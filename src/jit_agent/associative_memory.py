@@ -77,12 +77,17 @@ class AssociativeMemoryPacket:
     trace: AssociativeTrace
 
 
+def _term_token(value: str) -> str:
+    """Normalize one association TERM exactly as a query term is normalized."""
+    tokens = tokenize(value)
+    if len(tokens) != 1:
+        raise ValueError("TERM association nodes must normalize to exactly one token")
+    return tokens[0]
+
+
 def _node(kind: NodeKind, value: str) -> str:
     if kind == "TERM":
-        normalized = normalize_text(value)
-        if not normalized:
-            raise ValueError("TERM association nodes cannot be blank")
-        return f"term:{normalized}"
+        return f"term:{_term_token(value)}"
     if not value:
         raise ValueError("EVENT association nodes cannot be blank")
     return f"event:{value}"
@@ -90,20 +95,26 @@ def _node(kind: NodeKind, value: str) -> str:
 
 def _cue_nodes(cue: CueState) -> tuple[str, ...]:
     ignored = {
-        normalized
+        token
         for term in cue.ignored_terms
-        if (normalized := normalize_text(term))
+        for token in tokenize(term)
     }
     nodes = {
         f"term:{token}"
         for token in tokenize(cue.query_text or "")
         if token not in ignored
     }
-    nodes.update(
-        f"term:{normalized}"
-        for entity in cue.entities
-        if (normalized := normalize_text(entity))
-    )
+    for entity in cue.entities:
+        normalized = normalize_text(entity)
+        if normalized:
+            # Retain an exact normalized entity node for future phrase-level
+            # associations while also exposing its query-normalized term nodes.
+            nodes.add(f"term:{normalized}")
+        nodes.update(
+            f"term:{token}"
+            for token in tokenize(entity)
+            if token not in ignored
+        )
     return tuple(sorted(nodes))
 
 
