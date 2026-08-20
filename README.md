@@ -8,12 +8,9 @@ The model is never treated as durable memory, identity, or authoritative system 
 
 > **Core thesis:** persistent state belongs to the system, not to an LLM context window.
 
-The repository currently contains two related layers:
+The current repository contains a working stateless-agent MVP plus a sequence of deterministic memory-kernel experiments. Memory Kernel v0.4 is the current research milestone: it automatically derives a small set of provenance-bearing associative relationships from authoritative events and uses those relationships for bounded just-in-time recall.
 
-1. the original working **stateless-agent MVP**, which proves persistence and just-in-time recall across process and conversation boundaries; and
-2. **Memory Kernel v0.2**, an additive deterministic memory-research layer that treats source events as authoritative evidence and all derived memory representations as disposable, versioned projections.
-
-The longer-term research goal is to investigate whether this architecture can support human-inspired just-in-time recall with machine-level factual fidelity, and eventually a highly personalized AI whose persistent identity is independent of any one foundation model. That direction is aspirational; the present repository is a memory architecture and research platform, not a consciousness upload or complete model of a person.
+The longer-term research goal is to investigate whether this architecture can support human-inspired just-in-time recall with machine-level factual fidelity, and eventually a highly personalized AI whose persistent identity is independent of any one foundation model. That direction is aspirational; the present repository is a memory architecture and research platform, not a complete model of a person or a claim of consciousness transfer.
 
 ---
 
@@ -54,7 +51,7 @@ The LLM is therefore a **cognitive engine**, not the storage location of the age
 
 ## Current Architecture
 
-### Original MVP path
+### Stateless-agent MVP
 
 The original proof-of-concept remains intact:
 
@@ -94,37 +91,13 @@ Fresh Primary Agent classification
 
 The MVP Retrieval Service uses PostgreSQL metadata filtering and full-text search. Conversation IDs organize history but are not memory walls, and global sequence numbers provide authoritative ordering across conversations.
 
-### Memory Kernel v0.2
+### Memory Kernel v0.2 — deterministic control
 
-Memory Kernel v0.2 sits **beside** the MVP Retrieval Service rather than replacing it.
-
-Its central invariant is:
+Memory Kernel v0.2 introduced the core memory invariant:
 
 > **What happened is authoritative; how Prometheist currently remembers it is disposable.**
 
-```text
-Immutable events
-      |
-      +-------------------+
-      |                   |
-      v                   v
-Integrity chain     Versioned projections
-      |                   |
-      +---------+---------+
-                |
-                v
-       Deterministic cue scoring
-                |
-                v
-       Bounded MemoryPacket
-                |
-                +--> source event evidence
-                +--> score components
-                +--> retrieval reasons
-                +--> policy version
-```
-
-The kernel currently combines lexical, explicit-entity, temporal, and conversation cues. It does not require an LLM.
+It added deterministic cue scoring over canonical events, bounded `MemoryPacket` outputs, rebuildable lexical projections, and tamper-evident event-integrity metadata. It remains the control retrieval algorithm for later experiments.
 
 For a fixed evidence set, cue state, and policy version:
 
@@ -132,13 +105,64 @@ For a fixed evidence set, cue state, and policy version:
 same evidence + same cues + same policy = same MemoryPacket
 ```
 
-See [`MEMORY_KERNEL.md`](MEMORY_KERNEL.md) for the v0.2 contract and benchmark details.
+See [`MEMORY_KERNEL.md`](MEMORY_KERNEL.md).
+
+### Memory Kernel v0.3 — curated associative recall
+
+v0.3 tested whether a small deterministic association graph could repair known lexical-retrieval failures without weakening boundedness, provenance, determinism, or unknown-fact abstention.
+
+```text
+present cues
+    |
+    v
+bounded spreading activation
+    |
+    v
+association routing hints
+    |
+    v
+canonical source-event evidence
+```
+
+The mechanism succeeded on the Jordan Vale benchmark, improving the v0.2 control from 15/18 to 18/18. The v0.3 associations were deliberately curated, so the experiment proved the usefulness of associative activation but did **not** prove automatic association discovery.
+
+See [`ASSOCIATIVE_MEMORY.md`](ASSOCIATIVE_MEMORY.md).
+
+### Memory Kernel v0.4 — derived associative memory
+
+v0.4 keeps the v0.3 retrieval mechanism but changes how associations are produced.
+
+```text
+authoritative PostgreSQL events
+            |
+            v
+deterministic association derivation
+            |
+            v
+versioned association projection
+            |
+            v
+bounded associative activation
+            |
+            v
+canonical source-event evidence
+```
+
+Associations are derived state, not facts. They can be deleted and rebuilt from the authoritative event ledger.
+
+The current derivation projection implements three deliberately narrow rule families:
+
+- `PREVIOUS_STATE` — links a change event to the nearest earlier event in the same coarse concept class, gated by a past-state cue;
+- `RESOLVED_BY` — links an unresolved event to a later resolution event when explicit entity overlap supports the relationship;
+- `CONCEPT_INSTANCE` — maps the general concept `vehicle` to qualifying acquisition/ownership evidence for a recognized vehicle instance.
+
+Every derived association carries a deterministic ID, typed endpoints, relationship type, deterministic strength, source-event provenance, and optional cue gates. A deterministic projection digest makes repeated rebuilds directly comparable.
+
+See [`MEMORY_KERNEL_V0.4.md`](MEMORY_KERNEL_V0.4.md).
 
 ---
 
-## What the Current Repository Proves
-
-The implementation currently demonstrates:
+## What the Current Repository Demonstrates
 
 - **Stateless Primary Agent interactions** — no accumulated transcript is silently carried between separate external interactions.
 - **Complete event persistence** — meaningful user, agent, retrieval, and error events are recorded automatically.
@@ -153,9 +177,11 @@ The implementation currently demonstrates:
 - **Local inference and storage** — the prototype uses Ollama and native PostgreSQL on modest hardware.
 - **Disposable test database** — tests use `jit_agent_test`, not the long-lived development history.
 - **Deterministic Memory Kernel** — cue scoring and evidence selection can be tested without an LLM.
-- **Rebuildable derived memory** — projections and integrity metadata can be deleted and regenerated from authoritative events.
-- **Tamper-evident derivation** — a SHA-256 hash chain can verify the event sequence used to build memory state.
-- **Synthetic-life evaluation** — a fictional lifetime provides known ground truth for repeatable memory experiments.
+- **Rebuildable derived memory** — lexical and associative projections plus integrity metadata can be regenerated from authoritative events.
+- **Tamper-evident derivation** — a SHA-256 hash chain verifies the event sequence used to build memory state.
+- **Bounded associative recall** — explicit associations can activate canonical evidence that lexical overlap misses.
+- **Automatic deterministic association derivation** — v0.4 derives limited association types from events rather than requiring answer-specific hand-authored edges.
+- **Held-out synthetic evaluation** — the same derivation code is evaluated unchanged against a second fictional persona.
 
 ---
 
@@ -220,38 +246,34 @@ Each event carries deterministic metadata including:
 
 ---
 
-## Retrieval: MVP Baseline vs. Memory Research
+## Authoritative vs. Derived State
 
-The MVP Retrieval Service currently supports:
+PostgreSQL `events` is the authoritative structured memory ledger.
 
-- current-conversation or all-conversation scope
-- event/source-type filters
-- chronological and relevance ordering
-- bounded result limits
-- PostgreSQL full-text search
-- deterministic sequence cutoffs that prevent current-turn leakage
+The Memory Kernel currently maintains disposable derived state in:
 
-That lexical system remains valuable because it provides a simple control whose failure boundary is known.
+- `event_integrity`
+- `memory_projection_entries`
+- `memory_association_entries`
+- `memory_projection_runs`
 
-Memory Kernel v0.2 adds a second, LLM-independent experimental surface. It scores canonical events using explicit cue components and returns a bounded `MemoryPacket` plus an audit trace. The kernel is intentionally simple enough that later associative or semantic mechanisms can be measured against it rather than introduced by intuition.
+`postgres_memory_kernel.rebuild()` regenerates integrity metadata, lexical projection entries, and association projection entries from `events`. Association rebuilds record the projection name/version, source-event count, association count, and deterministic projection digest.
 
-The repository therefore does **not** assume that vector retrieval is automatically the next answer. The next mechanism must first demonstrate measurable improvement over the deterministic baseline.
+A rebuild must never rewrite authoritative event rows.
+
+Run a rebuild/verification with:
+
+```powershell
+uv run python scripts/rebuild_memory_kernel.py
+```
 
 ---
 
-## Memory Kernel v0.2 Synthetic-Life Benchmark
+## Verified Memory Benchmarks
 
-`benchmarks/jordan_vale_v1.json` defines a fictional person and an artificial event history containing changing preferences, ambiguous names, contradictions, temporal facts, exact identifiers, weak lexical overlap, and an intentionally unknown fact.
+The repository uses synthetic personas with known evaluator ground truth so retrieval changes can be compared against a fixed event history.
 
-The kernel receives the event stream, not the persona's evaluator-only oracle truth.
-
-Run the benchmark with:
-
-```powershell
-uv run python -m jit_agent.synthetic_benchmark
-```
-
-Verified v0.2 baseline:
+### Jordan Vale — v0.2 lexical/control baseline
 
 ```text
 questions: 15/18
@@ -261,31 +283,43 @@ mean_reciprocal_rank: 0.941
 unknown_abstention_rate: 1.000
 ```
 
-The three known failures are intentionally preserved as research targets:
+The three preserved failures are:
 
-1. historical-state recall — recovering the earlier latte preference from a question about the state before the coffee habit changed;
-2. associative/paraphrastic recall — connecting “recover the money from the old apartment” to the event that the landlord returned the security deposit;
-3. concept-to-instance recall — connecting the concept `vehicle` to the stored Toyota Corolla purchase event despite no shared vocabulary.
+1. historical-state recall — recovering an earlier latte preference when asked about the state before a later coffee-habit change;
+2. associative/paraphrastic recall — connecting recovery of money from an old apartment to the returned security-deposit event;
+3. concept-to-instance recall — connecting the general concept `vehicle` to the Toyota Corolla ownership event.
 
-These failures define the first v0.3 research objective.
+### Jordan Vale — v0.3 curated associations
 
----
-
-## Rebuildable Memory State
-
-Memory Kernel v0.2 adds three derived PostgreSQL tables:
-
-- `event_integrity`
-- `memory_projection_entries`
-- `memory_projection_runs`
-
-They are disposable. `rebuild()` regenerates them from `events` and never updates or deletes authoritative events.
-
-Run a rebuild/verification with:
-
-```powershell
-uv run python scripts/rebuild_memory_kernel.py
+```text
+v0.2 baseline:    15/18
+v0.3 associative: 18/18
+v0.3 evidence recall: 1.000
+v0.3 mean reciprocal rank: 1.000
+v0.3 unknown abstention: 1.000
 ```
+
+### v0.4 deterministic derived associations
+
+Verified locally on August 20, 2026:
+
+```text
+Jordan Vale
+  baseline: 15/18
+  derived:  18/18
+  derived evidence recall: 1.000
+  derived unknown abstention: 1.000
+
+Avery Chen (held out)
+  baseline: 3/6
+  derived:  6/6
+  derived evidence recall: 1.000
+  derived unknown abstention: 1.000
+```
+
+The Avery corpus has no hand-authored association fixture. The same derivation code used for Jordan is applied unchanged to Avery.
+
+These results are evidence that the current limited deterministic rules generalize beyond the corpus on which associative activation was first developed. They are **not** evidence of broad semantic-memory generalization: the benchmark remains intentionally small and synthetic.
 
 ---
 
@@ -311,7 +345,7 @@ Current requirements:
 - Ollama for LLM-backed MVP acceptance paths
 - a compatible local instruct model
 
-The deterministic Memory Kernel and synthetic benchmark do not require an LLM.
+The deterministic Memory Kernel and synthetic/associative benchmarks do not require an LLM.
 
 No Docker, remote database, or hosted LLM is required by the current implementation.
 
@@ -377,7 +411,7 @@ uv run pytest -v
 
 The suite is configured to use the dedicated `jit_agent_test` PostgreSQL database. The normal `.env` development database is not the default pytest target.
 
-The currently verified suite contains **34 passing tests** covering the original MVP and Memory Kernel v0.2, including:
+The full v0.4 regression suite was verified passing locally on August 20, 2026. Coverage includes the original MVP, Memory Kernel v0.2, v0.3 associative recall, and v0.4 association derivation, including:
 
 - append-only event persistence
 - per-conversation and global sequencing
@@ -388,12 +422,15 @@ The currently verified suite contains **34 passing tests** covering the original
 - documented lexical failure cases
 - deterministic Memory Kernel scoring
 - unknown-fact abstention
-- blank-entity and normalization regressions
 - projection rebuild determinism
 - integrity-chain verification and tamper detection
 - PostgreSQL Memory Kernel rebuild/idempotence
-- constrained candidate selection
-- synthetic-life benchmark regression floors
+- bounded associative activation
+- deterministic association derivation
+- false-association rejection tests
+- exact association provenance
+- association projection digest reproducibility
+- held-out Avery benchmark generalization
 
 Some LLM-backed acceptance paths require Ollama.
 
@@ -425,10 +462,22 @@ Memory Kernel rebuild and integrity verification:
 uv run python scripts/rebuild_memory_kernel.py
 ```
 
-Synthetic-life benchmark:
+v0.2 control benchmark:
 
 ```powershell
 uv run python -m jit_agent.synthetic_benchmark
+```
+
+v0.3 curated-association comparison:
+
+```powershell
+uv run python -m jit_agent.associative_benchmark
+```
+
+v0.4 derived-association evaluation:
+
+```powershell
+uv run python -m jit_agent.derived_associative_benchmark
 ```
 
 ---
@@ -437,10 +486,14 @@ uv run python -m jit_agent.synthetic_benchmark
 
 ```text
 prometheist/
+├── ASSOCIATIVE_MEMORY.md
 ├── MEMORY_KERNEL.md
+├── MEMORY_KERNEL_V0.4.md
 ├── PRIMARY_AGENT_SPEC_SHEET.md
 ├── README.md
 ├── benchmarks/
+│   ├── avery_chen_v1.json
+│   ├── jordan_vale_associations_v1.json
 │   └── jordan_vale_v1.json
 ├── pyproject.toml
 ├── schema.sql
@@ -451,60 +504,65 @@ prometheist/
 │   └── scale_test.py
 ├── src/
 │   └── jit_agent/
+│       ├── association_projection.py
+│       ├── associative_benchmark.py
+│       ├── associative_memory.py
 │       ├── cli.py
 │       ├── db.py
+│       ├── derived_associative_benchmark.py
 │       ├── event_store.py
 │       ├── llm.py
 │       ├── memory_integrity.py
 │       ├── memory_kernel.py
 │       ├── memory_projection.py
 │       ├── models.py
+│       ├── postgres_association_projection.py
 │       ├── postgres_memory_kernel.py
 │       ├── primary_agent.py
 │       ├── retrieval.py
 │       └── synthetic_benchmark.py
 └── tests/
     ├── conftest.py
-    ├── test_acceptance_restart.py
-    ├── test_cross_conversation_memory.py
-    ├── test_event_store.py
-    ├── test_fts_failure_corpus.py
+    ├── test_association_projection.py
+    ├── test_associative_benchmark.py
+    ├── test_associative_memory.py
+    ├── test_derived_associative_benchmark.py
     ├── test_memory_integrity.py
     ├── test_memory_kernel.py
     ├── test_memory_projection.py
+    ├── test_postgres_association_projection.py
     ├── test_postgres_memory_kernel.py
-    ├── test_primary_agent.py
-    ├── test_retrieval.py
-    └── test_synthetic_benchmark.py
+    └── ...
 ```
 
-`PRIMARY_AGENT_SPEC_SHEET.md` records the original prototype constraints. `MEMORY_KERNEL.md` records the current v0.2 kernel contract and benchmark baseline.
+`PRIMARY_AGENT_SPEC_SHEET.md` records the original prototype constraints. `MEMORY_KERNEL.md` records the deterministic kernel/control contract. `ASSOCIATIVE_MEMORY.md` records the v0.3 associative-retrieval experiment. `MEMORY_KERNEL_V0.4.md` records automatic deterministic association derivation and held-out evaluation.
 
 ---
 
 ## Current Status
 
 ```text
-Complete event persistence          PASS
-Stateless Primary Agent             PASS
-Cross-process recall                PASS
-Cross-conversation recall           PASS
-Bounded JIT context                 PASS at tested scale
-Deterministic temporal ordering     PASS
-Structured LLM decisions            PASS
-MVP deterministic retrieval policy  PASS
-Memory Kernel v0.2                  PASS
-Rebuildable projections             PASS
-Integrity verification              PASS
-Synthetic benchmark harness         PASS
-Full regression suite               34/34 PASS
-Jordan Vale v0.2 baseline           15/18
-Unknown-fact abstention              1.000
-Associative recall                  NEXT RESEARCH MILESTONE
-Vector semantic retrieval           DEFERRED pending evidence
-Production scalability              NOT CLAIMED
-Digital-doppelgänger model          LONG-TERM RESEARCH DIRECTION
-Consciousness transfer              NOT CLAIMED
+Complete event persistence           PASS
+Stateless Primary Agent              PASS
+Cross-process recall                 PASS
+Cross-conversation recall            PASS
+Bounded JIT context                  PASS at tested scale
+Deterministic temporal ordering      PASS
+Structured LLM decisions             PASS
+MVP deterministic retrieval policy   PASS
+Memory Kernel v0.2 control           PASS
+Memory Kernel v0.3 associative       PASS — Jordan 18/18
+Memory Kernel v0.4 derivation        PASS — Jordan 18/18, Avery 6/6
+Unknown-fact abstention              1.000 in verified synthetic benchmarks
+Rebuildable lexical projections      PASS
+Rebuildable association projection   PASS
+Projection digest reproducibility    PASS
+Integrity verification               PASS
+Full v0.4 regression suite           PASS locally 2026-08-20
+Vector semantic retrieval            DEFERRED pending evidence
+Production scalability               NOT CLAIMED
+Digital-doppelgänger model           LONG-TERM RESEARCH DIRECTION
+Consciousness transfer               NOT CLAIMED
 ```
 
 ---
@@ -547,32 +605,21 @@ These are not categorically rejected. They are deferred until a measured require
 
 ---
 
-## Next Engineering Milestone: Memory Kernel v0.3
+## Next Research Milestone
 
-The next research branch focuses on **deterministic associative recall**.
+v0.4 establishes that a small deterministic derivation layer can reproduce the v0.3 associative-recall result without loading Jordan's curated association fixture and can transfer unchanged to a small held-out Avery corpus.
 
-The immediate goal is not to add a vector database or a larger model. It is to determine whether a small, inspectable association mechanism can improve the three known Jordan Vale failures while preserving the v0.2 strengths.
+The next experiment should test **robustness and scale**, not simply add more examples of the same three relationships. Candidate stressors include:
 
-A proposed primitive is an explicit, provenance-bearing association:
+- multiple competing historical states;
+- repeated preference changes over time;
+- several semantically similar entities;
+- unresolved and resolved obligations interleaved with distractors;
+- ownership vs. consideration vs. disposal of objects;
+- deliberately misleading lexical overlap;
+- longer histories with unrelated noise;
+- false-association pressure and bounded-recall tradeoffs.
 
-```text
-Association
-├── source concept/event
-├── target concept/event
-├── relationship
-├── strength
-└── provenance
-```
+The development rule remains:
 
-Recall can then perform bounded spreading activation over those associations rather than requiring exact vocabulary overlap.
-
-Any v0.3 change is considered an improvement only if it:
-
-1. beats the exact 15/18 Jordan Vale v0.2 baseline;
-2. preserves 1.000 unknown-fact abstention;
-3. does not regress the existing 34-test suite;
-4. keeps evidence packets bounded;
-5. remains deterministic and inspectable; and
-6. preserves provenance back to authoritative source events.
-
-That is the development philosophy of Prometheist: **freeze a measurable baseline, add one mechanism, rerun the same experiment, and keep the mechanism only if the evidence justifies it.**
+> **Freeze a measurable baseline, add one mechanism, rerun the same experiment, and keep the mechanism only if the evidence justifies it.**
