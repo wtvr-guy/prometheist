@@ -101,6 +101,28 @@ def test_term_to_event_association_supports_concept_to_instance_recall():
     assert packet.trace.items[0].associative_activation > 0
 
 
+def test_term_associations_use_query_token_morphology_normalization():
+    events = [ev("car", 1, "I bought a 2021 Toyota Corolla.")]
+    association = Association(
+        association_id="a1",
+        source_kind="TERM",
+        source="vehicles",
+        target_kind="EVENT",
+        target="car",
+        relationship="CONCEPT_INSTANCE",
+        strength=1.0,
+    )
+
+    packet = associative_recall(
+        events,
+        CueState(query_text="Which vehicle do I own?", limit=1),
+        [association],
+    )
+
+    assert [event.event_id for event in packet.items] == ["car"]
+    assert packet.trace.items[0].association_hops[0].source_node == "term:vehicle"
+
+
 def test_unknown_query_still_abstains():
     events = [ev("coffee", 1, "I drink black coffee.")]
     associations = [
