@@ -46,6 +46,7 @@ def _association(raw: dict[str, Any]) -> Association:
         relationship=raw["relationship"],
         strength=float(raw["strength"]),
         provenance_event_ids=tuple(raw.get("provenance_event_ids", [])),
+        required_cue_terms=tuple(raw.get("required_cue_terms", [])),
     )
 
 
@@ -159,38 +160,20 @@ def main() -> None:
         f"  questions: {result.baseline.successful_questions}/"
         f"{result.baseline.question_count}"
     )
-    print(
-        f"  question_success_rate: "
-        f"{result.baseline.question_success_rate:.3f}"
-    )
+    print(f"  question_success_rate: {result.baseline.question_success_rate:.3f}")
     print(f"  evidence_recall: {result.baseline.evidence_recall:.3f}")
-    print(
-        f"  mean_reciprocal_rank: "
-        f"{result.baseline.mean_reciprocal_rank:.3f}"
-    )
-    print(
-        f"  unknown_abstention_rate: "
-        f"{result.baseline.unknown_abstention_rate:.3f}"
-    )
+    print(f"  mean_reciprocal_rank: {result.baseline.mean_reciprocal_rank:.3f}")
+    print(f"  unknown_abstention_rate: {result.baseline.unknown_abstention_rate:.3f}")
 
     print("v0.3 associative")
     print(
         f"  questions: {result.associative.successful_questions}/"
         f"{result.associative.question_count}"
     )
-    print(
-        f"  question_success_rate: "
-        f"{result.associative.question_success_rate:.3f}"
-    )
+    print(f"  question_success_rate: {result.associative.question_success_rate:.3f}")
     print(f"  evidence_recall: {result.associative.evidence_recall:.3f}")
-    print(
-        f"  mean_reciprocal_rank: "
-        f"{result.associative.mean_reciprocal_rank:.3f}"
-    )
-    print(
-        f"  unknown_abstention_rate: "
-        f"{result.associative.unknown_abstention_rate:.3f}"
-    )
+    print(f"  mean_reciprocal_rank: {result.associative.mean_reciprocal_rank:.3f}")
+    print(f"  unknown_abstention_rate: {result.associative.unknown_abstention_rate:.3f}")
     if result.associative.failures:
         print("associative failures:")
         for failure in result.associative.failures:
