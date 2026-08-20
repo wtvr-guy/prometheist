@@ -1,16 +1,13 @@
 """PostgreSQL adapter for the deterministic Prometheist memory kernel.
 
-This module is additive to the MVP Retrieval Service.  It intentionally does
+This module is additive to the MVP Retrieval Service. It intentionally does
 not replace ``jit_agent.retrieval`` yet; the existing proof-of-concept remains
-usable while the v0.2 kernel is benchmarked beside it.
+usable while the Memory Kernel evolves beside it.
 """
 from __future__ import annotations
 
-from dataclasses import asdict
-from datetime import datetime
 import json
 import uuid
-from typing import Iterable
 
 import psycopg
 from psycopg.rows import dict_row
@@ -23,6 +20,7 @@ from jit_agent.memory_integrity import (
 )
 from jit_agent.memory_kernel import CueState, MemoryEvent, MemoryPacket, normalize_text, recall, tokenize
 from jit_agent.memory_projection import LexicalProjection, build_projection, projection_digest
+from jit_agent.postgres_association_projection import rebuild_associations
 
 
 def _row_to_memory_event(row: dict) -> MemoryEvent:
@@ -59,16 +57,17 @@ def load_events(conn: psycopg.Connection, *, before_global_seq: int | None = Non
 
 
 def rebuild(conn: psycopg.Connection) -> dict[str, object]:
-    """Rebuild every v0.2 derived structure solely from authoritative events."""
+    """Rebuild every disposable Memory Kernel structure from authoritative events."""
     events = load_events(conn)
     integrity = build_integrity_chain(events)
     projection = LexicalProjection()
     entries = build_projection(events, projection)
     digest = projection_digest(entries)
+    associations = rebuild_associations(conn, events)
     run_id = uuid.uuid4()
 
     with conn.cursor() as cur:
-        # Derived state is explicitly disposable.  Authoritative ``events`` is
+        # Derived state is explicitly disposable. Authoritative ``events`` is
         # never modified by this operation.
         cur.execute("DELETE FROM event_integrity")
         cur.execute(
@@ -131,6 +130,7 @@ def rebuild(conn: psycopg.Connection) -> dict[str, object]:
         "source_event_count": len(events),
         "integrity_record_count": len(integrity),
         "projection_entry_count": len(entries),
+        "association_entry_count": len(associations),
         "projection_digest": digest,
     }
 
@@ -167,8 +167,8 @@ def _candidate_event_ids(
 ) -> list[uuid.UUID]:
     """Use the disposable lexical projection as a cheap global candidate index.
 
-    The pure kernel still performs final scoring.  We union lexical matches
-    with a small recency window so the adapter never relies on one route alone.
+    The pure kernel still performs final scoring. We union lexical matches with
+    a small recency window so the adapter never relies on one route alone.
     """
     ignored_terms = {normalized for term in cue.ignored_terms if (normalized := normalize_text(term))}
     terms = sorted({token for token in tokenize(cue.query_text or "") if token not in ignored_terms})
