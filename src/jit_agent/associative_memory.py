@@ -33,6 +33,7 @@ class Association:
     relationship: str
     strength: float
     provenance_event_ids: tuple[str, ...] = ()
+    required_cue_terms: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not 0.0 < self.strength <= 1.0:
@@ -139,6 +140,7 @@ def associative_recall(
 
     activation: dict[str, float] = {}
     cue_nodes = _cue_nodes(cue)
+    cue_term_values = {node.removeprefix("term:") for node in cue_nodes}
     for node in cue_nodes:
         activation[node] = 1.0
 
@@ -156,6 +158,13 @@ def associative_recall(
         prior = dict(activation)
         changed = False
         for association in ordered_associations:
+            required_terms = {
+                token
+                for value in association.required_cue_terms
+                for token in tokenize(value)
+            }
+            if required_terms and not required_terms.issubset(cue_term_values):
+                continue
             source_node = _node(association.source_kind, association.source)
             source_activation = prior.get(source_node, 0.0)
             if source_activation <= 0.0:
