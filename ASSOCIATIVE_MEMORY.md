@@ -55,9 +55,9 @@ Present cues
 
 The default experiment uses at most two hops and deterministic decay. There is no graph database and no LLM in the retrieval loop.
 
-## Unchanged control benchmark
+## Control benchmark
 
-`benchmarks/jordan_vale_v1.json` is not modified for v0.3. It remains the exact v0.2 control with a known baseline:
+The v0.2 retrieval algorithm remains unchanged and continues to provide the control baseline:
 
 ```text
 15/18 successful questions
@@ -66,7 +66,9 @@ The default experiment uses at most two hops and deterministic decay. There is n
 1.000 unknown abstention
 ```
 
-The three baseline failures are:
+The Jordan Vale fixture was corrected during v0.3 development so the unknown-fact case represents **open-world absence** rather than an explicit null field. The evaluator now asks `What is Jordan's blood type?`, while blood type is represented nowhere in the oracle/profile or event corpus. This correction does not change the v0.2 retrieval result: the control still reproduces 15/18.
+
+The three associative-recall baseline failures remain:
 
 1. historical-state recall for the earlier latte preference;
 2. resolving the returned security deposit from the paraphrase about recovering money from the old apartment;
@@ -92,17 +94,17 @@ Run:
 uv run python -m jit_agent.associative_benchmark
 ```
 
-The command prints the unchanged v0.2 baseline and the v0.3 associative result side by side.
+The command prints the v0.2 algorithmic control and the v0.3 associative result side by side.
 
 The regression test requires:
 
 ```text
-v0.2 baseline:     15/18
-v0.3 associative:  18/18
+v0.2 baseline:      15/18
+v0.3 associative:   18/18
 unknown abstention: 1.000 in both
 ```
 
-This 18/18 result, if reproduced by the local test suite, should be interpreted narrowly: the curated association graph repairs the three known benchmark failures without changing the event stream. It is not evidence of general semantic-memory performance.
+This 18/18 result should be interpreted narrowly: the curated association graph repairs the three known benchmark failures while the canonical event stream remains unchanged. It is not evidence of general semantic-memory performance.
 
 ## What comes next if this passes
 
