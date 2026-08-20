@@ -33,9 +33,9 @@ CREATE INDEX IF NOT EXISTS idx_events_payload_text_fts
     ON events USING GIN (to_tsvector('english', coalesce(payload_text, '')));
 
 -- ---------------------------------------------------------------------------
--- Prometheist Memory Kernel v0.2 derived state.
+-- Prometheist Memory Kernel derived state.
 --
--- `events` remains the sole authoritative history.  Everything below is
+-- `events` remains the sole authoritative history. Everything below is
 -- disposable: it can be deleted and regenerated solely from `events`.
 -- ---------------------------------------------------------------------------
 
@@ -82,3 +82,25 @@ CREATE INDEX IF NOT EXISTS idx_memory_projection_entries_source_seq
 
 CREATE INDEX IF NOT EXISTS idx_memory_projection_entries_data
     ON memory_projection_entries USING GIN (data);
+
+-- Memory Kernel v0.4 deterministic association projection. Association rows
+-- are routing hints only; provenance points back to authoritative events.
+CREATE TABLE IF NOT EXISTS memory_association_entries (
+    association_id TEXT PRIMARY KEY,
+    projection_version TEXT NOT NULL,
+    source_kind TEXT NOT NULL,
+    source TEXT NOT NULL,
+    target_kind TEXT NOT NULL,
+    target TEXT NOT NULL,
+    relationship TEXT NOT NULL,
+    strength DOUBLE PRECISION NOT NULL,
+    provenance_event_ids JSONB NOT NULL,
+    required_cue_terms JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_memory_association_entries_source
+    ON memory_association_entries (projection_version, source_kind, source);
+
+CREATE INDEX IF NOT EXISTS idx_memory_association_entries_target
+    ON memory_association_entries (projection_version, target_kind, target);
