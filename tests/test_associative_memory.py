@@ -70,8 +70,12 @@ def test_required_cue_terms_prevent_stale_state_pollution():
         [association],
     )
 
-    old_trace = next(item for item in packet.trace.items if item.event_id == "old")
-    assert old_trace.associative_activation == 0.0
+    # The PREVIOUS_STATE edge is gated off without the required "before" cue.
+    # Because the old event also has no direct score high enough to survive the
+    # minimum-score threshold, it should be absent from both the evidence packet
+    # and the ranked trace rather than appearing with zero activation.
+    assert "old" not in [event.event_id for event in packet.items]
+    assert all(item.event_id != "old" for item in packet.trace.items)
 
 
 def test_term_to_event_association_supports_concept_to_instance_recall():
