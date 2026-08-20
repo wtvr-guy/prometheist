@@ -11,7 +11,8 @@
       "target": "e001",
       "relationship": "PREVIOUS_STATE",
       "strength": 1.0,
-      "provenance_event_ids": ["e001", "e014"]
+      "provenance_event_ids": ["e001", "e014"],
+      "required_cue_terms": ["before"]
     },
     {
       "association_id": "a002",
@@ -21,7 +22,8 @@
       "target": "e008",
       "relationship": "RESOLVED_BY",
       "strength": 1.0,
-      "provenance_event_ids": ["e007", "e008"]
+      "provenance_event_ids": ["e007", "e008"],
+      "required_cue_terms": ["recover"]
     },
     {
       "association_id": "a003",
