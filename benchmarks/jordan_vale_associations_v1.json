@@ -1,7 +1,7 @@
 {
   "association_version": "jordan-vale-associations-v1",
   "benchmark": "jordan_vale_v1.json",
-  "description": "Curated deterministic association fixture used only to validate the v0.3 spreading-activation mechanism against the unchanged v0.2 synthetic life. It is not claimed to be a production association-extraction system.",
+  "description": "Curated deterministic association fixture used only to validate the v0.3 spreading-activation mechanism against the Jordan Vale control benchmark. The v0.2 retrieval algorithm remains the control; the benchmark's unknown-fact case was corrected to true open-world absence during v0.3 development. This fixture is not claimed to be a production association-extraction system.",
   "associations": [
     {
       "association_id": "a001",
