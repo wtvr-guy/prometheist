@@ -154,7 +154,57 @@ v0.4 should not be considered complete merely because the derivation rules compi
 6. leave authoritative event records unchanged across rebuilds;
 7. pass the pre-v0.4 regression suite as well as the new v0.4 tests.
 
-Benchmark numbers should be reported as verified only after the branch has been executed against the test environment.
+## Verified results — August 20, 2026
+
+The branch was synced and executed locally against the dedicated PostgreSQL test environment. The complete pytest suite passed.
+
+The preserved v0.2 control result was:
+
+```text
+questions: 15/18
+question_success_rate: 0.833
+evidence_recall: 0.833
+mean_reciprocal_rank: 0.941
+unknown_abstention_rate: 1.000
+```
+
+The curated v0.3 comparison reproduced:
+
+```text
+v0.2 baseline
+  questions: 15/18
+  question_success_rate: 0.833
+  evidence_recall: 0.833
+  mean_reciprocal_rank: 0.941
+  unknown_abstention_rate: 1.000
+
+v0.3 associative
+  questions: 18/18
+  question_success_rate: 1.000
+  evidence_recall: 1.000
+  mean_reciprocal_rank: 1.000
+  unknown_abstention_rate: 1.000
+```
+
+The v0.4 derived-association evaluation produced:
+
+```text
+jordan_vale_v1.json
+  baseline: 15/18
+  derived:  18/18
+  derived evidence recall: 1.000
+  derived unknown abstention: 1.000
+
+avery_chen_v1.json
+  baseline: 3/6
+  derived:  6/6
+  derived evidence recall: 1.000
+  derived unknown abstention: 1.000
+```
+
+Therefore all v0.4 acceptance criteria above are satisfied by the current synthetic evaluation and regression suite.
+
+The result should be interpreted narrowly. v0.4 demonstrates that the current deterministic derivation rules can reproduce the v0.3 Jordan result without loading the curated Jordan association fixture and can transfer unchanged to a small held-out Avery corpus while preserving perfect unknown-fact abstention. It does not establish broad semantic-memory generalization or production-scale behavior.
 
 ## Deliberately deferred
 
