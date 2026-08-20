@@ -170,7 +170,7 @@ def _candidate_event_ids(
     The pure kernel still performs final scoring.  We union lexical matches
     with a small recency window so the adapter never relies on one route alone.
     """
-    ignored_terms = {normalize_text(term) for term in cue.ignored_terms if normalize_text(term)}
+    ignored_terms = {normalized for term in cue.ignored_terms if (normalized := normalize_text(term))}
     terms = sorted({token for token in tokenize(cue.query_text or "") if token not in ignored_terms})
     entity_terms = sorted({normalized for entity in cue.entities if (normalized := normalize_text(entity))})
     cutoff_sql = "AND e.global_seq < %s" if before_global_seq is not None else ""
