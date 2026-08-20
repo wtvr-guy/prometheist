@@ -13,6 +13,11 @@ import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Json
 
+from jit_agent.association_projection import (
+    ASSOCIATION_PROJECTION_NAME,
+    ASSOCIATION_PROJECTION_VERSION,
+    association_projection_digest,
+)
 from jit_agent.memory_integrity import (
     IntegrityRecord,
     build_integrity_chain,
@@ -64,7 +69,9 @@ def rebuild(conn: psycopg.Connection) -> dict[str, object]:
     entries = build_projection(events, projection)
     digest = projection_digest(entries)
     associations = rebuild_associations(conn, events)
+    association_digest = association_projection_digest(associations)
     run_id = uuid.uuid4()
+    association_run_id = uuid.uuid4()
 
     with conn.cursor() as cur:
         # Derived state is explicitly disposable. Authoritative ``events`` is
@@ -124,14 +131,32 @@ def rebuild(conn: psycopg.Connection) -> dict[str, object]:
             """,
             (run_id, projection.name, projection.version, len(events), len(entries), digest),
         )
+        cur.execute(
+            """
+            INSERT INTO memory_projection_runs (
+                run_id, projection_name, projection_version, source_event_count,
+                entry_count, projection_digest, status, completed_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, 'COMPLETED', now())
+            """,
+            (
+                association_run_id,
+                ASSOCIATION_PROJECTION_NAME,
+                ASSOCIATION_PROJECTION_VERSION,
+                len(events),
+                len(associations),
+                association_digest,
+            ),
+        )
     conn.commit()
     return {
         "run_id": str(run_id),
+        "association_run_id": str(association_run_id),
         "source_event_count": len(events),
         "integrity_record_count": len(integrity),
         "projection_entry_count": len(entries),
         "association_entry_count": len(associations),
         "projection_digest": digest,
+        "association_projection_digest": association_digest,
     }
 
 
