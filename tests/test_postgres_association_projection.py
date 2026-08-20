@@ -44,6 +44,7 @@ def test_rebuild_persists_deterministic_associations_without_touching_events(con
 
     assert first["association_entry_count"] == 1
     assert second["association_entry_count"] == 1
+    assert first["association_projection_digest"] == second["association_projection_digest"]
     assert second_associations == first_associations
     assert first_associations[0].relationship == "PREVIOUS_STATE"
     assert first_associations[0].source == str(change.event_id)
