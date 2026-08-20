@@ -15,14 +15,14 @@ def conn():
     connection.close()
 
 
-def _record(conn, conversation_id, text):
+def _record(conn, conversation_id, text, *, entities=()):
     return event_store.record_event(
         conn,
         conversation_id=conversation_id,
         correlation_id=uuid.uuid4(),
         event_type=EventType.USER_PROMPT,
         source="test",
-        payload={"text": text},
+        payload={"text": text, "entities": list(entities)},
         payload_text=text,
     )
 
@@ -61,3 +61,24 @@ def test_postgres_recall_returns_bounded_source_evidence(conn):
     assert [event.event_id for event in packet.items] == [str(coffee.event_id)]
     assert packet.trace.items[0].selected is True
     assert "LEXICAL_CUE" in packet.trace.items[0].reasons
+
+
+def test_postgres_candidate_selection_respects_ignored_terms_and_nfkc_entities(conn):
+    conversation_id = event_store.start_conversation(conn)
+    coffee = _record(conn, conversation_id, "Coffee is black.", entities=("Sarah",))
+    _record(conn, conversation_id, "Jordan went for a walk.")
+    _record(conn, conversation_id, "Jordan read a book.")
+    rebuild(conn)
+
+    packet = recall_from_postgres(
+        conn,
+        CueState(
+            query_text="ＪＯＲＤＡＮ coffee",
+            entities=("ＳＡＲＡＨ",),
+            ignored_terms=("Jordan",),
+            limit=1,
+        ),
+        candidate_limit=1,
+    )
+
+    assert [event.event_id for event in packet.items] == [str(coffee.event_id)]
