@@ -8,7 +8,7 @@ BENCHMARK = ROOT / "benchmarks" / "jordan_vale_v1.json"
 ASSOCIATIONS = ROOT / "benchmarks" / "jordan_vale_associations_v1.json"
 
 
-def test_associative_recall_improves_unchanged_jordan_benchmark():
+def test_associative_recall_improves_jordan_control_baseline():
     result = run_comparison(BENCHMARK, ASSOCIATIONS)
 
     assert result.baseline.successful_questions == 15
