@@ -8,8 +8,7 @@
       "current_employer": "Northstar Labs",
       "current_coffee": "black coffee",
       "current_vehicle": "2021 Toyota Corolla",
-      "likes_mushrooms": true,
-      "favorite_color": null
+      "likes_mushrooms": true
     }
   },
   "events": [
@@ -54,7 +53,7 @@
     {"id":"q13","query":"What is the serial number on Jordan's old laptop?","entities":["old laptop"],"relevant_event_ids":["e016"],"required_event_ids":["e016"]},
     {"id":"q14","query":"Did Jordan actually go to the dentist appointment?","entities":["dentist appointment"],"relevant_event_ids":["e017","e018"],"required_event_ids":["e018"]},
     {"id":"q15","query":"Where did Jordan move from before living in Spokane?","entities":["Spokane"],"relevant_event_ids":["e006"],"required_event_ids":["e006"]},
-    {"id":"q16","query":"Which color did Jordan explicitly state that he preferred?","entities":["favorite color"],"relevant_event_ids":[],"required_event_ids":[],"expect_no_evidence":true},
+    {"id":"q16","query":"What is Jordan's blood type?","relevant_event_ids":[],"required_event_ids":[],"expect_no_evidence":true},
     {"id":"q17","query":"Is Jordan still a member of Evergreen Gym?","entities":["Evergreen Gym"],"relevant_event_ids":["e024"],"required_event_ids":["e024"]},
     {"id":"q18","query":"Which Sarah is coming for Thanksgiving?","entities":["Thanksgiving"],"relevant_event_ids":["e023"],"required_event_ids":["e023"]}
   ]
