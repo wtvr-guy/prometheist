@@ -1,6 +1,9 @@
 from datetime import datetime, timezone
 
-from jit_agent.association_projection import derive_associations
+from jit_agent.association_projection import (
+    association_projection_digest,
+    derive_associations,
+)
 from jit_agent.memory_kernel import MemoryEvent
 
 
@@ -28,6 +31,7 @@ def test_derives_previous_state_with_provenance():
     second = derive_associations(reversed(events))
 
     assert first == second
+    assert association_projection_digest(first) == association_projection_digest(second)
     assert len(first) == 1
     association = first[0]
     assert association.relationship == "PREVIOUS_STATE"
