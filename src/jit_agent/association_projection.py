@@ -1,12 +1,13 @@
 """Deterministic association derivation for Prometheist Memory Kernel v0.4.
 
-Canonical events remain authoritative evidence.  This module derives a small,
-versioned association projection from those events using explicit rules.  The
+Canonical events remain authoritative evidence. This module derives a small,
+versioned association projection from those events using explicit rules. The
 projection is disposable and reproducible; deleting it never deletes memory.
 """
 from __future__ import annotations
 
 import hashlib
+import json
 from typing import Iterable
 
 from jit_agent.associative_memory import Association
@@ -15,8 +16,8 @@ from jit_agent.memory_kernel import MemoryEvent, normalize_text, tokenize
 ASSOCIATION_PROJECTION_NAME = "associations"
 ASSOCIATION_PROJECTION_VERSION = "1"
 
-# Small deterministic ontology used by the v0.4 experiment.  These are general
-# concept aliases, not benchmark-answer edges.  Adding a concept changes the
+# Small deterministic ontology used by the v0.4 experiment. These are general
+# concept aliases, not benchmark-answer edges. Adding a concept changes the
 # projection version and must be benchmarked as a policy change.
 _CONCEPT_TERMS: dict[str, frozenset[str]] = {
     "beverage": frozenset(
@@ -139,6 +140,31 @@ def _association_id(
     return f"derived-{digest}"
 
 
+def association_projection_digest(associations: Iterable[Association]) -> str:
+    """Return a stable digest for one complete association projection rebuild."""
+    canonical = [
+        {
+            "association_id": association.association_id,
+            "source_kind": association.source_kind,
+            "source": association.source,
+            "target_kind": association.target_kind,
+            "target": association.target,
+            "relationship": association.relationship,
+            "strength": association.strength,
+            "provenance_event_ids": list(association.provenance_event_ids),
+            "required_cue_terms": list(association.required_cue_terms),
+        }
+        for association in sorted(associations, key=lambda item: item.association_id)
+    ]
+    payload = json.dumps(
+        canonical,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def derive_associations(events: Iterable[MemoryEvent]) -> tuple[Association, ...]:
     """Derive reproducible routing associations solely from source events.
 
@@ -152,7 +178,7 @@ def derive_associations(events: Iterable[MemoryEvent]) -> tuple[Association, ...
     * CONCEPT_INSTANCE: acquisition/ownership evidence for a recognized vehicle
       links the general term ``vehicle`` to that evidence.
 
-    Every edge carries the source event IDs that justify it.  No edge contains
+    Every edge carries the source event IDs that justify it. No edge contains
     facts not present in those events.
     """
     ordered = tuple(sorted(events, key=lambda event: (event.global_seq, event.event_id)))
@@ -193,7 +219,7 @@ def derive_associations(events: Iterable[MemoryEvent]) -> tuple[Association, ...
                 required_cue_terms=("before",),
             )
 
-    # Resolution links.  Explicit entity overlap is required so generic words
+    # Resolution links. Explicit entity overlap is required so generic words
     # such as "returned" cannot connect unrelated episodes.
     for later_index, later in enumerate(ordered):
         if not _contains_any(later.text, _RESOLVED_PHRASES):
@@ -228,7 +254,7 @@ def derive_associations(events: Iterable[MemoryEvent]) -> tuple[Association, ...
         )
 
     # General-concept links only for evidence that asserts acquisition or
-    # ownership.  Mere consideration of a vehicle is deliberately excluded.
+    # ownership. Mere consideration of a vehicle is deliberately excluded.
     for event in ordered:
         if "vehicle" not in concepts_by_id[event.event_id]:
             continue
