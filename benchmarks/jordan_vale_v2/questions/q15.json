@@ -1,0 +1,12 @@
+{
+  "artifact_id": "q15",
+  "artifact_type": "BENCHMARK_QUERY",
+  "schema_version": 1,
+  "source": "evaluator",
+  "payload": {
+    "query": "Where did Jordan move from before living in Spokane?",
+    "entities": ["Spokane"],
+    "relevant_event_ids": ["e006"],
+    "required_event_ids": ["e006"]
+  }
+}

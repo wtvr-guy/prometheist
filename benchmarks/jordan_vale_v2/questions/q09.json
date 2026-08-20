@@ -1,0 +1,12 @@
+{
+  "artifact_id": "q09",
+  "artifact_type": "BENCHMARK_QUERY",
+  "schema_version": 1,
+  "source": "evaluator",
+  "payload": {
+    "query": "What vehicle does Jordan own now?",
+    "entities": ["Jordan Vale"],
+    "relevant_event_ids": ["e011"],
+    "required_event_ids": ["e011"]
+  }
+}

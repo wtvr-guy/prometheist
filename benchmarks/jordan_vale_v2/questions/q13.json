@@ -1,0 +1,12 @@
+{
+  "artifact_id": "q13",
+  "artifact_type": "BENCHMARK_QUERY",
+  "schema_version": 1,
+  "source": "evaluator",
+  "payload": {
+    "query": "What is the serial number on Jordan's old laptop?",
+    "entities": ["old laptop"],
+    "relevant_event_ids": ["e016"],
+    "required_event_ids": ["e016"]
+  }
+}

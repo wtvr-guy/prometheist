@@ -1,0 +1,17 @@
+{
+  "artifact_id": "e013",
+  "artifact_type": "USER_PROMPT",
+  "schema_version": 1,
+  "created_at": "2025-04-01T19:02:00+00:00",
+  "source": "jordan",
+  "conversation_id": "c11",
+  "global_seq": 13,
+  "conversation_seq": 2,
+  "payload": {
+    "text": "I actually like mushrooms. Sarah just thinks I don't.",
+    "entities": [
+      "Sarah Kim",
+      "mushrooms"
+    ]
+  }
+}

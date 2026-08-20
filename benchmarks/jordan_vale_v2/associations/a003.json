@@ -1,0 +1,17 @@
+{
+  "artifact_id": "a003",
+  "artifact_type": "MEMORY_ASSOCIATION",
+  "schema_version": 1,
+  "source": "benchmark_curator",
+  "payload": {
+    "source_kind": "TERM",
+    "source": "vehicle",
+    "target_kind": "EVENT",
+    "target": "e011",
+    "relationship": "CONCEPT_INSTANCE",
+    "strength": 1.0,
+    "provenance_event_ids": [
+      "e011"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "artifact_id": "a001",
+  "artifact_type": "MEMORY_ASSOCIATION",
+  "schema_version": 1,
+  "source": "benchmark_curator",
+  "payload": {
+    "source_kind": "EVENT",
+    "source": "e014",
+    "target_kind": "EVENT",
+    "target": "e001",
+    "relationship": "PREVIOUS_STATE",
+    "strength": 1.0,
+    "provenance_event_ids": [
+      "e001",
+      "e014"
+    ],
+    "required_cue_terms": [
+      "before"
+    ]
+  }
+}
