@@ -21,7 +21,7 @@ from jit_agent.memory_integrity import (
     build_integrity_chain,
     verify_integrity_chain,
 )
-from jit_agent.memory_kernel import CueState, MemoryEvent, MemoryPacket, recall, tokenize
+from jit_agent.memory_kernel import CueState, MemoryEvent, MemoryPacket, normalize_text, recall, tokenize
 from jit_agent.memory_projection import LexicalProjection, build_projection, projection_digest
 
 
@@ -170,8 +170,9 @@ def _candidate_event_ids(
     The pure kernel still performs final scoring.  We union lexical matches
     with a small recency window so the adapter never relies on one route alone.
     """
-    terms = sorted(set(tokenize(cue.query_text or "")))
-    entity_terms = [entity.casefold().strip() for entity in cue.entities if entity.strip()]
+    ignored_terms = {normalized for term in cue.ignored_terms if (normalized := normalize_text(term))}
+    terms = sorted({token for token in tokenize(cue.query_text or "") if token not in ignored_terms})
+    entity_terms = sorted({normalized for entity in cue.entities if (normalized := normalize_text(entity))})
     cutoff_sql = "AND e.global_seq < %s" if before_global_seq is not None else ""
     cutoff_params: list[object] = [before_global_seq] if before_global_seq is not None else []
 

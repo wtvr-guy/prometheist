@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-import math
 import re
 import unicodedata
 from typing import Any, Iterable, Mapping, Sequence
@@ -159,10 +158,16 @@ def _clamp01(value: float) -> float:
     return max(0.0, min(1.0, value))
 
 
+def _normalized_nonempty(values: Sequence[str]) -> tuple[str, ...]:
+    """Normalize string cues once and discard blank/whitespace-only values."""
+    normalized = tuple(normalize_text(value) for value in values)
+    return tuple(value for value in normalized if value)
+
+
 def _lexical_score(query_text: str | None, event_text: str, ignored_terms: Sequence[str] = ()) -> float:
     if not query_text:
         return 0.0
-    ignored = {normalize_text(term) for term in ignored_terms}
+    ignored = set(_normalized_nonempty(ignored_terms))
     query_tokens = tuple(token for token in tokenize(query_text) if token not in ignored)
     if not query_tokens:
         return 0.0
@@ -180,20 +185,22 @@ def _lexical_score(query_text: str | None, event_text: str, ignored_terms: Seque
 
 
 def _entity_score(entities: Sequence[str], event_text: str, payload: Mapping[str, Any]) -> float:
-    if not entities:
+    normalized_entities = _normalized_nonempty(entities)
+    if not normalized_entities:
         return 0.0
     haystack = normalize_text(event_text)
     payload_entities = {
-        normalize_text(str(value))
+        normalized
         for value in payload.get("entities", [])
         if isinstance(value, (str, int, float))
+        if (normalized := normalize_text(str(value)))
     }
-    hits = 0
-    for entity in entities:
-        normalized = normalize_text(entity)
-        if normalized and (normalized in haystack or normalized in payload_entities):
-            hits += 1
-    return hits / len(entities)
+    hits = sum(
+        1
+        for normalized in normalized_entities
+        if normalized in haystack or normalized in payload_entities
+    )
+    return hits / len(normalized_entities)
 
 
 def _temporal_score(reference_time: datetime | None, created_at: datetime) -> float:
@@ -280,10 +287,12 @@ def recall(events: Iterable[MemoryEvent], cue: CueState) -> MemoryPacket:
         )
         for candidate in candidates
     )
+    ignored_terms = set(_normalized_nonempty(cue.ignored_terms))
+    normalized_entities = _normalized_nonempty(cue.entities)
     trace = RecallTrace(
         policy_version=POLICY_VERSION,
-        cue_tokens=tuple(token for token in tokenize(cue.query_text or "") if token not in {normalize_text(term) for term in cue.ignored_terms}),
-        normalized_entities=tuple(normalize_text(e) for e in cue.entities),
+        cue_tokens=tuple(token for token in tokenize(cue.query_text or "") if token not in ignored_terms),
+        normalized_entities=normalized_entities,
         candidates_considered=len(candidates),
         items=trace_items,
     )

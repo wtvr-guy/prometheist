@@ -45,3 +45,23 @@ def test_no_cues_returns_newest_history():
     events = [ev("a", 1, "first"), ev("b", 2, "second"), ev("c", 3, "third")]
     packet = recall(events, CueState(limit=2))
     assert [item.event_id for item in packet.items] == ["c", "b"]
+
+
+def test_blank_entities_do_not_dilute_entity_score():
+    events = [ev("a", 1, "Sarah called", entities=("Sarah",))]
+    packet = recall(
+        events,
+        CueState(entities=("  ", "ＳＡＲＡＨ", ""), minimum_score=0.1, limit=1),
+    )
+    assert [item.event_id for item in packet.items] == ["a"]
+    assert packet.trace.normalized_entities == ("sarah",)
+    assert packet.trace.items[0].score.entity == 1.0
+
+
+def test_trace_ignored_terms_are_normalized_once_semantically():
+    events = [ev("a", 1, "Jordan drinks black coffee")]
+    packet = recall(
+        events,
+        CueState(query_text="ＪＯＲＤＡＮ coffee", ignored_terms=("Jordan",), limit=1),
+    )
+    assert packet.trace.cue_tokens == ("coffee",)
