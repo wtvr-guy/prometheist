@@ -31,7 +31,17 @@ def _reset_test_database():
     try:
         with conn.cursor() as cur:
             cur.execute(SCHEMA_PATH.read_text())
-            cur.execute("TRUNCATE TABLE events, conversations RESTART IDENTITY CASCADE")
+            cur.execute(
+                """
+                TRUNCATE TABLE
+                    memory_projection_entries,
+                    memory_projection_runs,
+                    event_integrity,
+                    events,
+                    conversations
+                RESTART IDENTITY CASCADE
+                """
+            )
         conn.commit()
     finally:
         conn.close()
