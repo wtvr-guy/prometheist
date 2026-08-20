@@ -1,0 +1,13 @@
+{
+  "artifact_id": "q08",
+  "artifact_type": "BENCHMARK_QUERY",
+  "schema_version": 1,
+  "source": "evaluator",
+  "payload": {
+    "query": "What car was Jordan considering buying in March?",
+    "entities": ["Jordan Vale"],
+    "reference_time": "2025-03-31T12:00:00+00:00",
+    "relevant_event_ids": ["e009"],
+    "required_event_ids": ["e009"]
+  }
+}

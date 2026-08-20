@@ -1,0 +1,12 @@
+{
+  "artifact_id": "q14",
+  "artifact_type": "BENCHMARK_QUERY",
+  "schema_version": 1,
+  "source": "evaluator",
+  "payload": {
+    "query": "Did Jordan actually go to the dentist appointment?",
+    "entities": ["dentist appointment"],
+    "relevant_event_ids": ["e017", "e018"],
+    "required_event_ids": ["e018"]
+  }
+}

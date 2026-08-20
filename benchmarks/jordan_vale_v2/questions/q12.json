@@ -1,0 +1,12 @@
+{
+  "artifact_id": "q12",
+  "artifact_type": "BENCHMARK_QUERY",
+  "schema_version": 1,
+  "source": "evaluator",
+  "payload": {
+    "query": "Where was the blue notebook placed?",
+    "entities": ["blue notebook"],
+    "relevant_event_ids": ["e019"],
+    "required_event_ids": ["e019"]
+  }
+}

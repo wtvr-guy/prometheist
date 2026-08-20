@@ -1,0 +1,12 @@
+{
+  "artifact_id": "q03",
+  "artifact_type": "BENCHMARK_QUERY",
+  "schema_version": 1,
+  "source": "evaluator",
+  "payload": {
+    "query": "Where does Jordan work now?",
+    "entities": ["Jordan Vale"],
+    "relevant_event_ids": ["e022"],
+    "required_event_ids": ["e022"]
+  }
+}

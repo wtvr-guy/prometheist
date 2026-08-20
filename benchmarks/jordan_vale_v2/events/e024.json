@@ -1,0 +1,16 @@
+{
+  "artifact_id": "e024",
+  "artifact_type": "USER_PROMPT",
+  "schema_version": 1,
+  "created_at": "2025-11-15T17:00:00+00:00",
+  "source": "jordan",
+  "conversation_id": "c21",
+  "global_seq": 24,
+  "conversation_seq": 1,
+  "payload": {
+    "text": "I cancelled the Evergreen Gym membership today.",
+    "entities": [
+      "Evergreen Gym"
+    ]
+  }
+}

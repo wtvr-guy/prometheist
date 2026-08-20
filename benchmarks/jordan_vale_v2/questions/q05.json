@@ -1,0 +1,12 @@
+{
+  "artifact_id": "q05",
+  "artifact_type": "BENCHMARK_QUERY",
+  "schema_version": 1,
+  "source": "evaluator",
+  "payload": {
+    "query": "Which Sarah is Jordan's cousin?",
+    "entities": ["Sarah Moreno"],
+    "relevant_event_ids": ["e003", "e023"],
+    "required_event_ids": ["e003"]
+  }
+}

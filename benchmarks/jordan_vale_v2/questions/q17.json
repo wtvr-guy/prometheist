@@ -1,0 +1,12 @@
+{
+  "artifact_id": "q17",
+  "artifact_type": "BENCHMARK_QUERY",
+  "schema_version": 1,
+  "source": "evaluator",
+  "payload": {
+    "query": "Is Jordan still a member of Evergreen Gym?",
+    "entities": ["Evergreen Gym"],
+    "relevant_event_ids": ["e024"],
+    "required_event_ids": ["e024"]
+  }
+}

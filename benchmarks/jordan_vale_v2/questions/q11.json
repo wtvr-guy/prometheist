@@ -1,0 +1,12 @@
+{
+  "artifact_id": "q11",
+  "artifact_type": "BENCHMARK_QUERY",
+  "schema_version": 1,
+  "source": "evaluator",
+  "payload": {
+    "query": "Who claimed Jordan hated mushrooms?",
+    "entities": ["mushrooms"],
+    "relevant_event_ids": ["e012", "e013"],
+    "required_event_ids": ["e012"]
+  }
+}
