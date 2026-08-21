@@ -25,6 +25,7 @@ from jit_agent.postgres_memory_kernel import associative_recall_from_postgres, r
 from jit_agent.scale_corpus import (
     DEFAULT_BASE_CORPORA,
     DEFAULT_EVENT_COUNTS,
+    DEFAULT_PROBE_EVERY,
     DEFAULT_SEED,
     build_scaled_document,
     load_document,
@@ -36,6 +37,8 @@ from jit_agent.synthetic_benchmark import BenchmarkResult
 class PostgresScaleBenchmarkResult:
     persona: str
     event_count: int
+    base_question_count: int
+    probe_question_count: int
     candidate_limit: int
     association_limit: int
     load_seconds: float
@@ -54,7 +57,13 @@ def _percentile(values: list[float], percentile: float) -> float:
     if not values:
         return 0.0
     ordered = sorted(values)
-    index = max(0, min(len(ordered) - 1, int((len(ordered) - 1) * percentile + 0.999999)))
+    index = max(
+        0,
+        min(
+            len(ordered) - 1,
+            int((len(ordered) - 1) * percentile + 0.999999),
+        ),
+    )
     return ordered[index]
 
 
@@ -186,6 +195,7 @@ def run_postgres_scale_document(
     target_event_count: int,
     seed: int = DEFAULT_SEED,
     confusable_every: int = 12,
+    probe_every: int = DEFAULT_PROBE_EVERY,
     limit: int = 5,
     candidate_limit: int = 500,
     association_limit: int = 250,
@@ -195,6 +205,7 @@ def run_postgres_scale_document(
         target_event_count=target_event_count,
         seed=seed,
         confusable_every=confusable_every,
+        probe_every=probe_every,
     )
     _require_benchmark_database(conn)
     _reset_database(conn)
@@ -273,10 +284,13 @@ def run_postgres_scale_document(
         failures=tuple(failures),
     )
     durations_ms = [duration * 1000.0 for duration in recall_durations]
+    scale = document["scale"]
 
     return PostgresScaleBenchmarkResult(
         persona=principal_name,
         event_count=len(document["events"]),
+        base_question_count=int(scale["base_question_count"]),
+        probe_question_count=int(scale["probe_event_count"]),
         candidate_limit=candidate_limit,
         association_limit=association_limit,
         load_seconds=load_seconds,
@@ -305,6 +319,8 @@ def _print_result(result: PostgresScaleBenchmarkResult) -> None:
             (
                 result.persona,
                 f"events={result.event_count}",
+                f"base_questions={result.base_question_count}",
+                f"probe_questions={result.probe_question_count}",
                 f"accuracy={benchmark.successful_questions}/{benchmark.question_count}",
                 f"evidence_recall={benchmark.evidence_recall:.3f}",
                 f"mrr={benchmark.mean_reciprocal_rank:.3f}",
@@ -339,6 +355,7 @@ def main() -> None:
     )
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--confusable-every", type=int, default=12)
+    parser.add_argument("--probe-every", type=int, default=DEFAULT_PROBE_EVERY)
     parser.add_argument("--limit", type=int, default=5)
     parser.add_argument("--candidate-limit", type=int, default=500)
     parser.add_argument("--association-limit", type=int, default=250)
@@ -371,6 +388,7 @@ def main() -> None:
                     target_event_count=event_count,
                     seed=args.seed,
                     confusable_every=args.confusable_every,
+                    probe_every=args.probe_every,
                     limit=args.limit,
                     candidate_limit=args.candidate_limit,
                     association_limit=args.association_limit,
