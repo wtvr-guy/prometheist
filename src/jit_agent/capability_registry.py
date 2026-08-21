@@ -38,15 +38,29 @@ class RegisteredCapability:
 
 
 class CapabilityRegistry:
-    """Small deterministic registry with bounded lexical capability discovery."""
+    """Deterministic registry with bounded discovery and explicit extension points."""
 
-    def __init__(self, registrations: tuple[RegisteredCapability, ...]) -> None:
-        ids = [item.descriptor.capability_id for item in registrations]
-        if len(ids) != len(set(ids)):
-            raise ValueError("capability ids must be unique")
-        self._registrations = {
-            item.descriptor.capability_id: item for item in registrations
-        }
+    def __init__(
+        self,
+        registrations: tuple[RegisteredCapability, ...] = (),
+    ) -> None:
+        self._registrations: dict[str, RegisteredCapability] = {}
+        for registration in registrations:
+            self.register(registration)
+
+    def register(self, registration: RegisteredCapability) -> None:
+        """Install one capability; duplicate ids are rejected deterministically."""
+        capability_id = registration.descriptor.capability_id
+        if capability_id in self._registrations:
+            raise ValueError(f"capability id already registered: {capability_id}")
+        self._registrations[capability_id] = registration
+
+    def unregister(self, capability_id: str) -> RegisteredCapability:
+        """Remove one capability from current runtime configuration."""
+        try:
+            return self._registrations.pop(capability_id)
+        except KeyError as exc:
+            raise KeyError(f"Unknown capability_id: {capability_id}") from exc
 
     def get(self, capability_id: str) -> RegisteredCapability:
         try:
@@ -62,8 +76,8 @@ class CapabilityRegistry:
 
     def discover(self, need: CapabilityNeed) -> list[CapabilityMatch]:
         allowed_kinds = set(need.kinds) if need.kinds else None
-        query_norm = _normalize(need.query_text)
-        query_tokens = set(_tokens(need.query_text))
+        query_tokens = _tokens(need.query_text)
+        query_token_set = set(query_tokens)
         matches: list[CapabilityMatch] = []
 
         for registration in self._registrations.values():
@@ -74,20 +88,21 @@ class CapabilityRegistry:
             score = 0.0
             matched_terms: list[str] = []
 
-            capability_id_text = descriptor.capability_id.replace("_", " ")
-            if _normalize(capability_id_text) in query_norm:
+            capability_id_tokens = _tokens(descriptor.capability_id.replace("_", " "))
+            if _contains_phrase(query_tokens, capability_id_tokens):
                 score += 8.0
                 matched_terms.append(descriptor.capability_id)
 
             for raw_term in registration.routing_terms:
-                term_norm = _normalize(raw_term)
-                term_tokens = set(_tokens(raw_term))
+                term_tokens = _tokens(raw_term)
                 if not term_tokens:
                     continue
-                if term_norm and term_norm in query_norm:
+                if _contains_phrase(query_tokens, term_tokens):
                     score += 3.0 + (0.25 * len(term_tokens))
                     matched_terms.append(raw_term)
-                elif term_tokens.issubset(query_tokens):
+                elif set(term_tokens).issubset(query_token_set):
+                    # Multi-token cues may still be useful when words are split by
+                    # modifiers, but exact contiguous phrases rank higher.
                     score += 1.5 + (0.15 * len(term_tokens))
                     matched_terms.append(raw_term)
 
@@ -106,12 +121,15 @@ class CapabilityRegistry:
         return matches[: need.limit]
 
 
-def _normalize(value: str) -> str:
-    return " ".join(_tokens(value))
-
-
 def _tokens(value: str) -> tuple[str, ...]:
     return tuple(_TOKEN_RE.findall(value.casefold()))
+
+
+def _contains_phrase(haystack: tuple[str, ...], needle: tuple[str, ...]) -> bool:
+    if not needle or len(needle) > len(haystack):
+        return False
+    width = len(needle)
+    return any(haystack[index : index + width] == needle for index in range(len(haystack) - width + 1))
 
 
 DEFAULT_REGISTRY = CapabilityRegistry(
