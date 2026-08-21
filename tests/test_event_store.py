@@ -71,7 +71,7 @@ def test_conversation_seq_is_monotonic_per_conversation(conn):
 
 
 def test_concurrent_writers_preserve_same_conversation_sequence(conn):
-    """Independent local agents/processes may safely append to one conversation."""
+    """Independent local agents (simulated via concurrent DB connections) may safely append to one conversation."""
     conversation_id = event_store.start_conversation(conn)
     worker_count = 8
     start_together = Barrier(worker_count)
