@@ -1,5 +1,9 @@
 -- Append-only event log schema for the JIT persistent-memory agent prototype.
 -- Application code only ever INSERTs into `events`; never UPDATE/DELETE.
+-- This is currently an application-level invariant, not a database-level
+-- tamper boundary. Database permissions/immutability enforcement belong to the
+-- explicit v0.9 hardening/threat-model work and must not be inferred from this
+-- schema alone.
 
 CREATE TABLE IF NOT EXISTS conversations (
     conversation_id UUID PRIMARY KEY,

@@ -39,6 +39,7 @@ These records are intentionally retained rather than collapsed into a single ret
 ## Audits
 
 - [`audits/V05_CLOSURE_AUDIT_2026-08-21.md`](audits/V05_CLOSURE_AUDIT_2026-08-21.md) — static codebase audit performed before freezing v0.5 and beginning the multi-agent v0.6 work.
+- [`audits/POST_V06_CODEBASE_REVIEW_2026-08-21.md`](audits/POST_V06_CODEBASE_REVIEW_2026-08-21.md) — post-v0.6 review of versioning, append-only enforcement, live JIT freshness scaling, CI, durable execution, and local-agent concurrency assumptions.
 
 Audit records distinguish immediate correctness defects from deliberately deferred architecture/hardening work so later milestones do not silently inherit unresolved assumptions.
 

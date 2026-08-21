@@ -30,6 +30,14 @@ The v0.6 acceptance path was verified locally with PostgreSQL and Ollama: a fact
 
 See the [v0.5 final status](docs/milestones/v0.5/README.md), [v0.6 final status](docs/milestones/v0.6/README.md), [v0.5 experiment records](docs/milestones/v0.5/experiments/), and [closure audit](docs/audits/V05_CLOSURE_AUDIT_2026-08-21.md).
 
+## Versioning
+
+Prometheist uses architectural milestone labels such as **v0.5** and **v0.6** to identify accepted research/integration checkpoints. Those labels are not currently Python package release versions.
+
+The `version` field in `pyproject.toml` and the corresponding value in `uv.lock` are internal packaging metadata for the `jit-agent` Python package. They should not be used to infer which Prometheist architectural milestone is accepted. Until a formal distribution/release process is introduced, the milestone documents and this README are authoritative for project status.
+
+Before the first externally distributed package release, Prometheist should adopt an explicit package-release policy (for example SemVer) and either reconcile or deliberately continue separating package versions from architectural milestone labels. Development work must not casually bump package metadata merely to mirror a branch name or research experiment.
+
 ## Architecture
 
 ```text
@@ -142,6 +150,8 @@ uv run pytest -v
 
 Tests use a dedicated PostgreSQL database whose name must contain `test` or `benchmark`; the normal long-lived development history is not a valid destructive pytest target. Some LLM-backed acceptance paths require Ollama; deterministic Memory Kernel benchmarks do not.
 
+The repository also has a GitHub Actions PostgreSQL test lane. It runs the locked Python environment and the normal pytest suite against a disposable PostgreSQL service. Real-Ollama acceptance tests remain local because CI does not provide the project's local model runtime; those tests explicitly skip when Ollama is unavailable.
+
 ## Benchmarks
 
 The repository includes fixed synthetic personas, adversarial robustness cases, deterministic scale-corpus generation, and both full-history and indexed PostgreSQL benchmark paths.
@@ -172,6 +182,7 @@ prometheist/
 ├── pyproject.toml
 ├── uv.lock
 ├── schema.sql
+├── .github/workflows/    # automated PostgreSQL-backed regression lane
 ├── benchmarks/          # checked-in evaluation fixtures
 ├── docs/                # architecture, roadmap, milestones, audits, experiment records
 ├── scripts/             # diagnostics, rebuilds, benchmark entry points
