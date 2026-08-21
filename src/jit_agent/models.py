@@ -85,6 +85,14 @@ class MemoryNeed(BaseModel):
     """
 
     query_text: str | None = None
+    supplemental_query_texts: list[str] = Field(
+        default_factory=list,
+        max_length=3,
+        description=(
+            "Bounded alternate formulations of the same information need. "
+            "They may be tried only when the canonical query yields no evidence."
+        ),
+    )
     entities: list[str] = Field(default_factory=list)
     reference_time: datetime | None = None
     conversation_id: UUID | None = Field(
