@@ -1,10 +1,14 @@
-# Prometheist Memory Kernel v0.5 — Robust Association Routing
+# Prometheist Memory Kernel v0.5 — Robust Association Routing and Scale Characterization
 
 Memory Kernel v0.5 begins from the verified v0.4 result rather than adding a new retrieval technology by default.
 
-The question for this milestone is:
+The milestone now asks two related questions:
 
 > Do the deterministic associations introduced in v0.4 remain useful when the history contains competing states, lifecycle changes, and queries that share a concept term without asking about the relationship represented by the association?
+
+and:
+
+> How quickly and accurately does the current memory kernel retrieve evidence when each synthetic persona accumulates thousands or tens of thousands of later events?
 
 ## Experimental rule
 
@@ -13,6 +17,8 @@ v0.5 follows the same development rule used by the earlier memory-kernel milesto
 > Freeze a measurable baseline, add one mechanism, rerun the same experiment, and keep the mechanism only if the evidence justifies it.
 
 Vector semantic retrieval remains deferred. The first v0.5 failures are failures of deterministic association policy, so they should be repaired there before a new retrieval subsystem is introduced.
+
+The large-corpus benchmark is likewise intended to identify the failure domain before changing architecture. Candidate-index recall, scoring/routing policy, abstention behavior, rebuild cost, and query latency are measured separately where possible.
 
 ## New adversarial corpus
 
@@ -70,6 +76,105 @@ Disposition edges also require the cue `own`.
 
 For a present-ownership query, both acquisition and later disposition evidence can therefore activate. Existing deterministic ranking then places the later lifecycle evidence ahead of the earlier acquisition when their association activation is equal.
 
+## Indexed PostgreSQL associative recall
+
+v0.4 persisted association rows in PostgreSQL but the existing `recall_from_postgres()` path still executed only the baseline lexical kernel. v0.5 keeps that baseline API unchanged and adds a separate association-aware indexed path:
+
+```text
+associative_recall_from_postgres()
+```
+
+Its bounded routing sequence is:
+
+```text
+query/entity cues
+      |
+      v
+lexical projection candidate window
+      |
+      v
+direct candidates clearing minimum score
+      |
+      +--------------------+
+      |                    |
+query TERM nodes      activated EVENT nodes
+      |                    |
+      +---------+----------+
+                |
+                v
+bounded persisted association expansion
+                |
+                v
+canonical target events fetched from events
+                |
+                v
+pure associative kernel final scoring/ranking
+```
+
+`load_reachable_associations()` reads only association edges reachable from the current term/event frontier, enforces each edge's `required_cue_terms`, obeys a hop bound, and obeys an association-count bound. Canonical event content is still fetched independently from `events`.
+
+This provides a direct A/B surface:
+
+- `recall_from_postgres()` — indexed baseline control;
+- `associative_recall_from_postgres()` — indexed v0.5 associative path.
+
+## Large deterministic persona corpora
+
+`jit_agent.scale_corpus` deterministically expands Jordan Vale, Avery Chen, and Morgan Reyes while preserving their original oracle questions.
+
+Default sizes are:
+
+- 1,000 events per persona;
+- 10,000 events per persona;
+- 50,000 events per persona.
+
+Across all three personas and all three default sizes, the generator can materialize 183,000 benchmark events.
+
+Generated event and conversation IDs are stable UUIDv5 values, so the exact same corpus can be evaluated by the in-memory kernel and loaded into PostgreSQL.
+
+Most added events are mundane background history. Every twelfth distractor is lexically confusable by default and contains vocabulary from benchmark domains such as beverages, vehicles, deposits, employers/projects, people, locations, appointments, or objects without asserting the persona-specific oracle answer.
+
+The generator is deterministic and prefix-stable at a fixed seed. A 10,000-event corpus is therefore the exact prefix of the corresponding 50,000-event corpus, making latency/accuracy comparisons across sizes controlled rather than anecdotal.
+
+See [`SCALE_BENCHMARK.md`](SCALE_BENCHMARK.md) for commands and interpretation.
+
+## Scale measurements
+
+Two benchmark paths are provided.
+
+### Full-history in-memory control
+
+`python -m jit_agent.scale_benchmark`
+
+Measures:
+
+- oracle question accuracy;
+- evidence recall;
+- mean reciprocal rank;
+- unknown-fact abstention;
+- association derivation time;
+- recall p50/p95/max latency.
+
+This intentionally scores the entire history for every query. It characterizes raw algorithmic scaling but is not the intended long-term storage path.
+
+### Indexed PostgreSQL path
+
+`python -m jit_agent.postgres_scale_benchmark`
+
+Measures:
+
+- corpus load time;
+- derived-state rebuild time;
+- oracle question accuracy;
+- evidence recall;
+- mean reciprocal rank;
+- unknown-fact abstention;
+- recall p50/p95/max latency;
+- projection/association counts;
+- candidate-window size.
+
+The PostgreSQL runner is destructive to its selected database and therefore refuses to run unless the current database name contains `test` or `benchmark`.
+
 ## Invariants preserved
 
 v0.5 does not change the authoritative evidence model.
@@ -81,6 +186,8 @@ v0.5 does not change the authoritative evidence model.
 - Rebuilds remain versioned and digestable.
 - Returned evidence remains canonical `MemoryEvent` data.
 - No LLM is used to derive the new relationship.
+- Large scale corpora are derived benchmark artifacts, not authoritative project data.
+- The ordinary development database is not used for destructive scale runs.
 
 ## Acceptance target
 
@@ -93,9 +200,14 @@ Before v0.5 is considered complete, the branch should demonstrate:
 5. Avery Chen derived benchmark remains 6/6;
 6. association projection determinism and digest reproducibility remain intact;
 7. PostgreSQL rebuild/idempotence tests remain green;
-8. the complete pre-v0.5 regression suite remains green.
+8. PostgreSQL association-aware recall tests remain green;
+9. the complete pre-v0.5 regression suite remains green;
+10. scale results are recorded for 1,000, 10,000, and 50,000 events per persona on both the full-history and PostgreSQL paths, or any device-limited maximum is explicitly recorded;
+11. any scale accuracy loss is classified as candidate-index recall, scoring/routing, or abstention failure before another retrieval mechanism is introduced.
 
 The focused deterministic rule simulation predicts the Morgan corpus will satisfy items 1–3. These results must not be described as verified until the repository test suite has been executed against the v0.5 branch.
+
+No device-specific latency threshold is declared before the first local scale run. The initial run is a characterization baseline from which a defensible performance target can be set.
 
 ## Deliberately deferred
 
