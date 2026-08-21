@@ -160,3 +160,64 @@ def test_two_hop_spreading_is_bounded_and_deterministic():
     assert first == second
     assert [event.event_id for event in first.items] == ["target"]
     assert first.trace.items[0].association_hops[-1].hop == 2
+
+
+def test_topical_overlap_without_requested_attribute_abstains():
+    events = [
+        ev(
+            "parking",
+            1,
+            "Parking log: a delivery vehicle was noted near bay 42.",
+        )
+    ]
+
+    packet = associative_recall(
+        events,
+        CueState(query_text="Who insures my vehicle?", limit=5),
+        [],
+    )
+
+    # "vehicle" alone clears the broad activation score, but it is only half
+    # of the substantive query. It may seed routing; it is not sufficient
+    # evidence for the requested insurer attribute.
+    assert packet.items == ()
+
+
+def test_state_modifier_does_not_dilute_direct_support():
+    events = [
+        ev(
+            "work",
+            1,
+            "I left Acme Design and started working at Northstar Labs this month.",
+        )
+    ]
+
+    packet = associative_recall(
+        events,
+        CueState(query_text="Where do I work now?", limit=1),
+        [],
+    )
+
+    assert [event.event_id for event in packet.items] == ["work"]
+
+
+def test_temporal_cue_can_support_sparse_direct_lexical_match():
+    events = [
+        ev(
+            "considering",
+            1,
+            "I'm thinking about buying a Subaru Outback this spring.",
+        )
+    ]
+
+    packet = associative_recall(
+        events,
+        CueState(
+            query_text="What car was I considering buying in March?",
+            reference_time=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            limit=1,
+        ),
+        [],
+    )
+
+    assert [event.event_id for event in packet.items] == ["considering"]
