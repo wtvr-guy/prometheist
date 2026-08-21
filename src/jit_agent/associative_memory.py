@@ -181,11 +181,10 @@ def associative_recall(
             if source_activation <= 0.0:
                 continue
             target_node = _node(association.target_kind, association.target)
-            propagated = (
-                source_activation
-                * association.strength
-                * (decay ** hop_number)
-            )
+            # source_activation already contains decay from every prior hop.
+            # Apply exactly one additional decay factor for this edge so an
+            # N-hop path receives decay**N rather than triangular over-decay.
+            propagated = source_activation * association.strength * decay
             if propagated <= activation.get(target_node, 0.0):
                 continue
             activation[target_node] = propagated
