@@ -7,12 +7,13 @@ This directory contains project documentation useful for understanding the archi
 Long-lived design documents and specifications:
 
 - [`architecture/PRIMARY_AGENT_SPEC_SHEET.md`](architecture/PRIMARY_AGENT_SPEC_SHEET.md) — system-wide stateless-agent architecture, Primary Agent responsibilities, shared JIT memory principles, persistence, provenance, and user-control constraints.
+- [`architecture/CAPABILITY_REGISTRY.md`](architecture/CAPABILITY_REGISTRY.md) — deterministic just-in-time discovery of currently installed agents/tools without preloading the full capability catalog into LLM prompts.
 - [`architecture/MEMORY_KERNEL.md`](architecture/MEMORY_KERNEL.md) — deterministic Memory Kernel baseline and invariants.
 - [`architecture/ASSOCIATIVE_MEMORY.md`](architecture/ASSOCIATIVE_MEMORY.md) — bounded associative-recall design and provenance model.
 
 ## Roadmap
 
-- [`ROADMAP.md`](ROADMAP.md) — engineering milestones from the accepted v0.5 memory baseline and v0.6 stateless-MAS integration through the first complete v1.0 Prometheist architecture.
+- [`ROADMAP.md`](ROADMAP.md) — engineering milestones from the accepted v0.5 memory baseline through stateless multi-agent integration, durable execution, and the first complete v1.0 Prometheist architecture.
 
 ## Milestones
 
@@ -22,7 +23,7 @@ Versioned research checkpoints:
 - [`milestones/v0.5/README.md`](milestones/v0.5/README.md) — final v0.5 status, accepted measurements, causal fixes, and closure state.
 - [`milestones/v0.5/MEMORY_KERNEL_V0.5.md`](milestones/v0.5/MEMORY_KERNEL_V0.5.md) — original v0.5 design/experiment specification retained as research context.
 - [`milestones/v0.5/SCALE_BENCHMARK.md`](milestones/v0.5/SCALE_BENCHMARK.md) — reproducible v0.5 scale-benchmark workflow.
-- [`milestones/v0.6/README.md`](milestones/v0.6/README.md) — accepted shared-JIT-memory and stateless multi-agent integration result, acceptance chain, query-cue regression, and closure verification.
+- [`milestones/v0.6/README.md`](milestones/v0.6/README.md) — shared-JIT-memory/stateless-MAS milestone, including the reopened deterministic capability-discovery and multi-specialist completion work.
 
 ## v0.5 experiment record
 
