@@ -1,26 +1,31 @@
 # Prometheist Documentation
 
-This directory contains project documentation that is useful for understanding the architecture, research milestones, and benchmark history without cluttering the repository root.
+This directory contains project documentation useful for understanding the architecture, research milestones, audit history, and roadmap without cluttering the repository root.
 
 ## Architecture
 
 Long-lived design documents and specifications:
 
-- [`architecture/PRIMARY_AGENT_SPEC_SHEET.md`](architecture/PRIMARY_AGENT_SPEC_SHEET.md) — Primary Agent behavior and control contract.
+- [`architecture/PRIMARY_AGENT_SPEC_SHEET.md`](architecture/PRIMARY_AGENT_SPEC_SHEET.md) — system-wide stateless-agent architecture, Primary Agent responsibilities, shared JIT memory principles, persistence, provenance, and user-control constraints.
 - [`architecture/MEMORY_KERNEL.md`](architecture/MEMORY_KERNEL.md) — deterministic Memory Kernel baseline and invariants.
 - [`architecture/ASSOCIATIVE_MEMORY.md`](architecture/ASSOCIATIVE_MEMORY.md) — bounded associative-recall design and provenance model.
+
+## Roadmap
+
+- [`ROADMAP.md`](ROADMAP.md) — engineering milestones from the v0.5 memory baseline through the first complete v1.0 Prometheist architecture.
 
 ## Milestones
 
 Versioned research checkpoints:
 
 - [`milestones/v0.4/MEMORY_KERNEL_V0.4.md`](milestones/v0.4/MEMORY_KERNEL_V0.4.md) — deterministic derived associations.
-- [`milestones/v0.5/MEMORY_KERNEL_V0.5.md`](milestones/v0.5/MEMORY_KERNEL_V0.5.md) — robustness, support-aware evidence admission, bounded PostgreSQL candidate routing, and scale characterization.
+- [`milestones/v0.5/README.md`](milestones/v0.5/README.md) — final v0.5 status, accepted measurements, causal fixes, and closure state.
+- [`milestones/v0.5/MEMORY_KERNEL_V0.5.md`](milestones/v0.5/MEMORY_KERNEL_V0.5.md) — original v0.5 design/experiment specification retained as research context.
 - [`milestones/v0.5/SCALE_BENCHMARK.md`](milestones/v0.5/SCALE_BENCHMARK.md) — reproducible v0.5 scale-benchmark workflow.
 
 ## v0.5 experiment record
 
-The dated files under [`milestones/v0.5/experiments/`](milestones/v0.5/experiments/) preserve the experimental sequence used to diagnose and close v0.5 failures:
+The dated files under [`milestones/v0.5/experiments/`](milestones/v0.5/experiments/) preserve the experimental sequence used to diagnose and close the measured v0.5 failures:
 
 1. `V05_SCALE_BASELINE_2026-08-21.md` — frozen first full-scale baseline.
 2. `V05_ASSOCIATION_FIX_RESULT_2026-08-21.md` — association-activation bookkeeping correction.
@@ -28,7 +33,13 @@ The dated files under [`milestones/v0.5/experiments/`](milestones/v0.5/experimen
 4. `V05_SUPPORT_GATE_RESULT_2026-08-21.md` — accepted support-aware evidence-admission result.
 5. `V05_CANDIDATE_ROUTER_RESULT_2026-08-21.md` — accepted specificity-aware PostgreSQL candidate-router result.
 
-These records are intentionally retained as research evidence rather than collapsed into one retrospective summary. They document which mechanism changed, what failed, and what was measured at each step.
+These records are intentionally retained rather than collapsed into a single retrospective. They document which mechanism changed, what failed, and what was measured at each step.
+
+## Audits
+
+- [`audits/V05_CLOSURE_AUDIT_2026-08-21.md`](audits/V05_CLOSURE_AUDIT_2026-08-21.md) — static codebase audit performed before freezing v0.5 and beginning the multi-agent v0.6 work.
+
+Audit records distinguish immediate correctness defects from deliberately deferred architecture/hardening work so later milestones do not silently inherit unresolved assumptions.
 
 ## Benchmark fixtures
 

@@ -12,7 +12,7 @@ The repository currently contains a working stateless-agent MVP and a determinis
 
 ## Current status
 
-Memory Kernel v0.5 is the current verified milestone. It extends deterministic associative recall with lifecycle-aware routing, support-aware evidence admission, and a bounded specificity-aware PostgreSQL candidate router.
+Memory Kernel v0.5 is the accepted robustness-and-scale milestone. It extends deterministic associative recall with lifecycle-aware routing, support-aware evidence admission, and a bounded specificity-aware PostgreSQL candidate router.
 
 The frozen scale evaluation reached perfect observed correctness through 50,000 events per synthetic persona while keeping the PostgreSQL candidate window fixed at 500 events:
 
@@ -22,9 +22,11 @@ The frozen scale evaluation reached perfect observed correctness through 50,000 
 | Avery Chen, 50k | 105/105 | 1.000 | 1.000 | 1.000 | 163.3 ms |
 | Morgan Reyes, 50k | 106/106 | 1.000 | 1.000 | 1.000 | 151.7 ms |
 
-These are controlled synthetic benchmark results, not a claim of general semantic-memory completeness. They do show that the current deterministic lexical/entity/association architecture has not yet produced evidence that embeddings or a vector retrieval subsystem are necessary.
+These are controlled synthetic benchmark results, not a claim of general semantic-memory completeness. They show that the measured v0.5 failures did not justify embeddings or another retrieval subsystem.
 
-See the [v0.5 milestone](docs/milestones/v0.5/MEMORY_KERNEL_V0.5.md) and [experiment records](docs/milestones/v0.5/experiments/) for the full methodology and causal progression.
+A final static closure audit found bounded temporal-boundary, source-type candidate-filtering, and pytest-isolation defects outside the frozen scale workload. Fixes and regression tests are prepared on the v0.5 closure branch and must pass the full local suite before the milestone is frozen on `main`.
+
+See the [v0.5 final status](docs/milestones/v0.5/README.md), [experiment records](docs/milestones/v0.5/experiments/), and [closure audit](docs/audits/V05_CLOSURE_AUDIT_2026-08-21.md).
 
 ## Architecture
 
@@ -57,7 +59,7 @@ The LLM is a **cognitive engine**, not the storage location of the agent's ident
 
 Prometheist currently combines:
 
-- an append-only PostgreSQL event ledger;
+- an append-only PostgreSQL event ledger at the application layer;
 - explicit global and per-conversation ordering;
 - deterministic cue scoring;
 - rebuildable lexical and associative projections;
@@ -66,6 +68,8 @@ Prometheist currently combines:
 - bounded PostgreSQL candidate routing;
 - structured, schema-validated LLM control outputs;
 - local inference through Ollama for LLM-backed MVP paths.
+
+The verified Memory Kernel currently exists alongside the older user-facing Retrieval Service. Moving the kernel behind a shared JIT Memory interface for multiple stateless agents is the principal v0.6 integration goal.
 
 ## Design principles
 
@@ -130,7 +134,7 @@ Run the complete suite with:
 uv run pytest -v
 ```
 
-Tests use the dedicated `jit_agent_test` PostgreSQL database rather than the long-lived development history. Some LLM-backed acceptance paths require Ollama; deterministic Memory Kernel benchmarks do not.
+Tests use a dedicated PostgreSQL database whose name must contain `test` or `benchmark`; the normal long-lived development history is not a valid destructive pytest target. Some LLM-backed acceptance paths require Ollama; deterministic Memory Kernel benchmarks do not.
 
 ## Benchmarks
 
@@ -163,7 +167,7 @@ prometheist/
 ├── uv.lock
 ├── schema.sql
 ├── benchmarks/          # checked-in evaluation fixtures
-├── docs/                # architecture, milestones, experiment records
+├── docs/                # architecture, roadmap, milestones, audits, experiment records
 ├── scripts/             # diagnostics, rebuilds, benchmark entry points
 ├── src/jit_agent/       # application and Memory Kernel implementation
 └── tests/               # regression and acceptance suite
@@ -181,10 +185,15 @@ Key documents:
 - [Memory Kernel deterministic baseline](docs/architecture/MEMORY_KERNEL.md)
 - [Associative-memory design](docs/architecture/ASSOCIATIVE_MEMORY.md)
 - [Memory Kernel v0.4](docs/milestones/v0.4/MEMORY_KERNEL_V0.4.md)
-- [Memory Kernel v0.5](docs/milestones/v0.5/MEMORY_KERNEL_V0.5.md)
+- [Memory Kernel v0.5 final status](docs/milestones/v0.5/README.md)
+- [Roadmap to v1.0](docs/ROADMAP.md)
 
 ## Research direction
 
+The next milestone is **v0.6: Shared JIT Memory Interface and Stateless Multi-Agent Execution**. Its purpose is to test whether multiple fresh, stateless agents can behave as parts of one continuous system by obtaining all persistent internal context through the same JIT Memory subsystem.
+
 The longer-term goal is to investigate whether stateless LLM workers plus persistent, auditable JIT memory can support human-inspired recall dynamics with machine-level factual fidelity and eventually a highly personalized agent whose durable identity is independent of any one foundation model.
+
+See the [roadmap](docs/ROADMAP.md) for the proposed path through durable execution, harder memory generalization, operational hardening, and the first defensible v1.0 architecture.
 
 The present repository is a memory architecture and research platform. It is not a claim of consciousness transfer or a complete model of a person.

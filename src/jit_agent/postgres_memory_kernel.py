@@ -2,7 +2,8 @@
 
 This module is additive to the MVP Retrieval Service. It intentionally does
 not replace ``jit_agent.retrieval`` yet; the existing proof-of-concept remains
-usable while the Memory Kernel evolves beside it.
+usable while the Memory Kernel evolves beside it. A later MAS milestone can
+place the verified kernel behind the shared JIT-memory boundary.
 """
 from __future__ import annotations
 
@@ -39,7 +40,9 @@ from jit_agent.postgres_association_projection import (
     rebuild_associations,
 )
 
-CANDIDATE_ROUTER_VERSION = "specificity-routes-v2"
+CANDIDATE_ROUTER_VERSION = "specificity-routes-v3"
+LEXICAL_PROJECTION_NAME = LexicalProjection.name
+LEXICAL_PROJECTION_VERSION = LexicalProjection.version
 
 
 def _row_to_memory_event(row: dict) -> MemoryEvent:
@@ -78,18 +81,27 @@ def load_events(conn: psycopg.Connection, *, before_global_seq: int | None = Non
 def _load_events_by_ids(
     conn: psycopg.Connection,
     event_ids: list[uuid.UUID],
+    *,
+    before_global_seq: int | None = None,
 ) -> list[MemoryEvent]:
     if not event_ids:
         return []
+    cutoff_sql = "AND global_seq < %s" if before_global_seq is not None else ""
+    params: tuple[object, ...] = (
+        (event_ids, before_global_seq)
+        if before_global_seq is not None
+        else (event_ids,)
+    )
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
-            """
+            f"""
             SELECT event_id, global_seq, conversation_id, conversation_seq,
                    event_type, source, created_at, payload, payload_text
             FROM events
             WHERE event_id = ANY(%s)
+              {cutoff_sql}
             """,
-            (event_ids,),
+            params,
         )
         return [_row_to_memory_event(row) for row in cur.fetchall()]
 
@@ -229,6 +241,9 @@ def _candidate_event_ids(
     recency routes. An old authoritative event must not lose its chance to reach
     the pure kernel merely because hundreds of newer rows share one generic
     word. The total candidate bound remains fixed; only its composition changes.
+
+    Source-type restrictions are applied inside each route rather than after
+    truncation so disallowed event types cannot consume the bounded window.
     """
     ignored_terms = {
         token
@@ -249,8 +264,11 @@ def _candidate_event_ids(
             if (normalized := normalize_text(entity))
         }
     )
+    source_types = sorted(set(cue.source_types))
     cutoff_sql = "AND e.global_seq < %s" if before_global_seq is not None else ""
     cutoff_params: list[object] = [before_global_seq] if before_global_seq is not None else []
+    source_type_sql = "AND e.event_type = ANY(%s::text[])" if source_types else ""
+    source_type_params: list[object] = [source_types] if source_types else []
 
     # Preserve a small independent recency route, but never let it consume the
     # minimum space needed for the requested output when content cues exist.
@@ -313,16 +331,18 @@ def _candidate_event_ids(
                        ) AS term_matches
                 FROM memory_projection_entries p
                 JOIN events e ON e.event_id = p.source_event_id
-                WHERE p.projection_name = 'lexical'
-                  AND p.projection_version = '1'
+                WHERE p.projection_name = %s
+                  AND p.projection_version = %s
                   {cutoff_sql}
+                  {source_type_sql}
                   AND (p.data -> 'entities') ?| %s::text[]
                 ORDER BY entity_matches DESC, term_matches DESC,
                          e.global_seq DESC, e.event_id ASC
                 LIMIT %s
                 """,
-                [entity_terms, terms]
+                [entity_terms, terms, LEXICAL_PROJECTION_NAME, LEXICAL_PROJECTION_VERSION]
                 + cutoff_params
+                + source_type_params
                 + [entity_terms, entity_budget],
             )
             append_rows(cur.fetchall(), entity_budget)
@@ -349,31 +369,41 @@ def _candidate_event_ids(
                        ) AS entity_matches
                 FROM memory_projection_entries p
                 JOIN events e ON e.event_id = p.source_event_id
-                WHERE p.projection_name = 'lexical'
-                  AND p.projection_version = '1'
+                WHERE p.projection_name = %s
+                  AND p.projection_version = %s
                   {cutoff_sql}
+                  {source_type_sql}
                   AND (p.data -> 'terms') ?| %s::text[]
                 ORDER BY term_matches DESC, entity_matches DESC,
                          e.global_seq DESC, e.event_id ASC
                 LIMIT %s
                 """,
-                [terms, entity_terms]
+                [terms, entity_terms, LEXICAL_PROJECTION_NAME, LEXICAL_PROJECTION_VERSION]
                 + cutoff_params
+                + source_type_params
                 + [terms, lexical_fetch_limit],
             )
             append_rows(cur.fetchall(), lexical_budget)
 
         if recency_budget:
+            conditions: list[str] = []
+            params: list[object] = []
+            if before_global_seq is not None:
+                conditions.append("global_seq < %s")
+                params.append(before_global_seq)
+            if source_types:
+                conditions.append("event_type = ANY(%s::text[])")
+                params.append(source_types)
+            where_sql = "WHERE " + " AND ".join(conditions) if conditions else ""
             recency_fetch_limit = min(
                 candidate_limit,
                 recency_budget + len(seen),
             )
-            cutoff_where = "WHERE global_seq < %s" if before_global_seq is not None else ""
-            params = ([before_global_seq] if before_global_seq is not None else []) + [recency_fetch_limit]
+            params.append(recency_fetch_limit)
             cur.execute(
                 f"""
                 SELECT event_id FROM events
-                {cutoff_where}
+                {where_sql}
                 ORDER BY global_seq DESC, event_id ASC
                 LIMIT %s
                 """,
@@ -400,7 +430,14 @@ def recall_from_postgres(
         before_global_seq=before_global_seq,
         candidate_limit=candidate_limit,
     )
-    return recall(_load_events_by_ids(conn, event_ids), cue)
+    return recall(
+        _load_events_by_ids(
+            conn,
+            event_ids,
+            before_global_seq=before_global_seq,
+        ),
+        cue,
+    )
 
 
 def associative_recall_from_postgres(
@@ -420,6 +457,10 @@ def associative_recall_from_postgres(
     for association expansion. Query/entity terms are the other source nodes.
     Reachable association targets are then fetched as canonical events and the
     pure associative kernel performs final deterministic ranking.
+
+    The global-sequence boundary applies to both direct candidates and every
+    EVENT endpoint reached through the association projection. A full-history
+    projection must never reveal evidence newer than the caller's cutoff.
     """
     if candidate_limit < cue.limit:
         raise ValueError("candidate_limit must be >= cue.limit")
@@ -430,12 +471,18 @@ def associative_recall_from_postgres(
         before_global_seq=before_global_seq,
         candidate_limit=candidate_limit,
     )
-    candidates = _load_events_by_ids(conn, candidate_ids)
+    candidates = _load_events_by_ids(
+        conn,
+        candidate_ids,
+        before_global_seq=before_global_seq,
+    )
 
+    allowed_types = set(cue.source_types)
     directly_activated_ids = [
         event.event_id
         for event in candidates
-        if score_event(event, cue).total >= cue.minimum_score
+        if (not allowed_types or event.event_type in allowed_types)
+        and score_event(event, cue).total >= cue.minimum_score
     ]
     ignored = {
         token
@@ -456,6 +503,7 @@ def associative_recall_from_postgres(
         conn,
         cue_terms=cue_terms,
         source_event_ids=directly_activated_ids,
+        before_global_seq=before_global_seq,
         max_hops=max_hops,
         association_limit=association_limit,
     )
@@ -472,7 +520,11 @@ def associative_recall_from_postgres(
         uuid.UUID(event_id)
         for event_id in sorted(referenced_ids - loaded_ids)
     ]
-    events = candidates + _load_events_by_ids(conn, extra_uuid_ids)
+    events = candidates + _load_events_by_ids(
+        conn,
+        extra_uuid_ids,
+        before_global_seq=before_global_seq,
+    )
 
     return associative_recall(
         events,
