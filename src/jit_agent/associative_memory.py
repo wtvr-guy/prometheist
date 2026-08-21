@@ -1,10 +1,10 @@
-"""Deterministic bounded associative recall for Memory Kernel v0.3.
+"""Deterministic bounded associative recall for Prometheist Memory Kernel.
 
-This module is deliberately additive to the v0.2 kernel. Canonical events remain
-authoritative evidence; associations are derived, replaceable routing hints with
-explicit provenance. The algorithm performs bounded spreading activation over a
-small typed graph and then ranks source events using the stronger of the v0.2
-cue score and association activation.
+Canonical events remain authoritative evidence; associations are derived,
+replaceable routing hints with explicit provenance. The algorithm performs
+bounded spreading activation over a small typed graph and then ranks source
+events using the stronger of deterministic cue score and association
+activation.
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from jit_agent.memory_kernel import (
     tokenize,
 )
 
-ASSOCIATIVE_POLICY_VERSION = "deterministic-associations-v1"
+ASSOCIATIVE_POLICY_VERSION = "deterministic-associations-v2"
 NodeKind = Literal["TERM", "EVENT"]
 
 
@@ -126,12 +126,17 @@ def associative_recall(
     max_hops: int = 2,
     decay: float = 0.85,
 ) -> AssociativeMemoryPacket:
-    """Recall source evidence using v0.2 scoring plus bounded spreading activation.
+    """Recall source evidence using cue scoring plus bounded spreading activation.
 
     Query/entity terms begin fully activated. Any event that already clears the
-    v0.2 minimum score also becomes a fully activated event node. This models a
-    two-stage process: direct cues activate an initial memory set, then explicit
-    associations can activate neighboring concepts/events.
+    deterministic minimum score also becomes a fully activated event node. This
+    models a two-stage process: direct cues activate an initial memory set, then
+    explicit associations can activate neighboring concepts/events.
+
+    Direct activation and associative activation are tracked separately. A
+    directly matched event may still receive a meaningful relationship-specific
+    associative boost; direct activation must not suppress evidence that a valid
+    association path reached that same event.
 
     Associations never replace evidence. The returned items are canonical
     MemoryEvent objects, and trace hops retain association provenance.
@@ -149,7 +154,13 @@ def associative_recall(
         if not allowed_types or event.event_type in allowed_types
     }
 
+    # ``activation`` controls propagation and therefore contains both cue/direct
+    # seeds and propagated activation. ``associative_activation`` contains only
+    # activation earned by traversing an Association edge. Keeping these domains
+    # separate prevents a direct 1.0 seed from masking a valid 0.85 relationship
+    # boost to the same event.
     activation: dict[str, float] = {}
+    associative_activation: dict[str, float] = {}
     cue_nodes = _cue_nodes(cue)
     cue_term_values = {node.removeprefix("term:") for node in cue_nodes}
     for node in cue_nodes:
@@ -186,9 +197,16 @@ def associative_recall(
                 * association.strength
                 * (decay ** hop_number)
             )
-            if propagated <= activation.get(target_node, 0.0):
+
+            # Compare against prior *associative* activation, not the combined
+            # propagation seed. A direct event seed is intentionally 1.0, but it
+            # must not erase the fact that an association independently reached
+            # that event with a relationship-specific score.
+            if propagated <= associative_activation.get(target_node, 0.0):
                 continue
-            activation[target_node] = propagated
+            associative_activation[target_node] = propagated
+            if propagated > activation.get(target_node, 0.0):
+                activation[target_node] = propagated
             hops_by_target.setdefault(target_node, []).append(
                 AssociationHop(
                     association_id=association.association_id,
@@ -218,11 +236,7 @@ def associative_recall(
         if score is None:
             continue
         event_node = f"event:{event.event_id}"
-        assoc_activation = activation.get(event_node, 0.0)
-        # Direct activation only seeds spreading; it must not manufacture a
-        # perfect association score for the event that was directly retrieved.
-        if not hops_by_target.get(event_node):
-            assoc_activation = 0.0
+        assoc_activation = associative_activation.get(event_node, 0.0)
         total = max(score.total, assoc_activation)
         if has_cues and total < cue.minimum_score:
             continue
