@@ -36,12 +36,38 @@ _CONCEPT_TERMS: dict[str, frozenset[str]] = {
             "car",
             "sedan",
             "suv",
+            "crossover",
             "truck",
             "motorcycle",
             "corolla",
             "civic",
             "outback",
             "escape",
+            # Shallow deterministic manufacturer taxonomy. This allows an
+            # unseen model in entity metadata (for example a Mazda model not
+            # named elsewhere in the benchmark) to enter the vehicle concept
+            # without creating an answer-specific model edge.
+            "acura",
+            "audi",
+            "bmw",
+            "chevrolet",
+            "dodge",
+            "ford",
+            "honda",
+            "hyundai",
+            "jeep",
+            "kia",
+            "lexus",
+            "mazda",
+            "mercedes",
+            "nissan",
+            "porsche",
+            "ram",
+            "subaru",
+            "tesla",
+            "toyota",
+            "volkswagen",
+            "volvo",
         }
     ),
 }
