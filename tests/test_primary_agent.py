@@ -117,9 +117,15 @@ def test_primary_memory_request_preserves_exact_user_cue(conn):
     events = event_store.get_events_by_conversation(conn, recall_conversation)
     decision_event = next(event for event in events if event.event_type == EventType.AGENT_DECISION)
     request_event = next(event for event in events if event.event_type == EventType.MEMORY_REQUEST)
+    packet_event = next(event for event in events if event.event_type == EventType.MEMORY_PACKET)
 
     assert decision_event.payload["query_text"] == "previous persisted information"
     assert request_event.payload["need"]["query_text"] == question
+    assert request_event.payload["need"]["supplemental_query_texts"] == [
+        "previous persisted information"
+    ]
+    assert packet_event.payload["packet"]["retrieval_trace"]["selected_query_role"] == "canonical"
+    assert len(packet_event.payload["packet"]["retrieval_trace"]["query_attempts"]) == 1
 
 
 class RaisingLLM(FakeLLM):
