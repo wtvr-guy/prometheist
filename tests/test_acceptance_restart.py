@@ -39,19 +39,37 @@ def test_cross_process_restart_recalls_randomized_fact(codename_sentence, questi
     assert random_fact in answer
 
 
-def test_v06_cross_process_specialist_recalls_without_hidden_transcript():
+@pytest.mark.parametrize(
+    "fact_sentence,specialist_task",
+    [
+        (
+            "The codename for Project Oriole is {fact}.",
+            "Use a specialist to recall the codename for Project Oriole and state it exactly.",
+        ),
+        (
+            "My deployment requirement is {fact}.",
+            "Use a specialist to propose one deployment step that explicitly includes my deployment requirement.",
+        ),
+        (
+            "The Project Atlas schedule changed from September to {fact}.",
+            "Use a specialist to compare the Project Atlas schedule change and state the new schedule value exactly.",
+        ),
+    ],
+)
+def test_v06_registry_routes_multiple_specialists_without_hidden_transcript(
+    fact_sentence,
+    specialist_task,
+):
     fact_conversation = uuid.uuid4()
     task_conversation = uuid.uuid4()
     random_fact = uuid.uuid4().hex[:8].upper()
 
-    # Process A persists the event and exits completely.
-    run_once(f"The codename for Project Oriole is {random_fact}.", fact_conversation)
+    # Process A persists evidence and exits completely.
+    run_once(fact_sentence.format(fact=random_fact), fact_conversation)
 
-    # Process B has a fresh Primary invocation. The explicit wording makes the
-    # desired v0.6 control path unambiguous: Primary -> specialist -> JIT Memory.
-    answer = run_once(
-        "Use the memory specialist to tell me the codename for Project Oriole.",
-        task_conversation,
-    )
+    # Process B receives no capability catalog or inherited transcript. The
+    # Primary chooses only DELEGATE; deterministic capability discovery resolves
+    # the relevant registered specialist from the task itself.
+    answer = run_once(specialist_task, task_conversation)
 
     assert random_fact in answer
