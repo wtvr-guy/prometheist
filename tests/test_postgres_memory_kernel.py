@@ -89,6 +89,62 @@ def test_postgres_candidate_selection_respects_ignored_terms_and_nfkc_entities(c
     assert [event.event_id for event in packet.items] == [str(coffee.event_id)]
 
 
+def test_postgres_exact_entity_route_survives_newer_generic_crowdout(conn):
+    conversation_id = event_store.start_conversation(conn)
+    target = _record(
+        conn,
+        conversation_id,
+        "The parcel was placed in the archive area.",
+        entities=("locker-prb-0042",),
+    )
+    for index in range(12):
+        _record(
+            conn,
+            conversation_id,
+            f"New parcel note {index}: parcel processing was completed today.",
+        )
+    rebuild(conn)
+
+    packet = recall_from_postgres(
+        conn,
+        CueState(
+            query_text="Where is the parcel?",
+            entities=("locker-prb-0042",),
+            limit=1,
+        ),
+        candidate_limit=3,
+    )
+
+    assert [event.event_id for event in packet.items] == [str(target.event_id)]
+
+
+def test_postgres_lexical_specificity_route_survives_newer_one_word_crowdout(conn):
+    conversation_id = event_store.start_conversation(conn)
+    target = _record(
+        conn,
+        conversation_id,
+        "Parcel confirmation ZX-99 was stored on shelf amber.",
+    )
+    for index in range(12):
+        _record(
+            conn,
+            conversation_id,
+            f"Shelf inspection {index} was completed today.",
+        )
+    rebuild(conn)
+
+    packet = recall_from_postgres(
+        conn,
+        CueState(
+            query_text="parcel confirmation ZX-99 shelf",
+            limit=1,
+        ),
+        candidate_limit=3,
+    )
+
+    assert [event.event_id for event in packet.items] == [str(target.event_id)]
+
+
 def test_postgres_associative_recall_traverses_previous_state_edge(conn):
     conversation_id = event_store.start_conversation(conn)
     latte = _record(conn, conversation_id, "I usually get a latte in the morning.", entities=("latte",))
