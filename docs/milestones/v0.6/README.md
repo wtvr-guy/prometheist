@@ -1,16 +1,18 @@
 # Prometheist v0.6 — Shared JIT Memory and Stateless Multi-Agent Execution
 
-**Status:** in progress on `memory-kernel-v0.6-mas`.
+**Status:** accepted and closed on 2026-08-21.
 
 ## Question
 
 > Can multiple completely stateless agents behave as components of one continuous system by obtaining all persistent internal context through the same JIT Memory subsystem?
 
-v0.6 is an integration milestone. Memory Kernel v0.5 remains the frozen retrieval baseline; this milestone does not add embeddings, a vector database, an orchestration framework, or another retrieval algorithm.
+**Observed answer:** yes, within the verified v0.6 acceptance scope.
 
-## First vertical slice
+v0.6 is an integration milestone. Memory Kernel v0.5 remains the frozen retrieval baseline; this milestone did not add embeddings, a vector database, an orchestration framework, or another retrieval algorithm.
 
-The initial v0.6 implementation introduces:
+## Accepted result
+
+v0.6 established:
 
 - a stable MAS-facing `MemoryNeed` / `MemoryPacket` contract that does not expose retrieval implementation choices;
 - `jit_memory.request_memory()` as the shared internal-memory boundary;
@@ -23,7 +25,9 @@ The initial v0.6 implementation introduces:
 - a stateless LLM-backed `memory_specialist` that independently plans a memory need, obtains its own MemoryPacket, and returns a persisted `AGENT_RESULT`;
 - persisted `AGENT_DELEGATION`, `AGENT_RESULT`, memory request/packet, response, and failure events under one interaction correlation ID;
 - a deterministic specialist-level abstention guard when JIT Memory returns no supporting evidence;
-- a real-Ollama cross-process acceptance test for Primary -> specialist -> JIT Memory recall, skipped only when Ollama is unavailable.
+- a real-Ollama cross-process acceptance path for Primary -> specialist -> JIT Memory recall;
+- canonical-first query handling in which the exact user message is the Primary Agent's canonical memory cue and the classifier's shorter semantic formulation is retained only as a bounded supplemental fallback after canonical abstention;
+- retrieval-trace metadata recording which query formulation was attempted and which formulation produced evidence.
 
 ## Projection freshness boundary
 
@@ -31,11 +35,24 @@ v0.5 benchmark runs explicitly rebuilt derived projections before recall. The li
 
 v0.6 addresses that integration gap outside the frozen kernel algorithms. Before satisfying a live MemoryNeed, the adapter projects newly visible events into the existing lexical projection and idempotently adds deterministic associations derived from the visible append-only history. Canonical `events` rows are never rewritten.
 
-This is deliberately an integration mechanism, not a new memory algorithm. Its runtime cost should be characterized separately if v0.6 workloads reveal that association synchronization is material at large histories.
+This remains an integration mechanism, not a new memory algorithm. Its runtime cost can be characterized separately if later workloads show that association synchronization is material at larger histories.
+
+## Query-cue integration regression and fix
+
+The first live Primary-Agent integration exposed an important boundary defect: allowing an LLM-generated `query_text` to replace the user's exact message made recall dependent on a lossy paraphrase preserving every distinguishing term. Switching exclusively to the exact user message repaired the real cross-process Project Oriole/Falcon/Harrier acceptance cases but exposed the opposite failure: a verbose user question could fail the frozen v0.5 direct-support gate even when the classifier had produced a useful compressed cue.
+
+The accepted v0.6 policy therefore keeps both formulations without retuning v0.5:
+
+1. evaluate the exact user message as the canonical cue;
+2. if canonical recall returns admissible evidence, stop;
+3. only after canonical abstention, try bounded supplemental query formulations;
+4. preserve all attempts and the selected cue role in the MemoryPacket retrieval trace.
+
+This repaired the integration regression without changing v0.5 scoring, evidence-admission thresholds, association behavior, or PostgreSQL candidate routing.
 
 ## Acceptance chain
 
-The v0.6 acceptance path is intended to prove this causal sequence:
+The accepted v0.6 path demonstrates this causal sequence:
 
 1. Process A persists an arbitrary fact and exits.
 2. Process B starts with a fresh Primary Agent invocation and no inherited transcript.
@@ -46,15 +63,19 @@ The v0.6 acceptance path is intended to prove this causal sequence:
 7. The specialist result and Primary user-facing response are persisted.
 8. The entire chain shares durable correlation metadata and can be reconstructed from the event ledger.
 
-## Verification required before v0.6 can close
+## Closure verification
 
-The code in this first slice must still be run on the local Prometheist PostgreSQL/Ollama development environment. Closure requires, at minimum:
+On 2026-08-21 the local Prometheist PostgreSQL/Ollama development environment verified:
 
-```powershell
-uv run pytest tests/test_jit_memory.py tests/test_primary_agent.py -v
-uv run pytest -v
-```
+- the focused JIT Memory, Primary Agent, restart, and cross-conversation regression tests passed;
+- the real-Ollama cross-process specialist acceptance test executed and passed;
+- the complete pytest suite passed;
+- the frozen v0.5 regression baseline remained green.
 
-When Ollama is running, the full suite should execute the v0.6 cross-process specialist acceptance test rather than skipping it.
+PR #14 (`Add canonical-first supplemental JIT cue fallback`) was then merged into `main`, completing the final v0.6 integration correction.
 
-The frozen v0.5 regression baseline must continue to pass unchanged. Any failure in the v0.5 memory tests is a regression, not an invitation to retune the old benchmark.
+## Frozen conclusion
+
+v0.6 provides evidence that multiple fresh, stateless LLM roles can operate as parts of one persistent system when durable history, memory requests, evidence packets, delegation/result state, and provenance are externalized from every LLM context window.
+
+The next architectural question belongs to v0.7: whether unfinished multi-step work itself can survive process destruction and resume from durable execution state.

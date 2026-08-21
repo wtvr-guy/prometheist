@@ -8,11 +8,11 @@ The model is never treated as durable memory, identity, or authoritative system 
 
 > **Core thesis:** persistent state belongs to the system, not to an LLM context window.
 
-The repository currently contains a working stateless-agent MVP and a deterministic Memory Kernel research track through **v0.5**.
+The repository currently contains a working stateless multi-agent prototype and a deterministic Memory Kernel research track through **v0.6**.
 
 ## Current status
 
-Memory Kernel v0.5 is the accepted robustness-and-scale milestone. It extends deterministic associative recall with lifecycle-aware routing, support-aware evidence admission, and a bounded specificity-aware PostgreSQL candidate router.
+Memory Kernel v0.5 is the accepted robustness-and-scale baseline. It extends deterministic associative recall with lifecycle-aware routing, support-aware evidence admission, and a bounded specificity-aware PostgreSQL candidate router.
 
 The frozen scale evaluation reached perfect observed correctness through 50,000 events per synthetic persona while keeping the PostgreSQL candidate window fixed at 500 events:
 
@@ -24,9 +24,11 @@ The frozen scale evaluation reached perfect observed correctness through 50,000 
 
 These are controlled synthetic benchmark results, not a claim of general semantic-memory completeness. They show that the measured v0.5 failures did not justify embeddings or another retrieval subsystem.
 
-A final static closure audit found bounded temporal-boundary, source-type candidate-filtering, and pytest-isolation defects outside the frozen scale workload. Fixes and regression tests are prepared on the v0.5 closure branch and must pass the full local suite before the milestone is frozen on `main`.
+v0.6 is the accepted shared-JIT-memory and stateless multi-agent integration milestone. The live Primary Agent and a stateless `memory_specialist` now obtain persistent internal context through the same `MemoryNeed` / `MemoryPacket` boundary backed by the frozen v0.5 kernel. Agent delegations, results, memory requests, memory packets, failures, source-event provenance, and correlation metadata are persisted outside all LLM contexts.
 
-See the [v0.5 final status](docs/milestones/v0.5/README.md), [experiment records](docs/milestones/v0.5/experiments/), and [closure audit](docs/audits/V05_CLOSURE_AUDIT_2026-08-21.md).
+The v0.6 acceptance path was verified locally with PostgreSQL and Ollama: a fact persisted in one process was later recovered by a fresh Primary Agent and independently by a fresh specialist without an inherited transcript, while the complete pytest suite and frozen v0.5 regression baseline remained green.
+
+See the [v0.5 final status](docs/milestones/v0.5/README.md), [v0.6 final status](docs/milestones/v0.6/README.md), [v0.5 experiment records](docs/milestones/v0.5/experiments/), and [closure audit](docs/audits/V05_CLOSURE_AUDIT_2026-08-21.md).
 
 ## Architecture
 
@@ -37,16 +39,16 @@ Authoritative event history
 Derived memory structures
           |
           v
-Just-in-time retrieval
+Shared JIT Memory boundary
           |
           v
-Bounded working memory
+Bounded MemoryPacket
           |
           v
-Fresh stateless LLM call
+Fresh stateless Primary / specialist LLM call
           |
           v
-Response / decision / action
+Response / decision / delegation / result
           |
           v
 Persist resulting events
@@ -66,10 +68,14 @@ Prometheist currently combines:
 - bounded spreading activation with provenance;
 - support-aware evidence admission and open-world abstention;
 - bounded PostgreSQL candidate routing;
+- a shared `MemoryNeed` / `MemoryPacket` JIT Memory interface;
+- canonical-first user-query recall with bounded supplemental semantic cues after canonical abstention;
+- persisted memory requests, memory packets, agent delegations, specialist results, and correlation metadata;
+- a stateless Primary Agent plus a stateless LLM-backed memory specialist;
 - structured, schema-validated LLM control outputs;
-- local inference through Ollama for LLM-backed MVP paths.
+- local inference through Ollama for LLM-backed acceptance paths.
 
-The verified Memory Kernel currently exists alongside the older user-facing Retrieval Service. Moving the kernel behind a shared JIT Memory interface for multiple stateless agents is the principal v0.6 integration goal.
+The older Retrieval Service remains in the repository for regression compatibility, but the live Primary Agent uses the shared JIT Memory boundary.
 
 ## Design principles
 
@@ -186,11 +192,12 @@ Key documents:
 - [Associative-memory design](docs/architecture/ASSOCIATIVE_MEMORY.md)
 - [Memory Kernel v0.4](docs/milestones/v0.4/MEMORY_KERNEL_V0.4.md)
 - [Memory Kernel v0.5 final status](docs/milestones/v0.5/README.md)
+- [Prometheist v0.6 final status](docs/milestones/v0.6/README.md)
 - [Roadmap to v1.0](docs/ROADMAP.md)
 
 ## Research direction
 
-The next milestone is **v0.6: Shared JIT Memory Interface and Stateless Multi-Agent Execution**. Its purpose is to test whether multiple fresh, stateless agents can behave as parts of one continuous system by obtaining all persistent internal context through the same JIT Memory subsystem.
+The next milestone is **v0.7: Durable Execution and Restartable Orchestration**. Its purpose is to test whether unfinished work, intentions, task state, and multi-agent handoffs can survive complete process destruction and resume correctly using fresh LLM calls and durable system state.
 
 The longer-term goal is to investigate whether stateless LLM workers plus persistent, auditable JIT memory can support human-inspired recall dynamics with machine-level factual fidelity and eventually a highly personalized agent whose durable identity is independent of any one foundation model.
 
