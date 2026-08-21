@@ -2,7 +2,7 @@
 
 This benchmark answers two separate questions:
 
-1. **Accuracy under accumulated history:** does the same deterministic memory policy still retrieve the oracle evidence when a persona has thousands or tens of thousands of later events?
+1. **Accuracy under accumulated history:** does the same deterministic memory policy still retrieve oracle evidence when a persona has thousands or tens of thousands of events?
 2. **Latency under accumulated history:** how quickly can the pure kernel and the indexed PostgreSQL path retrieve bounded evidence as authoritative history grows?
 
 The benchmark deliberately measures both paths because they have different scaling behavior.
@@ -10,15 +10,21 @@ The benchmark deliberately measures both paths because they have different scali
 - `jit_agent.scale_benchmark` scores the **entire generated history in memory** for every question. This characterizes the raw deterministic algorithm without an index hiding its cost.
 - `jit_agent.postgres_scale_benchmark` uses the **PostgreSQL lexical projection plus bounded association expansion**. This characterizes the path that is closer to the intended JIT architecture.
 
-## Personas
+## Personas and oracle questions
 
 The scale generator expands all three current synthetic personas:
 
-- Jordan Vale — 18 oracle questions;
-- Avery Chen — 6 held-out oracle questions;
-- Morgan Reyes — 7 v0.5 adversarial oracle questions.
+- Jordan Vale — 18 base oracle questions;
+- Avery Chen — 6 held-out base oracle questions;
+- Morgan Reyes — 7 v0.5 adversarial base oracle questions.
 
-The base events and oracle questions remain semantically unchanged. All event and conversation IDs are deterministically remapped to UUIDv5 values so a generated corpus can be evaluated in memory and loaded into PostgreSQL without changing identity.
+The base events and questions remain semantically unchanged. All event and conversation IDs are deterministically remapped to UUIDv5 values so a generated corpus can be evaluated in memory and loaded into PostgreSQL without changing identity.
+
+A scale corpus does **not** merely append thousands of junk rows and keep asking the same few old questions. By default, every 500 generated events it plants a deterministic exact-recall probe fact and adds a corresponding oracle question. Probe examples include a unique reference card stored in a unique locker, a parcel confirmation attached to a unique shelf, or an archive-bin code.
+
+The probes are deliberately simple. They test whether a fact distributed through a long event history can still be found accurately and quickly. Semantic reasoning remains covered by the base persona questions rather than being mixed into the scale instrumentation.
+
+At 50,000 events this produces roughly 100 additional probe questions per persona, distributed through the generated tail.
 
 ## Default scale profiles
 
@@ -30,15 +36,15 @@ The default profiles are:
 | medium | 10,000 | 30,000 |
 | large | 50,000 | 150,000 |
 
-Running all three profiles for all three personas generates **183,000 total benchmark events**.
+Running all three profiles for all three personas generates **183,000 total benchmark events** across nine independently materialized corpora.
 
-Generated JSON is written under `benchmarks/generated/`, which is intentionally gitignored. The source benchmark, generator seed, and generation policy are versioned instead of committing large derived files.
+Generated JSON is written under `benchmarks/generated/`, which is intentionally gitignored. The source benchmarks, generator seed, generation policy, and probe cadence are versioned instead of committing large derived files.
 
 ## Noise model
 
 Most generated records are mundane synthetic background events: inventory notes, maintenance reminders, receipts, weather logs, office notes, and household checklists.
 
-Every twelfth distractor is lexically confusable by default. Confusable records contain vocabulary from one of the benchmark domains without asserting the persona-specific answer:
+Every twelfth non-probe generated record is lexically confusable by default. Confusable records contain vocabulary from one benchmark domain without asserting the persona-specific answer:
 
 - beverages;
 - vehicles;
@@ -49,9 +55,19 @@ Every twelfth distractor is lexically confusable by default. Confusable records 
 - appointments;
 - objects.
 
+Default confusable records avoid repeatedly copying oracle-bearing proper nouns. Exact-name collision or poisoning should be tested as a separate adversarial profile rather than hidden inside the basic scale characterization.
+
 This is intentional. A corpus containing 50,000 rows of random unrelated words would measure row-count overhead but would barely test retrieval interference.
 
-The generator is deterministic and prefix-stable: given the same seed, the first 10,000 events of a 50,000-event corpus are identical to the standalone 10,000-event corpus. That makes scale comparisons apples-to-apples.
+The generator is deterministic and prefix-stable: given the same seed and cadence settings, the first 10,000 events of a 50,000-event corpus are identical to the standalone 10,000-event corpus. Probe facts/questions in that prefix are also identical. That makes scale comparisons controlled rather than anecdotal.
+
+Defaults:
+
+```text
+seed = 20260820
+confusable_every = 12
+probe_every = 500
+```
 
 ## 1. Pull the v0.5 branch
 
@@ -85,6 +101,14 @@ To generate only the 50,000-event histories:
 uv run python -m jit_agent.scale_corpus --events 50000
 ```
 
+The probe cadence can be changed explicitly when a denser or lighter accuracy sample is useful:
+
+```powershell
+uv run python -m jit_agent.scale_corpus --events 50000 --probe-every 250
+```
+
+Keep the same `--probe-every` value when comparing in-memory and PostgreSQL results.
+
 ## 3. Run the full-history in-memory benchmark
 
 ```powershell
@@ -96,6 +120,9 @@ uv run python -m jit_agent.scale_benchmark `
 
 For every persona/size pair this reports:
 
+- event count;
+- base-question count;
+- distributed probe-question count;
 - question accuracy;
 - evidence recall;
 - mean reciprocal rank (MRR);
@@ -133,6 +160,9 @@ uv run python -m jit_agent.postgres_scale_benchmark `
 
 The PostgreSQL benchmark separately reports:
 
+- event count;
+- base-question count;
+- distributed probe-question count;
 - corpus load time;
 - complete derived-state rebuild time;
 - question accuracy;
@@ -163,12 +193,13 @@ Interpretation:
 - If the correct event enters the candidate set but still ranks incorrectly, the failure is primarily **scoring/routing policy**.
 - If accuracy remains strong but latency rises sharply, the next problem is **performance engineering** rather than retrieval semantics.
 - If unknown-fact abstention degrades, the system is becoming too willing to surface merely related evidence and the activation policy needs tightening.
+- If the distributed exact probes fail while the base questions remain strong, the candidate/index path is especially suspect because each probe has a unique high-specificity locator.
 
 This distinction matters before considering embeddings or another retrieval subsystem.
 
 ## What counts as a v0.5 result
 
-The scale benchmark is initially a characterization experiment, not a predeclared performance victory. We should record the first local measurements before setting device-specific latency thresholds.
+The scale benchmark is initially a characterization experiment, not a predeclared performance victory. The first local measurements should be recorded before setting device-specific latency thresholds.
 
 Correctness requirements from the small corpora remain hard requirements:
 
@@ -177,4 +208,4 @@ Correctness requirements from the small corpora remain hard requirements:
 - Avery: 6/6;
 - full regression suite green.
 
-For the scale profiles, record the exact corpus size, seed, candidate limit, machine, PostgreSQL version, accuracy metrics, and latency metrics. Any large-corpus failure becomes the evidence for the next mechanism change.
+For scale profiles, record the exact corpus size, seed, confusable cadence, probe cadence, candidate limit, machine, PostgreSQL version, accuracy metrics, question counts, and latency metrics. Any large-corpus failure becomes evidence for the next mechanism change.
