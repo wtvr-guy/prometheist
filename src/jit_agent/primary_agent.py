@@ -1,8 +1,9 @@
 """Primary Agent orchestration for the stateless Prometheist MAS.
 
 No hidden model state survives between calls. Persistent internal context is
-obtained only through the shared JIT Memory boundary, and specialist work is
-persisted as an explicit delegation/result chain.
+obtained only through shared JIT Memory, while specialist identity is resolved
+just in time through deterministic capability discovery rather than being
+embedded in the Primary Agent's permanent prompt.
 """
 from __future__ import annotations
 
@@ -11,11 +12,13 @@ import uuid
 
 import psycopg
 
-from jit_agent import event_store, jit_memory, memory_specialist
+from jit_agent import capability_registry, event_store, jit_memory, specialist_agent
 from jit_agent.llm import LLMClient
 from jit_agent.models import (
     AgentAction,
     AgentDelegation,
+    CapabilityKind,
+    CapabilityNeed,
     EventType,
     RetrievalRequest,
 )
@@ -98,31 +101,58 @@ def handle_interaction(
         payload=decision.model_dump(mode="json"),
     )
 
-    if decision.action == AgentAction.DELEGATE_MEMORY_SPECIALIST:
+    if decision.action == AgentAction.DELEGATE:
         task = decision.delegation_task or user_text
-        delegation = AgentDelegation(specialist=memory_specialist.SOURCE, task=task)
-        event_store.record_event(
-            conn,
-            conversation_id=conversation_id,
-            correlation_id=correlation_id,
-            event_type=EventType.AGENT_DELEGATION,
-            source=SOURCE,
-            payload=delegation.model_dump(mode="json"),
-            payload_text=task,
+        need = CapabilityNeed(
+            query_text=task,
+            kinds=[CapabilityKind.AGENT],
+            limit=1,
         )
         try:
-            result = memory_specialist.handle_task(
+            capability_packet = capability_registry.request_capability(
                 conn,
-                llm,
-                task=task,
                 conversation_id=conversation_id,
                 correlation_id=correlation_id,
-                before_global_seq=user_prompt_event.global_seq,
+                requesting_agent=SOURCE,
+                need=need,
             )
-        except Exception:
-            # The specialist persists a stage-specific ERROR event itself.
+        except Exception as exc:
+            _record_error(conn, conversation_id, correlation_id, "capability_discovery", exc)
             raise
-        response_text = result.text
+
+        if not capability_packet.matches:
+            response_text = "No registered specialist capability matches that task."
+        else:
+            capability_id = capability_packet.matches[0].descriptor.capability_id
+            registration = capability_registry.DEFAULT_REGISTRY.get(capability_id)
+            delegation = AgentDelegation(
+                specialist=capability_id,
+                task=task,
+                capability_request_id=capability_packet.capability_request_id,
+            )
+            event_store.record_event(
+                conn,
+                conversation_id=conversation_id,
+                correlation_id=correlation_id,
+                event_type=EventType.AGENT_DELEGATION,
+                source=SOURCE,
+                payload=delegation.model_dump(mode="json"),
+                payload_text=task,
+            )
+            try:
+                result = specialist_agent.handle_task(
+                    conn,
+                    llm,
+                    registration=registration,
+                    task=task,
+                    conversation_id=conversation_id,
+                    correlation_id=correlation_id,
+                    before_global_seq=user_prompt_event.global_seq,
+                )
+            except Exception:
+                # The specialist persists stage-specific ERROR events itself.
+                raise
+            response_text = result.text
 
     else:
         packet = None
