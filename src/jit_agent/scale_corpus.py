@@ -34,10 +34,10 @@ _MUNDANE_TEMPLATES = (
     "Household checklist {i}: laundry, dishes, recycling, and floor cleaning were recorded for cycle {n}.",
 )
 
-# These intentionally share vocabulary with benchmark questions without
-# asserting the persona-specific fact being tested. They are sparse enough to
-# model long-lived lexical interference without turning every query into a
-# deliberately impossible nearest-neighbor problem.
+# These intentionally share domain vocabulary with benchmark questions without
+# repeating the personas' oracle-bearing proper nouns. Exact-entity collision
+# stress belongs in a separate adversarial profile; the default scale corpus is
+# meant to characterize accumulated-history interference and row-count growth.
 _CONFUSABLE_TEMPLATES = (
     (
         "beverage",
@@ -46,7 +46,7 @@ _CONFUSABLE_TEMPLATES = (
     ),
     (
         "vehicle",
-        "Parking log {i}: a Toyota Corolla, Ford Escape, Honda Civic, and delivery vehicle were noted near bay {n}.",
+        "Parking log {i}: a Tesla Model 3, Chevrolet Bolt, Nissan Rogue, and delivery vehicle were noted near bay {n}.",
         ("parking log", "vehicle"),
     ),
     (
@@ -56,8 +56,8 @@ _CONFUSABLE_TEMPLATES = (
     ),
     (
         "work",
-        "Conference index {i}: Acme Design, Northstar Labs, Atlas, and Orion appear as sample organization or project labels in dataset {n}.",
-        ("conference index", "project labels"),
+        "Conference index {i}: employer, workplace, presentation, project, and office are sample organization-workflow labels in dataset {n}.",
+        ("conference index", "workflow labels"),
     ),
     (
         "people",
@@ -66,17 +66,17 @@ _CONFUSABLE_TEMPLATES = (
     ),
     (
         "location",
-        "Travel catalog {i}: Portland, Spokane, Seattle, and Tacoma appear in route example {n}.",
-        ("travel catalog", "route example"),
+        "Travel catalog {i}: Boise, Reno, Eugene, and Olympia appear in a city route example {n}.",
+        ("travel catalog", "city route"),
     ),
     (
         "appointment",
-        "Calendar template {i}: dentist appointment and delivery reminder are example fields for schedule slot {n}.",
+        "Calendar template {i}: medical appointment and delivery reminder are example fields for schedule slot {n}.",
         ("calendar template", "schedule slot"),
     ),
     (
         "objects",
-        "Inventory training note {i}: blue notebook, office shelf, and laptop charger are sample object labels for bin {n}.",
+        "Inventory training note {i}: blue folder, notebook, office shelf, and laptop charger are sample object labels for bin {n}.",
         ("inventory training", "object labels"),
     ),
 )
