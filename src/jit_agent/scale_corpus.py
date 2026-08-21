@@ -2,8 +2,9 @@
 
 The small persona benchmarks remain the oracle-bearing source corpora. This
 module expands one of those corpora with realistic but non-authoritative
-synthetic distractors while preserving every oracle question and remapping all
-IDs to stable UUIDs so the result can be loaded into PostgreSQL unchanged.
+synthetic distractors plus deterministic probe facts while preserving every
+base oracle question and remapping all IDs to stable UUIDs so the result can be
+loaded into PostgreSQL unchanged.
 """
 from __future__ import annotations
 
@@ -19,6 +20,7 @@ from typing import Any
 _SCALE_NAMESPACE = uuid.UUID("485b7648-c53a-4d7f-af1b-3dfd35fb71f2")
 DEFAULT_SEED = 20260820
 DEFAULT_EVENT_COUNTS = (1_000, 10_000, 50_000)
+DEFAULT_PROBE_EVERY = 500
 DEFAULT_BASE_CORPORA = (
     "jordan_vale_v1.json",
     "avery_chen_v1.json",
@@ -81,6 +83,24 @@ _CONFUSABLE_TEMPLATES = (
     ),
 )
 
+_PROBE_TEMPLATES = (
+    (
+        "I stored reference card {token} in locker {locator}.",
+        "Which reference card did {persona} store in locker {locator}?",
+        "reference card",
+    ),
+    (
+        "The parcel confirmation for shelf {locator} is {token}.",
+        "What parcel confirmation code did {persona} record for shelf {locator}?",
+        "parcel confirmation",
+    ),
+    (
+        "I labeled archive bin {locator} with code {token}.",
+        "What code did {persona} use for archive bin {locator}?",
+        "archive code",
+    ),
+)
+
 
 def _stable_uuid(value: str) -> str:
     return str(uuid.uuid5(_SCALE_NAMESPACE, value))
@@ -100,18 +120,22 @@ def build_scaled_document(
     target_event_count: int,
     seed: int = DEFAULT_SEED,
     confusable_every: int = 12,
+    probe_every: int = DEFAULT_PROBE_EVERY,
 ) -> dict[str, Any]:
     """Return a deterministic UUID-safe scale corpus derived from one persona.
 
     Base events are preserved semantically and remain first in append order.
-    Later distractor events simulate years of unrelated accumulated history,
-    including sparse lexically confusable records. Oracle question references
-    are remapped to the UUID IDs of the preserved base events.
+    Later generated events simulate accumulated history. Most are distractors;
+    every ``probe_every`` generated events a unique oracle-bearing fact is
+    planted and a deterministic exact-recall question is added. Base oracle
+    references and generated probe references both point to canonical event IDs.
     """
     if target_event_count < 1:
         raise ValueError("target_event_count must be >= 1")
     if confusable_every < 2:
         raise ValueError("confusable_every must be >= 2")
+    if probe_every < 1:
+        raise ValueError("probe_every must be >= 1")
 
     document = deepcopy(base_document)
     base_events = document.get("events", [])
@@ -122,6 +146,14 @@ def build_scaled_document(
 
     persona_name = document["persona"]["name"]
     persona_key = persona_name.casefold().replace(" ", "-")
+    principal_source = next(
+        (
+            str(event["source"])
+            for event in base_events
+            if event.get("event_type") == "USER_PROMPT"
+        ),
+        persona_key,
+    )
     rng = random.Random(seed)
 
     event_id_map: dict[str, str] = {}
@@ -145,58 +177,6 @@ def build_scaled_document(
         event["benchmark_origin_event_id"] = original_event_id
         scaled_events.append(event)
 
-    if scaled_events:
-        latest_time = max(_parse_time(event["created_at"]) for event in scaled_events)
-    else:
-        latest_time = datetime.fromisoformat("2026-01-01T00:00:00+00:00")
-
-    noise_count = target_event_count - len(scaled_events)
-    for noise_index in range(1, noise_count + 1):
-        global_seq = len(base_events) + noise_index
-        is_confusable = noise_index % confusable_every == 0
-        bucket = rng.randint(1, 9_999)
-
-        if is_confusable:
-            category, template, entities = _CONFUSABLE_TEMPLATES[
-                (noise_index // confusable_every - 1) % len(_CONFUSABLE_TEMPLATES)
-            ]
-            text = template.format(i=noise_index, n=bucket)
-            payload_entities = list(entities)
-            source = f"synthetic_{category}"
-            event_type = "SYSTEM_EVENT"
-        else:
-            template = _MUNDANE_TEMPLATES[(noise_index - 1) % len(_MUNDANE_TEMPLATES)]
-            text = template.format(i=noise_index, n=bucket)
-            payload_entities = ["synthetic distractor"]
-            source = "synthetic_background"
-            event_type = "SYSTEM_EVENT"
-
-        conversation_group = (noise_index - 1) // 10
-        conversation_seq = (noise_index - 1) % 10 + 1
-        conversation_id = _stable_uuid(
-            f"{persona_key}:noise-conversation:{conversation_group}"
-        )
-        event_id = _stable_uuid(f"{persona_key}:noise-event:{noise_index}")
-        created_at = latest_time + timedelta(minutes=noise_index)
-
-        scaled_events.append(
-            {
-                "event_id": event_id,
-                "global_seq": global_seq,
-                "conversation_id": conversation_id,
-                "conversation_seq": conversation_seq,
-                "event_type": event_type,
-                "source": source,
-                "created_at": created_at.isoformat(),
-                "text": text,
-                "payload": {
-                    "entities": payload_entities,
-                    "synthetic_scale_distractor": True,
-                    "distractor_kind": "confusable" if is_confusable else "background",
-                },
-            }
-        )
-
     scaled_questions: list[dict[str, Any]] = []
     for raw_question in document.get("questions", []):
         question = deepcopy(raw_question)
@@ -210,8 +190,103 @@ def build_scaled_document(
         ]
         scaled_questions.append(question)
 
+    if scaled_events:
+        latest_time = max(_parse_time(event["created_at"]) for event in scaled_events)
+    else:
+        latest_time = datetime.fromisoformat("2026-01-01T00:00:00+00:00")
+
+    generated_count = target_event_count - len(scaled_events)
+    probe_count = 0
+    confusable_count = 0
+    distractor_count = 0
+
+    for generated_index in range(1, generated_count + 1):
+        global_seq = len(base_events) + generated_index
+        is_probe = generated_index % probe_every == 0
+        is_confusable = (
+            not is_probe and generated_index % confusable_every == 0
+        )
+        bucket = rng.randint(1, 9_999)
+        conversation_group = (generated_index - 1) // 10
+        conversation_seq = (generated_index - 1) % 10 + 1
+        conversation_id = _stable_uuid(
+            f"{persona_key}:generated-conversation:{conversation_group}"
+        )
+        event_id = _stable_uuid(f"{persona_key}:generated-event:{generated_index}")
+        created_at = latest_time + timedelta(minutes=generated_index)
+
+        if is_probe:
+            probe_count += 1
+            template_index = (probe_count - 1) % len(_PROBE_TEMPLATES)
+            text_template, query_template, probe_label = _PROBE_TEMPLATES[template_index]
+            locator = f"{persona_key[:3]}-{probe_count:05d}"
+            token = _stable_uuid(
+                f"{persona_key}:probe-token:{probe_count}:seed:{seed}"
+            ).split("-")[0]
+            text = text_template.format(token=token, locator=locator)
+            payload_entities = [locator, probe_label, token]
+            source = principal_source
+            event_type = "USER_PROMPT"
+            scaled_questions.append(
+                {
+                    "id": f"scale_probe_{probe_count:05d}",
+                    "category": "scale_exact_probe",
+                    "query": query_template.format(
+                        persona=persona_name,
+                        locator=locator,
+                    ),
+                    "entities": [persona_name, locator],
+                    "relevant_event_ids": [event_id],
+                    "required_event_ids": [event_id],
+                }
+            )
+            payload = {
+                "entities": payload_entities,
+                "synthetic_scale_probe": True,
+                "probe_number": probe_count,
+            }
+        elif is_confusable:
+            confusable_count += 1
+            distractor_count += 1
+            category, template, entities = _CONFUSABLE_TEMPLATES[
+                (confusable_count - 1) % len(_CONFUSABLE_TEMPLATES)
+            ]
+            text = template.format(i=generated_index, n=bucket)
+            source = f"synthetic_{category}"
+            event_type = "SYSTEM_EVENT"
+            payload = {
+                "entities": list(entities),
+                "synthetic_scale_distractor": True,
+                "distractor_kind": "confusable",
+            }
+        else:
+            distractor_count += 1
+            template = _MUNDANE_TEMPLATES[(generated_index - 1) % len(_MUNDANE_TEMPLATES)]
+            text = template.format(i=generated_index, n=bucket)
+            source = "synthetic_background"
+            event_type = "SYSTEM_EVENT"
+            payload = {
+                "entities": ["synthetic distractor"],
+                "synthetic_scale_distractor": True,
+                "distractor_kind": "background",
+            }
+
+        scaled_events.append(
+            {
+                "event_id": event_id,
+                "global_seq": global_seq,
+                "conversation_id": conversation_id,
+                "conversation_seq": conversation_seq,
+                "event_type": event_type,
+                "source": source,
+                "created_at": created_at.isoformat(),
+                "text": text,
+                "payload": payload,
+            }
+        )
+
     document["benchmark_version"] = (
-        f"{base_document.get('benchmark_version', 'synthetic-life')}-scale-v1"
+        f"{base_document.get('benchmark_version', 'synthetic-life')}-scale-v2"
     )
     document["events"] = scaled_events
     document["questions"] = scaled_questions
@@ -219,9 +294,14 @@ def build_scaled_document(
         "seed": seed,
         "target_event_count": target_event_count,
         "base_event_count": len(base_events),
-        "distractor_event_count": noise_count,
+        "generated_event_count": generated_count,
+        "distractor_event_count": distractor_count,
         "confusable_every": confusable_every,
-        "confusable_distractor_count": noise_count // confusable_every,
+        "confusable_distractor_count": confusable_count,
+        "probe_every": probe_every,
+        "probe_event_count": probe_count,
+        "base_question_count": len(base_document.get("questions", [])),
+        "total_question_count": len(scaled_questions),
         "id_scheme": "uuid5",
     }
     return document
@@ -234,12 +314,14 @@ def write_scaled_document(
     target_event_count: int,
     seed: int = DEFAULT_SEED,
     confusable_every: int = 12,
+    probe_every: int = DEFAULT_PROBE_EVERY,
 ) -> Path:
     document = build_scaled_document(
         load_document(base_path),
         target_event_count=target_event_count,
         seed=seed,
         confusable_every=confusable_every,
+        probe_every=probe_every,
     )
     destination = Path(output_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -263,6 +345,7 @@ def main() -> None:
     )
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--confusable-every", type=int, default=12)
+    parser.add_argument("--probe-every", type=int, default=DEFAULT_PROBE_EVERY)
     parser.add_argument(
         "--output-dir",
         type=Path,
@@ -287,6 +370,7 @@ def main() -> None:
                 target_event_count=count,
                 seed=args.seed,
                 confusable_every=args.confusable_every,
+                probe_every=args.probe_every,
             )
             print(destination)
 
