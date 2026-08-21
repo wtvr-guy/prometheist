@@ -1,8 +1,8 @@
 # Memory Kernel v0.5 — Final Milestone Status
 
-**Status:** Accepted; final closure regression pending on `v05-closure-audit`.
+**Status:** Closed and frozen.
 
-Memory Kernel v0.5 is the completed robustness-and-scale research increment that follows the deterministic derived-association work in v0.4. The core experiment has already met its measured acceptance criteria. A final static code audit identified three bounded correctness/test-isolation defects that are being closed before the milestone is frozen on `main`.
+Memory Kernel v0.5 is the completed robustness-and-scale research increment that follows the deterministic derived-association work in v0.4. The core experiment met its measured acceptance criteria, and the final closure audit fixes have now passed both the targeted PostgreSQL regression suite and the complete local test suite.
 
 ## What v0.5 asked
 
@@ -92,7 +92,7 @@ The original v0.5 plan required:
 
 Those criteria were satisfied in the accepted v0.5 experimental sequence. The final candidate-router result records a full local pytest pass plus perfect 10k and 50k PostgreSQL benchmark metrics.
 
-## Closure audit
+## Closure audit — verified
 
 A static audit performed after the accepted benchmark result found three defects that were not exercised by the frozen scale corpus:
 
@@ -100,7 +100,17 @@ A static audit performed after the accepted benchmark result found three defects
 - bounded PostgreSQL candidate routes did not apply `CueState.source_types` until after candidate truncation;
 - the pytest database reset omitted `memory_association_entries`, did not guard the destructive target by database name, and reset only once per test session.
 
-The `v05-closure-audit` branch contains bounded fixes and regression tests for those findings. The milestone is considered fully frozen only after the complete local regression suite passes against that branch and the closure PR is merged.
+The closure patch fixed all three and added focused regressions. On 2026-08-21, the local verification run produced:
+
+```text
+uv run pytest tests/test_postgres_memory_kernel.py -v
+10 passed in 1.75s
+
+uv run pytest -v
+73 passed in 83.36s
+```
+
+The new cutoff and source-type regressions passed, and no existing regression or acceptance test failed. The 10k/50k scale benchmark was not rerun because these closure fixes do not change the frozen scale workload's candidate-ranking mechanism and that workload does not exercise `before_global_seq` or `source_types`.
 
 See [`../../audits/V05_CLOSURE_AUDIT_2026-08-21.md`](../../audits/V05_CLOSURE_AUDIT_2026-08-21.md) for the audit record.
 
