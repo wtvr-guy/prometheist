@@ -18,14 +18,28 @@ from jit_agent.association_projection import (
     ASSOCIATION_PROJECTION_VERSION,
     association_projection_digest,
 )
+from jit_agent.associative_memory import AssociativeMemoryPacket, associative_recall
 from jit_agent.memory_integrity import (
     IntegrityRecord,
     build_integrity_chain,
     verify_integrity_chain,
 )
-from jit_agent.memory_kernel import CueState, MemoryEvent, MemoryPacket, normalize_text, recall, tokenize
+from jit_agent.memory_kernel import (
+    CueState,
+    MemoryEvent,
+    MemoryPacket,
+    normalize_text,
+    recall,
+    score_event,
+    tokenize,
+)
 from jit_agent.memory_projection import LexicalProjection, build_projection, projection_digest
-from jit_agent.postgres_association_projection import rebuild_associations
+from jit_agent.postgres_association_projection import (
+    load_reachable_associations,
+    rebuild_associations,
+)
+
+CANDIDATE_ROUTER_VERSION = "specificity-routes-v2"
 
 
 def _row_to_memory_event(row: dict) -> MemoryEvent:
@@ -57,6 +71,25 @@ def load_events(conn: psycopg.Connection, *, before_global_seq: int | None = Non
             ORDER BY global_seq ASC
             """,
             params,
+        )
+        return [_row_to_memory_event(row) for row in cur.fetchall()]
+
+
+def _load_events_by_ids(
+    conn: psycopg.Connection,
+    event_ids: list[uuid.UUID],
+) -> list[MemoryEvent]:
+    if not event_ids:
+        return []
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(
+            """
+            SELECT event_id, global_seq, conversation_id, conversation_seq,
+                   event_type, source, created_at, payload, payload_text
+            FROM events
+            WHERE event_id = ANY(%s)
+            """,
+            (event_ids,),
         )
         return [_row_to_memory_event(row) for row in cur.fetchall()]
 
@@ -190,60 +223,164 @@ def _candidate_event_ids(
     before_global_seq: int | None,
     candidate_limit: int,
 ) -> list[uuid.UUID]:
-    """Use the disposable lexical projection as a cheap global candidate index.
+    """Build a bounded candidate union from independent deterministic routes.
 
-    The pure kernel still performs final scoring. We union lexical matches with
-    a small recency window so the adapter never relies on one route alone.
+    The router deliberately separates exact-entity, lexical-specificity, and
+    recency routes. An old authoritative event must not lose its chance to reach
+    the pure kernel merely because hundreds of newer rows share one generic
+    word. The total candidate bound remains fixed; only its composition changes.
     """
-    ignored_terms = {normalized for term in cue.ignored_terms if (normalized := normalize_text(term))}
-    terms = sorted({token for token in tokenize(cue.query_text or "") if token not in ignored_terms})
-    entity_terms = sorted({normalized for entity in cue.entities if (normalized := normalize_text(entity))})
+    ignored_terms = {
+        token
+        for value in cue.ignored_terms
+        for token in tokenize(value)
+    }
+    terms = sorted(
+        {
+            token
+            for token in tokenize(cue.query_text or "")
+            if token not in ignored_terms
+        }
+    )
+    entity_terms = sorted(
+        {
+            normalized
+            for entity in cue.entities
+            if (normalized := normalize_text(entity))
+        }
+    )
     cutoff_sql = "AND e.global_seq < %s" if before_global_seq is not None else ""
     cutoff_params: list[object] = [before_global_seq] if before_global_seq is not None else []
 
+    # Preserve a small independent recency route, but never let it consume the
+    # minimum space needed for the requested output when content cues exist.
+    has_content_routes = bool(terms or entity_terms)
+    if has_content_routes:
+        recency_budget = min(
+            100,
+            candidate_limit // 10,
+            max(0, candidate_limit - cue.limit),
+        )
+    else:
+        recency_budget = candidate_limit
+    content_budget = candidate_limit - recency_budget
+
+    if terms and entity_terms:
+        entity_budget = min(
+            content_budget,
+            max(cue.limit, content_budget // 4),
+        )
+        lexical_budget = content_budget - entity_budget
+    elif entity_terms:
+        entity_budget = content_budget
+        lexical_budget = 0
+    elif terms:
+        entity_budget = 0
+        lexical_budget = content_budget
+    else:
+        entity_budget = 0
+        lexical_budget = 0
+
     ids: list[uuid.UUID] = []
     seen: set[uuid.UUID] = set()
+
+    def append_rows(rows, budget: int) -> None:
+        added = 0
+        for row in rows:
+            event_id = row[0]
+            if event_id in seen:
+                continue
+            seen.add(event_id)
+            ids.append(event_id)
+            added += 1
+            if added >= budget:
+                break
+
     with conn.cursor() as cur:
-        if terms or entity_terms:
+        if entity_budget and entity_terms:
             cur.execute(
                 f"""
-                SELECT e.event_id
+                SELECT e.event_id,
+                       (
+                           SELECT count(*)
+                           FROM unnest(%s::text[]) AS q(entity)
+                           WHERE (p.data -> 'entities') ? q.entity
+                       ) AS entity_matches,
+                       (
+                           SELECT count(*)
+                           FROM unnest(%s::text[]) AS q(term)
+                           WHERE (p.data -> 'terms') ? q.term
+                       ) AS term_matches
                 FROM memory_projection_entries p
                 JOIN events e ON e.event_id = p.source_event_id
                 WHERE p.projection_name = 'lexical'
                   AND p.projection_version = '1'
                   {cutoff_sql}
-                  AND (
-                    (p.data -> 'terms') ?| %s::text[]
-                    OR (p.data -> 'entities') ?| %s::text[]
-                  )
-                ORDER BY e.global_seq DESC
+                  AND (p.data -> 'entities') ?| %s::text[]
+                ORDER BY entity_matches DESC, term_matches DESC,
+                         e.global_seq DESC, e.event_id ASC
                 LIMIT %s
                 """,
-                cutoff_params + [terms, entity_terms, candidate_limit],
+                [entity_terms, terms]
+                + cutoff_params
+                + [entity_terms, entity_budget],
             )
-            for (event_id,) in cur.fetchall():
-                if event_id not in seen:
-                    seen.add(event_id)
-                    ids.append(event_id)
+            append_rows(cur.fetchall(), entity_budget)
 
-        remaining = max(0, candidate_limit - len(ids))
-        if remaining:
+        if lexical_budget and terms:
+            # Fetch enough lexical rows to compensate for overlap with the
+            # entity route while keeping SQL work bounded by candidate_limit.
+            lexical_fetch_limit = min(
+                candidate_limit,
+                lexical_budget + len(seen),
+            )
+            cur.execute(
+                f"""
+                SELECT e.event_id,
+                       (
+                           SELECT count(*)
+                           FROM unnest(%s::text[]) AS q(term)
+                           WHERE (p.data -> 'terms') ? q.term
+                       ) AS term_matches,
+                       (
+                           SELECT count(*)
+                           FROM unnest(%s::text[]) AS q(entity)
+                           WHERE (p.data -> 'entities') ? q.entity
+                       ) AS entity_matches
+                FROM memory_projection_entries p
+                JOIN events e ON e.event_id = p.source_event_id
+                WHERE p.projection_name = 'lexical'
+                  AND p.projection_version = '1'
+                  {cutoff_sql}
+                  AND (p.data -> 'terms') ?| %s::text[]
+                ORDER BY term_matches DESC, entity_matches DESC,
+                         e.global_seq DESC, e.event_id ASC
+                LIMIT %s
+                """,
+                [terms, entity_terms]
+                + cutoff_params
+                + [terms, lexical_fetch_limit],
+            )
+            append_rows(cur.fetchall(), lexical_budget)
+
+        if recency_budget:
+            recency_fetch_limit = min(
+                candidate_limit,
+                recency_budget + len(seen),
+            )
             cutoff_where = "WHERE global_seq < %s" if before_global_seq is not None else ""
-            params = ([before_global_seq] if before_global_seq is not None else []) + [min(remaining, 100)]
+            params = ([before_global_seq] if before_global_seq is not None else []) + [recency_fetch_limit]
             cur.execute(
                 f"""
                 SELECT event_id FROM events
                 {cutoff_where}
-                ORDER BY global_seq DESC
+                ORDER BY global_seq DESC, event_id ASC
                 LIMIT %s
                 """,
                 params,
             )
-            for (event_id,) in cur.fetchall():
-                if event_id not in seen:
-                    seen.add(event_id)
-                    ids.append(event_id)
+            append_rows(cur.fetchall(), recency_budget)
+
     return ids[:candidate_limit]
 
 
@@ -254,6 +391,7 @@ def recall_from_postgres(
     before_global_seq: int | None = None,
     candidate_limit: int = 500,
 ) -> MemoryPacket:
+    """Baseline indexed recall without association expansion."""
     if candidate_limit < cue.limit:
         raise ValueError("candidate_limit must be >= cue.limit")
     event_ids = _candidate_event_ids(
@@ -262,18 +400,84 @@ def recall_from_postgres(
         before_global_seq=before_global_seq,
         candidate_limit=candidate_limit,
     )
-    if not event_ids:
-        return recall([], cue)
+    return recall(_load_events_by_ids(conn, event_ids), cue)
 
-    with conn.cursor(row_factory=dict_row) as cur:
-        cur.execute(
-            """
-            SELECT event_id, global_seq, conversation_id, conversation_seq,
-                   event_type, source, created_at, payload, payload_text
-            FROM events
-            WHERE event_id = ANY(%s)
-            """,
-            (event_ids,),
+
+def associative_recall_from_postgres(
+    conn: psycopg.Connection,
+    cue: CueState,
+    *,
+    before_global_seq: int | None = None,
+    candidate_limit: int = 500,
+    association_limit: int = 250,
+    max_hops: int = 2,
+    decay: float = 0.85,
+) -> AssociativeMemoryPacket:
+    """Indexed recall plus bounded traversal of persisted association routes.
+
+    The candidate router supplies a bounded direct-candidate union. Only direct
+    candidates that clear the kernel's minimum score become event-node sources
+    for association expansion. Query/entity terms are the other source nodes.
+    Reachable association targets are then fetched as canonical events and the
+    pure associative kernel performs final deterministic ranking.
+    """
+    if candidate_limit < cue.limit:
+        raise ValueError("candidate_limit must be >= cue.limit")
+
+    candidate_ids = _candidate_event_ids(
+        conn,
+        cue,
+        before_global_seq=before_global_seq,
+        candidate_limit=candidate_limit,
+    )
+    candidates = _load_events_by_ids(conn, candidate_ids)
+
+    directly_activated_ids = [
+        event.event_id
+        for event in candidates
+        if score_event(event, cue).total >= cue.minimum_score
+    ]
+    ignored = {
+        token
+        for value in cue.ignored_terms
+        for token in tokenize(value)
+    }
+    cue_terms = tuple(
+        sorted(
+            {
+                token
+                for value in ((cue.query_text or ""), *cue.entities)
+                for token in tokenize(value)
+                if token not in ignored
+            }
         )
-        events = [_row_to_memory_event(row) for row in cur.fetchall()]
-    return recall(events, cue)
+    )
+    associations = load_reachable_associations(
+        conn,
+        cue_terms=cue_terms,
+        source_event_ids=directly_activated_ids,
+        max_hops=max_hops,
+        association_limit=association_limit,
+    )
+
+    referenced_ids: set[str] = set()
+    for association in associations:
+        if association.source_kind == "EVENT":
+            referenced_ids.add(association.source)
+        if association.target_kind == "EVENT":
+            referenced_ids.add(association.target)
+
+    loaded_ids = {event.event_id for event in candidates}
+    extra_uuid_ids = [
+        uuid.UUID(event_id)
+        for event_id in sorted(referenced_ids - loaded_ids)
+    ]
+    events = candidates + _load_events_by_ids(conn, extra_uuid_ids)
+
+    return associative_recall(
+        events,
+        cue,
+        associations,
+        max_hops=max_hops,
+        decay=decay,
+    )

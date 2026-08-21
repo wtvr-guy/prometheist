@@ -1,4 +1,4 @@
-"""Deterministic association derivation for Prometheist Memory Kernel v0.4.
+"""Deterministic association derivation for Prometheist Memory Kernel v0.5.
 
 Canonical events remain authoritative evidence. This module derives a small,
 versioned association projection from those events using explicit rules. The
@@ -14,11 +14,8 @@ from jit_agent.associative_memory import Association
 from jit_agent.memory_kernel import MemoryEvent, normalize_text, tokenize
 
 ASSOCIATION_PROJECTION_NAME = "associations"
-ASSOCIATION_PROJECTION_VERSION = "1"
+ASSOCIATION_PROJECTION_VERSION = "2"
 
-# Small deterministic ontology used by the v0.4 experiment. These are general
-# concept aliases, not benchmark-answer edges. Adding a concept changes the
-# projection version and must be benchmarked as a policy change.
 _CONCEPT_TERMS: dict[str, frozenset[str]] = {
     "beverage": frozenset(
         {
@@ -39,12 +36,38 @@ _CONCEPT_TERMS: dict[str, frozenset[str]] = {
             "car",
             "sedan",
             "suv",
+            "crossover",
             "truck",
             "motorcycle",
             "corolla",
             "civic",
             "outback",
             "escape",
+            # Shallow deterministic manufacturer taxonomy. This allows an
+            # unseen model in entity metadata (for example a Mazda model not
+            # named elsewhere in the benchmark) to enter the vehicle concept
+            # without creating an answer-specific model edge.
+            "acura",
+            "audi",
+            "bmw",
+            "chevrolet",
+            "dodge",
+            "ford",
+            "honda",
+            "hyundai",
+            "jeep",
+            "kia",
+            "lexus",
+            "mazda",
+            "mercedes",
+            "nissan",
+            "porsche",
+            "ram",
+            "subaru",
+            "tesla",
+            "toyota",
+            "volkswagen",
+            "volvo",
         }
     ),
 }
@@ -82,6 +105,13 @@ _ACQUISITION_PHRASES = (
     "leased ",
     "acquired ",
     "i own ",
+)
+_DISPOSAL_PHRASES = (
+    "sold ",
+    "gave away ",
+    "traded in ",
+    "returned the lease",
+    "got rid of ",
 )
 
 
@@ -168,24 +198,15 @@ def association_projection_digest(associations: Iterable[Association]) -> str:
 def derive_associations(events: Iterable[MemoryEvent]) -> tuple[Association, ...]:
     """Derive reproducible routing associations solely from source events.
 
-    v0.4 intentionally implements only three rule families that correspond to
-    previously demonstrated retrieval gaps:
-
-    * PREVIOUS_STATE: a change event links to the nearest earlier same-source
-      event in the same coarse concept class, gated by the cue ``before``;
-    * RESOLVED_BY: an unresolved event links to a later resolution sharing
-      explicit entity terms, gated by the cue ``recover``;
-    * CONCEPT_INSTANCE: acquisition/ownership evidence for a recognized vehicle
-      links the general term ``vehicle`` to that evidence.
-
-    Every edge carries the source event IDs that justify it. No edge contains
-    facts not present in those events.
+    v0.5 retains the three v0.4 rule families and adds lifecycle-aware vehicle
+    routing. Vehicle ownership/disposal edges are gated by the cue ``own`` so
+    an ownership relationship cannot satisfy an unrelated attribute question
+    merely because that question contains the term ``vehicle``.
     """
     ordered = tuple(sorted(events, key=lambda event: (event.global_seq, event.event_id)))
     concepts_by_id = {event.event_id: _concepts(event) for event in ordered}
     derived: dict[str, Association] = {}
 
-    # Historical-state links.
     for index, event in enumerate(ordered):
         if not _contains_any(event.text, _CHANGE_PHRASES):
             continue
@@ -219,8 +240,6 @@ def derive_associations(events: Iterable[MemoryEvent]) -> tuple[Association, ...
                 required_cue_terms=("before",),
             )
 
-    # Resolution links. Explicit entity overlap is required so generic words
-    # such as "returned" cannot connect unrelated episodes.
     for later_index, later in enumerate(ordered):
         if not _contains_any(later.text, _RESOLVED_PHRASES):
             continue
@@ -253,15 +272,21 @@ def derive_associations(events: Iterable[MemoryEvent]) -> tuple[Association, ...
             required_cue_terms=("recover",),
         )
 
-    # General-concept links only for evidence that asserts acquisition or
-    # ownership. Mere consideration of a vehicle is deliberately excluded.
     for event in ordered:
         if "vehicle" not in concepts_by_id[event.event_id]:
             continue
-        if not _contains_any(event.text, _ACQUISITION_PHRASES):
+
+        relationship: str | None = None
+        if _contains_any(event.text, _ACQUISITION_PHRASES):
+            relationship = "CONCEPT_INSTANCE"
+        elif _contains_any(event.text, _DISPOSAL_PHRASES):
+            relationship = "CONCEPT_DISPOSITION"
+
+        if relationship is None:
             continue
+
         association_id = _association_id(
-            "CONCEPT_INSTANCE", "TERM", "vehicle", "EVENT", event.event_id
+            relationship, "TERM", "vehicle", "EVENT", event.event_id
         )
         derived[association_id] = Association(
             association_id=association_id,
@@ -269,9 +294,10 @@ def derive_associations(events: Iterable[MemoryEvent]) -> tuple[Association, ...
             source="vehicle",
             target_kind="EVENT",
             target=event.event_id,
-            relationship="CONCEPT_INSTANCE",
+            relationship=relationship,
             strength=1.0,
             provenance_event_ids=(event.event_id,),
+            required_cue_terms=("own",),
         )
 
     return tuple(derived[key] for key in sorted(derived))

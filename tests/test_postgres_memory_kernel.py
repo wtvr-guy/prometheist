@@ -5,7 +5,12 @@ import pytest
 from jit_agent import db, event_store
 from jit_agent.memory_kernel import CueState
 from jit_agent.models import EventType
-from jit_agent.postgres_memory_kernel import rebuild, recall_from_postgres, verify
+from jit_agent.postgres_memory_kernel import (
+    associative_recall_from_postgres,
+    rebuild,
+    recall_from_postgres,
+    verify,
+)
 
 
 @pytest.fixture
@@ -82,3 +87,118 @@ def test_postgres_candidate_selection_respects_ignored_terms_and_nfkc_entities(c
     )
 
     assert [event.event_id for event in packet.items] == [str(coffee.event_id)]
+
+
+def test_postgres_exact_entity_route_survives_newer_generic_crowdout(conn):
+    conversation_id = event_store.start_conversation(conn)
+    target = _record(
+        conn,
+        conversation_id,
+        "The parcel was placed in the archive area.",
+        entities=("locker-prb-0042",),
+    )
+    for index in range(12):
+        _record(
+            conn,
+            conversation_id,
+            f"New parcel note {index}: parcel processing was completed today.",
+        )
+    rebuild(conn)
+
+    packet = recall_from_postgres(
+        conn,
+        CueState(
+            query_text="Where is the parcel?",
+            entities=("locker-prb-0042",),
+            limit=1,
+        ),
+        candidate_limit=3,
+    )
+
+    assert [event.event_id for event in packet.items] == [str(target.event_id)]
+
+
+def test_postgres_lexical_specificity_route_survives_newer_one_word_crowdout(conn):
+    conversation_id = event_store.start_conversation(conn)
+    target = _record(
+        conn,
+        conversation_id,
+        "Parcel confirmation ZX-99 was stored on shelf amber.",
+    )
+    for index in range(12):
+        _record(
+            conn,
+            conversation_id,
+            f"Shelf inspection {index} was completed today.",
+        )
+    rebuild(conn)
+
+    packet = recall_from_postgres(
+        conn,
+        CueState(
+            query_text="parcel confirmation ZX-99 shelf",
+            limit=1,
+        ),
+        candidate_limit=3,
+    )
+
+    assert [event.event_id for event in packet.items] == [str(target.event_id)]
+
+
+def test_postgres_associative_recall_traverses_previous_state_edge(conn):
+    conversation_id = event_store.start_conversation(conn)
+    latte = _record(conn, conversation_id, "I usually get a latte in the morning.", entities=("latte",))
+    _record(
+        conn,
+        conversation_id,
+        "I stopped adding milk to coffee and drink it black.",
+        entities=("coffee",),
+    )
+    rebuild(conn)
+
+    packet = associative_recall_from_postgres(
+        conn,
+        CueState(
+            query_text="What did I drink before switching coffee habits?",
+            limit=1,
+        ),
+    )
+
+    assert [event.event_id for event in packet.items] == [str(latte.event_id)]
+    assert packet.trace.items[0].association_hops[0].relationship == "PREVIOUS_STATE"
+
+
+def test_postgres_associative_recall_surfaces_vehicle_disposition(conn):
+    conversation_id = event_store.start_conversation(conn)
+    bought = _record(conn, conversation_id, "I bought a used 2018 Ford Escape today.")
+    sold = _record(conn, conversation_id, "I sold the Ford Escape to a neighbor last week.")
+    rebuild(conn)
+
+    packet = associative_recall_from_postgres(
+        conn,
+        CueState(query_text="Do I still own the vehicle?", limit=2),
+    )
+
+    assert [event.event_id for event in packet.items] == [
+        str(sold.event_id),
+        str(bought.event_id),
+    ]
+    relationships = {
+        hop.relationship
+        for item in packet.trace.items
+        for hop in item.association_hops
+    }
+    assert {"CONCEPT_INSTANCE", "CONCEPT_DISPOSITION"}.issubset(relationships)
+
+
+def test_postgres_associative_recall_does_not_use_ownership_edge_for_insurance(conn):
+    conversation_id = event_store.start_conversation(conn)
+    _record(conn, conversation_id, "I bought a used 2021 Toyota Corolla today.")
+    rebuild(conn)
+
+    packet = associative_recall_from_postgres(
+        conn,
+        CueState(query_text="Who insures my vehicle?", limit=5),
+    )
+
+    assert packet.items == ()

@@ -6,7 +6,7 @@ from jit_agent.associative_memory import Association, associative_recall
 from jit_agent.memory_kernel import CueState, MemoryEvent
 
 
-def ev(event_id: str, seq: int, text: str):
+def ev(event_id: str, seq: int, text: str, *, entities=()):
     return MemoryEvent(
         event_id=event_id,
         global_seq=seq,
@@ -16,7 +16,7 @@ def ev(event_id: str, seq: int, text: str):
         source="test",
         created_at=datetime(2026, 1, seq, tzinfo=timezone.utc),
         text=text,
-        payload={},
+        payload={"entities": list(entities)},
     )
 
 
@@ -163,3 +163,113 @@ def test_two_hop_spreading_is_bounded_and_deterministic():
     assert [event.event_id for event in first.items] == ["target"]
     assert first.trace.items[0].association_hops[-1].hop == 2
     assert first.trace.items[0].associative_activation == pytest.approx(0.85**2)
+
+
+def test_topical_overlap_without_requested_attribute_abstains():
+    events = [
+        ev(
+            "parking",
+            1,
+            "Parking log: a delivery vehicle was noted near bay 42.",
+        )
+    ]
+
+    packet = associative_recall(
+        events,
+        CueState(query_text="Who insures my vehicle?", limit=5),
+        [],
+    )
+
+    # "vehicle" alone clears the broad activation score, but it is only half
+    # of the substantive query. It may seed routing; it is not sufficient
+    # evidence for the requested insurer attribute.
+    assert packet.items == ()
+
+
+def test_state_modifier_does_not_dilute_direct_support():
+    events = [
+        ev(
+            "work",
+            1,
+            "I left Acme Design and started working at Northstar Labs this month.",
+        )
+    ]
+
+    packet = associative_recall(
+        events,
+        CueState(query_text="Where do I work now?", limit=1),
+        [],
+    )
+
+    assert [event.event_id for event in packet.items] == ["work"]
+
+
+def test_temporal_cue_can_support_sparse_direct_lexical_match():
+    events = [
+        ev(
+            "considering",
+            1,
+            "I'm thinking about buying a Subaru Outback this spring.",
+        )
+    ]
+
+    packet = associative_recall(
+        events,
+        CueState(
+            query_text="What car was I considering buying in March?",
+            reference_time=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            limit=1,
+        ),
+        [],
+    )
+
+    assert [event.event_id for event in packet.items] == ["considering"]
+
+
+def test_explicit_entity_support_survives_predicate_paraphrase():
+    events = [
+        ev(
+            "claim",
+            1,
+            "Sarah Kim said Jordan hates mushrooms.",
+            entities=("Sarah Kim", "mushrooms"),
+        )
+    ]
+
+    packet = associative_recall(
+        events,
+        CueState(
+            query_text="Who claimed Jordan hated mushrooms?",
+            entities=("mushrooms",),
+            ignored_terms=("Jordan",),
+            limit=1,
+        ),
+        [],
+    )
+
+    assert [event.event_id for event in packet.items] == ["claim"]
+
+
+def test_entity_tokens_do_not_dilute_historical_lexical_support():
+    events = [
+        ev(
+            "old_job",
+            1,
+            "I'm still working at Acme Design downtown.",
+            entities=("Acme Design",),
+        )
+    ]
+
+    packet = associative_recall(
+        events,
+        CueState(
+            query_text="Where did I work before Northstar Labs?",
+            entities=("Northstar Labs",),
+            limit=1,
+        ),
+        [],
+    )
+
+    # Northstar Labs is already an explicit entity cue. Its tokens should not
+    # also count against lexical coverage for evidence describing the prior job.
+    assert [event.event_id for event in packet.items] == ["old_job"]

@@ -72,7 +72,7 @@ def test_derives_resolution_only_with_explicit_entity_overlap():
     assert resolutions[0].provenance_event_ids == ("owed", "resolved")
 
 
-def test_vehicle_concept_instance_requires_acquisition_evidence():
+def test_vehicle_concept_instance_requires_acquisition_evidence_and_ownership_cue():
     events = (
         ev("considered", 1, "I am considering a Subaru Outback."),
         ev("bought", 2, "I bought a used 2021 Toyota Corolla."),
@@ -86,6 +86,43 @@ def test_vehicle_concept_instance_requires_acquisition_evidence():
     assert vehicle_edges[0].source == "vehicle"
     assert vehicle_edges[0].target == "bought"
     assert vehicle_edges[0].provenance_event_ids == ("bought",)
+    assert vehicle_edges[0].required_cue_terms == ("own",)
+
+
+def test_vehicle_concept_recognizes_unseen_model_from_manufacturer_entity():
+    events = (
+        ev(
+            "bought",
+            1,
+            "I bought a 2024 Mazda CX-30 today.",
+            entities=("2024 Mazda CX-30",),
+        ),
+    )
+
+    associations = derive_associations(events)
+    vehicle_edges = [a for a in associations if a.relationship == "CONCEPT_INSTANCE"]
+
+    assert len(vehicle_edges) == 1
+    assert vehicle_edges[0].target == "bought"
+    assert vehicle_edges[0].source == "vehicle"
+
+
+def test_vehicle_disposition_is_derived_as_later_ownership_state_evidence():
+    events = (
+        ev("bought", 1, "I bought a used 2021 Toyota Corolla."),
+        ev("sold", 2, "I sold the Corolla to my neighbor."),
+    )
+
+    associations = derive_associations(events)
+    dispositions = [a for a in associations if a.relationship == "CONCEPT_DISPOSITION"]
+
+    assert len(dispositions) == 1
+    disposition = dispositions[0]
+    assert disposition.source_kind == "TERM"
+    assert disposition.source == "vehicle"
+    assert disposition.target == "sold"
+    assert disposition.provenance_event_ids == ("sold",)
+    assert disposition.required_cue_terms == ("own",)
 
 
 def test_unrelated_events_do_not_manufacture_associations():
