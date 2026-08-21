@@ -89,6 +89,24 @@ def test_vehicle_concept_instance_requires_acquisition_evidence_and_ownership_cu
     assert vehicle_edges[0].required_cue_terms == ("own",)
 
 
+def test_vehicle_concept_recognizes_unseen_model_from_manufacturer_entity():
+    events = (
+        ev(
+            "bought",
+            1,
+            "I bought a 2024 Mazda CX-30 today.",
+            entities=("2024 Mazda CX-30",),
+        ),
+    )
+
+    associations = derive_associations(events)
+    vehicle_edges = [a for a in associations if a.relationship == "CONCEPT_INSTANCE"]
+
+    assert len(vehicle_edges) == 1
+    assert vehicle_edges[0].target == "bought"
+    assert vehicle_edges[0].source == "vehicle"
+
+
 def test_vehicle_disposition_is_derived_as_later_ownership_state_evidence():
     events = (
         ev("bought", 1, "I bought a used 2021 Toyota Corolla."),
