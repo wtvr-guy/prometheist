@@ -4,7 +4,7 @@ from jit_agent.associative_memory import Association, associative_recall
 from jit_agent.memory_kernel import CueState, MemoryEvent
 
 
-def ev(event_id: str, seq: int, text: str):
+def ev(event_id: str, seq: int, text: str, *, entities=()):
     return MemoryEvent(
         event_id=event_id,
         global_seq=seq,
@@ -14,7 +14,7 @@ def ev(event_id: str, seq: int, text: str):
         source="test",
         created_at=datetime(2026, 1, seq, tzinfo=timezone.utc),
         text=text,
-        payload={},
+        payload={"entities": list(entities)},
     )
 
 
@@ -221,3 +221,52 @@ def test_temporal_cue_can_support_sparse_direct_lexical_match():
     )
 
     assert [event.event_id for event in packet.items] == ["considering"]
+
+
+def test_explicit_entity_support_survives_predicate_paraphrase():
+    events = [
+        ev(
+            "claim",
+            1,
+            "Sarah Kim said Jordan hates mushrooms.",
+            entities=("Sarah Kim", "mushrooms"),
+        )
+    ]
+
+    packet = associative_recall(
+        events,
+        CueState(
+            query_text="Who claimed Jordan hated mushrooms?",
+            entities=("mushrooms",),
+            ignored_terms=("Jordan",),
+            limit=1,
+        ),
+        [],
+    )
+
+    assert [event.event_id for event in packet.items] == ["claim"]
+
+
+def test_entity_tokens_do_not_dilute_historical_lexical_support():
+    events = [
+        ev(
+            "old_job",
+            1,
+            "I'm still working at Acme Design downtown.",
+            entities=("Acme Design",),
+        )
+    ]
+
+    packet = associative_recall(
+        events,
+        CueState(
+            query_text="Where did I work before Northstar Labs?",
+            entities=("Northstar Labs",),
+            limit=1,
+        ),
+        [],
+    )
+
+    # Northstar Labs is already an explicit entity cue. Its tokens should not
+    # also count against lexical coverage for evidence describing the prior job.
+    assert [event.event_id for event in packet.items] == ["old_job"]
