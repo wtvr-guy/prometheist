@@ -127,14 +127,14 @@ def handle_interaction(
     else:
         packet = None
         if decision.action == AgentAction.RETRIEVE_CONTEXT:
-            # The current user message is the canonical primary-agent recall cue.
-            # The classifier decides whether persisted memory is required, but
-            # an LLM-generated paraphrase must not replace the exact cue and
-            # accidentally discard distinguishing names, codes, or other terms.
-            # The proposed query_text remains persisted in AGENT_DECISION for
-            # auditability and future cue-expansion policies.
+            # The current user message is the canonical recall cue. The
+            # classifier's semantic compression is retained only as a bounded
+            # fallback and can never override evidence already found by the
+            # exact user wording.
+            supplemental_queries = [decision.query_text] if decision.query_text else []
             need = jit_memory.build_memory_need(
                 user_text,
+                supplemental_query_texts=supplemental_queries,
                 conversation_id=conversation_id,
             )
             try:
