@@ -20,6 +20,8 @@ class EventType(str, Enum):
     RETRIEVAL_RESULT = "RETRIEVAL_RESULT"  # legacy v0.1-v0.5 path
     MEMORY_REQUEST = "MEMORY_REQUEST"
     MEMORY_PACKET = "MEMORY_PACKET"
+    CAPABILITY_REQUEST = "CAPABILITY_REQUEST"
+    CAPABILITY_PACKET = "CAPABILITY_PACKET"
     AGENT_DELEGATION = "AGENT_DELEGATION"
     AGENT_RESULT = "AGENT_RESULT"
     TOOL_REQUEST = "TOOL_REQUEST"
@@ -49,14 +51,15 @@ class AgentAction(str, Enum):
 
     RESPOND_DIRECTLY = "RESPOND_DIRECTLY"
     RETRIEVE_CONTEXT = "RETRIEVE_CONTEXT"
-    DELEGATE_MEMORY_SPECIALIST = "DELEGATE_MEMORY_SPECIALIST"
+    DELEGATE = "DELEGATE"
 
 
 class AgentDecision(BaseModel):
     """Minimal structured output of the Primary Agent classification step.
 
-    The model chooses semantic intent only. Retrieval limits, source filters,
-    correlation ids, persistence, and kernel policy remain application-owned.
+    The model chooses semantic intent only. Retrieval limits, capability ids,
+    source filters, correlation ids, persistence, and routing policy remain
+    application-owned.
     """
 
     action: AgentAction
@@ -66,7 +69,7 @@ class AgentDecision(BaseModel):
     )
     delegation_task: str | None = Field(
         default=None,
-        description="When delegating, the bounded task to send to the specialist.",
+        description="When delegating, a self-contained bounded task. Do not name a capability.",
     )
 
 
@@ -75,6 +78,48 @@ class KnowledgeOrigin(str, Enum):
 
     INTERNAL_MEMORY = "INTERNAL_MEMORY"
     EXTERNAL_TOOL = "EXTERNAL_TOOL"
+
+
+class CapabilityKind(str, Enum):
+    """Current executable capability classes exposed by the system registry."""
+
+    AGENT = "AGENT"
+    TOOL = "TOOL"
+
+
+class CapabilityNeed(BaseModel):
+    """A caller-owned description of functionality needed from the current system.
+
+    Like ``MemoryNeed``, this says what is needed rather than naming an
+    implementation. The deterministic registry resolves it against capabilities
+    that are actually registered in the running Prometheist installation.
+    """
+
+    query_text: str
+    kinds: list[CapabilityKind] | None = None
+    limit: int = Field(default=3, ge=1, le=10)
+
+
+class CapabilityDescriptor(BaseModel):
+    """Small public description safe to reveal only when a capability is relevant."""
+
+    capability_id: str
+    kind: CapabilityKind
+    description: str
+
+
+class CapabilityMatch(BaseModel):
+    descriptor: CapabilityDescriptor
+    score: float
+    matched_terms: list[str] = Field(default_factory=list)
+
+
+class CapabilityPacket(BaseModel):
+    """Bounded deterministic capability-discovery result."""
+
+    capability_request_id: UUID
+    need: CapabilityNeed
+    matches: list[CapabilityMatch]
 
 
 class MemoryNeed(BaseModel):
@@ -140,6 +185,7 @@ class MemoryPacket(BaseModel):
 class AgentDelegation(BaseModel):
     specialist: str
     task: str
+    capability_request_id: UUID | None = None
 
 
 class AgentResult(BaseModel):
