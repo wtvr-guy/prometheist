@@ -2,24 +2,24 @@
 
 ## Status
 
-**Static audit complete. Code fixes prepared on `v05-closure-audit`; local regression verification pending.**
+**Static audit complete. Closure fixes verified locally. Memory Kernel v0.5 is closed and frozen upon merge of PR #11.**
 
 This audit was performed after the accepted Memory Kernel v0.5 scale result and before beginning v0.6. Its purpose is to distinguish defects that should be closed now from architectural work that belongs to later milestones.
 
 The audit reviewed the repository structure, authoritative event store, Primary Agent orchestration, legacy Retrieval Service, deterministic Memory Kernel, associative projection/recall, PostgreSQL adapter, scale tooling, schema, test database setup, and representative regression/acceptance tests. Repository-wide searches were also used to check for obvious TODO/FIXME markers, broad exception handling, stale version assumptions, and accidentally committed secrets.
 
-This is a static code audit. Because the project has no configured GitHub CI, runtime correctness of the closure patch must be established by the local pytest suite on the development machine.
+The closure patch was verified on the local development machine because the repository has no configured GitHub CI.
 
-## Closure defects fixed on the audit branch
+## Closure defects fixed and verified
 
 ### A-01 — Association traversal could cross the global-sequence cutoff
 
 **Severity:** correctness / historical-leakage risk  
-**Disposition:** fixed; regression pending local execution
+**Disposition:** fixed and regression-verified
 
 `associative_recall_from_postgres()` bounded its direct candidate set with `before_global_seq`, but the persisted association projection was rebuilt over the complete event ledger. Association traversal could therefore select an EVENT target newer than the cutoff, and `_load_events_by_ids()` could fetch that target without reapplying the boundary.
 
-That violates the intended temporal invariant: a historical/current-turn query must not receive evidence that did not yet exist at the requested global-sequence boundary.
+That violated the intended temporal invariant: a historical/current-turn query must not receive evidence that did not yet exist at the requested global-sequence boundary.
 
 The closure patch:
 
@@ -28,21 +28,23 @@ The closure patch:
 - reapplies the cutoff when canonical events are fetched by ID;
 - adds a regression test proving a future vehicle-acquisition event cannot be surfaced before its `global_seq`.
 
+The regression passed in both the targeted PostgreSQL run and the full suite.
+
 ### A-02 — `source_types` was enforced after bounded candidate truncation
 
 **Severity:** correctness / bounded-recall risk  
-**Disposition:** fixed; regression pending local execution
+**Disposition:** fixed and regression-verified
 
 The pure kernel respects `CueState.source_types`, but PostgreSQL candidate composition did not apply the restriction inside its entity, lexical, or recency routes. Disallowed event types could therefore consume a small candidate window and be discarded only after the valid allowed evidence had already been excluded.
 
 The closure patch applies source-type restrictions inside every candidate route before truncation and ensures only allowed directly activated candidates seed EVENT association traversal.
 
-A regression test uses a one-event candidate limit with a valid `SYSTEM_EVENT` target and newer `USER_PROMPT` confusers to ensure the allowed evidence survives.
+A regression test uses a one-event candidate limit with a valid `SYSTEM_EVENT` target and newer `USER_PROMPT` confusers to ensure the allowed evidence survives. The regression passed in both the targeted PostgreSQL run and the full suite.
 
 ### A-03 — Pytest database isolation was incomplete
 
 **Severity:** test reliability / destructive-safety risk  
-**Disposition:** fixed; regression pending local execution
+**Disposition:** fixed and regression-verified
 
 The existing pytest session fixture redirected the suite to `jit_agent_test`, but:
 
@@ -59,9 +61,46 @@ The closure patch:
 - truncates authoritative and derived test state before every test;
 - explicitly includes `memory_association_entries`.
 
+The complete suite passed with the stricter isolation behavior enabled.
+
+## Verification result
+
+Executed locally on 2026-08-21:
+
+```powershell
+uv run pytest tests/test_postgres_memory_kernel.py -v
+```
+
+Result:
+
+```text
+10 passed in 1.75s
+```
+
+Then:
+
+```powershell
+uv run pytest -v
+```
+
+Result:
+
+```text
+73 passed in 83.36s
+```
+
+The targeted run includes both new closure regressions:
+
+- `test_postgres_candidate_routes_apply_source_types_before_truncation`
+- `test_postgres_associative_recall_does_not_cross_global_cutoff`
+
+No existing test regressed.
+
+The 10k/50k scale benchmark was not rerun for the closure patch because the frozen scale workload does not use `before_global_seq` or `source_types`, and the accepted candidate-limit/ranking mechanism exercised by that workload is otherwise unchanged.
+
 ## Audit observations intentionally deferred
 
-The following are not v0.5 closure blockers. They should remain visible because they define later engineering work.
+The following are not v0.5 closure blockers. They remain visible because they define later engineering work.
 
 ### D-01 — The user-facing Primary Agent still uses the legacy Retrieval Service
 
@@ -135,21 +174,8 @@ The audit also confirmed several useful properties of the current codebase:
 - no obvious committed API keys/tokens were found in repository code search;
 - the project remains free of unnecessary orchestration/vector/distributed-system dependencies.
 
-## Verification required before merge
-
-The closure patch changes PostgreSQL routing and pytest setup. It must not be merged based on static reasoning alone.
-
-Run, in order:
-
-```powershell
-uv run pytest tests/test_postgres_memory_kernel.py -v
-uv run pytest -v
-```
-
-If both pass, the closure PR can be marked ready and merged. The 10k/50k scale benchmark does not need to be automatically rerun for these specific fixes because the frozen scale workload does not use `before_global_seq` or `source_types`, and the candidate-limit/ranking mechanism exercised by that workload is otherwise unchanged. A scale rerun remains optional if additional assurance is desired.
-
 ## Closure decision
 
-After the local regression suite passes and the audit branch is merged, Memory Kernel v0.5 should be considered **closed and frozen**.
+The closure regressions and complete local test suite passed. Once PR #11 is merged into `main`, Memory Kernel v0.5 is **closed and frozen**.
 
-Further work should begin under v0.6 rather than continuing to tune already-passing v0.5 corpora.
+Further work belongs under v0.6 rather than continuing to tune already-passing v0.5 corpora.
