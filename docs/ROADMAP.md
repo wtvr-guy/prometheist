@@ -14,7 +14,7 @@ This applies to memory, agent orchestration, infrastructure, dependencies, perfo
 
 ## v0.5 — Deterministic memory robustness and scale
 
-**Status:** accepted; final closure regression/audit patch pending merge.
+**Status:** accepted and frozen.
 
 Question:
 
@@ -26,6 +26,7 @@ Result:
 - support-aware evidence admission separated from broad activation;
 - bounded PostgreSQL candidate routing made specificity-aware;
 - 10k and 50k PostgreSQL scale suites reached perfect observed benchmark metrics at a fixed 500-event candidate limit;
+- closure-audit regressions for temporal boundaries, source-type candidate filtering, and pytest isolation were repaired and verified;
 - no measured failure justified embeddings or another retrieval subsystem.
 
 See [`milestones/v0.5/README.md`](milestones/v0.5/README.md).
@@ -34,22 +35,26 @@ See [`milestones/v0.5/README.md`](milestones/v0.5/README.md).
 
 ## v0.6 — Shared JIT Memory Interface and Stateless Multi-Agent Execution
 
+**Status:** accepted and closed on 2026-08-21.
+
 Primary question:
 
 > Can multiple completely stateless agents behave as components of one continuous system by obtaining all persistent internal context through the same JIT Memory subsystem?
 
-Primary deliverables:
+Accepted result:
 
-- define a stable `MemoryNeed`/`MemoryPacket`-style contract independent of retrieval implementation;
-- place the verified Memory Kernel behind that shared boundary;
-- introduce at least one specialized LLM-backed agent in addition to the Primary Agent;
-- allow the Primary Agent and specialist to request JIT memory independently;
-- persist agent delegations, agent results, memory requests, memory packets, failures, and correlation metadata;
-- distinguish internal persisted-memory retrieval from external web/API/tool acquisition;
-- prove cross-agent and cross-process recall with fresh LLM invocations;
-- preserve bounded evidence and exact provenance;
-- preserve unknown-fact abstention;
-- rerun the v0.5 regression baseline unchanged.
+- defined a stable `MemoryNeed` / `MemoryPacket` contract independent of retrieval implementation;
+- placed the verified v0.5 Memory Kernel behind the shared JIT Memory boundary;
+- migrated the live Primary Agent to that boundary;
+- added the stateless LLM-backed `memory_specialist`;
+- allowed the Primary Agent and specialist to request JIT memory independently;
+- persisted agent delegations, agent results, memory requests, memory packets, failures, and correlation metadata;
+- distinguished internal persisted-memory retrieval from future external web/API/tool acquisition;
+- proved cross-agent and cross-process recall with fresh LLM invocations;
+- preserved bounded evidence, exact source-event provenance, and unknown-fact abstention;
+- added canonical-first user-query handling with bounded supplemental classifier cues after canonical abstention;
+- reran the v0.5 regression baseline unchanged and kept it green;
+- passed the complete local pytest suite with PostgreSQL and Ollama available.
 
 Acceptance demonstration:
 
@@ -59,14 +64,18 @@ Acceptance demonstration:
 4. The specialist receives no hidden transcript.
 5. The specialist independently requests the relevant persisted history through JIT Memory.
 6. The specialist returns a useful result grounded in the retrieved packet.
-7. The Primary Agent integrates the result in another bounded/fresh inference step if necessary.
+7. The Primary Agent exposes the specialist result to the user through the same persisted interaction chain.
 8. The entire causal chain is recoverable from persistent events.
 
-Do not add embeddings simply because v0.6 introduces an interface. Retrieval mechanisms remain behind the boundary and change only when a frozen failure requires them.
+No v0.6 failure justified embeddings or another retrieval subsystem.
+
+See [`milestones/v0.6/README.md`](milestones/v0.6/README.md).
 
 ---
 
 ## v0.7 — Durable execution and restartable orchestration
+
+**Status:** next milestone.
 
 Primary question:
 
