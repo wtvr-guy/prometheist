@@ -44,6 +44,16 @@ class FakeLLM:
         return packet.items[0].content
 
 
+class LossyRetrievalCueLLM(FakeLLM):
+    """Classifier that intentionally destroys the useful lexical recall cue."""
+
+    def classify(self, prompt: str) -> AgentDecision:
+        return AgentDecision(
+            action=AgentAction.RETRIEVE_CONTEXT,
+            query_text="previous persisted information",
+        )
+
+
 @pytest.fixture
 def conn():
     connection = db.get_connection()
@@ -80,6 +90,36 @@ def test_memory_spans_conversations_by_default(conn):
         conn, FakeLLM(), "what number did I ask you to remember?", conv_b
     )
     assert token in reply
+
+
+def test_primary_memory_request_preserves_exact_user_cue(conn):
+    """A lossy classifier paraphrase must not replace the canonical recall cue."""
+    fact_conversation = uuid.uuid4()
+    recall_conversation = uuid.uuid4()
+    token = uuid.uuid4().hex[:10].upper()
+    question = "What codename did I give Project Oriole?"
+
+    primary_agent.handle_interaction(
+        conn,
+        FakeLLM(),
+        f"The codename for Project Oriole is {token}.",
+        fact_conversation,
+    )
+
+    reply = primary_agent.handle_interaction(
+        conn,
+        LossyRetrievalCueLLM(),
+        question,
+        recall_conversation,
+    )
+    assert token in reply
+
+    events = event_store.get_events_by_conversation(conn, recall_conversation)
+    decision_event = next(event for event in events if event.event_type == EventType.AGENT_DECISION)
+    request_event = next(event for event in events if event.event_type == EventType.MEMORY_REQUEST)
+
+    assert decision_event.payload["query_text"] == "previous persisted information"
+    assert request_event.payload["need"]["query_text"] == question
 
 
 class RaisingLLM(FakeLLM):
