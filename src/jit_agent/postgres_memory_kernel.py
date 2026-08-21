@@ -18,14 +18,26 @@ from jit_agent.association_projection import (
     ASSOCIATION_PROJECTION_VERSION,
     association_projection_digest,
 )
+from jit_agent.associative_memory import AssociativeMemoryPacket, associative_recall
 from jit_agent.memory_integrity import (
     IntegrityRecord,
     build_integrity_chain,
     verify_integrity_chain,
 )
-from jit_agent.memory_kernel import CueState, MemoryEvent, MemoryPacket, normalize_text, recall, tokenize
+from jit_agent.memory_kernel import (
+    CueState,
+    MemoryEvent,
+    MemoryPacket,
+    normalize_text,
+    recall,
+    score_event,
+    tokenize,
+)
 from jit_agent.memory_projection import LexicalProjection, build_projection, projection_digest
-from jit_agent.postgres_association_projection import rebuild_associations
+from jit_agent.postgres_association_projection import (
+    load_reachable_associations,
+    rebuild_associations,
+)
 
 
 def _row_to_memory_event(row: dict) -> MemoryEvent:
@@ -57,6 +69,25 @@ def load_events(conn: psycopg.Connection, *, before_global_seq: int | None = Non
             ORDER BY global_seq ASC
             """,
             params,
+        )
+        return [_row_to_memory_event(row) for row in cur.fetchall()]
+
+
+def _load_events_by_ids(
+    conn: psycopg.Connection,
+    event_ids: list[uuid.UUID],
+) -> list[MemoryEvent]:
+    if not event_ids:
+        return []
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(
+            """
+            SELECT event_id, global_seq, conversation_id, conversation_seq,
+                   event_type, source, created_at, payload, payload_text
+            FROM events
+            WHERE event_id = ANY(%s)
+            """,
+            (event_ids,),
         )
         return [_row_to_memory_event(row) for row in cur.fetchall()]
 
@@ -254,6 +285,7 @@ def recall_from_postgres(
     before_global_seq: int | None = None,
     candidate_limit: int = 500,
 ) -> MemoryPacket:
+    """Baseline indexed recall without association expansion."""
     if candidate_limit < cue.limit:
         raise ValueError("candidate_limit must be >= cue.limit")
     event_ids = _candidate_event_ids(
@@ -262,18 +294,84 @@ def recall_from_postgres(
         before_global_seq=before_global_seq,
         candidate_limit=candidate_limit,
     )
-    if not event_ids:
-        return recall([], cue)
+    return recall(_load_events_by_ids(conn, event_ids), cue)
 
-    with conn.cursor(row_factory=dict_row) as cur:
-        cur.execute(
-            """
-            SELECT event_id, global_seq, conversation_id, conversation_seq,
-                   event_type, source, created_at, payload, payload_text
-            FROM events
-            WHERE event_id = ANY(%s)
-            """,
-            (event_ids,),
+
+def associative_recall_from_postgres(
+    conn: psycopg.Connection,
+    cue: CueState,
+    *,
+    before_global_seq: int | None = None,
+    candidate_limit: int = 500,
+    association_limit: int = 250,
+    max_hops: int = 2,
+    decay: float = 0.85,
+) -> AssociativeMemoryPacket:
+    """Indexed recall plus bounded traversal of persisted association routes.
+
+    The lexical projection supplies a bounded direct-candidate set. Only direct
+    candidates that clear the kernel's minimum score become event-node sources
+    for association expansion. Query/entity terms are the other source nodes.
+    Reachable association targets are then fetched as canonical events and the
+    pure associative kernel performs final deterministic ranking.
+    """
+    if candidate_limit < cue.limit:
+        raise ValueError("candidate_limit must be >= cue.limit")
+
+    candidate_ids = _candidate_event_ids(
+        conn,
+        cue,
+        before_global_seq=before_global_seq,
+        candidate_limit=candidate_limit,
+    )
+    candidates = _load_events_by_ids(conn, candidate_ids)
+
+    directly_activated_ids = [
+        event.event_id
+        for event in candidates
+        if score_event(event, cue).total >= cue.minimum_score
+    ]
+    ignored = {
+        token
+        for value in cue.ignored_terms
+        for token in tokenize(value)
+    }
+    cue_terms = tuple(
+        sorted(
+            {
+                token
+                for value in ((cue.query_text or ""), *cue.entities)
+                for token in tokenize(value)
+                if token not in ignored
+            }
         )
-        events = [_row_to_memory_event(row) for row in cur.fetchall()]
-    return recall(events, cue)
+    )
+    associations = load_reachable_associations(
+        conn,
+        cue_terms=cue_terms,
+        source_event_ids=directly_activated_ids,
+        max_hops=max_hops,
+        association_limit=association_limit,
+    )
+
+    referenced_ids: set[str] = set()
+    for association in associations:
+        if association.source_kind == "EVENT":
+            referenced_ids.add(association.source)
+        if association.target_kind == "EVENT":
+            referenced_ids.add(association.target)
+
+    loaded_ids = {event.event_id for event in candidates}
+    extra_uuid_ids = [
+        uuid.UUID(event_id)
+        for event_id in sorted(referenced_ids - loaded_ids)
+    ]
+    events = candidates + _load_events_by_ids(conn, extra_uuid_ids)
+
+    return associative_recall(
+        events,
+        cue,
+        associations,
+        max_hops=max_hops,
+        decay=decay,
+    )
