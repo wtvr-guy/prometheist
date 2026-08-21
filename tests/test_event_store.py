@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 import uuid
 
 import pytest
@@ -66,6 +68,44 @@ def test_conversation_seq_is_monotonic_per_conversation(conn):
     seqs = [e.conversation_seq for e in events]
     assert seqs == sorted(seqs)
     assert seqs == list(range(1, 6))
+
+
+def test_concurrent_writers_preserve_same_conversation_sequence(conn):
+    """Independent local agents/processes may safely append to one conversation."""
+    conversation_id = event_store.start_conversation(conn)
+    worker_count = 8
+    start_together = Barrier(worker_count)
+
+    def append(index: int):
+        connection = db.get_connection()
+        try:
+            start_together.wait(timeout=10)
+            return event_store.record_event(
+                connection,
+                conversation_id=conversation_id,
+                correlation_id=uuid.uuid4(),
+                event_type=EventType.SYSTEM_EVENT,
+                source=f"concurrent-worker-{index}",
+                payload={"worker": index},
+            )
+        finally:
+            connection.close()
+
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        futures = [executor.submit(append, index) for index in range(worker_count)]
+        written = [future.result(timeout=20) for future in futures]
+
+    assert sorted(event.conversation_seq for event in written) == list(
+        range(1, worker_count + 1)
+    )
+    assert len({event.global_seq for event in written}) == worker_count
+    assert len({event.event_id for event in written}) == worker_count
+
+    stored = event_store.get_events_by_conversation(conn, conversation_id)
+    assert [event.conversation_seq for event in stored] == list(
+        range(1, worker_count + 1)
+    )
+    assert {event.payload["worker"] for event in stored} == set(range(worker_count))
 
 
 def test_global_seq_is_monotonic_across_conversations(conn):
