@@ -291,11 +291,10 @@ def associative_recall(
             if source_activation <= 0.0:
                 continue
             target_node = _node(association.target_kind, association.target)
-            propagated = (
-                source_activation
-                * association.strength
-                * (decay ** hop_number)
-            )
+            # source_activation already contains decay from every prior hop.
+            # Apply exactly one additional decay factor for this edge so an
+            # N-hop path receives decay**N rather than triangular over-decay.
+            propagated = source_activation * association.strength * decay
 
             # Compare against prior *associative* activation, not the combined
             # propagation seed. A direct event seed is intentionally 1.0, but it
