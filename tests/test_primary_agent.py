@@ -4,30 +4,44 @@ import uuid
 import pytest
 
 from jit_agent import db, event_store, primary_agent
-from jit_agent.models import AgentAction, AgentDecision, EventType, RetrievalItem
+from jit_agent.models import (
+    AgentAction,
+    AgentDecision,
+    EventType,
+    MemoryNeedDecision,
+    MemoryPacket,
+)
 
 
 class FakeLLM:
-    """Deterministic rule-based stand-in for an LLM, used so tests don't
-    depend on Ollama being installed/reliable. Exercises the same
-    classify -> retrieve -> respond pipeline the real OllamaClient would.
-    """
+    """Deterministic stateless stand-in for the Primary and specialist roles."""
 
     def classify(self, prompt: str) -> AgentDecision:
         lowered = prompt.lower()
+        if "memory specialist" in lowered:
+            return AgentDecision(
+                action=AgentAction.DELEGATE_MEMORY_SPECIALIST,
+                delegation_task=prompt,
+            )
         if "what" in lowered and ("remember" in lowered or "number" in lowered):
             return AgentDecision(action=AgentAction.RETRIEVE_CONTEXT, query_text="remember")
         return AgentDecision(action=AgentAction.RESPOND_DIRECTLY)
 
-    def respond(self, prompt: str, retrieved_items: list[RetrievalItem] | None) -> str:
-        if retrieved_items:
-            match = re.search(r"[0-9a-fA-F]{6,}", retrieved_items[0].content)
+    def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
+        if memory_packet and memory_packet.items:
+            match = re.search(r"[0-9a-fA-F]{6,}", memory_packet.items[0].content)
             if match:
                 return f"You asked me to remember {match.group(0)}."
-            return retrieved_items[0].content
+            return memory_packet.items[0].content
         if "hello" in prompt.lower():
             return "Hello! How can I help?"
         return "Got it."
+
+    def plan_memory(self, task: str) -> MemoryNeedDecision:
+        return MemoryNeedDecision(query_text="Project Oriole codename", entities=["Project Oriole"])
+
+    def answer_memory_task(self, task: str, packet: MemoryPacket) -> str:
+        return packet.items[0].content
 
 
 @pytest.fixture
@@ -38,50 +52,39 @@ def conn():
 
 
 def test_acceptance_scenario_three_interactions(conn):
-    """Reproduces spec section 14: hello -> remember X -> what was X, using
-    fresh handle_interaction calls (each a separate 'interaction')."""
     conversation_id = uuid.uuid4()
-    llm = FakeLLM()
 
-    reply1 = primary_agent.handle_interaction(conn, llm, "hello", conversation_id)
+    reply1 = primary_agent.handle_interaction(conn, FakeLLM(), "hello", conversation_id)
     assert reply1
 
     token = uuid.uuid4().hex[:10]
     reply2 = primary_agent.handle_interaction(
-        conn, llm, f"I want you to remember {token}.", conversation_id
+        conn, FakeLLM(), f"I want you to remember {token}.", conversation_id
     )
     assert reply2
 
     reply3 = primary_agent.handle_interaction(
-        conn, llm, "what was that number I just asked you to remember?", conversation_id
+        conn, FakeLLM(), "what was that number I just asked you to remember?", conversation_id
     )
     assert token in reply3
 
 
 def test_memory_spans_conversations_by_default(conn):
-    """Conversation boundaries are organizational metadata, not memory
-    walls: a fact told in one conversation must be recallable from a brand
-    new conversation, not just the one it was originally told in.
-    """
-    llm = FakeLLM()
     conv_a = uuid.uuid4()
     conv_b = uuid.uuid4()
 
     token = uuid.uuid4().hex[:10]
-    primary_agent.handle_interaction(conn, llm, f"remember {token}", conv_a)
+    primary_agent.handle_interaction(conn, FakeLLM(), f"remember {token}", conv_a)
 
     reply = primary_agent.handle_interaction(
-        conn, llm, "what number did I ask you to remember?", conv_b
+        conn, FakeLLM(), "what number did I ask you to remember?", conv_b
     )
     assert token in reply
 
 
-class RaisingLLM:
+class RaisingLLM(FakeLLM):
     def classify(self, prompt: str) -> AgentDecision:
         raise RuntimeError("boom")
-
-    def respond(self, prompt: str, retrieved_items: list[RetrievalItem] | None) -> str:
-        raise AssertionError("should not be reached")
 
 
 def test_classify_failure_is_persisted_as_error_event(conn):
@@ -98,11 +101,51 @@ def test_classify_failure_is_persisted_as_error_event(conn):
 
 
 def test_handle_interaction_needs_no_shared_python_state(conn):
-    """Two calls using brand-new LLM client instances each time -- proves no
-    state needs to survive in the orchestration layer between interactions."""
     conversation_id = uuid.uuid4()
 
     reply1 = primary_agent.handle_interaction(conn, FakeLLM(), "hello", conversation_id)
     reply2 = primary_agent.handle_interaction(conn, FakeLLM(), "hello again", conversation_id)
 
     assert reply1 and reply2
+
+
+def test_specialist_independently_recalls_prior_process_style_history(conn):
+    """v0.6 vertical acceptance: fresh Primary -> delegation -> specialist -> JIT memory."""
+    fact_conversation = uuid.uuid4()
+    task_conversation = uuid.uuid4()
+    token = uuid.uuid4().hex[:10].upper()
+
+    # Interaction A. Nothing from this FakeLLM object is reused later.
+    primary_agent.handle_interaction(
+        conn,
+        FakeLLM(),
+        f"The codename for Project Oriole is {token}.",
+        fact_conversation,
+    )
+
+    # Interaction B uses a brand-new stateless client and a new conversation.
+    answer = primary_agent.handle_interaction(
+        conn,
+        FakeLLM(),
+        "Use the memory specialist to tell me the codename for Project Oriole.",
+        task_conversation,
+    )
+    assert token in answer
+
+    events = event_store.get_events_by_conversation(conn, task_conversation)
+    event_types = [event.event_type for event in events]
+    assert EventType.AGENT_DELEGATION in event_types
+    assert EventType.MEMORY_REQUEST in event_types
+    assert EventType.MEMORY_PACKET in event_types
+    assert EventType.AGENT_RESULT in event_types
+    assert EventType.AGENT_RESPONSE in event_types
+
+    correlations = {event.correlation_id for event in events}
+    assert len(correlations) == 1
+
+    packet_event = next(event for event in events if event.event_type == EventType.MEMORY_PACKET)
+    result_event = next(event for event in events if event.event_type == EventType.AGENT_RESULT)
+    memory_request_id = packet_event.payload["packet"]["memory_request_id"]
+    assert memory_request_id in result_event.payload["memory_request_ids"]
+    assert packet_event.payload["packet"]["supported"] is True
+    assert packet_event.payload["packet"]["items"]
