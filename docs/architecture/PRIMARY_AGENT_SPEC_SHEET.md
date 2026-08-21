@@ -2,503 +2,642 @@
 
 ## 1. Purpose
 
-Build a small prototype of a persistent-memory agentic system centered
-on a **Primary Agent**.
+Prometheist is a local-first multi-agent system (MAS) built around a strict architectural invariant:
 
-The Primary Agent should behave like a continuous assistant from the
-user's perspective while the LLM that powers it remains **stateless
-between separate interactions**. The system must not depend on an
-ever-growing chat context window to remember what has happened.
+> **Every LLM invocation is stateless. Persistent continuity belongs to the system, not to any model context window.**
 
-Instead, the system must persist a complete record of everything that
-happens and retrieve only the information needed for the current
-interaction.
+The Primary Agent is the top-level coordinator of that system. It should behave as a continuous, increasingly personalized intelligence from the user's perspective while remaining technically independent of any persistent LLM session, hidden transcript, or provider-specific conversation state.
 
-The central design goal is:
+Prometheist therefore separates three things that conventional assistants often blur together:
 
-> **Persistent experience without persistent LLM context.**
+1. **LLM computation** — disposable inference workers;
+2. **persistent system state** — authoritative history and derived memory maintained outside the LLM;
+3. **just-in-time working context** — a bounded evidence packet reconstructed only when an agent needs it.
 
-The prototype should prove that an agent can accumulate an effectively
-unbounded external history while each new LLM invocation begins fresh
-and receives only the context relevant to the current task.
+The central design equation is:
 
-------------------------------------------------------------------------
+```text
+Stateless LLM workers
+        +
+Authoritative persistent system history
+        +
+Just-in-time memory retrieval
+        =
+Continuous agent experience without persistent model context
+```
 
-## 2. Core Concept
+The long-term objective is not merely a chatbot with recall. Prometheist is intended to become a persistent personal AI system whose continuity, identity, user model, preferences, relationships, obligations, projects, and accumulated experience can survive process restarts, conversation boundaries, model replacement, hardware migration, and long periods of time.
 
-Every new prompt, event, or trigger starts a fresh Primary Agent
-interaction.
+---
 
-The Primary Agent does **not** automatically receive the entire previous
-conversation. It receives the current input and may ask the Retrieval
-Service for relevant historical information when needed.
+## 2. System-Wide Statelessness
+
+Statelessness is not only a Primary Agent property.
+
+**No LLM-backed agent in Prometheist may rely on retained context from a previous invocation.**
+
+This applies to the Primary Agent and to future specialized agents such as planning, research, file, security, workflow, maintenance, or memory agents.
+
+Each LLM call must be treated as disposable:
+
+```text
+new task / event / trigger
+        |
+        v
+construct bounded working context
+        |
+        v
+fresh LLM invocation
+        |
+        v
+response / decision / action
+        |
+        v
+persist resulting events
+        |
+        v
+discard temporary LLM context
+```
+
+A single user interaction may require more than one fresh LLM call. That is acceptable. What is prohibited is treating any previous LLM context window as durable memory for the next call.
+
+If an agent needs information that already exists inside Prometheist, it must obtain that information through the system's memory interfaces rather than by assuming that a previous model invocation still remembers it.
+
+---
+
+## 3. Primary Agent Role
+
+The Primary Agent is the top-level cognitive coordinator and user-facing decision layer.
+
+Its responsibilities should eventually include:
+
+- interpreting the user's present request or current system event;
+- determining whether additional internal memory is needed;
+- determining whether external information or tools are needed;
+- delegating bounded tasks to specialized agents or services;
+- integrating returned evidence and tool results;
+- deciding what action or response should follow;
+- preserving alignment with the user's stated goals, preferences, values, permissions, and interests;
+- maintaining continuity through retrieved system memory rather than persistent model state.
+
+The Primary Agent should not become a monolith that directly implements every subsystem. It should orchestrate capabilities behind explicit interfaces.
+
+The Primary Agent is also **not the exclusive consumer of memory**. Any specialized agent may need JIT memory to complete its own task. The memory subsystem is shared infrastructure for the MAS.
+
+---
+
+## 4. JIT Memory as Shared MAS Infrastructure
+
+Prometheist's memory subsystem exists to reconstruct relevant internal context for any agent that needs it.
 
 Conceptually:
 
-``` text
-Current prompt/event
-        ↓
-Fresh Primary Agent invocation
-        ↓
-Does this task require historical information?
-        ↓
-   No ───────→ Respond/act
-        ↓ Yes
-Query Retrieval Service
-        ↓
-Retrieve relevant persisted history
-        ↓
-Return only useful context
-        ↓
-Primary Agent responds/acts
-        ↓
-Persist everything that happened
-        ↓
-Discard temporary LLM context
+```text
+                 +------------------+
+                 | authoritative     |
+                 | event history     |
+                 +---------+--------+
+                           |
+                           v
+                 +------------------+
+                 | derived memory    |
+                 | projections       |
+                 +---------+--------+
+                           |
+                           v
+agent need ---> JIT Memory subsystem ---> bounded MemoryPacket
+   ^                                      |
+   |                                      v
+   +------------------------------ fresh agent call
 ```
 
-The next interaction starts fresh again.
+The calling agent should express **what it needs to know**. The memory subsystem should decide **how to retrieve the best supporting evidence**.
 
-------------------------------------------------------------------------
+For example, an agent may ask for:
 
-## 3. Complete Persistence Is Mandatory
+- the user's current preference on a subject;
+- what happened immediately before a later state change;
+- the original wording of a prior statement;
+- whether an obligation was later resolved;
+- relevant events involving a specific person, place, project, artifact, or concept;
+- the most relevant evidence about a previously discussed issue;
+- exact events from a specified time range or conversation.
 
-**Everything that happens in the system must be persisted.**
+The caller should not need to know whether the answer came from exact metadata, lexical indexes, entity routes, temporal structure, associations, future semantic retrieval, or another internal mechanism.
 
-Persistence is not optional and is not something the LLM decides.
+Retrieval strategy is an implementation detail behind a stable memory boundary.
 
-The system should automatically record, at minimum:
+---
 
--   every user prompt
--   every Primary Agent response
--   every external/system-triggered event
--   every Primary Agent decision
--   every request sent to the Retrieval Service
--   every result returned by the Retrieval Service
--   every future tool or agent call
--   every future tool or agent result
--   errors, retries, and other meaningful system events
--   references to files or artifacts involved in an interaction
--   the deterministic metadata needed to reconstruct what happened and
-    in what order
+## 5. Internal Memory vs. External Knowledge
 
-There should be **no `memory_assertion`, `remember_this`, or similar
-LLM-controlled gate that determines whether ordinary history is
-retained**.
+Prometheist must distinguish between **system memory** and **outside information**.
 
-If something happened, it is part of the system's history and must be
-stored.
+System memory means information already stored inside Prometheist's persistent state, including prior user interactions, system events, tool results, artifacts, device observations, and other retained experience.
 
-------------------------------------------------------------------------
+External knowledge means information that must be obtained from outside the system, for example:
 
-## 4. Exact Historical Recall
+- the current weather;
+- a newly published article;
+- a live market price;
+- a website not previously ingested;
+- current laws, schedules, availability, or news;
+- information from an external account or service that has not yet been persisted.
 
-The persisted history must preserve original information accurately
-enough for exact historical questions.
+The JIT memory subsystem retrieves **internal persisted data**. Web/API/tool connectors retrieve **external or currently authoritative outside data**.
 
-For example, if the user asks:
+Once meaningful external results become part of an interaction, those results should themselves be persisted as system events so they can later become internal memory with provenance.
 
-> What was the first thing I said to you in the conversation that
-> started Monday at roughly 5:30 PM?
+---
 
-The system should be able to locate the relevant conversation and return
-the user's original wording verbatim.
+## 6. Complete Persistence Is Mandatory
 
-The system should therefore preserve original prompts and responses
-rather than replacing them with summaries.
+**Every meaningful event that occurs inside Prometheist must be persisted automatically.**
 
-Summaries, semantic interpretations, embeddings, indexes, or other
-derived representations may be created later to improve retrieval, but
-they must **supplement rather than replace** the authoritative original
-record.
+Persistence is application behavior, not an LLM decision.
 
-------------------------------------------------------------------------
+At minimum, the event history should be capable of recording:
 
-## 5. Stateless Primary Agent
+- user prompts and user-generated events;
+- Primary Agent responses and decisions;
+- specialized-agent requests and results;
+- JIT memory requests and returned packets;
+- tool calls and tool results;
+- external/system/device-triggered events;
+- files, artifacts, and references involved in an interaction;
+- errors, retries, failures, cancellations, and important control events;
+- deterministic execution metadata;
+- future system telemetry that the user has authorized Prometheist to retain.
 
-The Primary Agent's LLM must be stateless across separate external
-interactions.
+There should be no `remember_this`, `memory_assertion`, importance gate, or similar LLM-controlled mechanism deciding whether ordinary history survives.
 
-A conversation should feel continuous to the user because the system can
-retrieve its history, not because the LLM is silently carrying an
-accumulated transcript.
+If something meaningful happened, it belongs in the system history.
 
-Temporary context is allowed during one interaction. For example, the
-Primary Agent may:
+---
 
-1.  receive the current prompt;
-2.  decide that historical context is needed;
-3.  query the Retrieval Service;
-4.  receive the retrieval result;
-5.  reason over that result;
-6.  produce the final response.
+## 7. Authoritative History Must Be Append-Only
 
-That temporary working context may exist for the duration of the
-interaction. Once the interaction is complete, it should not serve as
-persistent memory for the next interaction.
+The authoritative autobiographical/event history is the source of truth.
 
-------------------------------------------------------------------------
+Original events must be treated as append-only, non-destructive records. Later interpretation must not silently rewrite what originally happened.
 
-## 6. Retrieval Service
+Corrections should themselves be new events. If the user says a previous fact was wrong, the system should preserve both:
 
-The prototype should include a minimal Retrieval Service responsible for
-finding historical information for the Primary Agent.
+1. the original event showing what was previously stated; and
+2. the later event correcting or superseding it.
 
-The Primary Agent decides **what information it needs**. The Retrieval
-Service decides **how to find that information in persisted history**.
+This distinction is essential because Prometheist must support both:
 
-The Retrieval Service should support both exact and semantic retrieval.
+- **historical truth** — what was actually said, observed, or recorded at a particular time; and
+- **current state** — what the system should presently believe or use after later evidence or corrections.
 
-Examples of exact/structured retrieval:
+Historical depth should not imply destructive summarization. The system should remain capable, in principle, of accurate recall from very old retained history with exact provenance.
 
--   the first prompt in a particular conversation
--   what happened at a particular time
--   the immediately preceding response
--   all events belonging to a particular conversation
--   a specific event identified by ID
+---
 
-Examples of semantic retrieval:
+## 8. Authoritative Evidence vs. Derived Memory
 
--   what the user previously said about a particular project
--   the number the user recently asked the agent to remember
--   the earlier discussion most relevant to the current question
+Prometheist already distinguishes authoritative events from rebuildable derived memory.
 
-Whenever exact metadata can answer a question reliably, use exact
-retrieval over asking an LLM to infer the answer.
+Authoritative state includes canonical source events.
 
-------------------------------------------------------------------------
+Derived state may include:
 
-## 7. Just-in-Time Context
+- lexical projection entries;
+- entity indexes;
+- deterministic associations;
+- integrity metadata;
+- future summaries;
+- extracted facts;
+- inferred relationships;
+- embeddings;
+- user-model features;
+- episodic groupings;
+- importance or salience signals;
+- consolidated memory structures.
 
-The Retrieval Service should return **only the historical information
-reasonably relevant to the current task**, rather than dumping the
-entire stored history into the Primary Agent's context.
+Derived memory is an **optimization and interpretation layer**, not a replacement for source evidence.
 
-The objective is not to eliminate context windows. The objective is to
-keep inference context bounded and task-specific.
+Every derived item should, where applicable:
 
-A system with years of stored history should still be capable of
-answering a simple new prompt without loading years of history into the
-LLM.
+- retain provenance to source events;
+- be versioned by derivation policy;
+- be reproducible or rebuildable when deterministic;
+- be disposable without destroying authoritative history;
+- avoid being treated as more authoritative than the evidence from which it was derived.
 
-Historical data growth should primarily become a retrieval/storage
-problem rather than an ever-growing inference-context problem.
+The current Memory Kernel work demonstrates this principle with deterministic lexical projections, provenance-bearing associations, and integrity metadata.
 
-------------------------------------------------------------------------
+---
 
-## 8. Deterministic Metadata
+## 9. Human-Like Recall, Machine-Level Fidelity
 
-The application, not the LLM, must generate information that can be
-known deterministically.
+Prometheist's memory goal is not to imitate human forgetting or human inaccuracy.
+
+The intended direction is:
+
+> **human-like just-in-time recall dynamics combined with machine-level historical fidelity.**
+
+A human generally does not carry every lifetime memory in conscious working context. Relevant memories are activated when needed. Prometheist should similarly avoid loading its entire history into every inference.
+
+However, unlike biological memory, Prometheist's underlying event record should remain sufficiently precise that retrieved evidence can be checked against immutable source history.
+
+The architecture should therefore optimize for:
+
+- selective activation;
+- bounded working context;
+- precise source recovery;
+- provenance;
+- temporal depth;
+- resistance to interference from irrelevant history;
+- explicit abstention when the stored evidence does not support an answer.
+
+---
+
+## 10. Bounded MemoryPackets
+
+JIT retrieval should return a bounded, structured evidence packet rather than an uncontrolled dump of historical text.
+
+A MemoryPacket should provide enough information for the consuming agent to reason correctly while preserving source identity and retrieval traceability.
+
+Depending on the task, it may include:
+
+- canonical event content;
+- event IDs;
+- timestamps;
+- sequence/order metadata;
+- conversation or execution identifiers;
+- provenance-bearing relationship information;
+- retrieval scores or trace information;
+- explicit indications that no supporting evidence was found.
+
+The size of persistent history must not determine the size of an LLM context window.
+
+Years of retained history should still permit a small, task-specific inference context.
+
+---
+
+## 11. Retrieval Policy
+
+Retrieval should use the simplest mechanism that reliably satisfies the information need.
+
+Preferred order of reasoning:
+
+1. exact IDs or deterministic metadata when available;
+2. structured temporal/conversation/source filters;
+3. entity and lexical specificity routes;
+4. deterministic association traversal where relationships have been derived;
+5. other retrieval mechanisms only when measured failures justify them.
+
+Do not add embeddings, vector search, graph databases, rerankers, or LLM-based retrieval layers merely because they are common in RAG systems.
+
+The current v0.5 benchmark demonstrates perfect observed correctness through 50,000 events per persona with a fixed 500-event PostgreSQL candidate bound using deterministic lexical/entity/association routing. That result means additional retrieval machinery has not yet earned its complexity.
+
+If future benchmarks expose failures that deterministic mechanisms cannot reasonably solve, add exactly one new mechanism, measure it against a frozen baseline, and keep it only if the evidence justifies the change.
+
+---
+
+## 12. Unknown-Fact Abstention
+
+Topical similarity is not sufficient evidence.
+
+The memory subsystem must distinguish between:
+
+- evidence that supports the requested fact or relationship; and
+- context that merely mentions the same general topic.
+
+If the system has events about a vehicle but no evidence identifying the vehicle's insurer, a query asking who insures the vehicle should not return unrelated vehicle events as though they answered the question.
+
+Broad matches may be useful internally for routing or association activation. They should not automatically be surfaced as final evidence.
+
+When stored history does not support the requested fact, the correct retrieval result may be an empty or explicitly unsupported MemoryPacket.
+
+---
+
+## 13. Deterministic Application Ownership
+
+Information that can be known exactly by ordinary software must be generated and controlled by ordinary software rather than by an LLM.
 
 Examples include:
 
--   unique IDs
--   conversation IDs
--   event IDs
--   timestamps
--   ordering/sequence information
--   relationships between events
--   source identifiers
--   agent identifiers
--   execution/correlation identifiers
--   schema versions
--   known model identifiers
+- event IDs;
+- conversation IDs;
+- correlation/execution IDs;
+- timestamps;
+- global and conversation sequence numbers;
+- source/agent identifiers;
+- schema versions;
+- model/provider identifiers;
+- retrieval limits and scopes;
+- database operations;
+- policy versions;
+- deterministic association IDs;
+- provenance links;
+- integrity digests.
 
-The LLM should not be used to invent this information.
+LLMs should be used for semantic interpretation, language generation, planning, or other tasks that genuinely require model reasoning.
 
-The LLM should generate only content or decisions that genuinely require
-language understanding or semantic reasoning.
+Do not ask an LLM to manufacture system facts the application already knows exactly.
 
-------------------------------------------------------------------------
+---
 
-## 9. Structured and Constrained LLM Communication
+## 14. Structured Agent Communication
 
-LLM outputs should be structured and constrained whenever practical.
+Inter-agent and agent-to-service communication should use explicit schemas wherever practical.
 
-Use **Pydantic** schemas to validate structured communication between
-the Primary Agent, Retrieval Service, and future components.
+Use Pydantic models or equivalent strongly validated structures for:
 
-Prefer narrowly defined choices and fields over arbitrary free-form
-control output.
+- agent decisions;
+- memory requests;
+- memory packets;
+- tool requests/results;
+- task delegation;
+- status/error events;
+- future policy/permission decisions.
 
-For example, the Primary Agent may initially need only to decide between
-concepts such as:
+LLM control outputs should be narrow and constrained.
 
-``` text
+The original prototype used decisions such as:
+
+```text
 RESPOND_DIRECTLY
-RETRIEVE_HISTORY
+RETRIEVE_CONTEXT
 ```
 
-Do not give the LLM unnecessary authority over system state, metadata,
-persistence, database structure, or workflow mechanics.
+Future MAS protocols may become richer, but the principle remains:
 
-Natural-language response text may of course remain natural language.
+> give an LLM only the control authority it actually needs.
 
-------------------------------------------------------------------------
+Natural-language user responses may remain free-form. System mechanics should not.
 
-## 10. Authoritative History vs. Derived Memory
+---
 
-For this prototype, treat the complete persisted event history as the
-system's authoritative memory.
+## 15. Provenance and Auditability
 
-Do not require a separate LLM-generated "memory assertion" mechanism.
+Prometheist must be able to explain where remembered information came from.
 
-Later versions may derive additional memory representations from
-historical events, such as:
+For a retrieved fact or event, the system should be able to identify relevant source-event IDs and ordering metadata. For derived relationships, it should preserve the source events and derivation policy that produced them.
 
--   semantic summaries
--   user facts
--   observations
--   inferred relationships
--   knowledge-graph relationships
--   importance scores
--   consolidated memories
+This is important for:
 
-Those are future optimization layers. They must remain traceable to the
-underlying source events and must never replace the original history.
+- debugging;
+- benchmark evaluation;
+- historical verification;
+- correcting stale interpretations;
+- user trust;
+- future security and policy checks;
+- comparing different retrieval algorithms against the same evidence.
 
-The first prototype should prove that complete event persistence plus
-retrieval works before adding sophisticated memory interpretation or
-consolidation.
+An answer that cannot be traced back to evidence should not be treated as equivalent to one that can.
 
-------------------------------------------------------------------------
+---
 
-## 11. Storage Direction
+## 16. Integrity and Historical Preservation
 
-Use **PostgreSQL running locally on the Windows development machine as a
-native service**.
+Prometheist should make silent historical mutation detectable.
 
-Do not use Docker or a remote/cloud database.
+The current Memory Kernel maintains hash-chain integrity metadata over authoritative events. Future storage changes should preserve the same principle even if the exact mechanism evolves.
 
-The development laptop has approximately:
+Integrity verification should remain independent of semantic interpretation.
 
--   Intel Core i5 quad-core CPU with Hyper-Threading
--   16 GB system RAM
--   1 TB M.2 NVMe PCIe SSD
--   Intel Iris Xe integrated graphics
--   no dedicated GPU
+A later model, projection algorithm, or memory policy may reinterpret an event. It should not be able to rewrite the event undetectably.
 
-The prototype should be designed comfortably within these constraints.
+---
 
-PostgreSQL should ultimately support structured metadata retrieval and
-semantic/vector retrieval. **pgvector may be used when semantic vector
-retrieval is implemented.**
+## 17. Local-First and User-Controlled Architecture
 
-Do not introduce another database unless a demonstrated requirement
-later justifies it.
+Prometheist is intended to run primarily on hardware controlled by its user.
 
-------------------------------------------------------------------------
+The architecture should favor:
 
-## 12. LLM Direction
+- local PostgreSQL storage;
+- local files/artifacts where practical;
+- local inference through swappable model backends such as Ollama when feasible;
+- minimal external dependencies;
+- inspectable data formats;
+- user-controlled retention and permissions;
+- portability to inexpensive commodity hardware.
 
-The architecture should remain LLM-agnostic.
+The system must not depend architecturally on a particular cloud LLM, hosted vector database, SaaS orchestration framework, or vendor-specific memory product.
 
-The development laptop does not need to run a large local model for the
-prototype to be valid. A hosted LLM API may be used while developing and
-testing the architecture.
+External services may be used where explicitly useful or authorized, but the persistent identity and autobiographical history of Prometheist should remain under the user's control.
 
-Local Ollama-compatible models may also be supported where practical,
-but local large-model inference is not a requirement for the first
-prototype.
+The long-term personal-system direction is that data generated by the user's own devices and activities should primarily benefit the user and their Prometheist system, not become an invisible third-party asset by default.
 
-Keep the model interface simple enough that the underlying
-model/provider can be changed later without redesigning the persistence
-and retrieval architecture.
+---
 
-------------------------------------------------------------------------
+## 18. LLM Agnosticism
 
-## 13. Prototype Scope
+Foundation models are replaceable cognitive engines.
 
-The first prototype should be deliberately small.
+Prometheist should be able to switch between model families, sizes, providers, or local inference backends without redesigning its persistent-memory architecture.
 
-It needs only enough functionality to demonstrate:
+No model should own the canonical identity of the system.
 
-1.  a fresh Primary Agent invocation for each user interaction;
-2.  automatic persistence of every event;
-3.  retrieval of relevant prior events;
-4.  use of retrieved history to answer a current prompt;
-5.  structured/constrained communication;
-6.  deterministic metadata generation;
-7.  traceability from an answer back to the events and retrieval
-    operations that produced it.
+Model-specific adapters may exist, but the following must remain outside the model:
 
-A simple CLI interface is sufficient.
+- persistent history;
+- memory projections;
+- identity continuity;
+- deterministic metadata;
+- permissions and policy state;
+- provenance;
+- durable task/workflow state.
 
-Do not build a production platform yet.
+A stronger future model should be able to inherit Prometheist's history through the same memory interfaces without requiring the old model's context window.
 
-------------------------------------------------------------------------
+---
 
-## 14. Initial Acceptance Scenario
+## 19. Commodity-Hardware Constraint
 
-The prototype should be able to demonstrate the following sequence.
+Prometheist should remain usable on modest hardware and should not assume datacenter-scale resources.
 
-### Interaction 1
+The current development environment includes a Windows laptop with approximately:
 
-User:
+- Intel Core i5 quad-core CPU with Hyper-Threading;
+- 16 GB RAM;
+- 1 TB NVMe SSD;
+- integrated Intel graphics;
+- no dedicated GPU.
 
-``` text
-hello
-```
+The architecture should therefore favor bounded retrieval, indexed storage, incremental/rebuildable projections, and lightweight deterministic mechanisms before computationally expensive alternatives.
 
-The Primary Agent responds normally. The prompt, response, and
-associated system events are persisted.
+Hardware constraints are not temporary inconveniences. They are useful design pressure toward an efficient local-first system.
 
-The LLM's temporary context is then discarded.
+---
 
-### Interaction 2
+## 20. Simplicity and Evidence-Driven Complexity
 
-User:
-
-``` text
-I want you to remember <some random sequence of characters>.
-```
-
-This interaction begins with a fresh Primary Agent invocation.
-
-The prompt and response are persisted automatically because **all events
-are persisted**, not because the LLM elects to create a special memory.
-
-The temporary context is discarded afterward.
-
-### Interaction 3
-
-User:
-
-``` text
-Hey — what was that number I just asked you to remember?
-```
-
-This again begins with a fresh Primary Agent invocation.
-
-The Primary Agent recognizes that historical information is required and
-requests it from the Retrieval Service.
-
-The Retrieval Service locates the relevant prior event and returns it.
-
-The Primary Agent answers:
-
-``` text
-You asked me to remember <insert exact sequence of characters from last step here>.
-```
-
-The new prompt, retrieval request, retrieval result, Primary Agent
-response, and associated metadata are all persisted.
-
-------------------------------------------------------------------------
-
-## 15. Historical Recall Acceptance Scenario
-
-The system should also eventually support a query such as:
-
-``` text
-What was the first thing I said to you in our conversation that started <insert date> at roughly <insert time>?
-```
-
-The system should use stored timestamps, conversation relationships,
-event ordering, and original event content to locate the relevant prompt
-and reproduce it accurately.
-
-This scenario is important because it demonstrates that the system has a
-complete historical record rather than merely a collection of selected
-semantic memories.
-
-------------------------------------------------------------------------
-
-## 16. Simplicity Is a Design Requirement
-
-The prototype must remain easy for one developer to understand.
+Prometheist should remain understandable to a single human developer.
 
 Do not prematurely introduce:
 
--   Neo4j
--   Temporal
--   LangChain
--   LangGraph
--   CrewAI
--   AutoGen
--   dedicated vector databases
--   multiple database systems
--   distributed services
--   Docker
--   Kubernetes
--   Redis
--   Kafka
--   elaborate agent frameworks
--   elaborate workflow frameworks
--   unnecessary API servers
--   unnecessary abstraction layers
+- Neo4j;
+- Temporal;
+- LangChain;
+- LangGraph;
+- CrewAI;
+- AutoGen;
+- dedicated vector databases;
+- multiple overlapping databases;
+- Docker as an architectural dependency;
+- Kubernetes;
+- Redis;
+- Kafka;
+- distributed microservices;
+- elaborate orchestration frameworks;
+- unnecessary API servers;
+- unnecessary abstraction layers.
 
-These technologies may become useful later. Their possible future
-usefulness is not sufficient reason to include them now.
+These tools are not prohibited forever. They must solve a demonstrated problem before being added.
 
-Before adding any major dependency or architectural component, identify
-the concrete problem that the existing prototype cannot reasonably solve
-without it.
+The experimental rule is:
 
-------------------------------------------------------------------------
+> **Freeze a measurable baseline, add exactly one mechanism, rerun the same experiment, and keep the mechanism only if the evidence justifies it.**
 
-## 17. Future System Direction
+This rule should apply to memory mechanisms, agent architecture, dependencies, infrastructure, and performance optimizations.
 
-The long-term system may eventually include additional specialized
-agents or services for:
+---
 
--   ingestion
--   memory maintenance/consolidation
--   files and artifacts
--   web retrieval
--   external tools
--   workflow execution
--   security/policy checks
--   knowledge graphs
--   sophisticated reranking
--   background tasks
--   resource management
+## 21. Current Verified Memory Baseline
 
-The Primary Agent is intended to become the orchestration layer that
-decides when those capabilities are needed.
+As of Memory Kernel v0.5, Prometheist has demonstrated:
 
-However, **do not implement them merely because they are part of the
-eventual vision**.
+- append-only canonical event persistence;
+- deterministic event ordering;
+- cross-conversation and cross-process recall;
+- deterministic lexical/entity/temporal/conversation scoring;
+- bounded MemoryPackets;
+- rebuildable lexical projections;
+- provenance-bearing deterministic associations;
+- association-derived prior-state, resolution, concept-instance, and disposition routing;
+- support-aware evidence admission and unknown-fact abstention;
+- bounded PostgreSQL candidate routing by specificity;
+- integrity metadata and rebuild verification;
+- perfect observed benchmark correctness through 50,000 events per synthetic persona at a fixed 500-event PostgreSQL candidate bound.
 
-The prototype should first establish the core architecture:
+This is a research baseline, not proof of general intelligence or universal memory correctness.
 
-``` text
-Stateless Primary Agent
-        +
-Complete persistent event history
-        +
-Just-in-time Retrieval Service
-        =
-Continuous agent experience without accumulated LLM context
+The purpose of preserving this baseline is to prevent future architecture changes from being justified only by intuition.
+
+---
+
+## 22. Future Multi-Agent Direction
+
+Prometheist may eventually contain specialized agents or services for:
+
+- JIT memory retrieval;
+- planning;
+- file/artifact management;
+- ingestion;
+- external research;
+- software/tool execution;
+- workflows;
+- security and permission enforcement;
+- contract/policy analysis;
+- device telemetry interpretation;
+- memory maintenance and consolidation;
+- long-running or scheduled tasks;
+- resource management;
+- self-diagnostics and maintenance.
+
+Every LLM-backed specialist remains stateless between calls.
+
+A specialist that requires historical system data should request JIT memory rather than asking the Primary Agent to carry a large transcript on its behalf.
+
+This avoids recreating a giant shared context window at the MAS level.
+
+The desired architecture is therefore not:
+
+```text
+one huge Primary Agent context
+        |
+        +--> many tools
 ```
 
-------------------------------------------------------------------------
+It is closer to:
 
-## 18. Instructions to GitHub Copilot
+```text
+                    persistent system state
+                             |
+                             v
+                    JIT memory subsystem
+                      /      |      \
+                     v       v       v
+              Primary     Agent A   Agent B
+              Agent          |        |
+                 \           |       /
+                  \----------+------/
+                             |
+                         tools/actions
+```
 
-Use this document as the high-level product and architecture
-specification for the prototype.
+Each cognitive worker receives only the internal memory and external evidence needed for its current bounded task.
 
-When implementing it:
+---
 
--   favor the smallest working design;
--   keep the complete control flow understandable;
--   persist every meaningful event automatically;
--   never make persistence dependent on an LLM decision;
--   do not silently maintain accumulated chat context;
--   generate deterministic metadata in application code;
--   constrain structured LLM outputs with Pydantic;
--   preserve original event content and provenance;
--   retrieve historical information just in time;
--   prefer deterministic retrieval when metadata can answer the question
-    exactly;
--   use semantic retrieval when the request is genuinely semantic;
--   avoid adding infrastructure for hypothetical future requirements;
--   add tests that prove the architecture behaves as specified;
--   ask before introducing a major new dependency, framework, database,
-    service, or architectural layer.
+## 23. Long-Term Personal Identity Direction
 
-When a design choice is ambiguous, prefer **simplicity, inspectability,
-deterministic behavior, complete historical preservation, and bounded
-LLM context**.
+Prometheist is intended to become more than a task assistant.
+
+Its long-term direction is a persistent digital representative whose behavior becomes increasingly aligned with the user's accumulated preferences, values, relationships, goals, history, and decision patterns.
+
+That continuity should emerge from retained evidence and explicit system state, not from pretending that one particular LLM instance has an uninterrupted consciousness.
+
+The architecture should make it possible for the system to become a durable personal digital counterpart while remaining:
+
+- evidence-grounded;
+- inspectable;
+- correctable;
+- portable;
+- model-independent;
+- user-controlled.
+
+This direction is aspirational. Current milestones should implement only the mechanisms needed to test the next concrete architectural hypothesis.
+
+---
+
+## 24. Safety, Permissions, and User Agency
+
+As Prometheist gains tools and autonomy, user-controlled permissions must remain first-class system state.
+
+Agents should not infer durable authority merely from past model behavior or conversational momentum.
+
+Future capabilities that can modify external systems, share personal data, spend resources, accept terms, communicate with third parties, or perform consequential actions should operate through explicit policy and permission boundaries.
+
+These permissions should be persistent, auditable, and independent of any single LLM context.
+
+The user's data should not be disclosed or used for third-party benefit merely because an agent can technically access it.
+
+---
+
+## 25. Implementation Guidance for GitHub Copilot
+
+Use this document as the high-level architecture contract for Prometheist.
+
+When implementing changes:
+
+- treat **all LLM calls** as stateless across invocations;
+- never rely on hidden or accumulated chat context for durable continuity;
+- persist every meaningful event automatically;
+- preserve authoritative events append-only;
+- represent corrections and superseding information as new events;
+- keep derived memory disposable, versioned, provenance-bearing, and rebuildable;
+- make JIT memory available to every agent that needs internal system data;
+- keep internal memory retrieval distinct from external web/API/tool retrieval;
+- return bounded, structured evidence packets rather than uncontrolled history dumps;
+- prefer deterministic exact/structured retrieval when it can answer reliably;
+- preserve unknown-fact abstention rather than surfacing merely topical context as evidence;
+- generate deterministic metadata in ordinary application code;
+- constrain structured LLM outputs with Pydantic or equivalent schemas;
+- keep model/provider interfaces replaceable;
+- favor local-first operation and modest hardware requirements;
+- preserve provenance and integrity verification;
+- avoid introducing a new framework, database, service, model layer, or retrieval mechanism without a demonstrated failure that justifies it;
+- add regression tests before or alongside fixes for discovered failure modes;
+- compare architectural changes against frozen benchmarks whenever practical;
+- keep the complete control flow understandable to one developer.
+
+When a design choice is ambiguous, prefer:
+
+> **simplicity, inspectability, deterministic behavior, user control, complete historical preservation, explicit provenance, bounded working context, and evidence-driven complexity.**
