@@ -3,7 +3,7 @@ import uuid
 import pytest
 
 from jit_agent import capability_registry, db, event_store, llm
-from jit_agent.models import CapabilityKind, CapabilityNeed, EventType
+from jit_agent.models import CapabilityDescriptor, CapabilityKind, CapabilityNeed, EventType
 
 
 @pytest.fixture
@@ -59,6 +59,31 @@ def test_registry_respects_capability_kind_filter():
     )
 
     assert capability_registry.DEFAULT_REGISTRY.discover(need) == []
+
+
+def test_registry_can_add_and_remove_capability_without_primary_changes():
+    registry = capability_registry.CapabilityRegistry()
+    registration = capability_registry.RegisteredCapability(
+        descriptor=CapabilityDescriptor(
+            capability_id="document_specialist",
+            kind=CapabilityKind.AGENT,
+            description="Inspect and synthesize persisted document evidence.",
+        ),
+        routing_terms=("document", "pdf", "contract"),
+        specialist_instruction="Analyze retrieved document evidence.",
+    )
+
+    registry.register(registration)
+    need = CapabilityNeed(
+        query_text="Analyze this contract document.",
+        kinds=[CapabilityKind.AGENT],
+        limit=1,
+    )
+    assert registry.discover(need)[0].descriptor.capability_id == "document_specialist"
+
+    removed = registry.unregister("document_specialist")
+    assert removed == registration
+    assert registry.discover(need) == []
 
 
 def test_primary_system_prompt_does_not_embed_capability_catalog():
