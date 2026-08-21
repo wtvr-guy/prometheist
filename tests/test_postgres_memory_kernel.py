@@ -20,12 +20,19 @@ def conn():
     connection.close()
 
 
-def _record(conn, conversation_id, text, *, entities=()):
+def _record(
+    conn,
+    conversation_id,
+    text,
+    *,
+    entities=(),
+    event_type: EventType = EventType.USER_PROMPT,
+):
     return event_store.record_event(
         conn,
         conversation_id=conversation_id,
         correlation_id=uuid.uuid4(),
-        event_type=EventType.USER_PROMPT,
+        event_type=event_type,
         source="test",
         payload={"text": text, "entities": list(entities)},
         payload_text=text,
@@ -145,6 +152,36 @@ def test_postgres_lexical_specificity_route_survives_newer_one_word_crowdout(con
     assert [event.event_id for event in packet.items] == [str(target.event_id)]
 
 
+def test_postgres_candidate_routes_apply_source_types_before_truncation(conn):
+    conversation_id = event_store.start_conversation(conn)
+    target = _record(
+        conn,
+        conversation_id,
+        "Project Zephyr status is amber.",
+        event_type=EventType.SYSTEM_EVENT,
+    )
+    for index in range(12):
+        _record(
+            conn,
+            conversation_id,
+            f"Project Zephyr status note {index} says amber.",
+            event_type=EventType.USER_PROMPT,
+        )
+    rebuild(conn)
+
+    packet = recall_from_postgres(
+        conn,
+        CueState(
+            query_text="Project Zephyr status amber",
+            source_types=(EventType.SYSTEM_EVENT.value,),
+            limit=1,
+        ),
+        candidate_limit=1,
+    )
+
+    assert [event.event_id for event in packet.items] == [str(target.event_id)]
+
+
 def test_postgres_associative_recall_traverses_previous_state_edge(conn):
     conversation_id = event_store.start_conversation(conn)
     latte = _record(conn, conversation_id, "I usually get a latte in the morning.", entities=("latte",))
@@ -201,4 +238,26 @@ def test_postgres_associative_recall_does_not_use_ownership_edge_for_insurance(c
         CueState(query_text="Who insures my vehicle?", limit=5),
     )
 
+    assert packet.items == ()
+
+
+def test_postgres_associative_recall_does_not_cross_global_cutoff(conn):
+    conversation_id = event_store.start_conversation(conn)
+    _record(conn, conversation_id, "I walked to work because the weather was nice.")
+    future_purchase = _record(
+        conn,
+        conversation_id,
+        "I bought a used 2021 Toyota Corolla today.",
+    )
+    rebuild(conn)
+
+    packet = associative_recall_from_postgres(
+        conn,
+        CueState(query_text="Do I still own the vehicle?", limit=5),
+        before_global_seq=future_purchase.global_seq,
+    )
+
+    assert str(future_purchase.event_id) not in {
+        event.event_id for event in packet.items
+    }
     assert packet.items == ()

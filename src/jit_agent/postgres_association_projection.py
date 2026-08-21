@@ -87,6 +87,7 @@ def load_reachable_associations(
     *,
     cue_terms: Sequence[str],
     source_event_ids: Sequence[str] = (),
+    before_global_seq: int | None = None,
     max_hops: int = 2,
     association_limit: int = 250,
 ) -> tuple[Association, ...]:
@@ -97,6 +98,11 @@ def load_reachable_associations(
     loads only edges whose source node is already active, then exposes target
     nodes to the next hop. Relationship-specific ``required_cue_terms`` are
     enforced before an edge is admitted.
+
+    When ``before_global_seq`` is supplied, every EVENT endpoint of an admitted
+    association must also precede that boundary. This prevents a projection
+    rebuilt from the full ledger from routing a historical/current-turn query
+    through evidence that did not yet exist at the requested point in history.
 
     The loader never scans or returns authoritative event content. It only
     selects disposable routing hints; callers fetch canonical events separately.
@@ -115,6 +121,39 @@ def load_reachable_associations(
     frontier_events = {str(event_id) for event_id in source_event_ids if str(event_id)}
     seen_nodes: set[tuple[str, str]] = set()
     selected: dict[str, Association] = {}
+
+    cutoff_sql = ""
+    cutoff_params: tuple[object, ...] = ()
+    if before_global_seq is not None:
+        # EVENT endpoints are stored as text because association nodes are typed
+        # TERM/EVENT. CASE ensures UUID casting is attempted only for EVENT rows.
+        cutoff_sql = """
+                  AND (
+                    a.source_kind <> 'EVENT'
+                    OR EXISTS (
+                        SELECT 1
+                        FROM events source_event
+                        WHERE source_event.event_id = CASE
+                            WHEN a.source_kind = 'EVENT' THEN a.source::uuid
+                            ELSE NULL
+                        END
+                          AND source_event.global_seq < %s
+                    )
+                  )
+                  AND (
+                    a.target_kind <> 'EVENT'
+                    OR EXISTS (
+                        SELECT 1
+                        FROM events target_event
+                        WHERE target_event.event_id = CASE
+                            WHEN a.target_kind = 'EVENT' THEN a.target::uuid
+                            ELSE NULL
+                        END
+                          AND target_event.global_seq < %s
+                    )
+                  )
+        """
+        cutoff_params = (before_global_seq, before_global_seq)
 
     with conn.cursor(row_factory=dict_row) as cur:
         for _hop in range(max_hops):
@@ -138,23 +177,25 @@ def load_reachable_associations(
                 break
 
             cur.execute(
-                """
-                SELECT association_id, source_kind, source, target_kind, target,
-                       relationship, strength, provenance_event_ids,
-                       required_cue_terms
-                FROM memory_association_entries
-                WHERE projection_version = %s
+                f"""
+                SELECT a.association_id, a.source_kind, a.source,
+                       a.target_kind, a.target, a.relationship, a.strength,
+                       a.provenance_event_ids, a.required_cue_terms
+                FROM memory_association_entries AS a
+                WHERE a.projection_version = %s
                   AND (
-                    (source_kind = 'TERM' AND source = ANY(%s::text[]))
-                    OR (source_kind = 'EVENT' AND source = ANY(%s::text[]))
+                    (a.source_kind = 'TERM' AND a.source = ANY(%s::text[]))
+                    OR (a.source_kind = 'EVENT' AND a.source = ANY(%s::text[]))
                   )
-                ORDER BY association_id ASC
+                  {cutoff_sql}
+                ORDER BY a.association_id ASC
                 LIMIT %s
                 """,
                 (
                     ASSOCIATION_PROJECTION_VERSION,
                     sorted(frontier_terms),
                     sorted(frontier_events),
+                    *cutoff_params,
                     remaining,
                 ),
             )
