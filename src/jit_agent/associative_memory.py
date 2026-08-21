@@ -19,8 +19,32 @@ from jit_agent.memory_kernel import (
     tokenize,
 )
 
-ASSOCIATIVE_POLICY_VERSION = "deterministic-associations-v2"
+ASSOCIATIVE_POLICY_VERSION = "deterministic-associations-v3"
 NodeKind = Literal["TERM", "EVENT"]
+
+# These tokens shape which state or interpretation the caller wants but are not
+# themselves evidence-bearing subject matter. Removing them from the direct
+# support denominator prevents questions such as "Where do I work now?" from
+# looking artificially weak merely because the event does not contain "now".
+_DIRECT_SUPPORT_MODIFIERS = frozenset(
+    {
+        "actually",
+        "before",
+        "current",
+        "currently",
+        "immediately",
+        "now",
+        "still",
+        "usually",
+    }
+)
+
+# Direct lexical evidence must cover more than half of the substantive query
+# terms unless another independent cue supplies support. This rejects merely
+# topical matches such as a generic vehicle record for "Who insures my
+# vehicle?" while preserving explicitly associated and temporally anchored
+# evidence. Keep this conservative and benchmarked; it is not a semantic model.
+_MIN_DIRECT_SUPPORT_COVERAGE = 0.60
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,6 +142,58 @@ def _cue_nodes(cue: CueState) -> tuple[str, ...]:
     return tuple(sorted(nodes))
 
 
+def _direct_support_coverage(event: MemoryEvent, cue: CueState) -> float:
+    """Measure how much substantive query content appears in one event.
+
+    This is intentionally separate from ``score_event``. The baseline score is
+    an activation score and is allowed to be broad enough to seed association
+    traversal. Evidence admission is stricter: a directly returned event should
+    support the requested content rather than merely share one topical word.
+    """
+    ignored = {
+        token
+        for value in cue.ignored_terms
+        for token in tokenize(value)
+    }
+    query_terms = {
+        token
+        for token in tokenize(cue.query_text or "")
+        if token not in ignored and token not in _DIRECT_SUPPORT_MODIFIERS
+    }
+    if not query_terms:
+        # Entity-only or non-text cues should continue to use the baseline
+        # scoring policy rather than being rejected by an empty denominator.
+        return 1.0
+    event_terms = set(tokenize(event.text))
+    return len(query_terms & event_terms) / len(query_terms)
+
+
+def _direct_evidence_is_admissible(
+    event: MemoryEvent,
+    cue: CueState,
+    *,
+    has_association_support: bool,
+) -> bool:
+    """Return whether a candidate has enough support to be surfaced as evidence.
+
+    Association-backed evidence is admitted because the explicit relationship
+    route is itself support. A temporal query may admit sparse direct lexical
+    evidence because time is an independent first-class cue. Otherwise a direct
+    candidate must cover a majority of substantive query terms.
+    """
+    if has_association_support:
+        return True
+
+    coverage = _direct_support_coverage(event, cue)
+    if coverage >= _MIN_DIRECT_SUPPORT_COVERAGE:
+        return True
+
+    if cue.reference_time is not None and coverage > 0.0:
+        return True
+
+    return False
+
+
 def associative_recall(
     events: Iterable[MemoryEvent],
     cue: CueState,
@@ -137,6 +213,11 @@ def associative_recall(
     directly matched event may still receive a meaningful relationship-specific
     associative boost; direct activation must not suppress evidence that a valid
     association path reached that same event.
+
+    Baseline activation is deliberately broader than final evidence admission.
+    Weak topical matches may seed association traversal, but a directly returned
+    event must have substantive query-content support unless an association or
+    temporal cue independently supports it.
 
     Associations never replace evidence. The returned items are canonical
     MemoryEvent objects, and trace hops retain association provenance.
@@ -240,13 +321,20 @@ def associative_recall(
         total = max(score.total, assoc_activation)
         if has_cues and total < cue.minimum_score:
             continue
+        hops = tuple(hops_by_target.get(event_node, ()))
+        if has_cues and not _direct_evidence_is_admissible(
+            event,
+            cue,
+            has_association_support=bool(hops),
+        ):
+            continue
         ranked.append(
             (
                 total,
                 event,
                 score.total,
                 assoc_activation,
-                tuple(hops_by_target.get(event_node, ())),
+                hops,
             )
         )
 
