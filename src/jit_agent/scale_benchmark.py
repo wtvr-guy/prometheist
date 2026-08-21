@@ -16,6 +16,7 @@ from jit_agent.memory_kernel import CueState, MemoryEvent
 from jit_agent.scale_corpus import (
     DEFAULT_BASE_CORPORA,
     DEFAULT_EVENT_COUNTS,
+    DEFAULT_PROBE_EVERY,
     DEFAULT_SEED,
     build_scaled_document,
     load_document,
@@ -28,6 +29,8 @@ from jit_agent.synthetic_benchmark import BenchmarkResult
 class ScaleBenchmarkResult:
     persona: str
     event_count: int
+    base_question_count: int
+    probe_question_count: int
     association_count: int
     generation_seconds: float
     derivation_seconds: float
@@ -57,7 +60,13 @@ def _percentile(values: list[float], percentile: float) -> float:
     if not values:
         return 0.0
     ordered = sorted(values)
-    index = max(0, min(len(ordered) - 1, int((len(ordered) - 1) * percentile + 0.999999)))
+    index = max(
+        0,
+        min(
+            len(ordered) - 1,
+            int((len(ordered) - 1) * percentile + 0.999999),
+        ),
+    )
     return ordered[index]
 
 
@@ -92,6 +101,7 @@ def run_scale_document(
     target_event_count: int,
     seed: int = DEFAULT_SEED,
     confusable_every: int = 12,
+    probe_every: int = DEFAULT_PROBE_EVERY,
     limit: int = 5,
 ) -> ScaleBenchmarkResult:
     generation_started = perf_counter()
@@ -100,6 +110,7 @@ def run_scale_document(
         target_event_count=target_event_count,
         seed=seed,
         confusable_every=confusable_every,
+        probe_every=probe_every,
     )
     generation_seconds = perf_counter() - generation_started
     events = tuple(_event(raw) for raw in document["events"])
@@ -170,10 +181,13 @@ def run_scale_document(
     )
     recall_seconds = sum(recall_durations)
     durations_ms = [duration * 1000.0 for duration in recall_durations]
+    scale = document["scale"]
 
     return ScaleBenchmarkResult(
         persona=principal_name,
         event_count=len(events),
+        base_question_count=int(scale["base_question_count"]),
+        probe_question_count=int(scale["probe_event_count"]),
         association_count=len(associations),
         generation_seconds=generation_seconds,
         derivation_seconds=derivation_seconds,
@@ -199,6 +213,8 @@ def _print_result(result: ScaleBenchmarkResult) -> None:
             (
                 result.persona,
                 f"events={result.event_count}",
+                f"base_questions={result.base_question_count}",
+                f"probe_questions={result.probe_question_count}",
                 f"associations={result.association_count}",
                 f"accuracy={benchmark.successful_questions}/{benchmark.question_count}",
                 f"evidence_recall={benchmark.evidence_recall:.3f}",
@@ -227,6 +243,7 @@ def main() -> None:
     )
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--confusable-every", type=int, default=12)
+    parser.add_argument("--probe-every", type=int, default=DEFAULT_PROBE_EVERY)
     parser.add_argument("--limit", type=int, default=5)
     parser.add_argument(
         "--base",
@@ -259,12 +276,14 @@ def main() -> None:
                     target_event_count=event_count,
                     seed=args.seed,
                     confusable_every=args.confusable_every,
+                    probe_every=args.probe_every,
                 )
             result = run_scale_document(
                 base_document,
                 target_event_count=event_count,
                 seed=args.seed,
                 confusable_every=args.confusable_every,
+                probe_every=args.probe_every,
                 limit=args.limit,
             )
             results.append(result)
