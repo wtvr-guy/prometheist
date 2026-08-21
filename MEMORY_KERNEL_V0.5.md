@@ -76,6 +76,14 @@ Disposition edges also require the cue `own`.
 
 For a present-ownership query, both acquisition and later disposition evidence can therefore activate. Existing deterministic ranking then places the later lifecycle evidence ahead of the earlier acquisition when their association activation is equal.
 
+### Shallow vehicle category recognition
+
+The Morgan corpus exposed a separate weakness in the v0.4 ontology: a previously unseen model such as `2024 Mazda CX-30` did not contain one of the small model aliases used to recognize the `vehicle` concept.
+
+v0.5 therefore broadens the deterministic vehicle taxonomy to include common manufacturer terms found in event text or entity metadata. The rule remains category-level rather than answer-specific: a Mazda, Toyota, Honda, Ford, Subaru, etc. entity can enter the vehicle concept even when the exact model has never appeared before.
+
+This is intentionally still a shallow taxonomy. It is not a general solution to entity typing. An unfamiliar manufacturer or a vehicle described without any recognized category/make term can still remain unclassified. If larger benchmarks show that limitation matters materially, richer deterministic entity typing or another justified mechanism should be evaluated explicitly rather than silently expanding a benchmark-specific alias list.
+
 ## Indexed PostgreSQL associative recall
 
 v0.4 persisted association rows in PostgreSQL but the existing `recall_from_postgres()` path still executed only the baseline lexical kernel. v0.5 keeps that baseline API unchanged and adds a separate association-aware indexed path:
@@ -132,7 +140,7 @@ Across all three personas and all three default sizes, the generator can materia
 
 Generated event and conversation IDs are stable UUIDv5 values, so the exact same corpus can be evaluated by the in-memory kernel and loaded into PostgreSQL.
 
-Most added events are mundane background history. Every twelfth distractor is lexically confusable by default and contains vocabulary from benchmark domains such as beverages, vehicles, deposits, employers/projects, people, locations, appointments, or objects without asserting the persona-specific oracle answer.
+Most added events are mundane background history. Every twelfth distractor is lexically confusable by default and contains vocabulary from benchmark domains such as beverages, vehicles, deposits, employers/projects, people, locations, appointments, or objects without asserting the persona-specific oracle answer. Default confusable records deliberately avoid repeatedly copying the oracle-bearing proper nouns; exact-entity collision stress should be a separate adversarial profile rather than being hidden inside the basic scale test.
 
 The generator is deterministic and prefix-stable at a fixed seed. A 10,000-event corpus is therefore the exact prefix of the corresponding 50,000-event corpus, making latency/accuracy comparisons across sizes controlled rather than anecdotal.
 
@@ -205,7 +213,7 @@ Before v0.5 is considered complete, the branch should demonstrate:
 10. scale results are recorded for 1,000, 10,000, and 50,000 events per persona on both the full-history and PostgreSQL paths, or any device-limited maximum is explicitly recorded;
 11. any scale accuracy loss is classified as candidate-index recall, scoring/routing, or abstention failure before another retrieval mechanism is introduced.
 
-The focused deterministic rule simulation predicts the Morgan corpus will satisfy items 1–3. These results must not be described as verified until the repository test suite has been executed against the v0.5 branch.
+The focused deterministic rule simulation predicts the Morgan corpus will satisfy items 1–3 after the vehicle taxonomy correction. These results must not be described as verified until the repository test suite has been executed against the v0.5 branch.
 
 No device-specific latency threshold is declared before the first local scale run. The initial run is a characterization baseline from which a defensible performance target can be set.
 
