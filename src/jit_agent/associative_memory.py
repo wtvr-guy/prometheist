@@ -42,8 +42,9 @@ _DIRECT_SUPPORT_MODIFIERS = frozenset(
 # Direct lexical evidence must cover more than half of the substantive query
 # terms unless another independent cue supplies support. This rejects merely
 # topical matches such as a generic vehicle record for "Who insures my
-# vehicle?" while preserving explicitly associated and temporally anchored
-# evidence. Keep this conservative and benchmarked; it is not a semantic model.
+# vehicle?" while preserving explicitly associated, entity-anchored, and
+# temporally anchored evidence. Keep this conservative and benchmarked; it is
+# not a semantic model.
 _MIN_DIRECT_SUPPORT_COVERAGE = 0.60
 
 
@@ -143,22 +144,35 @@ def _cue_nodes(cue: CueState) -> tuple[str, ...]:
 
 
 def _direct_support_coverage(event: MemoryEvent, cue: CueState) -> float:
-    """Measure how much substantive query content appears in one event.
+    """Measure non-entity substantive query content supported by one event.
 
     This is intentionally separate from ``score_event``. The baseline score is
     an activation score and is allowed to be broad enough to seed association
     traversal. Evidence admission is stricter: a directly returned event should
     support the requested content rather than merely share one topical word.
+
+    Explicit entities are first-class cues elsewhere in the scoring policy, so
+    their tokens are removed from this lexical denominator. Counting them again
+    would double-charge entity-anchored queries and reject valid historical or
+    paraphrastic evidence simply because the entity itself belongs to another
+    event in the same state transition.
     """
     ignored = {
         token
         for value in cue.ignored_terms
         for token in tokenize(value)
     }
+    entity_tokens = {
+        token
+        for value in cue.entities
+        for token in tokenize(value)
+    }
     query_terms = {
         token
         for token in tokenize(cue.query_text or "")
-        if token not in ignored and token not in _DIRECT_SUPPORT_MODIFIERS
+        if token not in ignored
+        and token not in entity_tokens
+        and token not in _DIRECT_SUPPORT_MODIFIERS
     }
     if not query_terms:
         # Entity-only or non-text cues should continue to use the baseline
@@ -173,15 +187,19 @@ def _direct_evidence_is_admissible(
     cue: CueState,
     *,
     has_association_support: bool,
+    has_entity_support: bool,
 ) -> bool:
     """Return whether a candidate has enough support to be surfaced as evidence.
 
     Association-backed evidence is admitted because the explicit relationship
-    route is itself support. A temporal query may admit sparse direct lexical
-    evidence because time is an independent first-class cue. Otherwise a direct
-    candidate must cover a majority of substantive query terms.
+    route is itself support. An explicit entity hit is also independent support:
+    the kernel is a retrieval layer, not an entailment judge, so entity-anchored
+    evidence may be useful even when the relationship is expressed by paraphrase.
+    A temporal query may likewise admit sparse direct lexical evidence because
+    time is an independent first-class cue. Otherwise a direct candidate must
+    cover a majority of substantive non-entity query terms.
     """
-    if has_association_support:
+    if has_association_support or has_entity_support:
         return True
 
     coverage = _direct_support_coverage(event, cue)
@@ -216,8 +234,8 @@ def associative_recall(
 
     Baseline activation is deliberately broader than final evidence admission.
     Weak topical matches may seed association traversal, but a directly returned
-    event must have substantive query-content support unless an association or
-    temporal cue independently supports it.
+    event must have substantive query-content support unless an association,
+    entity cue, or temporal cue independently supports it.
 
     Associations never replace evidence. The returned items are canonical
     MemoryEvent objects, and trace hops retain association provenance.
@@ -326,6 +344,7 @@ def associative_recall(
             event,
             cue,
             has_association_support=bool(hops),
+            has_entity_support=score.entity > 0.0,
         ):
             continue
         ranked.append(
