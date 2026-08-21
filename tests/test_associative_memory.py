@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 
+import pytest
+
 from jit_agent.associative_memory import Association, associative_recall
 from jit_agent.memory_kernel import CueState, MemoryEvent
 
@@ -160,3 +162,4 @@ def test_two_hop_spreading_is_bounded_and_deterministic():
     assert first == second
     assert [event.event_id for event in first.items] == ["target"]
     assert first.trace.items[0].association_hops[-1].hop == 2
+    assert first.trace.items[0].associative_activation == pytest.approx(0.85**2)
