@@ -66,6 +66,41 @@ def test_shared_memory_boundary_projects_new_events_without_manual_rebuild(conn)
         assert cur.fetchone()[0] == 1
 
 
+def test_memory_boundary_uses_supplemental_query_only_after_canonical_abstains(conn):
+    source_conversation = uuid.uuid4()
+    request_conversation = uuid.uuid4()
+    token = uuid.uuid4().hex[:10].upper()
+    source_event = _record_text(
+        conn,
+        source_conversation,
+        f"I want you to remember {token}.",
+    )
+    question = "What number did I ask you to remember?"
+    current_prompt = _record_text(conn, request_conversation, question)
+
+    packet = jit_memory.request_memory(
+        conn,
+        conversation_id=request_conversation,
+        correlation_id=current_prompt.correlation_id,
+        requesting_agent="primary_agent",
+        need=jit_memory.build_memory_need(
+            question,
+            supplemental_query_texts=["remember"],
+            conversation_id=request_conversation,
+        ),
+        before_global_seq=current_prompt.global_seq,
+    )
+
+    assert packet.supported is True
+    assert source_event.event_id in {item.source_event_id for item in packet.items}
+    assert token in packet.items[0].content
+    assert packet.retrieval_trace["selected_query_role"] == "supplemental"
+    attempts = packet.retrieval_trace["query_attempts"]
+    assert [attempt["role"] for attempt in attempts] == ["canonical", "supplemental"]
+    assert attempts[0]["supported"] is False
+    assert attempts[1]["supported"] is True
+
+
 def test_memory_boundary_preserves_unknown_fact_abstention(conn):
     source_conversation = uuid.uuid4()
     request_conversation = uuid.uuid4()

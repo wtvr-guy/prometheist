@@ -48,6 +48,7 @@ DEFAULT_EVIDENCE_TYPES = (
 def build_memory_need(
     query_text: str | None,
     *,
+    supplemental_query_texts: list[str] | None = None,
     entities: list[str] | None = None,
     conversation_id: uuid.UUID | None = None,
     limit: int = 5,
@@ -55,6 +56,7 @@ def build_memory_need(
     """Application policy for a normal internal-memory request."""
     return MemoryNeed(
         query_text=query_text,
+        supplemental_query_texts=supplemental_query_texts or [],
         entities=entities or [],
         conversation_id=conversation_id,
         source_types=list(DEFAULT_EVIDENCE_TYPES),
@@ -64,6 +66,35 @@ def build_memory_need(
 
 def _effective_source_types(need: MemoryNeed) -> tuple[EventType, ...]:
     return tuple(need.source_types) if need.source_types else DEFAULT_EVIDENCE_TYPES
+
+
+def _query_variants(need: MemoryNeed) -> tuple[tuple[str, str | None], ...]:
+    """Return deterministic canonical-then-fallback query formulations.
+
+    The canonical query always gets first refusal. Supplemental formulations are
+    only useful if the canonical kernel pass produces no admissible evidence.
+    Duplicate/blank formulations are removed without changing the persisted
+    ``MemoryNeed`` itself, so request provenance remains exact.
+    """
+    variants: list[tuple[str, str | None]] = []
+    seen: set[str] = set()
+
+    def add(role: str, value: str | None) -> None:
+        if value is None or not value.strip():
+            return
+        key = " ".join(value.split()).casefold()
+        if key in seen:
+            return
+        seen.add(key)
+        variants.append((role, value))
+
+    add("canonical", need.query_text)
+    for value in need.supplemental_query_texts:
+        add("supplemental", value)
+
+    if not variants:
+        variants.append(("canonical", None))
+    return tuple(variants)
 
 
 def _ensure_projection_fresh(
@@ -214,6 +245,33 @@ def _packet_from_kernel(
     )
 
 
+def _recall_for_query(
+    conn: psycopg.Connection,
+    *,
+    need: MemoryNeed,
+    query_text: str | None,
+    before_global_seq: int | None,
+):
+    cue = CueState(
+        query_text=query_text,
+        entities=tuple(need.entities),
+        reference_time=need.reference_time,
+        conversation_id=str(need.conversation_id) if need.conversation_id else None,
+        source_types=tuple(item.value for item in _effective_source_types(need)),
+        limit=need.limit,
+        minimum_score=MINIMUM_SCORE,
+    )
+    return postgres_memory_kernel.associative_recall_from_postgres(
+        conn,
+        cue,
+        before_global_seq=before_global_seq,
+        candidate_limit=CANDIDATE_LIMIT,
+        association_limit=ASSOCIATION_LIMIT,
+        max_hops=MAX_HOPS,
+        decay=ASSOCIATION_DECAY,
+    )
+
+
 def request_memory(
     conn: psycopg.Connection,
     *,
@@ -223,7 +281,13 @@ def request_memory(
     need: MemoryNeed,
     before_global_seq: int | None,
 ) -> MemoryPacket:
-    """Persist and satisfy one internal-memory request for any agent."""
+    """Persist and satisfy one internal-memory request for any agent.
+
+    The exact canonical query is evaluated first. Only an empty admissible result
+    permits a bounded supplemental formulation to be tried. This keeps the
+    verified v0.5 kernel unchanged while preventing either a verbose user query
+    or a lossy LLM compression from becoming a single point of recall failure.
+    """
     memory_request_id = uuid.uuid4()
     effective_need = need.model_copy(update={"source_types": list(_effective_source_types(need))})
 
@@ -243,25 +307,47 @@ def request_memory(
 
     _ensure_projection_fresh(conn, before_global_seq=before_global_seq)
 
-    cue = CueState(
-        query_text=effective_need.query_text,
-        entities=tuple(effective_need.entities),
-        reference_time=effective_need.reference_time,
-        conversation_id=str(effective_need.conversation_id) if effective_need.conversation_id else None,
-        source_types=tuple(item.value for item in _effective_source_types(effective_need)),
-        limit=effective_need.limit,
-        minimum_score=MINIMUM_SCORE,
+    attempts: list[dict[str, object]] = []
+    selected_kernel_packet = None
+    selected_role: str | None = None
+    selected_query_text: str | None = None
+
+    for role, query_text in _query_variants(effective_need):
+        kernel_packet = _recall_for_query(
+            conn,
+            need=effective_need,
+            query_text=query_text,
+            before_global_seq=before_global_seq,
+        )
+        attempts.append(
+            {
+                "role": role,
+                "query_text": query_text,
+                "supported": bool(kernel_packet.items),
+                "kernel_trace": asdict(kernel_packet.trace),
+            }
+        )
+        if selected_kernel_packet is None:
+            selected_kernel_packet = kernel_packet
+        if kernel_packet.items:
+            selected_kernel_packet = kernel_packet
+            selected_role = role
+            selected_query_text = query_text
+            break
+
+    assert selected_kernel_packet is not None
+    packet = _packet_from_kernel(memory_request_id, effective_need, selected_kernel_packet)
+    packet = packet.model_copy(
+        update={
+            "retrieval_trace": {
+                "kernel": "associative_recall_from_postgres",
+                "query_strategy": "canonical_then_supplemental_on_empty",
+                "selected_query_role": selected_role,
+                "selected_query_text": selected_query_text,
+                "query_attempts": attempts,
+            }
+        }
     )
-    kernel_packet = postgres_memory_kernel.associative_recall_from_postgres(
-        conn,
-        cue,
-        before_global_seq=before_global_seq,
-        candidate_limit=CANDIDATE_LIMIT,
-        association_limit=ASSOCIATION_LIMIT,
-        max_hops=MAX_HOPS,
-        decay=ASSOCIATION_DECAY,
-    )
-    packet = _packet_from_kernel(memory_request_id, effective_need, kernel_packet)
 
     event_store.record_event(
         conn,
