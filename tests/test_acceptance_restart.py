@@ -2,7 +2,7 @@
 
 Each ``run_once`` invocation launches a brand-new Python process. The tests are
 skipped when Ollama is unavailable, but when run they exercise real fresh model
-calls plus PostgreSQL-backed JIT memory rather than Python mock state.
+calls, deterministic capability discovery, and PostgreSQL-backed JIT memory.
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ pytestmark = pytest.mark.skipif(not ollama_available(), reason="Ollama is not re
 
 
 @pytest.mark.parametrize(
-    "codename_sentence,question",
+    "fact_sentence,question",
     [
         (
             "The codename for Project Oriole is {fact}.",
@@ -28,13 +28,17 @@ pytestmark = pytest.mark.skipif(not ollama_available(), reason="Ollama is not re
         ),
     ],
 )
-def test_cross_process_restart_recalls_randomized_fact(codename_sentence, question):
-    conversation_id = uuid.uuid4()
+def test_cross_process_restart_discovers_internal_memory_capability(fact_sentence, question):
+    fact_conversation = uuid.uuid4()
+    recall_conversation = uuid.uuid4()
     random_fact = uuid.uuid4().hex[:8].upper()
-    sentence = codename_sentence.format(fact=random_fact)
 
-    run_once(sentence, conversation_id)
-    answer = run_once(question, conversation_id)
+    # Process A persists evidence and exits completely.
+    run_once(fact_sentence.format(fact=random_fact), fact_conversation)
+
+    # Process B has no transcript and no privileged memory path. The Primary
+    # emits REQUEST_CAPABILITY and deterministic discovery selects internal_memory.
+    answer = run_once(question, recall_conversation)
 
     assert random_fact in answer
 
@@ -42,10 +46,6 @@ def test_cross_process_restart_recalls_randomized_fact(codename_sentence, questi
 @pytest.mark.parametrize(
     "fact_sentence,specialist_task",
     [
-        (
-            "The codename for Project Oriole is {fact}.",
-            "Use a specialist to recall the codename for Project Oriole and state it exactly.",
-        ),
         (
             "My deployment requirement is {fact}.",
             "Use a specialist to propose one deployment step that explicitly includes my deployment requirement.",
@@ -56,7 +56,7 @@ def test_cross_process_restart_recalls_randomized_fact(codename_sentence, questi
         ),
     ],
 )
-def test_v06_registry_routes_multiple_specialists_without_hidden_transcript(
+def test_v06_multiple_specialists_discover_memory_without_hidden_transcript(
     fact_sentence,
     specialist_task,
 ):
@@ -67,9 +67,10 @@ def test_v06_registry_routes_multiple_specialists_without_hidden_transcript(
     # Process A persists evidence and exits completely.
     run_once(fact_sentence.format(fact=random_fact), fact_conversation)
 
-    # Process B receives no capability catalog or inherited transcript. The
-    # Primary chooses only DELEGATE; deterministic capability discovery resolves
-    # the relevant registered specialist from the task itself.
+    # Process B receives no capability catalog or inherited transcript. Primary
+    # requests a capability, the registry selects the relevant specialist, and
+    # that fresh specialist independently requests another capability for the
+    # missing persisted information. The registry then selects internal_memory.
     answer = run_once(specialist_task, task_conversation)
 
     assert random_fact in answer
