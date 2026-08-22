@@ -1,4 +1,4 @@
-"""Stateless LLM adapters for Primary and specialist agent inference."""
+"""Stateless LLM adapters for Primary and specialist-agent inference."""
 from __future__ import annotations
 
 import logging
@@ -10,7 +10,7 @@ from typing import Protocol
 import httpx
 from pydantic import ValidationError
 
-from jit_agent.models import AgentDecision, MemoryNeedDecision, MemoryPacket
+from jit_agent.models import AgentDecision, MemoryPacket
 
 logger = logging.getLogger(__name__)
 _THINK_BLOCK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
@@ -41,32 +41,32 @@ def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> Non
 _CLASSIFY_SYSTEM_PROMPT = """\
 You are Prometheist's stateless Primary decision step. You receive only the
 current user message. Choose exactly one action:
-- RESPOND_DIRECTLY when no persisted context or specialist capability is needed.
-- RETRIEVE_CONTEXT for a simple memory-grounded answer; set query_text.
-- DELEGATE when a bounded specialist task would help; set delegation_task.
-Do not name or invent specialists, tools, ids, limits, or routing policy.
+- RESPOND_DIRECTLY if the current message alone is sufficient.
+- REQUEST_CAPABILITY if additional information access or functionality is needed.
+For REQUEST_CAPABILITY, set capability_query to a short description of what is
+needed. Do not name or invent implementations, agents, tools, ids, or limits.
 """
 
 _RESPOND_SYSTEM_PROMPT = """\
 You are Prometheist's Primary Agent in a fresh invocation. Use only the current
-message and supplied MemoryPacket, if any. Do not claim unsupported memory.
+message and supplied evidence, if any. Do not claim unsupported memory.
 """
 
-_SPECIALIST_PLAN_PROMPT = """\
-You are a stateless specialist in a fresh invocation. Given the role and task,
-return only the persisted information need: query_text and optional entities.
-Do not choose retrieval algorithms, limits, databases, or system metadata.
+_SPECIALIST_DECISION_PROMPT = """\
+You are a stateless specialist in a fresh invocation. Given only your role and
+current task, choose exactly one action:
+- RESPOND_DIRECTLY if the task can be completed from supplied information alone.
+- REQUEST_CAPABILITY if additional information access or functionality is needed.
+For REQUEST_CAPABILITY, describe what is needed without naming an implementation.
+If the task depends on prior or persisted information, request access to persisted
+internal history. Do not invent capability names, ids, limits, or routing policy.
 """
 
 _SPECIALIST_ANSWER_PROMPT = """\
-You are a stateless specialist in a fresh invocation. Complete the task using
-only the supplied MemoryPacket as evidence. Do not invent unsupported facts.
+You are a stateless specialist in a fresh invocation. Complete the supplied task
+using only the role, task, and bounded evidence packet if one is supplied. Do not
+invent unsupported facts.
 """
-
-_MEMORY_SPECIALIST_INSTRUCTION = (
-    "Recall and synthesize persisted internal history. Preserve exact facts and "
-    "distinguish unsupported claims from evidence."
-)
 
 
 class LLMClient(Protocol):
@@ -76,17 +76,17 @@ class LLMClient(Protocol):
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str: ...
 
-    def plan_specialist_memory(
+    def decide_specialist_action(
         self,
         specialist_instruction: str,
         task: str,
-    ) -> MemoryNeedDecision: ...
+    ) -> AgentDecision: ...
 
     def answer_specialist_task(
         self,
         specialist_instruction: str,
         task: str,
-        packet: MemoryPacket,
+        packet: MemoryPacket | None,
     ) -> str: ...
 
 
@@ -171,16 +171,19 @@ class OllamaClient:
         _log_call(kind, self.model, time.monotonic() - t0, body)
         return _strip_thinking(body["message"]["content"])
 
-    def classify(self, prompt: str) -> AgentDecision:
+    def _decision(self, kind: str, system: str, user: str) -> AgentDecision:
         schema = AgentDecision.model_json_schema()
         last_error: Exception | None = None
         for _ in range(2):
-            content = self._structured("CLASSIFY", _CLASSIFY_SYSTEM_PROMPT, prompt, schema, 96)
+            content = self._structured(kind, system, user, schema, 96)
             try:
                 return AgentDecision.model_validate_json(content)
             except ValidationError as exc:
                 last_error = exc
-        raise ValueError(f"LLM classification failed to validate: {last_error}")
+        raise ValueError(f"agent decision failed to validate: {last_error}")
+
+    def classify(self, prompt: str) -> AgentDecision:
+        return self._decision("CLASSIFY", _CLASSIFY_SYSTEM_PROMPT, prompt)
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
         return self._text(
@@ -189,44 +192,25 @@ class OllamaClient:
             prompt + _format_memory_packet(memory_packet),
         )
 
-    def plan_specialist_memory(
+    def decide_specialist_action(
         self,
         specialist_instruction: str,
         task: str,
-    ) -> MemoryNeedDecision:
-        schema = MemoryNeedDecision.model_json_schema()
-        last_error: Exception | None = None
-        user = _specialist_input(specialist_instruction, task)
-        for _ in range(2):
-            content = self._structured(
-                "SPECIALIST_PLAN",
-                _SPECIALIST_PLAN_PROMPT,
-                user,
-                schema,
-                96,
-            )
-            try:
-                return MemoryNeedDecision.model_validate_json(content)
-            except ValidationError as exc:
-                last_error = exc
-        raise ValueError(f"specialist memory plan failed to validate: {last_error}")
+    ) -> AgentDecision:
+        return self._decision(
+            "SPECIALIST_DECISION",
+            _SPECIALIST_DECISION_PROMPT,
+            _specialist_input(specialist_instruction, task),
+        )
 
     def answer_specialist_task(
         self,
         specialist_instruction: str,
         task: str,
-        packet: MemoryPacket,
+        packet: MemoryPacket | None,
     ) -> str:
         return self._text(
             "SPECIALIST_ANSWER",
             _SPECIALIST_ANSWER_PROMPT,
             _specialist_input(specialist_instruction, task) + _format_memory_packet(packet),
         )
-
-    # Compatibility wrappers for the original v0.6 memory_specialist module.
-    # The live Primary Agent now uses generic capability discovery/dispatch.
-    def plan_memory(self, task: str) -> MemoryNeedDecision:
-        return self.plan_specialist_memory(_MEMORY_SPECIALIST_INSTRUCTION, task)
-
-    def answer_memory_task(self, task: str, packet: MemoryPacket) -> str:
-        return self.answer_specialist_task(_MEMORY_SPECIALIST_INSTRUCTION, task, packet)
