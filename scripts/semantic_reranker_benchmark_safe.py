@@ -2,16 +2,14 @@
 
 Qwen3-Reranker defines relevance from the pairwise logits of the complete
 single-token answers ``yes`` and ``no``. llama.cpp's ``n_probs`` response only
-returns the top-N tokens, and grammar-constrained sampling can still expose
-prefix/variant tokens (``y``, ``No``, ``false``...) while omitting one of the
-complete target tokens.
+returns top-N probabilities, and grammar-constrained sampling can expose token
+prefixes/variants while omitting one complete target token.
 
-This wrapper avoids that ambiguity by applying the same large positive
-``logit_bias`` to the exact token strings ``yes`` and ``no``. Adding the same
-constant to both target logits preserves their pairwise softmax ratio exactly,
-while forcing both tokens into a small returned probability window. The final
-score is then renormalized over only ``yes`` and ``no``, matching Qwen's
-published scoring rule.
+This wrapper resolves the model's exact token IDs for ``yes`` and ``no`` via
+llama.cpp's /tokenize endpoint, applies the same large positive logit bias to
+both IDs, requests post-sampling probabilities, and then renormalizes only the
+two target-token probabilities. Equal additive bias preserves their pairwise
+softmax ratio exactly while forcing both tokens into the returned window.
 """
 from __future__ import annotations
 
@@ -26,25 +24,72 @@ import semantic_reranker_benchmark as benchmark
 
 PROBABILITY_WINDOW = 8
 TARGET_LOGIT_BIAS = 80.0
+_TARGET_IDS: dict[str, int] | None = None
 
 
-def _yes_probability(body: dict[str, Any]) -> float:
+def _token_id(client: httpx.Client, text: str) -> int:
+    body = benchmark.post(
+        client,
+        "/tokenize",
+        {
+            "content": text,
+            "add_special": False,
+            "parse_special": True,
+            "with_pieces": True,
+        },
+    )
+    tokens = body.get("tokens") or []
+    if len(tokens) != 1:
+        raise RuntimeError(
+            f"Qwen reranker answer {text!r} must be a single token; tokenizer returned {tokens}"
+        )
+    token = tokens[0]
+    token_id = token.get("id") if isinstance(token, dict) else token
+    try:
+        return int(token_id)
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(f"Invalid tokenization result for {text!r}: {tokens}") from exc
+
+
+def _target_ids(client: httpx.Client) -> dict[str, int]:
+    global _TARGET_IDS
+    if _TARGET_IDS is None:
+        _TARGET_IDS = {"yes": _token_id(client, "yes"), "no": _token_id(client, "no")}
+        if _TARGET_IDS["yes"] == _TARGET_IDS["no"]:
+            raise RuntimeError(f"yes/no unexpectedly share a token ID: {_TARGET_IDS}")
+        print(
+            "  reranker answer token IDs: "
+            f"yes={_TARGET_IDS['yes']} no={_TARGET_IDS['no']}"
+        )
+    return _TARGET_IDS
+
+
+def _yes_probability(body: dict[str, Any], target_ids: dict[str, int]) -> float:
     rows = body.get("completion_probabilities") or body.get("probs") or []
     if not rows:
         raise RuntimeError(f"llama.cpp returned no token probabilities: {body.keys()}")
 
     first = rows[0]
     options = first.get("top_probs") or first.get("top_logprobs") or first.get("probs") or []
-    values: dict[str, float] = {}
+    by_id: dict[int, float] = {}
     for item in options:
-        token = str(item.get("token") or item.get("tok_str") or "").strip().lower()
-        if token not in {"yes", "no"}:
+        raw_id = item.get("id")
+        if raw_id is None:
             continue
-        if "prob" in item:
-            values[token] = float(item["prob"])
-        elif "logprob" in item:
-            values[token] = math.exp(float(item["logprob"]))
+        try:
+            token_id = int(raw_id)
+        except (TypeError, ValueError):
+            continue
+        if "prob" in item and item.get("prob") is not None:
+            by_id[token_id] = float(item["prob"])
+        elif "logprob" in item and item.get("logprob") is not None:
+            by_id[token_id] = math.exp(float(item["logprob"]))
 
+    values = {
+        answer: by_id[token_id]
+        for answer, token_id in target_ids.items()
+        if token_id in by_id
+    }
     missing = {"yes", "no"} - set(values)
     if missing:
         compact = [
@@ -58,7 +103,7 @@ def _yes_probability(body: dict[str, Any]) -> float:
         ]
         raise RuntimeError(
             "Qwen reranker scoring requires complete yes/no token probabilities; "
-            f"missing={sorted(missing)} after equal target logit bias: {compact}"
+            f"target_ids={target_ids} missing={sorted(missing)} after equal ID bias: {compact}"
         )
 
     # Equal additive bias cancels exactly in the pairwise softmax:
@@ -70,6 +115,7 @@ def _yes_probability(body: dict[str, Any]) -> float:
 
 
 def rerank_score(client: httpx.Client, query: str, document: str) -> tuple[float, float]:
+    target_ids = _target_ids(client)
     started = time.perf_counter()
     body = benchmark.post(
         client,
@@ -82,15 +128,17 @@ def rerank_score(client: httpx.Client, query: str, document: str) -> tuple[float
             "top_p": 1.0,
             "min_p": 0.0,
             "n_probs": PROBABILITY_WINDOW,
-            "post_sampling_probs": False,
-            "logit_bias": [["yes", TARGET_LOGIT_BIAS], ["no", TARGET_LOGIT_BIAS]],
+            "post_sampling_probs": True,
+            "logit_bias": [
+                [target_ids["yes"], TARGET_LOGIT_BIAS],
+                [target_ids["no"], TARGET_LOGIT_BIAS],
+            ],
             "cache_prompt": False,
         },
     )
-    return _yes_probability(body), time.perf_counter() - started
+    return _yes_probability(body, target_ids), time.perf_counter() - started
 
 
-benchmark._yes_probability = _yes_probability
 benchmark.rerank_score = rerank_score
 
 
