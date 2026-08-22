@@ -4,27 +4,32 @@ import uuid
 import pytest
 
 from jit_agent import db, event_store, primary_agent
-from jit_agent.models import (
-    AgentAction,
-    AgentDecision,
-    EventType,
-    MemoryNeedDecision,
-    MemoryPacket,
-)
+from jit_agent.models import AgentAction, AgentDecision, EventType, MemoryPacket
 
 
 class FakeLLM:
-    """Deterministic stateless stand-in for Primary and generic specialist roles."""
+    """Deterministic stateless stand-in for Primary and specialist roles."""
 
     def classify(self, prompt: str) -> AgentDecision:
         lowered = prompt.lower()
-        if "specialist" in lowered:
+        if "use a specialist" in lowered:
+            if "deployment" in lowered or "plan" in lowered or "propose" in lowered:
+                return AgentDecision(
+                    action=AgentAction.REQUEST_CAPABILITY,
+                    capability_query="planning and recommendation functionality",
+                )
+            if "atlas" in lowered or "compare" in lowered or "changed" in lowered:
+                return AgentDecision(
+                    action=AgentAction.REQUEST_CAPABILITY,
+                    capability_query="comparison and analysis functionality",
+                )
+        if "what" in lowered and (
+            "remember" in lowered or "number" in lowered or "codename" in lowered
+        ):
             return AgentDecision(
-                action=AgentAction.DELEGATE,
-                delegation_task=prompt,
+                action=AgentAction.REQUEST_CAPABILITY,
+                capability_query=f"access persisted internal history about {prompt}",
             )
-        if "what" in lowered and ("remember" in lowered or "number" in lowered):
-            return AgentDecision(action=AgentAction.RETRIEVE_CONTEXT, query_text="remember")
         return AgentDecision(action=AgentAction.RESPOND_DIRECTLY)
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
@@ -37,47 +42,41 @@ class FakeLLM:
             return "Hello! How can I help?"
         return "Got it."
 
-    def plan_specialist_memory(
+    def decide_specialist_action(
         self,
         specialist_instruction: str,
         task: str,
-    ) -> MemoryNeedDecision:
+    ) -> AgentDecision:
         lowered = task.lower()
         if "deployment" in lowered:
-            return MemoryNeedDecision(query_text="deployment requirement")
-        if "atlas" in lowered:
-            return MemoryNeedDecision(
-                query_text="Project Atlas schedule",
-                entities=["Project Atlas"],
-            )
-        return MemoryNeedDecision(
-            query_text="Project Oriole codename",
-            entities=["Project Oriole"],
+            subject = "deployment requirement"
+        elif "atlas" in lowered:
+            subject = "Project Atlas schedule change"
+        else:
+            subject = task
+        return AgentDecision(
+            action=AgentAction.REQUEST_CAPABILITY,
+            capability_query=f"access persisted internal history about {subject}",
         )
 
     def answer_specialist_task(
         self,
         specialist_instruction: str,
         task: str,
-        packet: MemoryPacket,
+        packet: MemoryPacket | None,
     ) -> str:
-        return packet.items[0].content
-
-    # Compatibility methods for the retained original memory_specialist module.
-    def plan_memory(self, task: str) -> MemoryNeedDecision:
-        return self.plan_specialist_memory("memory", task)
-
-    def answer_memory_task(self, task: str, packet: MemoryPacket) -> str:
-        return self.answer_specialist_task("memory", task, packet)
+        if packet and packet.items:
+            return packet.items[0].content
+        return "Completed from supplied task context."
 
 
-class LossyRetrievalCueLLM(FakeLLM):
-    """Classifier that intentionally destroys the useful lexical recall cue."""
+class LossyCapabilityCueLLM(FakeLLM):
+    """Classifier whose capability hint is intentionally useless for recall."""
 
     def classify(self, prompt: str) -> AgentDecision:
         return AgentDecision(
-            action=AgentAction.RETRIEVE_CONTEXT,
-            query_text="previous persisted information",
+            action=AgentAction.REQUEST_CAPABILITY,
+            capability_query="unrelated additional functionality",
         )
 
 
@@ -119,8 +118,7 @@ def test_memory_spans_conversations_by_default(conn):
     assert token in reply
 
 
-def test_primary_memory_request_preserves_exact_user_cue(conn):
-    """A lossy classifier paraphrase must not replace the canonical recall cue."""
+def test_primary_discovers_internal_memory_and_preserves_exact_user_cue(conn):
     fact_conversation = uuid.uuid4()
     recall_conversation = uuid.uuid4()
     token = uuid.uuid4().hex[:10].upper()
@@ -135,7 +133,7 @@ def test_primary_memory_request_preserves_exact_user_cue(conn):
 
     reply = primary_agent.handle_interaction(
         conn,
-        LossyRetrievalCueLLM(),
+        LossyCapabilityCueLLM(),
         question,
         recall_conversation,
     )
@@ -143,16 +141,47 @@ def test_primary_memory_request_preserves_exact_user_cue(conn):
 
     events = event_store.get_events_by_conversation(conn, recall_conversation)
     decision_event = next(event for event in events if event.event_type == EventType.AGENT_DECISION)
+    capability_packet = next(
+        event for event in events if event.event_type == EventType.CAPABILITY_PACKET
+    )
     request_event = next(event for event in events if event.event_type == EventType.MEMORY_REQUEST)
     packet_event = next(event for event in events if event.event_type == EventType.MEMORY_PACKET)
 
-    assert decision_event.payload["query_text"] == "previous persisted information"
+    assert decision_event.payload["capability_query"] == "unrelated additional functionality"
+    selected = capability_packet.payload["packet"]["matches"][0]["descriptor"]["capability_id"]
+    assert selected == "internal_memory"
+    assert capability_packet.payload["packet"]["selected_query_role"] == "canonical"
     assert request_event.payload["need"]["query_text"] == question
     assert request_event.payload["need"]["supplemental_query_texts"] == [
-        "previous persisted information"
+        "unrelated additional functionality"
     ]
-    assert packet_event.payload["packet"]["retrieval_trace"]["selected_query_role"] == "canonical"
-    assert len(packet_event.payload["packet"]["retrieval_trace"]["query_attempts"]) == 1
+    assert packet_event.payload["packet"]["supported"] is True
+
+
+def test_direct_memory_use_does_not_create_agent_delegation(conn):
+    source_conversation = uuid.uuid4()
+    recall_conversation = uuid.uuid4()
+    token = uuid.uuid4().hex[:10].upper()
+
+    primary_agent.handle_interaction(
+        conn,
+        FakeLLM(),
+        f"The codename for Project Oriole is {token}.",
+        source_conversation,
+    )
+    answer = primary_agent.handle_interaction(
+        conn,
+        FakeLLM(),
+        "What codename did I give Project Oriole?",
+        recall_conversation,
+    )
+
+    assert token in answer
+    events = event_store.get_events_by_conversation(conn, recall_conversation)
+    assert EventType.CAPABILITY_REQUEST in {event.event_type for event in events}
+    assert EventType.MEMORY_REQUEST in {event.event_type for event in events}
+    assert EventType.AGENT_DELEGATION not in {event.event_type for event in events}
+    assert EventType.AGENT_RESULT not in {event.event_type for event in events}
 
 
 class RaisingLLM(FakeLLM):
@@ -182,79 +211,22 @@ def test_handle_interaction_needs_no_shared_python_state(conn):
     assert reply1 and reply2
 
 
-def test_specialist_independently_recalls_prior_process_style_history(conn):
-    """Fresh Primary -> registry -> specialist -> JIT Memory uses no hidden transcript."""
-    fact_conversation = uuid.uuid4()
-    task_conversation = uuid.uuid4()
-    token = uuid.uuid4().hex[:10].upper()
-
-    primary_agent.handle_interaction(
-        conn,
-        FakeLLM(),
-        f"The codename for Project Oriole is {token}.",
-        fact_conversation,
-    )
-
-    answer = primary_agent.handle_interaction(
-        conn,
-        FakeLLM(),
-        "Use the memory specialist to tell me the codename for Project Oriole.",
-        task_conversation,
-    )
-    assert token in answer
-
-    events = event_store.get_events_by_conversation(conn, task_conversation)
-    event_types = [event.event_type for event in events]
-    assert EventType.CAPABILITY_REQUEST in event_types
-    assert EventType.CAPABILITY_PACKET in event_types
-    assert EventType.AGENT_DELEGATION in event_types
-    assert EventType.MEMORY_REQUEST in event_types
-    assert EventType.MEMORY_PACKET in event_types
-    assert EventType.AGENT_RESULT in event_types
-    assert EventType.AGENT_RESPONSE in event_types
-
-    correlations = {event.correlation_id for event in events}
-    assert len(correlations) == 1
-
-    capability_packet = next(
-        event for event in events if event.event_type == EventType.CAPABILITY_PACKET
-    )
-    delegation_event = next(
-        event for event in events if event.event_type == EventType.AGENT_DELEGATION
-    )
-    packet_event = next(event for event in events if event.event_type == EventType.MEMORY_PACKET)
-    result_event = next(event for event in events if event.event_type == EventType.AGENT_RESULT)
-
-    selected = capability_packet.payload["packet"]["matches"][0]["descriptor"]["capability_id"]
-    assert selected == "memory_specialist"
-    assert delegation_event.payload["specialist"] == selected
-    assert result_event.payload["specialist"] == selected
-    assert packet_event.payload["requesting_agent"] == selected
-    memory_request_id = packet_event.payload["packet"]["memory_request_id"]
-    assert memory_request_id in result_event.payload["memory_request_ids"]
-
-
 @pytest.mark.parametrize(
     "fact,task,expected_specialist",
     [
         (
-            "The codename for Project Oriole is {token}.",
-            "Use a memory specialist to recall the codename for Project Oriole.",
-            "memory_specialist",
-        ),
-        (
             "My deployment requirement is {token}.",
-            "Use a planning specialist to propose a deployment plan that explicitly includes my deployment requirement.",
+            "Use a specialist to propose a deployment plan that explicitly includes my deployment requirement.",
             "planning_specialist",
         ),
         (
             "The Project Atlas schedule changed from September to {token}.",
-            "Use an analysis specialist to compare the Project Atlas schedule change and state the new schedule.",
+            "Use a specialist to compare the Project Atlas schedule change and state the new schedule.",
             "analysis_specialist",
         ),
     ],
 )
-def test_registry_routes_three_heterogeneous_specialists(
+def test_multiple_specialists_independently_discover_internal_memory(
     conn,
     fact,
     task,
@@ -279,15 +251,37 @@ def test_registry_routes_three_heterogeneous_specialists(
 
     assert token in answer
     events = event_store.get_events_by_conversation(conn, task_conversation)
-    capability_packet = next(
+    event_types = [event.event_type for event in events]
+    assert EventType.AGENT_DELEGATION in event_types
+    assert EventType.MEMORY_REQUEST in event_types
+    assert EventType.MEMORY_PACKET in event_types
+    assert EventType.AGENT_RESULT in event_types
+    assert EventType.AGENT_RESPONSE in event_types
+
+    correlations = {event.correlation_id for event in events}
+    assert len(correlations) == 1
+
+    capability_packets = [
         event for event in events if event.event_type == EventType.CAPABILITY_PACKET
-    )
+    ]
+    assert len(capability_packets) == 2
+    first_selected = capability_packets[0].payload["packet"]["matches"][0]["descriptor"][
+        "capability_id"
+    ]
+    second_selected = capability_packets[1].payload["packet"]["matches"][0]["descriptor"][
+        "capability_id"
+    ]
+    assert first_selected == expected_specialist
+    assert second_selected == "internal_memory"
+
     delegation_event = next(
         event for event in events if event.event_type == EventType.AGENT_DELEGATION
     )
     result_event = next(event for event in events if event.event_type == EventType.AGENT_RESULT)
+    memory_request = next(event for event in events if event.event_type == EventType.MEMORY_REQUEST)
 
-    selected = capability_packet.payload["packet"]["matches"][0]["descriptor"]["capability_id"]
-    assert selected == expected_specialist
     assert delegation_event.payload["specialist"] == expected_specialist
     assert result_event.payload["specialist"] == expected_specialist
+    assert memory_request.source == expected_specialist
+    assert memory_request.payload["need"]["query_text"] == task
+    assert token in result_event.payload["text"]
