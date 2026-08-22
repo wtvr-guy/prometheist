@@ -1,0 +1,34 @@
+{
+  "benchmark_version": "semantic-retrieval-v1",
+  "description": "Synthetic semantic-recall cases designed to expose failures that exact, lexical, and hand-authored association routes may miss. Oracle relevance is evaluator-only.",
+  "events": [
+    {"event_id":"s001","global_seq":1,"conversation_id":"s01","conversation_seq":1,"event_type":"USER_PROMPT","source":"user","created_at":"2026-01-01T12:00:00+00:00","text":"The codename for Project Oriole is Blue Cedar.","payload":{}},
+    {"event_id":"s002","global_seq":2,"conversation_id":"s02","conversation_seq":1,"event_type":"USER_PROMPT","source":"user","created_at":"2026-01-02T12:00:00+00:00","text":"My deployment requirement is that all inference remain fully offline on ARM64 hardware.","payload":{}},
+    {"event_id":"s003","global_seq":3,"conversation_id":"s03","conversation_seq":1,"event_type":"USER_PROMPT","source":"user","created_at":"2026-01-03T12:00:00+00:00","text":"The Project Atlas schedule changed from September to February 14.","payload":{}},
+    {"event_id":"s004","global_seq":4,"conversation_id":"s04","conversation_seq":1,"event_type":"USER_PROMPT","source":"user","created_at":"2026-01-04T12:00:00+00:00","text":"I keep the backup encryption key in the red fireproof envelope.","payload":{}},
+    {"event_id":"s005","global_seq":5,"conversation_id":"s05","conversation_seq":1,"event_type":"USER_PROMPT","source":"user","created_at":"2026-01-05T12:00:00+00:00","text":"My preferred grinder setting for the Ethiopian beans is 17 clicks.","payload":{}},
+    {"event_id":"s006","global_seq":6,"conversation_id":"s06","conversation_seq":1,"event_type":"USER_PROMPT","source":"user","created_at":"2026-01-06T12:00:00+00:00","text":"The motorcycle shop estimated the repairs at $8,420.","payload":{}},
+    {"event_id":"s007","global_seq":7,"conversation_id":"s07","conversation_seq":1,"event_type":"USER_PROMPT","source":"user","created_at":"2026-01-07T12:00:00+00:00","text":"I no longer use Docker for local Prometheist development; PostgreSQL runs directly on Windows.","payload":{}},
+    {"event_id":"s008","global_seq":8,"conversation_id":"s08","conversation_seq":1,"event_type":"USER_PROMPT","source":"user","created_at":"2026-01-08T12:00:00+00:00","text":"The release candidate must preserve the append-only event history without rewriting authoritative events.","payload":{}},
+    {"event_id":"s009","global_seq":9,"conversation_id":"s09","conversation_seq":1,"event_type":"USER_PROMPT","source":"user","created_at":"2026-01-09T12:00:00+00:00","text":"My emergency contact for the conference is Dana Ruiz.","payload":{}},
+    {"event_id":"s010","global_seq":10,"conversation_id":"s10","conversation_seq":1,"event_type":"USER_PROMPT","source":"user","created_at":"2026-01-10T12:00:00+00:00","text":"The spare laptop is stored in the hall closet.","payload":{}},
+    {"event_id":"s011","global_seq":11,"conversation_id":"s11","conversation_seq":1,"event_type":"USER_PROMPT","source":"user","created_at":"2026-01-11T12:00:00+00:00","text":"I prefer the quarterly review deck to use a dark theme with minimal decoration.","payload":{}},
+    {"event_id":"s012","global_seq":12,"conversation_id":"s12","conversation_seq":1,"event_type":"USER_PROMPT","source":"user","created_at":"2026-01-12T12:00:00+00:00","text":"The fallback database backup is copied to an encrypted external SSD every Sunday night.","payload":{}}
+  ],
+  "questions": [
+    {"id":"sq01","query":"What was the tree-related alias for the bird initiative?","relevant_event_ids":["s001"],"required_event_ids":["s001"]},
+    {"id":"sq02","query":"What platform constraint must a deployment step respect?","relevant_event_ids":["s002"],"required_event_ids":["s002"]},
+    {"id":"sq03","query":"When is the revised Atlas milestone due?","relevant_event_ids":["s003"],"required_event_ids":["s003"]},
+    {"id":"sq04","query":"Where is the secret used to decrypt backups kept?","relevant_event_ids":["s004"],"required_event_ids":["s004"]},
+    {"id":"sq05","query":"How finely should I set the burrs for the African coffee?","relevant_event_ids":["s005"],"required_event_ids":["s005"]},
+    {"id":"sq06","query":"How large is the expected repair bill for the bike?","relevant_event_ids":["s006"],"required_event_ids":["s006"]},
+    {"id":"sq07","query":"Should local persistence run inside a container?","relevant_event_ids":["s007"],"required_event_ids":["s007"]},
+    {"id":"sq08","query":"What historical-data invariant must survive the release?","relevant_event_ids":["s008"],"required_event_ids":["s008"]},
+    {"id":"sq09","query":"Who should be called if something goes wrong at the event?","relevant_event_ids":["s009"],"required_event_ids":["s009"]},
+    {"id":"sq10","query":"Where did I put my secondary computer?","relevant_event_ids":["s010"],"required_event_ids":["s010"]},
+    {"id":"sq11","query":"What visual style do I want for the recurring business presentation?","relevant_event_ids":["s011"],"required_event_ids":["s011"]},
+    {"id":"sq12","query":"What is the off-machine recovery routine for the database?","relevant_event_ids":["s012"],"required_event_ids":["s012"]},
+    {"id":"sq13","query":"What is my passport number?","relevant_event_ids":[],"required_event_ids":[],"expect_no_evidence":true},
+    {"id":"sq14","query":"Which prescription medication do I take every morning?","relevant_event_ids":[],"required_event_ids":[],"expect_no_evidence":true}
+  ]
+}
