@@ -29,6 +29,7 @@ def invoke_capability(
     before_global_seq: int,
     requesting_agent: str,
     capability_request_id: uuid.UUID | None = None,
+    supplemental_query_texts: list[str] | None = None,
     registry: CapabilityRegistry = DEFAULT_REGISTRY,
     depth: int = 0,
 ) -> CapabilityOutput:
@@ -39,11 +40,11 @@ def invoke_capability(
     capability_id = registration.descriptor.capability_id
 
     if registration.executor == "internal_memory":
-        # The task itself remains the canonical memory cue. Capability-discovery
-        # paraphrases describe *what capability* is needed and must never replace
-        # the evidence-retrieval query.
+        # The task itself remains the canonical memory cue. LLM-generated
+        # capability descriptions may help only after canonical abstention.
         need = jit_memory.build_memory_need(
             task,
+            supplemental_query_texts=supplemental_query_texts or [],
             conversation_id=conversation_id,
         )
         return jit_memory.request_memory(
