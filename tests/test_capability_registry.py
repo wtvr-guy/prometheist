@@ -45,6 +45,24 @@ def test_registry_routes_heterogeneous_capabilities_without_llm_selection(query,
     assert second == first
 
 
+@pytest.mark.parametrize(
+    "query",
+    [
+        "persisted internal history access",
+        "retrieve stored deployment information",
+        "look up saved Project Atlas data",
+        "access prior context about the deployment requirement",
+    ],
+)
+def test_internal_memory_discovery_accepts_natural_information_access_phrasing(query):
+    need = CapabilityNeed(query_text=query, limit=1)
+
+    matches = capability_registry.DEFAULT_REGISTRY.discover(need)
+
+    assert matches
+    assert matches[0].descriptor.capability_id == "internal_memory"
+
+
 def test_registry_returns_no_match_instead_of_inventing_capability():
     need = CapabilityNeed(
         query_text="Render a textured 3D mesh from a point cloud.",
