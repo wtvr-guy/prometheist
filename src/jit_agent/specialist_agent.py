@@ -116,13 +116,12 @@ def handle_task(
         payload=decision.model_dump(mode="json"),
     )
 
-    packet: MemoryPacket | None = None
     memory_request_ids: list[uuid.UUID] = []
     evidence_event_ids: list[uuid.UUID] = []
 
     if decision.action == AgentAction.REQUEST_CAPABILITY:
-        # A specialist's capability query describes the missing function, not its
-        # domain task. Excluding itself prevents trivial self-recursion.
+        # A specialist's canonical capability cue is its explicit description of
+        # the missing functionality. Excluding itself prevents trivial recursion.
         need = CapabilityNeed(
             query_text=decision.capability_query or "",
             exclude_capability_ids=[specialist],
@@ -153,6 +152,7 @@ def handle_task(
         else:
             selected_id = capability_packet.matches[0].descriptor.capability_id
             selected = registry.get(selected_id)
+            supplemental = [decision.capability_query] if decision.capability_query else []
             try:
                 output = capability_dispatcher.invoke_capability(
                     conn,
@@ -164,6 +164,7 @@ def handle_task(
                     before_global_seq=before_global_seq,
                     requesting_agent=specialist,
                     capability_request_id=capability_packet.capability_request_id,
+                    supplemental_query_texts=supplemental,
                     registry=registry,
                     depth=depth,
                 )
@@ -179,15 +180,14 @@ def handle_task(
                 raise
 
             if isinstance(output, MemoryPacket):
-                packet = output
-                memory_request_ids.append(packet.memory_request_id)
-                evidence_event_ids.extend(item.source_event_id for item in packet.items)
-                if packet.supported:
+                memory_request_ids.append(output.memory_request_id)
+                evidence_event_ids.extend(item.source_event_id for item in output.items)
+                if output.supported:
                     try:
                         text = llm.answer_specialist_task(
                             registration.instruction,
                             task,
-                            packet,
+                            output,
                         )
                     except Exception as exc:
                         _record_error(
