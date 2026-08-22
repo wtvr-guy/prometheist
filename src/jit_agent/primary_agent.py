@@ -104,10 +104,12 @@ def handle_interaction(
             _record_error(conn, conversation_id, correlation_id, "respond", exc)
             raise
     else:
-        supplemental = [decision.capability_query] if decision.capability_query else []
+        discovery_supplemental = (
+            [decision.capability_query] if decision.capability_query else []
+        )
         need = CapabilityNeed(
             query_text=user_text,
-            supplemental_query_texts=supplemental,
+            supplemental_query_texts=discovery_supplemental,
             limit=1,
         )
         try:
@@ -127,6 +129,9 @@ def handle_interaction(
         else:
             capability_id = capability_packet.matches[0].descriptor.capability_id
             registration = capability_registry.DEFAULT_REGISTRY.get(capability_id)
+            capability_input_supplemental = (
+                [decision.capability_input] if decision.capability_input else []
+            )
             try:
                 output = capability_dispatcher.invoke_capability(
                     conn,
@@ -138,7 +143,7 @@ def handle_interaction(
                     before_global_seq=user_prompt_event.global_seq,
                     requesting_agent=SOURCE,
                     capability_request_id=capability_packet.capability_request_id,
-                    supplemental_query_texts=supplemental,
+                    supplemental_query_texts=capability_input_supplemental,
                 )
             except Exception as exc:
                 _record_error(conn, conversation_id, correlation_id, "capability_invoke", exc)
