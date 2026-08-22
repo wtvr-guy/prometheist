@@ -29,7 +29,7 @@ class FakeLLM:
             if "codename" in lowered:
                 recall_input = "Project Oriole codename"
             else:
-                recall_input = "remember number"
+                recall_input = "remember"
             return AgentDecision(
                 action=AgentAction.REQUEST_CAPABILITY,
                 capability_query="persisted internal history access",
