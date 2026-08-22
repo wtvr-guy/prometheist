@@ -177,6 +177,20 @@ DEFAULT_REGISTRY = CapabilityRegistry(
                 "recall",
                 "persisted history",
                 "internal history",
+                "persisted internal history",
+                "persisted information",
+                "stored information",
+                "saved information",
+                "stored data",
+                "saved data",
+                "prior context",
+                "previous context",
+                "stored context",
+                "saved context",
+                "retrieve",
+                "retrieval",
+                "lookup",
+                "look up",
                 "historical",
                 "prior",
                 "earlier",
@@ -212,8 +226,9 @@ DEFAULT_REGISTRY = CapabilityRegistry(
             ),
             executor="stateless_specialist",
             instruction=(
-                "Produce a concrete plan or recommendation. Request additional "
-                "capabilities when required constraints or information are not supplied."
+                "Produce a concrete plan or recommendation. When required persisted "
+                "information is missing, request persisted internal history access "
+                "and put only the specific missing information in capability_input."
             ),
         ),
         RegisteredCapability(
@@ -240,8 +255,9 @@ DEFAULT_REGISTRY = CapabilityRegistry(
             ),
             executor="stateless_specialist",
             instruction=(
-                "Analyze and compare evidence. Request additional capabilities "
-                "when the task depends on information not supplied."
+                "Analyze and compare evidence. When required persisted information "
+                "is missing, request persisted internal history access and put only "
+                "the specific missing information in capability_input."
             ),
         ),
     )
