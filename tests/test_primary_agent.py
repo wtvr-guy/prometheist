@@ -26,9 +26,14 @@ class FakeLLM:
         if "what" in lowered and (
             "remember" in lowered or "number" in lowered or "codename" in lowered
         ):
+            if "codename" in lowered:
+                recall_input = "Project Oriole codename"
+            else:
+                recall_input = "remember number"
             return AgentDecision(
                 action=AgentAction.REQUEST_CAPABILITY,
-                capability_query=f"access persisted internal history about {prompt}",
+                capability_query="persisted internal history access",
+                capability_input=recall_input,
             )
         return AgentDecision(action=AgentAction.RESPOND_DIRECTLY)
 
@@ -56,7 +61,8 @@ class FakeLLM:
             subject = task
         return AgentDecision(
             action=AgentAction.REQUEST_CAPABILITY,
-            capability_query=f"access persisted internal history about {subject}",
+            capability_query="persisted internal history access",
+            capability_input=subject,
         )
 
     def answer_specialist_task(
@@ -71,12 +77,13 @@ class FakeLLM:
 
 
 class LossyCapabilityCueLLM(FakeLLM):
-    """Classifier whose capability hint is intentionally useless for recall."""
+    """Classifier whose discovery and invocation hints are intentionally useless."""
 
     def classify(self, prompt: str) -> AgentDecision:
         return AgentDecision(
             action=AgentAction.REQUEST_CAPABILITY,
             capability_query="unrelated additional functionality",
+            capability_input="unrelated compressed information cue",
         )
 
 
@@ -148,14 +155,16 @@ def test_primary_discovers_internal_memory_and_preserves_exact_user_cue(conn):
     packet_event = next(event for event in events if event.event_type == EventType.MEMORY_PACKET)
 
     assert decision_event.payload["capability_query"] == "unrelated additional functionality"
+    assert decision_event.payload["capability_input"] == "unrelated compressed information cue"
     selected = capability_packet.payload["packet"]["matches"][0]["descriptor"]["capability_id"]
     assert selected == "internal_memory"
     assert capability_packet.payload["packet"]["selected_query_role"] == "canonical"
     assert request_event.payload["need"]["query_text"] == question
     assert request_event.payload["need"]["supplemental_query_texts"] == [
-        "unrelated additional functionality"
+        "unrelated compressed information cue"
     ]
     assert packet_event.payload["packet"]["supported"] is True
+    assert packet_event.payload["packet"]["retrieval_trace"]["selected_query_role"] == "canonical"
 
 
 def test_direct_memory_use_does_not_create_agent_delegation(conn):
@@ -212,17 +221,19 @@ def test_handle_interaction_needs_no_shared_python_state(conn):
 
 
 @pytest.mark.parametrize(
-    "fact,task,expected_specialist",
+    "fact,task,expected_specialist,expected_memory_input",
     [
         (
             "My deployment requirement is {token}.",
             "Use a specialist to propose a deployment plan that explicitly includes my deployment requirement.",
             "planning_specialist",
+            "deployment requirement",
         ),
         (
             "The Project Atlas schedule changed from September to {token}.",
             "Use a specialist to compare the Project Atlas schedule change and state the new schedule.",
             "analysis_specialist",
+            "Project Atlas schedule change",
         ),
     ],
 )
@@ -231,6 +242,7 @@ def test_multiple_specialists_independently_discover_internal_memory(
     fact,
     task,
     expected_specialist,
+    expected_memory_input,
 ):
     fact_conversation = uuid.uuid4()
     task_conversation = uuid.uuid4()
@@ -283,5 +295,5 @@ def test_multiple_specialists_independently_discover_internal_memory(
     assert delegation_event.payload["specialist"] == expected_specialist
     assert result_event.payload["specialist"] == expected_specialist
     assert memory_request.source == expected_specialist
-    assert memory_request.payload["need"]["query_text"] == task
+    assert memory_request.payload["need"]["query_text"] == expected_memory_input
     assert token in result_event.payload["text"]
