@@ -1,8 +1,8 @@
-"""Generic executor for stateless memory-grounded specialist capabilities.
+"""Generic executor for stateless specialist-agent capabilities.
 
-Specialist identity and role instructions come from the deterministic capability
-registry. The executor itself is capability-agnostic: every model call is fresh,
-and any required persisted history is obtained through shared JIT Memory.
+Specialists receive only their role instruction and current task. If additional
+functionality or information is needed, they emit ``REQUEST_CAPABILITY`` and use
+the same deterministic registry/dispatcher path as the Primary Agent.
 """
 from __future__ import annotations
 
@@ -12,9 +12,16 @@ from typing import Protocol
 
 import psycopg
 
-from jit_agent import event_store, jit_memory
-from jit_agent.capability_registry import RegisteredCapability
-from jit_agent.models import AgentResult, EventType, MemoryNeedDecision, MemoryPacket
+from jit_agent import capability_dispatcher, capability_registry, event_store
+from jit_agent.capability_registry import CapabilityRegistry, RegisteredCapability
+from jit_agent.models import (
+    AgentAction,
+    AgentDecision,
+    AgentResult,
+    CapabilityNeed,
+    EventType,
+    MemoryPacket,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,17 +29,17 @@ logger = logging.getLogger(__name__)
 class SpecialistLLM(Protocol):
     """Each method represents a fresh, disposable specialist model invocation."""
 
-    def plan_specialist_memory(
+    def decide_specialist_action(
         self,
         specialist_instruction: str,
         task: str,
-    ) -> MemoryNeedDecision: ...
+    ) -> AgentDecision: ...
 
     def answer_specialist_task(
         self,
         specialist_instruction: str,
         task: str,
-        packet: MemoryPacket,
+        packet: MemoryPacket | None,
     ) -> str: ...
 
 
@@ -75,58 +82,136 @@ def handle_task(
     conversation_id: uuid.UUID,
     correlation_id: uuid.UUID,
     before_global_seq: int,
+    registry: CapabilityRegistry = capability_registry.DEFAULT_REGISTRY,
+    depth: int = 0,
 ) -> AgentResult:
     """Run one registered specialist with no inherited transcript or hidden state."""
     specialist = registration.descriptor.capability_id
-    if registration.executor != "memory_grounded_specialist":
+    if registration.executor != "stateless_specialist":
         raise ValueError(
             f"Capability {specialist!r} is not executable by the specialist executor"
         )
+    if not registration.instruction:
+        raise ValueError(f"Specialist capability {specialist!r} has no role instruction")
 
     try:
-        decision = llm.plan_specialist_memory(registration.specialist_instruction, task)
+        decision = llm.decide_specialist_action(registration.instruction, task)
     except Exception as exc:
         _record_error(
             conn,
             specialist=specialist,
             conversation_id=conversation_id,
             correlation_id=correlation_id,
-            stage="specialist_plan_memory",
+            stage="specialist_decision",
             exc=exc,
         )
         raise
 
-    need = jit_memory.build_memory_need(
-        decision.query_text,
-        entities=decision.entities,
+    event_store.record_event(
+        conn,
         conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        event_type=EventType.AGENT_DECISION,
+        source=specialist,
+        payload=decision.model_dump(mode="json"),
     )
-    try:
-        packet = jit_memory.request_memory(
-            conn,
-            conversation_id=conversation_id,
-            correlation_id=correlation_id,
-            requesting_agent=specialist,
-            need=need,
-            before_global_seq=before_global_seq,
-        )
-    except Exception as exc:
-        _record_error(
-            conn,
-            specialist=specialist,
-            conversation_id=conversation_id,
-            correlation_id=correlation_id,
-            stage="specialist_memory",
-            exc=exc,
-        )
-        raise
 
-    if packet.supported:
+    packet: MemoryPacket | None = None
+    memory_request_ids: list[uuid.UUID] = []
+    evidence_event_ids: list[uuid.UUID] = []
+
+    if decision.action == AgentAction.REQUEST_CAPABILITY:
+        # A specialist's capability query describes the missing function, not its
+        # domain task. Excluding itself prevents trivial self-recursion.
+        need = CapabilityNeed(
+            query_text=decision.capability_query or "",
+            exclude_capability_ids=[specialist],
+            limit=1,
+        )
+        try:
+            capability_packet = capability_registry.request_capability(
+                conn,
+                conversation_id=conversation_id,
+                correlation_id=correlation_id,
+                requesting_agent=specialist,
+                need=need,
+                registry=registry,
+            )
+        except Exception as exc:
+            _record_error(
+                conn,
+                specialist=specialist,
+                conversation_id=conversation_id,
+                correlation_id=correlation_id,
+                stage="specialist_capability_discovery",
+                exc=exc,
+            )
+            raise
+
+        if not capability_packet.matches:
+            text = "No registered capability can satisfy the specialist's additional need."
+        else:
+            selected_id = capability_packet.matches[0].descriptor.capability_id
+            selected = registry.get(selected_id)
+            try:
+                output = capability_dispatcher.invoke_capability(
+                    conn,
+                    llm,
+                    registration=selected,
+                    task=task,
+                    conversation_id=conversation_id,
+                    correlation_id=correlation_id,
+                    before_global_seq=before_global_seq,
+                    requesting_agent=specialist,
+                    capability_request_id=capability_packet.capability_request_id,
+                    registry=registry,
+                    depth=depth,
+                )
+            except Exception as exc:
+                _record_error(
+                    conn,
+                    specialist=specialist,
+                    conversation_id=conversation_id,
+                    correlation_id=correlation_id,
+                    stage="specialist_capability_invoke",
+                    exc=exc,
+                )
+                raise
+
+            if isinstance(output, MemoryPacket):
+                packet = output
+                memory_request_ids.append(packet.memory_request_id)
+                evidence_event_ids.extend(item.source_event_id for item in packet.items)
+                if packet.supported:
+                    try:
+                        text = llm.answer_specialist_task(
+                            registration.instruction,
+                            task,
+                            packet,
+                        )
+                    except Exception as exc:
+                        _record_error(
+                            conn,
+                            specialist=specialist,
+                            conversation_id=conversation_id,
+                            correlation_id=correlation_id,
+                            stage="specialist_answer",
+                            exc=exc,
+                        )
+                        raise
+                else:
+                    text = "I do not have supporting persisted evidence for that."
+            else:
+                # Nested agent capabilities already return a bounded textual result.
+                text = output.text
+                memory_request_ids.extend(output.memory_request_ids)
+                evidence_event_ids.extend(output.evidence_event_ids)
+    else:
         try:
             text = llm.answer_specialist_task(
-                registration.specialist_instruction,
+                registration.instruction,
                 task,
-                packet,
+                None,
             )
         except Exception as exc:
             _record_error(
@@ -138,15 +223,13 @@ def handle_task(
                 exc=exc,
             )
             raise
-    else:
-        text = "I do not have supporting persisted evidence for that."
 
     result = AgentResult(
         specialist=specialist,
         task=task,
         text=text,
-        memory_request_ids=[packet.memory_request_id],
-        evidence_event_ids=[item.source_event_id for item in packet.items],
+        memory_request_ids=memory_request_ids,
+        evidence_event_ids=evidence_event_ids,
     )
     event_store.record_event(
         conn,
