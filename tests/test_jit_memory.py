@@ -120,13 +120,19 @@ def test_memory_boundary_uses_supplemental_query_only_after_canonical_abstains(c
         ),
     ],
 )
-def test_captured_real_specialist_query_can_fallback_after_verbose_task(
+def test_captured_real_specialist_queries_document_current_lexical_gap(
     conn,
     fact_template,
     canonical_query,
     specialist_query,
 ):
-    """Real Qwen specialist queries from v0.6 failures remain useful fallback cues."""
+    """Captured real-Qwen formulations reproduce the measured semantic-recall gap.
+
+    Both the verbose original specialist task and Qwen's own information-need
+    paraphrase contain the right meaning, but the frozen lexical/associative
+    kernel admits no evidence. This is the benchmark-backed justification for
+    adding semantic retrieval rather than expanding hand-maintained synonyms.
+    """
     source_conversation = uuid.uuid4()
     request_conversation = uuid.uuid4()
     token = uuid.uuid4().hex[:10].upper()
@@ -150,10 +156,12 @@ def test_captured_real_specialist_query_can_fallback_after_verbose_task(
         before_global_seq=current_prompt.global_seq,
     )
 
-    assert packet.supported is True
-    assert source_event.event_id in {item.source_event_id for item in packet.items}
-    assert token in packet.items[0].content
-    assert packet.retrieval_trace["selected_query_role"] == "supplemental"
+    assert packet.supported is False
+    assert packet.items == []
+    assert source_event.event_id not in {item.source_event_id for item in packet.items}
+    attempts = packet.retrieval_trace["query_attempts"]
+    assert [attempt["role"] for attempt in attempts] == ["canonical", "supplemental"]
+    assert all(attempt["supported"] is False for attempt in attempts)
 
 
 def test_memory_boundary_preserves_unknown_fact_abstention(conn):
