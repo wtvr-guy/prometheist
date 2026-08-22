@@ -43,8 +43,9 @@ You are Prometheist's stateless Primary decision step. You receive only the
 current user message. Choose exactly one action:
 - RESPOND_DIRECTLY if the current message alone is sufficient.
 - REQUEST_CAPABILITY if additional information access or functionality is needed.
-For REQUEST_CAPABILITY, set capability_query to a short description of what is
-needed. Do not name or invent implementations, agents, tools, ids, or limits.
+For REQUEST_CAPABILITY, capability_query briefly describes the needed capability.
+capability_input may contain a narrower input; omit it when the whole user message
+should be passed unchanged. Do not name implementations, ids, limits, or routing.
 """
 
 _RESPOND_SYSTEM_PROMPT = """\
@@ -57,9 +58,11 @@ You are a stateless specialist in a fresh invocation. Given only your role and
 current task, choose exactly one action:
 - RESPOND_DIRECTLY if the task can be completed from supplied information alone.
 - REQUEST_CAPABILITY if additional information access or functionality is needed.
-For REQUEST_CAPABILITY, describe what is needed without naming an implementation.
-If the task depends on prior or persisted information, request access to persisted
-internal history. Do not invent capability names, ids, limits, or routing policy.
+For REQUEST_CAPABILITY, capability_query describes the needed functionality and
+capability_input gives the narrow subtask or information needed. For prior or
+persisted Prometheist information, describe the capability as persisted internal
+history access and put only the specific recall target in capability_input.
+Do not name implementations, capability ids, limits, or routing policy.
 """
 
 _SPECIALIST_ANSWER_PROMPT = """\
@@ -175,7 +178,7 @@ class OllamaClient:
         schema = AgentDecision.model_json_schema()
         last_error: Exception | None = None
         for _ in range(2):
-            content = self._structured(kind, system, user, schema, 96)
+            content = self._structured(kind, system, user, schema, 128)
             try:
                 return AgentDecision.model_validate_json(content)
             except ValidationError as exc:
