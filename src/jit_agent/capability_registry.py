@@ -1,9 +1,9 @@
 """Deterministic just-in-time discovery of currently installed capabilities.
 
-The registry is current system configuration, not autobiographical memory. Agents
-state what functionality they need through ``CapabilityNeed``; deterministic
-application code returns a bounded ``CapabilityPacket`` containing only relevant
-registered capabilities. No LLM is required to remember or enumerate the MAS.
+The registry is Prometheist's minimal discovery plane. Agents describe additional
+functionality they need through ``CapabilityNeed``; deterministic application
+code returns a bounded ``CapabilityPacket`` containing only relevant installed
+capabilities. Persistent memory is registered here like any other capability.
 """
 from __future__ import annotations
 
@@ -29,12 +29,12 @@ _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
 @dataclass(frozen=True)
 class RegisteredCapability:
-    """Internal registration metadata never dumped wholesale into an LLM prompt."""
+    """Application-owned registration metadata never dumped wholesale into prompts."""
 
     descriptor: CapabilityDescriptor
     routing_terms: tuple[str, ...]
-    specialist_instruction: str
-    executor: str = "memory_grounded_specialist"
+    executor: str
+    instruction: str | None = None
 
 
 class CapabilityRegistry:
@@ -75,13 +75,40 @@ class CapabilityRegistry:
         )
 
     def discover(self, need: CapabilityNeed) -> list[CapabilityMatch]:
+        """Return matches using canonical task text before bounded supplemental cues."""
+        matches, _, _ = self.discover_with_trace(need)
+        return matches
+
+    def discover_with_trace(
+        self,
+        need: CapabilityNeed,
+    ) -> tuple[list[CapabilityMatch], str | None, str | None]:
+        matches = self._discover_query(need, need.query_text)
+        if matches:
+            return matches, "canonical", need.query_text
+
+        for supplemental in need.supplemental_query_texts:
+            matches = self._discover_query(need, supplemental)
+            if matches:
+                return matches, "supplemental", supplemental
+
+        return [], None, None
+
+    def _discover_query(
+        self,
+        need: CapabilityNeed,
+        query_text: str,
+    ) -> list[CapabilityMatch]:
         allowed_kinds = set(need.kinds) if need.kinds else None
-        query_tokens = _tokens(need.query_text)
+        excluded = set(need.exclude_capability_ids)
+        query_tokens = _tokens(query_text)
         query_token_set = set(query_tokens)
         matches: list[CapabilityMatch] = []
 
         for registration in self._registrations.values():
             descriptor = registration.descriptor
+            if descriptor.capability_id in excluded:
+                continue
             if allowed_kinds is not None and descriptor.kind not in allowed_kinds:
                 continue
 
@@ -100,9 +127,7 @@ class CapabilityRegistry:
                 if _contains_phrase(query_tokens, term_tokens):
                     score += 3.0 + (0.25 * len(term_tokens))
                     matched_terms.append(raw_term)
-                elif set(term_tokens).issubset(query_token_set):
-                    # Multi-token cues may still be useful when words are split by
-                    # modifiers, but exact contiguous phrases rank higher.
+                elif len(term_tokens) > 1 and set(term_tokens).issubset(query_token_set):
                     score += 1.5 + (0.15 * len(term_tokens))
                     matched_terms.append(raw_term)
 
@@ -129,25 +154,29 @@ def _contains_phrase(haystack: tuple[str, ...], needle: tuple[str, ...]) -> bool
     if not needle or len(needle) > len(haystack):
         return False
     width = len(needle)
-    return any(haystack[index : index + width] == needle for index in range(len(haystack) - width + 1))
+    return any(
+        haystack[index : index + width] == needle
+        for index in range(len(haystack) - width + 1)
+    )
 
 
 DEFAULT_REGISTRY = CapabilityRegistry(
     (
         RegisteredCapability(
             descriptor=CapabilityDescriptor(
-                capability_id="memory_specialist",
-                kind=CapabilityKind.AGENT,
+                capability_id="internal_memory",
+                kind=CapabilityKind.SERVICE,
                 description=(
-                    "Recall, summarize, and synthesize persisted internal history "
-                    "with exact supporting evidence."
+                    "Retrieve relevant persisted internal history as bounded "
+                    "evidence with exact provenance."
                 ),
             ),
             routing_terms=(
                 "memory",
                 "remember",
                 "recall",
-                "history",
+                "persisted history",
+                "internal history",
                 "historical",
                 "prior",
                 "earlier",
@@ -157,10 +186,7 @@ DEFAULT_REGISTRY = CapabilityRegistry(
                 "codename",
                 "launch code",
             ),
-            specialist_instruction=(
-                "Recall and synthesize persisted internal history. Preserve exact "
-                "facts and distinguish unsupported claims from evidence."
-            ),
+            executor="internal_memory",
         ),
         RegisteredCapability(
             descriptor=CapabilityDescriptor(
@@ -168,7 +194,7 @@ DEFAULT_REGISTRY = CapabilityRegistry(
                 kind=CapabilityKind.AGENT,
                 description=(
                     "Develop plans, sequences, recommendations, and next steps "
-                    "subject to persisted requirements and preferences."
+                    "subject to available requirements and preferences."
                 ),
             ),
             routing_terms=(
@@ -184,9 +210,10 @@ DEFAULT_REGISTRY = CapabilityRegistry(
                 "deployment",
                 "next step",
             ),
-            specialist_instruction=(
-                "Produce a concrete plan or recommendation constrained by the "
-                "retrieved requirements, preferences, and prior decisions."
+            executor="stateless_specialist",
+            instruction=(
+                "Produce a concrete plan or recommendation. Request additional "
+                "capabilities when required constraints or information are not supplied."
             ),
         ),
         RegisteredCapability(
@@ -195,7 +222,7 @@ DEFAULT_REGISTRY = CapabilityRegistry(
                 kind=CapabilityKind.AGENT,
                 description=(
                     "Compare, evaluate, reconcile, and explain changes or "
-                    "relationships across persisted evidence."
+                    "relationships across available evidence."
                 ),
             ),
             routing_terms=(
@@ -211,9 +238,10 @@ DEFAULT_REGISTRY = CapabilityRegistry(
                 "implication",
                 "relationship",
             ),
-            specialist_instruction=(
-                "Analyze and compare the retrieved evidence. Explain supported "
-                "differences, changes, or implications without inventing facts."
+            executor="stateless_specialist",
+            instruction=(
+                "Analyze and compare evidence. Request additional capabilities "
+                "when the task depends on information not supplied."
             ),
         ),
     )
@@ -244,10 +272,13 @@ def request_capability(
         payload_text=need.query_text,
     )
 
+    matches, selected_query_role, selected_query_text = registry.discover_with_trace(need)
     packet = CapabilityPacket(
         capability_request_id=capability_request_id,
         need=need,
-        matches=registry.discover(need),
+        matches=matches,
+        selected_query_role=selected_query_role,
+        selected_query_text=selected_query_text,
     )
     event_store.record_event(
         conn,
