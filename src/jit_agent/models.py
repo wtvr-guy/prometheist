@@ -56,9 +56,11 @@ class AgentAction(str, Enum):
 class AgentDecision(BaseModel):
     """Minimal structured output of a stateless agent decision step.
 
-    Agents say whether they can proceed with supplied context or need additional
-    system functionality. They never name installed implementations. Exact tasks
-    remain authoritative; ``capability_query`` is only a bounded semantic hint.
+    ``capability_query`` is for discovery: it describes what kind of system
+    functionality is required. ``capability_input`` is optional invocation data:
+    it carries a narrower self-contained subtask or information need to whichever
+    capability the registry selects. Keeping them separate prevents discovery
+    language from contaminating capability-specific inputs such as memory queries.
     """
 
     action: AgentAction
@@ -67,6 +69,13 @@ class AgentDecision(BaseModel):
         description=(
             "When requesting a capability, briefly describe the additional "
             "functionality or information access needed without naming an implementation."
+        ),
+    )
+    capability_input: str | None = Field(
+        default=None,
+        description=(
+            "Optional narrower self-contained input for the selected capability. "
+            "Omit when the whole current task should be passed unchanged."
         ),
     )
 
