@@ -101,6 +101,61 @@ def test_memory_boundary_uses_supplemental_query_only_after_canonical_abstains(c
     assert attempts[1]["supported"] is True
 
 
+@pytest.mark.parametrize(
+    "fact_template,canonical_query,specialist_query",
+    [
+        (
+            "My deployment requirement is {token}.",
+            "Use a specialist to propose one deployment step that explicitly includes my deployment requirement.",
+            (
+                "access to deployment requirement specification from prior or persisted internal "
+                "history, including user-defined constraints, objectives, and constraints for the "
+                "current deployment task"
+            ),
+        ),
+        (
+            "The Project Atlas schedule changed from September to {token}.",
+            "Use a specialist to compare the Project Atlas schedule change and state the new schedule value exactly.",
+            "Access persisted internal history for Project Atlas schedule change details",
+        ),
+    ],
+)
+def test_captured_real_specialist_query_can_fallback_after_verbose_task(
+    conn,
+    fact_template,
+    canonical_query,
+    specialist_query,
+):
+    """Real Qwen specialist queries from v0.6 failures remain useful fallback cues."""
+    source_conversation = uuid.uuid4()
+    request_conversation = uuid.uuid4()
+    token = uuid.uuid4().hex[:10].upper()
+    source_event = _record_text(
+        conn,
+        source_conversation,
+        fact_template.format(token=token),
+    )
+    current_prompt = _record_text(conn, request_conversation, canonical_query)
+
+    packet = jit_memory.request_memory(
+        conn,
+        conversation_id=request_conversation,
+        correlation_id=current_prompt.correlation_id,
+        requesting_agent="captured_specialist",
+        need=jit_memory.build_memory_need(
+            canonical_query,
+            supplemental_query_texts=[specialist_query],
+            conversation_id=request_conversation,
+        ),
+        before_global_seq=current_prompt.global_seq,
+    )
+
+    assert packet.supported is True
+    assert source_event.event_id in {item.source_event_id for item in packet.items}
+    assert token in packet.items[0].content
+    assert packet.retrieval_trace["selected_query_role"] == "supplemental"
+
+
 def test_memory_boundary_preserves_unknown_fact_abstention(conn):
     source_conversation = uuid.uuid4()
     request_conversation = uuid.uuid4()
