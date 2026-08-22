@@ -120,8 +120,9 @@ def handle_task(
     evidence_event_ids: list[uuid.UUID] = []
 
     if decision.action == AgentAction.REQUEST_CAPABILITY:
-        # A specialist's canonical capability cue is its explicit description of
-        # the missing functionality. Excluding itself prevents trivial recursion.
+        # A nested agent request has no user-authored capability-discovery cue;
+        # the specialist's description is therefore canonical for discovery.
+        # Excluding itself prevents trivial recursion.
         need = CapabilityNeed(
             query_text=decision.capability_query or "",
             exclude_capability_ids=[specialist],
@@ -152,19 +153,18 @@ def handle_task(
         else:
             selected_id = capability_packet.matches[0].descriptor.capability_id
             selected = registry.get(selected_id)
-            supplemental = [decision.capability_query] if decision.capability_query else []
+            invocation_task = decision.capability_input or task
             try:
                 output = capability_dispatcher.invoke_capability(
                     conn,
                     llm,
                     registration=selected,
-                    task=task,
+                    task=invocation_task,
                     conversation_id=conversation_id,
                     correlation_id=correlation_id,
                     before_global_seq=before_global_seq,
                     requesting_agent=specialist,
                     capability_request_id=capability_packet.capability_request_id,
-                    supplemental_query_texts=supplemental,
                     registry=registry,
                     depth=depth,
                 )
@@ -202,7 +202,6 @@ def handle_task(
                 else:
                     text = "I do not have supporting persisted evidence for that."
             else:
-                # Nested agent capabilities already return a bounded textual result.
                 text = output.text
                 memory_request_ids.extend(output.memory_request_ids)
                 evidence_event_ids.extend(output.evidence_event_ids)
