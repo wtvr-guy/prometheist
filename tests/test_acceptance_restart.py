@@ -6,13 +6,33 @@ calls, deterministic capability discovery, and PostgreSQL-backed JIT memory.
 """
 from __future__ import annotations
 
+import json
 import uuid
 
 import pytest
 
+from jit_agent import db, event_store
 from tests._cli_helpers import ollama_available, run_once
 
 pytestmark = pytest.mark.skipif(not ollama_available(), reason="Ollama is not reachable")
+
+
+def _conversation_trace(conversation_id: uuid.UUID) -> str:
+    """Return a compact persisted causal trace for acceptance-test failures."""
+    conn = db.get_connection()
+    try:
+        events = event_store.get_events_by_conversation(conn, conversation_id)
+    finally:
+        conn.close()
+
+    lines: list[str] = []
+    for event in events:
+        payload = json.dumps(event.payload, sort_keys=True, default=str)
+        lines.append(
+            f"seq={event.conversation_seq} type={event.event_type.value} "
+            f"source={event.source} payload={payload}"
+        )
+    return "\n".join(lines)
 
 
 @pytest.mark.parametrize(
@@ -40,7 +60,7 @@ def test_cross_process_restart_discovers_internal_memory_capability(fact_sentenc
     # emits REQUEST_CAPABILITY and deterministic discovery selects internal_memory.
     answer = run_once(question, recall_conversation)
 
-    assert random_fact in answer
+    assert random_fact in answer, _conversation_trace(recall_conversation)
 
 
 @pytest.mark.parametrize(
@@ -73,4 +93,4 @@ def test_v06_multiple_specialists_discover_memory_without_hidden_transcript(
     # missing persisted information. The registry then selects internal_memory.
     answer = run_once(specialist_task, task_conversation)
 
-    assert random_fact in answer
+    assert random_fact in answer, _conversation_trace(task_conversation)
