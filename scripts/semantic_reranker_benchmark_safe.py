@@ -1,15 +1,17 @@
 """Compatibility wrapper for the Qwen3 reranker benchmark.
 
-llama.cpp grammars operate on token text prefixes, so the grammar
-``root ::= "yes" | "no"`` can admit tokens such as ``y`` or ``n`` in addition
-to the complete Qwen3 reranker answer tokens ``yes`` and ``no``.  The original
-benchmark requested only the top two post-sampling probabilities, which can
-therefore omit one complete answer token even when the scoring path is valid.
+Qwen3-Reranker defines relevance from the pairwise logits of the complete
+single-token answers ``yes`` and ``no``. llama.cpp's ``n_probs`` response only
+returns the top-N tokens, and grammar-constrained sampling can still expose
+prefix/variant tokens (``y``, ``No``, ``false``...) while omitting one of the
+complete target tokens.
 
-This wrapper preserves the benchmark and model-residency behavior unchanged,
-but requests a wider grammar-filtered probability window and then performs the
-Qwen-recommended binary normalization over the complete ``yes`` and ``no``
-tokens only.
+This wrapper avoids that ambiguity by applying the same large positive
+``logit_bias`` to the exact token strings ``yes`` and ``no``. Adding the same
+constant to both target logits preserves their pairwise softmax ratio exactly,
+while forcing both tokens into a small returned probability window. The final
+score is then renormalized over only ``yes`` and ``no``, matching Qwen's
+published scoring rule.
 """
 from __future__ import annotations
 
@@ -22,7 +24,8 @@ import httpx
 import semantic_reranker_benchmark as benchmark
 
 
-PROBABILITY_WINDOW = 32
+PROBABILITY_WINDOW = 8
+TARGET_LOGIT_BIAS = 80.0
 
 
 def _yes_probability(body: dict[str, Any]) -> float:
@@ -46,6 +49,7 @@ def _yes_probability(body: dict[str, Any]) -> float:
     if missing:
         compact = [
             {
+                "id": item.get("id"),
                 "token": item.get("token") or item.get("tok_str"),
                 "prob": item.get("prob"),
                 "logprob": item.get("logprob"),
@@ -54,13 +58,11 @@ def _yes_probability(body: dict[str, Any]) -> float:
         ]
         raise RuntimeError(
             "Qwen reranker scoring requires complete yes/no token probabilities; "
-            f"missing={sorted(missing)} from grammar-filtered top-{PROBABILITY_WINDOW}: {compact}"
+            f"missing={sorted(missing)} after equal target logit bias: {compact}"
         )
 
-    # Qwen3-Reranker defines relevance as softmax over the logits of the
-    # single-token answers yes and no.  llama.cpp has already softmaxed the
-    # grammar-valid logits; renormalizing just these two probabilities preserves
-    # their exact pairwise ratio while ignoring prefix tokens such as y/n.
+    # Equal additive bias cancels exactly in the pairwise softmax:
+    # exp(y+B)/(exp(y+B)+exp(n+B)) == exp(y)/(exp(y)+exp(n)).
     total = values["yes"] + values["no"]
     if total <= 0:
         raise RuntimeError(f"Invalid yes/no probability mass: {values}")
@@ -80,8 +82,8 @@ def rerank_score(client: httpx.Client, query: str, document: str) -> tuple[float
             "top_p": 1.0,
             "min_p": 0.0,
             "n_probs": PROBABILITY_WINDOW,
-            "post_sampling_probs": True,
-            "grammar": 'root ::= "yes" | "no"',
+            "post_sampling_probs": False,
+            "logit_bias": [["yes", TARGET_LOGIT_BIAS], ["no", TARGET_LOGIT_BIAS]],
             "cache_prompt": False,
         },
     )
