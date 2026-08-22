@@ -10,7 +10,7 @@ from enum import Enum
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class EventType(str, Enum):
@@ -47,30 +47,35 @@ class Event(BaseModel):
 
 
 class AgentAction(str, Enum):
-    """Bounded control choices available to the Primary Agent decision step."""
+    """Minimal control choices available to every stateless LLM agent."""
 
     RESPOND_DIRECTLY = "RESPOND_DIRECTLY"
-    RETRIEVE_CONTEXT = "RETRIEVE_CONTEXT"
-    DELEGATE = "DELEGATE"
+    REQUEST_CAPABILITY = "REQUEST_CAPABILITY"
 
 
 class AgentDecision(BaseModel):
-    """Minimal structured output of the Primary Agent classification step.
+    """Minimal structured output of a stateless agent decision step.
 
-    The model chooses semantic intent only. Retrieval limits, capability ids,
-    source filters, correlation ids, persistence, and routing policy remain
-    application-owned.
+    Agents say whether they can proceed with supplied context or need additional
+    system functionality. They never name installed implementations. Exact tasks
+    remain authoritative; ``capability_query`` is only a bounded semantic hint.
     """
 
     action: AgentAction
-    query_text: str | None = Field(
+    capability_query: str | None = Field(
         default=None,
-        description="When memory is needed, a short description of what to recall.",
+        description=(
+            "When requesting a capability, briefly describe the additional "
+            "functionality or information access needed without naming an implementation."
+        ),
     )
-    delegation_task: str | None = Field(
-        default=None,
-        description="When delegating, a self-contained bounded task. Do not name a capability.",
-    )
+
+    @model_validator(mode="after")
+    def require_capability_query(self) -> "AgentDecision":
+        if self.action == AgentAction.REQUEST_CAPABILITY:
+            if self.capability_query is None or not self.capability_query.strip():
+                raise ValueError("REQUEST_CAPABILITY requires capability_query")
+        return self
 
 
 class KnowledgeOrigin(str, Enum):
@@ -84,19 +89,22 @@ class CapabilityKind(str, Enum):
     """Current executable capability classes exposed by the system registry."""
 
     AGENT = "AGENT"
+    SERVICE = "SERVICE"
     TOOL = "TOOL"
 
 
 class CapabilityNeed(BaseModel):
     """A caller-owned description of functionality needed from the current system.
 
-    Like ``MemoryNeed``, this says what is needed rather than naming an
-    implementation. The deterministic registry resolves it against capabilities
-    that are actually registered in the running Prometheist installation.
+    The exact task is the canonical discovery cue. Optional LLM-generated hints
+    may be tried only if canonical discovery returns nothing. Implementations,
+    executors, and routing policy remain application-owned.
     """
 
     query_text: str
+    supplemental_query_texts: list[str] = Field(default_factory=list, max_length=3)
     kinds: list[CapabilityKind] | None = None
+    exclude_capability_ids: list[str] = Field(default_factory=list)
     limit: int = Field(default=3, ge=1, le=10)
 
 
@@ -120,10 +128,12 @@ class CapabilityPacket(BaseModel):
     capability_request_id: UUID
     need: CapabilityNeed
     matches: list[CapabilityMatch]
+    selected_query_role: Literal["canonical", "supplemental"] | None = None
+    selected_query_text: str | None = None
 
 
 class MemoryNeed(BaseModel):
-    """Stable MAS-facing description of an internal information need.
+    """Typed input contract of the registered ``internal_memory`` capability.
 
     This contract intentionally contains no candidate-router, association,
     full-text, embedding, or other retrieval-implementation controls.
@@ -149,14 +159,14 @@ class MemoryNeed(BaseModel):
 
 
 class MemoryNeedDecision(BaseModel):
-    """Semantic fields an LLM specialist may propose for a MemoryNeed."""
+    """Legacy semantic memory-plan schema retained for compatibility tests."""
 
     query_text: str
     entities: list[str] = Field(default_factory=list)
 
 
 class MemoryEvidence(BaseModel):
-    """One canonical source event surfaced through the shared JIT Memory API."""
+    """One canonical source event surfaced by the internal-memory capability."""
 
     source_event_id: UUID
     event_type: EventType
@@ -172,7 +182,7 @@ class MemoryEvidence(BaseModel):
 
 
 class MemoryPacket(BaseModel):
-    """Bounded internal evidence packet returned to any stateless agent."""
+    """Bounded evidence packet returned by the ``internal_memory`` capability."""
 
     memory_request_id: UUID
     origin: Literal[KnowledgeOrigin.INTERNAL_MEMORY] = KnowledgeOrigin.INTERNAL_MEMORY
