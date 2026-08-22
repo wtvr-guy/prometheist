@@ -14,37 +14,40 @@ def conn():
 
 
 @pytest.mark.parametrize(
-    "query,expected",
+    "query,expected,kind",
     [
         (
             "Create a deployment plan and recommend the next steps.",
             "planning_specialist",
+            CapabilityKind.AGENT,
         ),
         (
             "Compare the Project Atlas schedule and explain what changed.",
             "analysis_specialist",
+            CapabilityKind.AGENT,
         ),
         (
             "Recall the original Project Oriole codename from prior history.",
-            "memory_specialist",
+            "internal_memory",
+            CapabilityKind.SERVICE,
         ),
     ],
 )
-def test_registry_routes_tasks_without_llm_selection(query, expected):
-    need = CapabilityNeed(query_text=query, kinds=[CapabilityKind.AGENT], limit=1)
+def test_registry_routes_heterogeneous_capabilities_without_llm_selection(query, expected, kind):
+    need = CapabilityNeed(query_text=query, limit=1)
 
     first = capability_registry.DEFAULT_REGISTRY.discover(need)
     second = capability_registry.DEFAULT_REGISTRY.discover(need)
 
     assert first
     assert first[0].descriptor.capability_id == expected
+    assert first[0].descriptor.kind == kind
     assert second == first
 
 
 def test_registry_returns_no_match_instead_of_inventing_capability():
     need = CapabilityNeed(
         query_text="Render a textured 3D mesh from a point cloud.",
-        kinds=[CapabilityKind.AGENT],
         limit=3,
     )
 
@@ -53,8 +56,8 @@ def test_registry_returns_no_match_instead_of_inventing_capability():
 
 def test_registry_respects_capability_kind_filter():
     need = CapabilityNeed(
-        query_text="Create a deployment plan.",
-        kinds=[CapabilityKind.TOOL],
+        query_text="Recall prior history.",
+        kinds=[CapabilityKind.AGENT],
         limit=3,
     )
 
@@ -67,18 +70,15 @@ def test_registry_can_add_and_remove_capability_without_primary_changes():
         descriptor=CapabilityDescriptor(
             capability_id="document_specialist",
             kind=CapabilityKind.AGENT,
-            description="Inspect and synthesize persisted document evidence.",
+            description="Inspect and synthesize document evidence.",
         ),
         routing_terms=("document", "pdf", "contract"),
-        specialist_instruction="Analyze retrieved document evidence.",
+        executor="stateless_specialist",
+        instruction="Analyze supplied document evidence.",
     )
 
     registry.register(registration)
-    need = CapabilityNeed(
-        query_text="Analyze this contract document.",
-        kinds=[CapabilityKind.AGENT],
-        limit=1,
-    )
+    need = CapabilityNeed(query_text="Analyze this contract document.", limit=1)
     assert registry.discover(need)[0].descriptor.capability_id == "document_specialist"
 
     removed = registry.unregister("document_specialist")
@@ -93,12 +93,39 @@ def test_primary_system_prompt_does_not_embed_capability_catalog():
         assert descriptor.capability_id not in prompt
 
 
+def test_registry_uses_supplemental_capability_query_only_after_canonical_miss():
+    need = CapabilityNeed(
+        query_text="Please handle this for me.",
+        supplemental_query_texts=["access persisted internal history"],
+        limit=1,
+    )
+
+    matches, role, selected_query = capability_registry.DEFAULT_REGISTRY.discover_with_trace(need)
+
+    assert matches[0].descriptor.capability_id == "internal_memory"
+    assert role == "supplemental"
+    assert selected_query == "access persisted internal history"
+
+
+def test_canonical_capability_match_wins_over_lossy_supplemental_query():
+    need = CapabilityNeed(
+        query_text="Compare how the Project Atlas schedule changed.",
+        supplemental_query_texts=["access persisted internal history"],
+        limit=1,
+    )
+
+    matches, role, selected_query = capability_registry.DEFAULT_REGISTRY.discover_with_trace(need)
+
+    assert matches[0].descriptor.capability_id == "analysis_specialist"
+    assert role == "canonical"
+    assert selected_query == need.query_text
+
+
 def test_request_capability_persists_bounded_request_and_packet(conn):
     conversation_id = event_store.start_conversation(conn)
     correlation_id = uuid.uuid4()
     need = CapabilityNeed(
         query_text="Compare how the Project Atlas schedule changed.",
-        kinds=[CapabilityKind.AGENT],
         limit=1,
     )
 
@@ -112,6 +139,7 @@ def test_request_capability_persists_bounded_request_and_packet(conn):
 
     assert len(packet.matches) == 1
     assert packet.matches[0].descriptor.capability_id == "analysis_specialist"
+    assert packet.selected_query_role == "canonical"
 
     events = event_store.get_events_by_conversation(conn, conversation_id)
     assert [event.event_type for event in events] == [
