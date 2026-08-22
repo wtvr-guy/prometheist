@@ -138,6 +138,7 @@ def handle_interaction(
                     before_global_seq=user_prompt_event.global_seq,
                     requesting_agent=SOURCE,
                     capability_request_id=capability_packet.capability_request_id,
+                    supplemental_query_texts=supplemental,
                 )
             except Exception as exc:
                 _record_error(conn, conversation_id, correlation_id, "capability_invoke", exc)
