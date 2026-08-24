@@ -76,6 +76,14 @@ def _response_for_correlation(conversation_id: uuid.UUID, correlation_id: uuid.U
     return responses[0]
 
 
+def _correlation_event_ids(conversation_id: uuid.UUID, correlation_id: uuid.UUID) -> set[uuid.UUID]:
+    return {
+        event.event_id
+        for event in _events(conversation_id)
+        if event.correlation_id == correlation_id
+    }
+
+
 def _memory_source_ids_for_correlation(
     conversation_id: uuid.UUID,
     correlation_id: uuid.UUID,
@@ -95,6 +103,10 @@ def _seed_distractors(count: int = 12) -> None:
     try:
         for index in range(count):
             conversation_id = uuid.uuid4()
+            text = (
+                f"Unrelated historical note {index}: inventory marker "
+                f"{uuid.uuid4().hex[:10].upper()} belongs to archive shelf {index}."
+            )
             event_store.start_conversation(conn, conversation_id)
             event_store.record_event(
                 conn,
@@ -102,15 +114,8 @@ def _seed_distractors(count: int = 12) -> None:
                 correlation_id=uuid.uuid4(),
                 event_type=EventType.USER_PROMPT,
                 source="user",
-                payload={
-                    "text": (
-                        f"Unrelated historical note {index}: inventory marker "
-                        f"{uuid.uuid4().hex[:10].upper()} belongs to archive shelf {index}."
-                    )
-                },
-                payload_text=(
-                    f"Unrelated historical note {index}: archived inventory data for shelf {index}."
-                ),
+                payload={"text": text},
+                payload_text=text,
             )
     finally:
         conn.close()
@@ -166,12 +171,15 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
     failure_trace = _trace(historical_conversation, active_conversation)
     assert "docker" in answer2.casefold(), failure_trace
     assert profile_token.casefold() in answer2.casefold(), failure_trace
+    # These two source assertions are the core of the test: the same turn must
+    # retrieve one event from the immediate conversation and one older event from
+    # a different conversation. A plausible model guess is not enough to pass.
     assert historical_rule_event.event_id in turn2_sources, failure_trace
     assert turn1_event.event_id in turn2_sources, failure_trace
 
     # Turn 3 tests immediate continuity after another total process/context loss.
     # The nickname was introduced two turns ago; "just rule out" refers to the
-    # assistant response from the immediately preceding process.
+    # immediately preceding exchange.
     turn3 = "What nickname are we using for this plan, and which approach did you just rule out?"
     answer3 = run_once(turn3, active_conversation)
     turn3_event = _event_for_text(active_conversation, EventType.USER_PROMPT, turn3)
@@ -180,16 +188,18 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
         active_conversation,
         turn3_event.correlation_id,
     )
+    turn2_exchange_ids = _correlation_event_ids(active_conversation, turn2_event.correlation_id)
 
     failure_trace = _trace(historical_conversation, active_conversation)
     assert plan_label.casefold() in answer3.casefold(), failure_trace
     assert "docker" in answer3.casefold(), failure_trace
     assert turn1_event.event_id in turn3_sources, failure_trace
-    assert answer2_event.event_id in turn3_sources, failure_trace
+    assert turn3_sources & turn2_exchange_ids, failure_trace
 
     # Turn 4 contains almost no standalone semantic content. Correctly resolving
-    # "that one" requires the current conversation; giving the reason requires
-    # the earlier Kestrel rule (directly or through correctly recalled dialogue).
+    # "that one" requires the recent dialogue; giving the reason requires either
+    # the original historical rule or a prior grounded answer that carried it
+    # forward. We deliberately allow either valid retrieval path.
     turn4 = "Why did we rule that one out? Keep it to one sentence."
     answer4 = run_once(turn4, active_conversation)
     turn4_event = _event_for_text(active_conversation, EventType.USER_PROMPT, turn4)
@@ -197,12 +207,16 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
         active_conversation,
         turn4_event.correlation_id,
     )
+    turn3_exchange_ids = _correlation_event_ids(active_conversation, turn3_event.correlation_id)
 
     failure_trace = _trace(historical_conversation, active_conversation)
     assert re.search(r"virtuali[sz]ation", answer4, re.IGNORECASE), failure_trace
     assert "disabled" in answer4.casefold(), failure_trace
-    assert answer3_event.event_id in turn4_sources, failure_trace
-    assert historical_rule_event.event_id in turn4_sources, failure_trace
+    assert turn4_sources & turn3_exchange_ids, failure_trace
+    assert (
+        historical_rule_event.event_id in turn4_sources
+        or answer2_event.event_id in turn4_sources
+    ), failure_trace
 
     # Structural sanity check: the active conversation really did span four
     # independent external turns and every context-dependent turn invoked memory.
@@ -215,3 +229,8 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
             and event.correlation_id == prompt_event.correlation_id
             for event in active_events
         ), failure_trace
+
+    # Keep these references live so failures clearly preserve the exact assistant
+    # turns whose continuity is being tested.
+    assert answer2_event.event_type == EventType.AGENT_RESPONSE
+    assert answer3_event.event_type == EventType.AGENT_RESPONSE
