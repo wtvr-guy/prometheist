@@ -83,7 +83,7 @@ class ServiceGuarantee(BaseModel):
     """Queue-cycle guarantee used to prevent deterministic starvation.
 
     Once ``max_wait_cycles`` is reached, a queued task is promoted to at least
-    ``guaranteed_priority``. Guarantees never override a running task's
+    ``guaranteed_priority``.  Guarantees never override a running task's
     interruption policy; an ATOMIC task still runs to completion.
     """
 
@@ -190,7 +190,7 @@ def _normalize_deadline(deadline: datetime | None) -> datetime:
 class JITAttentionScheduler:
     """Deterministic executive scheduler for Prometheist task focus.
 
-    The scheduler has no wall-clock dependency. Service guarantees use the
+    The scheduler has no wall-clock dependency.  Service guarantees use the
     monotonic ``cycle`` counter so identical input/state produces identical
     decisions across machines and restarts.
     """
@@ -200,7 +200,15 @@ class JITAttentionScheduler:
         *,
         service_guarantees: dict[ServiceClass, ServiceGuarantee] | None = None,
     ) -> None:
-        self.service_guarantees = dict(service_guarantees or DEFAULT_SERVICE_GUARANTEES)
+        configured = DEFAULT_SERVICE_GUARANTEES if service_guarantees is None else service_guarantees
+        self.service_guarantees = {
+            service_class: guarantee.model_copy(deep=True)
+            for service_class, guarantee in configured.items()
+        }
+        missing = set(ServiceClass) - set(self.service_guarantees)
+        if missing:
+            missing_names = ", ".join(sorted(item.value for item in missing))
+            raise ValueError(f"Missing service guarantees for: {missing_names}")
         self.tasks: dict[UUID, AttentionTask] = {}
         self.active_task_id: UUID | None = None
         self.pending_preemption_task_id: UUID | None = None
@@ -229,10 +237,7 @@ class JITAttentionScheduler:
             pending_preemption_task_id=self.pending_preemption_task_id,
             tasks=[
                 task.model_copy(deep=True)
-                for task in sorted(
-                    self.tasks.values(),
-                    key=lambda item: (item.created_seq, item.task_id.hex),
-                )
+                for task in sorted(self.tasks.values(), key=lambda item: (item.created_seq, item.task_id.hex))
             ],
         )
 
@@ -327,10 +332,10 @@ class JITAttentionScheduler:
     def checkpoint_active(self) -> FocusDecision:
         """Yield at a safe boundary if a pending/higher-priority task exists."""
 
-        self.advance_cycle()
         if self.active_task_id is None:
             return self.reconcile_focus()
 
+        self.advance_cycle()
         active = self.tasks[self.active_task_id]
         if active.metadata.interruption_policy is InterruptionPolicy.ATOMIC:
             return FocusDecision(
@@ -443,7 +448,7 @@ class JITAttentionScheduler:
         )
 
     def _strictly_outprioritizes(self, candidate: AttentionTask, active: AttentionTask) -> bool:
-        # Same-priority arrivals do not preempt. This prevents deterministic
+        # Same-priority arrivals do not preempt.  This prevents deterministic
         # thrashing; FIFO/deadline tie-breakers apply when focus next becomes free.
         return int(self._effective_priority(candidate)) < int(derive_priority(active.metadata))
 
