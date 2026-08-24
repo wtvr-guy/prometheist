@@ -121,11 +121,20 @@ def _seed_distractors(count: int = 12) -> None:
         conn.close()
 
 
+def _print_turn(number: int, prompt: str, answer: str) -> None:
+    print(f"\nTurn {number} — User:\n{prompt}")
+    print(f"\nTurn {number} — Prometheist:\n{answer}")
+
+
 def test_stateless_multiturn_conversation_retains_local_context_and_relevant_history():
     historical_conversation = uuid.uuid4()
     active_conversation = uuid.uuid4()
     profile_token = f"VX-{uuid.uuid4().hex[:8].upper()}"
     plan_label = f"BlueHarbor-{uuid.uuid4().hex[:6].upper()}"
+
+    print("\n=== Stateless multi-turn conversation acceptance ===")
+    print(f"historical_conversation={historical_conversation}")
+    print(f"active_conversation={active_conversation}")
 
     # Persist an older fact through the normal CLI in a completely separate
     # process/conversation. It will later become relevant without being repeated.
@@ -133,7 +142,9 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
         "For Project Kestrel, never use Docker; deploy PostgreSQL directly on Windows "
         f"because virtualization is disabled. I track that constraint under profile {profile_token}."
     )
-    run_once(historical_rule, historical_conversation)
+    historical_answer = run_once(historical_rule, historical_conversation)
+    print(f"\nHistorical seed — User:\n{historical_rule}")
+    print(f"\nHistorical seed — Prometheist:\n{historical_answer}")
     historical_rule_event = _event_for_text(
         historical_conversation,
         EventType.USER_PROMPT,
@@ -151,7 +162,8 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
         "I'm choosing between Docker Compose and running PostgreSQL directly on Windows. "
         "I want to keep the discussion practical."
     )
-    run_once(turn1, active_conversation)
+    answer1 = run_once(turn1, active_conversation)
+    _print_turn(1, turn1, answer1)
     turn1_event = _event_for_text(active_conversation, EventType.USER_PROMPT, turn1)
 
     # Turn 2 requires BOTH missing pieces: "those approaches" comes from Turn 1,
@@ -161,6 +173,7 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
         "and what constraint profile did I give that rule?"
     )
     answer2 = run_once(turn2, active_conversation)
+    _print_turn(2, turn2, answer2)
     turn2_event = _event_for_text(active_conversation, EventType.USER_PROMPT, turn2)
     answer2_event = _response_for_correlation(active_conversation, turn2_event.correlation_id)
     turn2_sources = _memory_source_ids_for_correlation(
@@ -182,6 +195,7 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
     # immediately preceding exchange.
     turn3 = "What nickname are we using for this plan, and which approach did you just rule out?"
     answer3 = run_once(turn3, active_conversation)
+    _print_turn(3, turn3, answer3)
     turn3_event = _event_for_text(active_conversation, EventType.USER_PROMPT, turn3)
     answer3_event = _response_for_correlation(active_conversation, turn3_event.correlation_id)
     turn3_sources = _memory_source_ids_for_correlation(
@@ -202,6 +216,7 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
     # forward. We deliberately allow either valid retrieval path.
     turn4 = "Why did we rule that one out? Keep it to one sentence."
     answer4 = run_once(turn4, active_conversation)
+    _print_turn(4, turn4, answer4)
     turn4_event = _event_for_text(active_conversation, EventType.USER_PROMPT, turn4)
     turn4_sources = _memory_source_ids_for_correlation(
         active_conversation,
@@ -234,3 +249,4 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
     # turns whose continuity is being tested.
     assert answer2_event.event_type == EventType.AGENT_RESPONSE
     assert answer3_event.event_type == EventType.AGENT_RESPONSE
+    print("\nPASS: immediate context + older relevant history survived fresh-process turns.")
