@@ -11,6 +11,7 @@ import uuid
 from jit_agent import db
 from jit_agent.llm import OllamaClient
 from jit_agent.primary_agent import handle_interaction
+from jit_agent.semantic_memory import OllamaEmbeddingProvider
 
 
 def main() -> None:
@@ -24,11 +25,18 @@ def main() -> None:
     args = parser.parse_args()
 
     llm = OllamaClient()
+    embedding_provider = OllamaEmbeddingProvider()
 
     if args.once is not None:
         conversation_id = args.conversation_id or uuid.uuid4()
         with db.get_connection() as conn:
-            response = handle_interaction(conn, llm, args.once, conversation_id)
+            response = handle_interaction(
+                conn,
+                llm,
+                args.once,
+                conversation_id,
+                embedding_provider=embedding_provider,
+            )
         print(response)
         return
 
@@ -45,7 +53,13 @@ def main() -> None:
                 break
             if not user_text:
                 continue
-            response = handle_interaction(conn, llm, user_text, conversation_id)
+            response = handle_interaction(
+                conn,
+                llm,
+                user_text,
+                conversation_id,
+                embedding_provider=embedding_provider,
+            )
             print(response)
 
 
