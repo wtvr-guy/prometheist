@@ -117,6 +117,35 @@ def test_preemptible_task_is_requeued_when_higher_priority_work_arrives():
     ]
 
 
+def test_same_priority_arrival_never_preempts_active_task():
+    scheduler = JITAttentionScheduler()
+    later_deadline = datetime(2026, 8, 25, tzinfo=timezone.utc)
+    sooner_deadline = datetime(2026, 8, 24, tzinfo=timezone.utc)
+    active = scheduler.submit(
+        _task(
+            "active-same-priority",
+            1,
+            TaskCriticality.USER_REQUESTED,
+            deadline=later_deadline,
+        )
+    )
+    scheduler.reconcile_focus()
+    queued = scheduler.submit(
+        _task(
+            "queued-same-priority",
+            2,
+            TaskCriticality.USER_REQUESTED,
+            deadline=sooner_deadline,
+        )
+    )
+
+    decision = scheduler.reconcile_focus()
+
+    assert decision.action is FocusAction.CONTINUE
+    assert scheduler.active_task_id == active.task_id
+    assert scheduler.tasks[queued.task_id].status is TaskStatus.QUEUED
+
+
 def test_checkpoint_only_task_defers_preemption_until_checkpoint():
     scheduler = JITAttentionScheduler()
     low = scheduler.submit(
@@ -233,3 +262,19 @@ def test_snapshot_round_trip_preserves_focus_queue_and_resumable_state():
     assert restored.tasks[active.task_id].resumable_state == {"step": 3, "artifact": "abc"}
     assert restored.tasks[queued.task_id].status is TaskStatus.QUEUED
     assert [task.task_id for task in restored.queued_tasks()] == [queued.task_id]
+
+
+def test_identical_replay_produces_identical_focus_and_transition_ids():
+    def run_scenario():
+        scheduler = JITAttentionScheduler()
+        scheduler.submit(_task("replay-low", 1, TaskCriticality.USER_REQUESTED))
+        scheduler.reconcile_focus()
+        scheduler.submit(_task("replay-high", 2, TaskCriticality.USER_BLOCKING))
+        decision = scheduler.reconcile_focus()
+        return (
+            scheduler.snapshot().model_dump(mode="json"),
+            [transition.model_dump(mode="json") for transition in scheduler.transitions],
+            decision.model_dump(mode="json"),
+        )
+
+    assert run_scenario() == run_scenario()
