@@ -12,7 +12,14 @@ import psycopg
 
 from jit_agent import event_store, jit_memory
 from jit_agent.capability_registry import CapabilityRegistry, DEFAULT_REGISTRY, RegisteredCapability
-from jit_agent.models import AgentDelegation, AgentResult, EventType, MemoryPacket
+from jit_agent.models import (
+    AgentDelegation,
+    AgentResult,
+    EventType,
+    MemoryPacket,
+    SemanticRetrievalIntentV1,
+)
+from jit_agent.semantic_memory import EmbeddingProvider
 
 CapabilityOutput = MemoryPacket | AgentResult
 MAX_CAPABILITY_DEPTH = 4
@@ -30,6 +37,8 @@ def invoke_capability(
     requesting_agent: str,
     capability_request_id: uuid.UUID | None = None,
     supplemental_query_texts: list[str] | None = None,
+    semantic_intent: SemanticRetrievalIntentV1 | None = None,
+    embedding_provider: EmbeddingProvider | None = None,
     registry: CapabilityRegistry = DEFAULT_REGISTRY,
     depth: int = 0,
 ) -> CapabilityOutput:
@@ -40,11 +49,10 @@ def invoke_capability(
     capability_id = registration.descriptor.capability_id
 
     if registration.executor == "internal_memory":
-        # The task itself remains the canonical memory cue. LLM-generated
-        # capability descriptions may help only after canonical abstention.
         need = jit_memory.build_memory_need(
             task,
             supplemental_query_texts=supplemental_query_texts or [],
+            semantic_intent=semantic_intent,
             conversation_id=conversation_id,
         )
         return jit_memory.request_memory(
@@ -54,6 +62,7 @@ def invoke_capability(
             requesting_agent=requesting_agent,
             need=need,
             before_global_seq=before_global_seq,
+            embedding_provider=embedding_provider,
         )
 
     if registration.executor == "stateless_specialist":
@@ -72,8 +81,6 @@ def invoke_capability(
             payload_text=task,
         )
 
-        # Late import avoids a module cycle while still giving specialists the
-        # same dispatcher for their own capability requests.
         from jit_agent import specialist_agent
 
         return specialist_agent.handle_task(
@@ -86,6 +93,7 @@ def invoke_capability(
             before_global_seq=before_global_seq,
             registry=registry,
             depth=depth + 1,
+            embedding_provider=embedding_provider,
         )
 
     raise ValueError(
