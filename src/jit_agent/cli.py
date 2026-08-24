@@ -6,6 +6,7 @@ which is what makes the cross-process restart acceptance test meaningful.
 from __future__ import annotations
 
 import argparse
+import sys
 import uuid
 
 from jit_agent import db
@@ -14,7 +15,17 @@ from jit_agent.primary_agent import handle_interaction
 from jit_agent.semantic_memory import OllamaEmbeddingProvider
 
 
+def _configure_stdio() -> None:
+    """Prefer UTF-8 so model output is safe on Windows cp1252 consoles/pipes."""
+    for stream_name in ("stdout", "stderr"):
+        stream = getattr(sys, stream_name, None)
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 def main() -> None:
+    _configure_stdio()
     parser = argparse.ArgumentParser(prog="jit-agent")
     parser.add_argument("--once", help="Handle a single message non-interactively and print the response.")
     parser.add_argument(
