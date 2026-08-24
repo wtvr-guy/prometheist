@@ -53,6 +53,50 @@ class AgentAction(str, Enum):
     REQUEST_CAPABILITY = "REQUEST_CAPABILITY"
 
 
+class SemanticRetrievalTarget(str, Enum):
+    """Bounded query-time semantics used only to shape embedding retrieval.
+
+    These values are soft retrieval intent. They never label persisted events,
+    create graph edges, or become authoritative memory facts.
+    """
+
+    FACT = "FACT"
+    CURRENT_STATE = "CURRENT_STATE"
+    PRIOR_STATE = "PRIOR_STATE"
+    STATE_TRANSITION = "STATE_TRANSITION"
+    IDENTITY = "IDENTITY"
+    RELATIONSHIP = "RELATIONSHIP"
+    LOCATION = "LOCATION"
+    TIME = "TIME"
+    VALUE = "VALUE"
+    BOOLEAN_STATUS = "BOOLEAN_STATUS"
+    PREFERENCE = "PREFERENCE"
+    PROCEDURE = "PROCEDURE"
+    GENERAL = "GENERAL"
+
+
+class SemanticTemporalFocus(str, Enum):
+    CURRENT = "CURRENT"
+    PREVIOUS = "PREVIOUS"
+    AS_OF_REFERENCE_TIME = "AS_OF_REFERENCE_TIME"
+    HISTORICAL = "HISTORICAL"
+    UNSPECIFIED = "UNSPECIFIED"
+
+
+class SemanticRetrievalIntentV1(BaseModel):
+    """Versioned, deliberately narrow semantic-retrieval hint.
+
+    The requesting LLM may select only these bounded categories. Deterministic
+    code renders the actual Qwen embedding instruction from them, preventing
+    free-form model prose from inventing sources, locations, relationships, or
+    other supposed facts during retrieval planning.
+    """
+
+    schema_version: Literal[1] = 1
+    target: SemanticRetrievalTarget = SemanticRetrievalTarget.GENERAL
+    temporal_focus: SemanticTemporalFocus = SemanticTemporalFocus.UNSPECIFIED
+
+
 class AgentDecision(BaseModel):
     """Minimal structured output of a stateless agent decision step.
 
@@ -61,6 +105,9 @@ class AgentDecision(BaseModel):
     it carries a narrower self-contained subtask or information need to whichever
     capability the registry selects. Keeping them separate prevents discovery
     language from contaminating capability-specific inputs such as memory queries.
+
+    ``retrieval_intent`` is optional query-time metadata for requests that need
+    persisted internal memory. It is never used to classify stored events.
     """
 
     action: AgentAction
@@ -76,6 +123,13 @@ class AgentDecision(BaseModel):
         description=(
             "Optional narrower self-contained input for the selected capability. "
             "Omit when the whole current task should be passed unchanged."
+        ),
+    )
+    retrieval_intent: SemanticRetrievalIntentV1 | None = Field(
+        default=None,
+        description=(
+            "Optional bounded retrieval intent when persisted internal history is needed. "
+            "Do not populate it for unrelated capabilities."
         ),
     )
 
@@ -145,7 +199,8 @@ class MemoryNeed(BaseModel):
     """Typed input contract of the registered ``internal_memory`` capability.
 
     This contract intentionally contains no candidate-router, association,
-    full-text, embedding, or other retrieval-implementation controls.
+    full-text, embedding-model, vector-dimension, or other implementation knobs.
+    ``semantic_intent`` is query meaning, not retrieval policy.
     """
 
     query_text: str | None = None
@@ -157,6 +212,7 @@ class MemoryNeed(BaseModel):
             "They may be tried only when the canonical query yields no evidence."
         ),
     )
+    semantic_intent: SemanticRetrievalIntentV1 | None = None
     entities: list[str] = Field(default_factory=list)
     reference_time: datetime | None = None
     conversation_id: UUID | None = Field(
@@ -174,6 +230,13 @@ class MemoryNeedDecision(BaseModel):
     entities: list[str] = Field(default_factory=list)
 
 
+class EvidenceStatus(str, Enum):
+    """Epistemic status of an item returned through JIT Memory."""
+
+    ADMITTED = "ADMITTED"
+    SEMANTIC_CANDIDATE = "SEMANTIC_CANDIDATE"
+
+
 class MemoryEvidence(BaseModel):
     """One canonical source event surfaced by the internal-memory capability."""
 
@@ -186,12 +249,18 @@ class MemoryEvidence(BaseModel):
     global_seq: int
     content: str
     score: float | None = None
+    evidence_status: EvidenceStatus = EvidenceStatus.ADMITTED
     retrieval_reasons: list[str] = Field(default_factory=list)
     provenance_event_ids: list[UUID] = Field(default_factory=list)
 
 
 class MemoryPacket(BaseModel):
-    """Bounded evidence packet returned by the ``internal_memory`` capability."""
+    """Bounded evidence/candidate packet returned by ``internal_memory``.
+
+    ``supported`` is true only when deterministic evidence admission succeeded.
+    A packet may contain ``SEMANTIC_CANDIDATE`` items while supported is false;
+    those items are retrieval leads, not asserted facts or graph relationships.
+    """
 
     memory_request_id: UUID
     origin: Literal[KnowledgeOrigin.INTERNAL_MEMORY] = KnowledgeOrigin.INTERNAL_MEMORY
