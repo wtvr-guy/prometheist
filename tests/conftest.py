@@ -22,7 +22,9 @@ import pytest
 
 from jit_agent import db
 
-SCHEMA_PATH = pathlib.Path(__file__).resolve().parent.parent / "schema.sql"
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+SCHEMA_PATH = ROOT / "schema.sql"
+SEMANTIC_SCHEMA_PATH = ROOT / "schema_pgvector.sql"
 
 
 def _require_disposable_database(conn) -> str:
@@ -41,12 +43,13 @@ def _require_disposable_database(conn) -> str:
 
 @pytest.fixture(scope="session", autouse=True)
 def _prepare_test_database():
-    """Apply the idempotent schema once after verifying the database target."""
+    """Apply the base and semantic schemas once after verifying the target."""
     conn = db.get_connection()
     try:
         _require_disposable_database(conn)
         with conn.cursor() as cur:
             cur.execute(SCHEMA_PATH.read_text())
+            cur.execute(SEMANTIC_SCHEMA_PATH.read_text())
         conn.commit()
     finally:
         conn.close()
@@ -63,6 +66,7 @@ def _reset_test_database(_prepare_test_database):
             cur.execute(
                 """
                 TRUNCATE TABLE
+                    memory_semantic_projection_entries,
                     memory_association_entries,
                     memory_projection_entries,
                     memory_projection_runs,
