@@ -2,13 +2,14 @@
 
 ## Decision
 
-Prometheist will no longer treat a privileged Primary Agent or a fixed collection of long-lived agents as the core architectural abstraction.
+Prometheist will no longer treat a privileged Primary Agent, a fixed collection of long-lived agents, or a chat/session boundary as a core cognitive abstraction.
 
 Beginning with v0.7, the target architecture is an **attention-centric persistent cognitive system** in which:
 
 - persistent identity belongs to the system;
 - internal history belongs to the system;
 - durable intentions/tasks belong to the system;
+- interaction continuity belongs to the system rather than a chat session;
 - executive attention belongs to deterministic system policy;
 - execution resources are represented explicitly;
 - capabilities are modular system functions;
@@ -21,7 +22,7 @@ The current target architecture is documented in [`COGNITIVE_ARCHITECTURE.md`](C
 
 The original prototype architecture centered a stateless Primary Agent that could retrieve JIT Memory, respond directly, or delegate to specialists. v0.6 successfully demonstrated that multiple fresh stateless LLM calls can participate in one continuous system without inheriting hidden transcripts.
 
-That experiment exposed a more general possibility: if memory, task state, provenance, and execution state already live outside the model, there is no architectural requirement for a permanent Primary Agent at all.
+That experiment exposed a more general possibility: if memory, task state, provenance, interaction history, and execution state already live outside the model, there is no architectural requirement for a permanent Primary Agent at all.
 
 The v0.7 JIT Attention work then made focus itself durable and deterministic. From that point, the more coherent design became to let persistent attention allocate work directly to disposable workers and capabilities.
 
@@ -30,7 +31,8 @@ The v0.7 JIT Attention work then made focus itself durable and deterministic. Fr
 The target system is organized around:
 
 - **Percepts** — normalized observations from users, devices, software, and external sources.
-- **Situations** — correlated groups of percepts with shared semantic/causal significance.
+- **Interaction events/streams** — provenance-bearing records of communication without treating a UI session as a memory boundary.
+- **Situations / associations** — overlapping semantic, temporal, causal, entity, and task relationships among events.
 - **Retention decisions** — deterministic policy decisions controlling how external observations age, aggregate, promote, or expire.
 - **Tasks / intentions** — durable units of work carrying priority, dependencies, resource needs, interruption semantics, and resumable state.
 - **Attention** — deterministic allocation of tasks to bounded system resources.
@@ -44,22 +46,9 @@ The target system is organized around:
 
 ## Attention becomes plural
 
-The first v0.7 scheduler supports one active focus. The target is a deterministic **Attention Fabric** with multiple bounded execution lanes.
+The first v0.7 scheduler supports one active focus. The target is a deterministic **Attention Fabric** with multiple bounded execution lanes. The number of lanes is not synonymous with logical CPU thread count; lanes represent safe resource capacity.
 
-The number of lanes is not synonymous with logical CPU thread count. Lanes represent resource capacity and may be typed, for example:
-
-```text
-CPU_GENERAL
-LLM_INFERENCE
-DATABASE
-FILESYSTEM_IO
-NETWORK_IO
-GPU
-DEVICE_IO
-ACTUATOR
-```
-
-The system must deterministically assign compatible runnable tasks to available lanes in explicit scheduling epochs rather than allowing workers to race for queue items.
+The system must deterministically assign compatible runnable tasks to available resources in explicit scheduling epochs rather than allowing workers to race for queue items.
 
 ## Perception and salience
 
@@ -67,14 +56,7 @@ Continuous external input introduces a second problem: not every observation des
 
 Prometheist will develop a deterministic perceptual/salience pipeline that can classify observations as routine, attention-worthy, urgent, or eligible for a bounded reflex response.
 
-The system must distinguish:
-
-- **REFLEX** — immediate pre-authorized deterministic response to a known condition;
-- **ORIENT** — immediate investigation of a potentially consequential but uncertain event;
-- **DELIBERATE** — ordinary durable work;
-- **IGNORE** — no work beyond required retention bookkeeping.
-
-Threat is not the only source of salience. Opportunity, novelty, uncertainty, active-goal relevance, social relevance, and system-integrity relevance may also influence whether an event deserves attention.
+The system must distinguish `REFLEX`, `ORIENT`, `DELIBERATE`, and `IGNORE`. Threat is not the only source of salience. Opportunity, novelty, uncertainty, active-goal relevance, social relevance, and system-integrity relevance may also influence whether an event deserves attention.
 
 LLMs may assist semantic classification when warranted, but they provide structured evidence/proposals rather than owning scheduling or action authority.
 
@@ -94,19 +76,29 @@ The new persistence invariant is:
 
 Retention policy should support explicit classes from ephemeral data through protected evidence. An LLM may assist classification but must not possess unilateral deletion authority.
 
-## Historical status of the Primary Agent
+## Conversation/session boundaries revised
 
-The Primary Agent implementation and specification are not erased.
+The v0.6 implementation uses conversation identifiers and scopes because they were useful coordinates for proving stateless cross-turn and cross-conversation recall. Those identifiers remain useful provenance metadata, but they are not the target cognitive model.
 
-They remain historically important because v0.6 used them to establish:
+Prometheist should behave as though its experience is continuous. A user should be able to resume a prior subject naturally—for example, "remember that thing we were talking about yesterday, about the attention layers?"—without selecting, naming, or switching to a stored conversation.
 
-- stateless LLM execution;
-- shared JIT Memory access;
-- cross-worker memory retrieval;
-- persisted delegation/results;
-- process-level continuity without hidden transcripts.
+The system should resolve such references from semantic, temporal, causal, entity, task, and situation cues. Topics/situations must not merely replace conversations as rigid containers: associations may overlap, one event may participate in several situations, and one situation may span many sessions or devices.
 
-However, the Primary Agent is now a **superseded target architecture**. Future implementation should not spend effort turning it into a permanent scheduler facade.
+`conversation_id`, `conversation_seq`, session IDs, device IDs, and similar fields may continue to support ordering, provenance, debugging, UI grouping, explicit source-scoped questions, and retrieval optimization. They must not normally constrain semantic recall.
+
+If a reference is genuinely ambiguous, Prometheist should ask a natural semantic clarification rather than requiring the user to manipulate an internal memory namespace.
+
+The interaction invariant is:
+
+> **Conversations, sessions, devices, and interfaces are provenance metadata—not cognitive boundaries. Context is reconstructed just in time from current intent and available retrieval cues.**
+
+## Historical status of the Primary Agent and v0.6 conversation mechanics
+
+The Primary Agent implementation and specification are not erased. They remain historically important because v0.6 established stateless LLM execution, shared JIT Memory access, cross-worker memory retrieval, persisted delegation/results, and process-level continuity without hidden transcripts.
+
+Likewise, v0.6 conversation tests remain valuable behavioral baselines where they test cross-turn/cross-session recall, corrections, temporal reference, topic resumption, ambiguity handling, or use of prior information without inherited transcripts. Tests whose essential requirement is that a Primary Agent owns the turn or that a conversation ID forms the semantic recall boundary are historical architecture tests and should not constrain the replacement design.
+
+Future implementation should preserve or improve the useful conversational behavior while making the mechanism session-independent.
 
 ## Roadmap consequence
 
@@ -115,8 +107,8 @@ The roadmap from v0.7 onward is revised around these experiments:
 - **v0.7** — durable multi-lane Attention Fabric;
 - **v0.8** — deterministic perception and salience;
 - **v0.9** — deterministic retention and memory admission;
-- **v0.10** — harder memory-generalization failure discovery;
-- **v0.11** — integrated persistent cognitive loop;
+- **v0.10** — harder memory-generalization failure discovery, including natural topic resumption across interaction boundaries;
+- **v0.11** — integrated persistent cognitive loop and session-independent conversational continuity;
 - **v0.12** — operational hardening and portability;
 - **v1.0** — first complete attention-centric Prometheist architecture.
 
