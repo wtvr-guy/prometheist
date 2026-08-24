@@ -21,6 +21,7 @@ from jit_agent.models import (
     MemoryPacket,
     RetrievalRequest,
 )
+from jit_agent.semantic_memory import EmbeddingProvider
 
 logger = logging.getLogger(__name__)
 SOURCE = "primary_agent"
@@ -44,7 +45,6 @@ def _record_error(
     stage: str,
     exc: Exception,
 ) -> None:
-    """Best-effort persistence of orchestration failures."""
     try:
         conn.rollback()
     except Exception:
@@ -67,6 +67,8 @@ def handle_interaction(
     llm: LLMClient,
     user_text: str,
     conversation_id: uuid.UUID,
+    *,
+    embedding_provider: EmbeddingProvider | None = None,
 ) -> str:
     """Handle one external interaction using only fresh model invocations."""
     event_store.start_conversation(conn, conversation_id)
@@ -104,9 +106,7 @@ def handle_interaction(
             _record_error(conn, conversation_id, correlation_id, "respond", exc)
             raise
     else:
-        discovery_supplemental = (
-            [decision.capability_query] if decision.capability_query else []
-        )
+        discovery_supplemental = [decision.capability_query] if decision.capability_query else []
         need = CapabilityNeed(
             query_text=user_text,
             supplemental_query_texts=discovery_supplemental,
@@ -129,9 +129,7 @@ def handle_interaction(
         else:
             capability_id = capability_packet.matches[0].descriptor.capability_id
             registration = capability_registry.DEFAULT_REGISTRY.get(capability_id)
-            capability_input_supplemental = (
-                [decision.capability_input] if decision.capability_input else []
-            )
+            capability_input_supplemental = [decision.capability_input] if decision.capability_input else []
             try:
                 output = capability_dispatcher.invoke_capability(
                     conn,
@@ -144,6 +142,8 @@ def handle_interaction(
                     requesting_agent=SOURCE,
                     capability_request_id=capability_packet.capability_request_id,
                     supplemental_query_texts=capability_input_supplemental,
+                    semantic_intent=decision.retrieval_intent,
+                    embedding_provider=embedding_provider,
                 )
             except Exception as exc:
                 _record_error(conn, conversation_id, correlation_id, "capability_invoke", exc)
@@ -157,7 +157,7 @@ def handle_interaction(
                     raise
             elif isinstance(output, AgentResult):
                 response_text = output.text
-            else:  # pragma: no cover - dispatcher return type is closed above.
+            else:  # pragma: no cover
                 raise TypeError(f"unsupported capability output: {type(output).__name__}")
 
     event_store.record_event(
