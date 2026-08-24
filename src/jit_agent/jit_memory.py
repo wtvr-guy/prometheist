@@ -1,10 +1,13 @@
 """Shared JIT Memory boundary for every stateless Prometheist agent.
 
 Agents express *what* internal persisted information they need through
-``MemoryNeed``. This module owns *how* the current verified Memory Kernel is
-used, persists request/result provenance, and returns a bounded ``MemoryPacket``.
-No caller needs to know about candidate routing, lexical projections,
-associations, PostgreSQL FTS, or future retrieval mechanisms.
+``MemoryNeed``. This module owns *how* the verified deterministic Memory Kernel
+and optional semantic candidate route are used, persists request/result
+provenance, and returns a bounded ``MemoryPacket``.
+
+Semantic similarity is a recovery signal, not an evidence assertion. The frozen
+deterministic kernel always gets first refusal. Only after deterministic
+abstention may pgvector/Qwen return explicitly marked semantic candidates.
 """
 from __future__ import annotations
 
@@ -14,16 +17,18 @@ import uuid
 import psycopg
 from psycopg.types.json import Json
 
-from jit_agent import event_store, postgres_memory_kernel
+from jit_agent import event_store, postgres_memory_kernel, semantic_memory
 from jit_agent.association_projection import ASSOCIATION_PROJECTION_VERSION, derive_associations
 from jit_agent.memory_kernel import CueState
 from jit_agent.memory_projection import LexicalProjection, build_projection
 from jit_agent.models import (
+    EvidenceStatus,
     EventType,
     KnowledgeOrigin,
     MemoryEvidence,
     MemoryNeed,
     MemoryPacket,
+    SemanticRetrievalIntentV1,
 )
 
 SOURCE = "jit_memory"
@@ -49,6 +54,7 @@ def build_memory_need(
     query_text: str | None,
     *,
     supplemental_query_texts: list[str] | None = None,
+    semantic_intent: SemanticRetrievalIntentV1 | None = None,
     entities: list[str] | None = None,
     conversation_id: uuid.UUID | None = None,
     limit: int = 5,
@@ -57,6 +63,7 @@ def build_memory_need(
     return MemoryNeed(
         query_text=query_text,
         supplemental_query_texts=supplemental_query_texts or [],
+        semantic_intent=semantic_intent,
         entities=entities or [],
         conversation_id=conversation_id,
         source_types=list(DEFAULT_EVIDENCE_TYPES),
@@ -69,13 +76,7 @@ def _effective_source_types(need: MemoryNeed) -> tuple[EventType, ...]:
 
 
 def _query_variants(need: MemoryNeed) -> tuple[tuple[str, str | None], ...]:
-    """Return deterministic canonical-then-fallback query formulations.
-
-    The canonical query always gets first refusal. Supplemental formulations are
-    only useful if the canonical kernel pass produces no admissible evidence.
-    Duplicate/blank formulations are removed without changing the persisted
-    ``MemoryNeed`` itself, so request provenance remains exact.
-    """
+    """Return deterministic canonical-then-fallback query formulations."""
     variants: list[tuple[str, str | None]] = []
     seen: set[str] = set()
 
@@ -102,18 +103,7 @@ def _ensure_projection_fresh(
     *,
     before_global_seq: int | None,
 ) -> None:
-    """Incrementally make the v0.5 derived routes usable by the live MAS.
-
-    v0.5 benchmark setup explicitly rebuilt projections before recall. The live
-    event store, correctly, only appends authoritative events. v0.6 therefore
-    needs a bridge that projects newly visible events without rewriting history
-    or forcing a destructive full rebuild on each memory request.
-
-    Lexical rows are genuinely incremental. Association derivation is computed
-    from the visible append-only history and inserted idempotently; v0.5's rule
-    families only add relationships as new events arrive, so previously derived
-    association rows remain valid. This keeps the frozen kernel untouched.
-    """
+    """Incrementally make the frozen deterministic derived routes usable live."""
     events = postgres_memory_kernel.load_events(conn, before_global_seq=before_global_seq)
     if not events:
         return
@@ -228,6 +218,7 @@ def _packet_from_kernel(
                 global_seq=event.global_seq,
                 content=event.text,
                 score=score,
+                evidence_status=EvidenceStatus.ADMITTED,
                 retrieval_reasons=reasons,
                 provenance_event_ids=sorted(provenance, key=str),
             )
@@ -241,6 +232,48 @@ def _packet_from_kernel(
         retrieval_trace={
             "kernel": "associative_recall_from_postgres",
             "kernel_trace": asdict(kernel_packet.trace),
+        },
+    )
+
+
+def _packet_from_semantic_candidates(
+    memory_request_id: uuid.UUID,
+    need: MemoryNeed,
+    candidates: list[semantic_memory.SemanticCandidate],
+    *,
+    instruction: str,
+    projected_count: int,
+) -> MemoryPacket:
+    items = [
+        MemoryEvidence(
+            source_event_id=item.source_event_id,
+            event_type=item.event_type,
+            source=item.source,
+            created_at=item.created_at,
+            conversation_id=item.conversation_id,
+            conversation_seq=item.conversation_seq,
+            global_seq=item.global_seq,
+            content=item.content,
+            score=item.similarity,
+            evidence_status=EvidenceStatus.SEMANTIC_CANDIDATE,
+            retrieval_reasons=["SEMANTIC_CANDIDATE"],
+        )
+        for item in candidates
+    ]
+    return MemoryPacket(
+        memory_request_id=memory_request_id,
+        need=need,
+        supported=False,
+        items=items,
+        retrieval_trace={
+            "semantic": {
+                "provider": "exact_pgvector_cosine",
+                "projection_version": semantic_memory.SEMANTIC_PROJECTION_VERSION,
+                "candidate_limit": semantic_memory.SEMANTIC_CANDIDATE_LIMIT,
+                "instruction": instruction,
+                "new_projection_entries": projected_count,
+                "candidate_only": True,
+            }
         },
     )
 
@@ -280,13 +313,15 @@ def request_memory(
     requesting_agent: str,
     need: MemoryNeed,
     before_global_seq: int | None,
+    embedding_provider: semantic_memory.EmbeddingProvider | None = None,
 ) -> MemoryPacket:
     """Persist and satisfy one internal-memory request for any agent.
 
-    The exact canonical query is evaluated first. Only an empty admissible result
-    permits a bounded supplemental formulation to be tried. This keeps the
-    verified v0.5 kernel unchanged while preventing either a verbose user query
-    or a lossy LLM compression from becoming a single point of recall failure.
+    Deterministic retrieval gets first refusal. Supplemental text formulations
+    remain bounded fallbacks. If every deterministic attempt abstains and the
+    caller supplied a versioned semantic intent plus an embedding provider, an
+    exact pgvector top-10 search returns *candidate* source events. Those
+    candidates are never promoted to ``supported`` by vector similarity alone.
     """
     memory_request_id = uuid.uuid4()
     effective_need = need.model_copy(update={"source_types": list(_effective_source_types(need))})
@@ -341,13 +376,44 @@ def request_memory(
         update={
             "retrieval_trace": {
                 "kernel": "associative_recall_from_postgres",
-                "query_strategy": "canonical_then_supplemental_on_empty",
+                "query_strategy": "deterministic_first_then_semantic_candidates",
                 "selected_query_role": selected_role,
                 "selected_query_text": selected_query_text,
                 "query_attempts": attempts,
             }
         }
     )
+
+    if (
+        not packet.supported
+        and embedding_provider is not None
+        and effective_need.semantic_intent is not None
+        and effective_need.query_text
+    ):
+        projected_count = semantic_memory.ensure_semantic_projection(
+            conn,
+            embedding_provider,
+            before_global_seq=before_global_seq,
+            source_types=_effective_source_types(effective_need),
+        )
+        candidates, instruction = semantic_memory.search_semantic_candidates(
+            conn,
+            embedding_provider,
+            query=effective_need.query_text,
+            intent=effective_need.semantic_intent,
+            before_global_seq=before_global_seq,
+            source_types=_effective_source_types(effective_need),
+            limit=semantic_memory.SEMANTIC_CANDIDATE_LIMIT,
+        )
+        semantic_packet = _packet_from_semantic_candidates(
+            memory_request_id,
+            effective_need,
+            candidates,
+            instruction=instruction,
+            projected_count=projected_count,
+        )
+        semantic_packet.retrieval_trace["deterministic_attempts"] = attempts
+        packet = semantic_packet
 
     event_store.record_event(
         conn,
