@@ -6,8 +6,9 @@ This directory contains the architecture, research milestones, audit history, ex
 
 Start here for the post-v0.6 direction:
 
-- [`architecture/COGNITIVE_ARCHITECTURE.md`](architecture/COGNITIVE_ARCHITECTURE.md) — current target architecture: persistent cognitive system, multi-lane Attention Fabric, perception/salience, retention, capabilities, disposable workers, and system-owned continuity.
-- [`architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](architecture/ARCHITECTURAL_PIVOT_2026-08-24.md) — decision record explaining why Prometheist moved away from a privileged Primary Agent / fixed MAS hierarchy.
+- [`architecture/COGNITIVE_ARCHITECTURE.md`](architecture/COGNITIVE_ARCHITECTURE.md) — current target architecture: persistent cognitive system, multi-lane Attention Fabric, perception/salience, retention, capabilities, disposable workers, session-independent interaction continuity, and system-owned continuity.
+- [`architecture/INTERACTION_CONTINUITY.md`](architecture/INTERACTION_CONTINUITY.md) — requirement that conversations/sessions/devices remain provenance metadata rather than cognitive boundaries; defines natural topic resumption and its future benchmark.
+- [`architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](architecture/ARCHITECTURAL_PIVOT_2026-08-24.md) — decision record explaining why Prometheist moved away from a privileged Primary Agent / fixed MAS hierarchy and rigid conversation-scoped cognition.
 - [`ROADMAP.md`](ROADMAP.md) — revised milestone path from the accepted v0.5/v0.6 baselines through the first complete attention-centric v1.0 architecture.
 
 ## Architecture baselines
@@ -31,7 +32,7 @@ Versioned research checkpoints:
 - [`milestones/v0.5/README.md`](milestones/v0.5/README.md) — final v0.5 status, accepted measurements, causal fixes, and closure state.
 - [`milestones/v0.5/MEMORY_KERNEL_V0.5.md`](milestones/v0.5/MEMORY_KERNEL_V0.5.md) — original v0.5 design/experiment specification retained as research context.
 - [`milestones/v0.5/SCALE_BENCHMARK.md`](milestones/v0.5/SCALE_BENCHMARK.md) — reproducible v0.5 scale-benchmark workflow.
-- [`milestones/v0.6/README.md`](milestones/v0.6/README.md) — accepted shared-JIT-memory and stateless multi-component integration result.
+- [`milestones/v0.6/README.md`](milestones/v0.6/README.md) — accepted shared-JIT-memory and stateless multi-component integration result. Its useful conversation behavior remains a regression baseline even though Primary-Agent orchestration and conversation-scoped cognition are not the forward architecture.
 
 The v0.5 and v0.6 documents are intentionally preserved as historical evidence. The 2026-08-24 pivot changes the interpretation and forward architecture; it does not rewrite or invalidate those experiments.
 
