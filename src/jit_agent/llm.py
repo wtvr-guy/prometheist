@@ -38,7 +38,30 @@ def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> Non
     )
 
 
-_CLASSIFY_SYSTEM_PROMPT = """\
+_RETRIEVAL_INTENT_GUIDANCE = """\
+When the requested capability is access to persisted internal history, also set
+retrieval_intent using only the schema's bounded enum values. This is a soft
+query-time retrieval hint; it never labels stored events or asserts facts.
+Choose target by the requested answer:
+- FACT: a directly stated fact.
+- CURRENT_STATE: the currently applicable state or value.
+- PRIOR_STATE: the immediately preceding state or value.
+- STATE_TRANSITION: a change from an earlier state to a later state.
+- IDENTITY: the identity of a person, object, or named item.
+- RELATIONSHIP: a relationship between referenced subjects.
+- LOCATION: a requested location.
+- TIME: a date, time, schedule, or temporal value.
+- VALUE: a numeric, monetary, identifier, or other concrete value.
+- BOOLEAN_STATUS: whether a requested condition is true or false.
+- PREFERENCE: a preference or habitual choice.
+- PROCEDURE: a procedure, method, or operational requirement.
+- GENERAL: none of the more specific categories fits.
+Choose temporal_focus as CURRENT, PREVIOUS, AS_OF_REFERENCE_TIME, HISTORICAL,
+or UNSPECIFIED. Do not invent sources, repositories, locations, relationships,
+or facts in order to choose these enums.
+"""
+
+_CLASSIFY_SYSTEM_PROMPT = f"""\
 You are Prometheist's stateless Primary decision step. You receive only the
 current user message. Choose exactly one action:
 - RESPOND_DIRECTLY if the current message alone is sufficient.
@@ -46,14 +69,22 @@ current user message. Choose exactly one action:
 For REQUEST_CAPABILITY, capability_query briefly describes the needed capability.
 capability_input may contain a narrower input; omit it when the whole user message
 should be passed unchanged. Do not name implementations, ids, limits, or routing.
+{_RETRIEVAL_INTENT_GUIDANCE}
 """
 
 _RESPOND_SYSTEM_PROMPT = """\
 You are Prometheist's Primary Agent in a fresh invocation. Use only the current
-message and supplied evidence, if any. Do not claim unsupported memory.
+message and supplied MemoryPacket, if any. ADMITTED items have passed the
+system's deterministic evidence gate. SEMANTIC_CANDIDATE items are canonical
+source events recovered by semantic similarity but are not admitted facts.
+You may use a SEMANTIC_CANDIDATE only when its content itself directly supports
+the answer requested by the current message. Never treat its similarity score,
+retrieval rank, or mere presence as evidence. If no supplied item's source text
+directly supports the answer, say that persisted evidence is insufficient.
+Do not claim unsupported memory.
 """
 
-_SPECIALIST_DECISION_PROMPT = """\
+_SPECIALIST_DECISION_PROMPT = f"""\
 You are a stateless specialist in a fresh invocation. Given only your role and
 current task, choose exactly one action:
 - RESPOND_DIRECTLY if the task can be completed from supplied information alone.
@@ -63,12 +94,19 @@ capability_input gives the narrow subtask or information needed. For prior or
 persisted Prometheist information, describe the capability as persisted internal
 history access and put only the specific recall target in capability_input.
 Do not name implementations, capability ids, limits, or routing policy.
+{_RETRIEVAL_INTENT_GUIDANCE}
 """
 
 _SPECIALIST_ANSWER_PROMPT = """\
 You are a stateless specialist in a fresh invocation. Complete the supplied task
-using only the role, task, and bounded evidence packet if one is supplied. Do not
-invent unsupported facts.
+using only the role, task, and bounded MemoryPacket if one is supplied. ADMITTED
+items have passed deterministic evidence admission. SEMANTIC_CANDIDATE items are
+canonical source events recovered by semantic similarity and are not themselves
+assertions that the requested relation is true. You may use a candidate only
+when its source text itself directly supports the requested conclusion. Ignore
+similarity score and rank as evidence. If the supplied source text does not
+actually establish the answer, state that persisted evidence is insufficient.
+Do not invent unsupported facts.
 """
 
 
@@ -104,6 +142,7 @@ def _format_memory_packet(packet: MemoryPacket | None) -> str:
         provenance = ", ".join(str(value) for value in item.provenance_event_ids) or "none"
         blocks.append(
             f"{index}. event_id: {item.source_event_id}\n"
+            f"   evidence_status: {item.evidence_status.value}\n"
             f"   conversation_id: {item.conversation_id}\n"
             f"   conversation_seq: {item.conversation_seq}\n"
             f"   global_seq: {item.global_seq}\n"
@@ -178,7 +217,7 @@ class OllamaClient:
         schema = AgentDecision.model_json_schema()
         last_error: Exception | None = None
         for _ in range(2):
-            content = self._structured(kind, system, user, schema, 128)
+            content = self._structured(kind, system, user, schema, 160)
             try:
                 return AgentDecision.model_validate_json(content)
             except ValidationError as exc:
