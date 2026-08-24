@@ -11,12 +11,15 @@ See:
 - [`../../architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](../../architecture/ARCHITECTURAL_PIVOT_2026-08-24.md)
 - [`../../architecture/COGNITIVE_ARCHITECTURE.md`](../../architecture/COGNITIVE_ARCHITECTURE.md)
 - [`JIT_ATTENTION_DESIGN.md`](JIT_ATTENTION_DESIGN.md)
+- [`RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md`](RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md)
 
 ## Primary question
 
 > Can Prometheist deterministically allocate durable work across bounded concurrent execution resources, survive destruction of every worker process, and resume without any privileged Primary Agent or persistent LLM context?
 
 ## What is already implemented
+
+### Increment A — deterministic single-focus kernel
 
 The first v0.7 increment introduced a deterministic single-focus scheduler kernel and PostgreSQL durability layer.
 
@@ -37,23 +40,47 @@ Implemented/tested properties include:
 - deterministic replay equivalence;
 - forced Python-process destruction followed by reconstruction/resumption in a fresh process.
 
-The current implementation therefore proves that unfinished work can belong to persistent system state rather than the lifetime of a Python process or LLM context.
+This proves that unfinished work can belong to persistent system state rather than the lifetime of a Python process or LLM context.
 
-## What changed after the first increment
+### Increment B — explicit execution resources
 
-The original next step was to route the synchronous Primary Agent through the single-focus scheduler and demonstrate a restartable multi-agent workflow.
+The second v0.7 increment introduced explicit durable execution-resource state.
 
-That is no longer the intended direction.
+Implemented/tested properties include:
 
-The new target is to generalize the scheduler into an **Attention Fabric** with multiple deterministic resource lanes, then replace Primary-Agent orchestration with a stateless worker/capability execution protocol.
+- explicit `ExecutionResourceClass` values for `CPU_GENERAL`, `LLM_INFERENCE`, `DATABASE`, `FILESYSTEM_IO`, and `NETWORK_IO`;
+- durable `ExecutionResource` definitions with stable resource ids, explicit capacity, enabled/disabled state, and metadata;
+- deterministic resource ordering independent of configuration order;
+- resource-class requirements in task scheduling metadata;
+- resource-gated runnability: tasks remain durably `QUEUED` until every required resource class has enabled capacity;
+- disabled resources do not make tasks runnable;
+- stable resource identity cannot silently change class;
+- PostgreSQL persistence/restart reconstruction for resource definitions and task requirements;
+- idempotent schema evolution for existing local v0.7 databases.
 
-The current scheduler code is retained as the baseline because its priority, interruption, service-guarantee, dependency, checkpoint, determinism, and restart properties remain necessary.
+GitHub Actions run #78 verified the Increment B head with PostgreSQL 16: `99 passed, 4 skipped in 12.39s`.
+
+That CI result verifies the deterministic test environment. Resource-sensitive behavior on the intended development machine still requires separate local acceptance before it is considered verified against real hardware.
+
+## Attention and resource admission are separate
+
+After Increment B, the next design distinction became explicit:
+
+> **Attention decides which durable tasks deserve execution. Resource admission decides which of those tasks can safely execute concurrently on the available hardware.**
+
+A higher-priority task does not automatically preempt lower-priority work. If sufficient safe capacity exists, both should run concurrently.
+
+Preemption is considered only when higher-priority work cannot be admitted because currently running work occupies resources it needs. Even then, `PREEMPTIBLE`, `CHECKPOINT_ONLY`, and `ATOMIC` interruption policy remains authoritative.
+
+Fixed lanes are therefore not the universal hardware abstraction. Discrete lanes may still be useful for naturally slot-like resources such as a local-model inference backend or bounded worker pool, but quantitative reservation/admission is the core model for CPU, memory, and mixed resource demands.
+
+See [`RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md`](RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md) for the complete decision.
 
 ## Implementation sequence
 
 ### Increment A — freeze the single-focus kernel
 
-Preserve the existing scheduler tests as regression invariants.
+**Status:** implemented and retained as a regression baseline.
 
 Do not weaken:
 
@@ -68,96 +95,83 @@ Do not weaken:
 
 ### Increment B — explicit execution resources
 
-Introduce durable execution-resource definitions, for example:
+**Status:** implemented and verified in CI.
+
+Resource definitions are durable and deterministically ordered. Tasks may declare resource-class requirements, and unsupported/disabled requirements keep those tasks queued.
+
+This increment intentionally stops short of quantitative reservation, concurrency allocation, or worker assignment.
+
+### Increment C — deterministic resource admission and reservations
+
+Introduce the smallest resource-allocation mechanism that can answer:
+
+> Given the runnable tasks, their priority/interruption metadata, and an authoritative safe resource snapshot, which compatible subset can execute concurrently without oversubscribing the machine?
+
+The first version should support deterministic configured capacities/reservations rather than attempting a sophisticated dynamic optimizer.
+
+The resource model must preserve explicit safety headroom rather than treating all installed hardware as schedulable capacity.
+
+Conceptually:
 
 ```text
-ExecutionResource
-    resource_id
-    resource_class
-    capacity
-    enabled
-    metadata
+configured / measured resource capacity
+        - reserved system headroom
+        - active Prometheist reservations
+        = safely admissible capacity
 ```
 
-Initial resource classes should be deliberately small and generic, such as:
-
-```text
-CPU_GENERAL
-LLM_INFERENCE
-DATABASE
-FILESYSTEM_IO
-NETWORK_IO
-```
-
-Do not assume capacity equals host logical CPU count. Local LLM inference may remain capacity 1 even on a many-thread CPU.
+A task should be admitted if its reservation fits alongside current work. Higher priority alone is not a reason to stop work that can safely continue concurrently.
 
 Tests:
 
-- resource definitions round-trip durably;
-- identical resource state produces identical ordering;
-- disabled resources never receive assignments;
-- tasks requiring unsupported resources remain queued.
+- identical task state + identical resource snapshot + identical policy -> identical admission set;
+- admitted work never exceeds configured safe capacity;
+- a task whose reservation does not fit remains queued;
+- sufficient concurrent capacity permits lower- and higher-priority tasks to run together;
+- resource headroom is never allocatable to ordinary work;
+- restart reconstructs the same authoritative reservations;
+- synthetic resource snapshots remain deterministic and independent of worker race timing.
 
-### Increment C — durable attention lanes
+### Increment D — durable assignments and scheduling epochs
 
-Represent available capacity as deterministic lanes or equivalent durable slots.
-
-Example:
-
-```text
-cpu-general-00
-cpu-general-01
-llm-inference-00
-network-io-00
-network-io-01
-```
-
-Lane identity must be stable and deterministic.
-
-Tests:
-
-- stable lane creation/order;
-- no more assignments than declared capacity;
-- a task occupies at most one exclusive lane unless its contract explicitly supports otherwise;
-- lane state survives restart.
-
-### Increment D — scheduling epochs
-
-Replace single-task focus reconciliation with deterministic epoch assignment.
+Replace single-task focus reconciliation with deterministic epoch assignment over the admitted set.
 
 Each epoch should:
 
-1. identify runnable tasks;
-2. identify available lanes;
-3. derive effective priorities;
-4. deterministically rank tasks and lanes;
-5. match compatible tasks to lanes;
-6. persist the complete assignment atomically;
-7. expose committed assignments to workers.
+1. identify dependency-satisfied runnable tasks;
+2. derive effective priorities;
+3. read/capture the authoritative safe resource state;
+4. preserve valid existing reservations/assignments where possible;
+5. deterministically admit compatible tasks;
+6. create durable assignment identities or discrete slots where the resource contract requires them;
+7. persist the complete assignment/reservation set atomically;
+8. expose only committed assignments to workers.
 
 Workers must not race directly against the runnable queue.
 
 Tests:
 
-- identical state -> identical complete assignment set;
-- task/lane matching respects resource requirements;
+- identical authoritative state -> identical complete assignment/reservation set;
 - total ordering remains deterministic;
-- same-priority task arrivals do not cause unnecessary assignment churn;
+- same-priority arrivals do not cause unnecessary churn;
+- no resource is oversubscribed;
+- discrete resources never exceed their declared concurrency;
 - partial persistence cannot expose half an epoch as authoritative state.
 
-### Increment E — multi-lane interruption semantics
+### Increment E — contention-driven interruption semantics
 
-Generalize preemption from one active task to N active assignments.
+Generalize preemption from one active task to multiple concurrent assignments.
 
-A new high-priority task should preempt only the lowest-ranked compatible active work necessary to satisfy its resource requirements, and only where interruption policy permits.
+A higher-priority task should cause preemption only when it cannot otherwise be admitted. The scheduler should release only the minimum deterministically selected lower-priority compatible work needed to satisfy the missing reservation, and only where interruption policy permits.
 
 Tests:
 
-- preemption affects only compatible resource lanes;
+- no preemption occurs when safe concurrent capacity exists;
+- preemption affects only resources relevant to the blocked higher-priority task;
 - `ATOMIC` remains non-preemptible under normal scheduler authority;
-- `CHECKPOINT_ONLY` records pending replacement but retains its lane until checkpoint;
-- unrelated lanes continue running;
-- deterministic victim selection when several active tasks are preemptible.
+- `CHECKPOINT_ONLY` records pending replacement but retains its reservation until checkpoint;
+- unrelated work continues running;
+- victim selection is deterministic when several active tasks are eligible to yield.
 
 ### Increment F — durable worker protocol
 
@@ -167,13 +181,15 @@ A worker should receive a durable assignment containing only what it needs to ex
 
 ```text
 assignment_id
-lane_id
 task_id
 step_id / checkpoint revision
 required capability
+resource reservation refs
 input refs
 idempotency key
 ```
+
+A discrete `lane_id` may appear when the relevant resource contract actually uses lanes/slots; it is not required as the universal capacity model.
 
 The worker may invoke a model or another capability, return a structured result, persist a checkpoint/result, and disappear.
 
@@ -207,22 +223,41 @@ Exact stages should be introduced only as required by measured workflows.
 
 The existing Primary Agent may remain temporarily as a compatibility CLI path while the new execution path is built and tested, but it should cease to be the architectural executive.
 
-### Increment H — forced multi-lane restart acceptance
+### Increment H — forced concurrent restart acceptance
 
 Acceptance scenario:
 
 1. create several tasks with different resource requirements;
-2. assign several simultaneously;
+2. admit and assign several simultaneously where the machine/resource snapshot permits it;
 3. persist an intermediate checkpoint in at least one;
-4. create higher-priority work that causes a permitted preemption;
-5. kill all worker processes without graceful shutdown;
-6. start fresh processes;
-7. reconstruct authoritative assignments/checkpoints;
-8. recover abandoned work without duplicate effects;
-9. complete the workload;
-10. compare causal history against expected deterministic state transitions.
+4. create higher-priority work that cannot fit without a permitted preemption;
+5. verify only the minimum necessary compatible work yields;
+6. kill all worker processes without graceful shutdown;
+7. start fresh processes;
+8. reconstruct authoritative assignments/reservations/checkpoints;
+9. recover abandoned work without duplicate effects;
+10. complete the workload;
+11. compare causal history against expected deterministic state transitions.
 
-A deterministic fake-model/capability path should establish orchestration invariants first. A real Ollama-backed acceptance path can then verify stateless model replacement separately.
+A deterministic fake-resource/fake-worker path should establish orchestration invariants first. A real development-machine acceptance path should then verify the actual PostgreSQL/Ollama/hardware stack separately.
+
+## Verification policy
+
+v0.7 uses two complementary forms of evidence.
+
+### CI / deterministic simulation
+
+CI establishes deterministic policy invariants from controlled task and resource state. It should remain reproducible independent of the user's particular machine.
+
+### Development-machine acceptance
+
+Any behavior that claims to manage real local hardware must also be exercised on the actual intended development environment before it is considered verified.
+
+That acceptance should use the real local stack where applicable, including PostgreSQL, Ollama/local-model inference, actual CPU/RAM pressure, filesystem/network behavior, and process destruction/restart.
+
+Optional database extensions required by specific experimental suites should be installed so those suites do not remain skipped. Their presence does not automatically make those mechanisms architectural dependencies.
+
+In particular, pgvector is not a v0.7 JIT Attention dependency. Vector-backed memory experiments remain separately gated by measured memory failures and their own milestone evidence.
 
 ## Explicit non-goals for v0.7
 
@@ -244,16 +279,20 @@ Those mechanisms belong to later milestones and must be introduced against their
 
 v0.7 closes only when all of the following are demonstrated:
 
-- multiple durable tasks can execute concurrently across explicit bounded resource lanes;
-- assignment is deterministic from authoritative state;
+- multiple durable tasks can execute concurrently when safe resource capacity permits;
+- deterministic admission prevents oversubscription beyond the configured safe resource envelope;
+- attention priority does not force unnecessary serialization or preemption;
+- assignment/reservation decisions are deterministic from authoritative state;
 - workers cannot steal scheduling authority by racing for queue items;
-- priority, service guarantees, dependencies, and interruption policy remain deterministic;
-- task/lane state survives full process destruction;
+- priority, service guarantees, dependencies, resource requirements, and interruption policy remain deterministic;
+- higher-priority work preempts only when resource contention requires it and policy permits it;
+- assignment/reservation state survives full process destruction;
 - abandoned work is safely recoverable;
 - checkpointed work resumes with fresh worker/model processes;
 - at least one end-to-end workflow executes without requiring a privileged Primary Agent;
+- deterministic CI and real development-machine resource-sensitive acceptance both pass for the functionality they are intended to verify;
 - the v0.5/v0.6 regression baselines remain green unless a separately documented reason justifies a change.
 
 ## Milestone invariant
 
-> **Prometheist owns attention and unfinished work; workers merely borrow execution capacity to advance durable tasks.**
+> **Prometheist owns attention and unfinished work; workers merely borrow safely admitted execution capacity to advance durable tasks.**
