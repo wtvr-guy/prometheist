@@ -81,9 +81,15 @@ Primary question:
 
 > Can Prometheist deterministically allocate durable work across bounded concurrent execution resources, survive destruction of every worker process, and resume without any privileged Primary Agent or persistent LLM context?
 
-The first v0.7 increment already establishes a deterministic single-focus scheduler kernel with durable PostgreSQL task/checkpoint state, priority derivation, service guarantees, interruption policies, dependency gating, deterministic transition IDs, and forced-process restart recovery.
+The first v0.7 increment establishes a deterministic single-focus scheduler kernel with durable PostgreSQL task/checkpoint state, priority derivation, service guarantees, interruption policies, dependency gating, deterministic transition IDs, and forced-process restart recovery.
 
-The milestone now extends that substrate into a multi-lane **Attention Fabric**.
+Increment B adds explicit durable execution-resource definitions and task resource requirements. The next step is to generalize that substrate into a resource-aware concurrent **Attention Fabric**.
+
+The architecture now explicitly distinguishes attention from resource admission:
+
+> **Attention determines which durable tasks deserve execution. Resource admission determines which compatible subset can safely execute concurrently on the available hardware.**
+
+A higher-priority task does not automatically preempt lower-priority work. If sufficient safe capacity exists, both should execute concurrently. Preemption is considered only when resource contention prevents admission of higher-priority work and interruption policy permits lower-priority work to yield.
 
 Primary deliverables:
 
@@ -94,33 +100,42 @@ Primary deliverables:
 - `PREEMPTIBLE`, `CHECKPOINT_ONLY`, and `ATOMIC` interruption policies;
 - deterministic dependencies and eligibility;
 - explicit execution-resource classes and capacities;
-- N durable attention lanes rather than one privileged active focus;
+- explicit safe-capacity/headroom policy rather than assuming all installed hardware is schedulable;
+- deterministic task resource requirements and reservations;
+- deterministic concurrent resource admission;
 - deterministic scheduling epochs;
-- deterministic task-to-compatible-lane assignment;
-- atomic assignment persistence before worker execution;
+- durable assignment identities, with discrete lanes/slots only where a resource contract naturally requires them;
+- atomic assignment/reservation persistence before worker execution;
+- contention-driven preemption that releases only the resources actually required by higher-priority work;
 - resumable stateless worker protocol;
 - idempotent or explicitly retry-safe capability boundaries where required;
 - deliberate process-kill/restart acceptance tests;
 - removal of the Primary Agent as an architectural requirement.
 
-Resource capacity must be abstracted from raw CPU thread count. A system may expose separate capacities for CPU work, local LLM inference, database work, filesystem I/O, network I/O, GPU work, device I/O, or actuators.
+Resource capacity must be abstracted from raw CPU thread count. A system may expose separate capacities for CPU work, local LLM inference, database work, filesystem I/O, network I/O, GPU work, device I/O, actuators, or later quantitative dimensions such as RAM/VRAM when measured requirements justify them.
+
+Installed capacity is not identical to schedulable capacity. The system must reserve explicit safety headroom for the operating system and required services.
+
+Determinism applies given the same authoritative task state, resource snapshot, and policy version. Runtime hardware measurements may become deterministic policy inputs, but untracked worker/OS races must never become scheduling authority.
 
 Acceptance demonstration:
 
 1. Several durable tasks become runnable with different priorities, dependencies, resource requirements, and interruption policies.
-2. The Attention Fabric deterministically assigns a compatible subset across several available lanes.
-3. Higher-priority work preempts only where policy permits.
-4. Intermediate checkpoints and assignments are persisted.
-5. Every worker process is killed without graceful shutdown.
-6. Fresh processes reconstruct the authoritative task/lane state from PostgreSQL.
-7. Work resumes from committed checkpoints without duplicate side effects.
-8. The final result is correct without any inherited LLM or worker context.
+2. The Attention Fabric deterministically admits as many compatible tasks concurrently as the safe resource envelope permits.
+3. Higher-priority work starts without preemption when sufficient capacity exists.
+4. When higher-priority work cannot be admitted, only the minimum necessary compatible lower-priority work yields, and only where interruption policy permits.
+5. Intermediate checkpoints, resource reservations, and assignments are persisted atomically.
+6. Every worker process is killed without graceful shutdown.
+7. Fresh processes reconstruct authoritative task/resource/assignment state from PostgreSQL.
+8. Work resumes from committed checkpoints without duplicate side effects.
+9. The final result is correct without any inherited LLM or worker context.
+10. Deterministic CI tests and real development-machine resource-sensitive acceptance both pass for the behavior each is intended to verify.
 
 Critical invariant:
 
-> **Scheduling decisions belong to persistent deterministic system policy; workers execute assignments but do not own system attention.**
+> **Scheduling decisions belong to persistent deterministic system policy; workers execute admitted assignments but do not own system attention or resource-allocation authority.**
 
-See [`milestones/v0.7/README.md`](milestones/v0.7/README.md) and [`milestones/v0.7/JIT_ATTENTION_DESIGN.md`](milestones/v0.7/JIT_ATTENTION_DESIGN.md).
+See [`milestones/v0.7/README.md`](milestones/v0.7/README.md), [`milestones/v0.7/JIT_ATTENTION_DESIGN.md`](milestones/v0.7/JIT_ATTENTION_DESIGN.md), and [`milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md`](milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md).
 
 ---
 
@@ -252,7 +267,7 @@ perceive
   -> retain / buffer / discard according to policy
   -> assemble situation
   -> form durable task
-  -> allocate attention/resource lane
+  -> allocate attention + resource reservation
   -> invoke capabilities
   -> request JIT Memory only when required
   -> reason and/or act
@@ -268,15 +283,15 @@ perceive
 - JIT Memory as demand-driven capability rather than eager universal context injection;
 - causal/provenance linkage from observation through task formation, attention, capability use, action, and outcome;
 - child/nested tasks and dependency chains;
-- multi-lane concurrent workflows;
-- orienting tasks that can interrupt eligible work and return focus after benign resolution;
+- concurrent resource-admitted workflows;
+- orienting tasks that can interrupt eligible work when contention requires it and return attention/resources after benign resolution;
 - opportunity-triggered as well as threat-triggered attention;
 - model/backend replacement during unfinished workflows.
 
 Acceptance demonstrations should include at least:
 
-1. a background task interrupted by a high-salience ambiguous observation, followed by investigation, benign resolution, and exact resumption;
-2. a time-limited high-value opportunity that deterministically outranks lower-value work and then releases resources;
+1. a background task interrupted by a high-salience ambiguous observation when required by resource contention, followed by investigation, benign resolution, and exact resumption;
+2. a time-limited high-value opportunity that deterministically outranks lower-value work, executes concurrently when possible, and otherwise receives the resources policy allows it to claim;
 3. a model-backed workflow whose worker/model is destroyed and replaced between durable steps without loss of task identity or historical context.
 
 ---
@@ -301,7 +316,7 @@ Primary deliverables should include the subset justified by the architecture at 
 - model/backend replacement tests;
 - reproducible installation;
 - performance profiling and bounded resource behavior;
-- attention-lane lease/recovery semantics;
+- assignment/reservation lease and recovery semantics;
 - starvation and deadlock tests;
 - priority-inversion handling where required;
 - resource oversubscription protection;
@@ -313,7 +328,7 @@ Primary deliverables should include the subset justified by the architecture at 
 
 Critical portability test:
 
-Move Prometheist from Machine A to Machine B with different available execution resources and a different compatible LLM backend. The system must retain the same authoritative internal history, retained evidence, durable tasks, checkpoints, and causal provenance while adapting its Attention Fabric capacity to the new hardware.
+Move Prometheist from Machine A to Machine B with different available execution resources and a different compatible LLM backend. The system must retain the same authoritative internal history, retained evidence, durable tasks, checkpoints, and causal provenance while adapting its Attention Fabric safe-capacity policy and concurrent admission to the new hardware.
 
 ---
 
@@ -338,13 +353,13 @@ A defensible v1.0 should demonstrate:
 - unknown facts can be explicitly unsupported rather than hallucinated from topical similarity;
 - deterministic salience determines what observations warrant evaluation;
 - deterministic task formation converts relevant situations into durable intentions;
-- deterministic executive attention allocates those intentions across bounded concurrent resources;
+- deterministic executive attention ranks those intentions while deterministic resource admission allocates bounded concurrent capacity;
 - service guarantees and interruption policies coexist;
-- urgent observations can orient or interrupt the system;
+- urgent observations can orient the system and interrupt eligible work when resource contention actually requires it;
 - safe noninterruptible work remains noninterruptible under normal scheduler authority;
 - benign interruptions resolve and prior work resumes;
 - opportunities can compete for attention as well as threats;
-- multiple lanes execute concurrently without race-based scheduling semantics;
+- multiple assignments execute concurrently without race-based scheduling semantics or unsafe resource oversubscription;
 - every worker can be destroyed and replaced;
 - model backends can be replaced;
 - derived memory can be rebuilt without rewriting retained source evidence;
