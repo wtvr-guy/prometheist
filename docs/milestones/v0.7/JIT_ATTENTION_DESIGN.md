@@ -2,27 +2,28 @@
 
 ## Status
 
-This document began as the design for a deterministic single-focus scheduler. The first v0.7 implementation increment has already built and tested that kernel.
+This document began as the design for a deterministic single-focus scheduler. The first v0.7 implementation increment built and tested that kernel.
 
-After the 2026-08-24 architectural pivot, the single-focus scheduler is now treated as the baseline for a more general **JIT Attention Fabric**. The fabric will preserve the existing scheduler invariants while supporting multiple concurrent execution lanes and removing the Primary Agent as the intended executive layer.
+After the 2026-08-24 architectural pivot, the single-focus scheduler became the baseline for a more general **JIT Attention Fabric**. Increment B then made execution resources explicit and durable. A subsequent design clarification separated **attention priority** from **resource admission** so that Prometheist can exploit safe parallelism rather than treating fixed lanes as the universal capacity model.
 
 See:
 
 - [`../../architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](../../architecture/ARCHITECTURAL_PIVOT_2026-08-24.md)
 - [`../../architecture/COGNITIVE_ARCHITECTURE.md`](../../architecture/COGNITIVE_ARCHITECTURE.md)
 - [`README.md`](README.md)
+- [`RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md`](RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md)
 
 ## Purpose
 
-JIT Attention is the executive-control subsystem for Prometheist. It decides which durable tasks are entitled to which bounded execution resources at a given scheduling point.
+JIT Attention is the executive-control subsystem for Prometheist. It decides which durable tasks are entitled to execution and applies deterministic policy when those tasks compete for bounded hardware resources.
 
 It is intentionally separate from semantic interpretation and from capabilities such as JIT Memory, web retrieval, code execution, database access, model inference, device I/O, or actuators.
 
-The design goal is selective, resource-aware focus with deterministic scheduling semantics:
+The design goal is selective, resource-aware execution with deterministic scheduling semantics:
 
-> **Workers may produce evidence, results, or task proposals; deterministic system policy controls attention, assignment, preemption, and resumption.**
+> **Workers may produce evidence, results, or task proposals; deterministic system policy controls attention, admission, assignment, preemption, and resumption.**
 
-No LLM decides queue order or owns system focus.
+No LLM decides queue order, owns system focus, or arbitrates resource contention.
 
 ## Core invariant
 
@@ -32,7 +33,45 @@ The original single-focus invariant was:
 
 The generalized invariant is:
 
-> **Prometheist may hold arbitrarily many durable intentions, but only a deterministic compatible subset may consume the execution capacity currently exposed by the Attention Fabric.**
+> **Prometheist may hold arbitrarily many durable intentions and should execute as many compatible tasks concurrently as the authoritative safe resource state permits.**
+
+This means higher priority does not imply exclusive focus. Priority matters when work competes for insufficient resources.
+
+## Attention vs resource admission
+
+The Attention Fabric answers two distinct questions.
+
+### Attention
+
+Which runnable durable tasks deserve execution, and in what deterministic order?
+
+Attention is derived from structured task state such as:
+
+- criticality;
+- service class;
+- deadline;
+- dependencies;
+- creation sequence;
+- interruption policy.
+
+### Resource admission
+
+Which subset of attention-eligible tasks can execute concurrently without exceeding the safe resource envelope of the machine?
+
+Resource admission considers:
+
+- required resource classes;
+- configured or captured safe capacities;
+- active reservations;
+- reserved system headroom;
+- exclusive/shared constraints;
+- interruption policy when capacity is insufficient.
+
+The core rule is:
+
+> **A higher-priority task does not preempt lower-priority work if both can run safely at the same time.**
+
+Preemption is considered only when the higher-priority task cannot be admitted because currently running work occupies resources it needs.
 
 ## Task intake
 
@@ -44,7 +83,8 @@ Once a task exists, it carries structured scheduling metadata including:
 - `service_class`;
 - `interruption_policy`;
 - optional `deadline`;
-- `required_capabilities` and/or resource requirements;
+- `required_capabilities`;
+- resource requirements/reservations;
 - `dependency_ids`;
 - deterministic `created_seq`;
 - stable `task_id`;
@@ -91,14 +131,14 @@ Current defaults:
 | `MAINTENANCE` | 32 cycles | `P2` |
 | `BACKGROUND` | 128 cycles | `P3` |
 
-A guarantee may promote waiting work. It does **not** override interruption safety.
+A guarantee may promote waiting work. It does **not** override interruption safety or resource safety.
 
 ## Interruption policy
 
 Every task declares one of three policies:
 
-- `PREEMPTIBLE` — a strictly higher-priority compatible task may immediately suspend it and take the required execution resource;
-- `CHECKPOINT_ONLY` — higher-priority compatible work may be recorded as pending, but the active task yields only at a declared safe checkpoint;
+- `PREEMPTIBLE` — may immediately yield when deterministic contention policy selects it as necessary to admit higher-priority work;
+- `CHECKPOINT_ONLY` — may be selected as a pending victim but retains its resources until a declared safe checkpoint;
 - `ATOMIC` — the normal scheduler never preempts the active operation.
 
 When a task yields, its resumable state remains durable and it returns to the runnable set when appropriate.
@@ -109,13 +149,60 @@ When a task yields, its resumable state remains durable and it returns to the ru
 
 A queued task is not runnable until every declared dependency has reached the required terminal state, initially `COMPLETED`.
 
-Dependency gating occurs before ranking and assignment.
+Dependency gating occurs before ranking and admission.
 
 Priority inversion caused by high-priority work depending on lower-priority work is a known future hardening concern; it should be solved explicitly rather than hidden inside nondeterministic worker behavior.
 
+## Explicit execution resources
+
+Increment B introduced durable execution-resource definitions.
+
+Initial resource classes are:
+
+- `CPU_GENERAL`;
+- `LLM_INFERENCE`;
+- `DATABASE`;
+- `FILESYSTEM_IO`;
+- `NETWORK_IO`.
+
+A resource definition contains stable identity, class, capacity, enabled state, and metadata.
+
+Tasks may declare required resource classes. A task whose required class has no enabled capacity remains durably queued.
+
+The host may expose different capacities for different classes. Eight logical CPU threads, for example, do not imply eight sensible simultaneous local-model generations.
+
+## Safe capacity and headroom
+
+Installed hardware is not identical to schedulable capacity.
+
+Prometheist must reserve a safety envelope for the operating system and required processes such as PostgreSQL, Ollama, Prometheist itself, and user-authorized applications.
+
+Conceptually:
+
+```text
+physical / configured capacity
+        - reserved system headroom
+        - active Prometheist reservations
+        = currently admissible capacity
+```
+
+The initial implementation should favor configured deterministic capacity and reservation rules over opaque adaptive heuristics.
+
+Runtime measurements may eventually inform admission, but any measurement that materially changes a scheduling decision must be represented as authoritative input so the decision remains explainable.
+
+## Determinism boundary
+
+Real hardware state can vary over time. Determinism applies to policy given the same authoritative inputs.
+
+The required property is:
+
+> **Identical durable task state + identical resource snapshot + identical policy version produces identical admission, reservation, assignment, and preemption decisions.**
+
+The operating system may schedule threads nondeterministically at a lower level; Prometheist must not rely on those races to decide which durable task owns which resources.
+
 ## From focus to Attention Fabric
 
-The first implementation has one `active_task_id`. The target generalization introduces explicit execution resources and assignments.
+The first implementation has one `active_task_id`. The target generalization replaces that single focus with a durable admitted assignment set.
 
 Conceptually:
 
@@ -123,33 +210,36 @@ Conceptually:
 runnable tasks
       |
       v
-rank deterministically
+rank attention deterministically
       |
       v
-ATTENTION FABRIC <---- available resources / lanes
+RESOURCE ADMISSION <---- safe capacity / reservations / headroom
       |
       v
-persisted assignment set
+persisted admitted assignment set
       |
-      +--> lane 0 -> task A
-      +--> lane 1 -> task B
-      +--> lane 2 -> task C
+      +--> task A -> worker/capability
+      +--> task B -> worker/capability
+      +--> task C -> worker/capability
 ```
 
-A lane is not necessarily a CPU core or thread. It represents one unit of available capacity within a resource class.
+The assignment set may contain several concurrent tasks whenever the resource envelope permits it.
 
-Potential classes include:
+## Relationship to lanes
 
-- `CPU_GENERAL`;
-- `LLM_INFERENCE`;
-- `DATABASE`;
-- `FILESYSTEM_IO`;
-- `NETWORK_IO`;
-- `GPU`;
-- `DEVICE_IO`;
-- `ACTUATOR`.
+A lane is no longer the universal model of hardware capacity.
 
-The host may expose different capacities for different classes. For example, eight logical CPU threads do not imply eight sensible simultaneous local-model generations.
+Discrete lanes/slots may still be appropriate for resources whose capacity is naturally expressed as concurrency units, for example:
+
+```text
+llm-inference-00
+network-worker-00
+network-worker-01
+```
+
+But CPU and memory should not be permanently partitioned merely to make the scheduler easy to model.
+
+If retained, a lane means one durable slot within a specific resource contract or assignment mechanism. It does not define total system capacity.
 
 ## Deterministic scheduling epochs
 
@@ -158,63 +248,72 @@ Workers must not independently race to claim the next queue item.
 Each scheduling epoch should be application-owned and deterministic:
 
 1. read the authoritative runnable-task set;
-2. read the available resource/lane set;
+2. read/capture the authoritative safe resource state;
 3. compute effective priorities and eligibility;
-4. sort tasks deterministically;
-5. sort lanes deterministically;
-6. match tasks to compatible lanes with a deterministic algorithm;
-7. persist the entire assignment set atomically;
-8. release committed assignments to workers.
+4. preserve still-valid existing reservations/assignments where possible;
+5. iterate tasks in deterministic order;
+6. admit compatible tasks whose reservations fit;
+7. if higher-priority work cannot fit, deterministically evaluate legal lower-priority victims;
+8. persist the entire resulting reservation/assignment set atomically;
+9. release only committed assignments to workers.
 
-If two runs begin from identical durable state and identical resource availability, the resulting assignment set should be identical.
+If two runs begin from identical durable task state and identical resource state, the resulting assignment set should be identical.
 
-## Deterministic matching
+## Deterministic admission baseline
 
-The first matching algorithm should remain deliberately simple.
+The first admission algorithm should remain deliberately simple.
 
 A reasonable baseline is:
 
 1. iterate runnable tasks in deterministic priority order;
-2. for each task, choose the first deterministically ordered compatible available lane;
-3. reserve that lane for the epoch;
-4. continue until no compatible tasks or lanes remain.
+2. preserve existing valid assignments unless a higher-priority task is blocked by resource contention;
+3. admit each candidate whose reservations fit inside remaining safe capacity;
+4. if a higher-priority candidate cannot fit, identify lower-priority compatible work that may legally yield;
+5. select the minimum required victims using a deterministic total order;
+6. do not preempt anything if safe concurrent admission is possible;
+7. continue until no additional task can be admitted.
 
-Do not introduce an optimization solver until a frozen benchmark demonstrates that greedy deterministic matching causes a material problem.
+Do not introduce an optimization solver until a frozen benchmark demonstrates that a simpler deterministic algorithm causes a material problem.
 
-## Multi-lane preemption
+## Contention-driven preemption
 
-With multiple active assignments, a high-priority task should affect only the compatible resources it actually needs.
+With multiple active assignments, high-priority work should disturb only the work whose resources actually prevent admission.
 
 Example:
 
 ```text
-lane cpu-00      -> P3 preemptible task
-lane db-00       -> P2 atomic transaction
-lane network-00  -> P4 network task
+CPU task A      -> P3 PREEMPTIBLE
+DB task B       -> P2 ATOMIC
+network task C  -> P4 PREEMPTIBLE
 
-new P1 CPU task arrives
+new P1 CPU task D arrives
 ```
 
-The P1 task may preempt the P3 CPU task while the database and network lanes continue unaffected.
+If sufficient CPU capacity exists, D starts and A continues.
 
-If several compatible active tasks could be preempted, victim selection must itself use a deterministic total order.
+If CPU capacity is insufficient, D may require A to yield. B and C continue because they do not block D's required capacity.
 
-## Durable assignment state
+If several compatible active tasks could be preempted, victim selection must itself use a deterministic total order and release only enough capacity to admit the higher-priority work.
 
-The Attention Fabric will require durable state beyond the current single-focus scheduler snapshot.
+## Durable assignment and reservation state
+
+The Attention Fabric requires durable state beyond the original single-focus scheduler snapshot.
 
 Expected concepts include:
 
 - execution-resource definitions;
-- stable lane identifiers;
+- resource snapshots or policy-versioned configured capacity;
+- task resource requirements;
+- active reservations;
 - scheduling epoch identifiers;
-- task-to-lane assignments;
+- durable assignment identifiers;
+- optional lane/slot identifiers for discrete resource contracts;
 - assignment status/lease state;
 - pending checkpoint preemptions;
 - worker claim/heartbeat metadata if later justified;
 - idempotency keys for externally visible capability effects.
 
-Exact schema changes should be introduced incrementally and tested through migrations when the design is implemented.
+Exact schema changes should be introduced incrementally and tested through migrations when implemented.
 
 ## Stateless worker contract
 
@@ -248,7 +347,7 @@ A named role such as planner, researcher, analyst, or memory specialist may be a
 
 ## Relationship to capabilities
 
-JIT Attention schedules work. It is not itself memory, reasoning, or tool execution.
+JIT Attention schedules and admits work. It is not itself memory, reasoning, or tool execution.
 
 JIT Memory remains one capability among many that a task may request.
 
@@ -256,7 +355,10 @@ JIT Memory remains one capability among many that a task may request.
 durable task
      |
      v
-attention assignment
+attention + resource admission
+     |
+     v
+committed assignment
      |
      v
 worker
@@ -285,31 +387,53 @@ Already implemented in the v0.7 branch:
 - restart reconstruction;
 - transition idempotency;
 - deterministic replay tests;
-- forced-process-destruction acceptance proving unfinished work survives loss of Python process state.
+- forced-process-destruction acceptance proving unfinished work survives loss of Python process state;
+- explicit execution-resource classes/capacities;
+- deterministic durable resource ordering;
+- task resource-class requirements;
+- resource-gated runnability;
+- PostgreSQL persistence/restart reconstruction of resource definitions and requirements.
 
 Not yet implemented:
 
-- explicit resource classes/capacities;
-- multiple durable lanes;
-- epoch assignment sets;
-- multi-lane preemption;
+- quantitative task reservations and system headroom;
+- deterministic concurrent admission sets;
+- scheduling epochs over several active tasks;
+- durable assignment/reservation sets;
+- contention-driven multi-task preemption;
 - generic durable worker protocol;
 - replacement of the live Primary-Agent orchestration path.
 
-## Explicitly rejected next step
+## Explicitly rejected next steps
 
-The previous design said the next v0.7 step was to route a real multi-step/multi-agent workflow through the single-focus scheduler.
+Two shortcuts are explicitly rejected.
 
-That is superseded.
+First, do **not** merely wrap the current synchronous `PrimaryAgent.handle_interaction()` in the scheduler. That would preserve the old call stack as the real owner of execution while presenting a scheduler facade around it.
 
-Do **not** merely wrap the current synchronous `PrimaryAgent.handle_interaction()` in the scheduler. That would preserve the old call stack as the real owner of execution while presenting a scheduler facade around it.
+Second, do **not** convert every unit of hardware capacity into a permanent attention lane merely because discrete lanes are easy to reason about. That would conflate priority with resource admission and could either serialize safe parallel work or oversubscribe resource-intensive workloads.
 
 The correct direction is:
 
-1. generalize scheduler state into the Attention Fabric;
-2. define durable worker/capability steps;
-3. decompose actual interactions into durable work;
-4. retain the old Primary Agent temporarily only as compatibility/reference code until the replacement path is verified.
+1. preserve the deterministic scheduler baseline;
+2. make resource requirements, safe capacity, reservations, and headroom explicit;
+3. deterministically admit as much concurrent work as safe capacity permits;
+4. add durable assignment identities and optional discrete slots where appropriate;
+5. add contention-driven preemption;
+6. define durable worker/capability steps;
+7. decompose actual interactions into durable work;
+8. retain the old Primary Agent temporarily only as compatibility/reference code until the replacement path is verified.
+
+## Verification policy
+
+Deterministic CI and real-machine acceptance establish different facts.
+
+GitHub Actions should prove deterministic policy and persistence against controlled synthetic resource snapshots.
+
+Resource-sensitive claims about actual hardware must also be tested on the intended development machine using the real local stack where applicable: PostgreSQL, Ollama/local inference, actual CPU/RAM constraints, filesystem/network behavior, and process destruction/restart.
+
+A passing CI simulation does not prove that a particular resource envelope is safe on a particular host. A successful local run does not replace deterministic synthetic regression coverage. Both forms of evidence are required.
+
+pgvector is not a dependency of JIT Attention. Installing it may enable optional or experimental vector-backed memory tests, but vector retrieval must remain separately justified by measured memory failures.
 
 ## v0.7 acceptance properties
 
@@ -317,20 +441,23 @@ The final milestone should prove all of the following:
 
 - priority remains deterministically derived from structured metadata;
 - task and transition identifiers are reproducible;
-- task ordering and lane ordering are total and deterministic;
-- service guarantees do not override interruption safety;
+- task ordering and resource ordering are total and deterministic;
+- service guarantees do not override interruption or resource safety;
 - dependencies gate runnability;
-- resource requirements gate assignment compatibility;
-- identical task/resource state produces identical complete assignment sets;
-- no resource is oversubscribed beyond configured capacity;
-- unrelated lanes continue while a compatible lane is preempted;
-- `CHECKPOINT_ONLY` and `ATOMIC` semantics survive multi-lane generalization;
-- assignment/checkpoint state survives full worker-process destruction;
+- resource requirements gate admission compatibility;
+- safe concurrent capacity allows several tasks to execute without unnecessary preemption;
+- identical task/resource state produces identical admission/reservation/assignment sets;
+- no resource is oversubscribed beyond configured safe capacity;
+- reserved system headroom is not consumed by ordinary work;
+- higher-priority work preempts only when resource contention requires it and interruption policy permits it;
+- unrelated work continues while contention is resolved elsewhere;
+- `CHECKPOINT_ONLY` and `ATOMIC` semantics survive concurrent generalization;
+- assignment/reservation/checkpoint state survives full worker-process destruction;
 - abandoned work can be recovered safely;
 - idempotent/retry-safe boundaries prevent duplicate external side effects;
 - an end-to-end workflow completes through disposable workers without a privileged Primary Agent;
-- deterministic fake-worker tests and separate real-Ollama stateless-worker acceptance both pass.
+- deterministic fake-resource/fake-worker tests and separate real-development-machine/Ollama acceptance both pass for the functionality they are intended to verify.
 
 ## Milestone invariant
 
-> **Prometheist owns attention and unfinished work; workers merely borrow bounded execution capacity to advance durable tasks.**
+> **Prometheist owns attention and unfinished work, exploits safe parallelism by default, and constrains or preempts execution only when deterministic resource admission requires it.**
