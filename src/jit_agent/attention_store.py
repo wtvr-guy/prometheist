@@ -18,6 +18,7 @@ from jit_agent.attention import (
     TaskCriticality,
     TaskStatus,
 )
+from jit_agent.attention_resources import ExecutionResource, ExecutionResourceClass
 
 
 DEFAULT_SCHEDULER_KEY = "default"
@@ -37,10 +38,13 @@ def save_scheduler(
     *,
     scheduler_key: str = DEFAULT_SCHEDULER_KEY,
 ) -> None:
-    """Persist task state, lifecycle journal, and scheduler focus atomically."""
+    """Persist resource, task, lifecycle, and scheduler focus state atomically."""
 
     snapshot = scheduler.snapshot()
     with conn.cursor() as cur:
+        for resource in snapshot.execution_resources:
+            _upsert_execution_resource(cur, resource)
+
         for task in snapshot.tasks:
             _upsert_task(cur, task)
 
@@ -92,7 +96,7 @@ def load_scheduler(
     *,
     scheduler_key: str = DEFAULT_SCHEDULER_KEY,
 ) -> JITAttentionScheduler:
-    """Reconstruct focus and resumable task state without any LLM context."""
+    """Reconstruct resource, focus, and resumable task state without LLM context."""
 
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
@@ -104,16 +108,29 @@ def load_scheduler(
             (scheduler_key,),
         )
         state = cur.fetchone()
+
+        cur.execute(
+            """
+            SELECT resource_id, resource_class, capacity, enabled, metadata
+            FROM attention_execution_resources
+            ORDER BY resource_class ASC, resource_id ASC
+            """
+        )
+        resource_rows = cur.fetchall()
+        resources = [_row_to_execution_resource(row) for row in resource_rows]
+
         if state is None:
-            return JITAttentionScheduler()
+            return JITAttentionScheduler.from_snapshot(
+                SchedulerSnapshot(cycle=0, tasks=[], execution_resources=resources)
+            )
 
         cur.execute(
             """
             SELECT
                 task_id, task_key, created_seq, parent_task_id,
                 criticality, service_class, interruption_policy, deadline,
-                required_capabilities, dependency_ids, status, enqueued_cycle,
-                revision, resumable_state
+                required_capabilities, required_resource_classes, dependency_ids,
+                status, enqueued_cycle, revision, resumable_state
             FROM attention_tasks
             ORDER BY created_seq ASC, task_id ASC
             """
@@ -127,6 +144,7 @@ def load_scheduler(
             active_task_id=state["active_task_id"],
             pending_preemption_task_id=state["pending_preemption_task_id"],
             tasks=tasks,
+            execution_resources=resources,
         )
     )
 
@@ -145,6 +163,33 @@ def load_transition_count(conn: psycopg.Connection, task_id: UUID | None = None)
         return int(cur.fetchone()[0])
 
 
+def _upsert_execution_resource(
+    cur: psycopg.Cursor[Any],
+    resource: ExecutionResource,
+) -> None:
+    cur.execute(
+        """
+        INSERT INTO attention_execution_resources (
+            resource_id, resource_class, capacity, enabled, metadata
+        )
+        VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT (resource_id) DO UPDATE SET
+            resource_class = EXCLUDED.resource_class,
+            capacity = EXCLUDED.capacity,
+            enabled = EXCLUDED.enabled,
+            metadata = EXCLUDED.metadata,
+            updated_at = now()
+        """,
+        (
+            resource.resource_id,
+            resource.resource_class.value,
+            resource.capacity,
+            resource.enabled,
+            Json(resource.metadata),
+        ),
+    )
+
+
 def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
     metadata = task.metadata
     cur.execute(
@@ -152,14 +197,14 @@ def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
         INSERT INTO attention_tasks (
             task_id, task_key, created_seq, parent_task_id,
             criticality, service_class, interruption_policy, deadline,
-            required_capabilities, dependency_ids, status, enqueued_cycle,
-            revision, resumable_state
+            required_capabilities, required_resource_classes, dependency_ids,
+            status, enqueued_cycle, revision, resumable_state
         )
         VALUES (
             %s, %s, %s, %s,
             %s, %s, %s, %s,
-            %s, %s, %s, %s,
-            %s, %s
+            %s, %s, %s,
+            %s, %s, %s, %s
         )
         ON CONFLICT (task_id) DO UPDATE SET
             task_key = EXCLUDED.task_key,
@@ -170,6 +215,7 @@ def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
             interruption_policy = EXCLUDED.interruption_policy,
             deadline = EXCLUDED.deadline,
             required_capabilities = EXCLUDED.required_capabilities,
+            required_resource_classes = EXCLUDED.required_resource_classes,
             dependency_ids = EXCLUDED.dependency_ids,
             status = EXCLUDED.status,
             enqueued_cycle = EXCLUDED.enqueued_cycle,
@@ -187,12 +233,23 @@ def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
             metadata.interruption_policy.value,
             metadata.deadline,
             Json(metadata.required_capabilities),
+            Json([value.value for value in metadata.required_resource_classes]),
             Json([str(value) for value in metadata.dependency_ids]),
             task.status.value,
             task.enqueued_cycle,
             task.revision,
             Json(task.resumable_state),
         ),
+    )
+
+
+def _row_to_execution_resource(row: dict[str, Any]) -> ExecutionResource:
+    return ExecutionResource(
+        resource_id=row["resource_id"],
+        resource_class=ExecutionResourceClass(row["resource_class"]),
+        capacity=int(row["capacity"]),
+        enabled=bool(row["enabled"]),
+        metadata=dict(row["metadata"] or {}),
     )
 
 
@@ -208,6 +265,10 @@ def _row_to_task(row: dict[str, Any]) -> AttentionTask:
             interruption_policy=InterruptionPolicy(row["interruption_policy"]),
             deadline=row["deadline"],
             required_capabilities=list(row["required_capabilities"] or []),
+            required_resource_classes=[
+                ExecutionResourceClass(value)
+                for value in (row["required_resource_classes"] or [])
+            ],
             dependency_ids=list(row["dependency_ids"] or []),
         ),
         status=TaskStatus(row["status"]),
