@@ -2,19 +2,21 @@
 
 **Persistent identity for stateless intelligence.**
 
-Prometheist is an experimental, local-first AI-agent architecture built around a strict constraint: **every LLM invocation is stateless**.
+Prometheist is an experimental, local-first persistent AI architecture built around a strict constraint: **every LLM invocation is stateless**.
 
-The model is never treated as durable memory, identity, or authoritative system state. Prometheist records experience externally, preserves original events with provenance, derives replaceable memory structures from those events, and reconstructs only the context required for the current inference.
+Models and worker processes are never treated as durable memory, identity, attention, or authoritative system state.
 
-> **Core thesis:** persistent state belongs to the system, not to an LLM context window.
+> **Core thesis:** continuity belongs to the system, not to an LLM context window or worker process.
 
-The repository currently contains a working stateless multi-agent prototype and a deterministic Memory Kernel research track through **v0.6**.
+The project began as a stateless multi-agent prototype centered on a Primary Agent plus shared JIT Memory. v0.6 proved that fresh model invocations can participate in one continuous system without inherited transcripts. Beginning with v0.7, the project is deliberately pivoting away from a privileged Primary Agent toward an **attention-centric persistent cognitive architecture**.
 
 ## Current status
 
-Memory Kernel v0.5 is the accepted robustness-and-scale baseline. It extends deterministic associative recall with lifecycle-aware routing, support-aware evidence admission, and a bounded specificity-aware PostgreSQL candidate router.
+### v0.5 — accepted deterministic Memory Kernel baseline
 
-The frozen scale evaluation reached perfect observed correctness through 50,000 events per synthetic persona while keeping the PostgreSQL candidate window fixed at 500 events:
+Memory Kernel v0.5 established bounded deterministic associative recall with provenance, support-aware evidence admission, explicit abstention, and specificity-aware PostgreSQL candidate routing.
+
+The frozen synthetic scale evaluation reached perfect observed correctness through 50,000 events per persona while keeping the PostgreSQL candidate window fixed at 500 events:
 
 | Corpus | Questions | Evidence recall | MRR | Unknown abstention | PostgreSQL p50 |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -22,78 +24,145 @@ The frozen scale evaluation reached perfect observed correctness through 50,000 
 | Avery Chen, 50k | 105/105 | 1.000 | 1.000 | 1.000 | 163.3 ms |
 | Morgan Reyes, 50k | 106/106 | 1.000 | 1.000 | 1.000 | 151.7 ms |
 
-These are controlled synthetic benchmark results, not a claim of general semantic-memory completeness. They show that the measured v0.5 failures did not justify embeddings or another retrieval subsystem.
+These are controlled benchmark results, not a claim of general semantic-memory completeness.
 
-v0.6 is the accepted shared-JIT-memory and stateless multi-agent integration milestone. The live Primary Agent and a stateless `memory_specialist` now obtain persistent internal context through the same `MemoryNeed` / `MemoryPacket` boundary backed by the frozen v0.5 kernel. Agent delegations, results, memory requests, memory packets, failures, source-event provenance, and correlation metadata are persisted outside all LLM contexts.
+### v0.6 — accepted stateless-worker/JIT-Memory integration baseline
 
-The v0.6 acceptance path was verified locally with PostgreSQL and Ollama: a fact persisted in one process was later recovered by a fresh Primary Agent and independently by a fresh specialist without an inherited transcript, while the complete pytest suite and frozen v0.5 regression baseline remained green.
+v0.6 proved that separate fresh LLM-backed components can obtain persistent internal context through the same `MemoryNeed` / `MemoryPacket` boundary without inheriting hidden transcripts.
 
-See the [v0.5 final status](docs/milestones/v0.5/README.md), [v0.6 final status](docs/milestones/v0.6/README.md), [v0.5 experiment records](docs/milestones/v0.5/experiments/), and [closure audit](docs/audits/V05_CLOSURE_AUDIT_2026-08-21.md).
+The Primary Agent and specialist arrangement used in that experiment is retained as historical evidence, but it is no longer the intended permanent executive architecture.
 
-## Versioning
+### v0.7 — in development: durable JIT Attention Fabric
 
-Prometheist uses architectural milestone labels such as **v0.5** and **v0.6** to identify accepted research/integration checkpoints. Those labels are not currently Python package release versions.
+The first v0.7 increment has already introduced a deterministic durable single-focus scheduler with:
 
-The `version` field in `pyproject.toml` and the corresponding value in `uv.lock` are internal packaging metadata for the `jit-agent` Python package. They should not be used to infer which Prometheist architectural milestone is accepted. Until a formal distribution/release process is introduced, the milestone documents and this README are authoritative for project status.
+- structured priority metadata;
+- deterministic P0-P5 priority derivation;
+- service guarantees;
+- `PREEMPTIBLE`, `CHECKPOINT_ONLY`, and `ATOMIC` interruption semantics;
+- dependency gating;
+- deterministic task/transition IDs;
+- resumable PostgreSQL task state;
+- forced-process-destruction restart recovery.
 
-Before the first externally distributed package release, Prometheist should adopt an explicit package-release policy (for example SemVer) and either reconcile or deliberately continue separating package versions from architectural milestone labels. Development work must not casually bump package metadata merely to mirror a branch name or research experiment.
+The current v0.7 direction generalizes that scheduler into a **multi-lane Attention Fabric** that deterministically allocates durable tasks to bounded execution resources. The goal is to remove the Primary Agent as an architectural requirement rather than wrapping it in a scheduler facade.
 
-## Architecture
+See:
+
+- [Architectural pivot — 2026-08-24](docs/architecture/ARCHITECTURAL_PIVOT_2026-08-24.md)
+- [Current cognitive architecture](docs/architecture/COGNITIVE_ARCHITECTURE.md)
+- [v0.7 implementation plan](docs/milestones/v0.7/README.md)
+- [Roadmap to v1.0](docs/ROADMAP.md)
+
+## Target architecture
 
 ```text
-Authoritative event history
-          |
-          v
-Derived memory structures
-          |
-          v
-Shared JIT Memory boundary
-          |
-          v
-Bounded MemoryPacket
-          |
-          v
-Fresh stateless Primary / specialist LLM call
-          |
-          v
-Response / decision / delegation / result
-          |
-          v
-Persist resulting events
-          |
-          v
-Discard temporary LLM context
+external world / user / devices / software
+                  |
+                  v
+        ephemeral input buffers
+                  |
+                  v
+              perception
+                  |
+          +-------+-------+
+          |               |
+       reflex          salience
+          |               |
+          |        situation assembly
+          |               |
+          |          task formation
+          |               |
+          +-------+-------+
+                  |
+                  v
+           ATTENTION FABRIC
+                  |
+       deterministic allocation
+                  |
+       +----------+----------+
+       |          |          |
+     lane       lane       lane ...
+       |          |          |
+       +----------+----------+
+                  |
+              capabilities
+       memory / models / code /
+       web / files / devices /
+             actuators / ...
+                  |
+                  v
+          results + observations
+                  |
+                  v
+            internal history
+                  |
+          +-------+-------+
+          |               |
+       JIT Memory      retention
+          |               |
+          +-------+-------+
+                  |
+                  +----------> next cycle
 ```
 
-The LLM is a **cognitive engine**, not the storage location of the agent's identity.
+The architecture distinguishes several kinds of attention:
 
-Prometheist currently combines:
+- **perceptual attention** — what external changes warrant orientation;
+- **executive attention** — what durable work deserves resources;
+- **resource/lane attention** — which compatible task receives a specific execution slot;
+- **cognitive attention** — what bounded task-specific information enters a disposable model call.
 
-- an append-only PostgreSQL event ledger at the application layer;
-- explicit global and per-conversation ordering;
-- deterministic cue scoring;
-- rebuildable lexical and associative projections;
-- bounded spreading activation with provenance;
-- support-aware evidence admission and open-world abstention;
-- bounded PostgreSQL candidate routing;
-- a shared `MemoryNeed` / `MemoryPacket` JIT Memory interface;
-- canonical-first user-query recall with bounded supplemental semantic cues after canonical abstention;
-- persisted memory requests, memory packets, agent delegations, specialist results, and correlation metadata;
-- a stateless Primary Agent plus a stateless LLM-backed memory specialist;
-- structured, schema-validated LLM control outputs;
-- local inference through Ollama for LLM-backed acceptance paths.
+JIT Memory is one capability among many. It is demand-driven rather than universally injected.
 
-The older Retrieval Service remains in the repository for regression compatibility, but the live Primary Agent uses the shared JIT Memory boundary.
+## Persistence model
+
+The project no longer assumes that every raw external datum should be stored forever.
+
+Prometheist distinguishes:
+
+1. **ephemeral raw experience** — high-volume source data that may exist only in bounded buffers;
+2. **observational memory** — external observations retained according to explicit deterministic policy;
+3. **internal history** — durable system state needed to explain what Prometheist knew, focused on, decided, attempted, or did.
+
+The stronger invariant is:
+
+> **Anything that materially influences Prometheist's attention, reasoning, decisions, commitments, or actions must leave enough durable provenance to explain that behavior later.**
 
 ## Design principles
 
-1. **Persistent experience without persistent LLM context.** Historical growth should primarily become a storage-and-retrieval problem.
-2. **Persist first, interpret later.** Ordinary persistence is not gated by an LLM deciding what deserves to be remembered.
-3. **Evidence is authoritative; interpretations are replaceable.** Summaries, projections, associations, embeddings, and user models are derived state.
-4. **Deterministic code owns deterministic information.** IDs, timestamps, sequence numbers, limits, and schema versions are application state.
-5. **Retrieval mechanisms sit behind stable boundaries.** Consumers describe the information need; the memory subsystem decides how to satisfy it.
-6. **Preserve provenance.** Retrieved evidence should remain traceable to canonical source events.
-7. **Complexity must earn its place.** New retrieval technologies are added only when measured failures justify them.
+1. **System-owned continuity.** Identity, memory, task state, attention, policy, and provenance live outside model/worker contexts.
+2. **Disposable cognition.** LLM calls and worker processes may disappear after every bounded step.
+3. **Deterministic mechanics.** IDs, ordering, scheduling, retention rules, resource limits, and policy state belong to ordinary software whenever possible.
+4. **Demand-driven JIT Memory.** Historical context is retrieved only when a task requires it.
+5. **Bounded attention.** Prometheist may remember and intend much more than it actively thinks about at once.
+6. **Explicit resource capacity.** Concurrency is bounded by typed execution resources, not blindly by logical CPU thread count.
+7. **Model interpretation is advisory where policy must be deterministic.** Models may classify or propose; deterministic policy owns scheduling, deletion, permissions, and reflex authority.
+8. **Evidence and provenance survive interpretation changes.** Derived memory is replaceable; retained source evidence remains traceable.
+9. **Unknown facts may remain unknown.** Topical similarity is not evidence.
+10. **Complexity must earn its place.** Freeze a baseline, add one mechanism, rerun the experiment, keep it only if evidence justifies it.
+
+## Current implementation
+
+The repository currently includes:
+
+- PostgreSQL authoritative event history and deterministic ordering;
+- the frozen deterministic Memory Kernel baseline;
+- lexical/entity/association routing and provenance-bearing `MemoryPacket`s;
+- shared JIT Memory contracts;
+- v0.6 Primary/specialist compatibility paths;
+- deterministic v0.7 attention scheduler code and durable attention-task state;
+- restart/replay tests, including forced Python-process destruction;
+- local Ollama-backed stateless-model acceptance paths;
+- PostgreSQL-backed GitHub Actions regression tests.
+
+The target multi-lane Attention Fabric, perception/salience system, deterministic external-data retention layer, and integrated cognitive loop are roadmap work, not yet implemented.
+
+## Versioning
+
+Prometheist uses architectural milestone labels such as v0.5, v0.6, and v0.7. Those labels are not currently Python package-release versions.
+
+The `version` field in `pyproject.toml` and `uv.lock` is package metadata for the `jit-agent` Python package. It should not be changed merely to mirror research milestone names.
 
 ## Quick start
 
@@ -126,19 +195,19 @@ OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=qwen3:4b
 ```
 
-`.env` is ignored by Git and should not be committed.
-
-Run the interactive agent:
+Run the current compatibility CLI:
 
 ```powershell
 uv run jit-agent
 ```
 
-Single-shot mode is useful for demonstrating process-level statelessness:
+Single-shot mode remains useful for demonstrating process-level statelessness:
 
 ```powershell
 uv run jit-agent --once "What did I tell you about Project Falcon?" --conversation-id <uuid>
 ```
+
+The current CLI still exercises the v0.6 Primary-Agent path while the v0.7 attention-centric replacement is developed.
 
 ## Testing
 
@@ -148,19 +217,13 @@ Run the complete suite with:
 uv run pytest -v
 ```
 
-Tests use a dedicated PostgreSQL database whose name must contain `test` or `benchmark`; the normal long-lived development history is not a valid destructive pytest target. Some LLM-backed acceptance paths require Ollama; deterministic Memory Kernel benchmarks do not.
+Tests use a dedicated PostgreSQL database whose name must contain `test` or `benchmark`; the normal development history is not a valid destructive pytest target.
 
-The repository also has a GitHub Actions PostgreSQL test lane. It runs the locked Python environment and the normal pytest suite against a disposable PostgreSQL service. Real-Ollama acceptance tests remain local because CI does not provide the project's local model runtime; those tests explicitly skip when Ollama is unavailable.
+Some model-backed acceptance paths require Ollama. Deterministic Memory Kernel and Attention tests do not.
 
 ## Benchmarks
 
-The repository includes fixed synthetic personas, adversarial robustness cases, deterministic scale-corpus generation, and both full-history and indexed PostgreSQL benchmark paths.
-
-The v0.5 scale workflow is documented in:
-
-- [Scale benchmark guide](docs/milestones/v0.5/SCALE_BENCHMARK.md)
-- [v0.5 experiment records](docs/milestones/v0.5/experiments/)
-- [`benchmarks/`](benchmarks/) for checked-in benchmark fixtures
+The repository includes fixed synthetic personas, adversarial robustness cases, deterministic scale-corpus generation, and PostgreSQL benchmark paths.
 
 Useful commands include:
 
@@ -172,7 +235,7 @@ uv run python -m jit_agent.scale_benchmark --events 1000 10000 50000
 uv run python -m jit_agent.postgres_scale_benchmark --events 1000 10000 50000
 ```
 
-The PostgreSQL scale runner is destructive to its selected database and refuses to run unless the database name contains `test` or `benchmark`.
+See [the v0.5 scale benchmark guide](docs/milestones/v0.5/SCALE_BENCHMARK.md).
 
 ## Repository layout
 
@@ -182,15 +245,13 @@ prometheist/
 ├── pyproject.toml
 ├── uv.lock
 ├── schema.sql
-├── .github/workflows/    # automated PostgreSQL-backed regression lane
-├── benchmarks/          # checked-in evaluation fixtures
-├── docs/                # architecture, roadmap, milestones, audits, experiment records
-├── scripts/             # diagnostics, rebuilds, benchmark entry points
-├── src/jit_agent/       # application and Memory Kernel implementation
-└── tests/               # regression and acceptance suite
+├── .github/workflows/
+├── benchmarks/
+├── docs/
+├── scripts/
+├── src/jit_agent/
+└── tests/
 ```
-
-The project root is intentionally kept limited to entry-point documentation, package metadata, database schema, and primary source/test directories. Historical research records belong under `docs/` rather than accumulating beside runtime files.
 
 ## Documentation
 
@@ -198,20 +259,29 @@ Start with the [documentation index](docs/README.md).
 
 Key documents:
 
-- [Primary Agent specification](docs/architecture/PRIMARY_AGENT_SPEC_SHEET.md)
+- [Current cognitive architecture](docs/architecture/COGNITIVE_ARCHITECTURE.md)
+- [Architectural pivot — 2026-08-24](docs/architecture/ARCHITECTURAL_PIVOT_2026-08-24.md)
+- [v0.7 Attention Fabric milestone](docs/milestones/v0.7/README.md)
+- [JIT Attention design](docs/milestones/v0.7/JIT_ATTENTION_DESIGN.md)
+- [Roadmap to v1.0](docs/ROADMAP.md)
 - [Memory Kernel deterministic baseline](docs/architecture/MEMORY_KERNEL.md)
 - [Associative-memory design](docs/architecture/ASSOCIATIVE_MEMORY.md)
-- [Memory Kernel v0.4](docs/milestones/v0.4/MEMORY_KERNEL_V0.4.md)
-- [Memory Kernel v0.5 final status](docs/milestones/v0.5/README.md)
-- [Prometheist v0.6 final status](docs/milestones/v0.6/README.md)
-- [Roadmap to v1.0](docs/ROADMAP.md)
+- [v0.5 final status](docs/milestones/v0.5/README.md)
+- [v0.6 final status](docs/milestones/v0.6/README.md)
+- [Historical Primary Agent specification](docs/architecture/PRIMARY_AGENT_SPEC_SHEET.md)
 
 ## Research direction
 
-The next milestone is **v0.7: Durable Execution and Restartable Orchestration**. Its purpose is to test whether unfinished work, intentions, task state, and multi-agent handoffs can survive complete process destruction and resume correctly using fresh LLM calls and durable system state.
+The roadmap now proceeds through:
 
-The longer-term goal is to investigate whether stateless LLM workers plus persistent, auditable JIT memory can support human-inspired recall dynamics with machine-level factual fidelity and eventually a highly personalized agent whose durable identity is independent of any one foundation model.
+- v0.7 durable multi-lane JIT Attention;
+- v0.8 deterministic perception and salience;
+- v0.9 deterministic retention and memory admission;
+- v0.10 harder memory-generalization failure discovery;
+- v0.11 integrated persistent cognitive loop;
+- v0.12 operational hardening and portability;
+- v1.0 first complete attention-centric Prometheist architecture.
 
-See the [roadmap](docs/ROADMAP.md) for the proposed path through durable execution, harder memory generalization, operational hardening, and the first defensible v1.0 architecture.
+The long-term research question remains whether a local-first system can combine human-like selective recall/attention dynamics with machine-level historical fidelity while keeping durable identity independent of any one model.
 
-The present repository is a memory architecture and research platform. It is not a claim of consciousness transfer or a complete model of a person.
+Prometheist is a cognitive-architecture research platform. It is not a claim of consciousness transfer or a complete model of a person.
