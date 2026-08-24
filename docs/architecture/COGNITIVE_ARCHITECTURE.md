@@ -2,7 +2,7 @@
 
 **Status:** target architecture beginning with v0.7.
 
-Prometheist is evolving from a stateless multi-agent prototype into a persistent cognitive system whose identity, memory, attention, execution state, and policy remain outside all LLM contexts and worker processes.
+Prometheist is evolving from a stateless multi-agent prototype into a persistent cognitive system whose identity, memory, attention, execution state, interaction continuity, and policy remain outside all LLM contexts and worker processes.
 
 The central architectural rule is:
 
@@ -19,7 +19,8 @@ The next question is no longer how to make a Primary Agent orchestrate more spec
 Prometheist should instead be organized around durable cognitive primitives:
 
 - percepts;
-- situations;
+- interaction events and streams;
+- situations and associations;
 - retention decisions;
 - tasks and intentions;
 - attention allocation;
@@ -97,7 +98,7 @@ Prometheist uses the word attention at several distinct levels.
 
 Determines which external changes warrant orientation or further evaluation.
 
-Examples include a sudden loud impulse, an unexpected filesystem mutation, an unusual transaction, an approaching object, a temperature excursion, or a short-lived opportunity.
+Examples include a sudden loud impulse, an unexpected filesystem mutation, an unusual transaction, an approaching object, a temperature excursion, a user utterance, or a short-lived opportunity.
 
 ### 3.2 Executive attention
 
@@ -143,16 +144,7 @@ Conceptually:
 
 The number of lanes must not be hard-coded to CPU thread count. A lane represents available execution capacity for a resource class.
 
-Possible resource classes include:
-
-- `CPU_GENERAL`;
-- `LLM_INFERENCE`;
-- `DATABASE`;
-- `FILESYSTEM_IO`;
-- `NETWORK_IO`;
-- `GPU`;
-- `DEVICE_IO`;
-- `ACTUATOR`.
+Possible resource classes include `CPU_GENERAL`, `LLM_INFERENCE`, `DATABASE`, `FILESYSTEM_IO`, `NETWORK_IO`, `GPU`, `DEVICE_IO`, and `ACTUATOR`.
 
 A commodity system may expose several CPU threads but only one sensible local-LLM inference lane. Conversely, many network-I/O tasks may be safe to overlap while one CPU-intensive model call is active.
 
@@ -180,16 +172,7 @@ The first v0.7 scheduler already establishes core ordering, service-guarantee, i
 
 Task priority should be derived from structured metadata, not model preference.
 
-The current criticality mapping remains a useful baseline:
-
-| Criticality | Priority |
-| --- | --- |
-| `EMERGENCY` | `P0` |
-| `USER_BLOCKING` | `P1` |
-| `USER_REQUESTED` | `P2` |
-| `SUPPORTING` | `P3` |
-| `MAINTENANCE` | `P4` |
-| `OPPORTUNISTIC` | `P5` |
+The current criticality mapping remains a useful baseline: `EMERGENCY/P0`, `USER_BLOCKING/P1`, `USER_REQUESTED/P2`, `SUPPORTING/P3`, `MAINTENANCE/P4`, and `OPPORTUNISTIC/P5`.
 
 Service guarantees prevent starvation through explicit deterministic promotion policy.
 
@@ -205,21 +188,9 @@ Service guarantees must never silently override interruption safety.
 
 Continuous external input should not flow directly into an LLM or durable task queue.
 
-Each source should first produce normalized percepts through cheap deterministic or conventional signal-processing logic where possible.
+Each source should first produce normalized percepts through cheap deterministic or conventional signal-processing logic where possible. A user utterance is also an external percept, although its semantic value and retention policy normally differ sharply from high-volume raw sensor data.
 
-A percept may contain structured dimensions such as:
-
-- source and modality;
-- magnitude;
-- novelty;
-- rate of change;
-- anomaly class;
-- confidence;
-- threat relevance;
-- opportunity relevance;
-- goal relevance;
-- uncertainty;
-- system-integrity relevance.
+A percept may contain structured dimensions such as source and modality, magnitude, novelty, rate of change, anomaly class, confidence, threat relevance, opportunity relevance, goal relevance, uncertainty, and system-integrity relevance.
 
 Prometheist should distinguish at least four dispositions:
 
@@ -232,22 +203,9 @@ A sudden loud noise illustrates the distinction. It may be extremely salient bec
 
 ## 8. Situation assembly
 
-Individual percepts often become meaningful only when correlated.
+Individual percepts often become meaningful only when correlated. Prometheist should therefore assemble temporally, semantically, and causally related percepts into durable or temporary `Situation` objects before task formation where appropriate.
 
-Prometheist should therefore assemble temporally and causally related percepts into durable or temporary `Situation` objects before task formation where appropriate.
-
-For example:
-
-```text
-audio: glass-breaking signature
-camera: sudden motion
-door sensor: open
-                  |
-                  v
-          possible intrusion situation
-```
-
-Cross-source evidence should be explicit and provenance-bearing.
+Situations are associations, not rigid containers. One event may contribute to several situations or topics, and one situation may span multiple UI sessions, devices, days, or interaction streams.
 
 LLMs may assist with ambiguous semantic classification, but their output must be treated as structured evidence or a proposal. Deterministic policy retains authority over salience class, task priority, deletion, permissions, and actuator use.
 
@@ -259,19 +217,13 @@ Prometheist should support three distinct response paths.
 
 Known condition -> bounded deterministic action -> durable follow-up event/task.
 
-Example: a device controller detects an authorized thermal safety threshold and disables charging before any LLM is consulted.
-
 ### Orient
 
-Potentially consequential but uncertain condition -> high-priority investigation task.
-
-Example: a sudden unexplained impact or loud impulse causes temporary focus on determining the cause. If benign, the prior task resumes.
+Potentially consequential but uncertain condition -> high-priority investigation task. If benign, prior eligible work resumes.
 
 ### Deliberate
 
 Meaningful but non-immediate condition -> normal durable task formation and scheduling.
-
-Example: a potentially useful opportunity that does not expire immediately.
 
 ## 10. Retention architecture
 
@@ -279,28 +231,11 @@ The earlier rule to persist every incoming datum indefinitely does not scale to 
 
 Prometheist instead distinguishes:
 
-### Ephemeral raw experience
+- **Ephemeral raw experience** — raw external input may exist only in bounded rolling buffers unless policy promotes it.
+- **Observational memory** — external observations are retained according to deterministic retention policy.
+- **Internal history** — system-internal information that materially explains what Prometheist knew, focused on, decided, attempted, or did is durable by default.
 
-Raw external input may exist only in bounded rolling buffers unless policy promotes it.
-
-### Observational memory
-
-External observations are retained according to deterministic retention policy.
-
-### Internal history
-
-System-internal information that materially explains what Prometheist knew, focused on, decided, attempted, or did is durable by default.
-
-A useful initial retention classification is:
-
-| Class | Meaning |
-| --- | --- |
-| `R0 EPHEMERAL` | bounded buffer only; no durable raw record |
-| `R1 TEMPORARY` | retained for deterministic TTL / correlation window |
-| `R2 DERIVED_ONLY` | raw data may expire; derived aggregate/fact persists |
-| `R3 EVENT` | meaningful normalized event persists |
-| `R4 EVIDENCE` | normalized event plus selected supporting raw evidence persists |
-| `R5 PROTECTED` | durable until an explicit higher-authority retention policy permits removal |
+A useful initial retention classification is `R0 EPHEMERAL`, `R1 TEMPORARY`, `R2 DERIVED_ONLY`, `R3 EVENT`, `R4 EVIDENCE`, and `R5 PROTECTED`.
 
 Uncertain potentially important input should normally be retained temporarily rather than destroyed immediately.
 
@@ -324,7 +259,46 @@ The consumer expresses what information it requires through a stable contract su
 
 The verified Memory Kernel remains valuable because it provides deterministic, bounded, provenance-aware historical retrieval behind that capability boundary.
 
-## 13. Disposable cognition and worker roles
+## 13. Human-like interaction continuity
+
+Prometheist's persistent experience must be continuous across chat/session boundaries. A conversation identifier is useful provenance metadata, but it is not a cognitive boundary and must not normally be exposed as something the user has to manage.
+
+The target user experience is ordinary human conversational resumption. A user should be able to say:
+
+> "Remember that thing we were talking about yesterday, about the attention layers?"
+
+and allow Prometheist to resolve the referent from semantic, temporal, causal, entity, task, and situation cues. The user should not have to select or name a stored conversation.
+
+The architecture therefore distinguishes:
+
+- **interaction stream** — where and when communication physically occurred, including UI session/device/source provenance;
+- **topic/situation associations** — what events appear to concern, represented as overlapping associations rather than exclusive containers;
+- **task/intention** — what durable work Prometheist is pursuing.
+
+These relationships are many-to-many. A single utterance may relate to several situations and tasks. A single situation may span many interaction streams. A task may continue after the conversation that created it has ended.
+
+`conversation_id`, `conversation_seq`, session IDs, device IDs, and similar coordinates may remain valuable for provenance, ordering, debugging, UI grouping, explicit source-scoped questions, and retrieval optimization. They must not become default semantic walls around recall.
+
+Accordingly, concepts such as `CURRENT_CONVERSATION` versus `ALL_CONVERSATIONS` are historical retrieval mechanics rather than the target cognitive model. Ordinary recall should be ranked and constrained by evidence such as:
+
+- semantic/referential cues;
+- temporal cues;
+- causal relationships;
+- entities;
+- active and recent tasks;
+- situation/topic associations;
+- provenance/source constraints when the user explicitly asks for them;
+- confidence and authority.
+
+Context is reconstructed just in time for the current task. It is not carried forward because a model happened to inherit a transcript.
+
+If the evidence uniquely supports an earlier topic, Prometheist should resume it without fanfare. If genuine semantic ambiguity remains, Prometheist should ask a natural clarification about meaning (for example, which of two attention discussions the user means), not ask the user to operate an internal memory namespace.
+
+The interaction invariant is:
+
+> **Conversations, sessions, devices, and interfaces are provenance metadata—not cognitive boundaries. Context is reconstructed just in time from current intent and available retrieval cues.**
+
+## 14. Disposable cognition and worker roles
 
 A reasoning worker should receive only the task-local state it needs:
 
@@ -350,38 +324,30 @@ persist
 worker/model context discarded
 ```
 
-A worker may be configured as a planner, researcher, code reviewer, analyst, summarizer, or another specialist role. Those identities describe temporary compute behavior, not persistent cognitive entities.
+A worker may be configured as a planner, researcher, code reviewer, analyst, summarizer, conversational responder, or another specialist role. Those identities describe temporary compute behavior, not persistent cognitive entities.
 
-## 14. Capability boundary
+## 15. Capability boundary
 
-Capabilities should remain modular and independently invokable. Examples include:
-
-- JIT Memory;
-- model inference;
-- code execution;
-- database operations;
-- filesystem access;
-- web/API retrieval;
-- artifact processing;
-- device sensing;
-- actuator control.
+Capabilities should remain modular and independently invokable. Examples include JIT Memory, model inference, code execution, database operations, filesystem access, web/API retrieval, artifact processing, device sensing, and actuator control.
 
 Capabilities expose explicit schemas, permissions, resource requirements, idempotency behavior, and provenance where applicable.
 
-## 15. Historical compatibility
+## 16. Historical compatibility and conversation baseline
 
 The v0.5 and v0.6 results remain accepted evidence.
 
 v0.5 established a deterministic Memory Kernel baseline.
 
-v0.6 established that fresh stateless LLM invocations can use a shared JIT Memory boundary and persistent events to participate in one continuous system.
+v0.6 established that fresh stateless LLM invocations can use a shared JIT Memory boundary and persistent events to participate in one continuous system. Its conversation behavior remains an important regression baseline even though its Primary/specialist orchestration is superseded.
 
-The architectural pivot does not invalidate those experiments. It changes the interpretation of what the workers are. Primary/specialist agents become one previously tested worker arrangement rather than the permanent structure of Prometheist.
+Tests of cross-turn recall, corrections, temporal reference, cross-session recall, topic resumption, ambiguous references, and specialist use of prior information without inherited transcripts should be preserved or generalized. Tests whose essential assertion is that the Primary Agent owns the turn or orchestration should remain historical rather than constrain the new architecture.
 
-## 16. v1.0 target invariant
+The replacement architecture must reproduce or improve the useful conversational behavior demonstrated by v0.6 while removing session boundaries from the user's cognitive model.
+
+## 17. v1.0 target invariant
 
 A complete first architecture should satisfy:
 
-> **You can terminate every LLM and worker process, replace the model, restart Prometheist, and the system still retains its durable identity, internal history, unfinished intentions, attention state, retained evidence, and causal provenance because none of those things belonged to an agent or model context in the first place.**
+> **You can terminate every LLM and worker process, replace the model, restart Prometheist, and the system still retains its durable identity, internal history, unfinished intentions, attention state, retained evidence, interaction continuity, and causal provenance because none of those things belonged to an agent, chat session, or model context in the first place.**
 
 The roadmap defines the experimental milestones required to earn that claim.
