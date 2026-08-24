@@ -120,6 +120,19 @@ CREATE INDEX IF NOT EXISTS idx_memory_association_entries_target
 
 CREATE SEQUENCE IF NOT EXISTS attention_task_created_seq START WITH 1;
 
+CREATE TABLE IF NOT EXISTS attention_execution_resources (
+    resource_id TEXT PRIMARY KEY,
+    resource_class TEXT NOT NULL,
+    capacity INTEGER NOT NULL CHECK (capacity >= 1),
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_attention_execution_resources_class_enabled
+    ON attention_execution_resources (resource_class, enabled, resource_id);
+
 CREATE TABLE IF NOT EXISTS attention_tasks (
     task_id UUID PRIMARY KEY,
     task_key TEXT NOT NULL,
@@ -130,6 +143,7 @@ CREATE TABLE IF NOT EXISTS attention_tasks (
     interruption_policy TEXT NOT NULL,
     deadline TIMESTAMPTZ,
     required_capabilities JSONB NOT NULL DEFAULT '[]'::jsonb,
+    required_resource_classes JSONB NOT NULL DEFAULT '[]'::jsonb,
     dependency_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
     status TEXT NOT NULL,
     enqueued_cycle BIGINT NOT NULL DEFAULT 0,
@@ -138,6 +152,11 @@ CREATE TABLE IF NOT EXISTS attention_tasks (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Keep schema.sql idempotent for existing local v0.7 databases created before
+-- execution-resource requirements were added.
+ALTER TABLE attention_tasks
+    ADD COLUMN IF NOT EXISTS required_resource_classes JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 CREATE INDEX IF NOT EXISTS idx_attention_tasks_status_priority
     ON attention_tasks (status, criticality, created_seq);
