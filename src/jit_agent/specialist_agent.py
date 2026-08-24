@@ -22,6 +22,7 @@ from jit_agent.models import (
     EventType,
     MemoryPacket,
 )
+from jit_agent.semantic_memory import EmbeddingProvider
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,7 @@ def handle_task(
     before_global_seq: int,
     registry: CapabilityRegistry = capability_registry.DEFAULT_REGISTRY,
     depth: int = 0,
+    embedding_provider: EmbeddingProvider | None = None,
 ) -> AgentResult:
     """Run one registered specialist with no inherited transcript or hidden state."""
     specialist = registration.descriptor.capability_id
@@ -165,6 +167,8 @@ def handle_task(
                     before_global_seq=before_global_seq,
                     requesting_agent=specialist,
                     capability_request_id=capability_packet.capability_request_id,
+                    semantic_intent=decision.retrieval_intent,
+                    embedding_provider=embedding_provider,
                     registry=registry,
                     depth=depth,
                 )
@@ -182,7 +186,11 @@ def handle_task(
             if isinstance(output, MemoryPacket):
                 memory_request_ids.append(output.memory_request_id)
                 evidence_event_ids.extend(item.source_event_id for item in output.items)
-                if output.supported:
+                # Candidate-only packets intentionally have supported=False. They
+                # still contain canonical source events, so the fresh answer step
+                # may inspect their text and must independently refuse any item
+                # that does not explicitly support the requested conclusion.
+                if output.items:
                     try:
                         text = llm.answer_specialist_task(
                             registration.instruction,
