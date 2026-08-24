@@ -4,7 +4,15 @@ import uuid
 import pytest
 
 from jit_agent import db, event_store, primary_agent
-from jit_agent.models import AgentAction, AgentDecision, EventType, MemoryPacket
+from jit_agent.models import (
+    AgentAction,
+    AgentDecision,
+    EventType,
+    MemoryPacket,
+    SemanticRetrievalIntentV1,
+    SemanticRetrievalTarget,
+    SemanticTemporalFocus,
+)
 
 
 class FakeLLM:
@@ -85,6 +93,50 @@ class LossyCapabilityCueLLM(FakeLLM):
             capability_query="unrelated additional functionality",
             capability_input="unrelated compressed information cue",
         )
+
+
+class SemanticSpecialistLLM(FakeLLM):
+    """Specialist produces a semantically correct but lexically weak memory cue."""
+
+    def decide_specialist_action(
+        self,
+        specialist_instruction: str,
+        task: str,
+    ) -> AgentDecision:
+        return AgentDecision(
+            action=AgentAction.REQUEST_CAPABILITY,
+            capability_query="persisted internal history access",
+            capability_input="prior internal constraint for the current rollout",
+            retrieval_intent=SemanticRetrievalIntentV1(
+                target=SemanticRetrievalTarget.PROCEDURE,
+                temporal_focus=SemanticTemporalFocus.UNSPECIFIED,
+            ),
+        )
+
+
+class FakeEmbeddingProvider:
+    provider_name = "fake"
+    model = "fake-nested-semantic-v1"
+    dimensions = 1536
+
+    @staticmethod
+    def _vector(bucket: int) -> list[float]:
+        values = [0.0] * 1536
+        values[bucket] = 1.0
+        return values
+
+    @classmethod
+    def _bucket(cls, text: str) -> int:
+        lowered = text.casefold()
+        if "deployment" in lowered or "rollout" in lowered or "operational requirement" in lowered:
+            return 0
+        return 1
+
+    def embed_documents(self, texts):
+        return [self._vector(self._bucket(text)) for text in texts]
+
+    def embed_query(self, query: str, instruction: str):
+        return self._vector(self._bucket(query + " " + instruction))
 
 
 @pytest.fixture
@@ -297,3 +349,38 @@ def test_multiple_specialists_independently_discover_internal_memory(
     assert memory_request.source == expected_specialist
     assert memory_request.payload["need"]["query_text"] == expected_memory_input
     assert token in result_event.payload["text"]
+
+
+def test_nested_specialist_semantic_fallback_propagates_provider_and_intent(conn):
+    fact_conversation = uuid.uuid4()
+    task_conversation = uuid.uuid4()
+    token = uuid.uuid4().hex[:10].upper()
+
+    primary_agent.handle_interaction(
+        conn,
+        FakeLLM(),
+        f"My deployment requirement is {token}.",
+        fact_conversation,
+    )
+    answer = primary_agent.handle_interaction(
+        conn,
+        SemanticSpecialistLLM(),
+        "Use a specialist to propose one deployment step that respects my prior rollout constraint.",
+        task_conversation,
+        embedding_provider=FakeEmbeddingProvider(),
+    )
+
+    assert token in answer
+    events = event_store.get_events_by_conversation(conn, task_conversation)
+    memory_request = next(event for event in events if event.event_type == EventType.MEMORY_REQUEST)
+    memory_packet = next(event for event in events if event.event_type == EventType.MEMORY_PACKET)
+
+    assert memory_request.source == "planning_specialist"
+    assert memory_request.payload["need"]["semantic_intent"] == {
+        "schema_version": 1,
+        "target": "PROCEDURE",
+        "temporal_focus": "UNSPECIFIED",
+    }
+    assert memory_packet.payload["packet"]["supported"] is False
+    assert memory_packet.payload["packet"]["items"][0]["evidence_status"] == "SEMANTIC_CANDIDATE"
+    assert memory_packet.payload["packet"]["retrieval_trace"]["semantic"]["candidate_limit"] == 10
