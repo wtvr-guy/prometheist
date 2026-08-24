@@ -14,6 +14,12 @@ from uuid import UUID, uuid5
 
 from pydantic import BaseModel, Field
 
+from jit_agent.attention_resources import (
+    ExecutionResource,
+    ExecutionResourceClass,
+    execution_resource_sort_key,
+)
+
 
 class PriorityClass(IntEnum):
     """Lower numeric values have higher scheduling priority."""
@@ -123,6 +129,7 @@ class SchedulingMetadata(BaseModel):
     interruption_policy: InterruptionPolicy = InterruptionPolicy.PREEMPTIBLE
     deadline: datetime | None = None
     required_capabilities: list[str] = Field(default_factory=list)
+    required_resource_classes: list[ExecutionResourceClass] = Field(default_factory=list)
     dependency_ids: list[UUID] = Field(default_factory=list)
 
 
@@ -162,6 +169,7 @@ class SchedulerSnapshot(BaseModel):
     active_task_id: UUID | None = None
     pending_preemption_task_id: UUID | None = None
     tasks: list[AttentionTask]
+    execution_resources: list[ExecutionResource] = Field(default_factory=list)
 
 
 def deterministic_task_id(namespace: UUID, task_key: str) -> UUID:
@@ -210,6 +218,7 @@ class JITAttentionScheduler:
             missing_names = ", ".join(sorted(item.value for item in missing))
             raise ValueError(f"Missing service guarantees for: {missing_names}")
         self.tasks: dict[UUID, AttentionTask] = {}
+        self.resources: dict[str, ExecutionResource] = {}
         self.active_task_id: UUID | None = None
         self.pending_preemption_task_id: UUID | None = None
         self.cycle = 0
@@ -224,6 +233,13 @@ class JITAttentionScheduler:
     ) -> "JITAttentionScheduler":
         scheduler = cls(service_guarantees=service_guarantees)
         scheduler.tasks = {task.task_id: task.model_copy(deep=True) for task in snapshot.tasks}
+        resource_ids = [resource.resource_id for resource in snapshot.execution_resources]
+        if len(resource_ids) != len(set(resource_ids)):
+            raise ValueError("Snapshot contains duplicate execution resource ids")
+        scheduler.resources = {
+            resource.resource_id: resource.model_copy(deep=True)
+            for resource in snapshot.execution_resources
+        }
         scheduler.active_task_id = snapshot.active_task_id
         scheduler.pending_preemption_task_id = snapshot.pending_preemption_task_id
         scheduler.cycle = snapshot.cycle
@@ -239,7 +255,35 @@ class JITAttentionScheduler:
                 task.model_copy(deep=True)
                 for task in sorted(self.tasks.values(), key=lambda item: (item.created_seq, item.task_id.hex))
             ],
+            execution_resources=self.execution_resources(),
         )
+
+    def configure_execution_resource(self, resource: ExecutionResource) -> ExecutionResource:
+        """Create or update one durable resource definition deterministically.
+
+        A resource id may change capacity, enabled state, or metadata, but it may
+        not silently change resource class. Stable identity now becomes the
+        basis for deterministic lane identity in the next v0.7 increment.
+        """
+
+        existing = self.resources.get(resource.resource_id)
+        if existing is not None and existing.resource_class is not resource.resource_class:
+            raise ValueError(
+                f"Execution resource {resource.resource_id!r} cannot change class "
+                f"from {existing.resource_class.value} to {resource.resource_class.value}"
+            )
+        stored = resource.model_copy(deep=True)
+        self.resources[stored.resource_id] = stored
+        return stored.model_copy(deep=True)
+
+    def execution_resources(self, *, enabled_only: bool = False) -> list[ExecutionResource]:
+        resources = [
+            resource
+            for resource in self.resources.values()
+            if not enabled_only or resource.enabled
+        ]
+        resources.sort(key=execution_resource_sort_key)
+        return [resource.model_copy(deep=True) for resource in resources]
 
     def submit(self, task: AttentionTask) -> AttentionTask:
         if task.task_id in self.tasks:
@@ -405,7 +449,9 @@ class JITAttentionScheduler:
         runnable = [
             task
             for task in self.tasks.values()
-            if task.status is TaskStatus.QUEUED and self._dependencies_satisfied(task)
+            if task.status is TaskStatus.QUEUED
+            and self._dependencies_satisfied(task)
+            and self._resources_satisfied(task)
         ]
         runnable.sort(key=self._queue_key)
         return [task.task_id for task in runnable]
@@ -420,6 +466,17 @@ class JITAttentionScheduler:
             if dependency is None or dependency.status is not TaskStatus.COMPLETED:
                 return False
         return True
+
+    def _resources_satisfied(self, task: AttentionTask) -> bool:
+        required = set(task.metadata.required_resource_classes)
+        if not required:
+            return True
+        available = {
+            resource.resource_class
+            for resource in self.resources.values()
+            if resource.enabled and resource.capacity > 0
+        }
+        return required.issubset(available)
 
     def _service_due(self, task: AttentionTask) -> bool:
         guarantee = self.service_guarantees[task.metadata.service_class]
