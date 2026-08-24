@@ -66,6 +66,7 @@ def _reset_test_database(_prepare_test_database):
                     attention_task_transitions,
                     attention_scheduler_state,
                     attention_tasks,
+                    attention_execution_resources,
                     memory_association_entries,
                     memory_projection_entries,
                     memory_projection_runs,
