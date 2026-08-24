@@ -108,3 +108,59 @@ CREATE INDEX IF NOT EXISTS idx_memory_association_entries_source
 
 CREATE INDEX IF NOT EXISTS idx_memory_association_entries_target
     ON memory_association_entries (projection_version, target_kind, target);
+
+-- ---------------------------------------------------------------------------
+-- JIT Attention durable execution state.
+--
+-- Unlike derived memory projections, this is authoritative operational state:
+-- it records what Prometheist is doing and what can be resumed after process
+-- destruction. The transition journal is append-only at the application
+-- layer; the task table is the current-state snapshot for fast restart.
+-- ---------------------------------------------------------------------------
+
+CREATE SEQUENCE IF NOT EXISTS attention_task_created_seq START WITH 1;
+
+CREATE TABLE IF NOT EXISTS attention_tasks (
+    task_id UUID PRIMARY KEY,
+    task_key TEXT NOT NULL,
+    created_seq BIGINT NOT NULL UNIQUE,
+    parent_task_id UUID REFERENCES attention_tasks(task_id),
+    criticality TEXT NOT NULL,
+    service_class TEXT NOT NULL,
+    interruption_policy TEXT NOT NULL,
+    deadline TIMESTAMPTZ,
+    required_capabilities JSONB NOT NULL DEFAULT '[]'::jsonb,
+    dependency_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+    status TEXT NOT NULL,
+    enqueued_cycle BIGINT NOT NULL DEFAULT 0,
+    revision BIGINT NOT NULL DEFAULT 0,
+    resumable_state JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_attention_tasks_status_priority
+    ON attention_tasks (status, criticality, created_seq);
+
+CREATE TABLE IF NOT EXISTS attention_task_transitions (
+    transition_id UUID PRIMARY KEY,
+    task_id UUID NOT NULL REFERENCES attention_tasks(task_id) ON DELETE CASCADE,
+    revision BIGINT NOT NULL,
+    scheduler_cycle BIGINT NOT NULL,
+    from_status TEXT NOT NULL,
+    to_status TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (task_id, revision)
+);
+
+CREATE INDEX IF NOT EXISTS idx_attention_transitions_task_revision
+    ON attention_task_transitions (task_id, revision);
+
+CREATE TABLE IF NOT EXISTS attention_scheduler_state (
+    scheduler_key TEXT PRIMARY KEY,
+    cycle BIGINT NOT NULL DEFAULT 0,
+    active_task_id UUID REFERENCES attention_tasks(task_id),
+    pending_preemption_task_id UUID REFERENCES attention_tasks(task_id),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
