@@ -138,15 +138,19 @@ This keeps execution continuity in deterministic persistent state while LLM invo
 
 ## Current implementation boundary
 
-The first v0.7 increment implements and tests the deterministic scheduler kernel plus PostgreSQL restart state. It does not yet replace the live Primary Agent orchestration path. The next acceptance increment should wire a real multi-step agent workflow through JIT Attention, kill the process after an intermediate checkpoint, restart from PostgreSQL, and complete the task using fresh LLM calls.
+The first v0.7 increment implements and tests the deterministic scheduler kernel plus PostgreSQL restart state. It also includes a deterministic forced-process-destruction acceptance test: one Python process persists an unfinished active task and is killed without graceful shutdown; a second process reconstructs the exact focus/checkpoint from PostgreSQL, completes that task, and advances to the queued task.
+
+The live Primary Agent orchestration path is not yet routed through JIT Attention. The remaining v0.7 integration step is to place a real multi-step/multi-agent workflow behind this scheduler and repeat the kill/restart demonstration with fresh LLM calls. That model-backed acceptance path is necessarily distinct from the deterministic scheduler regression suite.
 
 ## Acceptance properties for this increment
 
-The deterministic test suite should establish that:
+The deterministic test suite establishes that:
 
 - priority is derived from structured metadata;
 - stable task identifiers are reproducible;
 - queue order has a total deterministic ordering;
+- same-priority arrivals do not preempt and cause focus thrash;
+- identical scheduling replay produces identical structured focus and transition identifiers;
 - higher-priority work preempts `PREEMPTIBLE` work;
 - `CHECKPOINT_ONLY` work yields only at a checkpoint;
 - `ATOMIC` work cannot be preempted even by `P0`;
@@ -154,4 +158,5 @@ The deterministic test suite should establish that:
 - dependencies gate runnability;
 - snapshot reconstruction preserves focus and resumable state;
 - PostgreSQL reconstruction works across fresh connections;
-- lifecycle persistence is idempotent.
+- lifecycle persistence is idempotent;
+- unfinished work survives forced Python process destruction and resumes in a fresh process from committed durable state.
