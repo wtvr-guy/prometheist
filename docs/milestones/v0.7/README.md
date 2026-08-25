@@ -88,7 +88,7 @@ Implemented/tested properties include:
 - invalidation of stale admission state whenever task, cycle, or resource state changes;
 - restart validation that rejects unknown, mismatched, incomplete, nondeterministic, or oversubscribed reservations.
 
-The database-independent Increment C suite currently passes locally (`28 passed, 2 deselected`). The two deselected cases require PostgreSQL and remain pending full CI verification at this implementation point.
+The database-independent Increment C suite passes locally (`28 passed, 2 deselected`). GitHub Actions run #99 verified the complete Increment C head with PostgreSQL 16: `112 passed, 4 skipped in 10.39s`.
 
 Increment C does **not** mark several tasks `RUNNING`, create worker-visible assignments, or implement contention-driven interruption. It proves the deterministic safe-capacity decision and makes that decision durable. Increment D will convert an admitted set into atomic scheduling-epoch assignments.
 
@@ -133,7 +133,7 @@ This increment intentionally stops short of quantitative reservation, concurrenc
 
 ### Increment C — deterministic resource admission and reservations
 
-**Status:** implemented; database-independent verification passes locally, with PostgreSQL/full-suite CI verification pending.
+**Status:** implemented and verified in CI.
 
 Introduce the smallest resource-allocation mechanism that can answer:
 
