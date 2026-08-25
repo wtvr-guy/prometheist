@@ -5,9 +5,9 @@ Process A (Conversation A) is told an arbitrary fact and exits completely.
 Process B (a brand-new Conversation B) asks about it and must still find it
 -- conversation boundaries are organizational metadata, not memory walls.
 
-Requires a running local Ollama with the configured model pulled, and
-Postgres reachable via DATABASE_URL. Skipped automatically if Ollama isn't
-reachable.
+Requires a running local Ollama with both configured chat and embedding models,
+plus PostgreSQL reachable through the pytest-selected `TEST_DATABASE_URL`.
+Skipped automatically when the Ollama runtime contract is unavailable.
 """
 from __future__ import annotations
 
@@ -15,9 +15,9 @@ import uuid
 
 import pytest
 
-from tests._cli_helpers import ollama_available, run_once
+from tests._cli_helpers import run_once
 
-pytestmark = pytest.mark.skipif(not ollama_available(), reason="Ollama is not reachable")
+pytestmark = pytest.mark.ollama
 
 
 def test_cross_conversation_cross_process_memory_recall():

@@ -8,7 +8,7 @@
 
 **Observed answer:** yes, within the verified v0.6 acceptance scope.
 
-v0.6 is an integration milestone. Memory Kernel v0.5 remains the frozen retrieval baseline; this milestone did not add embeddings, a vector database, an orchestration framework, or another retrieval algorithm.
+v0.6 is an integration milestone. Memory Kernel v0.5 remains the frozen retrieval baseline. At the original 2026-08-21 closure, this milestone had not added embeddings, a vector database, an orchestration framework, or another retrieval algorithm. The dated post-closure extension below distinguishes later candidate-recovery work from that original result.
 
 ## Accepted result
 
@@ -73,6 +73,30 @@ On 2026-08-21 the local Prometheist PostgreSQL/Ollama development environment ve
 - the frozen v0.5 regression baseline remained green.
 
 PR #14 (`Add canonical-first supplemental JIT cue fallback`) was then merged into `main`, completing the final v0.6 integration correction.
+
+## Post-closure extensions and revalidation
+
+The later v0.6 capability-registry branch added a bounded Ollama/pgvector
+semantic recovery route for lexically weak cues. This does not replace or retune
+the frozen v0.5 deterministic kernel: deterministic retrieval gets first refusal,
+vector similarity returns bounded `SEMANTIC_CANDIDATE` source events only, and
+similarity alone never changes a packet to `supported=true`. The CLI and test
+environment therefore now require `schema_pgvector.sql` and the configured
+embedding model even though the original closure did not.
+
+On 2026-08-24 the milestone was revalidated against a stricter four-turn
+conversation in which every turn ran in a new process. The accepted path combines
+immediate same-conversation context with an older fact from a separate
+conversation, rejects plausible answers without source provenance, and requires
+the final pronoun-heavy turn to retrieve the preceding grounded response plus the
+older causal rule. The run also exposed and corrected Windows UTF-8 harness
+failures, ungrounded direct routing for referential messages, source-precedence
+and exact-identifier synthesis errors, and non-enforcing local-model CI gates.
+
+See the dated
+[`conversation-continuity validation record`](experiments/V06_CONVERSATION_CONTINUITY_RESULT_2026-08-24.md)
+for the frozen scenario, observed failures, isolated packet replays, changes, CI
+contract, and limitations.
 
 ## Frozen conclusion
 

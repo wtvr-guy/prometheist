@@ -26,6 +26,8 @@ These are controlled synthetic benchmark results, not a claim of general semanti
 
 v0.6 is the accepted shared-JIT-memory and stateless multi-agent integration milestone. The live Primary Agent and a stateless `memory_specialist` now obtain persistent internal context through the same `MemoryNeed` / `MemoryPacket` boundary backed by the frozen v0.5 kernel. Agent delegations, results, memory requests, memory packets, failures, source-event provenance, and correlation metadata are persisted outside all LLM contexts.
 
+The later capability-registry work keeps deterministic retrieval first and adds a bounded pgvector recovery route for lexically weak cues. That route exposes canonical source events only as `SEMANTIC_CANDIDATE` items; vector similarity alone never admits a fact or changes a packet to `supported=true`.
+
 The v0.6 acceptance path was verified locally with PostgreSQL and Ollama: a fact persisted in one process was later recovered by a fresh Primary Agent and independently by a fresh specialist without an inherited transcript, while the complete pytest suite and frozen v0.5 regression baseline remained green.
 
 See the [v0.5 final status](docs/milestones/v0.5/README.md), [v0.6 final status](docs/milestones/v0.6/README.md), [v0.5 experiment records](docs/milestones/v0.5/experiments/), and [closure audit](docs/audits/V05_CLOSURE_AUDIT_2026-08-21.md).
@@ -78,6 +80,7 @@ Prometheist currently combines:
 - bounded PostgreSQL candidate routing;
 - a shared `MemoryNeed` / `MemoryPacket` JIT Memory interface;
 - canonical-first user-query recall with bounded supplemental semantic cues after canonical abstention;
+- deterministic-first, bounded pgvector recovery whose `SEMANTIC_CANDIDATE` events never self-admit as evidence;
 - persisted memory requests, memory packets, agent delegations, specialist results, and correlation metadata;
 - a stateless Primary Agent plus a stateless LLM-backed memory specialist;
 - structured, schema-validated LLM control outputs;
@@ -101,8 +104,8 @@ Requirements:
 
 - Python 3.12+
 - `uv`
-- PostgreSQL
-- Ollama for LLM-backed acceptance paths
+- PostgreSQL with pgvector
+- Ollama for the live CLI and LLM-backed acceptance paths
 
 Clone and install:
 
@@ -116,6 +119,7 @@ Create a PostgreSQL database and apply the schema:
 
 ```powershell
 psql -d jit_agent -f schema.sql
+psql -d jit_agent -f schema_pgvector.sql
 ```
 
 Example `.env`:
@@ -124,6 +128,14 @@ Example `.env`:
 DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/jit_agent
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=qwen3:4b
+OLLAMA_EMBEDDING_MODEL=qwen3-embedding:4b-q4_K_M
+```
+
+Pull both configured models before running live semantic/acceptance paths:
+
+```powershell
+ollama pull qwen3:4b
+ollama pull qwen3-embedding:4b-q4_K_M
 ```
 
 `.env` is ignored by Git and should not be committed.
@@ -150,7 +162,32 @@ uv run pytest -v
 
 Tests use a dedicated PostgreSQL database whose name must contain `test` or `benchmark`; the normal long-lived development history is not a valid destructive pytest target. Some LLM-backed acceptance paths require Ollama; deterministic Memory Kernel benchmarks do not.
 
-The repository also has a GitHub Actions PostgreSQL test lane. It runs the locked Python environment and the normal pytest suite against a disposable PostgreSQL service. Real-Ollama acceptance tests remain local because CI does not provide the project's local model runtime; those tests explicitly skip when Ollama is unavailable.
+Database-backed pytest runs must be serialized when they share a
+`TEST_DATABASE_URL`: the isolation fixture truncates the disposable database at
+the start of each test, so concurrent runs require separate test databases.
+
+Run the v0.6 multi-turn continuity acceptance gate, including its Ollama/model
+preflight and visible transcript, with:
+
+```powershell
+.\scripts\run_v06_continuity.ps1
+```
+
+This runner fails when the configured chat or embedding model is unavailable;
+it never reports an unavailable local-model test as a pass-by-skip. The test
+launches a fresh CLI process for every turn and verifies the source-event IDs in
+persisted memory packets as well as the answers. Pytest intentionally replaces
+the normal `DATABASE_URL` with `TEST_DATABASE_URL` (defaulting to the disposable
+`jit_agent_test` database); set that variable explicitly when your test database
+uses a different safe name or credential.
+
+GitHub Actions runs the deterministic suite explicitly with `-m "not ollama"`
+against a disposable pgvector/PostgreSQL service and separately verifies that
+all `ollama` acceptance tests remain collectable. A Windows lane exercises the
+CLI UTF-8 subprocess contract without database fixtures. Real-Ollama acceptance
+remains a required local gate because hosted CI does not provide the project's
+models; ordinary pytest runs may skip it when Ollama is unavailable, while the
+script above turns missing prerequisites into a failure.
 
 ## Benchmarks
 

@@ -53,6 +53,9 @@ Accepted result:
 - proved cross-agent and cross-process recall with fresh LLM invocations;
 - preserved bounded evidence, exact source-event provenance, and unknown-fact abstention;
 - added canonical-first user-query handling with bounded supplemental classifier cues after canonical abstention;
+- post-closure revalidation proved four-turn conversational continuity across
+  fresh processes while combining same-conversation context with older
+  cross-conversation facts and exact source-event provenance;
 - reran the v0.5 regression baseline unchanged and kept it green;
 - passed the complete local pytest suite with PostgreSQL and Ollama available.
 
@@ -67,9 +70,15 @@ Acceptance demonstration:
 7. The Primary Agent exposes the specialist result to the user through the same persisted interaction chain.
 8. The entire causal chain is recoverable from persistent events.
 
-No v0.6 failure justified embeddings or another retrieval subsystem.
+No failure in the original 2026-08-21 closure justified embeddings or another
+retrieval subsystem. Later work on the v0.6 capability-registry branch added a
+strictly candidate-only Ollama/pgvector recovery route for lexically weak cues;
+it runs only after deterministic abstention and cannot promote similarity to
+supported evidence. This post-closure extension is recorded separately rather
+than rewriting the original causal conclusion.
 
-See [`milestones/v0.6/README.md`](milestones/v0.6/README.md).
+See [`milestones/v0.6/README.md`](milestones/v0.6/README.md) and the dated
+[`conversation-continuity validation`](milestones/v0.6/experiments/V06_CONVERSATION_CONTINUITY_RESULT_2026-08-24.md).
 
 ---
 
@@ -117,13 +126,15 @@ Candidate benchmark domains:
 - larger histories and more heterogeneous event types;
 - episodic/event grouping.
 
-This is the milestone where semantic/vector retrieval may finally earn an experiment. The correct sequence is:
+The bounded, candidate-only pgvector route introduced during the later v0.6 work
+is the baseline here, not a conclusion that semantic retrieval is justified. The
+correct sequence is:
 
 ```text
-freeze deterministic failure
+freeze a deterministic-first failure
         |
         v
-add one semantic mechanism
+evaluate or change one bounded semantic mechanism
         |
         v
 rerun identical benchmark
@@ -135,7 +146,11 @@ measure recall + precision + abstention + latency
 keep or reject
 ```
 
-The milestone is not defined as “add pgvector.” It is defined as discovering and repairing measured memory-generalization failures while preserving provenance and boundedness.
+The milestone is not defined as “add pgvector” or as automatically retaining the
+existing route. It is defined as discovering and repairing measured
+memory-generalization failures while preserving provenance and boundedness, then
+keeping, retuning, or rejecting the semantic route according to the frozen
+measurements.
 
 ---
 

@@ -12,9 +12,9 @@ import uuid
 import pytest
 
 from jit_agent import db, event_store
-from tests._cli_helpers import ollama_available, run_once
+from tests._cli_helpers import run_once
 
-pytestmark = pytest.mark.skipif(not ollama_available(), reason="Ollama is not reachable")
+pytestmark = pytest.mark.ollama
 
 
 def _conversation_trace(conversation_id: uuid.UUID) -> str:

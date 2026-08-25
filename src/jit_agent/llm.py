@@ -8,12 +8,46 @@ import time
 from typing import Protocol
 
 import httpx
-from pydantic import ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from jit_agent.models import AgentDecision, MemoryPacket
+from jit_agent.models import AgentDecision, EventType, MemoryPacket
 
 logger = logging.getLogger(__name__)
 _THINK_BLOCK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
+_WHY_REQUEST_RE = re.compile(r"\b(?:why|reason|cause)\b", re.IGNORECASE)
+_CAUSAL_CLAUSE_RE = re.compile(
+    r"\b(?:because|due\s+to)\s+([^,.;!?\r\n]+)",
+    re.IGNORECASE,
+)
+_NEGATED_CAUSAL_PREFIX_RE = re.compile(
+    r"(?:\b(?:not|never|no)(?:\s+(?:only|merely|simply|just))?|n['\u2019]t)\s*$",
+    re.IGNORECASE,
+)
+_UNCERTAIN_CAUSAL_PREFIX_RE = re.compile(
+    r"\b(?:whether|if|might|maybe|perhaps|possibly)\b",
+    re.IGNORECASE,
+)
+_QUESTION_CAUSAL_PREFIX_RE = re.compile(
+    r"^\s*(?:is|are|was|were|do|does|did|can|could|would|should|has|have|had)\b",
+    re.IGNORECASE,
+)
+
+
+class _TextAnswer(BaseModel):
+    """Structured envelope that keeps model analysis out of user-facing text."""
+
+    answer: str = Field(
+        min_length=1,
+        description="The final user-facing answer only, with no analysis or preamble.",
+    )
+
+    @field_validator("answer")
+    @classmethod
+    def answer_must_not_be_blank(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("answer must not be blank")
+        return stripped
 
 
 def _strip_thinking(text: str) -> str:
@@ -69,6 +103,10 @@ current user message. Choose exactly one action:
 A user's current message may itself establish a name, preference, constraint,
 plan, correction, or other user-authored state. Do not request evidence merely
 to verify that the user said or chose what the current message explicitly says.
+Conversely, a reference whose antecedent is absent from the current message is
+not self-contained. Phrases such as "those options", "what we just decided",
+or "that one" require persisted conversational context; request the capability
+to access that history instead of guessing what the reference means.
 For REQUEST_CAPABILITY, capability_query briefly describes the needed capability.
 capability_input may contain a narrower input; omit it when the whole user message
 should be passed unchanged. Do not name implementations, ids, limits, or routing.
@@ -83,14 +121,36 @@ sources. ADMITTED items have passed the system's deterministic evidence gate.
 SEMANTIC_CANDIDATE items are canonical source events recovered by semantic
 similarity but are not admitted facts merely because they were retrieved.
 
+Put every requested value in the first sentence and copy opaque user-provided
+identifiers exactly from the source text. Unless the user requests detail, use at
+most three sentences with no headings, bullet lists, source quotations, or
+prefatory analysis. Reconcile all source statements before answering so the
+opening conclusion cannot contradict the explanation. Do not narrate hidden
+reasoning or expose packet labels, event identifiers, scores, or retrieval
+mechanics unless the user asks for them.
+When a question asks for a profile, code, nickname, name, or ID, return the exact
+source label rather than replacing it with a descriptive paraphrase.
+When a question asks why, state the explicit underlying cause recorded in the
+source; merely restating the rule or decision does not answer why. In particular,
+if a source says to avoid option A because of condition B, the answer to why must
+state condition B rather than stopping at "option A is prohibited." When a
+supporting USER_PROMPT contains an explicit "because ..." clause, preserve that
+clause's causal fact instead of substituting an implication or higher-level rule.
+
 Apply source semantics correctly. A USER_PROMPT source event is direct evidence
 of what the user previously said, named, preferred, required, planned, reported,
 or instructed. If the current question asks about such user-authored state, the
 source text itself can directly answer it; do not demand independent proof that
 the user's underlying real-world claim is objectively true. For example, a
-persisted user statement "never use Docker because virtualization is disabled"
-directly establishes that this is the user's recorded constraint and reason,
-even though it does not independently prove the hardware condition.
+persisted user statement that requires option A because of condition B directly
+establishes the user's recorded constraint and reason; it does not independently
+prove that condition B is objectively true.
+
+For user-authored constraints and preferences, USER_PROMPT evidence takes
+precedence over an AGENT_RESPONSE recommendation unless a later user event
+changes the constraint. When comparing named options with a prohibition, an
+option that uses or includes the prohibited method conflicts with that rule;
+an earlier agent recommendation cannot make it compatible.
 
 You may use a SEMANTIC_CANDIDATE only when its source content itself directly
 supports the answer requested by the current message. Never treat similarity
@@ -121,6 +181,21 @@ task or supplied source events. ADMITTED items have passed deterministic evidenc
 admission. SEMANTIC_CANDIDATE items are canonical source events recovered by
 semantic similarity and are not facts merely because they were retrieved.
 
+Put every requested value in the first sentence and copy opaque user-provided
+identifiers exactly from the source text. Unless the task requests detail, use at
+most three sentences with no headings, bullet lists, source quotations, or
+prefatory analysis. Reconcile all source statements before answering, and do not
+expose packet labels, event identifiers, scores, retrieval mechanics, or hidden
+reasoning unless the task explicitly asks for them.
+When a task asks for a profile, code, nickname, name, or ID, return the exact
+source label rather than replacing it with a descriptive paraphrase.
+When a task asks why, state the explicit underlying cause recorded in the
+source; merely restating the rule or decision does not answer why. In particular,
+if a source says to avoid option A because of condition B, the answer to why must
+state condition B rather than stopping at "option A is prohibited." When a
+supporting USER_PROMPT contains an explicit "because ..." clause, preserve that
+clause's causal fact instead of substituting an implication or higher-level rule.
+
 A USER_PROMPT source event is direct evidence of what the user previously said,
 named, preferred, required, planned, reported, or instructed. When the task asks
 about that user-authored state, use the source text directly; do not require
@@ -130,6 +205,11 @@ requested conclusion. Ignore similarity score and rank as evidence. If the
 requested personal/history-specific information is not established by supplied
 source text, state that persisted evidence is insufficient. Do not invent
 unsupported memory.
+
+For user-authored constraints and preferences, USER_PROMPT evidence takes
+precedence over an AGENT_RESPONSE recommendation unless a later user event
+changes the constraint. An option that uses or includes a prohibited method
+conflicts with that rule even if an earlier agent response recommended it.
 """
 
 
@@ -185,6 +265,64 @@ def _format_memory_packet(packet: MemoryPacket | None) -> str:
     )
 
 
+def _causal_clause_is_asserted(content: str, match: re.Match[str]) -> bool:
+    """Reject negated, interrogative, or explicitly uncertain causal mentions."""
+    start = max(content.rfind(mark, 0, match.start()) for mark in ".!?;,\n\r") + 1
+    following = [
+        position
+        for mark in ".!?;,\n\r"
+        if (position := content.find(mark, match.end())) >= 0
+    ]
+    end = min(following) if following else len(content)
+    terminator = content[end] if end < len(content) else ""
+    prefix = content[start : match.start()]
+    if terminator == "?":
+        return False
+    if _NEGATED_CAUSAL_PREFIX_RE.search(prefix):
+        return False
+    if _UNCERTAIN_CAUSAL_PREFIX_RE.search(prefix):
+        return False
+    return _QUESTION_CAUSAL_PREFIX_RE.search(prefix) is None
+
+
+def _format_explicit_causal_clauses(packet: MemoryPacket | None) -> str:
+    """Highlight asserted causal clauses already present in user-authored evidence."""
+    if packet is None:
+        return ""
+    facts: list[str] = []
+    seen: set[str] = set()
+    for item in packet.items:
+        if item.event_type != EventType.USER_PROMPT:
+            continue
+        for match in _CAUSAL_CLAUSE_RE.finditer(item.content):
+            if not _causal_clause_is_asserted(item.content, match):
+                continue
+            fact = " ".join(match.group(1).split())
+            key = fact.casefold()
+            if fact and key not in seen:
+                seen.add(key)
+                facts.append(fact)
+            if len(facts) == 3:
+                break
+        if len(facts) == 3:
+            break
+    if not facts:
+        return ""
+    rendered = "\n".join(f"- {fact}" for fact in facts)
+    return (
+        "\n\n[Asserted causal clauses from USER_PROMPT sources]\n"
+        f"{rendered}\n"
+        "For a why/reason request, state the relevant clause above in the final answer. "
+        "These lines only highlight exact content already present in the packet."
+    )
+
+
+def _causal_highlight_for_request(request: str, packet: MemoryPacket | None) -> str:
+    if _WHY_REQUEST_RE.search(request) is None:
+        return ""
+    return _format_explicit_causal_clauses(packet)
+
+
 def _specialist_input(specialist_instruction: str, task: str) -> str:
     return f"[Role]\n{specialist_instruction}\n\n[Task]\n{task}"
 
@@ -208,7 +346,7 @@ class OllamaClient:
                 "format": schema,
                 "think": False,
                 "stream": False,
-                "options": {"num_predict": max_tokens},
+                "options": {"num_predict": max_tokens, "temperature": 0},
             },
         )
         response.raise_for_status()
@@ -217,24 +355,20 @@ class OllamaClient:
         return _strip_thinking(body["message"]["content"])
 
     def _text(self, kind: str, system: str, user: str, max_tokens: int = 256) -> str:
-        t0 = time.monotonic()
-        response = self._client.post(
-            "/api/chat",
-            json={
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-                "think": False,
-                "stream": False,
-                "options": {"num_predict": max_tokens},
-            },
-        )
-        response.raise_for_status()
-        body = response.json()
-        _log_call(kind, self.model, time.monotonic() - t0, body)
-        return _strip_thinking(body["message"]["content"])
+        last_error: ValidationError | None = None
+        for _ in range(2):
+            content = self._structured(
+                kind,
+                system,
+                user,
+                _TextAnswer.model_json_schema(),
+                max_tokens,
+            )
+            try:
+                return _TextAnswer.model_validate_json(content).answer
+            except ValidationError as exc:
+                last_error = exc
+        raise ValueError(f"agent answer failed to validate: {last_error}")
 
     def _decision(self, kind: str, system: str, user: str) -> AgentDecision:
         schema = AgentDecision.model_json_schema()
@@ -251,10 +385,11 @@ class OllamaClient:
         return self._decision("CLASSIFY", _CLASSIFY_SYSTEM_PROMPT, prompt)
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
+        causal_clauses = _causal_highlight_for_request(prompt, memory_packet)
         return self._text(
             "RESPOND",
             _RESPOND_SYSTEM_PROMPT,
-            prompt + _format_memory_packet(memory_packet),
+            prompt + _format_memory_packet(memory_packet) + causal_clauses,
         )
 
     def decide_specialist_action(
@@ -274,8 +409,11 @@ class OllamaClient:
         task: str,
         packet: MemoryPacket | None,
     ) -> str:
+        causal_clauses = _causal_highlight_for_request(task, packet)
         return self._text(
             "SPECIALIST_ANSWER",
             _SPECIALIST_ANSWER_PROMPT,
-            _specialist_input(specialist_instruction, task) + _format_memory_packet(packet),
+            _specialist_input(specialist_instruction, task)
+            + _format_memory_packet(packet)
+            + causal_clauses,
         )

@@ -5,6 +5,13 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pytest:
     runs-on: ubuntu-latest
@@ -38,10 +45,40 @@ jobs:
           python-version: "3.12"
 
       - name: Install uv
-        run: python -m pip install --upgrade uv
+        run: python -m pip install uv==0.12.5
 
       - name: Sync locked environment
-        run: uv sync --frozen
+        run: uv sync --locked
 
-      - name: Run test suite
-        run: uv run pytest -q
+      - name: Verify local-model acceptance tests are collected
+        run: >-
+          uv run --locked pytest --collect-only -q -m ollama
+          tests/test_acceptance_restart.py
+          tests/test_cross_conversation_memory.py
+          tests/test_acceptance_conversation_continuity.py
+
+      - name: Run deterministic test suite
+        run: uv run --locked pytest -q -m "not ollama"
+
+  windows-cli-encoding:
+    name: Windows CLI encoding contract
+    runs-on: windows-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install uv==0.12.5
+
+      - name: Sync locked environment
+        run: uv sync --locked
+
+      - name: Run CLI encoding contract without database fixtures
+        run: uv run --locked pytest --noconftest -q tests/test_cli.py tests/test_cli_helpers.py

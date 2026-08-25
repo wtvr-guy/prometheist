@@ -12,7 +12,7 @@ The scenario deliberately requires two kinds of JIT recall at once:
 
 This is intentionally phrased like an ordinary conversation. Later turns use
 references such as "those approaches", "what you just ruled out", and "that
-one" rather than repeating the missing context in benchmark-style keywords.
+approach" rather than repeating the missing context in benchmark-style keywords.
 """
 from __future__ import annotations
 
@@ -24,9 +24,9 @@ import pytest
 
 from jit_agent import db, event_store
 from jit_agent.models import EventType
-from tests._cli_helpers import ollama_available, run_once
+from tests._cli_helpers import print_transcript, run_once
 
-pytestmark = pytest.mark.skipif(not ollama_available(), reason="Ollama is not reachable")
+pytestmark = pytest.mark.ollama
 
 
 def _events(conversation_id: uuid.UUID):
@@ -76,14 +76,6 @@ def _response_for_correlation(conversation_id: uuid.UUID, correlation_id: uuid.U
     return responses[0]
 
 
-def _correlation_event_ids(conversation_id: uuid.UUID, correlation_id: uuid.UUID) -> set[uuid.UUID]:
-    return {
-        event.event_id
-        for event in _events(conversation_id)
-        if event.correlation_id == correlation_id
-    }
-
-
 def _memory_source_ids_for_correlation(
     conversation_id: uuid.UUID,
     correlation_id: uuid.UUID,
@@ -122,8 +114,126 @@ def _seed_distractors(count: int = 12) -> None:
 
 
 def _print_turn(number: int, prompt: str, answer: str) -> None:
-    print(f"\nTurn {number} — User:\n{prompt}")
-    print(f"\nTurn {number} — Prometheist:\n{answer}")
+    print_transcript(f"\nTurn {number} — User:\n{prompt}")
+    print_transcript(f"\nTurn {number} — Prometheist:\n{answer}")
+
+
+def _normalized_answer(answer: str) -> str:
+    return " ".join(answer.casefold().replace("\u2019", "'").split())
+
+
+def _negates_near_subject(
+    answer: str,
+    *,
+    subject: str,
+    predicate: str,
+    distance: int = 100,
+) -> bool:
+    """Detect explicit negation without pretending to solve general semantics."""
+    negation = r"(?:\b(?:no|neither|not|never)\b|n['\u2019]t\b)"
+    return any(
+        re.search(pattern, answer) is not None
+        for pattern in (
+            rf"{subject}[^,.;!?]{{0,{distance}}}{negation}[^,.;!?]{{0,40}}\b(?:{predicate})\b",
+            rf"{negation}[^,.;!?]{{0,40}}\b(?:{predicate})\b[^,.;!?]{{0,{distance}}}{subject}",
+            rf"{negation}[^,.;!?]{{0,40}}{subject}[^,.;!?]{{0,{distance}}}\b(?:{predicate})\b",
+        )
+    )
+
+
+def _contrasts_subject(
+    answer: str,
+    *,
+    subject: str,
+    predicate: str,
+    distance: int = 100,
+) -> bool:
+    negation = r"(?:\b(?:not|never)\b|n['\u2019]t\b)"
+    return re.search(
+        rf"\b(?:{predicate})\b[^.;!?]{{0,{distance}}}{negation}\s+{subject}\b",
+        answer,
+    ) is not None
+
+
+def _affirms_docker_compose_conflicts(answer: str) -> bool:
+    normalized = _normalized_answer(answer)
+    predicate = r"conflicts?|violates?|prohibit(?:ed|s)?|rules? out|ruled out"
+    denies_conflict = re.search(
+        r"\b(?:none|neither)\s+of\s+(?:those|the)\s+approaches?\s+conflicts?\b",
+        normalized,
+    ) is not None or _negates_near_subject(
+        normalized,
+        subject=r"docker compose",
+        predicate=predicate,
+    ) or _contrasts_subject(
+        normalized,
+        subject=r"docker compose",
+        predicate=predicate,
+        distance=80,
+    )
+    positive = (
+        rf"(?:docker compose[^,.;!?]{{0,100}}\b(?:{predicate})\b"
+        rf"|\b(?:{predicate})\b[^,.;!?]{{0,100}}docker compose)"
+    )
+    return not denies_conflict and re.search(positive, normalized) is not None
+
+
+def _affirms_docker_compose_was_ruled_out(answer: str) -> bool:
+    normalized = _normalized_answer(answer)
+    predicate = r"rules?\s+out|ruled\s+out"
+    denies_exclusion = _negates_near_subject(
+        normalized,
+        subject=r"docker compose",
+        predicate=predicate,
+    ) or _contrasts_subject(
+        normalized,
+        subject=r"docker compose",
+        predicate=predicate,
+        distance=80,
+    ) or re.search(
+        r"(?:\bnot\b|n['\u2019]t\b)[^,.;!?]{0,30}\brule(?:d)?\b"
+        r"[^,.;!?]{0,50}docker compose[^,.;!?]{0,30}\bout\b",
+        normalized,
+    ) is not None
+    positive_patterns = (
+        r"docker compose[^,.;!?]{0,100}\bruled\s+out\b",
+        r"\bruled(?:-|\s+)out\b[^,.;!?]{0,100}docker compose",
+        r"\bruled\b[^,.;!?]{0,50}docker compose[^,.;!?]{0,30}\bout\b",
+    )
+    return not denies_exclusion and any(
+        re.search(pattern, normalized) is not None for pattern in positive_patterns
+    )
+
+
+def _affirms_virtualization_was_disabled(answer: str) -> bool:
+    normalized = _normalized_answer(answer)
+    subject = r"virtuali[sz]ation"
+    denies_disabled = _negates_near_subject(
+        normalized,
+        subject=subject,
+        predicate=r"disabled",
+        distance=50,
+    ) or _contrasts_subject(
+        normalized,
+        subject=subject,
+        predicate=r"disabled",
+        distance=50,
+    )
+    affirms_enabled = re.search(
+        rf"(?:{subject}[^,.;!?]{{0,50}}\benabled\b|\benabled\b[^,.;!?]{{0,50}}{subject})",
+        normalized,
+    ) is not None and not _negates_near_subject(
+        normalized,
+        subject=subject,
+        predicate=r"enabled",
+        distance=50,
+    )
+    positive = (
+        r"(?:virtuali[sz]ation[^,.;!?]{0,40}\bdisabled\b"
+        r"|\bdisabled\b[^,.;!?]{0,40}virtuali[sz]ation"
+        r"|virtuali[sz]ation[^.!?]{0,80}\bnot enabled\b[^.!?]{0,40}\bdisabled\b)"
+    )
+    return not denies_disabled and not affirms_enabled and re.search(positive, normalized) is not None
 
 
 def test_stateless_multiturn_conversation_retains_local_context_and_relevant_history():
@@ -143,8 +253,8 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
         f"because virtualization is disabled. I track that constraint under profile {profile_token}."
     )
     historical_answer = run_once(historical_rule, historical_conversation)
-    print(f"\nHistorical seed — User:\n{historical_rule}")
-    print(f"\nHistorical seed — Prometheist:\n{historical_answer}")
+    print_transcript(f"\nHistorical seed — User:\n{historical_rule}")
+    print_transcript(f"\nHistorical seed — Prometheist:\n{historical_answer}")
     historical_rule_event = _event_for_text(
         historical_conversation,
         EventType.USER_PROMPT,
@@ -182,8 +292,8 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
     )
 
     failure_trace = _trace(historical_conversation, active_conversation)
-    assert "docker" in answer2.casefold(), failure_trace
-    assert profile_token.casefold() in answer2.casefold(), failure_trace
+    assert _affirms_docker_compose_conflicts(answer2), failure_trace
+    assert profile_token in answer2, failure_trace
     # These two source assertions are the core of the test: the same turn must
     # retrieve one event from the immediate conversation and one older event from
     # a different conversation. A plausible model guess is not enough to pass.
@@ -202,19 +312,19 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
         active_conversation,
         turn3_event.correlation_id,
     )
-    turn2_exchange_ids = _correlation_event_ids(active_conversation, turn2_event.correlation_id)
-
     failure_trace = _trace(historical_conversation, active_conversation)
-    assert plan_label.casefold() in answer3.casefold(), failure_trace
-    assert "docker" in answer3.casefold(), failure_trace
+    assert plan_label in answer3, failure_trace
+    assert _affirms_docker_compose_was_ruled_out(answer3), failure_trace
     assert turn1_event.event_id in turn3_sources, failure_trace
-    assert turn3_sources & turn2_exchange_ids, failure_trace
+    assert answer2_event.event_id in turn3_sources, failure_trace
 
     # Turn 4 contains almost no standalone semantic content. Correctly resolving
-    # "that one" requires the recent dialogue; giving the reason requires either
-    # the original historical rule or a prior grounded answer that carried it
-    # forward. We deliberately allow either valid retrieval path.
-    turn4 = "Why did we rule that one out? Keep it to one sentence."
+    # "that approach" requires the recent dialogue; the underlying technical
+    # reason exists only in the original historical rule.
+    turn4 = (
+        "Name that approach and give the underlying technical reason we ruled it out, "
+        "in one sentence."
+    )
     answer4 = run_once(turn4, active_conversation)
     _print_turn(4, turn4, answer4)
     turn4_event = _event_for_text(active_conversation, EventType.USER_PROMPT, turn4)
@@ -222,16 +332,12 @@ def test_stateless_multiturn_conversation_retains_local_context_and_relevant_his
         active_conversation,
         turn4_event.correlation_id,
     )
-    turn3_exchange_ids = _correlation_event_ids(active_conversation, turn3_event.correlation_id)
-
     failure_trace = _trace(historical_conversation, active_conversation)
-    assert re.search(r"virtuali[sz]ation", answer4, re.IGNORECASE), failure_trace
-    assert "disabled" in answer4.casefold(), failure_trace
-    assert turn4_sources & turn3_exchange_ids, failure_trace
-    assert (
-        historical_rule_event.event_id in turn4_sources
-        or answer2_event.event_id in turn4_sources
-    ), failure_trace
+    assert _affirms_docker_compose_was_ruled_out(answer4), failure_trace
+    assert _affirms_virtualization_was_disabled(answer4), failure_trace
+    assert len(re.findall(r"[.!?](?=\s|$)", answer4.strip())) <= 1, failure_trace
+    assert answer3_event.event_id in turn4_sources, failure_trace
+    assert historical_rule_event.event_id in turn4_sources, failure_trace
 
     # Structural sanity check: the active conversation really did span four
     # independent external turns and every context-dependent turn invoked memory.

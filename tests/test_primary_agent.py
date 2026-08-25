@@ -95,6 +95,16 @@ class LossyCapabilityCueLLM(FakeLLM):
         )
 
 
+class PlanningMisrouteLLM(FakeLLM):
+    """Model decision that mistakes a continuity question for a planning task."""
+
+    def classify(self, prompt: str) -> AgentDecision:
+        return AgentDecision(
+            action=AgentAction.REQUEST_CAPABILITY,
+            capability_query="planning and recommendation functionality",
+        )
+
+
 class SemanticSpecialistLLM(FakeLLM):
     """Specialist produces a semantically correct but lexically weak memory cue."""
 
@@ -270,6 +280,134 @@ def test_handle_interaction_needs_no_shared_python_state(conn):
     reply2 = primary_agent.handle_interaction(conn, FakeLLM(), "hello again", conversation_id)
 
     assert reply1 and reply2
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "Why did we rule that one out?",
+        "Name that approach and explain why we ruled it out.",
+        "Which of those approaches conflicts with the rule?",
+        "What did you just decide?",
+        "What nickname are we using?",
+        "Between A and B, which of those options is cheaper, and what nickname are we using?",
+        "Compare A and B; which of those plans did we previously choose?",
+        "Compare that plan with A and B, and tell me which of those options is cheaper.",
+    ],
+)
+def test_explicit_conversation_references_require_persisted_context(prompt):
+    assert primary_agent._requires_persisted_context(prompt)
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "Please call this plan Blue Harbor.",
+        "Compare Docker with native PostgreSQL.",
+        "Explain why virtualization matters in general.",
+        "Between Docker and native PostgreSQL, which of those options is simpler?",
+        "Compare Docker and native PostgreSQL; which of those approaches is simpler?",
+        "These options are Docker and native PostgreSQL; which of those options is simpler?",
+    ],
+)
+def test_self_contained_messages_do_not_trigger_the_continuity_policy(prompt):
+    assert not primary_agent._requires_persisted_context(prompt)
+
+
+def test_continuity_policy_overrides_an_ungrounded_direct_response(conn):
+    conversation_id = uuid.uuid4()
+    primary_agent.handle_interaction(
+        conn,
+        FakeLLM(),
+        "Docker was an option, but we ruled it out because virtualization is disabled.",
+        conversation_id,
+    )
+
+    primary_agent.handle_interaction(
+        conn,
+        FakeLLM(),
+        "Why did we rule that one out?",
+        conversation_id,
+    )
+
+    events = event_store.get_events_by_conversation(conn, conversation_id)
+    second_prompt = [event for event in events if event.event_type == EventType.USER_PROMPT][-1]
+    correlated = [
+        event for event in events if event.correlation_id == second_prompt.correlation_id
+    ]
+    decision = next(event for event in correlated if event.event_type == EventType.AGENT_DECISION)
+
+    assert decision.payload["action"] == AgentAction.REQUEST_CAPABILITY.value
+    assert decision.payload["policy_override"] == primary_agent.CONTINUITY_POLICY
+    assert EventType.MEMORY_REQUEST in {event.event_type for event in correlated}
+
+
+def test_continuity_policy_preserves_a_classifier_memory_cue():
+    decision = AgentDecision(
+        action=AgentAction.REQUEST_CAPABILITY,
+        capability_query="persisted internal history access",
+        capability_input="the prior deployment constraint and its reason",
+    )
+
+    routed, policy = primary_agent._apply_continuity_policy(
+        "Why did we rule that one out?",
+        decision,
+    )
+
+    assert policy == primary_agent.CONTINUITY_POLICY
+    assert routed.capability_input == decision.capability_input
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "Use a specialist to expand that plan.",
+        "Use the planning specialist to expand that plan using prior constraints.",
+        "Ask the analysis agent to compare that plan with the baseline.",
+    ],
+)
+def test_explicit_specialist_operation_is_not_replaced_by_memory_only_routing(prompt):
+    decision = AgentDecision(
+        action=AgentAction.REQUEST_CAPABILITY,
+        capability_query="planning and recommendation functionality",
+        capability_input="expand the plan using prior constraints",
+    )
+
+    routed, policy = primary_agent._apply_continuity_policy(
+        prompt,
+        decision,
+    )
+
+    assert routed == decision
+    assert policy is None
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "What nickname are we using for this plan, and which approach did you just rule out?",
+        "Name that approach and explain why we ruled it out, in one sentence.",
+    ],
+)
+def test_continuity_policy_constrains_a_specialist_misroute_to_memory(conn, prompt):
+    conversation_id = uuid.uuid4()
+
+    primary_agent.handle_interaction(
+        conn,
+        PlanningMisrouteLLM(),
+        prompt,
+        conversation_id,
+    )
+
+    events = event_store.get_events_by_conversation(conn, conversation_id)
+    capability_packet = next(
+        event for event in events if event.event_type == EventType.CAPABILITY_PACKET
+    )
+    selected = capability_packet.payload["packet"]["matches"][0]["descriptor"]["capability_id"]
+
+    assert selected == "internal_memory"
+    assert EventType.MEMORY_REQUEST in {event.event_type for event in events}
+    assert EventType.AGENT_DELEGATION not in {event.event_type for event in events}
 
 
 @pytest.mark.parametrize(

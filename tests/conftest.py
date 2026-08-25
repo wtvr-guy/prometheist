@@ -21,10 +21,45 @@ os.environ["DATABASE_URL"] = os.environ.get(
 import pytest
 
 from jit_agent import db
+from tests._cli_helpers import ollama_required, ollama_unavailable_reason
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SCHEMA_PATH = ROOT / "schema.sql"
 SEMANTIC_SCHEMA_PATH = ROOT / "schema_pgvector.sql"
+OLLAMA_ACCEPTANCE_FILES = {
+    "test_acceptance_conversation_continuity.py",
+    "test_acceptance_restart.py",
+    "test_cross_conversation_memory.py",
+}
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_collection_modifyitems(items):
+    """Keep every real-model acceptance test behind the explicit marker."""
+    missing = [
+        item.nodeid
+        for item in items
+        if item.path.name in OLLAMA_ACCEPTANCE_FILES
+        and item.get_closest_marker("ollama") is None
+    ]
+    if missing:
+        raise pytest.UsageError(
+            "Real-model acceptance tests missing @pytest.mark.ollama: "
+            + ", ".join(missing)
+        )
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_setup(item):
+    """Gate selected real-model tests before any database fixture can mutate state."""
+    if item.get_closest_marker("ollama") is None:
+        return
+    reason = ollama_unavailable_reason()
+    if reason is None:
+        return
+    if ollama_required():
+        pytest.fail(f"Ollama acceptance is required but {reason}", pytrace=False)
+    pytest.skip(reason)
 
 
 def _require_disposable_database(conn) -> str:

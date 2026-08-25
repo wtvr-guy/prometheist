@@ -23,7 +23,11 @@ Versioned research checkpoints:
 - [`milestones/v0.5/README.md`](milestones/v0.5/README.md) — final v0.5 status, accepted measurements, causal fixes, and closure state.
 - [`milestones/v0.5/MEMORY_KERNEL_V0.5.md`](milestones/v0.5/MEMORY_KERNEL_V0.5.md) — original v0.5 design/experiment specification retained as research context.
 - [`milestones/v0.5/SCALE_BENCHMARK.md`](milestones/v0.5/SCALE_BENCHMARK.md) — reproducible v0.5 scale-benchmark workflow.
-- [`milestones/v0.6/README.md`](milestones/v0.6/README.md) — shared-JIT-memory/stateless-MAS milestone, including the reopened deterministic capability-discovery and multi-specialist completion work.
+- [`milestones/v0.6/README.md`](milestones/v0.6/README.md) — shared-JIT-memory/stateless-MAS milestone, including deterministic capability discovery and the later deterministic-first, bounded pgvector `SEMANTIC_CANDIDATE` recovery route.
+
+## v0.6 validation record
+
+- [`milestones/v0.6/experiments/V06_CONVERSATION_CONTINUITY_RESULT_2026-08-24.md`](milestones/v0.6/experiments/V06_CONVERSATION_CONTINUITY_RESULT_2026-08-24.md) — frozen multi-turn, fresh-process validation of immediate conversational continuity plus older cross-conversation JIT recall, including failures, causal fixes, and CI gates.
 
 ## v0.5 experiment record
 
