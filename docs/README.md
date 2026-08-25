@@ -7,7 +7,7 @@ This directory contains the current architecture, research milestones, historica
 These documents define the forward architecture beginning with v0.7:
 
 - [`architecture/COGNITIVE_ARCHITECTURE.md`](architecture/COGNITIVE_ARCHITECTURE.md) — authoritative target architecture: persistent cognitive system, resource-aware Attention Fabric, perception/salience, retention, capabilities, disposable workers, session-independent interaction continuity, and system-owned continuity.
-- [`architecture/INTERACTION_CONTINUITY.md`](architecture/INTERACTION_CONTINUITY.md) — conversations/sessions/devices are provenance metadata rather than cognitive boundaries; defines natural topic resumption and its future benchmark.
+- [`architecture/INTERACTION_CONTINUITY.md`](architecture/INTERACTION_CONTINUITY.md) — conversations/sessions/devices are provenance metadata rather than cognitive boundaries; defines natural topic resumption and binds the future design to the accepted v0.6 fresh-process continuity baseline.
 - [`architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](architecture/ARCHITECTURAL_PIVOT_2026-08-24.md) — decision record explaining the move away from a privileged Primary Agent, permanent agent hierarchy, rigid conversation-scoped cognition, and unconditional persistence of raw external input.
 - [`ROADMAP.md`](ROADMAP.md) — milestone path from the accepted v0.5/v0.6 baselines through the first complete attention-centric v1.0 architecture.
 
@@ -22,18 +22,22 @@ Long-lived mechanisms that remain applicable:
 
 These memory documents predate the attention-centric pivot. Where terminology conflicts, `COGNITIVE_ARCHITECTURE.md` and the roadmap define the current system-level architecture.
 
-## Historical architecture
+## Historical architecture and divergent v0.6 work
 
 - [`history/PRIMARY_AGENT_SPEC_SHEET_V06.md`](history/PRIMARY_AGENT_SPEC_SHEET_V06.md) — archived summary of the superseded v0.6 Primary-Agent design, retained so the experimental path is not erased. The complete original remains available in Git history.
 - [`milestones/v0.6/README.md`](milestones/v0.6/README.md) — accepted v0.6 experimental result. Its stateless-worker/JIT-Memory findings and useful conversational behavior remain regression baselines; its Primary/specialist hierarchy is historical.
+- [`milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md`](milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md) — comparison of the divergent `v0.6-capability-registry` branch against the active v0.7 architecture. It records which continuity tests/mechanisms must survive, which capability-registry ideas should be adapted, and which Primary-Agent/semantic-vector work should remain historical or deferred.
 
 Historical documents describe what was built or believed at a particular milestone. They do not override current architecture documents.
 
+The `v0.6-capability-registry` branch is intentionally not merged wholesale into v0.7. It contains valuable behavioral evidence and reusable mechanisms, but also superseded Primary-Agent orchestration, conflicting historical documentation, and semantic-memory experiments that belong to later evidence-gated work.
+
 ## Active milestone
 
-- [`milestones/v0.7/README.md`](milestones/v0.7/README.md) — v0.7 scope and implementation sequence for the durable resource-aware JIT Attention Fabric.
+- [`milestones/v0.7/README.md`](milestones/v0.7/README.md) — v0.7 scope and implementation sequence for the durable resource-aware JIT Attention Fabric, including the planned adaptation of deterministic capability discovery and the future continuity-regression migration gate.
 - [`milestones/v0.7/JIT_ATTENTION_DESIGN.md`](milestones/v0.7/JIT_ATTENTION_DESIGN.md) — deterministic scheduler invariants, current implementation boundary, and planned resource/lane generalization.
 - [`milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md`](milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md) — distinction between attention priority and safe concurrent hardware-resource admission.
+- [`milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md`](milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md) — migration policy for the divergent v0.6 continuity/capability work.
 
 ## Accepted milestones
 
