@@ -153,8 +153,8 @@ epoch; this increment does not invent leases, heartbeats, completion release,
 or effect execution before Increment F's worker contract exists.
 
 The database-independent Increment E suite passes locally (`10 passed, 3
-deselected`). PostgreSQL verification remains assigned to GitHub Actions before
-this increment is treated as remotely verified.
+deselected`). GitHub Actions run #103 verified the complete Increment E head
+with PostgreSQL 16: `136 passed, 4 skipped in 13.73s`.
 
 ## Attention and resource admission are separate
 
@@ -264,7 +264,7 @@ Tests:
 
 ### Increment E — contention-driven interruption semantics
 
-**Status:** implemented locally; complete PostgreSQL CI verification pending.
+**Status:** implemented and verified in CI.
 
 Generalize preemption from one active task to multiple concurrent assignments.
 
