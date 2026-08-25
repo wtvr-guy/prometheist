@@ -6,10 +6,14 @@ v0.7 is the first milestone after the 2026-08-24 architectural pivot from a priv
 
 The accepted v0.6 result remains important: multiple fresh stateless LLM calls can participate in one continuous system through shared JIT Memory and durable system state. v0.7 generalizes that result by moving executive control out of any agent and into deterministic persistent attention state.
 
+The post-pivot branch comparison is recorded in [`V06_INTEGRATION_INVENTORY_2026-08-25.md`](V06_INTEGRATION_INVENTORY_2026-08-25.md). That inventory is authoritative for what should be preserved, adapted, or left historical from the divergent `v0.6-capability-registry` branch. In particular, do not merge that branch wholesale into v0.7: preserve its behavioral evidence, adapt reusable mechanisms such as deterministic capability discovery, and leave Primary-Agent orchestration and premature semantic/vector dependencies historical until their roadmap milestones justify them.
+
 See:
 
 - [`../../architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](../../architecture/ARCHITECTURAL_PIVOT_2026-08-24.md)
 - [`../../architecture/COGNITIVE_ARCHITECTURE.md`](../../architecture/COGNITIVE_ARCHITECTURE.md)
+- [`../../architecture/INTERACTION_CONTINUITY.md`](../../architecture/INTERACTION_CONTINUITY.md)
+- [`V06_INTEGRATION_INVENTORY_2026-08-25.md`](V06_INTEGRATION_INVENTORY_2026-08-25.md)
 - [`JIT_ATTENTION_DESIGN.md`](JIT_ATTENTION_DESIGN.md)
 - [`RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md`](RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md)
 
@@ -195,6 +199,8 @@ The worker may invoke a model or another capability, return a structured result,
 
 The scheduler/fabric—not the worker—decides what work exists and what receives attention.
 
+Once this contract exists, adapt the deterministic v0.6 Capability Registry into task/worker-neutral terminology rather than recreating capability discovery from scratch. Preserve bounded deterministic matching, canonical-before-supplemental discovery, no-match abstention, progressive disclosure, and auditable selection. Do not preserve `CapabilityKind.AGENT` or `requesting_agent` as required architectural concepts.
+
 Tests:
 
 - worker can be destroyed after assignment but before completion;
@@ -212,7 +218,7 @@ A minimal transition path may use stages such as:
 
 ```text
 FORM_TASK
-CLASSIFY / INTERPRET
+INTERPRET / RESOLVE_REFERENCES
 REQUEST_CAPABILITY
 WAIT_FOR_RESULT
 RESPOND
@@ -220,6 +226,8 @@ PERSIST_RESULT
 ```
 
 Exact stages should be introduced only as required by measured workflows.
+
+The v0.6 `REFERENTIAL_CONTINUITY_REQUIRES_MEMORY_V1` behavior should be migrated here by moving deterministic unresolved-reference detection out of `primary_agent.py` and into reusable interaction/perception policy. The behavior survives; Primary-Agent ownership does not.
 
 The existing Primary Agent may remain temporarily as a compatibility CLI path while the new execution path is built and tested, but it should cease to be the architectural executive.
 
@@ -241,6 +249,20 @@ Acceptance scenario:
 
 A deterministic fake-resource/fake-worker path should establish orchestration invariants first. A real development-machine acceptance path should then verify the actual PostgreSQL/Ollama/hardware stack separately.
 
+### Post-worker continuity migration gate
+
+Before Primary-Agent compatibility code is removed, rewrite the frozen v0.6 four-turn continuity scenario against the new task/worker path. Preserve these acceptance properties:
+
+- one fresh external process/worker context per turn;
+- recent and older cross-session evidence needed in the same response;
+- distractor history;
+- exact required source-event provenance;
+- polarity-sensitive answer validation;
+- causal-source fidelity;
+- opaque identifier fidelity.
+
+The new path must reproduce or improve the accepted v0.6 behavior without using a conversation ID as the user's semantic memory namespace.
+
 ## Verification policy
 
 v0.7 uses two complementary forms of evidence.
@@ -257,7 +279,7 @@ That acceptance should use the real local stack where applicable, including Post
 
 Optional database extensions required by specific experimental suites should be installed so those suites do not remain skipped. Their presence does not automatically make those mechanisms architectural dependencies.
 
-In particular, pgvector is not a v0.7 JIT Attention dependency. Vector-backed memory experiments remain separately gated by measured memory failures and their own milestone evidence.
+In particular, pgvector is not a v0.7 JIT Attention dependency. Vector-backed memory experiments on the divergent v0.6 branch remain separately gated by measured memory failures and the v0.10 milestone; do not import them merely because the code already exists.
 
 ## Explicit non-goals for v0.7
 
@@ -290,6 +312,7 @@ v0.7 closes only when all of the following are demonstrated:
 - abandoned work is safely recoverable;
 - checkpointed work resumes with fresh worker/model processes;
 - at least one end-to-end workflow executes without requiring a privileged Primary Agent;
+- the v0.6 continuity behavioral baseline is reproduced or improved on the replacement path before compatibility orchestration is retired;
 - deterministic CI and real development-machine resource-sensitive acceptance both pass for the functionality they are intended to verify;
 - the v0.5/v0.6 regression baselines remain green unless a separately documented reason justifies a change.
 
