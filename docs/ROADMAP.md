@@ -46,11 +46,17 @@ Preserve or generalize tests for cross-turn/cross-session recall, corrections, t
 
 Primary question: can Prometheist deterministically allocate durable work across bounded concurrent execution resources, survive destruction of every worker process, and resume without any privileged Primary Agent or persistent LLM context?
 
-The first increment establishes the deterministic single-focus scheduler kernel. The next increments generalize it into a resource-aware concurrent Attention Fabric with explicit resource classes/capacities, safe headroom, deterministic task requirements/reservations, scheduling epochs, atomic assignments, contention-driven preemption, service guarantees, `PREEMPTIBLE`/`CHECKPOINT_ONLY`/`ATOMIC` interruption semantics, dependencies, resumable stateless workers, and process-kill/restart acceptance.
+The first increment establishes the deterministic single-focus scheduler kernel. The next increments generalize it into a resource-aware concurrent Attention Fabric with explicit resource classes/capacities, safe headroom, deterministic task requirements/reservations, scheduling epochs, atomic assignments, contention-driven preemption, authoritative resource-observation snapshots, service guarantees, `PREEMPTIBLE`/`CHECKPOINT_ONLY`/`ATOMIC` interruption semantics, dependencies, resumable stateless workers, and process-kill/restart acceptance.
 
 > **Attention determines which durable tasks deserve execution. Resource admission determines which compatible subset can safely execute concurrently on the available hardware.**
 
 Higher-priority work should execute concurrently with lower-priority work when safe capacity exists. Preemption occurs only when contention prevents admission and policy permits yielding.
+
+Configured capacity is the initial deterministic baseline, not a claim of live
+availability. Before durable workers execute real work, discovery and monitoring
+must produce persisted, freshness-bounded snapshots that epochs reference as
+authoritative inputs. Identical task state, resource snapshot, and policy must
+still produce the same scheduling decision.
 
 Critical invariant:
 

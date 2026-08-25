@@ -10,6 +10,13 @@ from jit_agent.attention_resources import (
     ResourceReservation,
     resource_reservation_sort_key,
 )
+from jit_agent.attention_preemption import (
+    PendingPreemption,
+    PreemptionEvent,
+    PreemptionEventType,
+    pending_preemption_snapshot_key,
+    pending_preemption_sort_key,
+)
 
 
 ASSIGNMENT_POLICY_VERSION = "v0.7-d-epoch-v1"
@@ -63,6 +70,11 @@ class SchedulingEpoch(BaseModel):
     status: SchedulingEpochStatus
     assignment_ids: list[UUID] = Field(default_factory=list)
     reservations: list[ResourceReservation] = Field(default_factory=list)
+    preemption_policy_version: str | None = None
+    pending_preemptions: list[PendingPreemption] = Field(default_factory=list)
+    preemption_event_ids: list[UUID] = Field(default_factory=list)
+    executed_preemption_ids: list[UUID] = Field(default_factory=list)
+    cancelled_preemption_ids: list[UUID] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def normalize_complete_set(self) -> "SchedulingEpoch":
@@ -75,6 +87,34 @@ class SchedulingEpoch(BaseModel):
             self.reservations,
             key=resource_reservation_sort_key,
         )
+        if self.preemption_policy_version is not None and not (
+            self.preemption_policy_version.strip()
+        ):
+            raise ValueError("preemption_policy_version must not be empty")
+        if self.preemption_policy_version is None and any(
+            (
+                self.pending_preemptions,
+                self.preemption_event_ids,
+                self.executed_preemption_ids,
+                self.cancelled_preemption_ids,
+            )
+        ):
+            raise ValueError("Preemption epoch data requires a policy version")
+        self.pending_preemptions = sorted(
+            self.pending_preemptions,
+            key=pending_preemption_sort_key,
+        )
+        for field_name, identifiers in (
+            ("preemption_event_ids", self.preemption_event_ids),
+            ("executed_preemption_ids", self.executed_preemption_ids),
+            ("cancelled_preemption_ids", self.cancelled_preemption_ids),
+        ):
+            if len(identifiers) != len(set(identifiers)):
+                raise ValueError(f"{field_name} must not contain duplicates")
+        if set(self.executed_preemption_ids).intersection(
+            self.cancelled_preemption_ids
+        ):
+            raise ValueError("An epoch cannot execute and cancel one preemption")
         return self
 
 
@@ -85,6 +125,8 @@ class SchedulingEpochPlan(BaseModel):
     admitted_task_ids: list[UUID] = Field(default_factory=list)
     unadmitted_task_ids: list[UUID] = Field(default_factory=list)
     assignments: list[DurableAssignment] = Field(default_factory=list)
+    pending_preemptions: list[PendingPreemption] = Field(default_factory=list)
+    preemption_events: list[PreemptionEvent] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_complete_plan(self) -> "SchedulingEpochPlan":
@@ -125,6 +167,52 @@ class SchedulingEpochPlan(BaseModel):
                 raise ValueError(
                     "assignment reservation_ids must match its complete reservation set"
                 )
+
+        normalized_pending = sorted(
+            self.pending_preemptions,
+            key=pending_preemption_sort_key,
+        )
+        if [pending_preemption_snapshot_key(value) for value in normalized_pending] != [
+            pending_preemption_snapshot_key(value)
+            for value in self.epoch.pending_preemptions
+        ]:
+            raise ValueError("epoch pending preemptions must match the plan snapshot")
+        event_ids = [event.event_id for event in self.preemption_events]
+        if len(event_ids) != len(set(event_ids)):
+            raise ValueError("preemption_events must not contain duplicate ids")
+        if event_ids != self.epoch.preemption_event_ids:
+            raise ValueError("epoch preemption event ids must match events in order")
+        executed_ids = [
+            event.preemption_id
+            for event in self.preemption_events
+            if event.event_type is PreemptionEventType.EXECUTED
+        ]
+        cancelled_ids = [
+            event.preemption_id
+            for event in self.preemption_events
+            if event.event_type is PreemptionEventType.CANCELLED
+        ]
+        if executed_ids != self.epoch.executed_preemption_ids:
+            raise ValueError("epoch executed preemption ids must match its events")
+        if cancelled_ids != self.epoch.cancelled_preemption_ids:
+            raise ValueError("epoch cancelled preemption ids must match its events")
+
+        pending_targets: set[UUID] = set()
+        pending_victims: set[UUID] = set()
+        for intent in normalized_pending:
+            if intent.target_task_id in pending_targets:
+                raise ValueError("A task may be the target of only one pending preemption")
+            if pending_victims.intersection(intent.victim_task_ids):
+                raise ValueError("A victim may belong to only one pending preemption")
+            pending_targets.add(intent.target_task_id)
+            pending_victims.update(intent.victim_task_ids)
+        if pending_targets.intersection(pending_victims):
+            raise ValueError("Pending targets and victims must be disjoint")
+        if not pending_targets.issubset(unadmitted):
+            raise ValueError("Pending preemption targets must remain unadmitted")
+        if not pending_victims.issubset(admitted):
+            raise ValueError("Pending preemption victims must remain admitted")
+        self.pending_preemptions = normalized_pending
         return self
 
 
@@ -158,6 +246,11 @@ def deterministic_epoch_id(
     assignment_policy_version: str,
     assignment_ids: list[UUID],
     reservations: list[ResourceReservation],
+    preemption_policy_version: str | None = None,
+    pending_preemptions: list[PendingPreemption] | None = None,
+    preemption_event_ids: list[UUID] | None = None,
+    executed_preemption_ids: list[UUID] | None = None,
+    cancelled_preemption_ids: list[UUID] | None = None,
 ) -> UUID:
     """Return the stable identity of one complete scheduling decision."""
 
@@ -171,15 +264,36 @@ def deterministic_epoch_id(
         f"{item.reservation_id}:{item.units}"
         for item in sorted(reservations, key=resource_reservation_sort_key)
     )
-    canonical = "|".join(
-        [
-            str(sequence),
-            previous,
-            str(scheduler_cycle),
-            admission_policy_version,
-            assignment_policy_version,
-            assignment_key,
-            reservation_key,
-        ]
+    canonical_parts = [
+        str(sequence),
+        previous,
+        str(scheduler_cycle),
+        admission_policy_version,
+        assignment_policy_version,
+        assignment_key,
+        reservation_key,
+    ]
+    pending = sorted(
+        pending_preemptions or [],
+        key=pending_preemption_sort_key,
     )
+    event_ids = preemption_event_ids or []
+    executed_ids = executed_preemption_ids or []
+    cancelled_ids = cancelled_preemption_ids or []
+    if preemption_policy_version is None:
+        if pending or event_ids or executed_ids or cancelled_ids:
+            raise ValueError("Preemption epoch data requires a policy version")
+    else:
+        if not preemption_policy_version.strip():
+            raise ValueError("preemption_policy_version must not be empty")
+        canonical_parts.extend(
+            [
+                preemption_policy_version,
+                ",".join(pending_preemption_snapshot_key(value) for value in pending),
+                ",".join(str(value) for value in event_ids),
+                ",".join(str(value) for value in executed_ids),
+                ",".join(str(value) for value in cancelled_ids),
+            ]
+        )
+    canonical = "|".join(canonical_parts)
     return uuid5(_EPOCH_NAMESPACE, canonical)

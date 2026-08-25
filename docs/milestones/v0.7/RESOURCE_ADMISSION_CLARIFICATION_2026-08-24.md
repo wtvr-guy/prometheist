@@ -205,7 +205,15 @@ Increment B remains valid and is not reverted. It established explicit durable r
 
 Increments C and D now implement **resource reservations, deterministic admission semantics, and atomically published assignment epochs** without treating fixed durable lanes as the central capacity abstraction.
 
-The next scheduling increment is contention-driven preemption. It must retain this clarification's rule that priority alone is insufficient: committed work yields only when a higher-priority task is blocked on relevant capacity and deterministic interruption policy permits the necessary release.
+Increment E now implements contention-driven preemption while retaining this
+clarification's rule that priority alone is insufficient: committed work yields
+only when a higher-priority task is blocked on relevant capacity and
+deterministic interruption policy permits the minimum selected release.
+
+The current capacity input remains durable configuration rather than live host
+monitoring. The pre-worker resource-observation gate must persist any runtime
+measurement that changes admission and make the consuming epoch reference that
+snapshot explicitly.
 
 Any discrete lanes introduced later should be derived from resource contracts where discrete slots are actually appropriate.
 

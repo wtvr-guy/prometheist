@@ -211,6 +211,11 @@ CREATE TABLE IF NOT EXISTS attention_scheduler_state (
     epoch_sequence BIGINT NOT NULL DEFAULT 0 CHECK (epoch_sequence >= 0),
     current_epoch_id UUID,
     assignment_policy_version TEXT NOT NULL DEFAULT 'v0.7-d-epoch-v1',
+    preemption_policy_version TEXT NOT NULL DEFAULT 'v0.7-e-contention-v1',
+    preemption_state_revision BIGINT NOT NULL DEFAULT 0
+        CHECK (preemption_state_revision >= 0),
+    pending_preemptions JSONB NOT NULL DEFAULT '[]'::jsonb
+        CHECK (jsonb_typeof(pending_preemptions) = 'array'),
     CONSTRAINT attention_scheduler_epoch_pointer_check CHECK (
         (epoch_sequence = 0 AND current_epoch_id IS NULL)
         OR (epoch_sequence >= 1 AND current_epoch_id IS NOT NULL)
@@ -234,6 +239,18 @@ ALTER TABLE attention_scheduler_state
 ALTER TABLE attention_scheduler_state
     ADD COLUMN IF NOT EXISTS assignment_policy_version TEXT NOT NULL
         DEFAULT 'v0.7-d-epoch-v1';
+
+ALTER TABLE attention_scheduler_state
+    ADD COLUMN IF NOT EXISTS preemption_policy_version TEXT NOT NULL
+        DEFAULT 'v0.7-e-contention-v1';
+
+ALTER TABLE attention_scheduler_state
+    ADD COLUMN IF NOT EXISTS preemption_state_revision BIGINT NOT NULL
+        DEFAULT 0;
+
+ALTER TABLE attention_scheduler_state
+    ADD COLUMN IF NOT EXISTS pending_preemptions JSONB NOT NULL
+        DEFAULT '[]'::jsonb;
 
 DO $$
 BEGIN
@@ -284,10 +301,38 @@ CREATE TABLE IF NOT EXISTS attention_scheduling_epochs (
         CHECK (jsonb_typeof(assignment_ids) = 'array'),
     reservations JSONB NOT NULL DEFAULT '[]'::jsonb
         CHECK (jsonb_typeof(reservations) = 'array'),
+    preemption_policy_version TEXT,
+    pending_preemptions JSONB NOT NULL DEFAULT '[]'::jsonb
+        CHECK (jsonb_typeof(pending_preemptions) = 'array'),
+    preemption_event_ids JSONB NOT NULL DEFAULT '[]'::jsonb
+        CHECK (jsonb_typeof(preemption_event_ids) = 'array'),
+    executed_preemption_ids JSONB NOT NULL DEFAULT '[]'::jsonb
+        CHECK (jsonb_typeof(executed_preemption_ids) = 'array'),
+    cancelled_preemption_ids JSONB NOT NULL DEFAULT '[]'::jsonb
+        CHECK (jsonb_typeof(cancelled_preemption_ids) = 'array'),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (scheduler_key, epoch_id),
     UNIQUE (scheduler_key, epoch_sequence)
 );
+
+ALTER TABLE attention_scheduling_epochs
+    ADD COLUMN IF NOT EXISTS preemption_policy_version TEXT;
+
+ALTER TABLE attention_scheduling_epochs
+    ADD COLUMN IF NOT EXISTS pending_preemptions JSONB NOT NULL
+        DEFAULT '[]'::jsonb;
+
+ALTER TABLE attention_scheduling_epochs
+    ADD COLUMN IF NOT EXISTS preemption_event_ids JSONB NOT NULL
+        DEFAULT '[]'::jsonb;
+
+ALTER TABLE attention_scheduling_epochs
+    ADD COLUMN IF NOT EXISTS executed_preemption_ids JSONB NOT NULL
+        DEFAULT '[]'::jsonb;
+
+ALTER TABLE attention_scheduling_epochs
+    ADD COLUMN IF NOT EXISTS cancelled_preemption_ids JSONB NOT NULL
+        DEFAULT '[]'::jsonb;
 
 CREATE INDEX IF NOT EXISTS idx_attention_scheduling_epochs_current
     ON attention_scheduling_epochs (scheduler_key, epoch_sequence DESC);
@@ -319,6 +364,37 @@ BEGIN
     END IF;
 END
 $$;
+
+-- Preemption explanations are append-only even though pending intent state is
+-- replaceable. This preserves why a victim was selected, checkpointed,
+-- executed, or spared after conditions changed.
+CREATE TABLE IF NOT EXISTS attention_preemption_events (
+    scheduler_key TEXT NOT NULL
+        REFERENCES attention_scheduler_state(scheduler_key) ON DELETE CASCADE,
+    event_id UUID NOT NULL,
+    preemption_id UUID NOT NULL,
+    event_type TEXT NOT NULL CHECK (
+        event_type IN (
+            'REQUESTED',
+            'CHECKPOINT_ACKNOWLEDGED',
+            'EXECUTED',
+            'CANCELLED'
+        )
+    ),
+    scheduler_cycle BIGINT NOT NULL CHECK (scheduler_cycle >= 0),
+    epoch_sequence BIGINT NOT NULL CHECK (epoch_sequence >= 0),
+    target_task_id UUID NOT NULL REFERENCES attention_tasks(task_id),
+    victim_task_ids JSONB NOT NULL CHECK (jsonb_typeof(victim_task_ids) = 'array'),
+    victim_assignment_ids JSONB NOT NULL
+        CHECK (jsonb_typeof(victim_assignment_ids) = 'array'),
+    checkpoint_task_id UUID REFERENCES attention_tasks(task_id),
+    reason TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (scheduler_key, event_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_attention_preemption_events_intent
+    ON attention_preemption_events (scheduler_key, preemption_id, created_at);
 
 CREATE TABLE IF NOT EXISTS attention_resource_reservations (
     reservation_id UUID PRIMARY KEY,

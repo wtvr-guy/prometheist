@@ -314,7 +314,7 @@ Increment D persists:
 - append-only immutable epoch and assignment rows;
 - the authoritative current-epoch pointer and current reservation set.
 
-Still-future worker/preemption concepts include optional lane/slot identifiers for discrete resource contracts, assignment claims/leases, pending checkpoint preemptions, worker heartbeat metadata, and idempotency keys for externally visible capability effects.
+Still-future worker concepts include optional lane/slot identifiers for discrete resource contracts, assignment claims/leases, worker heartbeat metadata, and idempotency keys for externally visible capability effects. Increment E now persists checkpoint-gated preemption intents separately from that worker protocol.
 
 Schema changes are introduced incrementally and must remain idempotent for existing local v0.7 databases.
 
@@ -414,10 +414,18 @@ Already implemented in the v0.7 branch:
 - idempotent epoch persistence and exact restart reconstruction;
 - rollback verification that partial epoch persistence exposes no authoritative state;
 - validation of complete epoch, assignment, revision, policy, and reservation consistency.
+- policy-versioned contention preemption only after concurrent admission fails;
+- exact minimum-cardinality victim selection over deficient resource classes;
+- deterministic victim ordering and same-priority/`ATOMIC` stability;
+- durable checkpoint-gated replacement intents with no partial release;
+- target-capacity protection while selected checkpoint victims yield;
+- append-only preemption lifecycle evidence and immutable epoch references;
+- optimistic revision checks for concurrent checkpoint progress;
+- restart, idempotency, and transaction-rollback coverage for preemption state.
 
 Not yet implemented:
 
-- contention-driven multi-task preemption;
+- authoritative live resource discovery/pressure snapshots referenced by epochs;
 - generic durable worker protocol;
 - replacement of the live Primary-Agent orchestration path.
 

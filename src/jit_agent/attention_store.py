@@ -30,6 +30,11 @@ from jit_agent.attention_assignments import (
     SchedulingEpoch,
     SchedulingEpochStatus,
 )
+from jit_agent.attention_preemption import (
+    PendingPreemption,
+    PreemptionEvent,
+    PreemptionEventType,
+)
 
 
 DEFAULT_SCHEDULER_KEY = "default"
@@ -58,6 +63,8 @@ def save_scheduler(
 
     snapshot = scheduler.snapshot()
     pending = scheduler.pending_scheduling_epoch()
+    preemption_events = scheduler.preemption_events()
+    preemption_base_revision = scheduler._preemption_persistence_revision()
     if pending is None:
         epoch = snapshot.current_epoch
         assignments = snapshot.assignments
@@ -65,6 +72,9 @@ def save_scheduler(
         epoch_sequence = snapshot.epoch_sequence
         admitted_task_ids = snapshot.admitted_task_ids
         reservations = snapshot.resource_reservations
+        pending_preemptions = snapshot.pending_preemptions
+        preemption_policy_version = snapshot.preemption_policy_version
+        preemption_state_revision = snapshot.preemption_state_revision
     else:
         epoch = pending.epoch.model_copy(
             update={"status": SchedulingEpochStatus.COMMITTED},
@@ -75,6 +85,17 @@ def save_scheduler(
         epoch_sequence = epoch.sequence
         admitted_task_ids = pending.admitted_task_ids
         reservations = epoch.reservations
+        pending_preemptions = pending.pending_preemptions
+        preemption_policy_version = (
+            epoch.preemption_policy_version or snapshot.preemption_policy_version
+        )
+        preemption_state_revision = snapshot.preemption_state_revision + 1
+        known_event_ids = {event.event_id for event in preemption_events}
+        preemption_events.extend(
+            event.model_copy(deep=True)
+            for event in pending.preemption_events
+            if event.event_id not in known_event_ids
+        )
         publication_snapshot = SchedulerSnapshot(
             cycle=state_cycle,
             active_task_id=snapshot.active_task_id,
@@ -86,6 +107,9 @@ def save_scheduler(
             resource_reservations=reservations,
             epoch_sequence=epoch_sequence,
             assignment_policy_version=epoch.assignment_policy_version,
+            preemption_policy_version=preemption_policy_version,
+            preemption_state_revision=preemption_state_revision,
+            pending_preemptions=pending_preemptions,
             current_epoch=epoch,
             assignments=assignments,
         )
@@ -106,6 +130,9 @@ def save_scheduler(
                     else None
                 ),
                 target_epoch=epoch if pending is not None else None,
+                preemption_base_revision=preemption_base_revision,
+                target_preemption_revision=preemption_state_revision,
+                target_pending_preemptions=pending_preemptions,
             )
             for resource in snapshot.execution_resources:
                 _upsert_execution_resource(cur, resource)
@@ -153,9 +180,13 @@ def save_scheduler(
                     scheduler_key, cycle, active_task_id,
                     pending_preemption_task_id, admission_policy_version,
                     admitted_task_ids, epoch_sequence, current_epoch_id,
-                    assignment_policy_version
+                    assignment_policy_version, preemption_policy_version,
+                    preemption_state_revision, pending_preemptions
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (
+                    %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s
+                )
                 ON CONFLICT (scheduler_key) DO UPDATE SET
                     cycle = EXCLUDED.cycle,
                     active_task_id = EXCLUDED.active_task_id,
@@ -165,6 +196,9 @@ def save_scheduler(
                     epoch_sequence = EXCLUDED.epoch_sequence,
                     current_epoch_id = EXCLUDED.current_epoch_id,
                     assignment_policy_version = EXCLUDED.assignment_policy_version,
+                    preemption_policy_version = EXCLUDED.preemption_policy_version,
+                    preemption_state_revision = EXCLUDED.preemption_state_revision,
+                    pending_preemptions = EXCLUDED.pending_preemptions,
                     updated_at = now()
                 """,
                 (
@@ -181,8 +215,22 @@ def save_scheduler(
                     epoch.assignment_policy_version
                     if epoch is not None
                     else snapshot.assignment_policy_version,
+                    preemption_policy_version,
+                    preemption_state_revision,
+                    Json(
+                        [
+                            intent.model_dump(mode="json")
+                            for intent in pending_preemptions
+                        ]
+                    ),
                 ),
             )
+            for event in preemption_events:
+                _insert_immutable_preemption_event(
+                    cur,
+                    scheduler_key=scheduler_key,
+                    event=event,
+                )
             _replace_resource_reservations(
                 cur,
                 scheduler_key=scheduler_key,
@@ -195,6 +243,7 @@ def save_scheduler(
 
     if pending is not None:
         scheduler._commit_pending_epoch(pending.epoch.epoch_id)
+    scheduler._mark_preemption_state_persisted(preemption_state_revision)
 
 
 def load_scheduler(
@@ -210,7 +259,9 @@ def load_scheduler(
             SELECT
                 cycle, active_task_id, pending_preemption_task_id,
                 admission_policy_version, admitted_task_ids,
-                epoch_sequence, current_epoch_id, assignment_policy_version
+                epoch_sequence, current_epoch_id, assignment_policy_version,
+                preemption_policy_version, preemption_state_revision,
+                pending_preemptions
             FROM attention_scheduler_state
             WHERE scheduler_key = %s
             """,
@@ -270,7 +321,9 @@ def load_scheduler(
                     epoch_id, epoch_sequence, previous_epoch_id,
                     scheduler_cycle, admission_policy_version,
                     assignment_policy_version, status, assignment_ids,
-                    reservations
+                    reservations, preemption_policy_version,
+                    pending_preemptions, preemption_event_ids,
+                    executed_preemption_ids, cancelled_preemption_ids
                 FROM attention_scheduling_epochs
                 WHERE scheduler_key = %s AND epoch_id = %s
                 """,
@@ -329,6 +382,12 @@ def load_scheduler(
             resource_reservations=reservations,
             epoch_sequence=int(state["epoch_sequence"]),
             assignment_policy_version=state["assignment_policy_version"],
+            preemption_policy_version=state["preemption_policy_version"],
+            preemption_state_revision=int(state["preemption_state_revision"]),
+            pending_preemptions=[
+                PendingPreemption.model_validate(value)
+                for value in (state["pending_preemptions"] or [])
+            ],
             current_epoch=current_epoch,
             assignments=assignments,
         )
@@ -362,6 +421,27 @@ def load_transition_count(conn: psycopg.Connection, task_id: UUID | None = None)
         return int(cur.fetchone()[0])
 
 
+def load_preemption_event_count(
+    conn: psycopg.Connection,
+    preemption_id: UUID | None = None,
+) -> int:
+    """Return durable preemption-history size for persistence verification."""
+
+    with conn.cursor() as cur:
+        if preemption_id is None:
+            cur.execute("SELECT count(*) FROM attention_preemption_events")
+        else:
+            cur.execute(
+                """
+                SELECT count(*)
+                FROM attention_preemption_events
+                WHERE preemption_id = %s
+                """,
+                (preemption_id,),
+            )
+        return int(cur.fetchone()[0])
+
+
 def _lock_scheduler_generation(
     cur: psycopg.Cursor[Any],
     *,
@@ -369,12 +449,20 @@ def _lock_scheduler_generation(
     snapshot_epoch_sequence: int,
     snapshot_epoch_id: UUID | None,
     target_epoch: SchedulingEpoch | None,
+    preemption_base_revision: int,
+    target_preemption_revision: int,
+    target_pending_preemptions: list[PendingPreemption],
 ) -> None:
     """Reject stale writers before they can move the current-epoch pointer."""
 
+    if target_preemption_revision < preemption_base_revision:
+        raise ValueError("Target preemption revision cannot move backward")
+
     cur.execute(
         """
-        SELECT epoch_sequence, current_epoch_id
+        SELECT
+            epoch_sequence, current_epoch_id,
+            preemption_state_revision, pending_preemptions
         FROM attention_scheduler_state
         WHERE scheduler_key = %s
         FOR UPDATE
@@ -384,7 +472,7 @@ def _lock_scheduler_generation(
     row = cur.fetchone()
     expected = (snapshot_epoch_sequence, snapshot_epoch_id)
     if row is None:
-        if expected != (0, None):
+        if expected != (0, None) or preemption_base_revision != 0:
             raise RuntimeError(
                 "Cannot persist an existing epoch into missing scheduler state"
             )
@@ -397,6 +485,21 @@ def _lock_scheduler_generation(
         allowed.add((target_epoch.sequence, target_epoch.epoch_id))
     if actual not in allowed:
         raise RuntimeError("Stale scheduler generation cannot overwrite current epoch")
+
+    actual_preemption_revision = int(state["preemption_state_revision"])
+    if actual_preemption_revision == preemption_base_revision:
+        return
+    if actual_preemption_revision != target_preemption_revision:
+        raise RuntimeError("Stale preemption state cannot overwrite checkpoint progress")
+    stored_pending = [
+        PendingPreemption.model_validate(value).model_dump(mode="json")
+        for value in (state["pending_preemptions"] or [])
+    ]
+    target_pending = [
+        intent.model_dump(mode="json") for intent in target_pending_preemptions
+    ]
+    if stored_pending != target_pending:
+        raise RuntimeError("Conflicting preemption state at the same revision")
 
 
 def _insert_immutable_assignment(
@@ -455,9 +558,16 @@ def _insert_immutable_epoch(
         INSERT INTO attention_scheduling_epochs (
             scheduler_key, epoch_id, epoch_sequence, previous_epoch_id,
             scheduler_cycle, admission_policy_version,
-            assignment_policy_version, status, assignment_ids, reservations
+            assignment_policy_version, status, assignment_ids, reservations,
+            preemption_policy_version, pending_preemptions,
+            preemption_event_ids, executed_preemption_ids,
+            cancelled_preemption_ids
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (
+            %s, %s, %s, %s, %s,
+            %s, %s, %s, %s, %s,
+            %s, %s, %s, %s, %s
+        )
         ON CONFLICT DO NOTHING
         """,
         (
@@ -476,6 +586,16 @@ def _insert_immutable_epoch(
                     for reservation in epoch.reservations
                 ]
             ),
+            epoch.preemption_policy_version,
+            Json(
+                [
+                    intent.model_dump(mode="json")
+                    for intent in epoch.pending_preemptions
+                ]
+            ),
+            Json([str(value) for value in epoch.preemption_event_ids]),
+            Json([str(value) for value in epoch.executed_preemption_ids]),
+            Json([str(value) for value in epoch.cancelled_preemption_ids]),
         ),
     )
     cur.execute(
@@ -483,7 +603,10 @@ def _insert_immutable_epoch(
         SELECT
             epoch_id, epoch_sequence, previous_epoch_id,
             scheduler_cycle, admission_policy_version,
-            assignment_policy_version, status, assignment_ids, reservations
+            assignment_policy_version, status, assignment_ids, reservations,
+            preemption_policy_version, pending_preemptions,
+            preemption_event_ids, executed_preemption_ids,
+            cancelled_preemption_ids
         FROM attention_scheduling_epochs
         WHERE scheduler_key = %s AND epoch_sequence = %s
         """,
@@ -495,6 +618,56 @@ def _insert_immutable_epoch(
     stored = _row_to_scheduling_epoch(_cursor_row_to_dict(cur, row))
     if stored.model_dump(mode="json") != epoch.model_dump(mode="json"):
         raise RuntimeError("Conflicting immutable scheduling epoch")
+
+
+def _insert_immutable_preemption_event(
+    cur: psycopg.Cursor[Any],
+    *,
+    scheduler_key: str,
+    event: PreemptionEvent,
+) -> None:
+    cur.execute(
+        """
+        INSERT INTO attention_preemption_events (
+            scheduler_key, event_id, preemption_id, event_type,
+            scheduler_cycle, epoch_sequence, target_task_id,
+            victim_task_ids, victim_assignment_ids,
+            checkpoint_task_id, reason
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT DO NOTHING
+        """,
+        (
+            scheduler_key,
+            event.event_id,
+            event.preemption_id,
+            event.event_type.value,
+            event.scheduler_cycle,
+            event.epoch_sequence,
+            event.target_task_id,
+            Json([str(value) for value in event.victim_task_ids]),
+            Json([str(value) for value in event.victim_assignment_ids]),
+            event.checkpoint_task_id,
+            event.reason,
+        ),
+    )
+    cur.execute(
+        """
+        SELECT
+            event_id, preemption_id, event_type, scheduler_cycle,
+            epoch_sequence, target_task_id, victim_task_ids,
+            victim_assignment_ids, checkpoint_task_id, reason
+        FROM attention_preemption_events
+        WHERE scheduler_key = %s AND event_id = %s
+        """,
+        (scheduler_key, event.event_id),
+    )
+    row = cur.fetchone()
+    if row is None:
+        raise RuntimeError("Preemption event insert did not produce a row")
+    stored = _row_to_preemption_event(_cursor_row_to_dict(cur, row))
+    if stored.model_dump(mode="json") != event.model_dump(mode="json"):
+        raise RuntimeError("Conflicting immutable preemption event")
 
 
 def _upsert_execution_resource(
@@ -694,6 +867,29 @@ def _row_to_scheduling_epoch(row: dict[str, Any]) -> SchedulingEpoch:
             ResourceReservation.model_validate(value)
             for value in (row["reservations"] or [])
         ],
+        preemption_policy_version=row["preemption_policy_version"],
+        pending_preemptions=[
+            PendingPreemption.model_validate(value)
+            for value in (row["pending_preemptions"] or [])
+        ],
+        preemption_event_ids=list(row["preemption_event_ids"] or []),
+        executed_preemption_ids=list(row["executed_preemption_ids"] or []),
+        cancelled_preemption_ids=list(row["cancelled_preemption_ids"] or []),
+    )
+
+
+def _row_to_preemption_event(row: dict[str, Any]) -> PreemptionEvent:
+    return PreemptionEvent(
+        event_id=row["event_id"],
+        preemption_id=row["preemption_id"],
+        event_type=PreemptionEventType(row["event_type"]),
+        scheduler_cycle=int(row["scheduler_cycle"]),
+        epoch_sequence=int(row["epoch_sequence"]),
+        target_task_id=row["target_task_id"],
+        victim_task_ids=list(row["victim_task_ids"] or []),
+        victim_assignment_ids=list(row["victim_assignment_ids"] or []),
+        checkpoint_task_id=row["checkpoint_task_id"],
+        reason=row["reason"],
     )
 
 

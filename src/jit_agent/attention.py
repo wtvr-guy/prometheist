@@ -24,6 +24,18 @@ from jit_agent.attention_assignments import (
     deterministic_assignment_id,
     deterministic_epoch_id,
 )
+from jit_agent.attention_preemption import (
+    PREEMPTION_POLICY_VERSION,
+    PendingPreemption,
+    PreemptionCandidate,
+    PreemptionEvent,
+    PreemptionEventType,
+    deterministic_preemption_id,
+    make_preemption_event,
+    make_selection_preemption_event,
+    pending_preemption_sort_key,
+    select_minimum_victims,
+)
 from jit_agent.attention_resources import (
     ExecutionResource,
     ExecutionResourceClass,
@@ -235,6 +247,12 @@ class SchedulerSnapshot(BaseModel):
         default=ASSIGNMENT_POLICY_VERSION,
         min_length=1,
     )
+    preemption_policy_version: str = Field(
+        default=PREEMPTION_POLICY_VERSION,
+        min_length=1,
+    )
+    preemption_state_revision: int = Field(default=0, ge=0)
+    pending_preemptions: list[PendingPreemption] = Field(default_factory=list)
     current_epoch: SchedulingEpoch | None = None
     assignments: list[DurableAssignment] = Field(default_factory=list)
 
@@ -288,11 +306,16 @@ class JITAttentionScheduler:
         self.resources: dict[str, ExecutionResource] = {}
         self.admission_policy_version = RESOURCE_ADMISSION_POLICY_VERSION
         self.assignment_policy_version = ASSIGNMENT_POLICY_VERSION
+        self.preemption_policy_version = PREEMPTION_POLICY_VERSION
+        self.preemption_state_revision = 0
+        self._persisted_preemption_state_revision = 0
         self.admitted_task_ids: list[UUID] = []
         self._resource_reservations: dict[UUID, ResourceReservation] = {}
         self.epoch_sequence = 0
         self.current_epoch: SchedulingEpoch | None = None
         self._assignments: dict[UUID, DurableAssignment] = {}
+        self._pending_preemptions: dict[UUID, PendingPreemption] = {}
+        self._preemption_events: list[PreemptionEvent] = []
         self._pending_epoch_plan: SchedulingEpochPlan | None = None
         self.active_task_id: UUID | None = None
         self.pending_preemption_task_id: UUID | None = None
@@ -335,6 +358,11 @@ class JITAttentionScheduler:
         }
         scheduler.epoch_sequence = snapshot.epoch_sequence
         scheduler.assignment_policy_version = snapshot.assignment_policy_version
+        scheduler.preemption_policy_version = snapshot.preemption_policy_version
+        scheduler.preemption_state_revision = snapshot.preemption_state_revision
+        scheduler._persisted_preemption_state_revision = (
+            snapshot.preemption_state_revision
+        )
         scheduler.current_epoch = (
             snapshot.current_epoch.model_copy(deep=True)
             if snapshot.current_epoch is not None
@@ -346,6 +374,15 @@ class JITAttentionScheduler:
         scheduler._assignments = {
             assignment.assignment_id: assignment.model_copy(deep=True)
             for assignment in snapshot.assignments
+        }
+        preemption_ids = [
+            intent.preemption_id for intent in snapshot.pending_preemptions
+        ]
+        if len(preemption_ids) != len(set(preemption_ids)):
+            raise ValueError("Snapshot contains duplicate pending preemption ids")
+        scheduler._pending_preemptions = {
+            intent.preemption_id: intent.model_copy(deep=True)
+            for intent in snapshot.pending_preemptions
         }
         scheduler.active_task_id = snapshot.active_task_id
         scheduler.pending_preemption_task_id = snapshot.pending_preemption_task_id
@@ -369,6 +406,9 @@ class JITAttentionScheduler:
             resource_reservations=self.resource_reservations(),
             epoch_sequence=self.epoch_sequence,
             assignment_policy_version=self.assignment_policy_version,
+            preemption_policy_version=self.preemption_policy_version,
+            preemption_state_revision=self.preemption_state_revision,
+            pending_preemptions=self.pending_preemptions(),
             current_epoch=(
                 self.current_epoch.model_copy(deep=True)
                 if self.current_epoch is not None
@@ -434,6 +474,75 @@ class JITAttentionScheduler:
             for assignment_id in self.current_epoch.assignment_ids
         ]
 
+    def pending_preemptions(self) -> list[PendingPreemption]:
+        """Return durable checkpoint-gated replacement intents in stable order."""
+
+        return [
+            intent.model_copy(deep=True)
+            for intent in sorted(
+                self._pending_preemptions.values(),
+                key=pending_preemption_sort_key,
+            )
+        ]
+
+    def preemption_events(self) -> list[PreemptionEvent]:
+        """Return append-only preemption events created by this scheduler instance."""
+
+        return [event.model_copy(deep=True) for event in self._preemption_events]
+
+    def checkpoint_pending_preemption(
+        self,
+        victim_task_id: UUID,
+        *,
+        resumable_state: dict[str, Any] | None = None,
+    ) -> PendingPreemption:
+        """Acknowledge one declared safe checkpoint without releasing capacity.
+
+        The current assignment and reservations remain worker-visible. A later
+        scheduling epoch atomically publishes the replacement only after every
+        checkpoint-only victim selected by the intent has acknowledged.
+        """
+
+        matches = [
+            intent
+            for intent in self._pending_preemptions.values()
+            if victim_task_id in intent.checkpoint_victim_task_ids
+        ]
+        if not matches:
+            raise KeyError(victim_task_id)
+        if len(matches) != 1:
+            raise RuntimeError("A checkpoint victim belongs to multiple intents")
+        intent = matches[0]
+        if victim_task_id in intent.checkpointed_victim_task_ids:
+            return intent.model_copy(deep=True)
+
+        self._invalidate_scheduling_plan()
+        if resumable_state is not None:
+            self.tasks[victim_task_id] = self.tasks[victim_task_id].model_copy(
+                update={"resumable_state": dict(resumable_state)},
+                deep=True,
+            )
+        checkpointed = list(intent.checkpointed_victim_task_ids)
+        checkpointed.append(victim_task_id)
+        updated = intent.model_copy(
+            update={"checkpointed_victim_task_ids": checkpointed},
+            deep=True,
+        )
+        self._pending_preemptions[updated.preemption_id] = updated
+        self.preemption_state_revision += 1
+        self._append_preemption_event(
+            make_preemption_event(
+                updated,
+                event_type=PreemptionEventType.CHECKPOINT_ACKNOWLEDGED,
+                scheduler_cycle=self.cycle,
+                epoch_sequence=self.epoch_sequence,
+                checkpoint_task_id=victim_task_id,
+                reason="checkpoint-only victim acknowledged a safe boundary",
+            )
+        )
+        self._validate_snapshot()
+        return updated.model_copy(deep=True)
+
     def pending_scheduling_epoch(self) -> SchedulingEpochPlan | None:
         """Return a copy of the provisional, deliberately invisible epoch plan."""
 
@@ -490,73 +599,302 @@ class JITAttentionScheduler:
                     task_reservations,
                     remaining=remaining,
                 )
-                task = self.tasks[task_id]
                 assignments.append(
-                    DurableAssignment(
-                        assignment_id=deterministic_assignment_id(
-                            task_id,
-                            task_revision=task.revision,
-                            reservations=task_reservations,
-                        ),
-                        task_id=task_id,
-                        task_revision=task.revision,
+                    self._new_assignment(
+                        task_id,
+                        reservations=task_reservations,
                         created_epoch_sequence=next_sequence,
-                        reservation_ids=[
-                            reservation.reservation_id
-                            for reservation in task_reservations
-                        ],
                     )
                 )
                 reservations.extend(task_reservations)
                 admitted.append(task_id)
 
-        preserved_ids = set(admitted)
+        # Only work that was authoritative before this planning pass may be a
+        # victim. A provisional assignment never churns another provisional
+        # assignment in the same deterministic pass.
+        preemptible_task_ids = set(admitted)
+        plan_events: list[PreemptionEvent] = []
+        carried_pending: list[PendingPreemption] = []
+        protected_victim_ids: set[UUID] = set()
+        waiting_target_ids: set[UUID] = set()
+        released_victim_ids: set[UUID] = set()
+
+        def admit_with_allocation(
+            task_id: UUID,
+            allocation: tuple[list[ResourceReservation], dict[str, int]],
+        ) -> None:
+            nonlocal remaining
+            task_reservations, remaining = allocation
+            task_reservations.sort(key=resource_reservation_sort_key)
+            assignments.append(
+                self._new_assignment(
+                    task_id,
+                    reservations=task_reservations,
+                    created_epoch_sequence=next_sequence,
+                )
+            )
+            reservations.extend(task_reservations)
+            admitted.append(task_id)
+
+        def release_selected(victim_task_ids: set[UUID]) -> None:
+            nonlocal assignments, reservations, admitted
+            for reservation in reservations:
+                if reservation.task_id in victim_task_ids:
+                    remaining[reservation.resource_id] += reservation.units
+            assignments = [
+                assignment
+                for assignment in assignments
+                if assignment.task_id not in victim_task_ids
+            ]
+            reservations = [
+                reservation
+                for reservation in reservations
+                if reservation.task_id not in victim_task_ids
+            ]
+            admitted = [
+                task_id for task_id in admitted if task_id not in victim_task_ids
+            ]
+            released_victim_ids.update(victim_task_ids)
+
+        # Stable checkpoint intents are resolved before new victim selection.
+        for intent in self.pending_preemptions():
+            target = self.tasks[intent.target_task_id]
+            direct_allocation = self._allocate_task_resources(
+                target,
+                remaining=remaining,
+                resources_by_class=resources_by_class,
+            )
+            if direct_allocation is not None:
+                admit_with_allocation(intent.target_task_id, direct_allocation)
+                plan_events.append(
+                    make_preemption_event(
+                        intent,
+                        event_type=PreemptionEventType.CANCELLED,
+                        scheduler_cycle=planned_cycle,
+                        epoch_sequence=next_sequence,
+                        reason=(
+                            "target became admissible without releasing selected victims"
+                        ),
+                    )
+                )
+                waiting_target_ids.add(intent.target_task_id)
+                continue
+
+            if not intent.ready_to_execute:
+                carried_pending.append(intent)
+                protected_victim_ids.update(intent.victim_task_ids)
+                waiting_target_ids.add(intent.target_task_id)
+                self._hold_available_task_capacity(
+                    target,
+                    remaining=remaining,
+                    resources_by_class=resources_by_class,
+                )
+                continue
+
+            releasable_remaining = dict(remaining)
+            for reservation in reservations:
+                if reservation.task_id in set(intent.victim_task_ids):
+                    releasable_remaining[reservation.resource_id] += reservation.units
+            replacement = self._allocate_task_resources(
+                target,
+                remaining=releasable_remaining,
+                resources_by_class=resources_by_class,
+            )
+            if replacement is None:
+                plan_events.append(
+                    make_preemption_event(
+                        intent,
+                        event_type=PreemptionEventType.CANCELLED,
+                        scheduler_cycle=planned_cycle,
+                        epoch_sequence=next_sequence,
+                        reason="selected victims no longer make the target admissible",
+                    )
+                )
+                continue
+
+            victim_ids = set(intent.victim_task_ids)
+            release_selected(victim_ids)
+            # The successful simulation already includes the released units.
+            remaining = releasable_remaining
+            admit_with_allocation(intent.target_task_id, replacement)
+            plan_events.append(
+                make_preemption_event(
+                    intent,
+                    event_type=PreemptionEventType.EXECUTED,
+                    scheduler_cycle=planned_cycle,
+                    epoch_sequence=next_sequence,
+                    reason="all required checkpoints committed; replacement published",
+                )
+            )
+            waiting_target_ids.add(intent.target_task_id)
+
         candidate_ids: list[UUID] = []
-        if self.active_task_id is not None and self.active_task_id not in preserved_ids:
+        if self.active_task_id is not None and self.active_task_id not in admitted:
             candidate_ids.append(self.active_task_id)
         candidate_ids.extend(
             task_id
             for task_id in self._ranked_dependency_satisfied_queued_task_ids(
                 cycle=planned_cycle
             )
-            if task_id not in preserved_ids and task_id != self.active_task_id
+            if task_id not in admitted
+            and task_id != self.active_task_id
+            and task_id not in waiting_target_ids
+            and task_id not in released_victim_ids
         )
 
-        unadmitted: list[UUID] = []
         for task_id in candidate_ids:
+            task = self.tasks[task_id]
             allocation = self._allocate_task_resources(
-                self.tasks[task_id],
+                task,
                 remaining=remaining,
                 resources_by_class=resources_by_class,
             )
-            if allocation is None:
-                if task_id == self.active_task_id:
-                    raise RuntimeError(
-                        "Active task resource requirements exceed the safe capacity envelope"
+            if allocation is not None:
+                admit_with_allocation(task_id, allocation)
+                continue
+            if task_id == self.active_task_id:
+                raise RuntimeError(
+                    "Active task resource requirements exceed the safe capacity envelope"
+                )
+
+            deficits = self._resource_class_deficits(
+                task,
+                remaining=remaining,
+                resources_by_class=resources_by_class,
+            )
+            victim_candidates: list[PreemptionCandidate] = []
+            reservations_by_task = {
+                assignment.task_id: [
+                    reservation
+                    for reservation in reservations
+                    if reservation.task_id == assignment.task_id
+                ]
+                for assignment in assignments
+            }
+            for current_index, assignment in enumerate(assignments):
+                victim_task_id = assignment.task_id
+                if (
+                    victim_task_id not in preemptible_task_ids
+                    or victim_task_id in protected_victim_ids
+                ):
+                    continue
+                victim = self.tasks[victim_task_id]
+                if victim.metadata.interruption_policy is InterruptionPolicy.ATOMIC:
+                    continue
+                if not self._strictly_outprioritizes(
+                    task,
+                    victim,
+                    cycle=planned_cycle,
+                ):
+                    continue
+                released_units = {
+                    resource_class: sum(
+                        reservation.units
+                        for reservation in reservations_by_task[victim_task_id]
+                        if reservation.resource_class is resource_class
                     )
-                unadmitted.append(task_id)
+                    for resource_class in deficits
+                }
+                if not any(released_units.values()):
+                    continue
+                victim_candidates.append(
+                    PreemptionCandidate(
+                        task_id=victim_task_id,
+                        assignment_id=assignment.assignment_id,
+                        base_priority=int(derive_priority(victim.metadata)),
+                        checkpoint_required=(
+                            victim.metadata.interruption_policy
+                            is InterruptionPolicy.CHECKPOINT_ONLY
+                        ),
+                        current_order=(
+                            assignment.created_epoch_sequence
+                            * (len(self.tasks) + 1)
+                            + current_index
+                        ),
+                        released_units=released_units,
+                    )
+                )
+
+            selected = select_minimum_victims(
+                deficits=deficits,
+                candidates=victim_candidates,
+            )
+            if selected is None:
                 continue
 
-            task_reservations, remaining = allocation
-            task_reservations.sort(key=resource_reservation_sort_key)
-            task = self.tasks[task_id]
-            assignment = DurableAssignment(
-                assignment_id=deterministic_assignment_id(
-                    task_id,
-                    task_revision=task.revision,
-                    reservations=task_reservations,
-                ),
-                task_id=task_id,
-                task_revision=task.revision,
-                created_epoch_sequence=next_sequence,
-                reservation_ids=[
-                    reservation.reservation_id
-                    for reservation in task_reservations
-                ],
+            victim_task_ids = [victim.task_id for victim in selected]
+            victim_assignment_ids = [victim.assignment_id for victim in selected]
+            preemption_id = deterministic_preemption_id(
+                target_task_id=task.task_id,
+                target_task_revision=task.revision,
+                victim_assignment_ids=victim_assignment_ids,
+                requested_epoch_sequence=next_sequence,
             )
-            assignments.append(assignment)
-            reservations.extend(task_reservations)
-            admitted.append(task_id)
+            checkpoint_victim_ids = [
+                victim.task_id for victim in selected if victim.checkpoint_required
+            ]
+            if checkpoint_victim_ids:
+                intent = PendingPreemption(
+                    preemption_id=preemption_id,
+                    target_task_id=task.task_id,
+                    target_task_revision=task.revision,
+                    victim_task_ids=victim_task_ids,
+                    victim_assignment_ids=victim_assignment_ids,
+                    checkpoint_victim_task_ids=checkpoint_victim_ids,
+                    requested_epoch_sequence=next_sequence,
+                )
+                carried_pending.append(intent)
+                protected_victim_ids.update(victim_task_ids)
+                waiting_target_ids.add(task.task_id)
+                plan_events.append(
+                    make_preemption_event(
+                        intent,
+                        event_type=PreemptionEventType.REQUESTED,
+                        scheduler_cycle=planned_cycle,
+                        epoch_sequence=next_sequence,
+                        reason="replacement waits for selected safe checkpoints",
+                    )
+                )
+                self._hold_available_task_capacity(
+                    task,
+                    remaining=remaining,
+                    resources_by_class=resources_by_class,
+                )
+                continue
+
+            victim_ids = set(victim_task_ids)
+            release_selected(victim_ids)
+            replacement = self._allocate_task_resources(
+                task,
+                remaining=remaining,
+                resources_by_class=resources_by_class,
+            )
+            if replacement is None:
+                raise RuntimeError(
+                    "Deterministic victim selection failed to satisfy its deficits"
+                )
+            admit_with_allocation(task_id, replacement)
+            plan_events.append(
+                make_selection_preemption_event(
+                    preemption_id=preemption_id,
+                    target_task_id=task.task_id,
+                    victim_task_ids=victim_task_ids,
+                    victim_assignment_ids=victim_assignment_ids,
+                    event_type=PreemptionEventType.EXECUTED,
+                    scheduler_cycle=planned_cycle,
+                    epoch_sequence=next_sequence,
+                    reason="minimum compatible preemptible victim set released",
+                )
+            )
+
+        carried_pending.sort(key=pending_preemption_sort_key)
+        ranked_ids = self._ranked_dependency_satisfied_queued_task_ids(
+            cycle=planned_cycle
+        )
+        if self.active_task_id is not None and self.active_task_id not in ranked_ids:
+            ranked_ids.insert(0, self.active_task_id)
+        admitted_set = set(admitted)
+        unadmitted = [task_id for task_id in ranked_ids if task_id not in admitted_set]
 
         reservations.sort(key=resource_reservation_sort_key)
         assignment_ids = [assignment.assignment_id for assignment in assignments]
@@ -571,6 +909,19 @@ class JITAttentionScheduler:
             assignment_policy_version=self.assignment_policy_version,
             assignment_ids=assignment_ids,
             reservations=reservations,
+            preemption_policy_version=self.preemption_policy_version,
+            pending_preemptions=carried_pending,
+            preemption_event_ids=[event.event_id for event in plan_events],
+            executed_preemption_ids=[
+                event.preemption_id
+                for event in plan_events
+                if event.event_type is PreemptionEventType.EXECUTED
+            ],
+            cancelled_preemption_ids=[
+                event.preemption_id
+                for event in plan_events
+                if event.event_type is PreemptionEventType.CANCELLED
+            ],
         )
         plan = SchedulingEpochPlan(
             epoch=SchedulingEpoch(
@@ -583,10 +934,25 @@ class JITAttentionScheduler:
                 status=SchedulingEpochStatus.PLANNED,
                 assignment_ids=assignment_ids,
                 reservations=reservations,
+                preemption_policy_version=self.preemption_policy_version,
+                pending_preemptions=carried_pending,
+                preemption_event_ids=[event.event_id for event in plan_events],
+                executed_preemption_ids=[
+                    event.preemption_id
+                    for event in plan_events
+                    if event.event_type is PreemptionEventType.EXECUTED
+                ],
+                cancelled_preemption_ids=[
+                    event.preemption_id
+                    for event in plan_events
+                    if event.event_type is PreemptionEventType.CANCELLED
+                ],
             ),
             admitted_task_ids=admitted,
             unadmitted_task_ids=unadmitted,
             assignments=assignments,
+            pending_preemptions=carried_pending,
+            preemption_events=plan_events,
         )
         self._pending_epoch_plan = plan.model_copy(deep=True)
         return plan.model_copy(deep=True)
@@ -606,6 +972,8 @@ class JITAttentionScheduler:
         self.current_epoch = committed_epoch
         self.admission_policy_version = committed_epoch.admission_policy_version
         self.assignment_policy_version = committed_epoch.assignment_policy_version
+        if committed_epoch.preemption_policy_version is not None:
+            self.preemption_policy_version = committed_epoch.preemption_policy_version
         self.admitted_task_ids = list(plan.admitted_task_ids)
         self._resource_reservations = {
             reservation.reservation_id: reservation.model_copy(deep=True)
@@ -615,8 +983,23 @@ class JITAttentionScheduler:
             assignment.assignment_id: assignment.model_copy(deep=True)
             for assignment in plan.assignments
         }
+        self._pending_preemptions = {
+            intent.preemption_id: intent.model_copy(deep=True)
+            for intent in plan.pending_preemptions
+        }
+        self.preemption_state_revision += 1
+        for event in plan.preemption_events:
+            self._append_preemption_event(event)
         self._pending_epoch_plan = None
         self._validate_snapshot()
+
+    def _preemption_persistence_revision(self) -> int:
+        return self._persisted_preemption_state_revision
+
+    def _mark_preemption_state_persisted(self, revision: int) -> None:
+        if revision != self.preemption_state_revision:
+            raise RuntimeError("Persisted preemption revision does not match scheduler")
+        self._persisted_preemption_state_revision = revision
 
     def reconcile_resource_admission(self) -> ResourceAdmissionPlan:
         """Reserve a deterministic attention-ordered set that fits safely.
@@ -938,6 +1321,77 @@ class JITAttentionScheduler:
                 return None
         return reservations, tentative_remaining
 
+    @staticmethod
+    def _resource_class_deficits(
+        task: AttentionTask,
+        *,
+        remaining: dict[str, int],
+        resources_by_class: dict[
+            ExecutionResourceClass,
+            list[ExecutionResource],
+        ],
+    ) -> dict[ExecutionResourceClass, int]:
+        deficits: dict[ExecutionResourceClass, int] = {}
+        for requirement in task.metadata.quantitative_resource_requirements():
+            available = sum(
+                remaining[resource.resource_id]
+                for resource in resources_by_class[requirement.resource_class]
+            )
+            missing = max(0, requirement.units - available)
+            if missing:
+                deficits[requirement.resource_class] = missing
+        return deficits
+
+    @staticmethod
+    def _hold_available_task_capacity(
+        task: AttentionTask,
+        *,
+        remaining: dict[str, int],
+        resources_by_class: dict[
+            ExecutionResourceClass,
+            list[ExecutionResource],
+        ],
+    ) -> None:
+        """Protect free capacity already needed by a checkpoint-gated target.
+
+        The hold is provisional planning state, not a worker-visible
+        reservation. It prevents later, lower-ranked work from consuming the
+        free half of a replacement contract while selected victims checkpoint.
+        """
+
+        for requirement in task.metadata.quantitative_resource_requirements():
+            held = 0
+            for resource in resources_by_class[requirement.resource_class]:
+                units = min(requirement.units - held, remaining[resource.resource_id])
+                if units <= 0:
+                    continue
+                remaining[resource.resource_id] -= units
+                held += units
+                if held == requirement.units:
+                    break
+
+    def _new_assignment(
+        self,
+        task_id: UUID,
+        *,
+        reservations: list[ResourceReservation],
+        created_epoch_sequence: int,
+    ) -> DurableAssignment:
+        task = self.tasks[task_id]
+        return DurableAssignment(
+            assignment_id=deterministic_assignment_id(
+                task_id,
+                task_revision=task.revision,
+                reservations=reservations,
+            ),
+            task_id=task_id,
+            task_revision=task.revision,
+            created_epoch_sequence=created_epoch_sequence,
+            reservation_ids=[
+                reservation.reservation_id for reservation in reservations
+            ],
+        )
+
     def _service_due(self, task: AttentionTask, *, cycle: int | None = None) -> bool:
         guarantee = self.service_guarantees[task.metadata.service_class]
         if guarantee.max_wait_cycles is None:
@@ -975,10 +1429,18 @@ class JITAttentionScheduler:
             task.task_id.hex,
         )
 
-    def _strictly_outprioritizes(self, candidate: AttentionTask, active: AttentionTask) -> bool:
+    def _strictly_outprioritizes(
+        self,
+        candidate: AttentionTask,
+        active: AttentionTask,
+        *,
+        cycle: int | None = None,
+    ) -> bool:
         # Same-priority arrivals do not preempt.  This prevents deterministic
         # thrashing; FIFO/deadline tie-breakers apply when focus next becomes free.
-        return int(self._effective_priority(candidate)) < int(derive_priority(active.metadata))
+        return int(self._effective_priority(candidate, cycle=cycle)) < int(
+            derive_priority(active.metadata)
+        )
 
     def _start(self, task_id: UUID, reason: str) -> None:
         if self.active_task_id is not None:
@@ -1055,6 +1517,15 @@ class JITAttentionScheduler:
             self.admitted_task_ids = []
             self._resource_reservations = {}
 
+    def _append_preemption_event(self, event: PreemptionEvent) -> None:
+        for existing in self._preemption_events:
+            if existing.event_id != event.event_id:
+                continue
+            if existing.model_dump(mode="json") != event.model_dump(mode="json"):
+                raise RuntimeError("Conflicting deterministic preemption event")
+            return
+        self._preemption_events.append(event.model_copy(deep=True))
+
     def _require_legacy_focus_mode(self) -> None:
         if self.current_epoch is not None or self._pending_epoch_plan is not None:
             raise RuntimeError(
@@ -1062,6 +1533,12 @@ class JITAttentionScheduler:
             )
 
     def _validate_snapshot(self) -> None:
+        if not self.preemption_policy_version.strip():
+            raise ValueError("Snapshot preemption policy version must not be empty")
+        event_ids = [event.event_id for event in self._preemption_events]
+        if len(event_ids) != len(set(event_ids)):
+            raise ValueError("Snapshot contains duplicate preemption event ids")
+
         running = [task.task_id for task in self.tasks.values() if task.status is TaskStatus.RUNNING]
         if self.active_task_id is None:
             if running:
@@ -1141,6 +1618,8 @@ class JITAttentionScheduler:
                 raise ValueError("Snapshot without a current epoch must have sequence zero")
             if self._assignments:
                 raise ValueError("Snapshot assignments require a committed current epoch")
+            if self._pending_preemptions:
+                raise ValueError("Pending preemptions require a committed current epoch")
             return
 
         epoch = self.current_epoch
@@ -1154,6 +1633,11 @@ class JITAttentionScheduler:
             raise ValueError("Current epoch admission policy does not match scheduler state")
         if epoch.assignment_policy_version != self.assignment_policy_version:
             raise ValueError("Current epoch assignment policy does not match scheduler state")
+        if (
+            epoch.preemption_policy_version is not None
+            and epoch.preemption_policy_version != self.preemption_policy_version
+        ):
+            raise ValueError("Current epoch preemption policy does not match scheduler state")
         if epoch.sequence == 1 and epoch.previous_epoch_id is not None:
             raise ValueError("The first scheduling epoch cannot have a predecessor")
         if epoch.sequence > 1 and epoch.previous_epoch_id is None:
@@ -1184,7 +1668,7 @@ class JITAttentionScheduler:
             if task is None:
                 raise ValueError("Assignment must reference an existing task")
             if assignment.status is not AssignmentStatus.READY:
-                raise ValueError("Increment D assignments must be ready")
+                raise ValueError("Worker-visible assignments must be ready")
             if assignment.task_revision != task.revision:
                 raise ValueError("Assignment task revision does not match current task")
             if assignment.created_epoch_sequence > epoch.sequence:
@@ -1203,6 +1687,61 @@ class JITAttentionScheduler:
             ):
                 raise ValueError("Assignment id is not deterministic")
 
+        assignment_by_task = {
+            assignment.task_id: assignment for assignment in assignments
+        }
+        pending_targets: set[UUID] = set()
+        pending_victims: set[UUID] = set()
+        for intent in self.pending_preemptions():
+            target = self.tasks.get(intent.target_task_id)
+            if target is None or target.status is not TaskStatus.QUEUED:
+                raise ValueError("Pending preemption target must be a queued task")
+            if not self._dependencies_satisfied(target):
+                raise ValueError("Pending preemption target dependencies must be satisfied")
+            if target.revision != intent.target_task_revision:
+                raise ValueError("Pending preemption target revision does not match")
+            if intent.target_task_id in admitted:
+                raise ValueError("Pending preemption target cannot already be admitted")
+            if intent.requested_epoch_sequence > self.epoch_sequence:
+                raise ValueError("Pending preemption cannot originate in a future epoch")
+            if intent.target_task_id in pending_targets:
+                raise ValueError("A task may be the target of only one pending preemption")
+            if pending_victims.intersection(intent.victim_task_ids):
+                raise ValueError("A victim may belong to only one pending preemption")
+
+            checkpoint_victims: list[UUID] = []
+            for victim_task_id, victim_assignment_id in zip(
+                intent.victim_task_ids,
+                intent.victim_assignment_ids,
+                strict=True,
+            ):
+                victim = self.tasks.get(victim_task_id)
+                assignment = assignment_by_task.get(victim_task_id)
+                if victim is None or assignment is None:
+                    raise ValueError("Pending preemption victim must remain assigned")
+                if assignment.assignment_id != victim_assignment_id:
+                    raise ValueError("Pending preemption victim assignment does not match")
+                if victim.metadata.interruption_policy is InterruptionPolicy.ATOMIC:
+                    raise ValueError("Atomic work cannot be a preemption victim")
+                if (
+                    victim.metadata.interruption_policy
+                    is InterruptionPolicy.CHECKPOINT_ONLY
+                ):
+                    checkpoint_victims.append(victim_task_id)
+            if checkpoint_victims != intent.checkpoint_victim_task_ids:
+                raise ValueError("Pending preemption checkpoint victims do not match policy")
+            if intent.preemption_id != deterministic_preemption_id(
+                target_task_id=intent.target_task_id,
+                target_task_revision=intent.target_task_revision,
+                victim_assignment_ids=intent.victim_assignment_ids,
+                requested_epoch_sequence=intent.requested_epoch_sequence,
+            ):
+                raise ValueError("Pending preemption id is not deterministic")
+            pending_targets.add(intent.target_task_id)
+            pending_victims.update(intent.victim_task_ids)
+        if pending_targets.intersection(pending_victims):
+            raise ValueError("Pending preemption targets and victims must be disjoint")
+
         expected_epoch_id = deterministic_epoch_id(
             sequence=epoch.sequence,
             previous_epoch_id=epoch.previous_epoch_id,
@@ -1211,6 +1750,11 @@ class JITAttentionScheduler:
             assignment_policy_version=epoch.assignment_policy_version,
             assignment_ids=epoch.assignment_ids,
             reservations=epoch.reservations,
+            preemption_policy_version=epoch.preemption_policy_version,
+            pending_preemptions=epoch.pending_preemptions,
+            preemption_event_ids=epoch.preemption_event_ids,
+            executed_preemption_ids=epoch.executed_preemption_ids,
+            cancelled_preemption_ids=epoch.cancelled_preemption_ids,
         )
         if epoch.epoch_id != expected_epoch_id:
             raise ValueError("Scheduling epoch id is not deterministic")

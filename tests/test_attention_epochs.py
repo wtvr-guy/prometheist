@@ -15,7 +15,10 @@ from jit_agent.attention import (
     TaskCriticality,
     deterministic_task_id,
 )
-from jit_agent.attention_assignments import SchedulingEpochStatus
+from jit_agent.attention_assignments import (
+    SchedulingEpochStatus,
+    deterministic_epoch_id,
+)
 from jit_agent.attention_resources import (
     ExecutionResource,
     ExecutionResourceClass,
@@ -230,7 +233,7 @@ def test_same_priority_arrival_preserves_assignment_and_reservation_identity():
     assert second_plan.assignments[0].created_epoch_sequence == 1
 
 
-def test_higher_priority_arrival_cannot_displace_committed_work_before_increment_e():
+def test_higher_priority_arrival_displaces_compatible_preemptible_work_in_increment_e():
     scheduler = JITAttentionScheduler()
     scheduler.configure_execution_resource(
         _resource("llm", ExecutionResourceClass.LLM_INFERENCE, 1)
@@ -256,11 +259,12 @@ def test_higher_priority_arrival_cannot_displace_committed_work_before_increment
 
     next_plan = scheduler.plan_scheduling_epoch()
 
-    assert next_plan.admitted_task_ids == [existing.task_id]
-    assert next_plan.unadmitted_task_ids == [urgent.task_id]
-    assert next_plan.assignments[0].assignment_id == (
+    assert next_plan.admitted_task_ids == [urgent.task_id]
+    assert next_plan.unadmitted_task_ids == [existing.task_id]
+    assert next_plan.assignments[0].assignment_id != (
         first_plan.assignments[0].assignment_id
     )
+    assert next_plan.epoch.executed_preemption_ids
 
 
 def test_discrete_capacity_and_headroom_are_never_oversubscribed():
@@ -327,6 +331,51 @@ def test_committed_epoch_snapshot_round_trip_is_exact_and_tamper_evident():
     tampered.assignments[0].task_revision += 1
     with pytest.raises(ValueError, match="task revision"):
         JITAttentionScheduler.from_snapshot(tampered)
+
+
+def test_increment_d_epoch_identity_remains_valid_after_preemption_migration():
+    scheduler = JITAttentionScheduler()
+    scheduler.configure_execution_resource(
+        _resource("cpu", ExecutionResourceClass.CPU_GENERAL, 1)
+    )
+    scheduler.submit(
+        _task(
+            "legacy-durable",
+            1,
+            requirements=[(ExecutionResourceClass.CPU_GENERAL, 1)],
+        )
+    )
+    scheduler.plan_scheduling_epoch()
+    _commit_in_memory(scheduler)
+    snapshot = scheduler.snapshot()
+    assert snapshot.current_epoch is not None
+    epoch = snapshot.current_epoch
+    legacy_id = deterministic_epoch_id(
+        sequence=epoch.sequence,
+        previous_epoch_id=epoch.previous_epoch_id,
+        scheduler_cycle=epoch.scheduler_cycle,
+        admission_policy_version=epoch.admission_policy_version,
+        assignment_policy_version=epoch.assignment_policy_version,
+        assignment_ids=epoch.assignment_ids,
+        reservations=epoch.reservations,
+    )
+    snapshot.current_epoch = epoch.model_copy(
+        update={
+            "epoch_id": legacy_id,
+            "preemption_policy_version": None,
+            "pending_preemptions": [],
+            "preemption_event_ids": [],
+            "executed_preemption_ids": [],
+            "cancelled_preemption_ids": [],
+        },
+        deep=True,
+    )
+
+    restored = JITAttentionScheduler.from_snapshot(snapshot)
+
+    assert restored.current_epoch is not None
+    assert restored.current_epoch.epoch_id == legacy_id
+    assert restored.current_epoch.preemption_policy_version is None
 
 
 def test_failed_postgres_epoch_transaction_exposes_no_partial_state(monkeypatch):

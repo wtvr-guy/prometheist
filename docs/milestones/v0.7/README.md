@@ -117,6 +117,45 @@ An Increment D assignment is a durable `READY` entitlement, not a worker claim. 
 
 The database-independent Increment D tests pass locally (`7 passed, 3 deselected`). GitHub Actions run #101 verified the complete Increment D head with PostgreSQL 16: `122 passed, 4 skipped in 12.69s`.
 
+### Increment E — contention-driven interruption semantics
+
+The fifth v0.7 increment generalizes interruption from one active focus to a
+complete committed assignment set.
+
+Implemented/tested properties include:
+
+- an explicit `v0.7-e-contention-v1` preemption-policy version;
+- preemption only after direct safe admission fails;
+- exact minimum victim count across all deficient resource classes, followed by
+  one total deterministic victim order: least important, immediately
+  preemptible, newest assignment, then UUID;
+- eligibility only for assignments that hold capacity in a resource class the
+  blocked higher-priority task actually lacks;
+- same-priority stability and normal-scheduler immunity for `ATOMIC` work;
+- immediate atomic replacement for wholly `PREEMPTIBLE` victim sets;
+- durable `CHECKPOINT_ONLY` replacement intents that retain every selected
+  assignment and reservation until all required safe checkpoints are recorded;
+- protection of the target's already-free capacity while it waits, so later
+  lower-ranked work cannot invalidate half of its replacement contract;
+- cancellation without victim churn when the target later fits concurrently;
+- append-only `REQUESTED`, `CHECKPOINT_ACKNOWLEDGED`, `EXECUTED`, and
+  `CANCELLED` causal events;
+- optimistic preemption-state revisions that prevent concurrent checkpoint
+  writers from erasing one another's progress;
+- immutable epoch snapshots that bind policy, pending intents, causal event ids,
+  and executed/cancelled preemption ids to deterministic epoch identity;
+- restart reconstruction, idempotent event persistence, and rollback isolation;
+- backward-compatible validation of pre-Increment-E epoch identities.
+
+Increment E still exposes `READY` entitlements rather than worker claims. A
+released victim remains a durable `QUEUED` task for reconsideration in a later
+epoch; this increment does not invent leases, heartbeats, completion release,
+or effect execution before Increment F's worker contract exists.
+
+The database-independent Increment E suite passes locally (`10 passed, 3
+deselected`). PostgreSQL verification remains assigned to GitHub Actions before
+this increment is treated as remotely verified.
+
 ## Attention and resource admission are separate
 
 After Increment B, the next design distinction became explicit:
@@ -225,6 +264,8 @@ Tests:
 
 ### Increment E — contention-driven interruption semantics
 
+**Status:** implemented locally; complete PostgreSQL CI verification pending.
+
 Generalize preemption from one active task to multiple concurrent assignments.
 
 A higher-priority task should cause preemption only when it cannot otherwise be admitted. The scheduler should release only the minimum deterministically selected lower-priority compatible work needed to satisfy the missing reservation, and only where interruption policy permits.
@@ -237,6 +278,34 @@ Tests:
 - `CHECKPOINT_ONLY` records pending replacement but retains its reservation until checkpoint;
 - unrelated work continues running;
 - victim selection is deterministic when several active tasks are eligible to yield.
+
+The implemented selector minimizes victim cardinality exactly over the blocked
+task's resource deficits. Equal-cardinality sets use the policy order documented
+above. If any selected victim is `CHECKPOINT_ONLY`, none of the selected work is
+partially released; the complete replacement becomes visible only in a later
+committed epoch after every required checkpoint acknowledgement.
+
+### Resource observation gate — required before Increment F
+
+Increment E consumes durable configured capacity, headroom, reservations, and
+pending-intent state. It does **not** yet discover live hardware or sample
+current CPU, memory, accelerator, inference-backend, or process pressure.
+
+Before worker execution is treated as resource-aware on a real machine, add one
+bounded observation mechanism with these properties:
+
+- discover installed/available resource identities separately from policy
+  capacity;
+- sample current pressure through a replaceable observer outside the scheduler;
+- persist an immutable, timestamped/freshness-bounded resource snapshot;
+- make each scheduling epoch reference the exact snapshot it consumed;
+- apply conservative behavior to stale, missing, or failed observations;
+- keep scheduling deterministic for identical task state, snapshot, and policy.
+
+The scheduler must never perform unrecorded live reads in the middle of policy
+evaluation. Until this gate is implemented and accepted on the development
+machine, “available hardware” means configured safe capacity minus durable
+reservations, not monitored instantaneous availability.
 
 ### Increment F — durable worker protocol
 

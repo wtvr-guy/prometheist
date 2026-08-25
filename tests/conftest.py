@@ -65,6 +65,7 @@ def _reset_test_database(_prepare_test_database):
                 """
                 TRUNCATE TABLE
                     attention_resource_reservations,
+                    attention_preemption_events,
                     attention_scheduling_epochs,
                     attention_assignments,
                     attention_task_transitions,

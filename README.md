@@ -24,11 +24,16 @@ The Primary Agent/specialist structure used to prove that result is **superseded
 
 ### v0.7 — in development: durable JIT Attention Fabric
 
-The first v0.7 increments establish deterministic durable task scheduling, structured priority metadata, service guarantees, interruption policies, dependency gating, resumable PostgreSQL state, configured safe headroom, quantitative resource admission/reservations, atomic durable scheduling epochs and assignment sets, and forced-process restart recovery.
+The first v0.7 increments establish deterministic durable task scheduling, structured priority metadata, service guarantees, interruption policies, dependency gating, resumable PostgreSQL state, configured safe headroom, quantitative resource admission/reservations, atomic durable scheduling epochs and assignment sets, contention-driven multi-assignment preemption, and forced-process restart recovery.
 
 The target is a resource-aware **Attention Fabric** that determines which durable tasks deserve execution and which compatible subset can safely execute concurrently on available hardware. Higher-priority work does not automatically kill lower-priority work: it runs concurrently when safe capacity exists and preempts only when resource contention requires it and interruption policy permits it.
 
 The goal is not to put a scheduler in front of the old Primary Agent. The goal is to remove permanent agents from executive architecture entirely.
+
+The current resource envelope is configured and durable; it is not yet a live
+host-pressure monitor. Before the worker protocol is accepted on real hardware,
+v0.7 will add persisted resource-observation snapshots so actual current
+conditions can influence admission without making decisions unreplayable.
 
 ## Target architecture
 
