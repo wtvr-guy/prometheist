@@ -115,7 +115,7 @@ Implemented/tested properties include:
 
 An Increment D assignment is a durable `READY` entitlement, not a worker claim. Increment D does not mark several tasks `RUNNING`, introduce leases/heartbeats, execute capabilities, or release reservations on completion. Those lifecycle semantics remain explicitly assigned to Increment F after contention behavior is generalized in Increment E.
 
-The database-independent Increment D tests pass locally (`7 passed, 3 deselected`). PostgreSQL CI verification is pending for this implementation head.
+The database-independent Increment D tests pass locally (`7 passed, 3 deselected`). GitHub Actions run #101 verified the complete Increment D head with PostgreSQL 16: `122 passed, 4 skipped in 12.69s`.
 
 ## Attention and resource admission are separate
 
@@ -193,7 +193,7 @@ The implemented baseline uses deterministic greedy admission rather than an opti
 
 ### Increment D — durable assignments and scheduling epochs
 
-**Status:** implemented; PostgreSQL CI verification pending.
+**Status:** implemented and verified in CI.
 
 Replace single-task focus reconciliation with deterministic epoch assignment over the admitted set.
 
