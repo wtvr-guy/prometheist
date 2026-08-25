@@ -12,6 +12,7 @@ class ExecutionResourceClass(str, Enum):
     """Bounded execution-capacity classes exposed to JIT Attention."""
 
     CPU_GENERAL = "CPU_GENERAL"
+    MEMORY_RAM = "MEMORY_RAM"
     LLM_INFERENCE = "LLM_INFERENCE"
     DATABASE = "DATABASE"
     FILESYSTEM_IO = "FILESYSTEM_IO"
@@ -70,6 +71,61 @@ class ResourceRequirement(BaseModel):
 
     resource_class: ExecutionResourceClass
     units: int = Field(ge=1)
+
+
+class ResourceEstimateSource(str, Enum):
+    """Provenance for a process peak-resource estimate."""
+
+    DECLARED = "DECLARED"
+    PROFILED = "PROFILED"
+    HISTORICAL_PEAK = "HISTORICAL_PEAK"
+    CONSERVATIVE_DEFAULT = "CONSERVATIVE_DEFAULT"
+
+
+class ProcessResourceEstimate(BaseModel):
+    """Pre-launch peak estimate for one bounded worker/process step.
+
+    CPU units are scheduler slots rather than logical threads. RAM is measured
+    in MiB. The host-safety path requires this structure instead of silently
+    guessing what an unknown process might consume.
+    """
+
+    cpu_units: int = Field(ge=1)
+    memory_mib: int = Field(ge=1)
+    llm_slots: int = Field(default=0, ge=0, le=1)
+    source: ResourceEstimateSource
+    basis: str = Field(min_length=1)
+
+    @field_validator("basis")
+    @classmethod
+    def normalize_basis(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("basis must not be empty")
+        return normalized
+
+    def resource_requirements(self) -> list[ResourceRequirement]:
+        """Return the canonical quantitative requirements for admission."""
+
+        requirements = [
+            ResourceRequirement(
+                resource_class=ExecutionResourceClass.CPU_GENERAL,
+                units=self.cpu_units,
+            ),
+            ResourceRequirement(
+                resource_class=ExecutionResourceClass.MEMORY_RAM,
+                units=self.memory_mib,
+            ),
+        ]
+        if self.llm_slots:
+            requirements.append(
+                ResourceRequirement(
+                    resource_class=ExecutionResourceClass.LLM_INFERENCE,
+                    units=self.llm_slots,
+                )
+            )
+        requirements.sort(key=resource_requirement_sort_key)
+        return requirements
 
 
 class ResourceReservation(BaseModel):

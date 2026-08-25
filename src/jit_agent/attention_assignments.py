@@ -10,6 +10,7 @@ from jit_agent.attention_resources import (
     ResourceReservation,
     resource_reservation_sort_key,
 )
+from jit_agent.attention_observation import ResourceObservationSnapshot
 from jit_agent.attention_preemption import (
     PendingPreemption,
     PreemptionEvent,
@@ -75,6 +76,8 @@ class SchedulingEpoch(BaseModel):
     preemption_event_ids: list[UUID] = Field(default_factory=list)
     executed_preemption_ids: list[UUID] = Field(default_factory=list)
     cancelled_preemption_ids: list[UUID] = Field(default_factory=list)
+    resource_observation_id: UUID | None = None
+    resource_safety_policy_version: str | None = None
 
     @model_validator(mode="after")
     def normalize_complete_set(self) -> "SchedulingEpoch":
@@ -115,6 +118,17 @@ class SchedulingEpoch(BaseModel):
             self.cancelled_preemption_ids
         ):
             raise ValueError("An epoch cannot execute and cancel one preemption")
+        if (self.resource_observation_id is None) != (
+            self.resource_safety_policy_version is None
+        ):
+            raise ValueError(
+                "Resource observation id and safety policy version must appear together"
+            )
+        if (
+            self.resource_safety_policy_version is not None
+            and not self.resource_safety_policy_version.strip()
+        ):
+            raise ValueError("resource_safety_policy_version must not be empty")
         return self
 
 
@@ -127,6 +141,7 @@ class SchedulingEpochPlan(BaseModel):
     assignments: list[DurableAssignment] = Field(default_factory=list)
     pending_preemptions: list[PendingPreemption] = Field(default_factory=list)
     preemption_events: list[PreemptionEvent] = Field(default_factory=list)
+    resource_observation: ResourceObservationSnapshot | None = None
 
     @model_validator(mode="after")
     def validate_complete_plan(self) -> "SchedulingEpochPlan":
@@ -212,6 +227,19 @@ class SchedulingEpochPlan(BaseModel):
             raise ValueError("Pending preemption targets must remain unadmitted")
         if not pending_victims.issubset(admitted):
             raise ValueError("Pending preemption victims must remain admitted")
+        if self.epoch.resource_observation_id is None:
+            if self.resource_observation is not None:
+                raise ValueError("Unreferenced resource observation in epoch plan")
+        elif (
+            self.resource_observation is None
+            or self.resource_observation.observation_id
+            != self.epoch.resource_observation_id
+            or self.resource_observation.safety_policy_version
+            != self.epoch.resource_safety_policy_version
+            or self.resource_observation.scheduler_cycle
+            != self.epoch.scheduler_cycle
+        ):
+            raise ValueError("Epoch must reference its exact resource observation")
         self.pending_preemptions = normalized_pending
         return self
 
@@ -251,6 +279,8 @@ def deterministic_epoch_id(
     preemption_event_ids: list[UUID] | None = None,
     executed_preemption_ids: list[UUID] | None = None,
     cancelled_preemption_ids: list[UUID] | None = None,
+    resource_observation_id: UUID | None = None,
+    resource_safety_policy_version: str | None = None,
 ) -> UUID:
     """Return the stable identity of one complete scheduling decision."""
 
@@ -294,6 +324,20 @@ def deterministic_epoch_id(
                 ",".join(str(value) for value in executed_ids),
                 ",".join(str(value) for value in cancelled_ids),
             ]
+        )
+    if (resource_observation_id is None) != (
+        resource_safety_policy_version is None
+    ):
+        raise ValueError(
+            "Resource observation id and safety policy version must appear together"
+        )
+    if resource_observation_id is not None:
+        if not resource_safety_policy_version or not (
+            resource_safety_policy_version.strip()
+        ):
+            raise ValueError("resource_safety_policy_version must not be empty")
+        canonical_parts.extend(
+            [str(resource_observation_id), resource_safety_policy_version]
         )
     canonical = "|".join(canonical_parts)
     return uuid5(_EPOCH_NAMESPACE, canonical)

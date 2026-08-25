@@ -39,7 +39,9 @@ from jit_agent.attention_preemption import (
 from jit_agent.attention_resources import (
     ExecutionResource,
     ExecutionResourceClass,
+    ProcessResourceEstimate,
     RESOURCE_ADMISSION_POLICY_VERSION,
+    ResourceEstimateSource,
     ResourceAdmissionPlan,
     ResourceRequirement,
     ResourceReservation,
@@ -48,6 +50,12 @@ from jit_agent.attention_resources import (
     execution_resource_sort_key,
     resource_requirement_sort_key,
     resource_reservation_sort_key,
+)
+from jit_agent.attention_observation import (
+    RESOURCE_SAFETY_POLICY_VERSION,
+    ResourceObservationError,
+    ResourceObservationSnapshot,
+    ResourceSafetyPolicy,
 )
 
 
@@ -161,6 +169,7 @@ class SchedulingMetadata(BaseModel):
     required_capabilities: list[str] = Field(default_factory=list)
     required_resource_classes: list[ExecutionResourceClass] = Field(default_factory=list)
     resource_requirements: list[ResourceRequirement] = Field(default_factory=list)
+    process_resource_estimate: ProcessResourceEstimate | None = None
     dependency_ids: list[UUID] = Field(default_factory=list)
 
     @model_validator(mode="after")
@@ -171,8 +180,28 @@ class SchedulingMetadata(BaseModel):
                 raise ValueError("resource_requirements must contain each class at most once")
             requirements_by_class[requirement.resource_class] = requirement
 
+        if self.process_resource_estimate is not None:
+            for requirement in (
+                self.process_resource_estimate.resource_requirements()
+            ):
+                existing = requirements_by_class.get(requirement.resource_class)
+                if existing is not None and existing.units != requirement.units:
+                    raise ValueError(
+                        "process_resource_estimate conflicts with an explicit "
+                        f"{requirement.resource_class.value} requirement"
+                    )
+                requirements_by_class[requirement.resource_class] = requirement
+
         required_classes = set(self.required_resource_classes)
         required_classes.update(requirements_by_class)
+        if (
+            self.process_resource_estimate is not None
+            and ExecutionResourceClass.LLM_INFERENCE in required_classes
+            and self.process_resource_estimate.llm_slots != 1
+        ):
+            raise ValueError(
+                "an LLM-backed process estimate must reserve exactly one LLM slot"
+            )
         self.required_resource_classes = sorted(
             required_classes,
             key=execution_resource_class_sort_key,
@@ -197,6 +226,44 @@ class SchedulingMetadata(BaseModel):
             ).model_copy(deep=True)
             for resource_class in self.required_resource_classes
         ]
+
+    def conservative_process_estimate(
+        self,
+        *,
+        policy: ResourceSafetyPolicy,
+    ) -> ProcessResourceEstimate:
+        """Derive the persisted fallback used until profiling data exists."""
+
+        explicit = {
+            requirement.resource_class: requirement.units
+            for requirement in self.quantitative_resource_requirements()
+        }
+        llm_slots = explicit.get(ExecutionResourceClass.LLM_INFERENCE, 0)
+        if llm_slots > 1:
+            raise ValueError(
+                "one bounded process estimate cannot request multiple LLM slots"
+            )
+        memory_default = (
+            policy.default_llm_process_memory_mib
+            if llm_slots
+            else policy.default_process_memory_mib
+        )
+        return ProcessResourceEstimate(
+            cpu_units=explicit.get(
+                ExecutionResourceClass.CPU_GENERAL,
+                policy.default_process_cpu_units,
+            ),
+            memory_mib=explicit.get(
+                ExecutionResourceClass.MEMORY_RAM,
+                memory_default,
+            ),
+            llm_slots=llm_slots,
+            source=ResourceEstimateSource.CONSERVATIVE_DEFAULT,
+            basis=(
+                f"{policy.policy_version}: conservative fallback pending "
+                "profiled or historical peak data"
+            ),
+        )
 
 
 class AttentionTask(BaseModel):
@@ -255,6 +322,12 @@ class SchedulerSnapshot(BaseModel):
     pending_preemptions: list[PendingPreemption] = Field(default_factory=list)
     current_epoch: SchedulingEpoch | None = None
     assignments: list[DurableAssignment] = Field(default_factory=list)
+    resource_safety_required: bool = False
+    resource_safety_policy_version: str = Field(
+        default=RESOURCE_SAFETY_POLICY_VERSION,
+        min_length=1,
+    )
+    current_resource_observation: ResourceObservationSnapshot | None = None
 
 
 def deterministic_task_id(namespace: UUID, task_key: str) -> UUID:
@@ -292,6 +365,8 @@ class JITAttentionScheduler:
         self,
         *,
         service_guarantees: dict[ServiceClass, ServiceGuarantee] | None = None,
+        resource_safety_required: bool = False,
+        resource_safety_policy_version: str = RESOURCE_SAFETY_POLICY_VERSION,
     ) -> None:
         configured = DEFAULT_SERVICE_GUARANTEES if service_guarantees is None else service_guarantees
         self.service_guarantees = {
@@ -317,6 +392,13 @@ class JITAttentionScheduler:
         self._pending_preemptions: dict[UUID, PendingPreemption] = {}
         self._preemption_events: list[PreemptionEvent] = []
         self._pending_epoch_plan: SchedulingEpochPlan | None = None
+        self.resource_safety_required = resource_safety_required
+        normalized_safety_version = resource_safety_policy_version.strip()
+        if not normalized_safety_version:
+            raise ValueError("resource_safety_policy_version must not be empty")
+        self.resource_safety_policy_version = normalized_safety_version
+        self._current_resource_observation: ResourceObservationSnapshot | None = None
+        self._pending_resource_observation: ResourceObservationSnapshot | None = None
         self.active_task_id: UUID | None = None
         self.pending_preemption_task_id: UUID | None = None
         self.cycle = 0
@@ -329,7 +411,13 @@ class JITAttentionScheduler:
         *,
         service_guarantees: dict[ServiceClass, ServiceGuarantee] | None = None,
     ) -> "JITAttentionScheduler":
-        scheduler = cls(service_guarantees=service_guarantees)
+        scheduler = cls(
+            service_guarantees=service_guarantees,
+            resource_safety_required=snapshot.resource_safety_required,
+            resource_safety_policy_version=(
+                snapshot.resource_safety_policy_version
+            ),
+        )
         task_ids = [task.task_id for task in snapshot.tasks]
         if len(task_ids) != len(set(task_ids)):
             raise ValueError("Snapshot contains duplicate task ids")
@@ -384,11 +472,31 @@ class JITAttentionScheduler:
             intent.preemption_id: intent.model_copy(deep=True)
             for intent in snapshot.pending_preemptions
         }
+        scheduler._current_resource_observation = (
+            snapshot.current_resource_observation.model_copy(deep=True)
+            if snapshot.current_resource_observation is not None
+            else None
+        )
         scheduler.active_task_id = snapshot.active_task_id
         scheduler.pending_preemption_task_id = snapshot.pending_preemption_task_id
         scheduler.cycle = snapshot.cycle
         scheduler._validate_snapshot()
         return scheduler
+
+    @classmethod
+    def for_local_host(
+        cls,
+        *,
+        service_guarantees: dict[ServiceClass, ServiceGuarantee] | None = None,
+        resource_safety_policy_version: str = RESOURCE_SAFETY_POLICY_VERSION,
+    ) -> "JITAttentionScheduler":
+        """Construct the host-aware scheduler used by real local execution."""
+
+        return cls(
+            service_guarantees=service_guarantees,
+            resource_safety_required=True,
+            resource_safety_policy_version=resource_safety_policy_version,
+        )
 
     def snapshot(self) -> SchedulerSnapshot:
         self._validate_snapshot()
@@ -415,6 +523,13 @@ class JITAttentionScheduler:
                 else None
             ),
             assignments=self.worker_visible_assignments(),
+            resource_safety_required=self.resource_safety_required,
+            resource_safety_policy_version=self.resource_safety_policy_version,
+            current_resource_observation=(
+                self._current_resource_observation.model_copy(deep=True)
+                if self._current_resource_observation is not None
+                else None
+            ),
         )
 
     def configure_execution_resource(self, resource: ExecutionResource) -> ExecutionResource:
@@ -460,6 +575,126 @@ class JITAttentionScheduler:
         reservations = list(self._resource_reservations.values())
         reservations.sort(key=resource_reservation_sort_key)
         return [reservation.model_copy(deep=True) for reservation in reservations]
+
+    def enable_resource_safety(self, *, policy_version: str) -> None:
+        """Require observed capacity for every future worker-visible epoch."""
+
+        normalized = policy_version.strip()
+        if not normalized:
+            raise ValueError("policy_version must not be empty")
+        if self.current_epoch is not None and (
+            self.current_epoch.resource_observation_id is None
+        ):
+            raise ResourceObservationError(
+                "configured-only assignments must drain before host safety is enabled"
+            )
+        self._invalidate_scheduling_plan()
+        self.resource_safety_required = True
+        self.resource_safety_policy_version = normalized
+
+    def assess_unestimated_processes(
+        self,
+        *,
+        policy: ResourceSafetyPolicy,
+    ) -> list[UUID]:
+        """Persist conservative guesses until profiling/history can replace them."""
+
+        if policy.policy_version != self.resource_safety_policy_version:
+            raise ResourceObservationError(
+                "resource estimate policy does not match scheduler safety policy"
+            )
+        assessed: list[UUID] = []
+        for task in sorted(
+            self.tasks.values(),
+            key=lambda value: (value.created_seq, value.task_id.hex),
+        ):
+            if task.status in {TaskStatus.COMPLETED, TaskStatus.FAILED}:
+                continue
+            if task.metadata.process_resource_estimate is not None:
+                continue
+            if task.task_id in self.admitted_task_ids:
+                raise ResourceObservationError(
+                    "an already-assigned task has no process resource estimate"
+                )
+            estimate = task.metadata.conservative_process_estimate(policy=policy)
+            metadata_payload = task.metadata.model_dump(mode="python")
+            metadata_payload["process_resource_estimate"] = estimate
+            metadata = SchedulingMetadata.model_validate(metadata_payload)
+            self.tasks[task.task_id] = task.model_copy(
+                update={"metadata": metadata, "revision": task.revision + 1},
+                deep=True,
+            )
+            assessed.append(task.task_id)
+        if assessed:
+            self._invalidate_scheduling_plan()
+        return assessed
+
+    def attach_resource_observation(
+        self,
+        observation: ResourceObservationSnapshot,
+        *,
+        evaluated_at: datetime,
+    ) -> None:
+        """Attach one fresh, complete input for the next deterministic epoch."""
+
+        if not self.resource_safety_required:
+            raise ResourceObservationError(
+                "host resource safety must be enabled before attaching observations"
+            )
+        observation.assert_fresh(at=evaluated_at)
+        if observation.scheduler_cycle != self.cycle + 1:
+            raise ResourceObservationError(
+                "resource observation does not target the next scheduler cycle"
+            )
+        if (
+            observation.safety_policy_version
+            != self.resource_safety_policy_version
+        ):
+            raise ResourceObservationError(
+                "resource observation policy does not match scheduler policy"
+            )
+
+        capacity_by_id = observation.capacity_by_resource_id()
+        resources = self.execution_resources(enabled_only=False)
+        if set(capacity_by_id) != {resource.resource_id for resource in resources}:
+            raise ResourceObservationError(
+                "resource observation must cover every configured resource exactly"
+            )
+        committed_by_resource: dict[str, int] = {}
+        for reservation in self._resource_reservations.values():
+            committed_by_resource[reservation.resource_id] = (
+                committed_by_resource.get(reservation.resource_id, 0)
+                + reservation.units
+            )
+        for resource in resources:
+            capacity = capacity_by_id[resource.resource_id]
+            if (
+                capacity.resource_class is not resource.resource_class
+                or capacity.configured_capacity != resource.capacity
+                or capacity.configured_headroom_units != resource.system_headroom
+                or capacity.committed_units
+                != committed_by_resource.get(resource.resource_id, 0)
+            ):
+                raise ResourceObservationError(
+                    "resource observation does not match configured/committed state"
+                )
+
+        self._invalidate_scheduling_plan()
+        self._pending_resource_observation = observation.model_copy(deep=True)
+
+    def current_resource_observation(
+        self,
+    ) -> ResourceObservationSnapshot | None:
+        if self._current_resource_observation is None:
+            return None
+        return self._current_resource_observation.model_copy(deep=True)
+
+    def pending_resource_observation(
+        self,
+    ) -> ResourceObservationSnapshot | None:
+        if self._pending_resource_observation is None:
+            return None
+        return self._pending_resource_observation.model_copy(deep=True)
 
     def worker_visible_assignments(self) -> list[DurableAssignment]:
         """Return only the complete assignment set of the committed epoch."""
@@ -566,10 +801,42 @@ class JITAttentionScheduler:
         planned_cycle = self.cycle + 1
         next_sequence = self.epoch_sequence + 1
         enabled_resources = self.execution_resources(enabled_only=True)
-        remaining = {
-            resource.resource_id: resource.admissible_capacity
-            for resource in enabled_resources
-        }
+        resource_observation: ResourceObservationSnapshot | None = None
+        if self.resource_safety_required:
+            resource_observation = self._pending_resource_observation
+            if resource_observation is None:
+                raise ResourceObservationError(
+                    "a fresh resource observation is required before epoch planning"
+                )
+            if resource_observation.scheduler_cycle != planned_cycle:
+                raise ResourceObservationError(
+                    "pending resource observation targets the wrong scheduler cycle"
+                )
+            unestimated = [
+                task.task_id
+                for task in self.tasks.values()
+                if task.status not in {TaskStatus.COMPLETED, TaskStatus.FAILED}
+                and task.metadata.process_resource_estimate is None
+            ]
+            if unestimated:
+                raise ResourceObservationError(
+                    "every unfinished task requires a persisted process estimate"
+                )
+            observed_capacity = resource_observation.capacity_by_resource_id()
+            remaining = {
+                resource.resource_id: observed_capacity[
+                    resource.resource_id
+                ].admission_capacity
+                for resource in enabled_resources
+            }
+        else:
+            remaining = {
+                resource.resource_id: resource.admissible_capacity
+                for resource in enabled_resources
+            }
+        allow_new_admission = (
+            resource_observation is None or resource_observation.healthy
+        )
         resources_by_class: dict[ExecutionResourceClass, list[ExecutionResource]] = {
             resource_class: [] for resource_class in ExecutionResourceClass
         }
@@ -658,6 +925,11 @@ class JITAttentionScheduler:
 
         # Stable checkpoint intents are resolved before new victim selection.
         for intent in self.pending_preemptions():
+            if not allow_new_admission:
+                carried_pending.append(intent)
+                protected_victim_ids.update(intent.victim_task_ids)
+                waiting_target_ids.add(intent.target_task_id)
+                continue
             target = self.tasks[intent.target_task_id]
             direct_allocation = self._allocate_task_resources(
                 target,
@@ -729,18 +1001,19 @@ class JITAttentionScheduler:
             waiting_target_ids.add(intent.target_task_id)
 
         candidate_ids: list[UUID] = []
-        if self.active_task_id is not None and self.active_task_id not in admitted:
-            candidate_ids.append(self.active_task_id)
-        candidate_ids.extend(
-            task_id
-            for task_id in self._ranked_dependency_satisfied_queued_task_ids(
-                cycle=planned_cycle
+        if allow_new_admission:
+            if self.active_task_id is not None and self.active_task_id not in admitted:
+                candidate_ids.append(self.active_task_id)
+            candidate_ids.extend(
+                task_id
+                for task_id in self._ranked_dependency_satisfied_queued_task_ids(
+                    cycle=planned_cycle
+                )
+                if task_id not in admitted
+                and task_id != self.active_task_id
+                and task_id not in waiting_target_ids
+                and task_id not in released_victim_ids
             )
-            if task_id not in admitted
-            and task_id != self.active_task_id
-            and task_id not in waiting_target_ids
-            and task_id not in released_victim_ids
-        )
 
         for task_id in candidate_ids:
             task = self.tasks[task_id]
@@ -922,6 +1195,16 @@ class JITAttentionScheduler:
                 for event in plan_events
                 if event.event_type is PreemptionEventType.CANCELLED
             ],
+            resource_observation_id=(
+                resource_observation.observation_id
+                if resource_observation is not None
+                else None
+            ),
+            resource_safety_policy_version=(
+                resource_observation.safety_policy_version
+                if resource_observation is not None
+                else None
+            ),
         )
         plan = SchedulingEpochPlan(
             epoch=SchedulingEpoch(
@@ -947,12 +1230,27 @@ class JITAttentionScheduler:
                     for event in plan_events
                     if event.event_type is PreemptionEventType.CANCELLED
                 ],
+                resource_observation_id=(
+                    resource_observation.observation_id
+                    if resource_observation is not None
+                    else None
+                ),
+                resource_safety_policy_version=(
+                    resource_observation.safety_policy_version
+                    if resource_observation is not None
+                    else None
+                ),
             ),
             admitted_task_ids=admitted,
             unadmitted_task_ids=unadmitted,
             assignments=assignments,
             pending_preemptions=carried_pending,
             preemption_events=plan_events,
+            resource_observation=(
+                resource_observation.model_copy(deep=True)
+                if resource_observation is not None
+                else None
+            ),
         )
         self._pending_epoch_plan = plan.model_copy(deep=True)
         return plan.model_copy(deep=True)
@@ -990,6 +1288,12 @@ class JITAttentionScheduler:
         self.preemption_state_revision += 1
         for event in plan.preemption_events:
             self._append_preemption_event(event)
+        self._current_resource_observation = (
+            plan.resource_observation.model_copy(deep=True)
+            if plan.resource_observation is not None
+            else None
+        )
+        self._pending_resource_observation = None
         self._pending_epoch_plan = None
         self._validate_snapshot()
 
@@ -1014,6 +1318,10 @@ class JITAttentionScheduler:
         path.
         """
 
+        if self.resource_safety_required:
+            raise RuntimeError(
+                "Host-safe admission requires an observed scheduling epoch"
+            )
         if self.current_epoch is not None or self._pending_epoch_plan is not None:
             raise RuntimeError(
                 "Reservation-only reconciliation is unavailable after epoch scheduling begins"
@@ -1510,6 +1818,7 @@ class JITAttentionScheduler:
 
     def _invalidate_scheduling_plan(self) -> None:
         self._pending_epoch_plan = None
+        self._pending_resource_observation = None
         if self.current_epoch is None:
             # Increment C admission has no committed epoch boundary and is stale
             # after a scheduling mutation. Increment D committed state remains
@@ -1527,6 +1836,10 @@ class JITAttentionScheduler:
         self._preemption_events.append(event.model_copy(deep=True))
 
     def _require_legacy_focus_mode(self) -> None:
+        if self.resource_safety_required:
+            raise RuntimeError(
+                "Host-safe execution requires observed scheduling epochs"
+            )
         if self.current_epoch is not None or self._pending_epoch_plan is not None:
             raise RuntimeError(
                 "Single-focus lifecycle operations are unavailable in epoch mode"
@@ -1535,6 +1848,8 @@ class JITAttentionScheduler:
     def _validate_snapshot(self) -> None:
         if not self.preemption_policy_version.strip():
             raise ValueError("Snapshot preemption policy version must not be empty")
+        if not self.resource_safety_policy_version.strip():
+            raise ValueError("Snapshot resource safety policy version must not be empty")
         event_ids = [event.event_id for event in self._preemption_events]
         if len(event_ids) != len(set(event_ids)):
             raise ValueError("Snapshot contains duplicate preemption event ids")
@@ -1620,6 +1935,10 @@ class JITAttentionScheduler:
                 raise ValueError("Snapshot assignments require a committed current epoch")
             if self._pending_preemptions:
                 raise ValueError("Pending preemptions require a committed current epoch")
+            if self._current_resource_observation is not None:
+                raise ValueError(
+                    "A current resource observation requires a committed epoch"
+                )
             return
 
         epoch = self.current_epoch
@@ -1642,6 +1961,31 @@ class JITAttentionScheduler:
             raise ValueError("The first scheduling epoch cannot have a predecessor")
         if epoch.sequence > 1 and epoch.previous_epoch_id is None:
             raise ValueError("A later scheduling epoch must identify its predecessor")
+        if self.resource_safety_required and epoch.resource_observation_id is None:
+            raise ValueError("Host-safe epoch must reference a resource observation")
+        if epoch.resource_observation_id is None:
+            if self._current_resource_observation is not None:
+                raise ValueError("Configured-only epoch cannot own an observation")
+        else:
+            observation = self._current_resource_observation
+            if observation is None:
+                raise ValueError("Epoch resource observation is missing from state")
+            if (
+                observation.observation_id != epoch.resource_observation_id
+                or observation.scheduler_cycle != epoch.scheduler_cycle
+                or observation.safety_policy_version
+                != epoch.resource_safety_policy_version
+                or observation.safety_policy_version
+                != self.resource_safety_policy_version
+            ):
+                raise ValueError("Current resource observation does not match epoch")
+            observed_by_id = observation.capacity_by_resource_id()
+            for resource_id, used_units in resource_usage.items():
+                capacity = observed_by_id.get(resource_id)
+                if capacity is None or used_units > capacity.admission_capacity:
+                    raise ValueError(
+                        "Current reservations exceed observed admission capacity"
+                    )
 
         assignment_ids = list(self._assignments)
         if set(assignment_ids) != set(epoch.assignment_ids):
@@ -1669,6 +2013,13 @@ class JITAttentionScheduler:
                 raise ValueError("Assignment must reference an existing task")
             if assignment.status is not AssignmentStatus.READY:
                 raise ValueError("Worker-visible assignments must be ready")
+            if (
+                epoch.resource_observation_id is not None
+                and task.metadata.process_resource_estimate is None
+            ):
+                raise ValueError(
+                    "Host-safe assignment requires a process resource estimate"
+                )
             if assignment.task_revision != task.revision:
                 raise ValueError("Assignment task revision does not match current task")
             if assignment.created_epoch_sequence > epoch.sequence:
@@ -1755,6 +2106,10 @@ class JITAttentionScheduler:
             preemption_event_ids=epoch.preemption_event_ids,
             executed_preemption_ids=epoch.executed_preemption_ids,
             cancelled_preemption_ids=epoch.cancelled_preemption_ids,
+            resource_observation_id=epoch.resource_observation_id,
+            resource_safety_policy_version=(
+                epoch.resource_safety_policy_version
+            ),
         )
         if epoch.epoch_id != expected_epoch_id:
             raise ValueError("Scheduling epoch id is not deterministic")

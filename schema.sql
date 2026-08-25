@@ -166,6 +166,7 @@ CREATE TABLE IF NOT EXISTS attention_tasks (
     required_capabilities JSONB NOT NULL DEFAULT '[]'::jsonb,
     required_resource_classes JSONB NOT NULL DEFAULT '[]'::jsonb,
     resource_requirements JSONB NOT NULL DEFAULT '[]'::jsonb,
+    process_resource_estimate JSONB,
     dependency_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
     status TEXT NOT NULL,
     enqueued_cycle BIGINT NOT NULL DEFAULT 0,
@@ -182,6 +183,9 @@ ALTER TABLE attention_tasks
 
 ALTER TABLE attention_tasks
     ADD COLUMN IF NOT EXISTS resource_requirements JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+ALTER TABLE attention_tasks
+    ADD COLUMN IF NOT EXISTS process_resource_estimate JSONB;
 
 CREATE INDEX IF NOT EXISTS idx_attention_tasks_status_priority
     ON attention_tasks (status, criticality, created_seq);
@@ -216,6 +220,10 @@ CREATE TABLE IF NOT EXISTS attention_scheduler_state (
         CHECK (preemption_state_revision >= 0),
     pending_preemptions JSONB NOT NULL DEFAULT '[]'::jsonb
         CHECK (jsonb_typeof(pending_preemptions) = 'array'),
+    resource_safety_required BOOLEAN NOT NULL DEFAULT FALSE,
+    resource_safety_policy_version TEXT NOT NULL
+        DEFAULT 'v0.7-resource-observation-v1',
+    current_resource_observation_id UUID,
     CONSTRAINT attention_scheduler_epoch_pointer_check CHECK (
         (epoch_sequence = 0 AND current_epoch_id IS NULL)
         OR (epoch_sequence >= 1 AND current_epoch_id IS NOT NULL)
@@ -252,6 +260,17 @@ ALTER TABLE attention_scheduler_state
     ADD COLUMN IF NOT EXISTS pending_preemptions JSONB NOT NULL
         DEFAULT '[]'::jsonb;
 
+ALTER TABLE attention_scheduler_state
+    ADD COLUMN IF NOT EXISTS resource_safety_required BOOLEAN NOT NULL
+        DEFAULT FALSE;
+
+ALTER TABLE attention_scheduler_state
+    ADD COLUMN IF NOT EXISTS resource_safety_policy_version TEXT NOT NULL
+        DEFAULT 'v0.7-resource-observation-v1';
+
+ALTER TABLE attention_scheduler_state
+    ADD COLUMN IF NOT EXISTS current_resource_observation_id UUID;
+
 DO $$
 BEGIN
     IF NOT EXISTS (
@@ -268,6 +287,26 @@ BEGIN
     END IF;
 END
 $$;
+
+-- Host measurements are immutable scheduler inputs rather than unrecorded
+-- reads inside policy evaluation. Failed probes are persisted too, with a
+-- fail-closed zero-new-work capacity envelope.
+CREATE TABLE IF NOT EXISTS attention_resource_observations (
+    scheduler_key TEXT NOT NULL,
+    observation_id UUID NOT NULL,
+    scheduler_cycle BIGINT NOT NULL CHECK (scheduler_cycle >= 1),
+    captured_at TIMESTAMPTZ NOT NULL,
+    valid_until TIMESTAMPTZ NOT NULL,
+    safety_policy_version TEXT NOT NULL,
+    healthy BOOLEAN NOT NULL,
+    snapshot JSONB NOT NULL CHECK (jsonb_typeof(snapshot) = 'object'),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (scheduler_key, observation_id),
+    CHECK (valid_until > captured_at)
+);
+
+CREATE INDEX IF NOT EXISTS idx_attention_resource_observations_cycle
+    ON attention_resource_observations (scheduler_key, scheduler_cycle DESC);
 
 -- Assignment and epoch rows are append-only authoritative scheduling history.
 -- PLANNED epochs exist only in memory; a database row is worker-visible only
@@ -310,6 +349,15 @@ CREATE TABLE IF NOT EXISTS attention_scheduling_epochs (
         CHECK (jsonb_typeof(executed_preemption_ids) = 'array'),
     cancelled_preemption_ids JSONB NOT NULL DEFAULT '[]'::jsonb
         CHECK (jsonb_typeof(cancelled_preemption_ids) = 'array'),
+    resource_observation_id UUID,
+    resource_safety_policy_version TEXT,
+    CONSTRAINT attention_scheduling_epochs_observation_pair_check CHECK (
+        (resource_observation_id IS NULL AND resource_safety_policy_version IS NULL)
+        OR (
+            resource_observation_id IS NOT NULL
+            AND resource_safety_policy_version IS NOT NULL
+        )
+    ),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (scheduler_key, epoch_id),
     UNIQUE (scheduler_key, epoch_sequence)
@@ -333,6 +381,36 @@ ALTER TABLE attention_scheduling_epochs
 ALTER TABLE attention_scheduling_epochs
     ADD COLUMN IF NOT EXISTS cancelled_preemption_ids JSONB NOT NULL
         DEFAULT '[]'::jsonb;
+
+ALTER TABLE attention_scheduling_epochs
+    ADD COLUMN IF NOT EXISTS resource_observation_id UUID;
+
+ALTER TABLE attention_scheduling_epochs
+    ADD COLUMN IF NOT EXISTS resource_safety_policy_version TEXT;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'attention_scheduling_epochs_observation_pair_check'
+          AND conrelid = 'attention_scheduling_epochs'::regclass
+    ) THEN
+        ALTER TABLE attention_scheduling_epochs
+            ADD CONSTRAINT attention_scheduling_epochs_observation_pair_check
+            CHECK (
+                (
+                    resource_observation_id IS NULL
+                    AND resource_safety_policy_version IS NULL
+                )
+                OR (
+                    resource_observation_id IS NOT NULL
+                    AND resource_safety_policy_version IS NOT NULL
+                )
+            );
+    END IF;
+END
+$$;
 
 CREATE INDEX IF NOT EXISTS idx_attention_scheduling_epochs_current
     ON attention_scheduling_epochs (scheduler_key, epoch_sequence DESC);
@@ -361,6 +439,34 @@ BEGIN
             ADD CONSTRAINT attention_scheduler_current_epoch_fk
             FOREIGN KEY (scheduler_key, current_epoch_id)
             REFERENCES attention_scheduling_epochs(scheduler_key, epoch_id);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'attention_scheduling_epochs_observation_fk'
+          AND conrelid = 'attention_scheduling_epochs'::regclass
+    ) THEN
+        ALTER TABLE attention_scheduling_epochs
+            ADD CONSTRAINT attention_scheduling_epochs_observation_fk
+            FOREIGN KEY (scheduler_key, resource_observation_id)
+            REFERENCES attention_resource_observations(
+                scheduler_key, observation_id
+            );
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'attention_scheduler_observation_fk'
+          AND conrelid = 'attention_scheduler_state'::regclass
+    ) THEN
+        ALTER TABLE attention_scheduler_state
+            ADD CONSTRAINT attention_scheduler_observation_fk
+            FOREIGN KEY (scheduler_key, current_resource_observation_id)
+            REFERENCES attention_resource_observations(
+                scheduler_key, observation_id
+            );
     END IF;
 END
 $$;

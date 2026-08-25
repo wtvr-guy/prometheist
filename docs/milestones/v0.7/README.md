@@ -156,6 +156,56 @@ The database-independent Increment E suite passes locally (`10 passed, 3
 deselected`). GitHub Actions run #103 verified the complete Increment E head
 with PostgreSQL 16: `136 passed, 4 skipped in 13.73s`.
 
+### Pre-Increment-F resource safety gate — observed host capacity
+
+The worker boundary now has an authoritative resource-observation prerequisite
+rather than treating durable configuration as current availability.
+
+Implemented/tested properties include:
+
+- a replaceable standard-library host probe for current CPU pressure and
+  available RAM, with Linux and Windows native counters and conservative macOS
+  support;
+- a real `MEMORY_RAM` resource dimension whose units are MiB;
+- an explicit `v0.7-resource-observation-v1` policy with a five-second maximum
+  observation age;
+- discovered `host-cpu`, `host-ram-mib`, and `local-llm` pools, with local LLM
+  capacity defaulting to exactly one concurrent inference;
+- transaction-level global reservation checks, ordered resource-row locks, and
+  rollback on contention so separate processes/scheduler keys cannot race past
+  the same physical pool or the one-LLM ceiling;
+- a default CPU pressure ceiling of 85%, multi-core OS headroom, RAM headroom
+  equal to the greater of 10% or 1 GiB, and a further 20% uncertainty reserve;
+- one immutable observation per planning cycle containing raw normalized host
+  metrics, configured and committed capacity, each headroom component, the
+  resulting admission envelope, health, and probe failures;
+- deterministic observation identity and an epoch reference to the exact
+  observation and policy version consumed;
+- fail-closed behavior for missing, stale, incomplete, mismatched, or failed
+  observations—there is no fallback to configured CPU/RAM capacity;
+- persisted process estimates with provenance values for declared, profiled,
+  historical-peak, and conservative-default estimates;
+- a current conservative fallback of one CPU slot and 512 MiB RAM for ordinary
+  work, or one CPU slot, 4 GiB RAM, and one exclusive LLM slot for LLM work;
+- preservation of explicit/profiled estimates so real peak data can replace
+  fallback guesses without changing the admission contract;
+- atomic PostgreSQL publication of the observation, estimate-bearing task
+  state, assignments, reservations, epoch, and scheduler pointers;
+- restart reconstruction, deterministic replay, and rollback isolation for the
+  observation path.
+
+The probe never runs inside deterministic policy evaluation. The local
+controller first assesses unestimated work, captures one bounded host sample,
+attaches it as explicit state, and only then asks the scheduler for an epoch.
+Identical task state, observation, and policy therefore still produce an
+identical assignment set.
+
+This gate controls `READY` assignment green-lighting. There is still no v0.7
+worker claim or process-spawn path, and the temporarily retained v0.6 Primary
+Agent is compatibility code rather than the new execution architecture.
+Increment F must re-observe immediately before a claim becomes executable and
+must make the guarded claim path the only way Prometheist can start a worker.
+
 ## Attention and resource admission are separate
 
 After Increment B, the next design distinction became explicit:
@@ -285,27 +335,26 @@ above. If any selected victim is `CHECKPOINT_ONLY`, none of the selected work is
 partially released; the complete replacement becomes visible only in a later
 committed epoch after every required checkpoint acknowledgement.
 
-### Resource observation gate — required before Increment F
+### Resource observation gate — implemented prerequisite for Increment F
 
-Increment E consumes durable configured capacity, headroom, reservations, and
-pending-intent state. It does **not** yet discover live hardware or sample
-current CPU, memory, accelerator, inference-backend, or process pressure.
+The bounded observation mechanism now:
 
-Before worker execution is treated as resource-aware on a real machine, add one
-bounded observation mechanism with these properties:
-
-- discover installed/available resource identities separately from policy
+- discovers installed/available resource identities separately from policy
   capacity;
-- sample current pressure through a replaceable observer outside the scheduler;
-- persist an immutable, timestamped/freshness-bounded resource snapshot;
-- make each scheduling epoch reference the exact snapshot it consumed;
-- apply conservative behavior to stale, missing, or failed observations;
-- keep scheduling deterministic for identical task state, snapshot, and policy.
+- samples current CPU and RAM pressure through a replaceable observer outside
+  the scheduler;
+- persists an immutable, timestamped/freshness-bounded resource snapshot;
+- makes each scheduling epoch reference the exact snapshot it consumed;
+- applies fail-closed behavior to stale, missing, mismatched, or failed
+  observations;
+- keeps scheduling deterministic for identical task state, snapshot, and
+  policy.
 
-The scheduler must never perform unrecorded live reads in the middle of policy
-evaluation. Until this gate is implemented and accepted on the development
-machine, “available hardware” means configured safe capacity minus durable
-reservations, not monitored instantaneous availability.
+The scheduler performs no unrecorded live reads in the middle of policy
+evaluation. Accelerator/VRAM pressure and inference-backend state remain
+unobserved dimensions; the current conservative protection is the single LLM
+slot plus the LLM task's larger RAM estimate. Those dimensions require explicit
+contracts if hardware acceptance shows they matter independently.
 
 ### Increment F — durable worker protocol
 

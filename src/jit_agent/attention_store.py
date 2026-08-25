@@ -21,9 +21,11 @@ from jit_agent.attention import (
 from jit_agent.attention_resources import (
     ExecutionResource,
     ExecutionResourceClass,
+    ProcessResourceEstimate,
     ResourceRequirement,
     ResourceReservation,
 )
+from jit_agent.attention_observation import ResourceObservationSnapshot
 from jit_agent.attention_assignments import (
     AssignmentStatus,
     DurableAssignment,
@@ -75,6 +77,7 @@ def save_scheduler(
         pending_preemptions = snapshot.pending_preemptions
         preemption_policy_version = snapshot.preemption_policy_version
         preemption_state_revision = snapshot.preemption_state_revision
+        resource_observation = snapshot.current_resource_observation
     else:
         epoch = pending.epoch.model_copy(
             update={"status": SchedulingEpochStatus.COMMITTED},
@@ -90,6 +93,7 @@ def save_scheduler(
             epoch.preemption_policy_version or snapshot.preemption_policy_version
         )
         preemption_state_revision = snapshot.preemption_state_revision + 1
+        resource_observation = pending.resource_observation
         known_event_ids = {event.event_id for event in preemption_events}
         preemption_events.extend(
             event.model_copy(deep=True)
@@ -112,6 +116,11 @@ def save_scheduler(
             pending_preemptions=pending_preemptions,
             current_epoch=epoch,
             assignments=assignments,
+            resource_safety_required=snapshot.resource_safety_required,
+            resource_safety_policy_version=(
+                snapshot.resource_safety_policy_version
+            ),
+            current_resource_observation=resource_observation,
         )
         JITAttentionScheduler.from_snapshot(
             publication_snapshot,
@@ -161,6 +170,13 @@ def save_scheduler(
                     ),
                 )
 
+            if resource_observation is not None:
+                _insert_immutable_resource_observation(
+                    cur,
+                    scheduler_key=scheduler_key,
+                    observation=resource_observation,
+                )
+
             if epoch is not None:
                 for assignment in assignments:
                     _insert_immutable_assignment(
@@ -181,11 +197,15 @@ def save_scheduler(
                     pending_preemption_task_id, admission_policy_version,
                     admitted_task_ids, epoch_sequence, current_epoch_id,
                     assignment_policy_version, preemption_policy_version,
-                    preemption_state_revision, pending_preemptions
+                    preemption_state_revision, pending_preemptions,
+                    resource_safety_required,
+                    resource_safety_policy_version,
+                    current_resource_observation_id
                 )
                 VALUES (
                     %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s
                 )
                 ON CONFLICT (scheduler_key) DO UPDATE SET
                     cycle = EXCLUDED.cycle,
@@ -199,6 +219,9 @@ def save_scheduler(
                     preemption_policy_version = EXCLUDED.preemption_policy_version,
                     preemption_state_revision = EXCLUDED.preemption_state_revision,
                     pending_preemptions = EXCLUDED.pending_preemptions,
+                    resource_safety_required = EXCLUDED.resource_safety_required,
+                    resource_safety_policy_version = EXCLUDED.resource_safety_policy_version,
+                    current_resource_observation_id = EXCLUDED.current_resource_observation_id,
                     updated_at = now()
                 """,
                 (
@@ -223,6 +246,13 @@ def save_scheduler(
                             for intent in pending_preemptions
                         ]
                     ),
+                    snapshot.resource_safety_required,
+                    snapshot.resource_safety_policy_version,
+                    (
+                        resource_observation.observation_id
+                        if resource_observation is not None
+                        else None
+                    ),
                 ),
             )
             for event in preemption_events:
@@ -235,6 +265,14 @@ def save_scheduler(
                 cur,
                 scheduler_key=scheduler_key,
                 reservations=reservations,
+                observed_admission_limits=(
+                    {
+                        capacity.resource_id: capacity.admission_capacity
+                        for capacity in resource_observation.capacities
+                    }
+                    if resource_observation is not None
+                    else None
+                ),
             )
         conn.commit()
     except Exception:
@@ -261,7 +299,9 @@ def load_scheduler(
                 admission_policy_version, admitted_task_ids,
                 epoch_sequence, current_epoch_id, assignment_policy_version,
                 preemption_policy_version, preemption_state_revision,
-                pending_preemptions
+                pending_preemptions, resource_safety_required,
+                resource_safety_policy_version,
+                current_resource_observation_id
             FROM attention_scheduler_state
             WHERE scheduler_key = %s
             """,
@@ -292,7 +332,7 @@ def load_scheduler(
                 task_id, task_key, created_seq, parent_task_id,
                 criticality, service_class, interruption_policy, deadline,
                 required_capabilities, required_resource_classes,
-                resource_requirements, dependency_ids,
+                resource_requirements, process_resource_estimate, dependency_ids,
                 status, enqueued_cycle, revision, resumable_state
             FROM attention_tasks
             ORDER BY created_seq ASC, task_id ASC
@@ -313,7 +353,22 @@ def load_scheduler(
         reservation_rows = cur.fetchall()
 
         epoch_row = None
+        observation_row = None
         assignment_rows: list[dict[str, Any]] = []
+        if state["current_resource_observation_id"] is not None:
+            cur.execute(
+                """
+                SELECT snapshot
+                FROM attention_resource_observations
+                WHERE scheduler_key = %s AND observation_id = %s
+                """,
+                (scheduler_key, state["current_resource_observation_id"]),
+            )
+            observation_row = cur.fetchone()
+            if observation_row is None:
+                raise ValueError(
+                    "Scheduler state references a missing resource observation"
+                )
         if state["current_epoch_id"] is not None:
             cur.execute(
                 """
@@ -323,7 +378,9 @@ def load_scheduler(
                     assignment_policy_version, status, assignment_ids,
                     reservations, preemption_policy_version,
                     pending_preemptions, preemption_event_ids,
-                    executed_preemption_ids, cancelled_preemption_ids
+                    executed_preemption_ids, cancelled_preemption_ids,
+                    resource_observation_id,
+                    resource_safety_policy_version
                 FROM attention_scheduling_epochs
                 WHERE scheduler_key = %s AND epoch_id = %s
                 """,
@@ -352,6 +409,11 @@ def load_scheduler(
     ]
     current_epoch = (
         _row_to_scheduling_epoch(epoch_row) if epoch_row is not None else None
+    )
+    current_resource_observation = (
+        ResourceObservationSnapshot.model_validate(observation_row["snapshot"])
+        if observation_row is not None
+        else None
     )
     assignment_by_id = {
         assignment.assignment_id: assignment
@@ -390,6 +452,11 @@ def load_scheduler(
             ],
             current_epoch=current_epoch,
             assignments=assignments,
+            resource_safety_required=bool(state["resource_safety_required"]),
+            resource_safety_policy_version=(
+                state["resource_safety_policy_version"]
+            ),
+            current_resource_observation=current_resource_observation,
         )
     )
 
@@ -502,6 +569,53 @@ def _lock_scheduler_generation(
         raise RuntimeError("Conflicting preemption state at the same revision")
 
 
+def _insert_immutable_resource_observation(
+    cur: psycopg.Cursor[Any],
+    *,
+    scheduler_key: str,
+    observation: ResourceObservationSnapshot,
+) -> None:
+    """Persist the exact host-pressure input consumed by an epoch."""
+
+    cur.execute(
+        """
+        INSERT INTO attention_resource_observations (
+            scheduler_key, observation_id, scheduler_cycle,
+            captured_at, valid_until, safety_policy_version,
+            healthy, snapshot
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT DO NOTHING
+        """,
+        (
+            scheduler_key,
+            observation.observation_id,
+            observation.scheduler_cycle,
+            observation.captured_at,
+            observation.valid_until,
+            observation.safety_policy_version,
+            observation.healthy,
+            Json(observation.model_dump(mode="json")),
+        ),
+    )
+    cur.execute(
+        """
+        SELECT snapshot
+        FROM attention_resource_observations
+        WHERE scheduler_key = %s AND observation_id = %s
+        """,
+        (scheduler_key, observation.observation_id),
+    )
+    row = cur.fetchone()
+    if row is None:
+        raise RuntimeError("Resource observation insert did not produce a row")
+    stored = ResourceObservationSnapshot.model_validate(
+        _cursor_row_to_dict(cur, row)["snapshot"]
+    )
+    if stored.model_dump(mode="json") != observation.model_dump(mode="json"):
+        raise RuntimeError("Conflicting immutable resource observation")
+
+
 def _insert_immutable_assignment(
     cur: psycopg.Cursor[Any],
     *,
@@ -561,12 +675,14 @@ def _insert_immutable_epoch(
             assignment_policy_version, status, assignment_ids, reservations,
             preemption_policy_version, pending_preemptions,
             preemption_event_ids, executed_preemption_ids,
-            cancelled_preemption_ids
+            cancelled_preemption_ids, resource_observation_id,
+            resource_safety_policy_version
         )
         VALUES (
             %s, %s, %s, %s, %s,
             %s, %s, %s, %s, %s,
-            %s, %s, %s, %s, %s
+            %s, %s, %s, %s, %s,
+            %s, %s
         )
         ON CONFLICT DO NOTHING
         """,
@@ -596,6 +712,8 @@ def _insert_immutable_epoch(
             Json([str(value) for value in epoch.preemption_event_ids]),
             Json([str(value) for value in epoch.executed_preemption_ids]),
             Json([str(value) for value in epoch.cancelled_preemption_ids]),
+            epoch.resource_observation_id,
+            epoch.resource_safety_policy_version,
         ),
     )
     cur.execute(
@@ -606,7 +724,8 @@ def _insert_immutable_epoch(
             assignment_policy_version, status, assignment_ids, reservations,
             preemption_policy_version, pending_preemptions,
             preemption_event_ids, executed_preemption_ids,
-            cancelled_preemption_ids
+            cancelled_preemption_ids, resource_observation_id,
+            resource_safety_policy_version
         FROM attention_scheduling_epochs
         WHERE scheduler_key = %s AND epoch_sequence = %s
         """,
@@ -707,14 +826,14 @@ def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
             task_id, task_key, created_seq, parent_task_id,
             criticality, service_class, interruption_policy, deadline,
             required_capabilities, required_resource_classes,
-            resource_requirements, dependency_ids,
+            resource_requirements, process_resource_estimate, dependency_ids,
             status, enqueued_cycle, revision, resumable_state
         )
         VALUES (
             %s, %s, %s, %s,
             %s, %s, %s, %s,
             %s, %s, %s, %s,
-            %s, %s, %s, %s
+            %s, %s, %s, %s, %s
         )
         ON CONFLICT (task_id) DO UPDATE SET
             task_key = EXCLUDED.task_key,
@@ -727,6 +846,7 @@ def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
             required_capabilities = EXCLUDED.required_capabilities,
             required_resource_classes = EXCLUDED.required_resource_classes,
             resource_requirements = EXCLUDED.resource_requirements,
+            process_resource_estimate = EXCLUDED.process_resource_estimate,
             dependency_ids = EXCLUDED.dependency_ids,
             status = EXCLUDED.status,
             enqueued_cycle = EXCLUDED.enqueued_cycle,
@@ -751,6 +871,11 @@ def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
                     for requirement in metadata.resource_requirements
                 ]
             ),
+            (
+                Json(metadata.process_resource_estimate.model_dump(mode="json"))
+                if metadata.process_resource_estimate is not None
+                else None
+            ),
             Json([str(value) for value in metadata.dependency_ids]),
             task.status.value,
             task.enqueued_cycle,
@@ -765,13 +890,84 @@ def _replace_resource_reservations(
     *,
     scheduler_key: str,
     reservations: list[ResourceReservation],
+    observed_admission_limits: dict[str, int] | None = None,
 ) -> None:
     """Atomically replace one scheduler's complete authoritative reservation set."""
+
+    target_usage: dict[str, int] = {}
+    for reservation in reservations:
+        target_usage[reservation.resource_id] = (
+            target_usage.get(reservation.resource_id, 0) + reservation.units
+        )
+    resource_ids = sorted(target_usage)
+    locked_resources: dict[str, dict[str, Any]] = {}
+    if resource_ids:
+        # Lock the physical pools in one global order. This makes capacity a
+        # system-wide invariant across processes and scheduler keys rather than
+        # an in-memory promise each scheduler can independently overbook.
+        cur.execute(
+            """
+            SELECT resource_id, capacity, system_headroom, enabled
+            FROM attention_execution_resources
+            WHERE resource_id = ANY(%s)
+            ORDER BY resource_id ASC
+            FOR UPDATE
+            """,
+            (resource_ids,),
+        )
+        locked_resources = {
+            row["resource_id"]: row
+            for row in (
+                _cursor_row_to_dict(cur, value) for value in cur.fetchall()
+            )
+        }
+        if set(locked_resources) != set(resource_ids):
+            raise RuntimeError("Reservation references an unknown resource pool")
 
     cur.execute(
         "DELETE FROM attention_resource_reservations WHERE scheduler_key = %s",
         (scheduler_key,),
     )
+    existing_usage: dict[str, int] = {}
+    if resource_ids:
+        cur.execute(
+            """
+            SELECT resource_id, sum(units) AS units
+            FROM attention_resource_reservations
+            WHERE resource_id = ANY(%s)
+            GROUP BY resource_id
+            """,
+            (resource_ids,),
+        )
+        existing_usage = {
+            row["resource_id"]: int(row["units"])
+            for row in (
+                _cursor_row_to_dict(cur, value) for value in cur.fetchall()
+            )
+        }
+        for resource_id, requested_units in target_usage.items():
+            resource = locked_resources[resource_id]
+            admissible_capacity = (
+                int(resource["capacity"]) - int(resource["system_headroom"])
+                if bool(resource["enabled"])
+                else 0
+            )
+            if observed_admission_limits is not None:
+                if resource_id not in observed_admission_limits:
+                    raise RuntimeError(
+                        "Observed admission limits are incomplete"
+                    )
+                admissible_capacity = min(
+                    admissible_capacity,
+                    observed_admission_limits[resource_id],
+                )
+            if (
+                existing_usage.get(resource_id, 0) + requested_units
+                > admissible_capacity
+            ):
+                raise RuntimeError(
+                    f"Global reservation capacity exceeded for {resource_id!r}"
+                )
     for reservation in reservations:
         cur.execute(
             """
@@ -823,6 +1019,13 @@ def _row_to_task(row: dict[str, Any]) -> AttentionTask:
                 ResourceRequirement.model_validate(value)
                 for value in (row["resource_requirements"] or [])
             ],
+            process_resource_estimate=(
+                ProcessResourceEstimate.model_validate(
+                    row["process_resource_estimate"]
+                )
+                if row["process_resource_estimate"] is not None
+                else None
+            ),
             dependency_ids=list(row["dependency_ids"] or []),
         ),
         status=TaskStatus(row["status"]),
@@ -875,6 +1078,8 @@ def _row_to_scheduling_epoch(row: dict[str, Any]) -> SchedulingEpoch:
         preemption_event_ids=list(row["preemption_event_ids"] or []),
         executed_preemption_ids=list(row["executed_preemption_ids"] or []),
         cancelled_preemption_ids=list(row["cancelled_preemption_ids"] or []),
+        resource_observation_id=row["resource_observation_id"],
+        resource_safety_policy_version=row["resource_safety_policy_version"],
     )
 
 

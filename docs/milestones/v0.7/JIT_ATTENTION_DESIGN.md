@@ -157,15 +157,16 @@ Priority inversion caused by high-priority work depending on lower-priority work
 
 Increment B introduced durable execution-resource definitions.
 
-Initial resource classes are:
+Current resource classes are:
 
 - `CPU_GENERAL`;
+- `MEMORY_RAM` (MiB);
 - `LLM_INFERENCE`;
 - `DATABASE`;
 - `FILESYSTEM_IO`;
 - `NETWORK_IO`.
 
-A resource definition contains stable identity, class, capacity, enabled state, and metadata.
+A resource definition contains stable identity, class, capacity, enabled state, and metadata. `MEMORY_RAM` was added by the pre-Increment-F observation gate because actual RAM pressure cannot be represented safely as a CPU or generic concurrency slot.
 
 Tasks may declare required resource classes. A task whose required class has no enabled capacity remains durably queued.
 
@@ -422,11 +423,19 @@ Already implemented in the v0.7 branch:
 - append-only preemption lifecycle evidence and immutable epoch references;
 - optimistic revision checks for concurrent checkpoint progress;
 - restart, idempotency, and transaction-rollback coverage for preemption state.
+- live host CPU/RAM discovery through a replaceable observer outside policy;
+- explicit MiB RAM requirements and conservative persisted process estimates;
+- versioned OS and uncertainty headroom plus a default single local-LLM slot;
+- PostgreSQL-enforced global capacity across concurrent scheduler writers;
+- immutable freshness-bounded resource observations referenced by exact epoch;
+- fail-closed missing/stale/failed-observation behavior;
+- atomic observation/epoch persistence and restart reconstruction.
 
 Not yet implemented:
 
-- authoritative live resource discovery/pressure snapshots referenced by epochs;
 - generic durable worker protocol;
+- claim-time resource revalidation immediately before process launch;
+- accelerator/VRAM and inference-backend pressure observation;
 - replacement of the live Primary-Agent orchestration path.
 
 ## Explicitly rejected next steps

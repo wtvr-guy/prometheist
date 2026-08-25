@@ -37,9 +37,10 @@ Prometheist therefore needs deterministic admission and reservation policy rathe
 
 Execution resources are authoritative system state. Resource classes may expose different capacity semantics.
 
-Initial v0.7 classes remain deliberately small:
+Current v0.7 classes remain deliberately small:
 
 - `CPU_GENERAL`
+- `MEMORY_RAM`
 - `LLM_INFERENCE`
 - `DATABASE`
 - `FILESYSTEM_IO`
@@ -47,7 +48,6 @@ Initial v0.7 classes remain deliberately small:
 
 Later measured requirements may justify quantitative classes or dimensions such as:
 
-- memory bytes;
 - GPU/VRAM capacity;
 - device I/O;
 - actuator capacity;
@@ -74,12 +74,15 @@ A task may eventually declare quantitative requirements or reservations such as:
 
 ```text
 CPU_GENERAL: 2 units
-MEMORY: 1 GiB
+MEMORY_RAM: 1024 MiB
 LLM_INFERENCE: 1 exclusive unit
 DATABASE: 1 unit
 ```
 
-Exact dimensions should be added only when tests demonstrate that they are required.
+`MEMORY_RAM` was added only after the live-observation gate demonstrated that
+RAM safety could not be represented by CPU/concurrency units. Further
+dimensions should still be added only when tests demonstrate that they are
+required.
 
 ## Determinism boundary
 
@@ -210,10 +213,17 @@ clarification's rule that priority alone is insufficient: committed work yields
 only when a higher-priority task is blocked on relevant capacity and
 deterministic interruption policy permits the minimum selected release.
 
-The current capacity input remains durable configuration rather than live host
-monitoring. The pre-worker resource-observation gate must persist any runtime
-measurement that changes admission and make the consuming epoch reference that
-snapshot explicitly.
+The pre-worker resource-observation gate now discovers local CPU/RAM capacity,
+samples current pressure outside policy, applies versioned OS and uncertainty
+headroom, persists the complete freshness-bounded input, and makes the
+consuming epoch reference that snapshot explicitly. Missing, stale, mismatched,
+or failed observations fail closed. Local LLM inference defaults to one slot;
+tasks carry persisted peak estimates, using conservative policy guesses until
+profiled or historical peak data is available.
+
+This is an assignment-admission gate, not yet a worker claim. Increment F must
+re-observe before process launch and make that guarded claim the exclusive
+Prometheist-owned worker-start path.
 
 Any discrete lanes introduced later should be derived from resource contracts where discrete slots are actually appropriate.
 
