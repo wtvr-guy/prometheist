@@ -14,6 +14,16 @@ from uuid import UUID, uuid5
 
 from pydantic import BaseModel, Field, model_validator
 
+from jit_agent.attention_assignments import (
+    ASSIGNMENT_POLICY_VERSION,
+    AssignmentStatus,
+    DurableAssignment,
+    SchedulingEpoch,
+    SchedulingEpochPlan,
+    SchedulingEpochStatus,
+    deterministic_assignment_id,
+    deterministic_epoch_id,
+)
 from jit_agent.attention_resources import (
     ExecutionResource,
     ExecutionResourceClass,
@@ -220,6 +230,13 @@ class SchedulerSnapshot(BaseModel):
     )
     admitted_task_ids: list[UUID] = Field(default_factory=list)
     resource_reservations: list[ResourceReservation] = Field(default_factory=list)
+    epoch_sequence: int = Field(default=0, ge=0)
+    assignment_policy_version: str = Field(
+        default=ASSIGNMENT_POLICY_VERSION,
+        min_length=1,
+    )
+    current_epoch: SchedulingEpoch | None = None
+    assignments: list[DurableAssignment] = Field(default_factory=list)
 
 
 def deterministic_task_id(namespace: UUID, task_key: str) -> UUID:
@@ -270,8 +287,13 @@ class JITAttentionScheduler:
         self.tasks: dict[UUID, AttentionTask] = {}
         self.resources: dict[str, ExecutionResource] = {}
         self.admission_policy_version = RESOURCE_ADMISSION_POLICY_VERSION
+        self.assignment_policy_version = ASSIGNMENT_POLICY_VERSION
         self.admitted_task_ids: list[UUID] = []
         self._resource_reservations: dict[UUID, ResourceReservation] = {}
+        self.epoch_sequence = 0
+        self.current_epoch: SchedulingEpoch | None = None
+        self._assignments: dict[UUID, DurableAssignment] = {}
+        self._pending_epoch_plan: SchedulingEpochPlan | None = None
         self.active_task_id: UUID | None = None
         self.pending_preemption_task_id: UUID | None = None
         self.cycle = 0
@@ -285,6 +307,9 @@ class JITAttentionScheduler:
         service_guarantees: dict[ServiceClass, ServiceGuarantee] | None = None,
     ) -> "JITAttentionScheduler":
         scheduler = cls(service_guarantees=service_guarantees)
+        task_ids = [task.task_id for task in snapshot.tasks]
+        if len(task_ids) != len(set(task_ids)):
+            raise ValueError("Snapshot contains duplicate task ids")
         scheduler.tasks = {task.task_id: task.model_copy(deep=True) for task in snapshot.tasks}
         resource_ids = [resource.resource_id for resource in snapshot.execution_resources]
         if len(resource_ids) != len(set(resource_ids)):
@@ -308,6 +333,20 @@ class JITAttentionScheduler:
             reservation.reservation_id: reservation.model_copy(deep=True)
             for reservation in snapshot.resource_reservations
         }
+        scheduler.epoch_sequence = snapshot.epoch_sequence
+        scheduler.assignment_policy_version = snapshot.assignment_policy_version
+        scheduler.current_epoch = (
+            snapshot.current_epoch.model_copy(deep=True)
+            if snapshot.current_epoch is not None
+            else None
+        )
+        assignment_ids = [assignment.assignment_id for assignment in snapshot.assignments]
+        if len(assignment_ids) != len(set(assignment_ids)):
+            raise ValueError("Snapshot contains duplicate assignment ids")
+        scheduler._assignments = {
+            assignment.assignment_id: assignment.model_copy(deep=True)
+            for assignment in snapshot.assignments
+        }
         scheduler.active_task_id = snapshot.active_task_id
         scheduler.pending_preemption_task_id = snapshot.pending_preemption_task_id
         scheduler.cycle = snapshot.cycle
@@ -315,6 +354,7 @@ class JITAttentionScheduler:
         return scheduler
 
     def snapshot(self) -> SchedulerSnapshot:
+        self._validate_snapshot()
         return SchedulerSnapshot(
             cycle=self.cycle,
             active_task_id=self.active_task_id,
@@ -327,14 +367,22 @@ class JITAttentionScheduler:
             admission_policy_version=self.admission_policy_version,
             admitted_task_ids=list(self.admitted_task_ids),
             resource_reservations=self.resource_reservations(),
+            epoch_sequence=self.epoch_sequence,
+            assignment_policy_version=self.assignment_policy_version,
+            current_epoch=(
+                self.current_epoch.model_copy(deep=True)
+                if self.current_epoch is not None
+                else None
+            ),
+            assignments=self.worker_visible_assignments(),
         )
 
     def configure_execution_resource(self, resource: ExecutionResource) -> ExecutionResource:
         """Create or update one durable resource definition deterministically.
 
         A resource id may change capacity, enabled state, or metadata, but it may
-        not silently change resource class. Stable identity now becomes the
-        basis for deterministic lane identity in the next v0.7 increment.
+        not silently change resource class or invalidate a committed
+        reservation. Configuration changes invalidate only provisional plans.
         """
 
         existing = self.resources.get(resource.resource_id)
@@ -343,8 +391,19 @@ class JITAttentionScheduler:
                 f"Execution resource {resource.resource_id!r} cannot change class "
                 f"from {existing.resource_class.value} to {resource.resource_class.value}"
             )
-        self._invalidate_resource_admission()
         stored = resource.model_copy(deep=True)
+        if self.current_epoch is not None:
+            committed_units = sum(
+                reservation.units
+                for reservation in self._resource_reservations.values()
+                if reservation.resource_id == stored.resource_id
+            )
+            if committed_units > stored.admissible_capacity:
+                raise ValueError(
+                    f"Execution resource {stored.resource_id!r} cannot reduce safe "
+                    "capacity below committed reservations"
+                )
+        self._invalidate_scheduling_plan()
         self.resources[stored.resource_id] = stored
         return stored.model_copy(deep=True)
 
@@ -362,6 +421,203 @@ class JITAttentionScheduler:
         reservations.sort(key=resource_reservation_sort_key)
         return [reservation.model_copy(deep=True) for reservation in reservations]
 
+    def worker_visible_assignments(self) -> list[DurableAssignment]:
+        """Return only the complete assignment set of the committed epoch."""
+
+        if (
+            self.current_epoch is None
+            or self.current_epoch.status is not SchedulingEpochStatus.COMMITTED
+        ):
+            return []
+        return [
+            self._assignments[assignment_id].model_copy(deep=True)
+            for assignment_id in self.current_epoch.assignment_ids
+        ]
+
+    def pending_scheduling_epoch(self) -> SchedulingEpochPlan | None:
+        """Return a copy of the provisional, deliberately invisible epoch plan."""
+
+        if self._pending_epoch_plan is None:
+            return None
+        return self._pending_epoch_plan.model_copy(deep=True)
+
+    def plan_scheduling_epoch(self) -> SchedulingEpochPlan:
+        """Plan the next complete deterministic assignment/reservation epoch.
+
+        Planning is side-effect free with respect to committed worker state.
+        The durability adapter makes this plan authoritative only after its
+        epoch, assignments, reservation snapshot, and scheduler pointer commit
+        in one PostgreSQL transaction.
+        """
+
+        if self._pending_epoch_plan is not None:
+            return self._pending_epoch_plan.model_copy(deep=True)
+
+        self._validate_snapshot()
+        planned_cycle = self.cycle + 1
+        next_sequence = self.epoch_sequence + 1
+        enabled_resources = self.execution_resources(enabled_only=True)
+        remaining = {
+            resource.resource_id: resource.admissible_capacity
+            for resource in enabled_resources
+        }
+        resources_by_class: dict[ExecutionResourceClass, list[ExecutionResource]] = {
+            resource_class: [] for resource_class in ExecutionResourceClass
+        }
+        for resource in enabled_resources:
+            resources_by_class[resource.resource_class].append(resource)
+
+        assignments: list[DurableAssignment] = []
+        reservations: list[ResourceReservation] = []
+        admitted: list[UUID] = []
+
+        if self.current_epoch is not None:
+            for assignment_id in self.current_epoch.assignment_ids:
+                assignment = self._assignments[assignment_id].model_copy(deep=True)
+                task_reservations = self._reservations_for_task(assignment.task_id)
+                self._consume_preserved_reservations(
+                    task_reservations,
+                    remaining=remaining,
+                )
+                assignments.append(assignment)
+                reservations.extend(task_reservations)
+                admitted.append(assignment.task_id)
+        elif self.admitted_task_ids:
+            # Upgrade an Increment C reservation-only snapshot without churn.
+            for task_id in self.admitted_task_ids:
+                task_reservations = self._reservations_for_task(task_id)
+                self._consume_preserved_reservations(
+                    task_reservations,
+                    remaining=remaining,
+                )
+                task = self.tasks[task_id]
+                assignments.append(
+                    DurableAssignment(
+                        assignment_id=deterministic_assignment_id(
+                            task_id,
+                            task_revision=task.revision,
+                            reservations=task_reservations,
+                        ),
+                        task_id=task_id,
+                        task_revision=task.revision,
+                        created_epoch_sequence=next_sequence,
+                        reservation_ids=[
+                            reservation.reservation_id
+                            for reservation in task_reservations
+                        ],
+                    )
+                )
+                reservations.extend(task_reservations)
+                admitted.append(task_id)
+
+        preserved_ids = set(admitted)
+        candidate_ids: list[UUID] = []
+        if self.active_task_id is not None and self.active_task_id not in preserved_ids:
+            candidate_ids.append(self.active_task_id)
+        candidate_ids.extend(
+            task_id
+            for task_id in self._ranked_dependency_satisfied_queued_task_ids(
+                cycle=planned_cycle
+            )
+            if task_id not in preserved_ids and task_id != self.active_task_id
+        )
+
+        unadmitted: list[UUID] = []
+        for task_id in candidate_ids:
+            allocation = self._allocate_task_resources(
+                self.tasks[task_id],
+                remaining=remaining,
+                resources_by_class=resources_by_class,
+            )
+            if allocation is None:
+                if task_id == self.active_task_id:
+                    raise RuntimeError(
+                        "Active task resource requirements exceed the safe capacity envelope"
+                    )
+                unadmitted.append(task_id)
+                continue
+
+            task_reservations, remaining = allocation
+            task_reservations.sort(key=resource_reservation_sort_key)
+            task = self.tasks[task_id]
+            assignment = DurableAssignment(
+                assignment_id=deterministic_assignment_id(
+                    task_id,
+                    task_revision=task.revision,
+                    reservations=task_reservations,
+                ),
+                task_id=task_id,
+                task_revision=task.revision,
+                created_epoch_sequence=next_sequence,
+                reservation_ids=[
+                    reservation.reservation_id
+                    for reservation in task_reservations
+                ],
+            )
+            assignments.append(assignment)
+            reservations.extend(task_reservations)
+            admitted.append(task_id)
+
+        reservations.sort(key=resource_reservation_sort_key)
+        assignment_ids = [assignment.assignment_id for assignment in assignments]
+        previous_epoch_id = (
+            self.current_epoch.epoch_id if self.current_epoch is not None else None
+        )
+        epoch_id = deterministic_epoch_id(
+            sequence=next_sequence,
+            previous_epoch_id=previous_epoch_id,
+            scheduler_cycle=planned_cycle,
+            admission_policy_version=self.admission_policy_version,
+            assignment_policy_version=self.assignment_policy_version,
+            assignment_ids=assignment_ids,
+            reservations=reservations,
+        )
+        plan = SchedulingEpochPlan(
+            epoch=SchedulingEpoch(
+                epoch_id=epoch_id,
+                sequence=next_sequence,
+                previous_epoch_id=previous_epoch_id,
+                scheduler_cycle=planned_cycle,
+                admission_policy_version=self.admission_policy_version,
+                assignment_policy_version=self.assignment_policy_version,
+                status=SchedulingEpochStatus.PLANNED,
+                assignment_ids=assignment_ids,
+                reservations=reservations,
+            ),
+            admitted_task_ids=admitted,
+            unadmitted_task_ids=unadmitted,
+            assignments=assignments,
+        )
+        self._pending_epoch_plan = plan.model_copy(deep=True)
+        return plan.model_copy(deep=True)
+
+    def _commit_pending_epoch(self, epoch_id: UUID) -> None:
+        """Publish a plan in memory after the durability transaction commits."""
+
+        plan = self._pending_epoch_plan
+        if plan is None or plan.epoch.epoch_id != epoch_id:
+            raise RuntimeError("No matching provisional scheduling epoch")
+        committed_epoch = plan.epoch.model_copy(
+            update={"status": SchedulingEpochStatus.COMMITTED},
+            deep=True,
+        )
+        self.cycle = committed_epoch.scheduler_cycle
+        self.epoch_sequence = committed_epoch.sequence
+        self.current_epoch = committed_epoch
+        self.admission_policy_version = committed_epoch.admission_policy_version
+        self.assignment_policy_version = committed_epoch.assignment_policy_version
+        self.admitted_task_ids = list(plan.admitted_task_ids)
+        self._resource_reservations = {
+            reservation.reservation_id: reservation.model_copy(deep=True)
+            for reservation in committed_epoch.reservations
+        }
+        self._assignments = {
+            assignment.assignment_id: assignment.model_copy(deep=True)
+            for assignment in plan.assignments
+        }
+        self._pending_epoch_plan = None
+        self._validate_snapshot()
+
     def reconcile_resource_admission(self) -> ResourceAdmissionPlan:
         """Reserve a deterministic attention-ordered set that fits safely.
 
@@ -370,9 +626,15 @@ class JITAttentionScheduler:
         Dependency-satisfied queued work is then considered in normal attention
         order. Each task's multi-resource contract is all-or-nothing.
 
-        This records admission and reservations only. Durable worker assignments
-        and scheduling epochs remain separate follow-up work.
+        This retained Increment C compatibility path records admission and
+        reservations only. ``plan_scheduling_epoch`` is the forward assignment
+        path.
         """
+
+        if self.current_epoch is not None or self._pending_epoch_plan is not None:
+            raise RuntimeError(
+                "Reservation-only reconciliation is unavailable after epoch scheduling begins"
+            )
 
         remaining = {
             resource.resource_id: resource.admissible_capacity
@@ -448,7 +710,7 @@ class JITAttentionScheduler:
         if count < 0:
             raise ValueError("count must be >= 0")
         if count:
-            self._invalidate_resource_admission()
+            self._invalidate_scheduling_plan()
         self.cycle += count
         return self.cycle
 
@@ -461,6 +723,7 @@ class JITAttentionScheduler:
     def reconcile_focus(self) -> FocusDecision:
         """Choose what should own focus at the current deterministic cycle."""
 
+        self._require_legacy_focus_mode()
         self.advance_cycle()
         candidate_id = self._best_queued_task_id()
 
@@ -523,6 +786,7 @@ class JITAttentionScheduler:
     def checkpoint_active(self) -> FocusDecision:
         """Yield at a safe boundary if a pending/higher-priority task exists."""
 
+        self._require_legacy_focus_mode()
         if self.active_task_id is None:
             return self.reconcile_focus()
 
@@ -565,6 +829,7 @@ class JITAttentionScheduler:
         )
 
     def complete_active(self, resumable_state: dict[str, Any] | None = None) -> AttentionTask:
+        self._require_legacy_focus_mode()
         if self.active_task_id is None:
             raise RuntimeError("No active task")
         task_id = self.active_task_id
@@ -576,6 +841,7 @@ class JITAttentionScheduler:
         return self.tasks[task_id].model_copy(deep=True)
 
     def fail_active(self, resumable_state: dict[str, Any] | None = None) -> AttentionTask:
+        self._require_legacy_focus_mode()
         if self.active_task_id is None:
             raise RuntimeError("No active task")
         task_id = self.active_task_id
@@ -592,22 +858,26 @@ class JITAttentionScheduler:
         self._replace_task(task_id, resumable_state=dict(state))
         return self.tasks[task_id].model_copy(deep=True)
 
-    def _ranked_queued_task_ids(self) -> list[UUID]:
+    def _ranked_queued_task_ids(self, *, cycle: int | None = None) -> list[UUID]:
         runnable = [
             self.tasks[task_id]
-            for task_id in self._ranked_dependency_satisfied_queued_task_ids()
+            for task_id in self._ranked_dependency_satisfied_queued_task_ids(cycle=cycle)
             if self._resources_satisfied(self.tasks[task_id])
         ]
         return [task.task_id for task in runnable]
 
-    def _ranked_dependency_satisfied_queued_task_ids(self) -> list[UUID]:
+    def _ranked_dependency_satisfied_queued_task_ids(
+        self,
+        *,
+        cycle: int | None = None,
+    ) -> list[UUID]:
         runnable = [
             task
             for task in self.tasks.values()
             if task.status is TaskStatus.QUEUED
             and self._dependencies_satisfied(task)
         ]
-        runnable.sort(key=self._queue_key)
+        runnable.sort(key=lambda task: self._queue_key(task, cycle=cycle))
         return [task.task_id for task in runnable]
 
     def _best_queued_task_id(self) -> UUID | None:
@@ -668,27 +938,38 @@ class JITAttentionScheduler:
                 return None
         return reservations, tentative_remaining
 
-    def _service_due(self, task: AttentionTask) -> bool:
+    def _service_due(self, task: AttentionTask, *, cycle: int | None = None) -> bool:
         guarantee = self.service_guarantees[task.metadata.service_class]
         if guarantee.max_wait_cycles is None:
             return False
-        waited = max(0, self.cycle - task.enqueued_cycle)
+        current_cycle = self.cycle if cycle is None else cycle
+        waited = max(0, current_cycle - task.enqueued_cycle)
         return waited >= guarantee.max_wait_cycles
 
-    def _effective_priority(self, task: AttentionTask) -> PriorityClass:
+    def _effective_priority(
+        self,
+        task: AttentionTask,
+        *,
+        cycle: int | None = None,
+    ) -> PriorityClass:
         base = derive_priority(task.metadata)
         if task.status is not TaskStatus.QUEUED:
             return base
         guarantee = self.service_guarantees[task.metadata.service_class]
-        if not self._service_due(task):
+        if not self._service_due(task, cycle=cycle):
             return base
         return PriorityClass(min(int(base), int(guarantee.guaranteed_priority)))
 
-    def _queue_key(self, task: AttentionTask) -> tuple[int, int, datetime, int, str]:
+    def _queue_key(
+        self,
+        task: AttentionTask,
+        *,
+        cycle: int | None = None,
+    ) -> tuple[int, int, datetime, int, str]:
         # A due guarantee wins tie-breaking within its promoted priority class.
         return (
-            int(self._effective_priority(task)),
-            0 if self._service_due(task) else 1,
+            int(self._effective_priority(task, cycle=cycle)),
+            0 if self._service_due(task, cycle=cycle) else 1,
             _normalize_deadline(task.metadata.deadline),
             task.created_seq,
             task.task_id.hex,
@@ -720,7 +1001,7 @@ class JITAttentionScheduler:
         self.pending_preemption_task_id = None
 
     def _transition(self, task_id: UUID, to_status: TaskStatus, reason: str) -> None:
-        self._invalidate_resource_admission()
+        self._invalidate_scheduling_plan()
         task = self.tasks[task_id]
         from_status = task.status
         revision = task.revision + 1
@@ -740,11 +1021,45 @@ class JITAttentionScheduler:
         )
 
     def _replace_task(self, task_id: UUID, **updates: Any) -> None:
+        self._invalidate_scheduling_plan()
         self.tasks[task_id] = self.tasks[task_id].model_copy(update=updates, deep=True)
 
-    def _invalidate_resource_admission(self) -> None:
-        self.admitted_task_ids = []
-        self._resource_reservations = {}
+    def _reservations_for_task(self, task_id: UUID) -> list[ResourceReservation]:
+        reservations = [
+            reservation.model_copy(deep=True)
+            for reservation in self._resource_reservations.values()
+            if reservation.task_id == task_id
+        ]
+        reservations.sort(key=resource_reservation_sort_key)
+        return reservations
+
+    @staticmethod
+    def _consume_preserved_reservations(
+        reservations: list[ResourceReservation],
+        *,
+        remaining: dict[str, int],
+    ) -> None:
+        for reservation in reservations:
+            if reservation.resource_id not in remaining:
+                raise RuntimeError("Committed reservation resource is unavailable")
+            remaining[reservation.resource_id] -= reservation.units
+            if remaining[reservation.resource_id] < 0:
+                raise RuntimeError("Committed reservations exceed safe resource capacity")
+
+    def _invalidate_scheduling_plan(self) -> None:
+        self._pending_epoch_plan = None
+        if self.current_epoch is None:
+            # Increment C admission has no committed epoch boundary and is stale
+            # after a scheduling mutation. Increment D committed state remains
+            # worker-visible until a replacement epoch commits.
+            self.admitted_task_ids = []
+            self._resource_reservations = {}
+
+    def _require_legacy_focus_mode(self) -> None:
+        if self.current_epoch is not None or self._pending_epoch_plan is not None:
+            raise RuntimeError(
+                "Single-focus lifecycle operations are unavailable in epoch mode"
+            )
 
     def _validate_snapshot(self) -> None:
         running = [task.task_id for task in self.tasks.values() if task.status is TaskStatus.RUNNING]
@@ -820,3 +1135,82 @@ class JITAttentionScheduler:
                 raise ValueError(
                     "Admitted task reservations do not exactly satisfy its requirements"
                 )
+
+        if self.current_epoch is None:
+            if self.epoch_sequence != 0:
+                raise ValueError("Snapshot without a current epoch must have sequence zero")
+            if self._assignments:
+                raise ValueError("Snapshot assignments require a committed current epoch")
+            return
+
+        epoch = self.current_epoch
+        if epoch.status is not SchedulingEpochStatus.COMMITTED:
+            raise ValueError("The current scheduling epoch must be committed")
+        if epoch.sequence != self.epoch_sequence:
+            raise ValueError("Current epoch sequence does not match scheduler state")
+        if epoch.scheduler_cycle > self.cycle:
+            raise ValueError("Current epoch cannot be newer than scheduler state")
+        if epoch.admission_policy_version != self.admission_policy_version:
+            raise ValueError("Current epoch admission policy does not match scheduler state")
+        if epoch.assignment_policy_version != self.assignment_policy_version:
+            raise ValueError("Current epoch assignment policy does not match scheduler state")
+        if epoch.sequence == 1 and epoch.previous_epoch_id is not None:
+            raise ValueError("The first scheduling epoch cannot have a predecessor")
+        if epoch.sequence > 1 and epoch.previous_epoch_id is None:
+            raise ValueError("A later scheduling epoch must identify its predecessor")
+
+        assignment_ids = list(self._assignments)
+        if set(assignment_ids) != set(epoch.assignment_ids):
+            raise ValueError("Current epoch assignment ids do not match assignment state")
+        assignments = [
+            self._assignments[assignment_id]
+            for assignment_id in epoch.assignment_ids
+        ]
+        if [assignment.task_id for assignment in assignments] != self.admitted_task_ids:
+            raise ValueError("Current assignments must match admitted task order")
+
+        current_reservations = self.resource_reservations()
+        if [
+            reservation.model_dump(mode="json")
+            for reservation in epoch.reservations
+        ] != [
+            reservation.model_dump(mode="json")
+            for reservation in current_reservations
+        ]:
+            raise ValueError("Current epoch reservation snapshot does not match scheduler state")
+
+        for assignment in assignments:
+            task = self.tasks.get(assignment.task_id)
+            if task is None:
+                raise ValueError("Assignment must reference an existing task")
+            if assignment.status is not AssignmentStatus.READY:
+                raise ValueError("Increment D assignments must be ready")
+            if assignment.task_revision != task.revision:
+                raise ValueError("Assignment task revision does not match current task")
+            if assignment.created_epoch_sequence > epoch.sequence:
+                raise ValueError("Assignment cannot be created after its current epoch")
+            task_reservations = self._reservations_for_task(assignment.task_id)
+            if set(assignment.reservation_ids) != {
+                reservation.reservation_id for reservation in task_reservations
+            }:
+                raise ValueError(
+                    "Assignment reservation ids do not match current task reservations"
+                )
+            if assignment.assignment_id != deterministic_assignment_id(
+                assignment.task_id,
+                task_revision=assignment.task_revision,
+                reservations=task_reservations,
+            ):
+                raise ValueError("Assignment id is not deterministic")
+
+        expected_epoch_id = deterministic_epoch_id(
+            sequence=epoch.sequence,
+            previous_epoch_id=epoch.previous_epoch_id,
+            scheduler_cycle=epoch.scheduler_cycle,
+            admission_policy_version=epoch.admission_policy_version,
+            assignment_policy_version=epoch.assignment_policy_version,
+            assignment_ids=epoch.assignment_ids,
+            reservations=epoch.reservations,
+        )
+        if epoch.epoch_id != expected_epoch_id:
+            raise ValueError("Scheduling epoch id is not deterministic")

@@ -208,6 +208,13 @@ CREATE TABLE IF NOT EXISTS attention_scheduler_state (
     pending_preemption_task_id UUID REFERENCES attention_tasks(task_id),
     admission_policy_version TEXT NOT NULL DEFAULT 'v0.7-c-greedy-v1',
     admitted_task_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+    epoch_sequence BIGINT NOT NULL DEFAULT 0 CHECK (epoch_sequence >= 0),
+    current_epoch_id UUID,
+    assignment_policy_version TEXT NOT NULL DEFAULT 'v0.7-d-epoch-v1',
+    CONSTRAINT attention_scheduler_epoch_pointer_check CHECK (
+        (epoch_sequence = 0 AND current_epoch_id IS NULL)
+        OR (epoch_sequence >= 1 AND current_epoch_id IS NOT NULL)
+    ),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -217,6 +224,101 @@ ALTER TABLE attention_scheduler_state
 
 ALTER TABLE attention_scheduler_state
     ADD COLUMN IF NOT EXISTS admitted_task_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+ALTER TABLE attention_scheduler_state
+    ADD COLUMN IF NOT EXISTS epoch_sequence BIGINT NOT NULL DEFAULT 0;
+
+ALTER TABLE attention_scheduler_state
+    ADD COLUMN IF NOT EXISTS current_epoch_id UUID;
+
+ALTER TABLE attention_scheduler_state
+    ADD COLUMN IF NOT EXISTS assignment_policy_version TEXT NOT NULL
+        DEFAULT 'v0.7-d-epoch-v1';
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'attention_scheduler_epoch_pointer_check'
+          AND conrelid = 'attention_scheduler_state'::regclass
+    ) THEN
+        ALTER TABLE attention_scheduler_state
+            ADD CONSTRAINT attention_scheduler_epoch_pointer_check CHECK (
+                (epoch_sequence = 0 AND current_epoch_id IS NULL)
+                OR (epoch_sequence >= 1 AND current_epoch_id IS NOT NULL)
+            );
+    END IF;
+END
+$$;
+
+-- Assignment and epoch rows are append-only authoritative scheduling history.
+-- PLANNED epochs exist only in memory; a database row is worker-visible only
+-- when the scheduler pointer and its complete reservation set commit with it.
+CREATE TABLE IF NOT EXISTS attention_assignments (
+    scheduler_key TEXT NOT NULL,
+    assignment_id UUID NOT NULL,
+    task_id UUID NOT NULL REFERENCES attention_tasks(task_id),
+    task_revision BIGINT NOT NULL CHECK (task_revision >= 0),
+    created_epoch_sequence BIGINT NOT NULL CHECK (created_epoch_sequence >= 1),
+    reservation_ids JSONB NOT NULL DEFAULT '[]'::jsonb
+        CHECK (jsonb_typeof(reservation_ids) = 'array'),
+    status TEXT NOT NULL CHECK (status = 'READY'),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (scheduler_key, assignment_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_attention_assignments_task
+    ON attention_assignments (scheduler_key, task_id, created_epoch_sequence);
+
+CREATE TABLE IF NOT EXISTS attention_scheduling_epochs (
+    scheduler_key TEXT NOT NULL,
+    epoch_id UUID NOT NULL,
+    epoch_sequence BIGINT NOT NULL CHECK (epoch_sequence >= 1),
+    previous_epoch_id UUID,
+    scheduler_cycle BIGINT NOT NULL CHECK (scheduler_cycle >= 0),
+    admission_policy_version TEXT NOT NULL,
+    assignment_policy_version TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status = 'COMMITTED'),
+    assignment_ids JSONB NOT NULL DEFAULT '[]'::jsonb
+        CHECK (jsonb_typeof(assignment_ids) = 'array'),
+    reservations JSONB NOT NULL DEFAULT '[]'::jsonb
+        CHECK (jsonb_typeof(reservations) = 'array'),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (scheduler_key, epoch_id),
+    UNIQUE (scheduler_key, epoch_sequence)
+);
+
+CREATE INDEX IF NOT EXISTS idx_attention_scheduling_epochs_current
+    ON attention_scheduling_epochs (scheduler_key, epoch_sequence DESC);
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'attention_scheduling_epochs_previous_fk'
+          AND conrelid = 'attention_scheduling_epochs'::regclass
+    ) THEN
+        ALTER TABLE attention_scheduling_epochs
+            ADD CONSTRAINT attention_scheduling_epochs_previous_fk
+            FOREIGN KEY (scheduler_key, previous_epoch_id)
+            REFERENCES attention_scheduling_epochs(scheduler_key, epoch_id);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'attention_scheduler_current_epoch_fk'
+          AND conrelid = 'attention_scheduler_state'::regclass
+    ) THEN
+        ALTER TABLE attention_scheduler_state
+            ADD CONSTRAINT attention_scheduler_current_epoch_fk
+            FOREIGN KEY (scheduler_key, current_epoch_id)
+            REFERENCES attention_scheduling_epochs(scheduler_key, epoch_id);
+    END IF;
+END
+$$;
 
 CREATE TABLE IF NOT EXISTS attention_resource_reservations (
     reservation_id UUID PRIMARY KEY,

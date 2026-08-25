@@ -203,7 +203,9 @@ Installing pgvector on a development machine is still useful when the repository
 
 Increment B remains valid and is not reverted. It established explicit durable resource classes/capacities and resource-gated runnability.
 
-The next implementation should build **resource reservations and deterministic admission semantics** before treating fixed durable lanes as the central capacity abstraction.
+Increments C and D now implement **resource reservations, deterministic admission semantics, and atomically published assignment epochs** without treating fixed durable lanes as the central capacity abstraction.
+
+The next scheduling increment is contention-driven preemption. It must retain this clarification's rule that priority alone is insufficient: committed work yields only when a higher-priority task is blocked on relevant capacity and deterministic interruption policy permits the necessary release.
 
 Any discrete lanes introduced later should be derived from resource contracts where discrete slots are actually appropriate.
 

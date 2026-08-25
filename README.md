@@ -24,7 +24,7 @@ The Primary Agent/specialist structure used to prove that result is **superseded
 
 ### v0.7 — in development: durable JIT Attention Fabric
 
-The first v0.7 increments establish deterministic durable task scheduling, structured priority metadata, service guarantees, interruption policies, dependency gating, resumable PostgreSQL state, configured safe headroom, quantitative resource admission/reservations, and forced-process restart recovery.
+The first v0.7 increments establish deterministic durable task scheduling, structured priority metadata, service guarantees, interruption policies, dependency gating, resumable PostgreSQL state, configured safe headroom, quantitative resource admission/reservations, atomic durable scheduling epochs and assignment sets, and forced-process restart recovery.
 
 The target is a resource-aware **Attention Fabric** that determines which durable tasks deserve execution and which compatible subset can safely execute concurrently on available hardware. Higher-priority work does not automatically kill lower-priority work: it runs concurrently when safe capacity exists and preempts only when resource contention requires it and interruption policy permits it.
 
@@ -122,11 +122,11 @@ It distinguishes:
 
 The repository is in transition. It currently contains both accepted historical mechanisms and new v0.7 mechanisms.
 
-Implemented/verified foundations include PostgreSQL authoritative history, deterministic ordering, the Memory Kernel, provenance-bearing `MemoryPacket`s, shared JIT Memory contracts, v0.6 compatibility paths, deterministic attention/task state, resource-admission work, and restart/replay tests.
+Implemented/verified foundations include PostgreSQL authoritative history, deterministic ordering, the Memory Kernel, provenance-bearing `MemoryPacket`s, shared JIT Memory contracts, v0.6 compatibility paths, deterministic attention/task state, resource admission, durable epoch-wide assignments, atomic PostgreSQL publication, and restart/replay tests.
 
 `src/jit_agent/primary_agent.py`, Primary-Agent tests, and the current CLI are **legacy v0.6 compatibility surfaces**, not declarations of the target architecture. They remain until their useful behavioral baselines are reproduced by the attention-centric execution path. New architecture work should not extend the Primary Agent as a permanent coordinator.
 
-Durable scheduling-epoch assignments, contention-driven concurrent preemption, the worker protocol, perception/salience, deterministic external-data retention, session-independent interaction mechanics, and the fully integrated cognitive loop remain roadmap work unless a milestone document states otherwise.
+Contention-driven concurrent preemption, the worker claim/lease protocol, perception/salience, deterministic external-data retention, session-independent interaction mechanics, and the fully integrated cognitive loop remain roadmap work unless a milestone document states otherwise.
 
 ## Roadmap
 

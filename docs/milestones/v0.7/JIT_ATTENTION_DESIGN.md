@@ -4,7 +4,7 @@
 
 This document began as the design for a deterministic single-focus scheduler. The first v0.7 implementation increment built and tested that kernel.
 
-After the 2026-08-24 architectural pivot, the single-focus scheduler became the baseline for a more general **JIT Attention Fabric**. Increment B then made execution resources explicit and durable. A subsequent design clarification separated **attention priority** from **resource admission** so that Prometheist can exploit safe parallelism rather than treating fixed lanes as the universal capacity model.
+After the 2026-08-24 architectural pivot, the single-focus scheduler became the baseline for a more general **JIT Attention Fabric**. Increment B then made execution resources explicit and durable. A subsequent design clarification separated **attention priority** from **resource admission** so that Prometheist can exploit safe parallelism rather than treating fixed lanes as the universal capacity model. Increment C implemented quantitative admission/reservations, and Increment D now publishes complete durable assignment sets through atomic scheduling epochs.
 
 See:
 
@@ -202,7 +202,7 @@ The operating system may schedule threads nondeterministically at a lower level;
 
 ## From focus to Attention Fabric
 
-The first implementation has one `active_task_id`. The target generalization replaces that single focus with a durable admitted assignment set.
+The retained Increment A compatibility kernel has one `active_task_id`. Increment D adds the forward generalization: a durable admitted assignment set owned by a committed scheduling epoch.
 
 Conceptually:
 
@@ -245,7 +245,7 @@ If retained, a lane means one durable slot within a specific resource contract o
 
 Workers must not independently race to claim the next queue item.
 
-Each scheduling epoch should be application-owned and deterministic:
+Each scheduling epoch is application-owned and deterministic:
 
 1. read the authoritative runnable-task set;
 2. read/capture the authoritative safe resource state;
@@ -253,11 +253,13 @@ Each scheduling epoch should be application-owned and deterministic:
 4. preserve still-valid existing reservations/assignments where possible;
 5. iterate tasks in deterministic order;
 6. admit compatible tasks whose reservations fit;
-7. if higher-priority work cannot fit, deterministically evaluate legal lower-priority victims;
+7. in Increment E, if higher-priority work cannot fit, deterministically evaluate legal lower-priority victims;
 8. persist the entire resulting reservation/assignment set atomically;
 9. release only committed assignments to workers.
 
-If two runs begin from identical durable task state and identical resource state, the resulting assignment set should be identical.
+If two runs begin from identical durable task state and identical resource state, the resulting assignment set is identical. Increment D preserves all valid committed assignments before admitting new candidates; it does not yet release a lower-priority assignment to make room for a later higher-priority task.
+
+A `PLANNED` epoch is provisional scheduler state. Workers can read assignments only from the scheduler's current `COMMITTED` epoch. PostgreSQL atomically commits immutable assignment rows, the immutable epoch and its complete reservation snapshot, the replaceable current reservation set, and the current-epoch pointer. The in-memory pointer changes only after that transaction succeeds.
 
 ## Deterministic admission baseline
 
@@ -266,12 +268,12 @@ The first admission algorithm should remain deliberately simple.
 A reasonable baseline is:
 
 1. iterate runnable tasks in deterministic priority order;
-2. preserve existing valid assignments unless a higher-priority task is blocked by resource contention;
+2. preserve existing valid assignments;
 3. admit each candidate whose reservations fit inside remaining safe capacity;
-4. if a higher-priority candidate cannot fit, identify lower-priority compatible work that may legally yield;
-5. select the minimum required victims using a deterministic total order;
-6. do not preempt anything if safe concurrent admission is possible;
-7. continue until no additional task can be admitted.
+4. leave candidates that do not fit queued in Increment D;
+5. continue until no additional task can be admitted.
+
+Increment E extends this baseline: only then may the scheduler identify lower-priority compatible work that may legally yield, select the minimum required victims using a deterministic total order, and release reservations to admit blocked higher-priority work.
 
 Do not introduce an optimization solver until a frozen benchmark demonstrates that a simpler deterministic algorithm causes a material problem.
 
@@ -299,7 +301,7 @@ If several compatible active tasks could be preempted, victim selection must its
 
 The Attention Fabric requires durable state beyond the original single-focus scheduler snapshot.
 
-Expected concepts include:
+Increment D persists:
 
 - execution-resource definitions;
 - resource snapshots or policy-versioned configured capacity;
@@ -307,13 +309,14 @@ Expected concepts include:
 - active reservations;
 - scheduling epoch identifiers;
 - durable assignment identifiers;
-- optional lane/slot identifiers for discrete resource contracts;
-- assignment status/lease state;
-- pending checkpoint preemptions;
-- worker claim/heartbeat metadata if later justified;
-- idempotency keys for externally visible capability effects.
+- a `READY` assignment status that denotes entitlement, not a worker claim;
+- an explicit assignment-policy version;
+- append-only immutable epoch and assignment rows;
+- the authoritative current-epoch pointer and current reservation set.
 
-Exact schema changes should be introduced incrementally and tested through migrations when implemented.
+Still-future worker/preemption concepts include optional lane/slot identifiers for discrete resource contracts, assignment claims/leases, pending checkpoint preemptions, worker heartbeat metadata, and idempotency keys for externally visible capability effects.
+
+Schema changes are introduced incrementally and must remain idempotent for existing local v0.7 databases.
 
 ## Stateless worker contract
 
@@ -401,12 +404,19 @@ Already implemented in the v0.7 branch:
 - explicit admission-policy versioning;
 - durable admitted-task and reservation state;
 - atomic PostgreSQL replacement/restart reconstruction of reservation sets;
-- snapshot validation against incomplete or oversubscribed reservation state.
+- snapshot validation against incomplete or oversubscribed reservation state;
+- deterministic `SchedulingEpoch` and `DurableAssignment` identities;
+- policy-versioned, attention-ordered assignment sets over all admitted tasks;
+- preservation of committed assignment/reservation identity across later arrivals;
+- provisional epoch isolation from worker-visible state;
+- atomic PostgreSQL publication of immutable assignments, immutable complete epoch snapshots, current reservations, and the current-epoch pointer;
+- stale-scheduler generation rejection;
+- idempotent epoch persistence and exact restart reconstruction;
+- rollback verification that partial epoch persistence exposes no authoritative state;
+- validation of complete epoch, assignment, revision, policy, and reservation consistency.
 
 Not yet implemented:
 
-- scheduling epochs over several active tasks;
-- durable worker-visible assignment sets;
 - contention-driven multi-task preemption;
 - generic durable worker protocol;
 - replacement of the live Primary-Agent orchestration path.

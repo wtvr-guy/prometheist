@@ -35,7 +35,7 @@ The `v0.6-capability-registry` branch is intentionally not merged wholesale into
 ## Active milestone
 
 - [`milestones/v0.7/README.md`](milestones/v0.7/README.md) — v0.7 scope and implementation sequence for the durable resource-aware JIT Attention Fabric, including the planned adaptation of deterministic capability discovery and the future continuity-regression migration gate.
-- [`milestones/v0.7/JIT_ATTENTION_DESIGN.md`](milestones/v0.7/JIT_ATTENTION_DESIGN.md) — deterministic scheduler invariants, implemented quantitative admission/reservations, and the remaining assignment/preemption generalization.
+- [`milestones/v0.7/JIT_ATTENTION_DESIGN.md`](milestones/v0.7/JIT_ATTENTION_DESIGN.md) — deterministic scheduler invariants, implemented quantitative admission/reservations and atomic epoch assignments, plus the remaining preemption/worker-protocol generalization.
 - [`milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md`](milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md) — distinction between attention priority and safe concurrent hardware-resource admission.
 - [`milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md`](milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md) — migration policy for the divergent v0.6 continuity/capability work.
 

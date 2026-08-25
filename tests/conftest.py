@@ -5,8 +5,9 @@ long-lived development database cannot be selected through the normal `.env`.
 A database-name guard adds a second line of defense against destructive test
 setup, and every test begins from an empty derived/authoritative store.
 
-Set TEST_DATABASE_URL to override the default. The selected database name must
-contain `test` or `benchmark`.
+Set TEST_DATABASE_URL when the local PostgreSQL connection needs explicit
+credentials. Otherwise the default URL relies on normal libpq authentication.
+The selected database name must contain `test` or `benchmark`.
 """
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ import pathlib
 
 os.environ["DATABASE_URL"] = os.environ.get(
     "TEST_DATABASE_URL",
-    "postgresql://jit_agent_app:jit_agent_dev_pw@localhost:5432/jit_agent_test",
+    "postgresql://jit_agent_app@localhost:5432/jit_agent_test",
 )
 
 import pytest
@@ -64,6 +65,8 @@ def _reset_test_database(_prepare_test_database):
                 """
                 TRUNCATE TABLE
                     attention_resource_reservations,
+                    attention_scheduling_epochs,
+                    attention_assignments,
                     attention_task_transitions,
                     attention_scheduler_state,
                     attention_tasks,

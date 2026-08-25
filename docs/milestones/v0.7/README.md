@@ -85,12 +85,37 @@ Implemented/tested properties include:
 - authoritative admitted-task and resource-reservation state in scheduler snapshots;
 - PostgreSQL persistence/restart reconstruction of headroom, quantitative requirements, policy version, admitted task ids, and reservations;
 - atomic replacement of each scheduler's complete reservation set;
-- invalidation of stale admission state whenever task, cycle, or resource state changes;
+- invalidation of stale reservation-only admission state whenever task, cycle, or resource state changes;
 - restart validation that rejects unknown, mismatched, incomplete, nondeterministic, or oversubscribed reservations.
 
 The database-independent Increment C suite passes locally (`28 passed, 2 deselected`). GitHub Actions run #99 verified the complete Increment C head with PostgreSQL 16: `112 passed, 4 skipped in 10.39s`.
 
-Increment C does **not** mark several tasks `RUNNING`, create worker-visible assignments, or implement contention-driven interruption. It proves the deterministic safe-capacity decision and makes that decision durable. Increment D will convert an admitted set into atomic scheduling-epoch assignments.
+Increment C does **not** mark several tasks `RUNNING`, create worker-visible assignments, or implement contention-driven interruption. It proves the deterministic safe-capacity decision and makes that decision durable. Increment D converts an admitted set into atomic scheduling-epoch assignments.
+
+### Increment D — durable assignments and scheduling epochs
+
+The fourth v0.7 increment replaces single-task focus reconciliation as the forward scheduling path with deterministic assignment over a complete epoch.
+
+Implemented/tested properties include:
+
+- explicit policy-versioned `SchedulingEpoch` and `DurableAssignment` models;
+- deterministic epoch and assignment identities derived from authoritative state;
+- one total, attention-ordered assignment set per epoch;
+- preservation of existing valid assignment and reservation identities before new admission;
+- no priority-only displacement of committed work while contention preemption remains deferred to Increment E;
+- a provisional `PLANNED` epoch that cannot be observed through the worker-facing assignment API;
+- one PostgreSQL transaction for immutable assignment rows, the immutable complete epoch snapshot, the current reservation set, and the scheduler's `COMMITTED` epoch pointer;
+- in-memory publication only after that database transaction commits;
+- append-only epoch/assignment history plus an authoritative current-epoch pointer;
+- optimistic generation checks that reject stale schedulers instead of allowing them to overwrite a newer epoch;
+- exact PostgreSQL restart reconstruction and idempotent persistence;
+- rollback tests proving that an injected late transaction failure exposes neither assignments nor a partial epoch;
+- discrete-resource and configured-headroom enforcement without oversubscription;
+- snapshot validation that rejects mismatched revisions, assignment identities, epoch identities, reservations, policy versions, and incomplete current sets.
+
+An Increment D assignment is a durable `READY` entitlement, not a worker claim. Increment D does not mark several tasks `RUNNING`, introduce leases/heartbeats, execute capabilities, or release reservations on completion. Those lifecycle semantics remain explicitly assigned to Increment F after contention behavior is generalized in Increment E.
+
+The database-independent Increment D tests pass locally (`7 passed, 3 deselected`). PostgreSQL CI verification is pending for this implementation head.
 
 ## Attention and resource admission are separate
 
@@ -168,6 +193,8 @@ The implemented baseline uses deterministic greedy admission rather than an opti
 
 ### Increment D — durable assignments and scheduling epochs
 
+**Status:** implemented; PostgreSQL CI verification pending.
+
 Replace single-task focus reconciliation with deterministic epoch assignment over the admitted set.
 
 Each epoch should:
@@ -182,6 +209,10 @@ Each epoch should:
 8. expose only committed assignments to workers.
 
 Workers must not race directly against the runnable queue.
+
+The implemented boundary preserves all valid committed assignments before considering new candidates. A later higher-priority arrival therefore cannot displace committed lower-priority work in Increment D; it remains queued when capacity is unavailable. Contention-driven victim selection and reservation release begin only in Increment E.
+
+`PLANNED` epochs exist only in scheduler memory and remain worker-invisible. PostgreSQL stores only immutable `COMMITTED` epochs. Assignment rows, the epoch's complete assignment/reservation snapshot, the authoritative current reservations, and the scheduler's current-epoch pointer commit together before the in-memory worker view changes.
 
 Tests:
 
