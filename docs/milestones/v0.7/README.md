@@ -66,6 +66,32 @@ GitHub Actions run #78 verified the Increment B head with PostgreSQL 16: `99 pas
 
 That CI result verifies the deterministic test environment. Resource-sensitive behavior on the intended development machine still requires separate local acceptance before it is considered verified against real hardware.
 
+### Increment C — deterministic resource admission and reservations
+
+The third v0.7 increment introduces quantitative configured admission without yet pretending that an admission is a worker assignment.
+
+Implemented/tested properties include:
+
+- positive integer `ResourceRequirement` units per resource class;
+- backward-compatible interpretation of Increment B class-only requirements as one unit;
+- explicit per-resource `system_headroom` that ordinary work cannot reserve;
+- deterministic all-or-nothing admission in attention order;
+- deterministic splitting across ordered fungible pools of the same resource class;
+- stable task/resource reservation identities;
+- an explicit `v0.7-c-greedy-v1` admission-policy version;
+- concurrent admission of higher- and lower-priority work whenever both fit safely;
+- rejection without partial reservation when any part of a task's resource contract does not fit;
+- preservation of the current single-focus task until contention-driven preemption is implemented;
+- authoritative admitted-task and resource-reservation state in scheduler snapshots;
+- PostgreSQL persistence/restart reconstruction of headroom, quantitative requirements, policy version, admitted task ids, and reservations;
+- atomic replacement of each scheduler's complete reservation set;
+- invalidation of stale admission state whenever task, cycle, or resource state changes;
+- restart validation that rejects unknown, mismatched, incomplete, nondeterministic, or oversubscribed reservations.
+
+The database-independent Increment C suite currently passes locally (`28 passed, 2 deselected`). The two deselected cases require PostgreSQL and remain pending full CI verification at this implementation point.
+
+Increment C does **not** mark several tasks `RUNNING`, create worker-visible assignments, or implement contention-driven interruption. It proves the deterministic safe-capacity decision and makes that decision durable. Increment D will convert an admitted set into atomic scheduling-epoch assignments.
+
 ## Attention and resource admission are separate
 
 After Increment B, the next design distinction became explicit:
@@ -107,6 +133,8 @@ This increment intentionally stops short of quantitative reservation, concurrenc
 
 ### Increment C — deterministic resource admission and reservations
 
+**Status:** implemented; database-independent verification passes locally, with PostgreSQL/full-suite CI verification pending.
+
 Introduce the smallest resource-allocation mechanism that can answer:
 
 > Given the runnable tasks, their priority/interruption metadata, and an authoritative safe resource snapshot, which compatible subset can execute concurrently without oversubscribing the machine?
@@ -135,6 +163,8 @@ Tests:
 - resource headroom is never allocatable to ordinary work;
 - restart reconstructs the same authoritative reservations;
 - synthetic resource snapshots remain deterministic and independent of worker race timing.
+
+The implemented baseline uses deterministic greedy admission rather than an optimization solver. A multi-resource task is admitted only if its complete contract fits; a failed candidate consumes no partial capacity. Integer units are fungible within one resource class and allocate across stable resource ids in deterministic order. Any future exclusive, affinity, memory-byte, GPU/VRAM, or measured-runtime semantics require their own explicit resource contract and evidence.
 
 ### Increment D — durable assignments and scheduling epochs
 

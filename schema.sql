@@ -124,11 +124,32 @@ CREATE TABLE IF NOT EXISTS attention_execution_resources (
     resource_id TEXT PRIMARY KEY,
     resource_class TEXT NOT NULL,
     capacity INTEGER NOT NULL CHECK (capacity >= 1),
+    system_headroom INTEGER NOT NULL DEFAULT 0 CHECK (system_headroom >= 0),
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT attention_execution_resources_headroom_check
+        CHECK (system_headroom <= capacity)
 );
+
+ALTER TABLE attention_execution_resources
+    ADD COLUMN IF NOT EXISTS system_headroom INTEGER NOT NULL DEFAULT 0;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'attention_execution_resources_headroom_check'
+          AND conrelid = 'attention_execution_resources'::regclass
+    ) THEN
+        ALTER TABLE attention_execution_resources
+            ADD CONSTRAINT attention_execution_resources_headroom_check
+            CHECK (system_headroom >= 0 AND system_headroom <= capacity);
+    END IF;
+END
+$$;
 
 CREATE INDEX IF NOT EXISTS idx_attention_execution_resources_class_enabled
     ON attention_execution_resources (resource_class, enabled, resource_id);
@@ -144,6 +165,7 @@ CREATE TABLE IF NOT EXISTS attention_tasks (
     deadline TIMESTAMPTZ,
     required_capabilities JSONB NOT NULL DEFAULT '[]'::jsonb,
     required_resource_classes JSONB NOT NULL DEFAULT '[]'::jsonb,
+    resource_requirements JSONB NOT NULL DEFAULT '[]'::jsonb,
     dependency_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
     status TEXT NOT NULL,
     enqueued_cycle BIGINT NOT NULL DEFAULT 0,
@@ -157,6 +179,9 @@ CREATE TABLE IF NOT EXISTS attention_tasks (
 -- execution-resource requirements were added.
 ALTER TABLE attention_tasks
     ADD COLUMN IF NOT EXISTS required_resource_classes JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+ALTER TABLE attention_tasks
+    ADD COLUMN IF NOT EXISTS resource_requirements JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 CREATE INDEX IF NOT EXISTS idx_attention_tasks_status_priority
     ON attention_tasks (status, criticality, created_seq);
@@ -181,5 +206,30 @@ CREATE TABLE IF NOT EXISTS attention_scheduler_state (
     cycle BIGINT NOT NULL DEFAULT 0,
     active_task_id UUID REFERENCES attention_tasks(task_id),
     pending_preemption_task_id UUID REFERENCES attention_tasks(task_id),
+    admission_policy_version TEXT NOT NULL DEFAULT 'v0.7-c-greedy-v1',
+    admitted_task_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE attention_scheduler_state
+    ADD COLUMN IF NOT EXISTS admission_policy_version TEXT NOT NULL
+        DEFAULT 'v0.7-c-greedy-v1';
+
+ALTER TABLE attention_scheduler_state
+    ADD COLUMN IF NOT EXISTS admitted_task_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+CREATE TABLE IF NOT EXISTS attention_resource_reservations (
+    reservation_id UUID PRIMARY KEY,
+    scheduler_key TEXT NOT NULL
+        REFERENCES attention_scheduler_state(scheduler_key) ON DELETE CASCADE,
+    task_id UUID NOT NULL REFERENCES attention_tasks(task_id) ON DELETE CASCADE,
+    resource_id TEXT NOT NULL
+        REFERENCES attention_execution_resources(resource_id),
+    resource_class TEXT NOT NULL,
+    units INTEGER NOT NULL CHECK (units >= 1),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (scheduler_key, task_id, resource_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_attention_resource_reservations_resource
+    ON attention_resource_reservations (scheduler_key, resource_class, resource_id);

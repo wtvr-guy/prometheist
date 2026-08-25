@@ -392,14 +392,21 @@ Already implemented in the v0.7 branch:
 - deterministic durable resource ordering;
 - task resource-class requirements;
 - resource-gated runnability;
-- PostgreSQL persistence/restart reconstruction of resource definitions and requirements.
+- PostgreSQL persistence/restart reconstruction of resource definitions and requirements;
+- quantitative integer resource requirements with Increment B one-unit compatibility;
+- explicit configured system headroom;
+- deterministic greedy, all-or-nothing concurrent admission;
+- deterministic allocation across fungible pools of the same class;
+- stable task/resource reservation identities;
+- explicit admission-policy versioning;
+- durable admitted-task and reservation state;
+- atomic PostgreSQL replacement/restart reconstruction of reservation sets;
+- snapshot validation against incomplete or oversubscribed reservation state.
 
 Not yet implemented:
 
-- quantitative task reservations and system headroom;
-- deterministic concurrent admission sets;
 - scheduling epochs over several active tasks;
-- durable assignment/reservation sets;
+- durable worker-visible assignment sets;
 - contention-driven multi-task preemption;
 - generic durable worker protocol;
 - replacement of the live Primary-Agent orchestration path.

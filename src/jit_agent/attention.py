@@ -12,12 +12,20 @@ from enum import Enum, IntEnum
 from typing import Any
 from uuid import UUID, uuid5
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from jit_agent.attention_resources import (
     ExecutionResource,
     ExecutionResourceClass,
+    RESOURCE_ADMISSION_POLICY_VERSION,
+    ResourceAdmissionPlan,
+    ResourceRequirement,
+    ResourceReservation,
+    deterministic_reservation_id,
+    execution_resource_class_sort_key,
     execution_resource_sort_key,
+    resource_requirement_sort_key,
+    resource_reservation_sort_key,
 )
 
 
@@ -130,7 +138,43 @@ class SchedulingMetadata(BaseModel):
     deadline: datetime | None = None
     required_capabilities: list[str] = Field(default_factory=list)
     required_resource_classes: list[ExecutionResourceClass] = Field(default_factory=list)
+    resource_requirements: list[ResourceRequirement] = Field(default_factory=list)
     dependency_ids: list[UUID] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def normalize_resource_contract(self) -> "SchedulingMetadata":
+        requirements_by_class: dict[ExecutionResourceClass, ResourceRequirement] = {}
+        for requirement in self.resource_requirements:
+            if requirement.resource_class in requirements_by_class:
+                raise ValueError("resource_requirements must contain each class at most once")
+            requirements_by_class[requirement.resource_class] = requirement
+
+        required_classes = set(self.required_resource_classes)
+        required_classes.update(requirements_by_class)
+        self.required_resource_classes = sorted(
+            required_classes,
+            key=execution_resource_class_sort_key,
+        )
+        self.resource_requirements = sorted(
+            requirements_by_class.values(),
+            key=resource_requirement_sort_key,
+        )
+        return self
+
+    def quantitative_resource_requirements(self) -> list[ResourceRequirement]:
+        """Return the canonical quantitative contract, including v0.7-B inputs."""
+
+        explicit = {
+            requirement.resource_class: requirement
+            for requirement in self.resource_requirements
+        }
+        return [
+            explicit.get(
+                resource_class,
+                ResourceRequirement(resource_class=resource_class, units=1),
+            ).model_copy(deep=True)
+            for resource_class in self.required_resource_classes
+        ]
 
 
 class AttentionTask(BaseModel):
@@ -170,6 +214,12 @@ class SchedulerSnapshot(BaseModel):
     pending_preemption_task_id: UUID | None = None
     tasks: list[AttentionTask]
     execution_resources: list[ExecutionResource] = Field(default_factory=list)
+    admission_policy_version: str = Field(
+        default=RESOURCE_ADMISSION_POLICY_VERSION,
+        min_length=1,
+    )
+    admitted_task_ids: list[UUID] = Field(default_factory=list)
+    resource_reservations: list[ResourceReservation] = Field(default_factory=list)
 
 
 def deterministic_task_id(namespace: UUID, task_key: str) -> UUID:
@@ -219,6 +269,9 @@ class JITAttentionScheduler:
             raise ValueError(f"Missing service guarantees for: {missing_names}")
         self.tasks: dict[UUID, AttentionTask] = {}
         self.resources: dict[str, ExecutionResource] = {}
+        self.admission_policy_version = RESOURCE_ADMISSION_POLICY_VERSION
+        self.admitted_task_ids: list[UUID] = []
+        self._resource_reservations: dict[UUID, ResourceReservation] = {}
         self.active_task_id: UUID | None = None
         self.pending_preemption_task_id: UUID | None = None
         self.cycle = 0
@@ -240,6 +293,21 @@ class JITAttentionScheduler:
             resource.resource_id: resource.model_copy(deep=True)
             for resource in snapshot.execution_resources
         }
+        scheduler.admission_policy_version = snapshot.admission_policy_version
+        admitted_task_ids = list(snapshot.admitted_task_ids)
+        if len(admitted_task_ids) != len(set(admitted_task_ids)):
+            raise ValueError("Snapshot contains duplicate admitted task ids")
+        scheduler.admitted_task_ids = admitted_task_ids
+        reservation_ids = [
+            reservation.reservation_id
+            for reservation in snapshot.resource_reservations
+        ]
+        if len(reservation_ids) != len(set(reservation_ids)):
+            raise ValueError("Snapshot contains duplicate resource reservation ids")
+        scheduler._resource_reservations = {
+            reservation.reservation_id: reservation.model_copy(deep=True)
+            for reservation in snapshot.resource_reservations
+        }
         scheduler.active_task_id = snapshot.active_task_id
         scheduler.pending_preemption_task_id = snapshot.pending_preemption_task_id
         scheduler.cycle = snapshot.cycle
@@ -256,6 +324,9 @@ class JITAttentionScheduler:
                 for task in sorted(self.tasks.values(), key=lambda item: (item.created_seq, item.task_id.hex))
             ],
             execution_resources=self.execution_resources(),
+            admission_policy_version=self.admission_policy_version,
+            admitted_task_ids=list(self.admitted_task_ids),
+            resource_reservations=self.resource_reservations(),
         )
 
     def configure_execution_resource(self, resource: ExecutionResource) -> ExecutionResource:
@@ -272,6 +343,7 @@ class JITAttentionScheduler:
                 f"Execution resource {resource.resource_id!r} cannot change class "
                 f"from {existing.resource_class.value} to {resource.resource_class.value}"
             )
+        self._invalidate_resource_admission()
         stored = resource.model_copy(deep=True)
         self.resources[stored.resource_id] = stored
         return stored.model_copy(deep=True)
@@ -284,6 +356,79 @@ class JITAttentionScheduler:
         ]
         resources.sort(key=execution_resource_sort_key)
         return [resource.model_copy(deep=True) for resource in resources]
+
+    def resource_reservations(self) -> list[ResourceReservation]:
+        reservations = list(self._resource_reservations.values())
+        reservations.sort(key=resource_reservation_sort_key)
+        return [reservation.model_copy(deep=True) for reservation in reservations]
+
+    def reconcile_resource_admission(self) -> ResourceAdmissionPlan:
+        """Reserve a deterministic attention-ordered set that fits safely.
+
+        The current single-focus task is preserved first because contention-
+        driven interruption is deliberately deferred to a later v0.7 increment.
+        Dependency-satisfied queued work is then considered in normal attention
+        order. Each task's multi-resource contract is all-or-nothing.
+
+        This records admission and reservations only. Durable worker assignments
+        and scheduling epochs remain separate follow-up work.
+        """
+
+        remaining = {
+            resource.resource_id: resource.admissible_capacity
+            for resource in self.execution_resources(enabled_only=True)
+        }
+        resources_by_class: dict[ExecutionResourceClass, list[ExecutionResource]] = {
+            resource_class: [] for resource_class in ExecutionResourceClass
+        }
+        for resource in self.execution_resources(enabled_only=True):
+            resources_by_class[resource.resource_class].append(resource)
+
+        candidate_ids: list[UUID] = []
+        if self.active_task_id is not None:
+            candidate_ids.append(self.active_task_id)
+        candidate_ids.extend(
+            task_id
+            for task_id in self._ranked_dependency_satisfied_queued_task_ids()
+            if task_id != self.active_task_id
+        )
+
+        admitted: list[UUID] = []
+        unadmitted: list[UUID] = []
+        reservations: list[ResourceReservation] = []
+        for task_id in candidate_ids:
+            allocation = self._allocate_task_resources(
+                self.tasks[task_id],
+                remaining=remaining,
+                resources_by_class=resources_by_class,
+            )
+            if allocation is None:
+                if task_id == self.active_task_id:
+                    raise RuntimeError(
+                        "Active task resource requirements exceed the safe capacity envelope"
+                    )
+                unadmitted.append(task_id)
+                continue
+
+            task_reservations, updated_remaining = allocation
+            remaining = updated_remaining
+            admitted.append(task_id)
+            reservations.extend(task_reservations)
+
+        reservations.sort(key=resource_reservation_sort_key)
+        plan = ResourceAdmissionPlan(
+            policy_version=RESOURCE_ADMISSION_POLICY_VERSION,
+            admitted_task_ids=admitted,
+            unadmitted_task_ids=unadmitted,
+            reservations=reservations,
+        )
+        self.admission_policy_version = plan.policy_version
+        self.admitted_task_ids = list(plan.admitted_task_ids)
+        self._resource_reservations = {
+            reservation.reservation_id: reservation.model_copy(deep=True)
+            for reservation in plan.reservations
+        }
+        return plan.model_copy(deep=True)
 
     def submit(self, task: AttentionTask) -> AttentionTask:
         if task.task_id in self.tasks:
@@ -302,6 +447,8 @@ class JITAttentionScheduler:
     def advance_cycle(self, count: int = 1) -> int:
         if count < 0:
             raise ValueError("count must be >= 0")
+        if count:
+            self._invalidate_resource_admission()
         self.cycle += count
         return self.cycle
 
@@ -447,11 +594,18 @@ class JITAttentionScheduler:
 
     def _ranked_queued_task_ids(self) -> list[UUID]:
         runnable = [
+            self.tasks[task_id]
+            for task_id in self._ranked_dependency_satisfied_queued_task_ids()
+            if self._resources_satisfied(self.tasks[task_id])
+        ]
+        return [task.task_id for task in runnable]
+
+    def _ranked_dependency_satisfied_queued_task_ids(self) -> list[UUID]:
+        runnable = [
             task
             for task in self.tasks.values()
             if task.status is TaskStatus.QUEUED
             and self._dependencies_satisfied(task)
-            and self._resources_satisfied(task)
         ]
         runnable.sort(key=self._queue_key)
         return [task.task_id for task in runnable]
@@ -468,15 +622,51 @@ class JITAttentionScheduler:
         return True
 
     def _resources_satisfied(self, task: AttentionTask) -> bool:
-        required = set(task.metadata.required_resource_classes)
-        if not required:
-            return True
-        available = {
-            resource.resource_class
-            for resource in self.resources.values()
-            if resource.enabled and resource.capacity > 0
+        available_by_class = {
+            resource_class: 0 for resource_class in ExecutionResourceClass
         }
-        return required.issubset(available)
+        for resource in self.resources.values():
+            available_by_class[resource.resource_class] += resource.admissible_capacity
+        return all(
+            available_by_class[requirement.resource_class] >= requirement.units
+            for requirement in task.metadata.quantitative_resource_requirements()
+        )
+
+    def _allocate_task_resources(
+        self,
+        task: AttentionTask,
+        *,
+        remaining: dict[str, int],
+        resources_by_class: dict[ExecutionResourceClass, list[ExecutionResource]],
+    ) -> tuple[list[ResourceReservation], dict[str, int]] | None:
+        tentative_remaining = dict(remaining)
+        reservations: list[ResourceReservation] = []
+        for requirement in task.metadata.quantitative_resource_requirements():
+            needed = requirement.units
+            for resource in resources_by_class[requirement.resource_class]:
+                available = tentative_remaining[resource.resource_id]
+                reserved = min(needed, available)
+                if reserved <= 0:
+                    continue
+                reservations.append(
+                    ResourceReservation(
+                        reservation_id=deterministic_reservation_id(
+                            task.task_id,
+                            resource.resource_id,
+                        ),
+                        task_id=task.task_id,
+                        resource_id=resource.resource_id,
+                        resource_class=resource.resource_class,
+                        units=reserved,
+                    )
+                )
+                tentative_remaining[resource.resource_id] -= reserved
+                needed -= reserved
+                if needed == 0:
+                    break
+            if needed:
+                return None
+        return reservations, tentative_remaining
 
     def _service_due(self, task: AttentionTask) -> bool:
         guarantee = self.service_guarantees[task.metadata.service_class]
@@ -530,6 +720,7 @@ class JITAttentionScheduler:
         self.pending_preemption_task_id = None
 
     def _transition(self, task_id: UUID, to_status: TaskStatus, reason: str) -> None:
+        self._invalidate_resource_admission()
         task = self.tasks[task_id]
         from_status = task.status
         revision = task.revision + 1
@@ -551,6 +742,10 @@ class JITAttentionScheduler:
     def _replace_task(self, task_id: UUID, **updates: Any) -> None:
         self.tasks[task_id] = self.tasks[task_id].model_copy(update=updates, deep=True)
 
+    def _invalidate_resource_admission(self) -> None:
+        self.admitted_task_ids = []
+        self._resource_reservations = {}
+
     def _validate_snapshot(self) -> None:
         running = [task.task_id for task in self.tasks.values() if task.status is TaskStatus.RUNNING]
         if self.active_task_id is None:
@@ -567,3 +762,61 @@ class JITAttentionScheduler:
         created = [task.created_seq for task in self.tasks.values()]
         if len(created) != len(set(created)):
             raise ValueError("Snapshot contains duplicate created_seq values")
+
+        admitted = set(self.admitted_task_ids)
+        if len(admitted) != len(self.admitted_task_ids):
+            raise ValueError("Snapshot contains duplicate admitted task ids")
+        for task_id in self.admitted_task_ids:
+            task = self.tasks.get(task_id)
+            if task is None:
+                raise ValueError("admitted_task_ids must reference existing tasks")
+            if task.status not in {TaskStatus.QUEUED, TaskStatus.RUNNING}:
+                raise ValueError("Only queued or running tasks may be admitted")
+            if not self._dependencies_satisfied(task):
+                raise ValueError("Admitted task dependencies must be satisfied")
+        if admitted and self.active_task_id is not None and self.active_task_id not in admitted:
+            raise ValueError("An authoritative admission set must include the active task")
+
+        resource_usage: dict[str, int] = {}
+        task_class_usage: dict[UUID, dict[ExecutionResourceClass, int]] = {}
+        task_resource_pairs: set[tuple[UUID, str]] = set()
+        for reservation in self._resource_reservations.values():
+            if reservation.task_id not in admitted:
+                raise ValueError("Resource reservation must belong to an admitted task")
+            resource = self.resources.get(reservation.resource_id)
+            if resource is None:
+                raise ValueError("Resource reservation references an unknown resource")
+            if resource.resource_class is not reservation.resource_class:
+                raise ValueError("Resource reservation class does not match its resource")
+            if reservation.reservation_id != deterministic_reservation_id(
+                reservation.task_id,
+                reservation.resource_id,
+            ):
+                raise ValueError("Resource reservation id is not deterministic")
+            pair = (reservation.task_id, reservation.resource_id)
+            if pair in task_resource_pairs:
+                raise ValueError("Task has duplicate reservations for one resource")
+            task_resource_pairs.add(pair)
+
+            resource_usage[reservation.resource_id] = (
+                resource_usage.get(reservation.resource_id, 0) + reservation.units
+            )
+            if resource_usage[reservation.resource_id] > resource.admissible_capacity:
+                raise ValueError("Resource reservations exceed admissible capacity")
+
+            class_usage = task_class_usage.setdefault(reservation.task_id, {})
+            class_usage[reservation.resource_class] = (
+                class_usage.get(reservation.resource_class, 0) + reservation.units
+            )
+
+        for task_id in self.admitted_task_ids:
+            expected = {
+                requirement.resource_class: requirement.units
+                for requirement in self.tasks[
+                    task_id
+                ].metadata.quantitative_resource_requirements()
+            }
+            if task_class_usage.get(task_id, {}) != expected:
+                raise ValueError(
+                    "Admitted task reservations do not exactly satisfy its requirements"
+                )

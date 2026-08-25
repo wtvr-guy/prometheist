@@ -188,6 +188,7 @@ def test_execution_resources_and_task_requirements_round_trip_through_postgres()
                 resource_id="cpu-general",
                 resource_class=ExecutionResourceClass.CPU_GENERAL,
                 capacity=3,
+                system_headroom=1,
                 metadata={"host": "local"},
             )
         )
@@ -221,6 +222,8 @@ def test_execution_resources_and_task_requirements_round_trip_through_postgres()
             "local-llm",
         ]
         assert resources[0].capacity == 3
+        assert resources[0].system_headroom == 1
+        assert resources[0].admissible_capacity == 2
         assert resources[0].metadata == {"host": "local"}
         assert resources[1].enabled is False
         assert resources[1].metadata == {"backend": "ollama"}

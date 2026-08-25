@@ -18,7 +18,12 @@ from jit_agent.attention import (
     TaskCriticality,
     TaskStatus,
 )
-from jit_agent.attention_resources import ExecutionResource, ExecutionResourceClass
+from jit_agent.attention_resources import (
+    ExecutionResource,
+    ExecutionResourceClass,
+    ResourceRequirement,
+    ResourceReservation,
+)
 
 
 DEFAULT_SCHEDULER_KEY = "default"
@@ -72,13 +77,16 @@ def save_scheduler(
         cur.execute(
             """
             INSERT INTO attention_scheduler_state (
-                scheduler_key, cycle, active_task_id, pending_preemption_task_id
+                scheduler_key, cycle, active_task_id, pending_preemption_task_id,
+                admission_policy_version, admitted_task_ids
             )
-            VALUES (%s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s)
             ON CONFLICT (scheduler_key) DO UPDATE SET
                 cycle = EXCLUDED.cycle,
                 active_task_id = EXCLUDED.active_task_id,
                 pending_preemption_task_id = EXCLUDED.pending_preemption_task_id,
+                admission_policy_version = EXCLUDED.admission_policy_version,
+                admitted_task_ids = EXCLUDED.admitted_task_ids,
                 updated_at = now()
             """,
             (
@@ -86,7 +94,14 @@ def save_scheduler(
                 snapshot.cycle,
                 snapshot.active_task_id,
                 snapshot.pending_preemption_task_id,
+                snapshot.admission_policy_version,
+                Json([str(task_id) for task_id in snapshot.admitted_task_ids]),
             ),
+        )
+        _replace_resource_reservations(
+            cur,
+            scheduler_key=scheduler_key,
+            reservations=snapshot.resource_reservations,
         )
     conn.commit()
 
@@ -101,7 +116,9 @@ def load_scheduler(
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """
-            SELECT cycle, active_task_id, pending_preemption_task_id
+            SELECT
+                cycle, active_task_id, pending_preemption_task_id,
+                admission_policy_version, admitted_task_ids
             FROM attention_scheduler_state
             WHERE scheduler_key = %s
             """,
@@ -111,7 +128,9 @@ def load_scheduler(
 
         cur.execute(
             """
-            SELECT resource_id, resource_class, capacity, enabled, metadata
+            SELECT
+                resource_id, resource_class, capacity, system_headroom,
+                enabled, metadata
             FROM attention_execution_resources
             ORDER BY resource_class ASC, resource_id ASC
             """
@@ -129,7 +148,8 @@ def load_scheduler(
             SELECT
                 task_id, task_key, created_seq, parent_task_id,
                 criticality, service_class, interruption_policy, deadline,
-                required_capabilities, required_resource_classes, dependency_ids,
+                required_capabilities, required_resource_classes,
+                resource_requirements, dependency_ids,
                 status, enqueued_cycle, revision, resumable_state
             FROM attention_tasks
             ORDER BY created_seq ASC, task_id ASC
@@ -137,7 +157,22 @@ def load_scheduler(
         )
         rows = cur.fetchall()
 
+        cur.execute(
+            """
+            SELECT
+                reservation_id, task_id, resource_id, resource_class, units
+            FROM attention_resource_reservations
+            WHERE scheduler_key = %s
+            ORDER BY resource_class ASC, resource_id ASC, task_id ASC
+            """,
+            (scheduler_key,),
+        )
+        reservation_rows = cur.fetchall()
+
     tasks = [_row_to_task(row) for row in rows]
+    reservations = [
+        _row_to_resource_reservation(row) for row in reservation_rows
+    ]
     return JITAttentionScheduler.from_snapshot(
         SchedulerSnapshot(
             cycle=int(state["cycle"]),
@@ -145,6 +180,9 @@ def load_scheduler(
             pending_preemption_task_id=state["pending_preemption_task_id"],
             tasks=tasks,
             execution_resources=resources,
+            admission_policy_version=state["admission_policy_version"],
+            admitted_task_ids=list(state["admitted_task_ids"] or []),
+            resource_reservations=reservations,
         )
     )
 
@@ -170,12 +208,13 @@ def _upsert_execution_resource(
     cur.execute(
         """
         INSERT INTO attention_execution_resources (
-            resource_id, resource_class, capacity, enabled, metadata
+            resource_id, resource_class, capacity, system_headroom, enabled, metadata
         )
-        VALUES (%s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s)
         ON CONFLICT (resource_id) DO UPDATE SET
             resource_class = EXCLUDED.resource_class,
             capacity = EXCLUDED.capacity,
+            system_headroom = EXCLUDED.system_headroom,
             enabled = EXCLUDED.enabled,
             metadata = EXCLUDED.metadata,
             updated_at = now()
@@ -184,6 +223,7 @@ def _upsert_execution_resource(
             resource.resource_id,
             resource.resource_class.value,
             resource.capacity,
+            resource.system_headroom,
             resource.enabled,
             Json(resource.metadata),
         ),
@@ -197,13 +237,14 @@ def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
         INSERT INTO attention_tasks (
             task_id, task_key, created_seq, parent_task_id,
             criticality, service_class, interruption_policy, deadline,
-            required_capabilities, required_resource_classes, dependency_ids,
+            required_capabilities, required_resource_classes,
+            resource_requirements, dependency_ids,
             status, enqueued_cycle, revision, resumable_state
         )
         VALUES (
             %s, %s, %s, %s,
             %s, %s, %s, %s,
-            %s, %s, %s,
+            %s, %s, %s, %s,
             %s, %s, %s, %s
         )
         ON CONFLICT (task_id) DO UPDATE SET
@@ -216,6 +257,7 @@ def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
             deadline = EXCLUDED.deadline,
             required_capabilities = EXCLUDED.required_capabilities,
             required_resource_classes = EXCLUDED.required_resource_classes,
+            resource_requirements = EXCLUDED.resource_requirements,
             dependency_ids = EXCLUDED.dependency_ids,
             status = EXCLUDED.status,
             enqueued_cycle = EXCLUDED.enqueued_cycle,
@@ -234,6 +276,12 @@ def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
             metadata.deadline,
             Json(metadata.required_capabilities),
             Json([value.value for value in metadata.required_resource_classes]),
+            Json(
+                [
+                    requirement.model_dump(mode="json")
+                    for requirement in metadata.resource_requirements
+                ]
+            ),
             Json([str(value) for value in metadata.dependency_ids]),
             task.status.value,
             task.enqueued_cycle,
@@ -243,11 +291,44 @@ def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
     )
 
 
+def _replace_resource_reservations(
+    cur: psycopg.Cursor[Any],
+    *,
+    scheduler_key: str,
+    reservations: list[ResourceReservation],
+) -> None:
+    """Atomically replace one scheduler's complete authoritative reservation set."""
+
+    cur.execute(
+        "DELETE FROM attention_resource_reservations WHERE scheduler_key = %s",
+        (scheduler_key,),
+    )
+    for reservation in reservations:
+        cur.execute(
+            """
+            INSERT INTO attention_resource_reservations (
+                scheduler_key, reservation_id, task_id,
+                resource_id, resource_class, units
+            )
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                scheduler_key,
+                reservation.reservation_id,
+                reservation.task_id,
+                reservation.resource_id,
+                reservation.resource_class.value,
+                reservation.units,
+            ),
+        )
+
+
 def _row_to_execution_resource(row: dict[str, Any]) -> ExecutionResource:
     return ExecutionResource(
         resource_id=row["resource_id"],
         resource_class=ExecutionResourceClass(row["resource_class"]),
         capacity=int(row["capacity"]),
+        system_headroom=int(row["system_headroom"]),
         enabled=bool(row["enabled"]),
         metadata=dict(row["metadata"] or {}),
     )
@@ -269,10 +350,24 @@ def _row_to_task(row: dict[str, Any]) -> AttentionTask:
                 ExecutionResourceClass(value)
                 for value in (row["required_resource_classes"] or [])
             ],
+            resource_requirements=[
+                ResourceRequirement.model_validate(value)
+                for value in (row["resource_requirements"] or [])
+            ],
             dependency_ids=list(row["dependency_ids"] or []),
         ),
         status=TaskStatus(row["status"]),
         enqueued_cycle=int(row["enqueued_cycle"]),
         revision=int(row["revision"]),
         resumable_state=dict(row["resumable_state"] or {}),
+    )
+
+
+def _row_to_resource_reservation(row: dict[str, Any]) -> ResourceReservation:
+    return ResourceReservation(
+        reservation_id=row["reservation_id"],
+        task_id=row["task_id"],
+        resource_id=row["resource_id"],
+        resource_class=ExecutionResourceClass(row["resource_class"]),
+        units=int(row["units"]),
     )
