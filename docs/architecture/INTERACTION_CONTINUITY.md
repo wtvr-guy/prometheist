@@ -92,6 +92,44 @@ conversation != memory scope
 
 A conversational response is one form of system work scheduled by the Attention Fabric.
 
+## Accepted v0.6 behavioral baseline
+
+The `v0.6-capability-registry` branch now contains a dated conversation-continuity experiment at commit `be1344aa858dc62c323756dafafb42230ba57c75`. That experiment is historical implementation evidence but a forward behavioral baseline.
+
+Its strongest acceptance properties are:
+
+- every external turn executes in a fresh Python/CLI process;
+- one response can require both recent dialogue and older history from a different conversation;
+- unrelated historical distractors compete with the target evidence;
+- context-dependent turns must actually invoke persisted-memory access rather than succeed through plausible guessing;
+- exact source-event IDs prove the required provenance;
+- answer oracles reject polarity/negation inversions;
+- causal questions require the underlying user-authored causal source when that source is part of the required evidence;
+- opaque user-supplied identifiers must survive exactly when requested.
+
+These properties should be preserved when the scenario is rewritten against the attention-centric execution path. The future test must not require the old Primary Agent, but it should remain at least as strict about statelessness and provenance.
+
+See [`../milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md`](../milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md) for the complete migration inventory.
+
+## What does not survive from the v0.6 mechanism
+
+The v0.6 implementation detects a bounded set of unresolved references inside `primary_agent.py` and applies `REFERENTIAL_CONTINUITY_REQUIRES_MEMORY_V1` to override the Primary Agent toward persisted-memory access.
+
+That is a useful tested mechanism, but the ownership is obsolete.
+
+The replacement should move deterministic referential/context detection into reusable interaction/perception policy before capability selection:
+
+```text
+user utterance
+    -> perception / referential analysis
+    -> situation + task formation
+    -> explicit information need
+    -> JIT Memory capability
+    -> disposable worker synthesis
+```
+
+The old regex vocabulary can serve as a first regression fixture, but the system should not pretend it solves general coreference resolution.
+
 ## v0.6 compatibility
 
 v0.6 remains an important behavioral baseline. Preserve or generalize tests that establish:
@@ -152,6 +190,8 @@ Measurements should include:
 - context size/boundedness;
 - provenance correctness;
 - abstention when the historical referent cannot be supported.
+
+The v0.6 four-turn scenario should be migrated first as the fixed compatibility benchmark. The broader natural-topic benchmark should then extend beyond its bounded deictic vocabulary and deliberate conversation IDs.
 
 ## v1.0 interaction requirement
 
