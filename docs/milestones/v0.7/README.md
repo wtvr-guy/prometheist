@@ -206,6 +206,10 @@ Agent is compatibility code rather than the new execution architecture.
 Increment F must re-observe immediately before a claim becomes executable and
 must make the guarded claim path the only way Prometheist can start a worker.
 
+The database-independent resource-observation suite passes locally (`11
+passed, 3 deselected`). GitHub Actions run #105 verified the complete safety
+gate head with PostgreSQL 16: `150 passed, 4 skipped in 24.13s`.
+
 ## Attention and resource admission are separate
 
 After Increment B, the next design distinction became explicit:
@@ -336,6 +340,8 @@ partially released; the complete replacement becomes visible only in a later
 committed epoch after every required checkpoint acknowledgement.
 
 ### Resource observation gate — implemented prerequisite for Increment F
+
+**Status:** implemented and verified in CI.
 
 The bounded observation mechanism now:
 
