@@ -248,12 +248,22 @@ def deterministic_assignment_id(
     task_id: UUID,
     *,
     task_revision: int,
+    created_epoch_sequence: int,
     reservations: list[ResourceReservation],
 ) -> UUID:
-    """Return a stable id while task revision and reservations remain unchanged."""
+    """Return a stable id for one concrete assignment generation.
+
+    A task that remains assigned across replacement epochs keeps the same
+    ``DurableAssignment`` object and therefore the same identifier.  If it is
+    released and later readmitted, ``created_epoch_sequence`` distinguishes
+    the new entitlement from the immutable historical assignment even when
+    task revision and resource reservations are otherwise unchanged.
+    """
 
     if task_revision < 0:
         raise ValueError("task_revision must be >= 0")
+    if created_epoch_sequence < 1:
+        raise ValueError("created_epoch_sequence must be >= 1")
     canonical_reservations = sorted(reservations, key=resource_reservation_sort_key)
     reservation_key = ",".join(
         f"{item.reservation_id}:{item.units}"
@@ -261,7 +271,10 @@ def deterministic_assignment_id(
     )
     return uuid5(
         task_id,
-        f"prometheist-assignment:{task_revision}:{reservation_key}",
+        (
+            "prometheist-assignment:"
+            f"{task_revision}:{created_epoch_sequence}:{reservation_key}"
+        ),
     )
 
 

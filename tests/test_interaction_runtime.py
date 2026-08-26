@@ -145,7 +145,14 @@ def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(
             **_kwargs(),
         )
     response = finish_interaction(conn, interaction, **_kwargs())
-    assert token in response
+    packet_events = [
+        event
+        for event in event_store.get_events_by_conversation(conn, recall_conversation)
+        if event.event_type is EventType.MEMORY_PACKET
+    ]
+    assert token in response, (
+        packet_events[-1].payload["packet"] if packet_events else "no memory packet"
+    )
 
     classify_id = deterministic_worker_step_id(
         interaction.assignment_id,
@@ -179,7 +186,7 @@ def test_selected_memory_analysis_registration_executes_real_profile(conn):
     handle_interaction(
         conn,
         FakeLLM(),
-        f"I want you to remember {token}.",
+        f"I want you to remember opaque token {token}.",
         uuid.uuid4(),
         **_kwargs(),
     )

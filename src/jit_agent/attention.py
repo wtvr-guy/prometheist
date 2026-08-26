@@ -1731,6 +1731,7 @@ class JITAttentionScheduler:
             assignment_id=deterministic_assignment_id(
                 task_id,
                 task_revision=task.revision,
+                created_epoch_sequence=created_epoch_sequence,
                 reservations=reservations,
             ),
             task_id=task_id,
@@ -2084,6 +2085,7 @@ class JITAttentionScheduler:
             if assignment.assignment_id != deterministic_assignment_id(
                 assignment.task_id,
                 task_revision=assignment.task_revision,
+                created_epoch_sequence=assignment.created_epoch_sequence,
                 reservations=task_reservations,
             ):
                 raise ValueError("Assignment id is not deterministic")
