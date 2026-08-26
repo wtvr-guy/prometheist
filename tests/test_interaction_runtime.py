@@ -115,7 +115,7 @@ def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(
     handle_interaction(
         conn,
         FakeLLM(),
-        f"Remember this number: {token}.",
+        f"I want you to remember {token}.",
         fact_conversation,
         **_kwargs(),
     )
@@ -123,7 +123,7 @@ def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(
     recall_conversation = uuid.uuid4()
     interaction = begin_interaction(
         conn,
-        "What number did we just say to remember?",
+        "What number did I ask you to remember, as we just discussed?",
         recall_conversation,
         **_kwargs(),
     )
