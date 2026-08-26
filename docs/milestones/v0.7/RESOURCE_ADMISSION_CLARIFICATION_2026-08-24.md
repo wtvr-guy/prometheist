@@ -221,8 +221,9 @@ or failed observations fail closed. Local LLM inference defaults to one slot;
 tasks carry persisted peak estimates, using conservative policy guesses until
 profiled or historical peak data is available.
 
-This is an assignment-admission gate, not yet a worker claim. Increment F must
-re-observe before process launch and make that guarded claim the exclusive
+Increment F now consumes this assignment-admission foundation at the worker
+boundary: it re-observes immediately before process launch, binds the decision
+to the exact committed safety policy, and makes the guarded claim the exclusive
 Prometheist-owned worker-start path.
 
 Any discrete lanes introduced later should be derived from resource contracts where discrete slots are actually appropriate.

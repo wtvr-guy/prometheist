@@ -16,6 +16,7 @@ See:
 - [`V06_INTEGRATION_INVENTORY_2026-08-25.md`](V06_INTEGRATION_INVENTORY_2026-08-25.md)
 - [`JIT_ATTENTION_DESIGN.md`](JIT_ATTENTION_DESIGN.md)
 - [`RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md`](RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md)
+- [`INCREMENT_F_WORKER_PROTOCOL_2026-08-26.md`](INCREMENT_F_WORKER_PROTOCOL_2026-08-26.md)
 
 ## Primary question
 
@@ -200,15 +201,55 @@ attaches it as explicit state, and only then asks the scheduler for an epoch.
 Identical task state, observation, and policy therefore still produce an
 identical assignment set.
 
-This gate controls `READY` assignment green-lighting. There is still no v0.7
-worker claim or process-spawn path, and the temporarily retained v0.6 Primary
-Agent is compatibility code rather than the new execution architecture.
-Increment F must re-observe immediately before a claim becomes executable and
-must make the guarded claim path the only way Prometheist can start a worker.
+At this checkpoint the gate controlled only `READY` assignment green-lighting.
+Increment F now re-observes immediately before a claim becomes executable and
+makes the guarded launcher the only Prometheist-owned worker process-start
+boundary. The temporarily retained v0.6 Primary Agent remains compatibility
+code rather than the new execution architecture.
 
 The database-independent resource-observation suite passes locally (`11
 passed, 3 deselected`). GitHub Actions run #105 verified the complete safety
 gate head with PostgreSQL 16: `150 passed, 4 skipped in 24.13s`.
+
+### Increment F — durable disposable-worker protocol
+
+The sixth v0.7 increment turns a committed `READY` entitlement into executable
+work only through an expiring, freshly guarded claim.
+
+Implemented/tested properties include:
+
+- immutable, agent-neutral `WorkerStep` contracts derived only from current
+  committed assignments;
+- deterministic step, claim, checkpoint, result, and claim-observation IDs;
+- one stable idempotency key across every attempt for a step;
+- explicit `NO_EXTERNAL_EFFECT`, `IDEMPOTENT_WITH_KEY`, and `AT_MOST_ONCE`
+  effect policies;
+- exact claim-time CPU/RAM/LLM reobservation using the full policy persisted
+  with the committed epoch, not caller-selected thresholds;
+- immutable granted and denied claim observations with freshness bounds,
+  resource snapshots, active-claim sets, and reasons;
+- PostgreSQL-enforced exclusion of simultaneous claims for the same step or
+  assignment;
+- expiring leases, ownership-checked heartbeats, deterministic abandonment,
+  and recovery by a fresh worker;
+- append-only checkpoint revisions handed to the next worker claim;
+- exactly one terminal result per step and idempotent completion retries;
+- fail-closed abandoned recovery for `AT_MOST_ONCE` effects that require
+  explicit reconciliation;
+- reservation protection that prevents a new scheduler epoch from releasing
+  capacity beneath a live worker;
+- a `GuardedWorkerLauncher` that commits the claim before invoking a shell-free
+  process factory, injects only bounded durable identifiers, never spawns after
+  denial, and releases the claim if process creation fails;
+- forced child-process disappearance followed by lease-expiry recovery from
+  PostgreSQL alone.
+
+The worker protocol still does not choose queue work, interpret capability
+registrations, mark an entire durable task complete, or replace the Primary
+Agent interaction path. Those decisions remain with the Attention Fabric and
+the next integration increments. See
+[`INCREMENT_F_WORKER_PROTOCOL_2026-08-26.md`](INCREMENT_F_WORKER_PROTOCOL_2026-08-26.md)
+for the implementation boundary and verification status.
 
 ## Attention and resource admission are separate
 
@@ -364,9 +405,13 @@ contracts if hardware acceptance shows they matter independently.
 
 ### Increment F — durable worker protocol
 
-Define a worker contract that is independent of named agents.
+**Status:** core protocol implemented; PostgreSQL CI and development-machine
+worker acceptance are tracked separately.
 
-A worker should receive a durable assignment containing only what it needs to execute one bounded step, such as:
+The implemented worker contract is independent of named agents.
+
+A worker receives a durable envelope containing only what it needs to execute
+one bounded step:
 
 ```text
 assignment_id
@@ -380,18 +425,29 @@ idempotency key
 
 A discrete `lane_id` may appear when the relevant resource contract actually uses lanes/slots; it is not required as the universal capacity model.
 
-The worker may invoke a model or another capability, return a structured result, persist a checkpoint/result, and disappear.
+The worker may invoke a model or another capability, return a structured
+result, persist a checkpoint/result, and disappear. A worker that disappears
+without cleanup leaves an expiring claim; a safe effect policy allows a fresh
+worker to recover the same step and idempotency key.
 
 The scheduler/fabric—not the worker—decides what work exists and what receives attention.
 
-Once this contract exists, adapt the deterministic v0.6 Capability Registry into task/worker-neutral terminology rather than recreating capability discovery from scratch. Preserve bounded deterministic matching, canonical-before-supplemental discovery, no-match abstention, progressive disclosure, and auditable selection. Do not preserve `CapabilityKind.AGENT` or `requesting_agent` as required architectural concepts.
+With this contract in place, the next capability slice should adapt the
+deterministic v0.6 Capability Registry into task/worker-neutral terminology
+rather than recreating capability discovery from scratch. Preserve bounded
+deterministic matching, canonical-before-supplemental discovery, no-match
+abstention, progressive disclosure, and auditable selection. Do not preserve
+`CapabilityKind.AGENT` or `requesting_agent` as required architectural concepts.
 
 Tests:
 
 - worker can be destroyed after assignment but before completion;
 - expired/abandoned assignment can be recovered deterministically;
-- retry does not duplicate side effects when the capability declares idempotency;
-- fresh worker can resume from committed checkpoint.
+- retry retains one stable external-effect key when idempotency is declared;
+- completed work cannot be claimed again;
+- fresh worker can resume from a committed checkpoint;
+- claim denial cannot reach the process factory;
+- live worker capacity cannot be released by epoch replacement.
 
 ### Increment G — replace Primary-Agent orchestration path
 

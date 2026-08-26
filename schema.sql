@@ -517,3 +517,165 @@ CREATE TABLE IF NOT EXISTS attention_resource_reservations (
 
 CREATE INDEX IF NOT EXISTS idx_attention_resource_reservations_resource
     ON attention_resource_reservations (scheduler_key, resource_class, resource_id);
+
+-- ---------------------------------------------------------------------------
+-- Increment F: durable disposable-worker protocol.
+--
+-- A READY assignment is only an entitlement.  It becomes executable through
+-- an expiring claim created after a fresh resource observation.  Step,
+-- observation, checkpoint, and result rows are immutable; claim rows are the
+-- replaceable lease state.  Exactly one terminal result may exist per step.
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS attention_worker_steps (
+    scheduler_key TEXT NOT NULL,
+    step_id UUID NOT NULL,
+    assignment_id UUID NOT NULL,
+    task_id UUID NOT NULL REFERENCES attention_tasks(task_id),
+    task_revision BIGINT NOT NULL CHECK (task_revision >= 0),
+    created_epoch_sequence BIGINT NOT NULL CHECK (created_epoch_sequence >= 1),
+    protocol_version TEXT NOT NULL,
+    step_key TEXT NOT NULL,
+    capability TEXT NOT NULL,
+    reservation_ids JSONB NOT NULL DEFAULT '[]'::jsonb
+        CHECK (jsonb_typeof(reservation_ids) = 'array'),
+    input_refs JSONB NOT NULL DEFAULT '[]'::jsonb
+        CHECK (jsonb_typeof(input_refs) = 'array'),
+    idempotency_key TEXT NOT NULL,
+    effect_policy TEXT NOT NULL CHECK (
+        effect_policy IN (
+            'NO_EXTERNAL_EFFECT',
+            'IDEMPOTENT_WITH_KEY',
+            'AT_MOST_ONCE'
+        )
+    ),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (scheduler_key, step_id),
+    UNIQUE (scheduler_key, assignment_id, step_key),
+    UNIQUE (idempotency_key),
+    FOREIGN KEY (scheduler_key, assignment_id)
+        REFERENCES attention_assignments(scheduler_key, assignment_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_attention_worker_steps_assignment
+    ON attention_worker_steps (scheduler_key, assignment_id, step_id);
+
+CREATE TABLE IF NOT EXISTS attention_worker_claim_observations (
+    scheduler_key TEXT NOT NULL,
+    observation_id UUID NOT NULL,
+    step_id UUID NOT NULL,
+    assignment_id UUID NOT NULL,
+    captured_at TIMESTAMPTZ NOT NULL,
+    evaluated_at TIMESTAMPTZ NOT NULL,
+    valid_until TIMESTAMPTZ NOT NULL,
+    claim_policy_version TEXT NOT NULL,
+    resource_safety_policy_version TEXT NOT NULL,
+    decision TEXT NOT NULL CHECK (decision IN ('GRANTED', 'DENIED')),
+    reason TEXT NOT NULL,
+    snapshot JSONB NOT NULL CHECK (jsonb_typeof(snapshot) = 'object'),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (scheduler_key, observation_id),
+    FOREIGN KEY (scheduler_key, step_id)
+        REFERENCES attention_worker_steps(scheduler_key, step_id),
+    FOREIGN KEY (scheduler_key, assignment_id)
+        REFERENCES attention_assignments(scheduler_key, assignment_id),
+    CHECK (valid_until > captured_at)
+);
+
+CREATE INDEX IF NOT EXISTS idx_attention_worker_claim_observations_step
+    ON attention_worker_claim_observations (
+        scheduler_key, step_id, captured_at DESC
+    );
+
+CREATE TABLE IF NOT EXISTS attention_worker_claims (
+    scheduler_key TEXT NOT NULL,
+    claim_id UUID NOT NULL,
+    step_id UUID NOT NULL,
+    assignment_id UUID NOT NULL,
+    task_id UUID NOT NULL REFERENCES attention_tasks(task_id),
+    worker_id TEXT NOT NULL,
+    attempt INTEGER NOT NULL CHECK (attempt >= 1),
+    checkpoint_revision BIGINT NOT NULL DEFAULT 0
+        CHECK (checkpoint_revision >= 0),
+    observation_id UUID NOT NULL,
+    claimed_at TIMESTAMPTZ NOT NULL,
+    lease_expires_at TIMESTAMPTZ NOT NULL,
+    last_heartbeat_at TIMESTAMPTZ NOT NULL,
+    status TEXT NOT NULL CHECK (
+        status IN (
+            'ACTIVE',
+            'CHECKPOINTED',
+            'COMPLETED',
+            'ABANDONED',
+            'RELEASED'
+        )
+    ),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (scheduler_key, claim_id),
+    UNIQUE (scheduler_key, step_id, attempt),
+    FOREIGN KEY (scheduler_key, step_id)
+        REFERENCES attention_worker_steps(scheduler_key, step_id),
+    FOREIGN KEY (scheduler_key, observation_id)
+        REFERENCES attention_worker_claim_observations(
+            scheduler_key, observation_id
+        ),
+    CHECK (lease_expires_at > claimed_at),
+    CHECK (
+        last_heartbeat_at >= claimed_at
+        AND last_heartbeat_at < lease_expires_at
+    )
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_attention_worker_one_active_step
+    ON attention_worker_claims (scheduler_key, step_id)
+    WHERE status = 'ACTIVE';
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_attention_worker_one_active_assignment
+    ON attention_worker_claims (scheduler_key, assignment_id)
+    WHERE status = 'ACTIVE';
+
+CREATE INDEX IF NOT EXISTS idx_attention_worker_claims_lease
+    ON attention_worker_claims (status, lease_expires_at, scheduler_key);
+
+CREATE TABLE IF NOT EXISTS attention_worker_checkpoints (
+    scheduler_key TEXT NOT NULL,
+    checkpoint_id UUID NOT NULL,
+    step_id UUID NOT NULL,
+    claim_id UUID NOT NULL,
+    revision BIGINT NOT NULL CHECK (revision >= 1),
+    state JSONB NOT NULL DEFAULT '{}'::jsonb
+        CHECK (jsonb_typeof(state) = 'object'),
+    output_refs JSONB NOT NULL DEFAULT '[]'::jsonb
+        CHECK (jsonb_typeof(output_refs) = 'array'),
+    created_at TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (scheduler_key, checkpoint_id),
+    UNIQUE (scheduler_key, step_id, revision),
+    FOREIGN KEY (scheduler_key, step_id)
+        REFERENCES attention_worker_steps(scheduler_key, step_id),
+    FOREIGN KEY (scheduler_key, claim_id)
+        REFERENCES attention_worker_claims(scheduler_key, claim_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_attention_worker_checkpoints_latest
+    ON attention_worker_checkpoints (scheduler_key, step_id, revision DESC);
+
+CREATE TABLE IF NOT EXISTS attention_worker_results (
+    scheduler_key TEXT NOT NULL,
+    result_id UUID NOT NULL,
+    step_id UUID NOT NULL,
+    claim_id UUID NOT NULL,
+    checkpoint_revision BIGINT NOT NULL CHECK (checkpoint_revision >= 0),
+    idempotency_key TEXT NOT NULL,
+    output JSONB NOT NULL DEFAULT '{}'::jsonb
+        CHECK (jsonb_typeof(output) = 'object'),
+    output_refs JSONB NOT NULL DEFAULT '[]'::jsonb
+        CHECK (jsonb_typeof(output_refs) = 'array'),
+    completed_at TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (scheduler_key, result_id),
+    UNIQUE (scheduler_key, step_id),
+    UNIQUE (idempotency_key),
+    FOREIGN KEY (scheduler_key, step_id)
+        REFERENCES attention_worker_steps(scheduler_key, step_id),
+    FOREIGN KEY (scheduler_key, claim_id)
+        REFERENCES attention_worker_claims(scheduler_key, claim_id)
+);

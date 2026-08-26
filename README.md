@@ -24,7 +24,7 @@ The Primary Agent/specialist structure used to prove that result is **superseded
 
 ### v0.7 — in development: durable JIT Attention Fabric
 
-The first v0.7 increments establish deterministic durable task scheduling, structured priority metadata, service guarantees, interruption policies, dependency gating, resumable PostgreSQL state, live CPU/RAM discovery, conservative observed-capacity snapshots, configured safe headroom, quantitative resource admission/reservations, a default single local-LLM slot, atomic durable scheduling epochs and assignment sets, contention-driven multi-assignment preemption, and forced-process restart recovery.
+The first v0.7 increments establish deterministic durable task scheduling, structured priority metadata, service guarantees, interruption policies, dependency gating, resumable PostgreSQL state, live CPU/RAM discovery, conservative observed-capacity snapshots, configured safe headroom, quantitative resource admission/reservations, a default single local-LLM slot, atomic durable scheduling epochs and assignment sets, contention-driven multi-assignment preemption, and a durable claim/lease/checkpoint/result protocol for disposable workers.
 
 The target is a resource-aware **Attention Fabric** that determines which durable tasks deserve execution and which compatible subset can safely execute concurrently on available hardware. Higher-priority work does not automatically kill lower-priority work: it runs concurrently when safe capacity exists and preempts only when resource contention requires it and interruption policy permits it.
 
@@ -34,9 +34,10 @@ The host-aware path samples CPU pressure and available RAM outside scheduling
 policy, applies explicit operating-system and uncertainty headroom, and persists
 the exact freshness-bounded observation consumed by each epoch. Missing, stale,
 or failed observations do not fall back to optimistic configured capacity.
-Actual worker claims do not exist yet; Increment F must recheck current pressure
-at claim time and make this gate the only route to starting Prometheist-owned
-worker processes.
+Increment F adds an immutable agent-neutral `WorkerStep`, stable idempotency
+keys, fresh claim-time reobservation bound to the exact committed policy,
+expiring leases and heartbeats, append-only checkpoints, exactly one terminal
+result, abandoned-work recovery, and an exclusive guarded process launcher.
 
 ## Target architecture
 
@@ -130,11 +131,11 @@ It distinguishes:
 
 The repository is in transition. It currently contains both accepted historical mechanisms and new v0.7 mechanisms.
 
-Implemented/verified foundations include PostgreSQL authoritative history, deterministic ordering, the Memory Kernel, provenance-bearing `MemoryPacket`s, shared JIT Memory contracts, v0.6 compatibility paths, deterministic attention/task state, resource admission, durable epoch-wide assignments, atomic PostgreSQL publication, and restart/replay tests.
+Implemented/verified foundations include PostgreSQL authoritative history, deterministic ordering, the Memory Kernel, provenance-bearing `MemoryPacket`s, shared JIT Memory contracts, v0.6 compatibility paths, deterministic attention/task state, resource admission, durable epoch-wide assignments, atomic PostgreSQL publication, contention preemption, durable disposable-worker claims/checkpoints/results, and restart/replay tests.
 
 `src/jit_agent/primary_agent.py`, Primary-Agent tests, and the current CLI are **legacy v0.6 compatibility surfaces**, not declarations of the target architecture. They remain until their useful behavioral baselines are reproduced by the attention-centric execution path. New architecture work should not extend the Primary Agent as a permanent coordinator.
 
-Contention-driven concurrent preemption, the worker claim/lease protocol, perception/salience, deterministic external-data retention, session-independent interaction mechanics, and the fully integrated cognitive loop remain roadmap work unless a milestone document states otherwise.
+Capability discovery/execution on the new worker contract, replacement of Primary-Agent interaction orchestration, perception/salience, deterministic external-data retention, session-independent interaction mechanics, and the fully integrated cognitive loop remain roadmap work unless a milestone document states otherwise.
 
 ## Roadmap
 

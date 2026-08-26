@@ -414,7 +414,7 @@ Already implemented in the v0.7 branch:
 - stale-scheduler generation rejection;
 - idempotent epoch persistence and exact restart reconstruction;
 - rollback verification that partial epoch persistence exposes no authoritative state;
-- validation of complete epoch, assignment, revision, policy, and reservation consistency.
+- validation of complete epoch, assignment, revision, policy, and reservation consistency;
 - policy-versioned contention preemption only after concurrent admission fails;
 - exact minimum-cardinality victim selection over deficient resource classes;
 - deterministic victim ordering and same-priority/`ATOMIC` stability;
@@ -422,19 +422,25 @@ Already implemented in the v0.7 branch:
 - target-capacity protection while selected checkpoint victims yield;
 - append-only preemption lifecycle evidence and immutable epoch references;
 - optimistic revision checks for concurrent checkpoint progress;
-- restart, idempotency, and transaction-rollback coverage for preemption state.
+- restart, idempotency, and transaction-rollback coverage for preemption state;
 - live host CPU/RAM discovery through a replaceable observer outside policy;
 - explicit MiB RAM requirements and conservative persisted process estimates;
 - versioned OS and uncertainty headroom plus a default single local-LLM slot;
 - PostgreSQL-enforced global capacity across concurrent scheduler writers;
 - immutable freshness-bounded resource observations referenced by exact epoch;
 - fail-closed missing/stale/failed-observation behavior;
-- atomic observation/epoch persistence and restart reconstruction.
+- atomic observation/epoch persistence and restart reconstruction;
+- immutable agent-neutral worker-step contracts with deterministic identities and stable idempotency keys;
+- fresh claim-time resource observations bound to the exact policy persisted with the current epoch;
+- PostgreSQL leases, heartbeats, live-claim exclusion, deterministic abandonment, and retry-policy enforcement;
+- append-only checkpoint revisions and exactly one terminal result per step;
+- forced worker-process loss followed by fresh-process recovery from PostgreSQL;
+- protection against releasing reservations held by live worker claims;
+- one guarded, shell-free Prometheist-owned worker process-launch boundary.
 
 Not yet implemented:
 
-- generic durable worker protocol;
-- claim-time resource revalidation immediately before process launch;
+- task/worker-neutral capability-registry adaptation and real capability invocation;
 - accelerator/VRAM and inference-backend pressure observation;
 - replacement of the live Primary-Agent orchestration path.
 

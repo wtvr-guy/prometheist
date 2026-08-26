@@ -64,6 +64,11 @@ def _reset_test_database(_prepare_test_database):
             cur.execute(
                 """
                 TRUNCATE TABLE
+                    attention_worker_results,
+                    attention_worker_checkpoints,
+                    attention_worker_claims,
+                    attention_worker_claim_observations,
+                    attention_worker_steps,
                     attention_resource_reservations,
                     attention_preemption_events,
                     attention_scheduling_epochs,

@@ -32,3 +32,12 @@ This is the first development-machine validation since v0.6 and provides evidenc
 It does **not** yet prove the future worker-launch safety boundary. Increment F still needs to implement the generic durable worker claim/lease protocol, perform fresh claim-time resource revalidation immediately before executable work begins, and make guarded claims the only Prometheist-owned worker-start path.
 
 Accordingly, this result closes the current pre-Increment-F local validation gate but does not close v0.7 itself.
+
+## Subsequent Increment F status
+
+Increment F was implemented after the local run recorded above. The repository
+now contains the durable worker step/claim/lease/checkpoint/result protocol and
+the exclusive guarded process launcher. That later implementation does not
+retroactively change what this acceptance run proved: the real Windows host,
+PostgreSQL lease-recovery path, guarded launch boundary, and real LLM-backed
+workers still require a new development-machine acceptance run.

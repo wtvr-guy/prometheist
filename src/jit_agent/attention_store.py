@@ -265,6 +265,7 @@ def save_scheduler(
                 cur,
                 scheduler_key=scheduler_key,
                 reservations=reservations,
+                assignments=assignments,
                 observed_admission_limits=(
                     {
                         capacity.resource_id: capacity.admission_capacity
@@ -890,9 +891,85 @@ def _replace_resource_reservations(
     *,
     scheduler_key: str,
     reservations: list[ResourceReservation],
+    assignments: list[DurableAssignment],
     observed_admission_limits: dict[str, int] | None = None,
 ) -> None:
     """Atomically replace one scheduler's complete authoritative reservation set."""
+
+    # An assignment entitlement may be removed by a later epoch, but capacity
+    # borrowed by a still-live Increment F worker may not disappear underneath
+    # the process.  A cooperative worker must first checkpoint/release/complete;
+    # expired leases are made abandoned before the replacement is evaluated.
+    cur.execute(
+        """
+        UPDATE attention_worker_claims
+        SET status = 'ABANDONED', updated_at = now()
+        WHERE scheduler_key = %s
+          AND status = 'ACTIVE'
+          AND lease_expires_at <= now()
+        """,
+        (scheduler_key,),
+    )
+    cur.execute(
+        """
+        SELECT c.claim_id, c.assignment_id, s.reservation_ids
+        FROM attention_worker_claims c
+        JOIN attention_worker_steps s
+          ON s.scheduler_key = c.scheduler_key AND s.step_id = c.step_id
+        WHERE c.scheduler_key = %s AND c.status = 'ACTIVE'
+        ORDER BY c.claim_id ASC
+        """,
+        (scheduler_key,),
+    )
+    active_claim_rows = [
+        _cursor_row_to_dict(cur, row) for row in cur.fetchall()
+    ]
+    target_assignments = {
+        assignment.assignment_id: assignment for assignment in assignments
+    }
+    target_reservations = {
+        reservation.reservation_id: reservation for reservation in reservations
+    }
+    held_reservation_ids = {
+        UUID(str(value))
+        for row in active_claim_rows
+        for value in (row["reservation_ids"] or [])
+    }
+    current_reservations: dict[UUID, ResourceReservation] = {}
+    if held_reservation_ids:
+        cur.execute(
+            """
+            SELECT reservation_id, task_id, resource_id, resource_class, units
+            FROM attention_resource_reservations
+            WHERE scheduler_key = %s AND reservation_id = ANY(%s)
+            """,
+            (
+                scheduler_key,
+                sorted(held_reservation_ids, key=lambda value: value.hex),
+            ),
+        )
+        current_reservations = {
+            reservation.reservation_id: reservation
+            for reservation in (
+                _row_to_resource_reservation(_cursor_row_to_dict(cur, value))
+                for value in cur.fetchall()
+            )
+        }
+    for row in active_claim_rows:
+        assignment_id = UUID(str(row["assignment_id"]))
+        held = {UUID(str(value)) for value in (row["reservation_ids"] or [])}
+        target_assignment = target_assignments.get(assignment_id)
+        if target_assignment is None or set(target_assignment.reservation_ids) != held:
+            raise RuntimeError(
+                "Cannot replace an assignment held by an active worker claim"
+            )
+        for reservation_id in held:
+            current = current_reservations.get(reservation_id)
+            target = target_reservations.get(reservation_id)
+            if current is None or target is None or current != target:
+                raise RuntimeError(
+                    "Cannot alter a reservation held by an active worker claim"
+                )
 
     target_usage: dict[str, int] = {}
     for reservation in reservations:
