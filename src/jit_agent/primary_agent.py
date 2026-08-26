@@ -156,13 +156,17 @@ def handle_interaction(
             _record_error(conn, conversation_id, correlation_id, "respond", exc)
             raise
 
-    event_store.record_event(
-        conn,
-        conversation_id=conversation_id,
-        correlation_id=correlation_id,
-        event_type=EventType.AGENT_RESPONSE,
-        source=SOURCE,
-        payload={"text": response_text},
-        payload_text=response_text,
-    )
+    try:
+        event_store.record_event(
+            conn,
+            conversation_id=conversation_id,
+            correlation_id=correlation_id,
+            event_type=EventType.AGENT_RESPONSE,
+            source=SOURCE,
+            payload={"text": response_text},
+            payload_text=response_text,
+        )
+    except Exception as exc:
+        _record_error(conn, conversation_id, correlation_id, "persist_response", exc)
+        raise
     return response_text
