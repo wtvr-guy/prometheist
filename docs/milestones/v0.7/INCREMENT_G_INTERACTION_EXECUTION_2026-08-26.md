@@ -65,7 +65,7 @@ The Increment G suite establishes:
 - deterministic final-response retry without duplicate append-only events;
 - completion of a concurrently assigned task without legacy active focus.
 
-Static compilation, whitespace validation, and collection of all 180 tests are
+Static compilation, whitespace validation, and collection of all 181 tests are
 performed in the implementation workspace. Database execution requires the
 repository's PostgreSQL 16 CI because this workspace has no PostgreSQL server.
 

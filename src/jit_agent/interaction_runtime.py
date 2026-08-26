@@ -164,10 +164,10 @@ def _ensure_interaction_steps(
         )
         register_worker_step(
             conn,
-            assignment_id=assignment.assignment_id,
+            assignment_id=interaction.assignment_id,
             step_key=stage.value,
             capability=stage.capability,
-            input_refs=[f"event:{prompt.event_id}"],
+            input_refs=[f"event:{interaction.user_prompt_event_id}"],
             effect_policy=effect_policy,
             scheduler_key=scheduler_key,
         )

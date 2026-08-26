@@ -173,3 +173,22 @@ def test_deterministic_response_event_retry_does_not_duplicate_history(conn):
     assert finish_interaction(conn, interaction, **_kwargs()) == "Got it."
     events = event_store.get_events_by_conversation(conn, conversation_id)
     assert [event.event_type for event in events].count(EventType.AGENT_RESPONSE) == 1
+
+
+def test_step_publication_repair_is_idempotent(conn):
+    interaction = begin_interaction(conn, "hello", uuid.uuid4(), **_kwargs())
+
+    execute_next_interaction_step(
+        conn,
+        FakeLLM(),
+        interaction,
+        worker_id="repair-check-worker",
+        **_kwargs(),
+    )
+
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT count(*) FROM attention_worker_steps WHERE task_id = %s",
+            (interaction.task_id,),
+        )
+        assert cur.fetchone()[0] == len(INTERACTION_STAGES)
