@@ -280,6 +280,7 @@ def request_memory(
     requesting_agent: str,
     need: MemoryNeed,
     before_global_seq: int | None,
+    memory_request_id: uuid.UUID | None = None,
 ) -> MemoryPacket:
     """Persist and satisfy one internal-memory request for any agent.
 
@@ -288,7 +289,7 @@ def request_memory(
     verified v0.5 kernel unchanged while preventing either a verbose user query
     or a lossy LLM compression from becoming a single point of recall failure.
     """
-    memory_request_id = uuid.uuid4()
+    memory_request_id = memory_request_id or uuid.uuid4()
     effective_need = need.model_copy(update={"source_types": list(_effective_source_types(need))})
 
     event_store.record_event(
@@ -303,6 +304,7 @@ def request_memory(
             "need": effective_need.model_dump(mode="json"),
         },
         payload_text=effective_need.query_text,
+        event_id=uuid.uuid5(memory_request_id, "memory-request-event"),
     )
 
     _ensure_projection_fresh(conn, before_global_seq=before_global_seq)
@@ -359,5 +361,6 @@ def request_memory(
             "requesting_agent": requesting_agent,
             "packet": packet.model_dump(mode="json"),
         },
+        event_id=uuid.uuid5(memory_request_id, "memory-packet-event"),
     )
     return packet

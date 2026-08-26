@@ -1549,6 +1549,25 @@ class JITAttentionScheduler:
         self._replace_task(task_id, resumable_state=dict(state))
         return self.tasks[task_id].model_copy(deep=True)
 
+    def complete_task(
+        self,
+        task_id: UUID,
+        resumable_state: dict[str, Any] | None = None,
+    ) -> AttentionTask:
+        """Complete one concurrently assigned task after its worker steps finish."""
+
+        if task_id not in self.tasks:
+            raise KeyError(task_id)
+        task = self.tasks[task_id]
+        if task.status is TaskStatus.COMPLETED:
+            return task.model_copy(deep=True)
+        if task.status in {TaskStatus.FAILED, TaskStatus.NEW}:
+            raise RuntimeError(f"Task {task_id} cannot complete from {task.status.value}")
+        if resumable_state is not None:
+            self._replace_task(task_id, resumable_state=dict(resumable_state))
+        self._transition(task_id, TaskStatus.COMPLETED, "all durable worker steps completed")
+        return self.tasks[task_id].model_copy(deep=True)
+
     def _ranked_queued_task_ids(self, *, cycle: int | None = None) -> list[UUID]:
         runnable = [
             self.tasks[task_id]

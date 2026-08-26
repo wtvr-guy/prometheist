@@ -70,6 +70,23 @@ def test_deterministic_task_id_is_stable():
     assert first != other
 
 
+def test_concurrently_assigned_task_can_complete_without_legacy_active_focus():
+    scheduler = JITAttentionScheduler()
+    submitted = scheduler.submit(
+        _task("concurrent-completion", 1, TaskCriticality.USER_REQUESTED)
+    )
+
+    completed = scheduler.complete_task(
+        submitted.task_id,
+        {"result_ref": "worker-result:1"},
+    )
+
+    assert scheduler.active_task_id is None
+    assert completed.status is TaskStatus.COMPLETED
+    assert completed.resumable_state == {"result_ref": "worker-result:1"}
+    assert scheduler.complete_task(completed.task_id) == completed
+
+
 def test_queue_order_is_priority_then_deadline_then_creation_sequence():
     scheduler = JITAttentionScheduler()
     later_deadline = datetime(2026, 8, 25, tzinfo=timezone.utc)

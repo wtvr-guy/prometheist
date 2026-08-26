@@ -39,6 +39,11 @@ keys, fresh claim-time reobservation bound to the exact committed policy,
 expiring leases and heartbeats, append-only checkpoints, exactly one terminal
 result, abandoned-work recovery, and an exclusive guarded process launcher.
 
+Increment G decomposes external interactions into durable reference,
+classification, retrieval, response, and persistence steps executed through
+fresh guarded worker claims. The new path resumes from PostgreSQL and does not
+require the temporarily retained Primary Agent compatibility entry point.
+
 ## Target architecture
 
 ```text

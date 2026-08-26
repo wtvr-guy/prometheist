@@ -679,3 +679,25 @@ CREATE TABLE IF NOT EXISTS attention_worker_results (
     FOREIGN KEY (scheduler_key, claim_id)
         REFERENCES attention_worker_claims(scheduler_key, claim_id)
 );
+
+-- Increment G interaction intake. Worker-step results are the authoritative
+-- stage journal; this row binds one external percept to its durable task.
+CREATE TABLE IF NOT EXISTS attention_interactions (
+    scheduler_key TEXT NOT NULL,
+    interaction_id UUID NOT NULL,
+    protocol_version TEXT NOT NULL,
+    conversation_id UUID NOT NULL REFERENCES conversations(conversation_id),
+    correlation_id UUID NOT NULL,
+    user_prompt_event_id UUID NOT NULL UNIQUE REFERENCES events(event_id),
+    before_global_seq BIGINT NOT NULL CHECK (before_global_seq >= 1),
+    task_id UUID NOT NULL UNIQUE REFERENCES attention_tasks(task_id),
+    assignment_id UUID NOT NULL,
+    user_text TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (scheduler_key, interaction_id),
+    FOREIGN KEY (scheduler_key, assignment_id)
+        REFERENCES attention_assignments(scheduler_key, assignment_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_attention_interactions_task
+    ON attention_interactions (scheduler_key, task_id);

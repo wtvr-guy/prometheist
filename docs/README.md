@@ -40,6 +40,7 @@ The `v0.6-capability-registry` branch is intentionally not merged wholesale into
 - [`milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md`](milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md) — distinction between attention priority and safe concurrent hardware-resource admission.
 - [`milestones/v0.7/ATTENTION_FOCUS_CONCENTRATION_2026-08-26.md`](milestones/v0.7/ATTENTION_FOCUS_CONCENTRATION_2026-08-26.md) — clarifies that safe concurrency is a baseline rather than the goal: attention may narrow and concentrate most safely useful resources on a focal task while preserving system viability, perception/orientation capacity, determinism, and resource safety.
 - [`milestones/v0.7/INCREMENT_F_WORKER_PROTOCOL_2026-08-26.md`](milestones/v0.7/INCREMENT_F_WORKER_PROTOCOL_2026-08-26.md) — implementation record for agent-neutral worker steps, guarded claim-time admission, leases, checkpoints, idempotent recovery, terminal results, and the exclusive process-launch boundary.
+- [`milestones/v0.7/INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md`](milestones/v0.7/INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md) — implementation record for the durable attention-centric interaction path, reusable reference policy, restartable stateless stages, and deterministic effect persistence.
 - [`milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md`](milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md) — migration policy for the divergent v0.6 continuity/capability work.
 
 ## Accepted milestones

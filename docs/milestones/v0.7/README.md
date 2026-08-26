@@ -455,6 +455,9 @@ Tests:
 
 ### Increment G — replace Primary-Agent orchestration path
 
+**Status:** implemented; PostgreSQL CI and development-machine acceptance are
+tracked separately.
+
 Do not wrap `PrimaryAgent.handle_interaction()` inside the scheduler as a permanent design.
 
 Instead, decompose a user interaction into durable steps/tasks that can be executed by disposable workers.
@@ -475,6 +478,13 @@ Exact stages should be introduced only as required by measured workflows.
 The v0.6 `REFERENTIAL_CONTINUITY_REQUIRES_MEMORY_V1` behavior should be migrated here by moving deterministic unresolved-reference detection out of `primary_agent.py` and into reusable interaction/perception policy. The behavior survives; Primary-Agent ownership does not.
 
 The existing Primary Agent may remain temporarily as a compatibility CLI path while the new execution path is built and tested, but it should cease to be the architectural executive.
+
+The new `interaction_runtime` path forms one durable Attention task and
+executes reference analysis, classification, JIT Memory retrieval, response
+synthesis, and idempotent result persistence as separately claimed worker
+steps. Fresh workers resume by inspecting immutable step results in PostgreSQL;
+the path does not call the compatibility Primary Agent. See
+[`INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md`](INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md).
 
 ### Increment H — forced concurrent restart acceptance
 

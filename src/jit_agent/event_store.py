@@ -43,14 +43,38 @@ def record_event(
     source: str,
     payload: dict[str, Any],
     payload_text: str | None = None,
+    event_id: uuid.UUID | None = None,
 ) -> Event:
     """Append one event, assigning a monotonic per-conversation sequence number.
 
     Uses a simple locked-counter transaction (single-user prototype scale):
     lock the conversation row, read+use its next_event_seq, then increment it.
     """
-    event_id = uuid.uuid4()
+    event_id = event_id or uuid.uuid4()
     with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(
+            """
+            SELECT event_id, conversation_id, correlation_id, global_seq,
+                   conversation_seq, event_type, source, created_at,
+                   payload, payload_text, schema_version
+            FROM events WHERE event_id = %s
+            """,
+            (event_id,),
+        )
+        existing = cur.fetchone()
+        if existing is not None:
+            stored = _row_to_event(existing)
+            if (
+                stored.conversation_id != conversation_id
+                or stored.correlation_id != correlation_id
+                or stored.event_type is not event_type
+                or stored.source != source
+                or stored.payload != payload
+                or existing["payload_text"] != payload_text
+            ):
+                raise ValueError("conflicting deterministic event retry")
+            conn.commit()
+            return stored
         cur.execute(
             "SELECT next_event_seq FROM conversations WHERE conversation_id = %s FOR UPDATE",
             (conversation_id,),
