@@ -850,6 +850,14 @@ class JITAttentionScheduler:
         if self.current_epoch is not None:
             for assignment_id in self.current_epoch.assignment_ids:
                 assignment = self._assignments[assignment_id].model_copy(deep=True)
+                if self.tasks[assignment.task_id].status in {
+                    TaskStatus.COMPLETED,
+                    TaskStatus.FAILED,
+                }:
+                    # The terminal transition is durable task state. Its old
+                    # assignment/reservation remains authoritative only until
+                    # this replacement epoch commits without it.
+                    continue
                 task_reservations = self._reservations_for_task(assignment.task_id)
                 self._consume_preserved_reservations(
                     task_reservations,
@@ -1896,8 +1904,13 @@ class JITAttentionScheduler:
             task = self.tasks.get(task_id)
             if task is None:
                 raise ValueError("admitted_task_ids must reference existing tasks")
-            if task.status not in {TaskStatus.QUEUED, TaskStatus.RUNNING}:
-                raise ValueError("Only queued or running tasks may be admitted")
+            if task.status not in {
+                TaskStatus.QUEUED,
+                TaskStatus.RUNNING,
+                TaskStatus.COMPLETED,
+                TaskStatus.FAILED,
+            }:
+                raise ValueError("Only executable or terminal-draining tasks may be admitted")
             if not self._dependencies_satisfied(task):
                 raise ValueError("Admitted task dependencies must be satisfied")
         if admitted and self.active_task_id is not None and self.active_task_id not in admitted:
@@ -2039,7 +2052,11 @@ class JITAttentionScheduler:
                 raise ValueError(
                     "Host-safe assignment requires a process resource estimate"
                 )
-            if assignment.task_revision != task.revision:
+            terminal_drain = (
+                task.status in {TaskStatus.COMPLETED, TaskStatus.FAILED}
+                and assignment.task_revision + 1 == task.revision
+            )
+            if assignment.task_revision != task.revision and not terminal_drain:
                 raise ValueError("Assignment task revision does not match current task")
             if assignment.created_epoch_sequence > epoch.sequence:
                 raise ValueError("Assignment cannot be created after its current epoch")
