@@ -6,14 +6,24 @@ which is what makes the cross-process restart acceptance test meaningful.
 from __future__ import annotations
 
 import argparse
+import sys
 import uuid
 
 from jit_agent import db
-from jit_agent.llm import OllamaClient
-from jit_agent.primary_agent import handle_interaction
+from jit_agent.interaction_runtime import handle_interaction_in_worker_processes
+
+
+def _configure_utf8_streams() -> None:
+    """Make Windows subprocess output deterministic before argument parsing."""
+
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="replace")
 
 
 def main() -> None:
+    _configure_utf8_streams()
     parser = argparse.ArgumentParser(prog="jit-agent")
     parser.add_argument("--once", help="Handle a single message non-interactively and print the response.")
     parser.add_argument(
@@ -23,12 +33,14 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    llm = OllamaClient()
-
     if args.once is not None:
         conversation_id = args.conversation_id or uuid.uuid4()
         with db.get_connection() as conn:
-            response = handle_interaction(conn, llm, args.once, conversation_id)
+            response = handle_interaction_in_worker_processes(
+                conn,
+                args.once,
+                conversation_id,
+            )
         print(response)
         return
 
@@ -45,7 +57,11 @@ def main() -> None:
                 break
             if not user_text:
                 continue
-            response = handle_interaction(conn, llm, user_text, conversation_id)
+            response = handle_interaction_in_worker_processes(
+                conn,
+                user_text,
+                conversation_id,
+            )
             print(response)
 
 

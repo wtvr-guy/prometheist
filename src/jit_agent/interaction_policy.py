@@ -5,17 +5,15 @@ import re
 from enum import Enum
 from uuid import UUID, uuid5
 
-from pydantic import BaseModel, Field, field_validator
-
-from jit_agent.models import AgentAction, AgentDecision
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-INTERACTION_PROTOCOL_VERSION = "v0.7-g-interaction-v1"
+INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v2"
 CONTINUITY_POLICY_VERSION = "REFERENTIAL_CONTINUITY_REQUIRES_MEMORY_V1"
 INTERACTION_CAPABILITIES = (
     "interaction.resolve_references",
-    "interaction.classify",
-    "memory.retrieve",
+    "capability.discover",
+    "capability.execute",
     "interaction.respond",
     "interaction.persist_result",
 )
@@ -29,6 +27,45 @@ _CONTEXT_REFERENCE_PATTERNS = tuple(
         r"\b(?:did|do|have|are|were)\s+(?:we|you|i)\s+(?:(?:just|previously|earlier)\s+)?(?:say|mention|decide|choose|select|rule|discuss|call|calling|name|naming|agree|use|using)\b",
     )
 )
+_EXPLICIT_CAPABILITY_REQUEST_PATTERN = re.compile(
+    r"\b(?:use|ask|delegate\s+to)\s+(?:a\s+|an\s+|the\s+)?"
+    r"(?:[a-z][\w-]*\s+){0,2}(?:service|workflow|tool|model|specialist|agent)\b",
+    re.IGNORECASE,
+)
+_MEMORY_CAPABILITY_PATTERN = re.compile(
+    r"\b(?:memory|history|historical|persisted|recall|retrieve)\b",
+    re.IGNORECASE,
+)
+
+
+class InteractionAction(str, Enum):
+    """Bounded semantic choices proposed by one disposable model call."""
+
+    RESPOND_DIRECTLY = "RESPOND_DIRECTLY"
+    REQUEST_CAPABILITY = "REQUEST_CAPABILITY"
+
+
+class InteractionDecision(BaseModel):
+    """Model-proposed intent; discovery and execution remain system-owned."""
+
+    action: InteractionAction
+    capability_query: str | None = None
+    capability_input: str | None = None
+
+    @model_validator(mode="after")
+    def require_capability_query(self) -> "InteractionDecision":
+        if self.action is InteractionAction.REQUEST_CAPABILITY and not (
+            self.capability_query and self.capability_query.strip()
+        ):
+            raise ValueError("REQUEST_CAPABILITY requires capability_query")
+        for field_name in ("capability_query", "capability_input"):
+            value = getattr(self, field_name)
+            if value is not None:
+                normalized = value.strip()
+                if not normalized:
+                    raise ValueError(f"{field_name} must not be blank")
+                setattr(self, field_name, normalized)
+        return self
 _INLINE_ANTECEDENT_PATTERNS = tuple(
     re.compile(pattern, re.IGNORECASE | re.DOTALL)
     for pattern in (
@@ -40,8 +77,8 @@ _INLINE_ANTECEDENT_PATTERNS = tuple(
 
 class InteractionStage(str, Enum):
     RESOLVE_REFERENCES = "RESOLVE_REFERENCES"
-    CLASSIFY = "CLASSIFY"
-    RETRIEVE = "RETRIEVE"
+    SELECT_CAPABILITY = "SELECT_CAPABILITY"
+    EXECUTE_CAPABILITY = "EXECUTE_CAPABILITY"
     RESPOND = "RESPOND"
     PERSIST_RESULT = "PERSIST_RESULT"
 
@@ -49,8 +86,8 @@ class InteractionStage(str, Enum):
     def capability(self) -> str:
         return {
             InteractionStage.RESOLVE_REFERENCES: INTERACTION_CAPABILITIES[0],
-            InteractionStage.CLASSIFY: INTERACTION_CAPABILITIES[1],
-            InteractionStage.RETRIEVE: INTERACTION_CAPABILITIES[2],
+            InteractionStage.SELECT_CAPABILITY: INTERACTION_CAPABILITIES[1],
+            InteractionStage.EXECUTE_CAPABILITY: INTERACTION_CAPABILITIES[2],
             InteractionStage.RESPOND: INTERACTION_CAPABILITIES[3],
             InteractionStage.PERSIST_RESULT: INTERACTION_CAPABILITIES[4],
         }[self]
@@ -95,17 +132,31 @@ def requires_persisted_context(user_text: str) -> bool:
 
 def apply_continuity_policy(
     user_text: str,
-    decision: AgentDecision,
+    decision: InteractionDecision,
     analysis: ReferenceAnalysis,
-) -> tuple[AgentDecision, str | None]:
+) -> tuple[InteractionDecision, str | None]:
     """Move the v0.6 continuity behavior out of Primary-Agent ownership."""
 
     if not analysis.requires_persisted_context:
         return decision, None
-    if decision.action is AgentAction.RETRIEVE_CONTEXT:
+    requests_memory = (
+        decision.action is InteractionAction.REQUEST_CAPABILITY
+        and _MEMORY_CAPABILITY_PATTERN.search(decision.capability_query or "")
+        is not None
+    )
+    if (
+        decision.action is InteractionAction.REQUEST_CAPABILITY
+        and not requests_memory
+        and _EXPLICIT_CAPABILITY_REQUEST_PATTERN.search(user_text)
+    ):
+        return decision, None
+    if requests_memory:
         return decision, CONTINUITY_POLICY_VERSION
     return (
-        AgentDecision(action=AgentAction.RETRIEVE_CONTEXT, query_text=user_text),
+        InteractionDecision(
+            action=InteractionAction.REQUEST_CAPABILITY,
+            capability_query="internal_memory",
+        ),
         CONTINUITY_POLICY_VERSION,
     )
 

@@ -46,7 +46,7 @@ def test_shared_memory_boundary_projects_new_events_without_manual_rebuild(conn)
         conn,
         conversation_id=request_conversation,
         correlation_id=current_prompt.correlation_id,
-        requesting_agent="test_agent",
+        requesting_component="test-component",
         need=need,
         before_global_seq=current_prompt.global_seq,
     )
@@ -82,7 +82,7 @@ def test_memory_boundary_uses_supplemental_query_only_after_canonical_abstains(c
         conn,
         conversation_id=request_conversation,
         correlation_id=current_prompt.correlation_id,
-        requesting_agent="primary_agent",
+        requesting_component="interaction-test",
         need=jit_memory.build_memory_need(
             question,
             supplemental_query_texts=["remember"],
@@ -112,7 +112,7 @@ def test_memory_boundary_preserves_unknown_fact_abstention(conn):
         conn,
         conversation_id=request_conversation,
         correlation_id=current_prompt.correlation_id,
-        requesting_agent="test_agent",
+        requesting_component="test-component",
         need=jit_memory.build_memory_need("Who insures my vehicle?"),
         before_global_seq=current_prompt.global_seq,
     )
@@ -130,7 +130,7 @@ def test_memory_request_and_packet_are_persisted_with_same_request_id(conn):
         conn,
         conversation_id=conversation_id,
         correlation_id=current_prompt.correlation_id,
-        requesting_agent="primary_agent",
+        requesting_component="interaction-test",
         need=jit_memory.build_memory_need("passphrase cobalt raven"),
         before_global_seq=current_prompt.global_seq,
     )
@@ -156,7 +156,7 @@ def test_control_plane_memory_events_do_not_become_default_evidence(conn):
         conn,
         conversation_id=conversation_id,
         correlation_id=first_prompt.correlation_id,
-        requesting_agent="primary_agent",
+        requesting_component="interaction-test",
         need=jit_memory.build_memory_need("launch phrase silver comet"),
         before_global_seq=first_prompt.global_seq,
     )
@@ -167,7 +167,7 @@ def test_control_plane_memory_events_do_not_become_default_evidence(conn):
         conn,
         conversation_id=conversation_id,
         correlation_id=later_prompt.correlation_id,
-        requesting_agent="memory_specialist",
+        requesting_component="memory-analysis-test",
         need=jit_memory.build_memory_need("launch phrase silver comet"),
         before_global_seq=later_prompt.global_seq,
     )

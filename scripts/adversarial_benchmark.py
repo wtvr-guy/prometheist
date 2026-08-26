@@ -24,8 +24,8 @@ import time
 import uuid
 from dataclasses import dataclass, field
 
-from jit_agent import db, event_store, primary_agent
-from jit_agent.llm import OllamaClient
+from jit_agent import db, event_store
+from jit_agent.interaction_runtime import handle_interaction_in_worker_processes
 from jit_agent.models import EventType
 
 _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
@@ -148,15 +148,19 @@ def build_temporal_group() -> TemporalGroup:
 
 
 def _measure_interaction(
-    conn, llm, conversation_id, question: str, target_text: str, expected: str, distractors: list[str]
+    conn, conversation_id, question: str, target_text: str, expected: str, distractors: list[str]
 ) -> dict:
     t0 = time.monotonic()
-    answer = primary_agent.handle_interaction(conn, llm, question, conversation_id)
+    answer = handle_interaction_in_worker_processes(conn, question, conversation_id)
     elapsed = time.monotonic() - t0
 
     events = event_store.get_events_by_conversation(conn, conversation_id)
-    retrieval_results = [e for e in events if e.event_type == EventType.RETRIEVAL_RESULT]
-    items = retrieval_results[-1].payload.get("items", []) if retrieval_results else []
+    retrieval_results = [e for e in events if e.event_type == EventType.MEMORY_PACKET]
+    items = (
+        retrieval_results[-1].payload.get("packet", {}).get("items", [])
+        if retrieval_results
+        else []
+    )
 
     target_rank = None
     for i, item in enumerate(items):
@@ -183,7 +187,7 @@ def _measure_interaction(
     }
 
 
-def run_case(conn, llm, case: Case) -> dict:
+def run_case(conn, case: Case) -> dict:
     conversation_id = event_store.start_conversation(conn)
     target_text = case.statements[case.target_statement_index]
 
@@ -199,14 +203,14 @@ def run_case(conn, llm, case: Case) -> dict:
         )
 
     result = _measure_interaction(
-        conn, llm, conversation_id, case.question, target_text, case.expected, case.distractors
+        conn, conversation_id, case.question, target_text, case.expected, case.distractors
     )
     result["category"] = case.category
     result["note"] = case.note
     return result
 
 
-def run_temporal_group(conn, llm, group: TemporalGroup) -> list[dict]:
+def run_temporal_group(conn, group: TemporalGroup) -> list[dict]:
     """Each question gets its own fresh conversation seeded with the same
     timeline, so questions can't leak retrieval/context state between each
     other -- only the seeded history and the current question matter.
@@ -227,7 +231,7 @@ def run_temporal_group(conn, llm, group: TemporalGroup) -> list[dict]:
 
         target_text = group.statements[q.target_statement_index]
         result = _measure_interaction(
-            conn, llm, conversation_id, q.question, target_text, q.expected, q.distractors
+            conn, conversation_id, q.question, target_text, q.expected, q.distractors
         )
         result["category"] = f"{group.category}:{q.label}"
         result["note"] = group.note
@@ -236,12 +240,11 @@ def run_temporal_group(conn, llm, group: TemporalGroup) -> list[dict]:
 
 
 def main() -> None:
-    llm = OllamaClient()
     results = []
     with db.get_connection() as conn:
         for case in build_cases():
-            results.append(run_case(conn, llm, case))
-        results.extend(run_temporal_group(conn, llm, build_temporal_group()))
+            results.append(run_case(conn, case))
+        results.extend(run_temporal_group(conn, build_temporal_group()))
 
     for r in results:
         print(f"--- {r['category']} ---")

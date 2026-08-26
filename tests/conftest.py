@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import pathlib
+import platform
 
 os.environ["DATABASE_URL"] = os.environ.get(
     "TEST_DATABASE_URL",
@@ -20,10 +21,31 @@ os.environ["DATABASE_URL"] = os.environ.get(
 )
 
 import pytest
+import httpx
 
 from jit_agent import db
 
 SCHEMA_PATH = pathlib.Path(__file__).resolve().parent.parent / "schema.sql"
+
+
+def pytest_sessionstart(session) -> None:
+    """Fail closed when an explicitly requested real-machine gate is unavailable."""
+
+    require_ollama = os.environ.get("REQUIRE_OLLAMA_ACCEPTANCE") == "1"
+    require_v07_local = os.environ.get("REQUIRE_V07_LOCAL_ACCEPTANCE") == "1"
+    if require_v07_local and platform.system() != "Windows":
+        raise pytest.UsageError(
+            "v0.7 local acceptance must run on the intended native Windows host"
+        )
+    if require_ollama or require_v07_local:
+        try:
+            with httpx.Client(trust_env=False, timeout=2.0) as client:
+                response = client.get("http://localhost:11434/api/tags")
+                response.raise_for_status()
+        except (httpx.HTTPError, OSError) as exc:
+            raise pytest.UsageError(
+                "Ollama acceptance was required but localhost:11434 is unavailable"
+            ) from exc
 
 
 def _require_disposable_database(conn) -> str:

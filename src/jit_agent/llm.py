@@ -1,4 +1,4 @@
-"""Stateless LLM adapters for Primary and specialist agent inference."""
+"""Stateless model adapters for disposable interaction/capability workers."""
 from __future__ import annotations
 
 import logging
@@ -8,12 +8,47 @@ import time
 from typing import Protocol
 
 import httpx
-from pydantic import ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from jit_agent.models import AgentDecision, MemoryNeedDecision, MemoryPacket
+from jit_agent.interaction_policy import InteractionDecision
+from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
 
 logger = logging.getLogger(__name__)
 _THINK_BLOCK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
+_WHY_REQUEST_RE = re.compile(r"\b(?:why|reason|cause)\b", re.IGNORECASE)
+_CAUSAL_CLAUSE_RE = re.compile(
+    r"\b(?:because|due\s+to)\s+([^,.;!?\r\n]+)",
+    re.IGNORECASE,
+)
+_NEGATED_CAUSAL_PREFIX_RE = re.compile(
+    r"(?:\b(?:not|never|no)(?:\s+(?:only|merely|simply|just))?|n['\u2019]t)\s*$",
+    re.IGNORECASE,
+)
+_UNCERTAIN_CAUSAL_PREFIX_RE = re.compile(
+    r"\b(?:whether|if|might|maybe|perhaps|possibly)\b",
+    re.IGNORECASE,
+)
+_QUESTION_CAUSAL_PREFIX_RE = re.compile(
+    r"^\s*(?:is|are|was|were|do|does|did|can|could|would|should|has|have|had)\b",
+    re.IGNORECASE,
+)
+
+
+class _TextAnswer(BaseModel):
+    """Validated envelope that excludes hidden analysis from final text."""
+
+    answer: str = Field(
+        min_length=1,
+        description="Final user-facing answer only, with no analysis or preamble.",
+    )
+
+    @field_validator("answer")
+    @classmethod
+    def normalize_answer(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("answer must not be blank")
+        return normalized
 
 
 def _strip_thinking(text: str) -> str:
@@ -52,50 +87,68 @@ def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> Non
 
 
 _CLASSIFY_SYSTEM_PROMPT = """\
-You are the decision step of Prometheist's Primary Agent. You receive only the
-current user message; no earlier transcript is retained in your model context.
-Choose exactly one action:
-- RESPOND_DIRECTLY when no earlier persisted information is needed.
-- RETRIEVE_CONTEXT when the Primary Agent can answer a simple memory-grounded
-  request after retrieving persisted internal evidence. Set query_text to a
-  short description of the needed information.
-- DELEGATE_MEMORY_SPECIALIST when the user explicitly asks for a specialist or
-  when the task calls for focused analysis/synthesis of persisted history. Set
-  delegation_task to a self-contained bounded task for the specialist.
-Do not invent system ids, retrieval limits, source filters, or persistence
-metadata. Respond only with the structured decision.
+You are a disposable Prometheist interaction-interpretation worker. You receive
+only the current user message. Choose exactly one action:
+- RESPOND_DIRECTLY if the current message alone is sufficient.
+- REQUEST_CAPABILITY if additional information access or functionality is needed.
+A current message may itself establish a name, preference, constraint, plan,
+correction, or other user-authored state. Do not request evidence merely to
+verify what the current message explicitly says. Conversely, unresolved phrases
+such as "those options", "what we just decided", or "that one" require access
+to persisted internal history rather than a guess.
+For REQUEST_CAPABILITY, capability_query briefly describes the needed kind of
+functionality. capability_input may contain a narrower information need; omit it
+when the whole user message should be passed unchanged. Do not invent system
+ids, limits, source filters, executors, or routing policy. Return only the
+structured decision.
 """
 
 _RESPOND_SYSTEM_PROMPT = """\
-You are Prometheist's Primary Agent. This is a fresh model invocation. Answer
-using only the current user message and the bounded internal MemoryPacket, if
-one is supplied. The packet contains canonical source-event metadata and exact
-content. Do not claim to remember anything that is not supported by the packet.
-If a memory-grounded question has no supporting packet evidence, say that the
-stored history does not support an answer. Keep the response concise and do not
-narrate retrieval mechanics unless the user asks.
+You are a fresh disposable Prometheist response worker. Use the current message,
+the supplied bounded MemoryPacket, and general model knowledge as appropriate.
+Never invent personal or history-specific information absent from those sources.
+
+Put every requested value in the first sentence and copy opaque user-provided
+identifiers exactly. Unless the user requests detail, use at most three concise
+sentences with no headings, source quotations, or prefatory analysis. Reconcile
+all source statements before answering. Do not expose packet labels, event ids,
+scores, retrieval mechanics, or hidden reasoning unless asked.
+
+When asked for a profile, code, nickname, name, or ID, return the exact source
+label. When asked why, state the explicit underlying cause from user-authored
+evidence rather than merely restating a prohibition or decision. A USER_PROMPT
+is direct evidence of what the user previously said, named, preferred, required,
+planned, reported, or instructed; it need not independently prove the external
+world. Later user-authored corrections supersede earlier statements. Historical
+assistant responses never override a user-authored constraint.
+
+If the requested personal or historical information is not established by the
+current message or supplied source text, say that persisted evidence is
+insufficient. Do not claim unsupported memory.
 """
 
 _SPECIALIST_PLAN_PROMPT = """\
-You are a stateless memory-analysis specialist. You receive one bounded task and
-no transcript. Describe the internal persisted information you need by returning
-only: query_text (short and evidence-focused) and optional entity strings. Do
-not choose retrieval algorithms, limits, databases, or system metadata.
+You are a disposable memory-analysis planning worker. You receive one bounded
+task and no transcript. Describe the persisted internal evidence needed by
+returning only query_text and optional entity strings. Do not choose retrieval
+algorithms, limits, databases, executors, or system metadata.
 """
 
 _SPECIALIST_ANSWER_PROMPT = """\
-You are a stateless memory-analysis specialist. Complete the delegated task
-using only the supplied bounded MemoryPacket. Treat canonical source events as
-evidence. Do not infer an unsupported fact merely from topical similarity. If
-the evidence is insufficient, explicitly say so. Return only the useful result,
-not a discussion of your hidden reasoning.
+You are a disposable memory-analysis worker. Complete the bounded task using
+only the supplied MemoryPacket and general model knowledge where appropriate.
+Never invent personal or history-specific information absent from the source
+events. Put requested values first, copy opaque identifiers exactly, preserve
+the polarity and direction of relationships, and state explicit user-authored
+causes for why/reason questions. If evidence is insufficient, say so. Return
+only the useful result, never hidden reasoning or retrieval mechanics.
 """
 
 
 class LLMClient(Protocol):
-    """One object may expose several roles; every method call is stateless."""
+    """Every method call is an independent disposable model invocation."""
 
-    def classify(self, prompt: str) -> AgentDecision: ...
+    def classify(self, prompt: str) -> InteractionDecision: ...
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str: ...
 
@@ -134,11 +187,77 @@ def _format_memory_packet(packet: MemoryPacket | None) -> str:
     )
 
 
+def _causal_clause_is_asserted(content: str, match: re.Match[str]) -> bool:
+    """Reject negated, interrogative, or explicitly uncertain causal mentions."""
+
+    start = max(content.rfind(mark, 0, match.start()) for mark in ".!?;,\n\r") + 1
+    following = [
+        position
+        for mark in ".!?;,\n\r"
+        if (position := content.find(mark, match.end())) >= 0
+    ]
+    end = min(following) if following else len(content)
+    terminator = content[end] if end < len(content) else ""
+    prefix = content[start : match.start()]
+    if terminator == "?":
+        return False
+    if _NEGATED_CAUSAL_PREFIX_RE.search(prefix):
+        return False
+    if _UNCERTAIN_CAUSAL_PREFIX_RE.search(prefix):
+        return False
+    return _QUESTION_CAUSAL_PREFIX_RE.search(prefix) is None
+
+
+def _format_explicit_causal_clauses(packet: MemoryPacket | None) -> str:
+    """Highlight asserted causes already present in user-authored evidence."""
+
+    if packet is None:
+        return ""
+    facts: list[str] = []
+    seen: set[str] = set()
+    for item in packet.items:
+        if item.event_type is not EventType.USER_PROMPT:
+            continue
+        for match in _CAUSAL_CLAUSE_RE.finditer(item.content):
+            if not _causal_clause_is_asserted(item.content, match):
+                continue
+            fact = " ".join(match.group(1).split())
+            key = fact.casefold()
+            if fact and key not in seen:
+                seen.add(key)
+                facts.append(fact)
+            if len(facts) == 3:
+                break
+        if len(facts) == 3:
+            break
+    if not facts:
+        return ""
+    rendered = "\n".join(f"- {fact}" for fact in facts)
+    return (
+        "\n\n[Asserted causal clauses from USER_PROMPT sources]\n"
+        f"{rendered}\n"
+        "For a why/reason request, state the relevant clause in the final answer. "
+        "These lines only highlight exact content already present in the packet."
+    )
+
+
+def _causal_highlight_for_request(request: str, packet: MemoryPacket | None) -> str:
+    if _WHY_REQUEST_RE.search(request) is None:
+        return ""
+    return _format_explicit_causal_clauses(packet)
+
+
 class OllamaClient:
     def __init__(self, base_url: str | None = None, model: str | None = None) -> None:
         self.base_url = base_url or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
         self.model = model or os.environ.get("OLLAMA_MODEL", "qwen3:4b")
-        self._client = httpx.Client(base_url=self.base_url, timeout=300.0)
+        # Ollama is a local backend. Proxy environment variables must never
+        # redirect or break loopback inference traffic.
+        self._client = httpx.Client(
+            base_url=self.base_url,
+            timeout=300.0,
+            trust_env=False,
+        )
 
     def _structured(self, kind: str, system: str, user: str, schema: dict, max_tokens: int) -> str:
         t0 = time.monotonic()
@@ -153,7 +272,7 @@ class OllamaClient:
                 "format": schema,
                 "think": False,
                 "stream": False,
-                "options": {"num_predict": max_tokens},
+                "options": {"num_predict": max_tokens, "temperature": 0},
             },
         )
         response.raise_for_status()
@@ -162,41 +281,44 @@ class OllamaClient:
         return _strip_thinking(body["message"]["content"])
 
     def _text(self, kind: str, system: str, user: str, max_tokens: int = 256) -> str:
-        t0 = time.monotonic()
-        response = self._client.post(
-            "/api/chat",
-            json={
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-                "think": False,
-                "stream": False,
-                "options": {"num_predict": max_tokens},
-            },
-        )
-        response.raise_for_status()
-        body = response.json()
-        _log_call(kind, self.model, time.monotonic() - t0, body)
-        return _strip_thinking(body["message"]["content"])
-
-    def classify(self, prompt: str) -> AgentDecision:
-        schema = AgentDecision.model_json_schema()
         last_error: Exception | None = None
         for _ in range(2):
-            content = self._structured("CLASSIFY", _CLASSIFY_SYSTEM_PROMPT, prompt, schema, 96)
             try:
-                return AgentDecision.model_validate_json(content)
-            except ValidationError as exc:
+                content = self._structured(
+                    kind,
+                    system,
+                    user,
+                    _TextAnswer.model_json_schema(),
+                    max_tokens,
+                )
+                return _TextAnswer.model_validate_json(content).answer
+            except (ValidationError, ValueError) as exc:
                 last_error = exc
-        raise ValueError(f"LLM classification failed to validate: {last_error}")
+        raise ValueError(f"model answer failed to validate: {last_error}")
+
+    def classify(self, prompt: str) -> InteractionDecision:
+        schema = InteractionDecision.model_json_schema()
+        last_error: Exception | None = None
+        for _ in range(2):
+            try:
+                content = self._structured(
+                    "CLASSIFY",
+                    _CLASSIFY_SYSTEM_PROMPT,
+                    prompt,
+                    schema,
+                    128,
+                )
+                return InteractionDecision.model_validate_json(content)
+            except (ValidationError, ValueError) as exc:
+                last_error = exc
+        raise ValueError(f"interaction classification failed to validate: {last_error}")
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
+        causal_clauses = _causal_highlight_for_request(prompt, memory_packet)
         return self._text(
             "RESPOND",
             _RESPOND_SYSTEM_PROMPT,
-            prompt + _format_memory_packet(memory_packet),
+            prompt + _format_memory_packet(memory_packet) + causal_clauses,
         )
 
     def plan_memory(self, task: str) -> MemoryNeedDecision:
@@ -211,8 +333,9 @@ class OllamaClient:
         raise ValueError(f"specialist memory plan failed to validate: {last_error}")
 
     def answer_memory_task(self, task: str, packet: MemoryPacket) -> str:
+        causal_clauses = _causal_highlight_for_request(task, packet)
         return self._text(
             "SPECIALIST_ANSWER",
             _SPECIALIST_ANSWER_PROMPT,
-            task + _format_memory_packet(packet),
+            task + _format_memory_packet(packet) + causal_clauses,
         )

@@ -4,11 +4,13 @@ from datetime import datetime, timezone
 
 import pytest
 
-from jit_agent import db, event_store, primary_agent
+from jit_agent import db, event_store
 from jit_agent.attention_observation import HostResourceMetrics
 from jit_agent.interaction_policy import (
     CONTINUITY_POLICY_VERSION,
     INTERACTION_STAGES,
+    InteractionAction,
+    InteractionDecision,
     InteractionStage,
     requires_persisted_context,
 )
@@ -18,7 +20,7 @@ from jit_agent.interaction_runtime import (
     finish_interaction,
     handle_interaction,
 )
-from jit_agent.models import AgentAction, AgentDecision, EventType, MemoryNeedDecision, MemoryPacket
+from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
 from jit_agent.worker_protocol import deterministic_worker_step_id
 from jit_agent.worker_store import load_worker_result
 
@@ -39,13 +41,14 @@ class FixedProbe:
 
 
 class FakeLLM:
-    def classify(self, prompt: str) -> AgentDecision:
+    def classify(self, prompt: str) -> InteractionDecision:
         if "what" in prompt.lower() and "remember" in prompt.lower():
-            return AgentDecision(
-                action=AgentAction.RETRIEVE_CONTEXT,
-                query_text="remember",
+            return InteractionDecision(
+                action=InteractionAction.REQUEST_CAPABILITY,
+                capability_query="internal_memory",
+                capability_input="remember",
             )
-        return AgentDecision(action=AgentAction.RESPOND_DIRECTLY)
+        return InteractionDecision(action=InteractionAction.RESPOND_DIRECTLY)
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
         if memory_packet and memory_packet.items:
@@ -80,12 +83,7 @@ def test_reference_policy_is_reusable_and_does_not_claim_general_coreference():
     assert requires_persisted_context("Tell me about PostgreSQL.") is False
 
 
-def test_end_to_end_interaction_uses_durable_workers_not_primary_agent(conn, monkeypatch):
-    monkeypatch.setattr(
-        primary_agent,
-        "handle_interaction",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("legacy path used")),
-    )
+def test_end_to_end_interaction_uses_only_durable_task_neutral_workers(conn):
     conversation_id = uuid.uuid4()
     response = handle_interaction(
         conn,
@@ -99,7 +97,7 @@ def test_end_to_end_interaction_uses_durable_workers_not_primary_agent(conn, mon
     events = event_store.get_events_by_conversation(conn, conversation_id)
     assert [event.event_type for event in events] == [
         EventType.USER_PROMPT,
-        EventType.AGENT_RESPONSE,
+        EventType.INTERACTION_RESPONSE,
     ]
     assert events[-1].source == "attention_interaction"
     with conn.cursor() as cur:
@@ -151,11 +149,64 @@ def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(
 
     classify_id = deterministic_worker_step_id(
         interaction.assignment_id,
-        InteractionStage.CLASSIFY.value,
+        InteractionStage.SELECT_CAPABILITY.value,
     )
     classified = load_worker_result(conn, classify_id)
     assert classified.output["continuity_policy"] == CONTINUITY_POLICY_VERSION
-    assert classified.output["decision"]["action"] == AgentAction.RETRIEVE_CONTEXT.value
+    assert (
+        classified.output["decision"]["action"]
+        == InteractionAction.REQUEST_CAPABILITY.value
+    )
+    events = event_store.get_events_by_conversation(conn, recall_conversation)
+    assert EventType.CAPABILITY_REQUEST in [event.event_type for event in events]
+    assert EventType.CAPABILITY_PACKET in [event.event_type for event in events]
+    assert EventType.CAPABILITY_RESULT in [event.event_type for event in events]
+
+
+def test_selected_memory_analysis_registration_executes_real_profile(conn):
+    class AnalysisLLM(FakeLLM):
+        def classify(self, prompt: str) -> InteractionDecision:
+            return InteractionDecision(
+                action=InteractionAction.REQUEST_CAPABILITY,
+                capability_query="memory analysis",
+                capability_input="remembered opaque token",
+            )
+
+        def answer_memory_task(self, task: str, packet: MemoryPacket) -> str:
+            return f"analyzed:{packet.items[0].content}"
+
+    token = uuid.uuid4().hex[:10]
+    handle_interaction(
+        conn,
+        FakeLLM(),
+        f"I want you to remember {token}.",
+        uuid.uuid4(),
+        **_kwargs(),
+    )
+    interaction = begin_interaction(
+        conn,
+        "Use memory analysis for my remembered opaque token.",
+        uuid.uuid4(),
+        **_kwargs(),
+    )
+    for index in range(len(INTERACTION_STAGES)):
+        execute_next_interaction_step(
+            conn,
+            AnalysisLLM(),
+            interaction,
+            worker_id=f"analysis-worker-{index}",
+            **_kwargs(),
+        )
+
+    response = finish_interaction(conn, interaction, **_kwargs())
+    assert token in response
+    execute_id = deterministic_worker_step_id(
+        interaction.assignment_id,
+        InteractionStage.EXECUTE_CAPABILITY.value,
+    )
+    execution = load_worker_result(conn, execute_id)
+    assert execution.output["execution"]["capability_id"] == "memory_analysis"
+    assert execution.output["execution"]["executor"] == "memory_analysis"
 
 
 def test_deterministic_response_event_retry_does_not_duplicate_history(conn):
@@ -172,7 +223,7 @@ def test_deterministic_response_event_retry_does_not_duplicate_history(conn):
     assert finish_interaction(conn, interaction, **_kwargs()) == "Got it."
     assert finish_interaction(conn, interaction, **_kwargs()) == "Got it."
     events = event_store.get_events_by_conversation(conn, conversation_id)
-    assert [event.event_type for event in events].count(EventType.AGENT_RESPONSE) == 1
+    assert [event.event_type for event in events].count(EventType.INTERACTION_RESPONSE) == 1
 
 
 def test_step_publication_repair_is_idempotent(conn):

@@ -1,5 +1,12 @@
 name: tests
 
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
@@ -45,6 +52,13 @@ jobs:
 
       - name: Run static checks
         run: uv run ruff check .
+
+      - name: Collect local-model acceptance gates
+        run: >-
+          uv run pytest --collect-only -q -m ollama
+          tests/test_acceptance_restart.py
+          tests/test_cross_conversation_memory.py
+          tests/test_acceptance_conversation_continuity.py
 
       - name: Run test suite
         run: uv run pytest -q

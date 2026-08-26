@@ -38,6 +38,7 @@ MINIMUM_SCORE = 0.15
 # become evidence merely because they mention the same words as a later query.
 DEFAULT_EVIDENCE_TYPES = (
     EventType.USER_PROMPT,
+    EventType.INTERACTION_RESPONSE,
     EventType.AGENT_RESPONSE,
     EventType.AGENT_RESULT,
     EventType.TOOL_RESULT,
@@ -277,12 +278,12 @@ def request_memory(
     *,
     conversation_id: uuid.UUID,
     correlation_id: uuid.UUID,
-    requesting_agent: str,
+    requesting_component: str,
     need: MemoryNeed,
     before_global_seq: int | None,
     memory_request_id: uuid.UUID | None = None,
 ) -> MemoryPacket:
-    """Persist and satisfy one internal-memory request for any agent.
+    """Persist and satisfy one internal-memory request for any task component.
 
     The exact canonical query is evaluated first. Only an empty admissible result
     permits a bounded supplemental formulation to be tried. This keeps the
@@ -297,7 +298,7 @@ def request_memory(
         conversation_id=conversation_id,
         correlation_id=correlation_id,
         event_type=EventType.MEMORY_REQUEST,
-        source=requesting_agent,
+        source=requesting_component,
         payload={
             "memory_request_id": str(memory_request_id),
             "origin": KnowledgeOrigin.INTERNAL_MEMORY.value,
@@ -358,7 +359,7 @@ def request_memory(
         event_type=EventType.MEMORY_PACKET,
         source=SOURCE,
         payload={
-            "requesting_agent": requesting_agent,
+            "requesting_component": requesting_component,
             "packet": packet.model_dump(mode="json"),
         },
         event_id=uuid.uuid5(memory_request_id, "memory-packet-event"),
