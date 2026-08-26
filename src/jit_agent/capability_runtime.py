@@ -59,12 +59,18 @@ def execute_registered_capability(
 ) -> CapabilityExecution:
     """Execute a selected binding without granting policy authority to a worker."""
 
+    # Conversation/session identifiers are provenance, not memory boundaries.
+    # Internal persisted memory must be able to recover evidence written in any
+    # earlier conversation while ``before_global_seq`` remains the hard current-
+    # turn leakage boundary.
+    memory_scope_conversation_id = None
+
     if registration.executor == "jit_memory":
         supplemental = [capability_input] if capability_input else []
         need = jit_memory.build_memory_need(
             task_text,
             supplemental_query_texts=supplemental,
-            conversation_id=conversation_id,
+            conversation_id=memory_scope_conversation_id,
         )
     elif registration.executor == "memory_analysis":
         planned = llm.plan_memory(capability_input or task_text)
@@ -73,7 +79,7 @@ def execute_registered_capability(
             task_text,
             supplemental_query_texts=supplemental,
             entities=planned.entities,
-            conversation_id=conversation_id,
+            conversation_id=memory_scope_conversation_id,
         )
     else:
         raise ValueError(
