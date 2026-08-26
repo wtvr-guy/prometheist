@@ -455,8 +455,8 @@ Tests:
 
 ### Increment G — replace Primary-Agent orchestration path
 
-**Status:** implemented; PostgreSQL CI and development-machine acceptance are
-tracked separately.
+**Status:** implemented and verified in PostgreSQL 16 CI; development-machine
+acceptance is tracked separately.
 
 Do not wrap `PrimaryAgent.handle_interaction()` inside the scheduler as a permanent design.
 
@@ -485,6 +485,9 @@ synthesis, and idempotent result persistence as separately claimed worker
 steps. Fresh workers resume by inspecting immutable step results in PostgreSQL;
 the path does not call the compatibility Primary Agent. See
 [`INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md`](INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md).
+
+GitHub Actions run #123 verified the complete Increment G head with PostgreSQL
+16: `177 passed, 4 skipped in 26.78s`.
 
 ### Increment H — forced concurrent restart acceptance
 

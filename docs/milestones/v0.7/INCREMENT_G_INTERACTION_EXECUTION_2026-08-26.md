@@ -2,8 +2,8 @@
 
 **Implementation date:** 2026-08-26
 
-**Status:** implemented; PostgreSQL CI and real local-model acceptance remain
-separate evidence gates.
+**Status:** implemented and verified in PostgreSQL 16 CI; real local-model
+acceptance remains a separate evidence gate.
 
 ## Decision
 
@@ -65,9 +65,10 @@ The Increment G suite establishes:
 - deterministic final-response retry without duplicate append-only events;
 - completion of a concurrently assigned task without legacy active focus.
 
-Static compilation, whitespace validation, and collection of all 181 tests are
-performed in the implementation workspace. Database execution requires the
-repository's PostgreSQL 16 CI because this workspace has no PostgreSQL server.
+Static compilation, whitespace validation, and collection of all 181 tests
+passed in the implementation workspace. GitHub Actions run #123 verified the
+complete Increment G head against PostgreSQL 16: `177 passed, 4 skipped in
+26.78s`.
 
 ## Deliberate boundary
 
