@@ -127,8 +127,37 @@ def test_transition_persistence_is_idempotent():
 
         save_scheduler(conn, scheduler)
         assert load_transition_count(conn, task.task_id) == expected_count
+        assert scheduler._pending_transitions_for_persistence() == []
 
         save_scheduler(conn, scheduler)
         assert load_transition_count(conn, task.task_id) == expected_count
+        assert scheduler._pending_transitions_for_persistence() == []
+    finally:
+        conn.close()
+
+
+def test_scheduler_namespaces_reconstruct_only_their_own_tasks_and_transitions():
+    conn = db.get_connection()
+    try:
+        first = load_scheduler(conn, scheduler_key="first")
+        first_task = first.submit(
+            _new_task(conn, "first-task", TaskCriticality.USER_REQUESTED)
+        )
+        save_scheduler(conn, first, scheduler_key="first")
+
+        second = load_scheduler(conn, scheduler_key="second")
+        assert second.tasks == {}
+        second_task = second.submit(
+            _new_task(conn, "second-task", TaskCriticality.SUPPORTING)
+        )
+        save_scheduler(conn, second, scheduler_key="second")
+
+        restored_first = load_scheduler(conn, scheduler_key="first")
+        restored_second = load_scheduler(conn, scheduler_key="second")
+
+        assert set(restored_first.tasks) == {first_task.task_id}
+        assert set(restored_second.tasks) == {second_task.task_id}
+        assert load_transition_count(conn, scheduler_key="first") == 1
+        assert load_transition_count(conn, scheduler_key="second") == 1
     finally:
         conn.close()

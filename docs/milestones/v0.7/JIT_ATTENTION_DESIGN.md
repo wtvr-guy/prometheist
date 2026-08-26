@@ -302,6 +302,13 @@ If several compatible active tasks could be preempted, victim selection must its
 
 The Attention Fabric requires durable state beyond the original single-focus scheduler snapshot.
 
+`scheduler_key` is an explicit persistence namespace. Tasks, task transitions,
+epochs, assignments, worker state, and interactions reconstruct only within
+that namespace. Physical execution-resource definitions remain host-global,
+and PostgreSQL checks reservations across scheduler namespaces so separate
+controllers cannot oversubscribe one machine or bypass the single-local-LLM
+limit.
+
 Increment D persists:
 
 - execution-resource definitions;
@@ -436,13 +443,21 @@ Already implemented in the v0.7 branch:
 - append-only checkpoint revisions and exactly one terminal result per step;
 - forced worker-process loss followed by fresh-process recovery from PostgreSQL;
 - protection against releasing reservations held by live worker claims;
-- one guarded, shell-free Prometheist-owned worker process-launch boundary.
+- one guarded, shell-free Prometheist-owned worker process-launch boundary;
+- durable interaction tasks decomposed into separately claimed reference,
+  classification, retrieval, response, and persistence steps;
+- restartable interaction execution without calling the Primary-Agent
+  compatibility path;
+- idempotent final-response event persistence and deterministic task
+  completion/reservation release.
 
 Not yet implemented:
 
 - task/worker-neutral capability-registry adaptation and real capability invocation;
 - accelerator/VRAM and inference-backend pressure observation;
-- replacement of the live Primary-Agent orchestration path.
+- Increment H's complete forced concurrent restart workload;
+- the full v0.6 continuity migration gate on the new execution path;
+- removal of the legacy Primary-Agent CLI and compatibility surfaces.
 
 ## Explicitly rejected next steps
 

@@ -140,7 +140,12 @@ Implemented/verified foundations include PostgreSQL authoritative history, deter
 
 `src/jit_agent/primary_agent.py`, Primary-Agent tests, and the current CLI are **legacy v0.6 compatibility surfaces**, not declarations of the target architecture. They remain until their useful behavioral baselines are reproduced by the attention-centric execution path. New architecture work should not extend the Primary Agent as a permanent coordinator.
 
-Capability discovery/execution on the new worker contract, replacement of Primary-Agent interaction orchestration, perception/salience, deterministic external-data retention, session-independent interaction mechanics, and the fully integrated cognitive loop remain roadmap work unless a milestone document states otherwise.
+Task/worker-neutral capability-registry adaptation, Increment H's forced
+concurrent restart scenario, migration of the complete v0.6 continuity
+baseline, eventual removal of Primary-Agent compatibility code,
+perception/salience, deterministic external-data retention, and the fully
+integrated cognitive loop remain roadmap work unless a milestone document
+states otherwise.
 
 ## Roadmap
 
@@ -161,7 +166,7 @@ Requirements: Python 3.12+, `uv`, PostgreSQL, and Ollama for model-backed accept
 ```powershell
 git clone https://github.com/wtvr-guy/prometheist.git
 cd prometheist
-uv sync
+uv sync --frozen
 psql -d jit_agent -f schema.sql
 uv run pytest -v
 ```

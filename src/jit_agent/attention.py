@@ -403,6 +403,7 @@ class JITAttentionScheduler:
         self.pending_preemption_task_id: UUID | None = None
         self.cycle = 0
         self.transitions: list[TaskTransition] = []
+        self._persisted_transition_count = 0
 
     @classmethod
     def from_snapshot(
@@ -1313,6 +1314,19 @@ class JITAttentionScheduler:
             raise RuntimeError("Persisted preemption revision does not match scheduler")
         self._persisted_preemption_state_revision = revision
 
+    def _pending_transitions_for_persistence(self) -> list[TaskTransition]:
+        if self._persisted_transition_count > len(self.transitions):
+            raise RuntimeError("Persisted transition cursor exceeds transition history")
+        return [
+            transition.model_copy(deep=True)
+            for transition in self.transitions[self._persisted_transition_count :]
+        ]
+
+    def _mark_transitions_persisted(self, count: int) -> None:
+        if count < self._persisted_transition_count or count > len(self.transitions):
+            raise RuntimeError("Invalid persisted transition cursor")
+        self._persisted_transition_count = count
+
     def reconcile_resource_admission(self) -> ResourceAdmissionPlan:
         """Reserve a deterministic attention-ordered set that fits safely.
 
@@ -1396,8 +1410,8 @@ class JITAttentionScheduler:
             raise ValueError(f"Duplicate task_id: {task.task_id}")
         if any(existing.created_seq == task.created_seq for existing in self.tasks.values()):
             raise ValueError(f"Duplicate created_seq: {task.created_seq}")
-        if task.status not in {TaskStatus.NEW, TaskStatus.QUEUED}:
-            raise ValueError("Newly submitted tasks must be NEW or QUEUED")
+        if task.status is not TaskStatus.NEW:
+            raise ValueError("Newly submitted tasks must be NEW")
 
         stored = task.model_copy(deep=True)
         self.tasks[stored.task_id] = stored

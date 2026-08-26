@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import datetime
 from uuid import UUID, uuid4, uuid5
 
 import psycopg

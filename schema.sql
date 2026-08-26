@@ -155,6 +155,7 @@ CREATE INDEX IF NOT EXISTS idx_attention_execution_resources_class_enabled
     ON attention_execution_resources (resource_class, enabled, resource_id);
 
 CREATE TABLE IF NOT EXISTS attention_tasks (
+    scheduler_key TEXT NOT NULL DEFAULT 'default',
     task_id UUID PRIMARY KEY,
     task_key TEXT NOT NULL,
     created_seq BIGINT NOT NULL UNIQUE,
@@ -187,10 +188,17 @@ ALTER TABLE attention_tasks
 ALTER TABLE attention_tasks
     ADD COLUMN IF NOT EXISTS process_resource_estimate JSONB;
 
+ALTER TABLE attention_tasks
+    ADD COLUMN IF NOT EXISTS scheduler_key TEXT NOT NULL DEFAULT 'default';
+
 CREATE INDEX IF NOT EXISTS idx_attention_tasks_status_priority
     ON attention_tasks (status, criticality, created_seq);
 
+CREATE INDEX IF NOT EXISTS idx_attention_tasks_scheduler_status_priority
+    ON attention_tasks (scheduler_key, status, criticality, created_seq);
+
 CREATE TABLE IF NOT EXISTS attention_task_transitions (
+    scheduler_key TEXT NOT NULL DEFAULT 'default',
     transition_id UUID PRIMARY KEY,
     task_id UUID NOT NULL REFERENCES attention_tasks(task_id) ON DELETE CASCADE,
     revision BIGINT NOT NULL,
@@ -202,8 +210,14 @@ CREATE TABLE IF NOT EXISTS attention_task_transitions (
     UNIQUE (task_id, revision)
 );
 
+ALTER TABLE attention_task_transitions
+    ADD COLUMN IF NOT EXISTS scheduler_key TEXT NOT NULL DEFAULT 'default';
+
 CREATE INDEX IF NOT EXISTS idx_attention_transitions_task_revision
     ON attention_task_transitions (task_id, revision);
+
+CREATE INDEX IF NOT EXISTS idx_attention_transitions_scheduler_task_revision
+    ON attention_task_transitions (scheduler_key, task_id, revision);
 
 CREATE TABLE IF NOT EXISTS attention_scheduler_state (
     scheduler_key TEXT PRIMARY KEY,

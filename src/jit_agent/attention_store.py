@@ -64,6 +64,8 @@ def save_scheduler(
     """
 
     snapshot = scheduler.snapshot()
+    pending_transitions = scheduler._pending_transitions_for_persistence()
+    persisted_transition_count = len(scheduler.transitions)
     pending = scheduler.pending_scheduling_epoch()
     preemption_events = scheduler.preemption_events()
     preemption_base_revision = scheduler._preemption_persistence_revision()
@@ -147,19 +149,20 @@ def save_scheduler(
                 _upsert_execution_resource(cur, resource)
 
             for task in snapshot.tasks:
-                _upsert_task(cur, task)
+                _upsert_task(cur, task, scheduler_key=scheduler_key)
 
-            for transition in scheduler.transitions:
+            for transition in pending_transitions:
                 cur.execute(
                     """
                     INSERT INTO attention_task_transitions (
-                        transition_id, task_id, revision, scheduler_cycle,
+                        scheduler_key, transition_id, task_id, revision, scheduler_cycle,
                         from_status, to_status, reason
                     )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (transition_id) DO NOTHING
                     """,
                     (
+                        scheduler_key,
                         transition.transition_id,
                         transition.task_id,
                         transition.revision,
@@ -282,6 +285,7 @@ def save_scheduler(
 
     if pending is not None:
         scheduler._commit_pending_epoch(pending.epoch.epoch_id)
+    scheduler._mark_transitions_persisted(persisted_transition_count)
     scheduler._mark_preemption_state_persisted(preemption_state_revision)
 
 
@@ -336,8 +340,10 @@ def load_scheduler(
                 resource_requirements, process_resource_estimate, dependency_ids,
                 status, enqueued_cycle, revision, resumable_state
             FROM attention_tasks
+            WHERE scheduler_key = %s
             ORDER BY created_seq ASC, task_id ASC
-            """
+            """,
+            (scheduler_key,),
         )
         rows = cur.fetchall()
 
@@ -475,16 +481,32 @@ def load_worker_visible_assignments(
     ).worker_visible_assignments()
 
 
-def load_transition_count(conn: psycopg.Connection, task_id: UUID | None = None) -> int:
+def load_transition_count(
+    conn: psycopg.Connection,
+    task_id: UUID | None = None,
+    *,
+    scheduler_key: str = DEFAULT_SCHEDULER_KEY,
+) -> int:
     """Small inspection helper used by deterministic persistence tests."""
 
     with conn.cursor() as cur:
         if task_id is None:
-            cur.execute("SELECT count(*) FROM attention_task_transitions")
+            cur.execute(
+                """
+                SELECT count(*)
+                FROM attention_task_transitions
+                WHERE scheduler_key = %s
+                """,
+                (scheduler_key,),
+            )
         else:
             cur.execute(
-                "SELECT count(*) FROM attention_task_transitions WHERE task_id = %s",
-                (task_id,),
+                """
+                SELECT count(*)
+                FROM attention_task_transitions
+                WHERE scheduler_key = %s AND task_id = %s
+                """,
+                (scheduler_key, task_id),
             )
         return int(cur.fetchone()[0])
 
@@ -819,19 +841,24 @@ def _upsert_execution_resource(
     )
 
 
-def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
+def _upsert_task(
+    cur: psycopg.Cursor[Any],
+    task: AttentionTask,
+    *,
+    scheduler_key: str,
+) -> None:
     metadata = task.metadata
     cur.execute(
         """
         INSERT INTO attention_tasks (
-            task_id, task_key, created_seq, parent_task_id,
+            scheduler_key, task_id, task_key, created_seq, parent_task_id,
             criticality, service_class, interruption_policy, deadline,
             required_capabilities, required_resource_classes,
             resource_requirements, process_resource_estimate, dependency_ids,
             status, enqueued_cycle, revision, resumable_state
         )
         VALUES (
-            %s, %s, %s, %s,
+            %s, %s, %s, %s, %s,
             %s, %s, %s, %s,
             %s, %s, %s, %s,
             %s, %s, %s, %s, %s
@@ -854,8 +881,10 @@ def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
             revision = EXCLUDED.revision,
             resumable_state = EXCLUDED.resumable_state,
             updated_at = now()
+        WHERE attention_tasks.scheduler_key = EXCLUDED.scheduler_key
         """,
         (
+            scheduler_key,
             task.task_id,
             task.task_key,
             task.created_seq,
@@ -884,6 +913,10 @@ def _upsert_task(cur: psycopg.Cursor[Any], task: AttentionTask) -> None:
             Json(task.resumable_state),
         ),
     )
+    if cur.rowcount != 1:
+        raise ValueError(
+            f"Task {task.task_id} already belongs to another scheduler namespace"
+        )
 
 
 def _replace_resource_reservations(

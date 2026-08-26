@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import UUID
 
+import pytest
+
 from jit_agent.attention import (
     AttentionTask,
     FocusAction,
@@ -68,6 +70,28 @@ def test_deterministic_task_id_is_stable():
     other = deterministic_task_id(NAMESPACE, "deploy-release")
     assert first == second
     assert first != other
+
+
+def test_submit_rejects_prequeued_task_without_recording_a_noop_transition():
+    scheduler = JITAttentionScheduler()
+    prequeued = _task("already-queued", 1, TaskCriticality.USER_REQUESTED).model_copy(
+        update={"status": TaskStatus.QUEUED}
+    )
+
+    with pytest.raises(ValueError, match="must be NEW"):
+        scheduler.submit(prequeued)
+
+    assert scheduler.tasks == {}
+    assert scheduler.transitions == []
+
+
+def test_checkpoint_without_active_task_advances_exactly_one_cycle():
+    scheduler = JITAttentionScheduler()
+
+    decision = scheduler.checkpoint_active()
+
+    assert decision.action is FocusAction.IDLE
+    assert scheduler.cycle == 1
 
 
 def test_concurrently_assigned_task_can_complete_without_legacy_active_focus():
