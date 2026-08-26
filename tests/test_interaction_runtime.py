@@ -12,6 +12,8 @@ from jit_agent.interaction_policy import (
     InteractionAction,
     InteractionDecision,
     InteractionStage,
+    ReferenceAnalysis,
+    apply_continuity_policy,
     requires_persisted_context,
 )
 from jit_agent.interaction_runtime import (
@@ -81,6 +83,23 @@ def test_reference_policy_is_reusable_and_does_not_claim_general_coreference():
         "Compare caching and recomputation; which of those approaches is safer?"
     ) is False
     assert requires_persisted_context("Tell me about PostgreSQL.") is False
+
+
+def test_reference_policy_preserves_canonical_memory_capability_input():
+    decision = InteractionDecision(
+        action=InteractionAction.REQUEST_CAPABILITY,
+        capability_query="internal_memory",
+        capability_input="remember",
+    )
+
+    adjusted, applied_policy = apply_continuity_policy(
+        "What number did I ask you to remember, as we just discussed?",
+        decision,
+        ReferenceAnalysis(requires_persisted_context=True),
+    )
+
+    assert adjusted == decision
+    assert applied_policy == CONTINUITY_POLICY_VERSION
 
 
 def test_end_to_end_interaction_uses_only_durable_task_neutral_workers(conn):

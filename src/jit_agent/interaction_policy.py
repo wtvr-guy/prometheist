@@ -139,9 +139,14 @@ def apply_continuity_policy(
 
     if not analysis.requires_persisted_context:
         return decision, None
+    normalized_capability_query = re.sub(
+        r"[_-]+",
+        " ",
+        decision.capability_query or "",
+    )
     requests_memory = (
         decision.action is InteractionAction.REQUEST_CAPABILITY
-        and _MEMORY_CAPABILITY_PATTERN.search(decision.capability_query or "")
+        and _MEMORY_CAPABILITY_PATTERN.search(normalized_capability_query)
         is not None
     )
     if (
