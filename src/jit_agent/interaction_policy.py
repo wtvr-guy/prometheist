@@ -52,20 +52,30 @@ class InteractionDecision(BaseModel):
     capability_query: str | None = None
     capability_input: str | None = None
 
+    @field_validator("capability_query", "capability_input", mode="before")
+    @classmethod
+    def normalize_optional_text(cls, value: object) -> object:
+        """Treat blank structured-output optionals as absent.
+
+        Local structured-output models commonly emit ``""`` for optional
+        JSON-schema string fields. For fields whose absence is semantically
+        unambiguous, canonicalize blank/whitespace-only strings to ``None`` at
+        the protocol boundary while leaving non-string inputs for Pydantic to
+        validate normally.
+        """
+
+        if isinstance(value, str):
+            normalized = value.strip()
+            return normalized or None
+        return value
+
     @model_validator(mode="after")
     def require_capability_query(self) -> "InteractionDecision":
-        if self.action is InteractionAction.REQUEST_CAPABILITY and not (
-            self.capability_query and self.capability_query.strip()
-        ):
+        if self.action is InteractionAction.REQUEST_CAPABILITY and self.capability_query is None:
             raise ValueError("REQUEST_CAPABILITY requires capability_query")
-        for field_name in ("capability_query", "capability_input"):
-            value = getattr(self, field_name)
-            if value is not None:
-                normalized = value.strip()
-                if not normalized:
-                    raise ValueError(f"{field_name} must not be blank")
-                setattr(self, field_name, normalized)
         return self
+
+
 _INLINE_ANTECEDENT_PATTERNS = tuple(
     re.compile(pattern, re.IGNORECASE | re.DOTALL)
     for pattern in (
