@@ -342,7 +342,7 @@ def request_memory(
     packet = packet.model_copy(
         update={
             "retrieval_trace": {
-                "kernel": "associative_recall_from_postgres",
+                **packet.retrieval_trace,
                 "query_strategy": "canonical_then_supplemental_on_empty",
                 "selected_query_role": selected_role,
                 "selected_query_text": selected_query_text,

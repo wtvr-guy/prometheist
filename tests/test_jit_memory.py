@@ -99,6 +99,7 @@ def test_memory_boundary_uses_supplemental_query_only_after_canonical_abstains(c
     assert [attempt["role"] for attempt in attempts] == ["canonical", "supplemental"]
     assert attempts[0]["supported"] is False
     assert attempts[1]["supported"] is True
+    assert packet.retrieval_trace["kernel_trace"] == attempts[1]["kernel_trace"]
 
 
 def test_memory_boundary_preserves_unknown_fact_abstention(conn):
