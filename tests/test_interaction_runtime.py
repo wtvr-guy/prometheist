@@ -43,7 +43,7 @@ class FakeLLM:
         if "what" in prompt.lower() and "remember" in prompt.lower():
             return AgentDecision(
                 action=AgentAction.RETRIEVE_CONTEXT,
-                query_text="remembered value",
+                query_text="remember",
             )
         return AgentDecision(action=AgentAction.RESPOND_DIRECTLY)
 
