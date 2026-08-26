@@ -1,6 +1,8 @@
 # Prometheist v0.7 — Durable JIT Attention Fabric
 
-**Status:** in development.
+**Status:** release candidate. Deterministic PostgreSQL CI is complete; final
+native Windows/PostgreSQL/Ollama acceptance is still required before the
+milestone is marked accepted and closed.
 
 v0.7 is the first milestone after the 2026-08-24 architectural pivot from a privileged Primary Agent / fixed multi-agent hierarchy toward an attention-centric persistent cognitive system.
 
@@ -204,8 +206,9 @@ identical assignment set.
 At this checkpoint the gate controlled only `READY` assignment green-lighting.
 Increment F now re-observes immediately before a claim becomes executable and
 makes the guarded launcher the only Prometheist-owned worker process-start
-boundary. The temporarily retained v0.6 Primary Agent remains compatibility
-code rather than the new execution architecture.
+boundary. The v0.6 Primary Agent was retained only until the replacement path
+reproduced its useful behavioral evidence, then removed before this release
+candidate.
 
 The database-independent resource-observation suite passes locally (`11
 passed, 3 deselected`). GitHub Actions run #105 verified the complete safety
@@ -436,12 +439,13 @@ worker to recover the same step and idempotency key.
 
 The scheduler/fabric—not the worker—decides what work exists and what receives attention.
 
-With this contract in place, the next capability slice should adapt the
-deterministic v0.6 Capability Registry into task/worker-neutral terminology
-rather than recreating capability discovery from scratch. Preserve bounded
-deterministic matching, canonical-before-supplemental discovery, no-match
-abstention, progressive disclosure, and auditable selection. Do not preserve
-`CapabilityKind.AGENT` or `requesting_agent` as required architectural concepts.
+The release-candidate capability slice adapts the deterministic v0.6 registry
+into task/worker-neutral terminology. It preserves bounded deterministic
+matching, canonical-before-supplemental discovery, no-match abstention,
+progressive disclosure, and auditable selection without preserving
+`CapabilityKind.AGENT` or `requesting_agent` as architectural concepts. The
+selected `internal_memory` and `memory_analysis` registrations execute through
+application-owned bindings behind durable worker steps.
 
 Tests:
 
@@ -477,19 +481,25 @@ Exact stages should be introduced only as required by measured workflows.
 
 The v0.6 `REFERENTIAL_CONTINUITY_REQUIRES_MEMORY_V1` behavior should be migrated here by moving deterministic unresolved-reference detection out of `primary_agent.py` and into reusable interaction/perception policy. The behavior survives; Primary-Agent ownership does not.
 
-The existing Primary Agent may remain temporarily as a compatibility CLI path while the new execution path is built and tested, but it should cease to be the architectural executive.
+The compatibility Primary Agent and specialist path was removed only after the
+replacement runtime and continuity regressions were in place. Historical event
+types remain readable for existing ledgers.
 
 The new `interaction_runtime` path forms one durable Attention task and
-executes reference analysis, classification, JIT Memory retrieval, response
+executes reference analysis, capability discovery/execution, response
 synthesis, and idempotent result persistence as separately claimed worker
-steps. Fresh workers resume by inspecting immutable step results in PostgreSQL;
-the path does not call the compatibility Primary Agent. See
+steps. The CLI launches each stage as a separately guarded child process. Fresh
+workers resume by inspecting immutable step results in PostgreSQL; the path has
+no Primary-Agent dependency. See
 [`INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md`](INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md).
 
 GitHub Actions run #123 verified the complete Increment G head with PostgreSQL
 16: `177 passed, 4 skipped in 26.78s`.
 
 ### Increment H — forced concurrent restart acceptance
+
+**Status:** implemented in the deterministic PostgreSQL suite; native-machine
+execution remains part of the final acceptance script.
 
 Acceptance scenario:
 
@@ -505,11 +515,20 @@ Acceptance scenario:
 10. complete the workload;
 11. compare causal history against expected deterministic state transitions.
 
-A deterministic fake-resource/fake-worker path should establish orchestration invariants first. A real development-machine acceptance path should then verify the actual PostgreSQL/Ollama/hardware stack separately.
+The deterministic scenario admits three assignments, checkpoints a
+`CHECKPOINT_ONLY` victim, introduces resource-contending P0 work, destroys all
+three worker processes, reconstructs state in a fresh process, recovers two
+idempotent effects without duplication, readmits the checkpointed task under a
+new immutable assignment generation, and completes the workload. The real
+development-machine path remains a separate PostgreSQL/Ollama/hardware gate.
 
 ### Post-worker continuity migration gate
 
-Before Primary-Agent compatibility code is removed, rewrite the frozen v0.6 four-turn continuity scenario against the new task/worker path. Preserve these acceptance properties:
+**Status:** ported to the guarded task/worker CLI path and collected in CI;
+execution with the real local Ollama model remains part of the native gate.
+
+The frozen v0.6 four-turn continuity scenario is rewritten against the new
+task/worker path and preserves these acceptance properties:
 
 - one fresh external process/worker context per turn;
 - recent and older cross-session evidence needed in the same response;
@@ -520,6 +539,20 @@ Before Primary-Agent compatibility code is removed, rewrite the frozen v0.6 four
 - opaque identifier fidelity.
 
 The new path must reproduce or improve the accepted v0.6 behavior without using a conversation ID as the user's semantic memory namespace.
+
+### Release-candidate state
+
+The code-complete candidate now demonstrates every deterministic milestone
+criterion in PostgreSQL CI, including task-neutral capability execution,
+concurrent forced-restart recovery, and removal of compatibility orchestration.
+GitHub Actions run #129 verified the exact release-candidate code head with
+PostgreSQL 16: Ruff passed and pytest reported `205 passed, 5 skipped in
+31.81s`; the five skips are the explicitly collected local-Ollama acceptance
+cases rather than missing deterministic coverage.
+The exact local command is `scripts/run_v07_acceptance.ps1`. Until that script
+passes on the intended Windows/PostgreSQL/Ollama development machine, v0.7 is a
+release candidate rather than an accepted baseline and PR #18 must remain
+unmerged.
 
 ## Verification policy
 

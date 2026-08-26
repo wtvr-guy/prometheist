@@ -42,11 +42,12 @@ Preserve or generalize tests for cross-turn/cross-session recall, corrections, t
 
 ## v0.7 — Durable JIT Attention Fabric
 
-**Status:** in development.
+**Status:** release candidate. Deterministic PostgreSQL CI is complete; native
+Windows/PostgreSQL/Ollama acceptance remains the final milestone gate.
 
 Primary question: can Prometheist deterministically allocate durable work across bounded concurrent execution resources, survive destruction of every worker process, and resume without any privileged Primary Agent or persistent LLM context?
 
-The first increment establishes the deterministic single-focus scheduler kernel. The next increments generalize it into a resource-aware concurrent Attention Fabric with explicit resource classes/capacities, safe headroom, deterministic task requirements/reservations, scheduling epochs, atomic assignments, contention-driven preemption, authoritative resource-observation snapshots, service guarantees, `PREEMPTIBLE`/`CHECKPOINT_ONLY`/`ATOMIC` interruption semantics, dependencies, resumable stateless workers, and process-kill/restart acceptance.
+The milestone generalizes its deterministic single-focus scheduler seed into a resource-aware concurrent Attention Fabric with explicit resource classes/capacities, safe headroom, deterministic task requirements/reservations, scheduling epochs, atomic assignments, contention-driven preemption, authoritative resource-observation snapshots, service guarantees, `PREEMPTIBLE`/`CHECKPOINT_ONLY`/`ATOMIC` interruption semantics, dependencies, task-neutral capabilities, resumable stateless workers, and process-kill/restart acceptance.
 
 > **Attention determines which durable tasks deserve execution. Resource admission determines which compatible subset can safely execute concurrently on the available hardware.**
 

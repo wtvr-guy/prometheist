@@ -41,3 +41,17 @@ the exclusive guarded process launcher. That later implementation does not
 retroactively change what this acceptance run proved: the real Windows host,
 PostgreSQL lease-recovery path, guarded launch boundary, and real LLM-backed
 workers still require a new development-machine acceptance run.
+
+## Release-candidate rerun
+
+The repository now provides `scripts/run_v07_acceptance.ps1`. From PowerShell
+on the intended development machine, run:
+
+```powershell
+.\scripts\run_v07_acceptance.ps1
+```
+
+The script fails closed unless it is running on Windows with reachable Ollama,
+then executes the worker/runtime acceptance group, the guarded cross-process
+Ollama continuity group, and the complete non-Ollama regression suite against
+the configured disposable PostgreSQL test database.

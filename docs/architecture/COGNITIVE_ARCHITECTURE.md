@@ -8,7 +8,7 @@ The central architectural rule is:
 
 > **The system owns continuity. Models and workers are disposable compute.**
 
-This document supersedes the Primary Agent as the target top-level architecture. The existing Primary Agent implementation remains valuable as a verified v0.6 historical integration path, but it is not the intended executive structure for v0.7 and later.
+This document supersedes the Primary Agent as the target top-level architecture. The removed Primary-Agent implementation remains part of the verified v0.6 historical record, not the executive structure for v0.7 and later.
 
 ## 1. Architectural pivot
 

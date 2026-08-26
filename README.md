@@ -20,11 +20,11 @@ Memory Kernel v0.5 established bounded deterministic associative recall with pro
 
 v0.6 proved that separate fresh LLM-backed components can obtain persistent internal context through the same `MemoryNeed` / `MemoryPacket` boundary without inheriting hidden transcripts.
 
-The Primary Agent/specialist structure used to prove that result is **superseded architecture**. Its implementation remains temporarily in the repository as compatibility and regression code while v0.7 replaces its executive role. Historical documentation is kept under `docs/history/` and the v0.6 milestone record rather than presented as current architecture.
+The Primary Agent/specialist structure used to prove that result is **superseded architecture**. v0.7 removes that execution path after reproducing its useful continuity baseline through durable task-neutral workers. Historical event names and documentation remain readable as evidence; they are not current executive architecture.
 
-### v0.7 — in development: durable JIT Attention Fabric
+### v0.7 — release candidate: durable JIT Attention Fabric
 
-The first v0.7 increments establish deterministic durable task scheduling, structured priority metadata, service guarantees, interruption policies, dependency gating, resumable PostgreSQL state, live CPU/RAM discovery, conservative observed-capacity snapshots, configured safe headroom, quantitative resource admission/reservations, a default single local-LLM slot, atomic durable scheduling epochs and assignment sets, contention-driven multi-assignment preemption, and a durable claim/lease/checkpoint/result protocol for disposable workers.
+v0.7 establishes deterministic durable task scheduling, structured priority metadata, service guarantees, interruption policies, dependency gating, resumable PostgreSQL state, live CPU/RAM discovery, conservative observed-capacity snapshots, configured safe headroom, quantitative resource admission/reservations, a default single local-LLM slot, atomic durable scheduling epochs and assignment sets, contention-driven multi-assignment preemption, and a durable claim/lease/checkpoint/result protocol for disposable workers.
 
 The target is a resource-aware **Attention Fabric** that determines which durable tasks deserve execution and which compatible subset can safely execute concurrently on available hardware. Higher-priority work does not automatically kill lower-priority work: it runs concurrently when safe capacity exists and preempts only when resource contention requires it and interruption policy permits it.
 
@@ -40,9 +40,18 @@ expiring leases and heartbeats, append-only checkpoints, exactly one terminal
 result, abandoned-work recovery, and an exclusive guarded process launcher.
 
 Increment G decomposes external interactions into durable reference,
-classification, retrieval, response, and persistence steps executed through
+capability discovery/execution, response, and persistence steps executed through
 fresh guarded worker claims. The new path resumes from PostgreSQL and does not
-require the temporarily retained Primary Agent compatibility entry point.
+require a Primary Agent.
+
+The release candidate also ports deterministic capability discovery into
+task/worker-neutral terminology, connects real JIT Memory execution, migrates
+the CLI to one guarded child process per durable stage, removes the compatibility
+Primary Agent/specialist path, and adds an integrated forced-destruction test
+covering concurrent assignments, checkpoint preemption, abandoned claims,
+readmission, and duplicate-effect prevention. Deterministic PostgreSQL CI is the
+release-candidate gate; the final native Windows/PostgreSQL/Ollama run remains a
+separate hardware-sensitive acceptance requirement.
 
 ## Target architecture
 
@@ -134,18 +143,15 @@ It distinguishes:
 
 ## Current implementation versus target architecture
 
-The repository is in transition. It currently contains both accepted historical mechanisms and new v0.7 mechanisms.
+The repository contains accepted historical evidence alongside the current v0.7 architecture.
 
-Implemented/verified foundations include PostgreSQL authoritative history, deterministic ordering, the Memory Kernel, provenance-bearing `MemoryPacket`s, shared JIT Memory contracts, v0.6 compatibility paths, deterministic attention/task state, resource admission, durable epoch-wide assignments, atomic PostgreSQL publication, contention preemption, durable disposable-worker claims/checkpoints/results, and restart/replay tests.
+Implemented/verified foundations include PostgreSQL authoritative history, deterministic ordering, the Memory Kernel, provenance-bearing `MemoryPacket`s, shared JIT Memory contracts, deterministic attention/task state, resource admission, durable epoch-wide assignments, atomic PostgreSQL publication, contention preemption, task-neutral capability discovery/execution, durable disposable-worker claims/checkpoints/results, guarded interaction workers, and restart/replay tests.
 
-`src/jit_agent/primary_agent.py`, Primary-Agent tests, and the current CLI are **legacy v0.6 compatibility surfaces**, not declarations of the target architecture. They remain until their useful behavioral baselines are reproduced by the attention-centric execution path. New architecture work should not extend the Primary Agent as a permanent coordinator.
-
-Task/worker-neutral capability-registry adaptation, Increment H's forced
-concurrent restart scenario, migration of the complete v0.6 continuity
-baseline, eventual removal of Primary-Agent compatibility code,
-perception/salience, deterministic external-data retention, and the fully
-integrated cognitive loop remain roadmap work unless a milestone document
-states otherwise.
+The legacy Primary Agent, memory-specialist implementation, and their ownership
+tests have been removed. Historical event types remain supported so existing
+ledgers stay readable. Perception/salience, deterministic external-data
+retention, harder memory generalization, and the fully integrated cognitive loop
+remain roadmap work.
 
 ## Roadmap
 
@@ -171,13 +177,16 @@ psql -d jit_agent -f schema.sql
 uv run pytest -v
 ```
 
-The current CLI still exercises the legacy v0.6 interaction path while its attention-centric replacement is developed:
+The CLI forms a durable interaction task and launches every stage through the
+guarded disposable-worker boundary:
 
 ```powershell
 uv run jit-agent
 ```
 
-Do not interpret that compatibility entry point as the target architecture.
+Ollama-backed acceptance requires the configured local model and a disposable
+PostgreSQL test database. The full native v0.7 gate is
+`scripts/run_v07_acceptance.ps1`.
 
 ## Documentation
 
