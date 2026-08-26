@@ -8,7 +8,11 @@ import psycopg
 from pydantic import BaseModel, Field, model_validator
 
 from jit_agent import event_store, jit_memory
-from jit_agent.capability_registry import RegisteredCapability
+from jit_agent.capability_registry import (
+    CapabilityPacket,
+    RegisteredCapability,
+    deterministic_capability_event_id,
+)
 from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
 
 
@@ -42,6 +46,46 @@ class CapabilityExecution(BaseModel):
         return self
 
 
+def _load_discovery_packet(
+    conn: psycopg.Connection,
+    capability_request_id: UUID,
+) -> CapabilityPacket:
+    """Reconstruct the authoritative discovery handoff from durable history."""
+
+    event = event_store.get_event_by_id(
+        conn,
+        deterministic_capability_event_id(capability_request_id, "packet"),
+    )
+    if event is None:
+        raise RuntimeError("selected capability has no durable discovery packet")
+    if event.event_type is not EventType.CAPABILITY_PACKET:
+        raise RuntimeError("capability discovery event has the wrong event type")
+    try:
+        return CapabilityPacket.model_validate(event.payload["packet"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise RuntimeError("capability discovery packet is invalid") from exc
+
+
+def _supplemental_queries(*groups: list[str] | tuple[str, ...]) -> list[str]:
+    """Merge bounded equivalent cues without changing deterministic ordering."""
+
+    merged: list[str] = []
+    seen: set[str] = set()
+    for group in groups:
+        for value in group:
+            normalized = value.strip()
+            if not normalized:
+                continue
+            key = " ".join(normalized.split()).casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(normalized)
+            if len(merged) == 3:
+                return merged
+    return merged
+
+
 def execute_registered_capability(
     conn: psycopg.Connection,
     llm: CapabilityExecutionLLM,
@@ -59,14 +103,23 @@ def execute_registered_capability(
 ) -> CapabilityExecution:
     """Execute a selected binding without granting policy authority to a worker."""
 
+    discovery_packet = _load_discovery_packet(conn, capability_request_id)
+    if discovery_packet.requester_task_id != requester_task_id:
+        raise RuntimeError("capability discovery task does not match execution task")
+
     # Conversation/session identifiers are provenance, not memory boundaries.
     # Internal persisted memory must be able to recover evidence written in any
     # earlier conversation while ``before_global_seq`` remains the hard current-
     # turn leakage boundary.
     memory_scope_conversation_id = None
+    discovery_supplemental = discovery_packet.need.supplemental_query_texts
 
     if registration.executor == "jit_memory":
-        supplemental = [capability_input] if capability_input else []
+        explicit_input = [capability_input] if capability_input else []
+        supplemental = _supplemental_queries(
+            discovery_supplemental,
+            explicit_input,
+        )
         need = jit_memory.build_memory_need(
             task_text,
             supplemental_query_texts=supplemental,
@@ -74,7 +127,11 @@ def execute_registered_capability(
         )
     elif registration.executor == "memory_analysis":
         planned = llm.plan_memory(capability_input or task_text)
-        supplemental = [planned.query_text] if planned.query_text != task_text else []
+        planned_queries = [planned.query_text] if planned.query_text != task_text else []
+        supplemental = _supplemental_queries(
+            discovery_supplemental,
+            planned_queries,
+        )
         need = jit_memory.build_memory_need(
             task_text,
             supplemental_query_texts=supplemental,
