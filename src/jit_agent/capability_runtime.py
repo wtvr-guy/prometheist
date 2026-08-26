@@ -1,6 +1,7 @@
 """Application-owned execution bindings for selected v0.7 capabilities."""
 from __future__ import annotations
 
+import re
 from typing import Protocol
 from uuid import UUID, uuid5
 
@@ -18,6 +19,9 @@ from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
 
 CAPABILITY_EXECUTION_VERSION = "v0.7-capability-execution-v1"
 SOURCE = "capability_runtime"
+_ENTITY_SPAN_RE = re.compile(
+    r"\b[A-Z][A-Za-z0-9_-]*(?:\s+[A-Z][A-Za-z0-9_-]*)+\b"
+)
 
 
 class CapabilityExecutionLLM(Protocol):
@@ -86,6 +90,54 @@ def _supplemental_queries(*groups: list[str] | tuple[str, ...]) -> list[str]:
     return merged
 
 
+def _deterministic_entity_cues(*texts: str | None) -> list[str]:
+    """Extract bounded explicit multi-token names without model-owned identity inference.
+
+    The memory kernel deliberately admits entity-anchored evidence under a
+    stricter direct-support policy.  The v0.7 worker path therefore preserves
+    obvious names already present in the interaction/planning text instead of
+    forcing every natural-language query to satisfy lexical coverage alone.
+    This is syntax-only cue extraction: no entity meaning or identity is
+    inferred, and canonical events remain the sole evidence source.
+    """
+
+    entities: list[str] = []
+    seen: set[str] = set()
+    for text in texts:
+        if not text:
+            continue
+        for match in _ENTITY_SPAN_RE.finditer(text):
+            value = " ".join(match.group(0).split())
+            key = value.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            entities.append(value)
+            if len(entities) == 8:
+                return entities
+    return entities
+
+
+def _merge_entities(*groups: list[str] | tuple[str, ...]) -> list[str]:
+    """Merge bounded entity cues while preserving first-seen spelling/order."""
+
+    merged: list[str] = []
+    seen: set[str] = set()
+    for group in groups:
+        for value in group:
+            normalized = value.strip()
+            if not normalized:
+                continue
+            key = " ".join(normalized.split()).casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(normalized)
+            if len(merged) == 8:
+                return merged
+    return merged
+
+
 def execute_registered_capability(
     conn: psycopg.Connection,
     llm: CapabilityExecutionLLM,
@@ -120,9 +172,15 @@ def execute_registered_capability(
             discovery_supplemental,
             explicit_input,
         )
+        entities = _deterministic_entity_cues(
+            task_text,
+            capability_input,
+            *discovery_supplemental,
+        )
         need = jit_memory.build_memory_need(
             task_text,
             supplemental_query_texts=supplemental,
+            entities=entities,
             conversation_id=memory_scope_conversation_id,
         )
     elif registration.executor == "memory_analysis":
@@ -132,10 +190,19 @@ def execute_registered_capability(
             discovery_supplemental,
             planned_queries,
         )
+        entities = _merge_entities(
+            planned.entities,
+            _deterministic_entity_cues(
+                task_text,
+                capability_input,
+                planned.query_text,
+                *discovery_supplemental,
+            ),
+        )
         need = jit_memory.build_memory_need(
             task_text,
             supplemental_query_texts=supplemental,
-            entities=planned.entities,
+            entities=entities,
             conversation_id=memory_scope_conversation_id,
         )
     else:
