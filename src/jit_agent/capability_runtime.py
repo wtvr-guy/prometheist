@@ -22,6 +22,58 @@ SOURCE = "capability_runtime"
 _ENTITY_SPAN_RE = re.compile(
     r"\b[A-Z][A-Za-z0-9_-]*(?:\s+[A-Z][A-Za-z0-9_-]*)+\b"
 )
+_SINGLETON_ENTITY_RE = re.compile(r"\b[A-Z][A-Za-z0-9_-]{2,}\b")
+_SINGLETON_ENTITY_STOPWORDS = frozenset(
+    {
+        "A",
+        "An",
+        "And",
+        "Are",
+        "As",
+        "At",
+        "Be",
+        "But",
+        "By",
+        "Did",
+        "Do",
+        "Does",
+        "For",
+        "From",
+        "Give",
+        "How",
+        "I",
+        "If",
+        "In",
+        "Is",
+        "It",
+        "My",
+        "Name",
+        "Of",
+        "On",
+        "Or",
+        "Recall",
+        "Tell",
+        "That",
+        "The",
+        "Then",
+        "This",
+        "Those",
+        "To",
+        "Use",
+        "Was",
+        "We",
+        "Were",
+        "What",
+        "When",
+        "Where",
+        "Which",
+        "Who",
+        "Why",
+        "With",
+        "You",
+        "Your",
+    }
+)
 
 
 class CapabilityExecutionLLM(Protocol):
@@ -91,29 +143,43 @@ def _supplemental_queries(*groups: list[str] | tuple[str, ...]) -> list[str]:
 
 
 def _deterministic_entity_cues(*texts: str | None) -> list[str]:
-    """Extract bounded explicit multi-token names without model-owned identity inference.
+    """Extract bounded explicit names without model-owned identity inference.
 
-    The memory kernel deliberately admits entity-anchored evidence under a
-    stricter direct-support policy.  The v0.7 worker path therefore preserves
-    obvious names already present in the interaction/planning text instead of
-    forcing every natural-language query to satisfy lexical coverage alone.
-    This is syntax-only cue extraction: no entity meaning or identity is
-    inferred, and canonical events remain the sole evidence source.
+    Prefer multi-token capitalized spans such as ``Project Oriole`` and
+    ``Docker Compose``.  Also retain proper-name-like singleton anchors such as
+    ``Kestrel`` when a natural follow-up drops the generic prefix (for example,
+    ``Project Kestrel`` -> ``Kestrel rule``).  Common sentence-function words
+    are excluded so question form does not become entity evidence.
     """
 
     entities: list[str] = []
     seen: set[str] = set()
+
+    def add(value: str) -> bool:
+        normalized = " ".join(value.split())
+        key = normalized.casefold()
+        if not normalized or key in seen:
+            return False
+        seen.add(key)
+        entities.append(normalized)
+        return len(entities) == 8
+
     for text in texts:
         if not text:
             continue
+        occupied: list[tuple[int, int]] = []
         for match in _ENTITY_SPAN_RE.finditer(text):
-            value = " ".join(match.group(0).split())
-            key = value.casefold()
-            if key in seen:
+            occupied.append(match.span())
+            if add(match.group(0)):
+                return entities
+
+        for match in _SINGLETON_ENTITY_RE.finditer(text):
+            if any(start <= match.start() and match.end() <= end for start, end in occupied):
                 continue
-            seen.add(key)
-            entities.append(value)
-            if len(entities) == 8:
+            value = match.group(0)
+            if value in _SINGLETON_ENTITY_STOPWORDS:
+                continue
+            if add(value):
                 return entities
     return entities
 
