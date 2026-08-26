@@ -17,10 +17,23 @@ _THINK_BLOCK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 
 
 def _strip_thinking(text: str) -> str:
+    """Remove model thinking markup without silently accepting an empty answer.
+
+    Some thinking-model chat templates can emit only reasoning followed by a
+    trailing ``</think>`` when generation is truncated. Persisting the empty
+    post-tag string would turn a model failure into an apparently successful
+    blank response. Treat missing answer content as an explicit inference
+    failure instead.
+    """
     text = _THINK_BLOCK_RE.sub("", text)
     if "</think>" in text:
-        text = text.rsplit("</think>", 1)[1]
-    return text.strip()
+        _before, after = text.rsplit("</think>", 1)
+        text = after
+
+    stripped = text.strip()
+    if not stripped:
+        raise ValueError("LLM response contained no answer content after stripping thinking")
+    return stripped
 
 
 def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> None:
