@@ -251,6 +251,10 @@ the next integration increments. See
 [`INCREMENT_F_WORKER_PROTOCOL_2026-08-26.md`](INCREMENT_F_WORKER_PROTOCOL_2026-08-26.md)
 for the implementation boundary and verification status.
 
+GitHub Actions run #116 verified the Increment F head with PostgreSQL 16:
+`171 passed, 4 skipped in 23.34s`. Real Windows worker launch/recovery and real
+LLM-backed capability execution remain separate development-machine gates.
+
 ## Attention and resource admission are separate
 
 After Increment B, the next design distinction became explicit:
@@ -405,8 +409,8 @@ contracts if hardware acceptance shows they matter independently.
 
 ### Increment F — durable worker protocol
 
-**Status:** core protocol implemented; PostgreSQL CI and development-machine
-worker acceptance are tracked separately.
+**Status:** core protocol implemented and verified in PostgreSQL 16 CI;
+development-machine worker acceptance is tracked separately.
 
 The implemented worker contract is independent of named agents.
 

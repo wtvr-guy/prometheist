@@ -2,7 +2,7 @@
 
 **Implementation date:** 2026-08-26
 
-**Status:** implemented; PostgreSQL CI and post-implementation development-machine acceptance remain separate evidence gates.
+**Status:** implemented and verified in PostgreSQL 16 CI; post-implementation development-machine acceptance remains a separate evidence gate.
 
 ## Decision
 
@@ -93,10 +93,10 @@ The focused suite covers:
 - denial-before-spawn and spawn-failure claim release.
 
 Static compilation, whitespace validation, and collection of all 175 repository
-tests pass in the implementation workspace. That workspace has no PostgreSQL
-server, so database-backed execution is intentionally deferred to the existing
-PostgreSQL 16 pull-request CI. The earlier Windows local acceptance predates
-Increment F and does not validate this worker boundary.
+tests pass in the implementation workspace. GitHub Actions run #116 then
+executed the complete suite against PostgreSQL 16: `171 passed, 4 skipped in
+23.34s`. The earlier Windows local acceptance predates Increment F and does not
+validate this worker boundary.
 
 ## Deliberate boundary
 
