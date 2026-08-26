@@ -28,7 +28,10 @@ def _packet(step_id: uuid.UUID, task_id: uuid.UUID) -> CapabilityPacket:
         requester_step_id=step_id,
         need=CapabilityNeed(
             query_text="What did I establish?",
-            supplemental_query_texts=["persisted Project Kestrel constraint profile"],
+            supplemental_query_texts=[
+                "access to persisted internal history to identify established kestrel rule "
+                "and its associated constraint profile"
+            ],
             limit=1,
         ),
         matches=[
@@ -91,7 +94,10 @@ def test_internal_memory_preserves_discovery_supplemental_and_cross_conversation
         requester_step_id=step_id,
         conversation_id=uuid.uuid4(),
         correlation_id=uuid.uuid4(),
-        task_text="What did I establish?",
+        task_text=(
+            "Which of those approaches conflicts with my established Kestrel rule, "
+            "and what constraint profile did I give that rule?"
+        ),
         capability_input=None,
         before_global_seq=100,
         memory_request_id=uuid.uuid4(),
@@ -99,8 +105,10 @@ def test_internal_memory_preserves_discovery_supplemental_and_cross_conversation
 
     need = captured["need"]
     assert need.conversation_id is None
+    assert need.entities == ["Kestrel"]
     assert need.supplemental_query_texts == [
-        "persisted Project Kestrel constraint profile"
+        "access to persisted internal history to identify established kestrel rule "
+        "and its associated constraint profile"
     ]
 
 
@@ -140,6 +148,7 @@ def test_memory_analysis_merges_discovery_and_planned_supplementals(monkeypatch)
     assert need.conversation_id is None
     assert need.entities == ["Project Oriole"]
     assert need.supplemental_query_texts == [
-        "persisted Project Kestrel constraint profile",
+        "access to persisted internal history to identify established kestrel rule "
+        "and its associated constraint profile",
         "Project Oriole codename",
     ]
