@@ -98,13 +98,17 @@ def handle_task(
         memory_request_ids=[packet.memory_request_id],
         evidence_event_ids=[item.source_event_id for item in packet.items],
     )
-    event_store.record_event(
-        conn,
-        conversation_id=conversation_id,
-        correlation_id=correlation_id,
-        event_type=EventType.AGENT_RESULT,
-        source=SOURCE,
-        payload=result.model_dump(mode="json"),
-        payload_text=text,
-    )
+    try:
+        event_store.record_event(
+            conn,
+            conversation_id=conversation_id,
+            correlation_id=correlation_id,
+            event_type=EventType.AGENT_RESULT,
+            source=SOURCE,
+            payload=result.model_dump(mode="json"),
+            payload_text=text,
+        )
+    except Exception as exc:
+        _record_error(conn, conversation_id, correlation_id, "specialist_persist_result", exc)
+        raise
     return result
