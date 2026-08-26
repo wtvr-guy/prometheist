@@ -7,6 +7,7 @@ This directory contains the current architecture, research milestones, historica
 These documents define the forward architecture beginning with v0.7:
 
 - [`architecture/COGNITIVE_ARCHITECTURE.md`](architecture/COGNITIVE_ARCHITECTURE.md) — authoritative target architecture: persistent cognitive system, resource-aware Attention Fabric, perception/salience, retention, capabilities, disposable workers, session-independent interaction continuity, and system-owned continuity.
+- [`architecture/LOSSLESS_PROGRESSIVE_MEMORY.md`](architecture/LOSSLESS_PROGRESSIVE_MEMORY.md) — authoritative lossless-memory and scaling constraints: durable source memories are never replaced by summaries/aggregations, derived structures remain routing aids, recall is progressive and source-backed, model context is bounded, and ordinary recall must avoid inference growth proportional to corpus size. Where older architecture/roadmap language conflicts on post-admission aggregation or expiry, this document controls.
 - [`architecture/INTERACTION_CONTINUITY.md`](architecture/INTERACTION_CONTINUITY.md) — conversations/sessions/devices are provenance metadata rather than cognitive boundaries; defines natural topic resumption and binds the future design to the accepted v0.6 fresh-process continuity baseline.
 - [`architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](architecture/ARCHITECTURAL_PIVOT_2026-08-24.md) — decision record explaining the move away from a privileged Primary Agent, permanent agent hierarchy, rigid conversation-scoped cognition, and unconditional persistence of raw external input.
 - [`ROADMAP.md`](ROADMAP.md) — milestone path from the accepted v0.5/v0.6 baselines through the first complete attention-centric v1.0 architecture.
@@ -18,9 +19,9 @@ There is intentionally no current `PRIMARY_AGENT_SPEC_SHEET` under `docs/archite
 Long-lived mechanisms that remain applicable:
 
 - [`architecture/MEMORY_KERNEL.md`](architecture/MEMORY_KERNEL.md) — deterministic Memory Kernel baseline and invariants.
-- [`architecture/ASSOCIATIVE_MEMORY.md`](architecture/ASSOCIATIVE_MEMORY.md) — bounded associative-recall design and provenance model.
+- [`architecture/ASSOCIATIVE_MEMORY.md`](architecture/ASSOCIATIVE_MEMORY.md) — bounded associative-recall design and provenance model. Its canonical-event rule remains directly aligned with the current lossless-memory architecture: associations are routing hints, never substitutes for source evidence.
 
-These memory documents predate the attention-centric pivot. Where terminology conflicts, `COGNITIVE_ARCHITECTURE.md` and the roadmap define the current system-level architecture.
+These memory documents predate the attention-centric pivot. Where terminology conflicts, the current architecture documents listed above and the roadmap define the system-level architecture; `LOSSLESS_PROGRESSIVE_MEMORY.md` specifically controls the durable-memory fidelity and scaling rules frozen on 2026-08-26.
 
 ## Historical architecture and divergent v0.6 work
 
@@ -37,6 +38,7 @@ The `v0.6-capability-registry` branch is intentionally not merged wholesale into
 - [`milestones/v0.7/README.md`](milestones/v0.7/README.md) — v0.7 scope and implementation sequence for the durable resource-aware JIT Attention Fabric, including the planned adaptation of deterministic capability discovery and the future continuity-regression migration gate.
 - [`milestones/v0.7/JIT_ATTENTION_DESIGN.md`](milestones/v0.7/JIT_ATTENTION_DESIGN.md) — deterministic scheduler invariants, implemented quantitative admission/reservations and atomic epoch assignments, plus the remaining preemption/worker-protocol generalization.
 - [`milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md`](milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md) — distinction between attention priority and safe concurrent hardware-resource admission.
+- [`milestones/v0.7/ATTENTION_FOCUS_CONCENTRATION_2026-08-26.md`](milestones/v0.7/ATTENTION_FOCUS_CONCENTRATION_2026-08-26.md) — clarifies that safe concurrency is a baseline rather than the goal: attention may narrow and concentrate most safely useful resources on a focal task while preserving system viability, perception/orientation capacity, determinism, and resource safety.
 - [`milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md`](milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md) — migration policy for the divergent v0.6 continuity/capability work.
 
 ## Accepted milestones
