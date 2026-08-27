@@ -1,0 +1,1152 @@
+{
+  "benchmark": "prometheist-semantic-native-reranker-v1",
+  "created_at": "2026-08-22T14:57:11.734414+00:00",
+  "host": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "logical_cpu_count": 8,
+    "memory_before_reranker": {
+      "total_physical_bytes": 16901771264,
+      "available_physical_bytes": 8825159680
+    },
+    "memory_during_reranker": {
+      "total_physical_bytes": 16901771264,
+      "available_physical_bytes": 4801630208
+    },
+    "embedding_memory": {
+      "available_before_embedding": 8825810944,
+      "available_during_embedding": null,
+      "available_after_embedding": 8825810944,
+      "reused_embedding_results": "C:\\Users\\gy0d8\\OneDrive\\Documents\\jit_agent_prototype\\benchmark_results\\semantic_embedding_20260822T033349Z.json"
+    }
+  },
+  "embedding_model": "qwen3-embedding:4b-q4_K_M",
+  "embedding_dimensions": 1536,
+  "reranker_hf": "Voodisss/Qwen3-Reranker-4B-GGUF-llama_cpp:Q4_K_M",
+  "candidate_limit": 5,
+  "question_mode": "hard",
+  "reranker_load_wall_seconds": 4.135249699989799,
+  "sanity": {
+    "positive": 0.9982112646102905,
+    "negative": 1.4548140825354494e-05
+  },
+  "summary": {
+    "known_questions": 10,
+    "unknown_questions": 6,
+    "embedding_recall_at_1": 0.2,
+    "reranker_recall_at_1": 0.3,
+    "embedding_mrr": 0.4683333333333334,
+    "reranker_mrr": 0.5366666666666666,
+    "unknown_max_reranker_score": 0.08278456330299377,
+    "known_min_best_required_reranker_score": 0.0006417862605303526,
+    "mean_rerank_batch_wall_ms": 3956.976699995507,
+    "median_rerank_batch_wall_ms": 4003.0650999979116,
+    "mean_effective_pair_wall_ms": 821.117714704665,
+    "median_effective_pair_wall_ms": 831.9372400001157
+  },
+  "questions": [
+    {
+      "question_id": "jordan_vale_v1:q01",
+      "query": "What kind of coffee does Jordan drink now?",
+      "expect_no_evidence": false,
+      "embedding_required_rank": 4,
+      "reranker_required_rank": 4,
+      "best_required_reranker_score": 0.013885581865906715,
+      "top_reranker_score": 0.9733081459999084,
+      "rerank_batch_wall_ms": 4003.0650999979116,
+      "embedding_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.7506071948883546
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m003",
+          "text": "I started drinking black coffee instead of jasmine tea.",
+          "similarity": 0.6198381798450721
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m011",
+          "text": "I stopped drinking green tea and now drink espresso.",
+          "similarity": 0.6042358274607443
+        },
+        {
+          "event_id": "jordan_vale_v1:e014",
+          "text": "I stopped putting milk in my coffee. I've been drinking it black lately.",
+          "similarity": 0.5874599816927298
+        },
+        {
+          "event_id": "avery_chen_v1:a007",
+          "text": "I stopped ordering cappuccinos and drink espresso now.",
+          "similarity": 0.5821378273175362
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.7506071948883546,
+          "reranker_score": 0.9733081459999084
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m011",
+          "text": "I stopped drinking green tea and now drink espresso.",
+          "similarity": 0.6042358274607443,
+          "reranker_score": 0.07505330443382263
+        },
+        {
+          "event_id": "avery_chen_v1:a007",
+          "text": "I stopped ordering cappuccinos and drink espresso now.",
+          "similarity": 0.5821378273175362,
+          "reranker_score": 0.0341690368950367
+        },
+        {
+          "event_id": "jordan_vale_v1:e014",
+          "text": "I stopped putting milk in my coffee. I've been drinking it black lately.",
+          "similarity": 0.5874599816927298,
+          "reranker_score": 0.013885581865906715
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m003",
+          "text": "I started drinking black coffee instead of jasmine tea.",
+          "similarity": 0.6198381798450721,
+          "reranker_score": 0.01016117725521326
+        }
+      ]
+    },
+    {
+      "question_id": "jordan_vale_v1:q03",
+      "query": "Where does Jordan work now?",
+      "expect_no_evidence": false,
+      "embedding_required_rank": 5,
+      "reranker_required_rank": 3,
+      "best_required_reranker_score": 0.05186684802174568,
+      "top_reranker_score": 0.1579403281211853,
+      "rerank_batch_wall_ms": 3910.019500006456,
+      "embedding_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e018",
+          "text": "Jordan completed the dentist appointment this afternoon.",
+          "similarity": 0.5935377241838751
+        },
+        {
+          "event_id": "jordan_vale_v1:e019",
+          "text": "Jordan carried the blue notebook into the office and placed it on the office shelf.",
+          "similarity": 0.5673167068394498
+        },
+        {
+          "event_id": "jordan_vale_v1:e021",
+          "text": "Jordan spent Saturday morning doing routine grocery shopping.",
+          "similarity": 0.5512816049546373
+        },
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.5047866214378013
+        },
+        {
+          "event_id": "jordan_vale_v1:e022",
+          "text": "I left Acme Design and started working at Northstar Labs this month.",
+          "similarity": 0.503481211522177
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e021",
+          "text": "Jordan spent Saturday morning doing routine grocery shopping.",
+          "similarity": 0.5512816049546373,
+          "reranker_score": 0.1579403281211853
+        },
+        {
+          "event_id": "jordan_vale_v1:e019",
+          "text": "Jordan carried the blue notebook into the office and placed it on the office shelf.",
+          "similarity": 0.5673167068394498,
+          "reranker_score": 0.057953014969825745
+        },
+        {
+          "event_id": "jordan_vale_v1:e022",
+          "text": "I left Acme Design and started working at Northstar Labs this month.",
+          "similarity": 0.503481211522177,
+          "reranker_score": 0.05186684802174568
+        },
+        {
+          "event_id": "jordan_vale_v1:e018",
+          "text": "Jordan completed the dentist appointment this afternoon.",
+          "similarity": 0.5935377241838751,
+          "reranker_score": 0.03551919758319855
+        },
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.5047866214378013,
+          "reranker_score": 0.0030064673628658056
+        }
+      ]
+    },
+    {
+      "question_id": "jordan_vale_v1:q07",
+      "query": "Did Jordan recover the money from the old apartment?",
+      "expect_no_evidence": false,
+      "embedding_required_rank": 2,
+      "reranker_required_rank": 1,
+      "best_required_reranker_score": 0.08221377432346344,
+      "top_reranker_score": 0.08221377432346344,
+      "rerank_batch_wall_ms": 3944.8231999995187,
+      "embedding_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e007",
+          "text": "My old landlord still owes me the security deposit from the Portland apartment.",
+          "similarity": 0.627426266420957
+        },
+        {
+          "event_id": "jordan_vale_v1:e008",
+          "text": "The landlord finally returned the full security deposit today.",
+          "similarity": 0.6077089270718787
+        },
+        {
+          "event_id": "avery_chen_v1:a002",
+          "text": "My old landlord still owes me the pet deposit from the apartment.",
+          "similarity": 0.5685625890288742
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m005",
+          "text": "Northgate Storage refunded the key deposit for unit 14 today.",
+          "similarity": 0.564321444886872
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m002",
+          "text": "Northgate Storage still owes me the key deposit from unit 14.",
+          "similarity": 0.5496289730067252
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e008",
+          "text": "The landlord finally returned the full security deposit today.",
+          "similarity": 0.6077089270718787,
+          "reranker_score": 0.08221377432346344
+        },
+        {
+          "event_id": "avery_chen_v1:a002",
+          "text": "My old landlord still owes me the pet deposit from the apartment.",
+          "similarity": 0.5685625890288742,
+          "reranker_score": 0.014142471365630627
+        },
+        {
+          "event_id": "jordan_vale_v1:e007",
+          "text": "My old landlord still owes me the security deposit from the Portland apartment.",
+          "similarity": 0.627426266420957,
+          "reranker_score": 0.007589335087686777
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m002",
+          "text": "Northgate Storage still owes me the key deposit from unit 14.",
+          "similarity": 0.5496289730067252,
+          "reranker_score": 0.0009624050580896437
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m005",
+          "text": "Northgate Storage refunded the key deposit for unit 14 today.",
+          "similarity": 0.564321444886872,
+          "reranker_score": 0.0008071784395724535
+        }
+      ]
+    },
+    {
+      "question_id": "jordan_vale_v1:q09",
+      "query": "What vehicle does Jordan own now?",
+      "expect_no_evidence": false,
+      "embedding_required_rank": 5,
+      "reranker_required_rank": 4,
+      "best_required_reranker_score": 0.0006417862605303526,
+      "top_reranker_score": 0.0046321009285748005,
+      "rerank_batch_wall_ms": 3931.092599988915,
+      "embedding_candidates": [
+        {
+          "event_id": "morgan_reyes_v05_robustness:m009",
+          "text": "I sold the Ford Escape to a neighbor last week.",
+          "similarity": 0.5906394921014985
+        },
+        {
+          "event_id": "avery_chen_v1:a006",
+          "text": "I bought a used 2022 Ford Escape today.",
+          "similarity": 0.5728398072797117
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m008",
+          "text": "I bought a used 2018 Ford Escape today.",
+          "similarity": 0.5703913903124055
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m007",
+          "text": "I am considering a Subaru Crosstrek for my next car.",
+          "similarity": 0.5642335465701875
+        },
+        {
+          "event_id": "jordan_vale_v1:e011",
+          "text": "I bought a used 2021 Toyota Corolla today.",
+          "similarity": 0.5637317002893297
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "morgan_reyes_v05_robustness:m009",
+          "text": "I sold the Ford Escape to a neighbor last week.",
+          "similarity": 0.5906394921014985,
+          "reranker_score": 0.0046321009285748005
+        },
+        {
+          "event_id": "avery_chen_v1:a006",
+          "text": "I bought a used 2022 Ford Escape today.",
+          "similarity": 0.5728398072797117,
+          "reranker_score": 0.0015450362116098404
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m008",
+          "text": "I bought a used 2018 Ford Escape today.",
+          "similarity": 0.5703913903124055,
+          "reranker_score": 0.001405344344675541
+        },
+        {
+          "event_id": "jordan_vale_v1:e011",
+          "text": "I bought a used 2021 Toyota Corolla today.",
+          "similarity": 0.5637317002893297,
+          "reranker_score": 0.0006417862605303526
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m007",
+          "text": "I am considering a Subaru Crosstrek for my next car.",
+          "similarity": 0.5642335465701875,
+          "reranker_score": 0.0002536318206693977
+        }
+      ]
+    },
+    {
+      "question_id": "jordan_vale_v1:q10",
+      "query": "Does Jordan actually like mushrooms?",
+      "expect_no_evidence": false,
+      "embedding_required_rank": 2,
+      "reranker_required_rank": 2,
+      "best_required_reranker_score": 0.9522979855537415,
+      "top_reranker_score": 0.9903480410575867,
+      "rerank_batch_wall_ms": 3901.688500016462,
+      "embedding_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e012",
+          "text": "Sarah Kim said Jordan hates mushrooms.",
+          "similarity": 0.7229065366408652
+        },
+        {
+          "event_id": "jordan_vale_v1:e013",
+          "text": "I actually like mushrooms. Sarah just thinks I don't.",
+          "similarity": 0.5866110248114257
+        },
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.5507122086631436
+        },
+        {
+          "event_id": "jordan_vale_v1:e021",
+          "text": "Jordan spent Saturday morning doing routine grocery shopping.",
+          "similarity": 0.5433191430844948
+        },
+        {
+          "event_id": "jordan_vale_v1:e018",
+          "text": "Jordan completed the dentist appointment this afternoon.",
+          "similarity": 0.508183444644665
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e012",
+          "text": "Sarah Kim said Jordan hates mushrooms.",
+          "similarity": 0.7229065366408652,
+          "reranker_score": 0.9903480410575867
+        },
+        {
+          "event_id": "jordan_vale_v1:e013",
+          "text": "I actually like mushrooms. Sarah just thinks I don't.",
+          "similarity": 0.5866110248114257,
+          "reranker_score": 0.9522979855537415
+        },
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.5507122086631436,
+          "reranker_score": 0.003538486547768116
+        },
+        {
+          "event_id": "jordan_vale_v1:e021",
+          "text": "Jordan spent Saturday morning doing routine grocery shopping.",
+          "similarity": 0.5433191430844948,
+          "reranker_score": 0.0010684180306270719
+        },
+        {
+          "event_id": "jordan_vale_v1:e018",
+          "text": "Jordan completed the dentist appointment this afternoon.",
+          "similarity": 0.508183444644665,
+          "reranker_score": 0.0004659284313675016
+        }
+      ]
+    },
+    {
+      "question_id": "jordan_vale_v1:q16",
+      "query": "What is Jordan's blood type?",
+      "expect_no_evidence": true,
+      "embedding_required_rank": null,
+      "reranker_required_rank": null,
+      "best_required_reranker_score": null,
+      "top_reranker_score": 0.00018780829850584269,
+      "rerank_batch_wall_ms": 3912.9167999781203,
+      "embedding_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e018",
+          "text": "Jordan completed the dentist appointment this afternoon.",
+          "similarity": 0.561480959895484
+        },
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.538438010846726
+        },
+        {
+          "event_id": "jordan_vale_v1:e021",
+          "text": "Jordan spent Saturday morning doing routine grocery shopping.",
+          "similarity": 0.5375170927251726
+        },
+        {
+          "event_id": "jordan_vale_v1:e019",
+          "text": "Jordan carried the blue notebook into the office and placed it on the office shelf.",
+          "similarity": 0.5281507891963823
+        },
+        {
+          "event_id": "jordan_vale_v1:e012",
+          "text": "Sarah Kim said Jordan hates mushrooms.",
+          "similarity": 0.5052325035042377
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e018",
+          "text": "Jordan completed the dentist appointment this afternoon.",
+          "similarity": 0.561480959895484,
+          "reranker_score": 0.00018780829850584269
+        },
+        {
+          "event_id": "jordan_vale_v1:e019",
+          "text": "Jordan carried the blue notebook into the office and placed it on the office shelf.",
+          "similarity": 0.5281507891963823,
+          "reranker_score": 0.00013993972970638424
+        },
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.538438010846726,
+          "reranker_score": 9.714484622236341e-05
+        },
+        {
+          "event_id": "jordan_vale_v1:e021",
+          "text": "Jordan spent Saturday morning doing routine grocery shopping.",
+          "similarity": 0.5375170927251726,
+          "reranker_score": 3.623771408456378e-05
+        },
+        {
+          "event_id": "jordan_vale_v1:e012",
+          "text": "Sarah Kim said Jordan hates mushrooms.",
+          "similarity": 0.5052325035042377,
+          "reranker_score": 2.8039401058777003e-06
+        }
+      ]
+    },
+    {
+      "question_id": "avery_chen_v1:aq03",
+      "query": "Did Avery recover what the old landlord owed?",
+      "expect_no_evidence": false,
+      "embedding_required_rank": 5,
+      "reranker_required_rank": 5,
+      "best_required_reranker_score": 0.0016549428692087531,
+      "top_reranker_score": 0.933822512626648,
+      "rerank_batch_wall_ms": 3918.9125999982934,
+      "embedding_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e008",
+          "text": "The landlord finally returned the full security deposit today.",
+          "similarity": 0.5744156043127058
+        },
+        {
+          "event_id": "avery_chen_v1:a010",
+          "text": "Avery ordered a double espresso.",
+          "similarity": 0.5561666073064806
+        },
+        {
+          "event_id": "jordan_vale_v1:e007",
+          "text": "My old landlord still owes me the security deposit from the Portland apartment.",
+          "similarity": 0.5518021721299059
+        },
+        {
+          "event_id": "avery_chen_v1:a002",
+          "text": "My old landlord still owes me the pet deposit from the apartment.",
+          "similarity": 0.549159882515151
+        },
+        {
+          "event_id": "avery_chen_v1:a003",
+          "text": "The full pet deposit was refunded today.",
+          "similarity": 0.4884888826710417
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "avery_chen_v1:a002",
+          "text": "My old landlord still owes me the pet deposit from the apartment.",
+          "similarity": 0.549159882515151,
+          "reranker_score": 0.933822512626648
+        },
+        {
+          "event_id": "jordan_vale_v1:e007",
+          "text": "My old landlord still owes me the security deposit from the Portland apartment.",
+          "similarity": 0.5518021721299059,
+          "reranker_score": 0.9293886423110962
+        },
+        {
+          "event_id": "jordan_vale_v1:e008",
+          "text": "The landlord finally returned the full security deposit today.",
+          "similarity": 0.5744156043127058,
+          "reranker_score": 0.09317155182361603
+        },
+        {
+          "event_id": "avery_chen_v1:a010",
+          "text": "Avery ordered a double espresso.",
+          "similarity": 0.5561666073064806,
+          "reranker_score": 0.004605666268616915
+        },
+        {
+          "event_id": "avery_chen_v1:a003",
+          "text": "The full pet deposit was refunded today.",
+          "similarity": 0.4884888826710417,
+          "reranker_score": 0.0016549428692087531
+        }
+      ]
+    },
+    {
+      "question_id": "avery_chen_v1:aq04",
+      "query": "What vehicle does Avery own now?",
+      "expect_no_evidence": false,
+      "embedding_required_rank": 2,
+      "reranker_required_rank": 3,
+      "best_required_reranker_score": 0.000685010279994458,
+      "top_reranker_score": 0.008910450153052807,
+      "rerank_batch_wall_ms": 3911.638599995058,
+      "embedding_candidates": [
+        {
+          "event_id": "avery_chen_v1:a010",
+          "text": "Avery ordered a double espresso.",
+          "similarity": 0.6550806158412669
+        },
+        {
+          "event_id": "avery_chen_v1:a006",
+          "text": "I bought a used 2022 Ford Escape today.",
+          "similarity": 0.5573441929981677
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m008",
+          "text": "I bought a used 2018 Ford Escape today.",
+          "similarity": 0.5563603881396014
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m009",
+          "text": "I sold the Ford Escape to a neighbor last week.",
+          "similarity": 0.5496512614419644
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m007",
+          "text": "I am considering a Subaru Crosstrek for my next car.",
+          "similarity": 0.5482115813589179
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "avery_chen_v1:a010",
+          "text": "Avery ordered a double espresso.",
+          "similarity": 0.6550806158412669,
+          "reranker_score": 0.008910450153052807
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m009",
+          "text": "I sold the Ford Escape to a neighbor last week.",
+          "similarity": 0.5496512614419644,
+          "reranker_score": 0.0067117782309651375
+        },
+        {
+          "event_id": "avery_chen_v1:a006",
+          "text": "I bought a used 2022 Ford Escape today.",
+          "similarity": 0.5573441929981677,
+          "reranker_score": 0.000685010279994458
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m008",
+          "text": "I bought a used 2018 Ford Escape today.",
+          "similarity": 0.5563603881396014,
+          "reranker_score": 0.00059580581728369
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m007",
+          "text": "I am considering a Subaru Crosstrek for my next car.",
+          "similarity": 0.5482115813589179,
+          "reranker_score": 0.00013901464990340173
+        }
+      ]
+    },
+    {
+      "question_id": "avery_chen_v1:aq06",
+      "query": "What is Avery's blood type?",
+      "expect_no_evidence": true,
+      "embedding_required_rank": null,
+      "reranker_required_rank": null,
+      "best_required_reranker_score": null,
+      "top_reranker_score": 0.00439676595851779,
+      "rerank_batch_wall_ms": 4159.6862000005785,
+      "embedding_candidates": [
+        {
+          "event_id": "avery_chen_v1:a010",
+          "text": "Avery ordered a double espresso.",
+          "similarity": 0.6434419097687536
+        },
+        {
+          "event_id": "jordan_vale_v1:e023",
+          "text": "My cousin Sarah Moreno is coming over for Thanksgiving.",
+          "similarity": 0.4375032472793371
+        },
+        {
+          "event_id": "jordan_vale_v1:e003",
+          "text": "My cousin Sarah Moreno's birthday is next Friday.",
+          "similarity": 0.43267184923711094
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s009",
+          "text": "My emergency contact for the conference is Dana Ruiz.",
+          "similarity": 0.416608550371727
+        },
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.40495213263395013
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "avery_chen_v1:a010",
+          "text": "Avery ordered a double espresso.",
+          "similarity": 0.6434419097687536,
+          "reranker_score": 0.00439676595851779
+        },
+        {
+          "event_id": "jordan_vale_v1:e023",
+          "text": "My cousin Sarah Moreno is coming over for Thanksgiving.",
+          "similarity": 0.4375032472793371,
+          "reranker_score": 0.00010072978329844773
+        },
+        {
+          "event_id": "jordan_vale_v1:e003",
+          "text": "My cousin Sarah Moreno's birthday is next Friday.",
+          "similarity": 0.43267184923711094,
+          "reranker_score": 3.783408465096727e-05
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s009",
+          "text": "My emergency contact for the conference is Dana Ruiz.",
+          "similarity": 0.416608550371727,
+          "reranker_score": 3.474235563771799e-05
+        },
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.40495213263395013,
+          "reranker_score": 1.4129454939393327e-05
+        }
+      ]
+    },
+    {
+      "question_id": "morgan_reyes_v05_robustness:mq01",
+      "query": "What did Morgan drink immediately before switching to green tea?",
+      "expect_no_evidence": false,
+      "embedding_required_rank": 3,
+      "reranker_required_rank": 2,
+      "best_required_reranker_score": 0.9630569219589233,
+      "top_reranker_score": 0.9947956204414368,
+      "rerank_batch_wall_ms": 4351.280699978815,
+      "embedding_candidates": [
+        {
+          "event_id": "morgan_reyes_v05_robustness:m006",
+          "text": "I switched from black coffee to green tea.",
+          "similarity": 0.6841767149066069
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m011",
+          "text": "I stopped drinking green tea and now drink espresso.",
+          "similarity": 0.6332194787302786
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m003",
+          "text": "I started drinking black coffee instead of jasmine tea.",
+          "similarity": 0.618802818621985
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m001",
+          "text": "I drink jasmine tea every morning.",
+          "similarity": 0.6051700483399933
+        },
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.5614529113137385
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "morgan_reyes_v05_robustness:m006",
+          "text": "I switched from black coffee to green tea.",
+          "similarity": 0.6841767149066069,
+          "reranker_score": 0.9947956204414368
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m003",
+          "text": "I started drinking black coffee instead of jasmine tea.",
+          "similarity": 0.618802818621985,
+          "reranker_score": 0.9630569219589233
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m011",
+          "text": "I stopped drinking green tea and now drink espresso.",
+          "similarity": 0.6332194787302786,
+          "reranker_score": 0.6448377370834351
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m001",
+          "text": "I drink jasmine tea every morning.",
+          "similarity": 0.6051700483399933,
+          "reranker_score": 0.4305073916912079
+        },
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.5614529113137385,
+          "reranker_score": 0.06302516162395477
+        }
+      ]
+    },
+    {
+      "question_id": "morgan_reyes_v05_robustness:mq06",
+      "query": "Who insures Morgan's vehicle?",
+      "expect_no_evidence": true,
+      "embedding_required_rank": null,
+      "reranker_required_rank": null,
+      "best_required_reranker_score": null,
+      "top_reranker_score": 0.0015420819399878383,
+      "rerank_batch_wall_ms": 4284.706200007349,
+      "embedding_candidates": [
+        {
+          "event_id": "semantic_retrieval_v1:s006",
+          "text": "The motorcycle shop estimated the repairs at $8,420.",
+          "similarity": 0.5062239251534321
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m009",
+          "text": "I sold the Ford Escape to a neighbor last week.",
+          "similarity": 0.4943678515723333
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m008",
+          "text": "I bought a used 2018 Ford Escape today.",
+          "similarity": 0.48624145863070883
+        },
+        {
+          "event_id": "avery_chen_v1:a004",
+          "text": "I am considering a Honda Civic for my next car.",
+          "similarity": 0.4857301807926631
+        },
+        {
+          "event_id": "avery_chen_v1:a006",
+          "text": "I bought a used 2022 Ford Escape today.",
+          "similarity": 0.4855850893371003
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "semantic_retrieval_v1:s006",
+          "text": "The motorcycle shop estimated the repairs at $8,420.",
+          "similarity": 0.5062239251534321,
+          "reranker_score": 0.0015420819399878383
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m009",
+          "text": "I sold the Ford Escape to a neighbor last week.",
+          "similarity": 0.4943678515723333,
+          "reranker_score": 7.2964328865055e-05
+        },
+        {
+          "event_id": "avery_chen_v1:a006",
+          "text": "I bought a used 2022 Ford Escape today.",
+          "similarity": 0.4855850893371003,
+          "reranker_score": 1.816731491999235e-05
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m008",
+          "text": "I bought a used 2018 Ford Escape today.",
+          "similarity": 0.48624145863070883,
+          "reranker_score": 1.6587200661888346e-05
+        },
+        {
+          "event_id": "avery_chen_v1:a004",
+          "text": "I am considering a Honda Civic for my next car.",
+          "similarity": 0.4857301807926631,
+          "reranker_score": 6.9394286583701614e-06
+        }
+      ]
+    },
+    {
+      "question_id": "morgan_reyes_v05_robustness:mq07",
+      "query": "What is Morgan's blood type?",
+      "expect_no_evidence": true,
+      "embedding_required_rank": null,
+      "reranker_required_rank": null,
+      "best_required_reranker_score": null,
+      "top_reranker_score": 7.269570050993934e-05,
+      "rerank_batch_wall_ms": 4248.336799995741,
+      "embedding_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e003",
+          "text": "My cousin Sarah Moreno's birthday is next Friday.",
+          "similarity": 0.4574440796611346
+        },
+        {
+          "event_id": "avery_chen_v1:a010",
+          "text": "Avery ordered a double espresso.",
+          "similarity": 0.4393124318685537
+        },
+        {
+          "event_id": "jordan_vale_v1:e023",
+          "text": "My cousin Sarah Moreno is coming over for Thanksgiving.",
+          "similarity": 0.4310863584138662
+        },
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.43035826815111256
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s009",
+          "text": "My emergency contact for the conference is Dana Ruiz.",
+          "similarity": 0.42338947720216985
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e023",
+          "text": "My cousin Sarah Moreno is coming over for Thanksgiving.",
+          "similarity": 0.4310863584138662,
+          "reranker_score": 7.269570050993934e-05
+        },
+        {
+          "event_id": "jordan_vale_v1:e003",
+          "text": "My cousin Sarah Moreno's birthday is next Friday.",
+          "similarity": 0.4574440796611346,
+          "reranker_score": 3.2729403756093234e-05
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s009",
+          "text": "My emergency contact for the conference is Dana Ruiz.",
+          "similarity": 0.42338947720216985,
+          "reranker_score": 2.7584892450249754e-05
+        },
+        {
+          "event_id": "jordan_vale_v1:e015",
+          "text": "Jordan ordered a large black coffee.",
+          "similarity": 0.43035826815111256,
+          "reranker_score": 1.625192817300558e-05
+        },
+        {
+          "event_id": "avery_chen_v1:a010",
+          "text": "Avery ordered a double espresso.",
+          "similarity": 0.4393124318685537,
+          "reranker_score": 1.337321191385854e-05
+        }
+      ]
+    },
+    {
+      "question_id": "semantic_retrieval_v1:sq02",
+      "query": "What platform constraint must a deployment step respect?",
+      "expect_no_evidence": false,
+      "embedding_required_rank": 1,
+      "reranker_required_rank": 1,
+      "best_required_reranker_score": 0.4423118233680725,
+      "top_reranker_score": 0.4423118233680725,
+      "rerank_batch_wall_ms": 4317.562499985797,
+      "embedding_candidates": [
+        {
+          "event_id": "semantic_retrieval_v1:s002",
+          "text": "My deployment requirement is that all inference remain fully offline on ARM64 hardware.",
+          "similarity": 0.5621408712942458
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s008",
+          "text": "The release candidate must preserve the append-only event history without rewriting authoritative events.",
+          "similarity": 0.4166421003502038
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s007",
+          "text": "I no longer use Docker for local Prometheist development; PostgreSQL runs directly on Windows.",
+          "similarity": 0.3620187715279367
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s012",
+          "text": "The fallback database backup is copied to an encrypted external SSD every Sunday night.",
+          "similarity": 0.345053443128506
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s004",
+          "text": "I keep the backup encryption key in the red fireproof envelope.",
+          "similarity": 0.3330450926095479
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "semantic_retrieval_v1:s002",
+          "text": "My deployment requirement is that all inference remain fully offline on ARM64 hardware.",
+          "similarity": 0.5621408712942458,
+          "reranker_score": 0.4423118233680725
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s008",
+          "text": "The release candidate must preserve the append-only event history without rewriting authoritative events.",
+          "similarity": 0.4166421003502038,
+          "reranker_score": 0.16227877140045166
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s012",
+          "text": "The fallback database backup is copied to an encrypted external SSD every Sunday night.",
+          "similarity": 0.345053443128506,
+          "reranker_score": 0.0006032256060279906
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s007",
+          "text": "I no longer use Docker for local Prometheist development; PostgreSQL runs directly on Windows.",
+          "similarity": 0.3620187715279367,
+          "reranker_score": 0.0002602939202915877
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s004",
+          "text": "I keep the backup encryption key in the red fireproof envelope.",
+          "similarity": 0.3330450926095479,
+          "reranker_score": 7.952273881528527e-05
+        }
+      ]
+    },
+    {
+      "question_id": "semantic_retrieval_v1:sq03",
+      "query": "When is the revised Atlas milestone due?",
+      "expect_no_evidence": false,
+      "embedding_required_rank": 1,
+      "reranker_required_rank": 1,
+      "best_required_reranker_score": 0.9463387727737427,
+      "top_reranker_score": 0.9463387727737427,
+      "rerank_batch_wall_ms": 4268.739199993433,
+      "embedding_candidates": [
+        {
+          "event_id": "semantic_retrieval_v1:s003",
+          "text": "The Project Atlas schedule changed from September to February 14.",
+          "similarity": 0.7541615249114128
+        },
+        {
+          "event_id": "jordan_vale_v1:e004",
+          "text": "Sarah Kim from work is helping me with the Atlas presentation.",
+          "similarity": 0.5066303673957387
+        },
+        {
+          "event_id": "jordan_vale_v1:e022",
+          "text": "I left Acme Design and started working at Northstar Labs this month.",
+          "similarity": 0.42585819971545813
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s008",
+          "text": "The release candidate must preserve the append-only event history without rewriting authoritative events.",
+          "similarity": 0.41798662341050674
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s006",
+          "text": "The motorcycle shop estimated the repairs at $8,420.",
+          "similarity": 0.3982536503688354
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "semantic_retrieval_v1:s003",
+          "text": "The Project Atlas schedule changed from September to February 14.",
+          "similarity": 0.7541615249114128,
+          "reranker_score": 0.9463387727737427
+        },
+        {
+          "event_id": "jordan_vale_v1:e004",
+          "text": "Sarah Kim from work is helping me with the Atlas presentation.",
+          "similarity": 0.5066303673957387,
+          "reranker_score": 0.01390798483043909
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s008",
+          "text": "The release candidate must preserve the append-only event history without rewriting authoritative events.",
+          "similarity": 0.41798662341050674,
+          "reranker_score": 0.00033924737363122404
+        },
+        {
+          "event_id": "jordan_vale_v1:e022",
+          "text": "I left Acme Design and started working at Northstar Labs this month.",
+          "similarity": 0.42585819971545813,
+          "reranker_score": 0.00017987046157941222
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s006",
+          "text": "The motorcycle shop estimated the repairs at $8,420.",
+          "similarity": 0.3982536503688354,
+          "reranker_score": 1.5609706679242663e-05
+        }
+      ]
+    },
+    {
+      "question_id": "semantic_retrieval_v1:sq13",
+      "query": "What is my passport number?",
+      "expect_no_evidence": true,
+      "embedding_required_rank": null,
+      "reranker_required_rank": null,
+      "best_required_reranker_score": null,
+      "top_reranker_score": 0.001832983922213316,
+      "rerank_batch_wall_ms": 4255.090899998322,
+      "embedding_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e016",
+          "text": "The serial number on my old laptop is DL-7KQ-4912-Z.",
+          "similarity": 0.4964812172296452
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s009",
+          "text": "My emergency contact for the conference is Dana Ruiz.",
+          "similarity": 0.4745706436317469
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m004",
+          "text": "I paid a refundable key deposit for unit 27 at Northgate Storage.",
+          "similarity": 0.4704055935061607
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s004",
+          "text": "I keep the backup encryption key in the red fireproof envelope.",
+          "similarity": 0.46088285525564215
+        },
+        {
+          "event_id": "avery_chen_v1:a003",
+          "text": "The full pet deposit was refunded today.",
+          "similarity": 0.44515470132592405
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e016",
+          "text": "The serial number on my old laptop is DL-7KQ-4912-Z.",
+          "similarity": 0.4964812172296452,
+          "reranker_score": 0.001832983922213316
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s004",
+          "text": "I keep the backup encryption key in the red fireproof envelope.",
+          "similarity": 0.46088285525564215,
+          "reranker_score": 0.00023863092064857483
+        },
+        {
+          "event_id": "semantic_retrieval_v1:s009",
+          "text": "My emergency contact for the conference is Dana Ruiz.",
+          "similarity": 0.4745706436317469,
+          "reranker_score": 6.715024210279807e-05
+        },
+        {
+          "event_id": "avery_chen_v1:a003",
+          "text": "The full pet deposit was refunded today.",
+          "similarity": 0.44515470132592405,
+          "reranker_score": 3.996392115368508e-05
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m004",
+          "text": "I paid a refundable key deposit for unit 27 at Northgate Storage.",
+          "similarity": 0.4704055935061607,
+          "reranker_score": 1.3128921636962332e-05
+        }
+      ]
+    },
+    {
+      "question_id": "semantic_retrieval_v1:sq14",
+      "query": "Which prescription medication do I take every morning?",
+      "expect_no_evidence": true,
+      "embedding_required_rank": null,
+      "reranker_required_rank": null,
+      "best_required_reranker_score": null,
+      "top_reranker_score": 0.08278456330299377,
+      "rerank_batch_wall_ms": 4264.776600000914,
+      "embedding_candidates": [
+        {
+          "event_id": "jordan_vale_v1:e001",
+          "text": "I usually get a latte in the morning.",
+          "similarity": 0.5604719879269043
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m001",
+          "text": "I drink jasmine tea every morning.",
+          "similarity": 0.5313037371780119
+        },
+        {
+          "event_id": "avery_chen_v1:a001",
+          "text": "I usually get a cappuccino on work mornings.",
+          "similarity": 0.5047018689107666
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m003",
+          "text": "I started drinking black coffee instead of jasmine tea.",
+          "similarity": 0.4403326730628385
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m011",
+          "text": "I stopped drinking green tea and now drink espresso.",
+          "similarity": 0.43523679571364254
+        }
+      ],
+      "reranked_candidates": [
+        {
+          "event_id": "morgan_reyes_v05_robustness:m001",
+          "text": "I drink jasmine tea every morning.",
+          "similarity": 0.5313037371780119,
+          "reranker_score": 0.08278456330299377
+        },
+        {
+          "event_id": "avery_chen_v1:a001",
+          "text": "I usually get a cappuccino on work mornings.",
+          "similarity": 0.5047018689107666,
+          "reranker_score": 0.003537339624017477
+        },
+        {
+          "event_id": "jordan_vale_v1:e001",
+          "text": "I usually get a latte in the morning.",
+          "similarity": 0.5604719879269043,
+          "reranker_score": 0.003537186188623309
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m003",
+          "text": "I started drinking black coffee instead of jasmine tea.",
+          "similarity": 0.4403326730628385,
+          "reranker_score": 0.0020414094906300306
+        },
+        {
+          "event_id": "morgan_reyes_v05_robustness:m011",
+          "text": "I stopped drinking green tea and now drink espresso.",
+          "similarity": 0.43523679571364254,
+          "reranker_score": 0.00038105418207123876
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4736 @@
+{
+  "benchmark": "prometheist-semantic-hybrid-v1",
+  "created_at": "2026-08-24T00:23:34.467293+00:00",
+  "instruction_model": "qwen3:4b-instruct",
+  "embedding_model": "qwen3-embedding:4b-q4_K_M",
+  "embedding_dimensions": 1536,
+  "candidate_windows": [
+    5,
+    10,
+    20,
+    50
+  ],
+  "rrf_k": 60,
+  "generic_instruction": "Retrieve persisted internal-memory events that contain evidence needed to satisfy the current request.",
+  "instructions": {
+    "jordan_vale_v1:q01": "Retrieve the current coffee preference of Jordan from persisted evidence.",
+    "jordan_vale_v1:q02": "Retrieve the beverage that Jordan typically consumed immediately before adopting a new coffee-based drinking habit, as recorded in persistent internal memory.",
+    "jordan_vale_v1:q03": "Retrieve the current employer and workplace location of Jordan from persisted evidence.",
+    "jordan_vale_v1:q04": "Retrieve the name of the company Jordan worked for immediately before joining Northstar Labs.",
+    "jordan_vale_v1:q05": "Retrieve the name of the Sarah who is related to Jordan as a cousin, based on persistent family relationship records.",
+    "jordan_vale_v1:q06": "Retrieve the name of the person who, with Sarah, helped prepare or deliver the Atlas presentation at work.",
+    "jordan_vale_v1:q07": "Retrieve evidence that confirms whether Jordan obtained the money previously stored in the old apartment.",
+    "jordan_vale_v1:q08": "Retrieve the specific car model that Jordan was considering purchasing in the month of March, based on persisted evidence such as purchase records, financial documents, or personal communications.",
+    "jordan_vale_v1:q09": "Retrieve the current vehicle ownership record for Jordan from the internal memory database.",
+    "jordan_vale_v1:q10": "Retrieve persistent evidence indicating whether Jordan has expressed a preference, interest, or positive interaction with mushrooms.",
+    "jordan_vale_v1:q11": "Retrieve the name of the person who made the claim that Jordan hated mushrooms.",
+    "jordan_vale_v1:q12": "Retrieve the location where the blue notebook was physically placed, based on persistent evidence such as logs, sensor data, or recorded observations.",
+    "jordan_vale_v1:q13": "Retrieve the serial number associated with Jordan's old laptop from the internal memory.",
+    "jordan_vale_v1:q14": "Persisted evidence showing a recorded dental appointment attendance by Jordan would satisfy this query.",
+    "jordan_vale_v1:q15": "Retrieve the location Jordan moved from immediately before residing in Spokane, based on verified personal movement records in the internal memory.",
+    "jordan_vale_v1:q16": "Retrieve the blood type associated with the individual named Jordan from persisted evidence.",
+    "jordan_vale_v1:q17": "Retrieve the current membership status of Jordan in the Evergreen Gym database.",
+    "jordan_vale_v1:q18": "Retrieve the name of the Sarah who is confirmed to attend the Thanksgiving event based on the internal memory records.",
+    "avery_chen_v1:aq01": "Persisted evidence showing the current beverage consumed by Avery would satisfy this query.",
+    "avery_chen_v1:aq02": "Persisted evidence showing the specific beverage Avery consumed immediately prior to adopting new beverage habits.",
+    "avery_chen_v1:aq03": "Retrieve evidence that confirms whether Avery received repayment from the old landlord for a debt owed prior to the property transfer.",
+    "avery_chen_v1:aq04": "Retrieve the current vehicle ownership record for the individual named Avery from the internal memory database.",
+    "avery_chen_v1:aq05": "Retrieve the name of the person currently assigned to assist Avery in the development or execution of the Orion proposal, based on internal memory records.",
+    "avery_chen_v1:aq06": "Retrieve the blood type associated with the individual named Avery from the internal memory.",
+    "morgan_reyes_v05_robustness:mq01": "Retrieve the specific beverage Morgan consumed immediately prior to switching to green tea, based on persisted evidence in the internal memory.",
+    "morgan_reyes_v05_robustness:mq02": "Retrieve the specific beverage Morgan consumed immediately prior to switching to espresso, as recorded in the internal memory.",
+    "morgan_reyes_v05_robustness:mq03": "Retrieve evidence showing whether Morgan received the key deposit for unit 14, including financial records, transaction logs, or official correspondence confirming the deposit's recovery.",
+    "morgan_reyes_v05_robustness:mq04": "Retrieve evidence that confirms or denies the current ownership of a vehicle by Morgan.",
+    "morgan_reyes_v05_robustness:mq05": "Retrieve evidence of ownership of a Ford Escape by Morgan as of the current date.",
+    "morgan_reyes_v05_robustness:mq06": "Retrieve the name of the insurance company that provides coverage for Morgan's vehicle from persisted evidence.",
+    "morgan_reyes_v05_robustness:mq07": "Retrieve the blood type associated with the individual named Morgan from the internal memory.",
+    "semantic_retrieval_v1:sq01": "Retrieve the tree-related alias that was specifically assigned to the bird initiative in the internal memory.",
+    "semantic_retrieval_v1:sq02": "A deployment step must respect the platform's supported runtime environment, including version compatibility, architecture, and dependency constraints.",
+    "semantic_retrieval_v1:sq03": "Retrieve the revised due date for the Atlas milestone from the internal memory system.",
+    "semantic_retrieval_v1:sq04": "The secret used to decrypt backups is kept in the internal memory of the Prometheist system, specifically in the encrypted vault associated with the backup decryption key.",
+    "semantic_retrieval_v1:sq05": "Retrieve the specific burr adjustment setting recommended for African coffee in the internal memory of the Prometheist system.",
+    "semantic_retrieval_v1:sq06": "Retrieve the expected monetary value of the repair bill for the bike from persisted evidence.",
+    "semantic_retrieval_v1:sq07": "Persisted evidence that satisfies this query is a record of the configuration or runtime decision specifying whether local persistence is implemented within a container environment, including the actual deployment setting or policy that governs this decision.",
+    "semantic_retrieval_v1:sq08": "The historical-data invariant that must survive the release is the consistency of all recorded events in the timeline, as verified by independent, peer-reviewed sources.",
+    "semantic_retrieval_v1:sq09": "Retrieve the name and contact information of the designated emergency contact person responsible for handling incidents at the event.",
+    "semantic_retrieval_v1:sq10": "Retrieve the last recorded location of the secondary computer in the user's internal memory.",
+    "semantic_retrieval_v1:sq11": "Retrieve the persisted evidence of the approved visual style guidelines for recurring business presentations.",
+    "semantic_retrieval_v1:sq12": "Retrieve the specific procedure or protocol documented in the system's internal memory that outlines the steps to recover a database instance when it is not running on the primary machine.",
+    "semantic_retrieval_v1:sq13": "Retrieve the persistent evidence that directly identifies and confirms the holder's official passport number from the internal memory.",
+    "semantic_retrieval_v1:sq14": "Retrieve the name of the prescription medication that is scheduled to be taken every morning based on the user's active medical prescription records."
+  },
+  "instruction_metrics": {
+    "cached": false,
+    "wall_seconds": 128.82295890001114,
+    "mean_query_ms": 2862.535295557852,
+    "median_query_ms": 2546.3357000262477
+  },
+  "document_embedding_metrics": {
+    "calls": 4,
+    "wall_seconds": 31.041433800011873,
+    "api_total_seconds": 31.003806100000002,
+    "api_load_seconds": 4.4699254999999996,
+    "prompt_eval_count": 761
+  },
+  "query_embedding_metrics": {
+    "generic_instruction": {
+      "calls": 3,
+      "wall_seconds": 17.74597950000316,
+      "api_total_seconds": 17.7143597,
+      "api_load_seconds": 0.0079633,
+      "prompt_eval_count": 1340
+    },
+    "per_query_instruction": {
+      "calls": 3,
+      "wall_seconds": 40.75115610001376,
+      "api_total_seconds": 40.708332600000006,
+      "api_load_seconds": 0.008233500000000001,
+      "prompt_eval_count": 1569
+    }
+  },
+  "results": {
+    "generic_instruction": {
+      "summary": {
+        "mode": "generic_instruction",
+        "known_questions": 39,
+        "unknown_questions": 6,
+        "semantic_mrr_full": 0.7586487586487587,
+        "semantic_recall_at_1": 0.6666666666666666,
+        "unknown_top1_similarity_max": 0.6162975842457635,
+        "unknown_top1_lexical_overlap_rate": 0.6666666666666666,
+        "windows": {
+          "5": {
+            "semantic_candidate_recall": 0.8974358974358975,
+            "fused_recall_at_1": 0.48717948717948717,
+            "fused_recall_at_5": 0.8717948717948718,
+            "fused_mrr": 0.7015432098765433,
+            "unknown_semantic_top_in_lexical_window_rate": 0.6666666666666666,
+            "unknown_fused_top_multiroute_rate": 0.6666666666666666
+          },
+          "10": {
+            "semantic_candidate_recall": 1.0,
+            "fused_recall_at_1": 0.48717948717948717,
+            "fused_recall_at_5": 0.8461538461538461,
+            "fused_mrr": 0.6562382062382063,
+            "unknown_semantic_top_in_lexical_window_rate": 0.6666666666666666,
+            "unknown_fused_top_multiroute_rate": 0.6666666666666666
+          },
+          "20": {
+            "semantic_candidate_recall": 1.0,
+            "fused_recall_at_1": 0.48717948717948717,
+            "fused_recall_at_5": 0.8461538461538461,
+            "fused_mrr": 0.6478743478743478,
+            "unknown_semantic_top_in_lexical_window_rate": 0.6666666666666666,
+            "unknown_fused_top_multiroute_rate": 0.6666666666666666
+          },
+          "50": {
+            "semantic_candidate_recall": 1.0,
+            "fused_recall_at_1": 0.48717948717948717,
+            "fused_recall_at_5": 0.8461538461538461,
+            "fused_mrr": 0.6432447182447182,
+            "unknown_semantic_top_in_lexical_window_rate": 0.6666666666666666,
+            "unknown_fused_top_multiroute_rate": 0.6666666666666666
+          }
+        }
+      },
+      "questions": [
+        {
+          "question_id": "jordan_vale_v1:q01",
+          "query": "What kind of coffee does Jordan drink now?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 4,
+          "semantic_top_event_id": "jordan_vale_v1:e015",
+          "semantic_top_similarity": 0.7302778462526887,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q02",
+          "query": "What did Jordan usually drink before switching coffee habits?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 9,
+          "semantic_top_event_id": "morgan_reyes_v05_robustness:m003",
+          "semantic_top_similarity": 0.6529047056347638,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": false,
+              "fused_required_rank": null,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 7,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 7,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 7,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q03",
+          "query": "Where does Jordan work now?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 4,
+          "semantic_top_event_id": "jordan_vale_v1:e018",
+          "semantic_top_similarity": 0.5744035117960512,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 9,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 7,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 8,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 8,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q04",
+          "query": "Where did Jordan work before Northstar Labs?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e022",
+          "semantic_top_similarity": 0.6241599745933044,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e022",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e022",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e022",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e022",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q05",
+          "query": "Which Sarah is Jordan's cousin?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e003",
+          "semantic_top_similarity": 0.6744640010191905,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q06",
+          "query": "Which Sarah helped with the Atlas presentation at work?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e004",
+          "semantic_top_similarity": 0.8108095447725633,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q07",
+          "query": "Did Jordan recover the money from the old apartment?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 2,
+          "semantic_top_event_id": "jordan_vale_v1:e007",
+          "semantic_top_similarity": 0.6245786161259175,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "jordan_vale_v1:e007",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 6,
+              "fused_top_event_id": "jordan_vale_v1:e007",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 8,
+              "fused_top_event_id": "jordan_vale_v1:e007",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 9,
+              "fused_top_event_id": "jordan_vale_v1:e007",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q08",
+          "query": "What car was Jordan considering buying in March?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e009",
+          "semantic_top_similarity": 0.6227376060556413,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q09",
+          "query": "What vehicle does Jordan own now?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 5,
+          "semantic_top_event_id": "morgan_reyes_v05_robustness:m009",
+          "semantic_top_similarity": 0.5855086163900649,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 9,
+              "fused_top_event_id": "avery_chen_v1:a007",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 10,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 12,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 12,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q10",
+          "query": "Does Jordan actually like mushrooms?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 2,
+          "semantic_top_event_id": "jordan_vale_v1:e012",
+          "semantic_top_similarity": 0.728972107027007,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q11",
+          "query": "Who claimed Jordan hated mushrooms?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e012",
+          "semantic_top_similarity": 0.7555054784931388,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q12",
+          "query": "Where was the blue notebook placed?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e019",
+          "semantic_top_similarity": 0.7612503509202605,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e019",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e019",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e019",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e019",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q13",
+          "query": "What is the serial number on Jordan's old laptop?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e016",
+          "semantic_top_similarity": 0.6486654949433878,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q14",
+          "query": "Did Jordan actually go to the dentist appointment?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e018",
+          "semantic_top_similarity": 0.786824512920263,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q15",
+          "query": "Where did Jordan move from before living in Spokane?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e006",
+          "semantic_top_similarity": 0.7197545563081558,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q16",
+          "query": "What is Jordan's blood type?",
+          "expect_no_evidence": true,
+          "semantic_required_rank": null,
+          "semantic_top_event_id": "jordan_vale_v1:e018",
+          "semantic_top_similarity": 0.48958703321272234,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q17",
+          "query": "Is Jordan still a member of Evergreen Gym?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e024",
+          "semantic_top_similarity": 0.6475342626910701,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e024",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e024",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e024",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e024",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q18",
+          "query": "Which Sarah is coming for Thanksgiving?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e023",
+          "semantic_top_similarity": 0.8200407373113567,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e023",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e023",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e023",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e023",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "avery_chen_v1:aq01",
+          "query": "What does Avery drink now?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 6,
+          "semantic_top_event_id": "avery_chen_v1:a010",
+          "semantic_top_similarity": 0.716617212009537,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": false,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "avery_chen_v1:aq02",
+          "query": "What did Avery drink before changing beverage habits?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 10,
+          "semantic_top_event_id": "avery_chen_v1:a010",
+          "semantic_top_similarity": 0.6714834991790426,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": false,
+              "fused_required_rank": null,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 11,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 11,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 11,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "avery_chen_v1:aq03",
+          "query": "Did Avery recover what the old landlord owed?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 5,
+          "semantic_top_event_id": "jordan_vale_v1:e008",
+          "semantic_top_similarity": 0.5793958853730671,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 5,
+              "fused_top_event_id": "avery_chen_v1:a002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 5,
+              "fused_top_event_id": "avery_chen_v1:a002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 5,
+              "fused_top_event_id": "avery_chen_v1:a002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 5,
+              "fused_top_event_id": "avery_chen_v1:a002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "avery_chen_v1:aq04",
+          "query": "What vehicle does Avery own now?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 2,
+          "semantic_top_event_id": "avery_chen_v1:a010",
+          "semantic_top_similarity": 0.6387204941638743,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "avery_chen_v1:aq05",
+          "query": "Who is helping Avery with the Orion proposal?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "avery_chen_v1:a009",
+          "semantic_top_similarity": 0.6508960225036146,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "avery_chen_v1:a009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "avery_chen_v1:a009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "avery_chen_v1:a009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "avery_chen_v1:a009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "avery_chen_v1:aq06",
+          "query": "What is Avery's blood type?",
+          "expect_no_evidence": true,
+          "semantic_required_rank": null,
+          "semantic_top_event_id": "avery_chen_v1:a010",
+          "semantic_top_similarity": 0.6162975842457635,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq01",
+          "query": "What did Morgan drink immediately before switching to green tea?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 3,
+          "semantic_top_event_id": "morgan_reyes_v05_robustness:m006",
+          "semantic_top_similarity": 0.6887942457199074,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq02",
+          "query": "What did Morgan drink immediately before switching to espresso?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 7,
+          "semantic_top_event_id": "avery_chen_v1:a010",
+          "semantic_top_similarity": 0.6517418245973212,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": false,
+              "fused_required_rank": null,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 6,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 6,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 6,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq03",
+          "query": "Did Morgan recover the key deposit for unit 14?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "morgan_reyes_v05_robustness:m005",
+          "semantic_top_similarity": 0.7242499481935383,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq04",
+          "query": "Does Morgan own a vehicle now?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "morgan_reyes_v05_robustness:m009",
+          "semantic_top_similarity": 0.5296755473194967,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "avery_chen_v1:a007",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "avery_chen_v1:a007",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m011",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m011",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq05",
+          "query": "Does Morgan still own the Ford Escape?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 3,
+          "semantic_top_event_id": "avery_chen_v1:a006",
+          "semantic_top_similarity": 0.6589946614292921,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq06",
+          "query": "Who insures Morgan's vehicle?",
+          "expect_no_evidence": true,
+          "semantic_required_rank": null,
+          "semantic_top_event_id": "semantic_retrieval_v1:s006",
+          "semantic_top_similarity": 0.5020372438905454,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq07",
+          "query": "What is Morgan's blood type?",
+          "expect_no_evidence": true,
+          "semantic_required_rank": null,
+          "semantic_top_event_id": "jordan_vale_v1:e003",
+          "semantic_top_similarity": 0.44710116896330426,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq01",
+          "query": "What was the tree-related alias for the bird initiative?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s001",
+          "semantic_top_similarity": 0.5421915650580286,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s001",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s001",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s001",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s001",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq02",
+          "query": "What platform constraint must a deployment step respect?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s002",
+          "semantic_top_similarity": 0.5367629950439619,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq03",
+          "query": "When is the revised Atlas milestone due?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s003",
+          "semantic_top_similarity": 0.7385248416261855,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq04",
+          "query": "Where is the secret used to decrypt backups kept?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s004",
+          "semantic_top_similarity": 0.7318639519182223,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq05",
+          "query": "How finely should I set the burrs for the African coffee?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s005",
+          "semantic_top_similarity": 0.6846310255722325,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq06",
+          "query": "How large is the expected repair bill for the bike?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s006",
+          "semantic_top_similarity": 0.7931161487078935,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq07",
+          "query": "Should local persistence run inside a container?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s007",
+          "semantic_top_similarity": 0.4555451738938096,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s007",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s007",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s007",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s007",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq08",
+          "query": "What historical-data invariant must survive the release?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s008",
+          "semantic_top_similarity": 0.6927422392453828,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq09",
+          "query": "Who should be called if something goes wrong at the event?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s009",
+          "semantic_top_similarity": 0.6756439086368071,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq10",
+          "query": "Where did I put my secondary computer?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s010",
+          "semantic_top_similarity": 0.6762199748265655,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e014",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e014",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e014",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e014",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq11",
+          "query": "What visual style do I want for the recurring business presentation?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s011",
+          "semantic_top_similarity": 0.5889183952696901,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq12",
+          "query": "What is the off-machine recovery routine for the database?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s012",
+          "semantic_top_similarity": 0.5557475493310253,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq13",
+          "query": "What is my passport number?",
+          "expect_no_evidence": true,
+          "semantic_required_rank": null,
+          "semantic_top_event_id": "jordan_vale_v1:e016",
+          "semantic_top_similarity": 0.5049745524608248,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq14",
+          "query": "Which prescription medication do I take every morning?",
+          "expect_no_evidence": true,
+          "semantic_required_rank": null,
+          "semantic_top_event_id": "jordan_vale_v1:e001",
+          "semantic_top_similarity": 0.5302568054930001,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e001",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e001",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e001",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e001",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        }
+      ]
+    },
+    "per_query_instruction": {
+      "summary": {
+        "mode": "per_query_instruction",
+        "known_questions": 39,
+        "unknown_questions": 6,
+        "semantic_mrr_full": 0.7861416361416361,
+        "semantic_recall_at_1": 0.6923076923076923,
+        "unknown_top1_similarity_max": 0.5295992290479493,
+        "unknown_top1_lexical_overlap_rate": 0.6666666666666666,
+        "windows": {
+          "5": {
+            "semantic_candidate_recall": 0.9230769230769231,
+            "fused_recall_at_1": 0.48717948717948717,
+            "fused_recall_at_5": 0.9230769230769231,
+            "fused_mrr": 0.693993993993994,
+            "unknown_semantic_top_in_lexical_window_rate": 0.6666666666666666,
+            "unknown_fused_top_multiroute_rate": 0.6666666666666666
+          },
+          "10": {
+            "semantic_candidate_recall": 1.0,
+            "fused_recall_at_1": 0.48717948717948717,
+            "fused_recall_at_5": 0.8717948717948718,
+            "fused_mrr": 0.658954933954934,
+            "unknown_semantic_top_in_lexical_window_rate": 0.6666666666666666,
+            "unknown_fused_top_multiroute_rate": 0.6666666666666666
+          },
+          "20": {
+            "semantic_candidate_recall": 1.0,
+            "fused_recall_at_1": 0.48717948717948717,
+            "fused_recall_at_5": 0.8717948717948718,
+            "fused_mrr": 0.6546814296814296,
+            "unknown_semantic_top_in_lexical_window_rate": 0.6666666666666666,
+            "unknown_fused_top_multiroute_rate": 0.6666666666666666
+          },
+          "50": {
+            "semantic_candidate_recall": 1.0,
+            "fused_recall_at_1": 0.48717948717948717,
+            "fused_recall_at_5": 0.8461538461538461,
+            "fused_mrr": 0.6445674695674696,
+            "unknown_semantic_top_in_lexical_window_rate": 0.6666666666666666,
+            "unknown_fused_top_multiroute_rate": 0.6666666666666666
+          }
+        }
+      },
+      "questions": [
+        {
+          "question_id": "jordan_vale_v1:q01",
+          "query": "What kind of coffee does Jordan drink now?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 4,
+          "semantic_top_event_id": "jordan_vale_v1:e015",
+          "semantic_top_similarity": 0.6648990828749902,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q02",
+          "query": "What did Jordan usually drink before switching coffee habits?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 7,
+          "semantic_top_event_id": "morgan_reyes_v05_robustness:m003",
+          "semantic_top_similarity": 0.592522608722469,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": false,
+              "fused_required_rank": null,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 6,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 6,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 6,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q03",
+          "query": "Where does Jordan work now?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 4,
+          "semantic_top_event_id": "jordan_vale_v1:e018",
+          "semantic_top_similarity": 0.47756098195333035,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 9,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 8,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 8,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 8,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q04",
+          "query": "Where did Jordan work before Northstar Labs?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e022",
+          "semantic_top_similarity": 0.5825392983582975,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e022",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e022",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e022",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e022",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q05",
+          "query": "Which Sarah is Jordan's cousin?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e003",
+          "semantic_top_similarity": 0.6281419830874871,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q06",
+          "query": "Which Sarah helped with the Atlas presentation at work?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e004",
+          "semantic_top_similarity": 0.8197733222253587,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q07",
+          "query": "Did Jordan recover the money from the old apartment?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e008",
+          "semantic_top_similarity": 0.5790800437171879,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 6,
+              "fused_top_event_id": "avery_chen_v1:a002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 8,
+              "fused_top_event_id": "avery_chen_v1:a002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 9,
+              "fused_top_event_id": "avery_chen_v1:a002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q08",
+          "query": "What car was Jordan considering buying in March?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e009",
+          "semantic_top_similarity": 0.5717749928619701,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q09",
+          "query": "What vehicle does Jordan own now?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 2,
+          "semantic_top_event_id": "avery_chen_v1:a006",
+          "semantic_top_similarity": 0.5221692944368099,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a006",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 6,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 8,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 9,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q10",
+          "query": "Does Jordan actually like mushrooms?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 2,
+          "semantic_top_event_id": "jordan_vale_v1:e012",
+          "semantic_top_similarity": 0.6999264224103026,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q11",
+          "query": "Who claimed Jordan hated mushrooms?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e012",
+          "semantic_top_similarity": 0.7682944016857349,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q12",
+          "query": "Where was the blue notebook placed?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e019",
+          "semantic_top_similarity": 0.6601461003594468,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e019",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e019",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e019",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e019",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q13",
+          "query": "What is the serial number on Jordan's old laptop?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e016",
+          "semantic_top_similarity": 0.7162440724395918,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q14",
+          "query": "Did Jordan actually go to the dentist appointment?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e018",
+          "semantic_top_similarity": 0.7330410419170926,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e018",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q15",
+          "query": "Where did Jordan move from before living in Spokane?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e006",
+          "semantic_top_similarity": 0.6448709912103534,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q16",
+          "query": "What is Jordan's blood type?",
+          "expect_no_evidence": true,
+          "semantic_required_rank": null,
+          "semantic_top_event_id": "jordan_vale_v1:e018",
+          "semantic_top_similarity": 0.44798854787391906,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q17",
+          "query": "Is Jordan still a member of Evergreen Gym?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e024",
+          "semantic_top_similarity": 0.6345328480798614,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e024",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e024",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e024",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e024",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "jordan_vale_v1:q18",
+          "query": "Which Sarah is coming for Thanksgiving?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "jordan_vale_v1:e023",
+          "semantic_top_similarity": 0.7909917609110741,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e023",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e023",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e023",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "jordan_vale_v1:e023",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "avery_chen_v1:aq01",
+          "query": "What does Avery drink now?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 6,
+          "semantic_top_event_id": "avery_chen_v1:a010",
+          "semantic_top_similarity": 0.6785841583422847,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": false,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "avery_chen_v1:aq02",
+          "query": "What did Avery drink before changing beverage habits?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 10,
+          "semantic_top_event_id": "avery_chen_v1:a010",
+          "semantic_top_similarity": 0.6289137483293996,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": false,
+              "fused_required_rank": null,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 11,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 11,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 11,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "avery_chen_v1:aq03",
+          "query": "Did Avery recover what the old landlord owed?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 4,
+          "semantic_top_event_id": "avery_chen_v1:a002",
+          "semantic_top_similarity": 0.5573562649748688,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 5,
+              "fused_top_event_id": "avery_chen_v1:a002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 5,
+              "fused_top_event_id": "avery_chen_v1:a002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 5,
+              "fused_top_event_id": "avery_chen_v1:a002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 6,
+              "fused_top_event_id": "avery_chen_v1:a002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "avery_chen_v1:aq04",
+          "query": "What vehicle does Avery own now?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 2,
+          "semantic_top_event_id": "avery_chen_v1:a010",
+          "semantic_top_similarity": 0.5553924253210805,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "avery_chen_v1:aq05",
+          "query": "Who is helping Avery with the Orion proposal?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "avery_chen_v1:a009",
+          "semantic_top_similarity": 0.6465663716623281,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "avery_chen_v1:a009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "avery_chen_v1:a009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "avery_chen_v1:a009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "avery_chen_v1:a009",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "avery_chen_v1:aq06",
+          "query": "What is Avery's blood type?",
+          "expect_no_evidence": true,
+          "semantic_required_rank": null,
+          "semantic_top_event_id": "avery_chen_v1:a010",
+          "semantic_top_similarity": 0.5141514222418768,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "avery_chen_v1:a010",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq01",
+          "query": "What did Morgan drink immediately before switching to green tea?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 3,
+          "semantic_top_event_id": "morgan_reyes_v05_robustness:m006",
+          "semantic_top_similarity": 0.6269889322699107,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 4,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq02",
+          "query": "What did Morgan drink immediately before switching to espresso?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 3,
+          "semantic_top_event_id": "morgan_reyes_v05_robustness:m011",
+          "semantic_top_similarity": 0.6123094078083143,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 5,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m011",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 5,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m011",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 5,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m011",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 5,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m011",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq03",
+          "query": "Did Morgan recover the key deposit for unit 14?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "morgan_reyes_v05_robustness:m005",
+          "semantic_top_similarity": 0.6669184741470068,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq04",
+          "query": "Does Morgan own a vehicle now?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "morgan_reyes_v05_robustness:m009",
+          "semantic_top_similarity": 0.4637771933696202,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "avery_chen_v1:a007",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "avery_chen_v1:a007",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "avery_chen_v1:a007",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "morgan_reyes_v05_robustness:m011",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq05",
+          "query": "Does Morgan still own the Ford Escape?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 3,
+          "semantic_top_event_id": "avery_chen_v1:a006",
+          "semantic_top_similarity": 0.5962763137076357,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "avery_chen_v1:a006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq06",
+          "query": "Who insures Morgan's vehicle?",
+          "expect_no_evidence": true,
+          "semantic_required_rank": null,
+          "semantic_top_event_id": "semantic_retrieval_v1:s006",
+          "semantic_top_similarity": 0.4219966231856682,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "morgan_reyes_v05_robustness:mq07",
+          "query": "What is Morgan's blood type?",
+          "expect_no_evidence": true,
+          "semantic_required_rank": null,
+          "semantic_top_event_id": "jordan_vale_v1:e003",
+          "semantic_top_similarity": 0.3392063001948962,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e003",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq01",
+          "query": "What was the tree-related alias for the bird initiative?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s001",
+          "semantic_top_similarity": 0.5199557461888127,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s001",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s001",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s001",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s001",
+              "fused_top_routes": [
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq02",
+          "query": "What platform constraint must a deployment step respect?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s002",
+          "semantic_top_similarity": 0.5119792089624144,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s002",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq03",
+          "query": "When is the revised Atlas milestone due?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s003",
+          "semantic_top_similarity": 0.7286113565207386,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq04",
+          "query": "Where is the secret used to decrypt backups kept?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s004",
+          "semantic_top_similarity": 0.7067629750311444,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq05",
+          "query": "How finely should I set the burrs for the African coffee?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s005",
+          "semantic_top_similarity": 0.6533889086942524,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e015",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq06",
+          "query": "How large is the expected repair bill for the bike?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s006",
+          "semantic_top_similarity": 0.7914321881441037,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s006",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq07",
+          "query": "Should local persistence run inside a container?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s007",
+          "semantic_top_similarity": 0.4131567770633096,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s007",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s007",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s007",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s007",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq08",
+          "query": "What historical-data invariant must survive the release?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s008",
+          "semantic_top_similarity": 0.6367026687681021,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq09",
+          "query": "Who should be called if something goes wrong at the event?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s009",
+          "semantic_top_similarity": 0.6841186916340812,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "semantic_retrieval_v1:s008",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq10",
+          "query": "Where did I put my secondary computer?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s010",
+          "semantic_top_similarity": 0.6617086286238153,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e014",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e014",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e014",
+              "fused_top_routes": [
+                "lexical"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e014",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq11",
+          "query": "What visual style do I want for the recurring business presentation?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s011",
+          "semantic_top_similarity": 0.47683528190644114,
+          "semantic_top_has_lexical_overlap": false,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 2,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 3,
+              "fused_top_event_id": "jordan_vale_v1:e004",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": false
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq12",
+          "query": "What is the off-machine recovery routine for the database?",
+          "expect_no_evidence": false,
+          "semantic_required_rank": 1,
+          "semantic_top_event_id": "semantic_retrieval_v1:s012",
+          "semantic_top_similarity": 0.4900339809828617,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": true,
+              "fused_required_rank": 1,
+              "fused_top_event_id": "semantic_retrieval_v1:s012",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq13",
+          "query": "What is my passport number?",
+          "expect_no_evidence": true,
+          "semantic_required_rank": null,
+          "semantic_top_event_id": "jordan_vale_v1:e016",
+          "semantic_top_similarity": 0.4967658946917682,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e016",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        },
+        {
+          "question_id": "semantic_retrieval_v1:sq14",
+          "query": "Which prescription medication do I take every morning?",
+          "expect_no_evidence": true,
+          "semantic_required_rank": null,
+          "semantic_top_event_id": "jordan_vale_v1:e001",
+          "semantic_top_similarity": 0.5295992290479493,
+          "semantic_top_has_lexical_overlap": true,
+          "windows": {
+            "5": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e001",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "10": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e001",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "20": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e001",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            },
+            "50": {
+              "semantic_candidate_hit": null,
+              "fused_required_rank": null,
+              "fused_top_event_id": "jordan_vale_v1:e001",
+              "fused_top_routes": [
+                "lexical",
+                "semantic"
+              ],
+              "semantic_top_in_lexical_window": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

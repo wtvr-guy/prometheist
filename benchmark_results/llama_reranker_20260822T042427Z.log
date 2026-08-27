@@ -1,0 +1,23 @@
+0.01.027.783 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.01.029.045 I srv          init: The UI is disabled
+0.01.029.054 I srv          init: Use --ui/--no-ui (or deprecated --webui/--no-webui) to enable/disable
+0.01.029.234 W srv  llama_server: -----------------
+0.01.029.237 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.01.029.238 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.01.029.238 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.01.029.238 W srv  llama_server: -----------------
+2.24.547.827 W finalize_file: failed to create symlink: A required privilege is not held by the client.
+2.24.547.834 W finalize_file: switching to degraded mode
+2.24.559.721 I srv    load_model: loading model 'QuantFactory/Qwen3-Reranker-4B-GGUF:Q4_K_M'
+2.25.179.506 W load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+2.28.136.575 I cmn          init: llama threadpool init, n_threads = 4
+2.33.752.675 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 4096, kv_unified = 'false'
+2.33.780.053 I srv  llama_server: model loaded
+2.33.780.163 I srv  llama_server: listening on http://127.0.0.1:18081
+2.33.835.122 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = -1
+2.33.836.487 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+2.35.944.247 I slot print_timing: id  0 | task 0 | prompt eval time =    2095.22 ms /    89 tokens (   23.54 ms per token,    42.48 tokens per second)
+2.35.944.257 I slot print_timing: id  0 | task 0 |        eval time =       0.00 ms /     1 tokens (    0.00 ms per token,     0.00 tokens per second)
+2.35.944.259 I slot print_timing: id  0 | task 0 |       total time =    2095.22 ms /    90 tokens
+2.35.944.260 I slot print_timing: id  0 | task 0 |    graphs reused =          1
+2.35.944.299 I slot      release: id  0 | task 0 | stop processing: n_tokens = 89, truncated = 0
