@@ -228,6 +228,30 @@ Prometheist is intended to remain usable on modest local hardware. Stronger hard
 
 **Deep dive:** [`docs/engineering/CONSTITUTIONAL_GOVERNANCE.md`](docs/engineering/CONSTITUTIONAL_GOVERNANCE.md)
 
+### Article 27 — Capability reasoning is recurrent, but every reassessment is fresh
+
+**Rule.** Completion of capability work does not inherit or extend the previous model context and does not automatically authorize a user-facing response. Prometheist persists the capability result, rebuilds a bounded system-owned context, and uses a new stateless model invocation to decide whether more work is required or the system is ready to respond. Final user-facing generation occurs only after explicit readiness under the current routing contract.
+
+**Why it matters.** One-shot routing is not a valid substitute for reasoning depth, while carrying the same model context across capability rounds would violate statelessness and hide continuity inside the worker.
+
+**Deep dive:** [`docs/architecture/INTERACTION_CONTINUITY.md`](docs/architecture/INTERACTION_CONTINUITY.md)
+
+### Article 28 — Durable queued work must have an explicit anti-starvation policy
+
+**Rule.** Lower-priority durable work may wait behind more important work, but the scheduler must provide structured, deterministic service guarantees or an equivalent explicit anti-starvation mechanism. Exact guarantee thresholds are governed tunables and never override resource safety, dependencies, or interruption safety.
+
+**Why it matters.** A durable intention that can remain runnable forever without any governed path to service is not meaningfully durable executable work.
+
+**Deep dive:** [`docs/architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](docs/architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md)
+
+### Article 29 — Insufficient authority or evidence fails closed
+
+**Rule.** Prometheist must not guess past invalid, stale, contradictory, missing, or ambiguous control authority. Invalid model-control output, unusable resource state, unresolved dependency authority, unsupported factual evidence, and ambiguous irreversible side effects must produce an explicit failure, abstention, wait, or reconciliation state as appropriate rather than fabricated success or weakened policy.
+
+**Why it matters.** Determinism, provenance, resource safety, and epistemic accuracy all fail if the system silently invents authority when the evidence or control contract is insufficient.
+
+**Deep dives:** [`docs/architecture/SYSTEM_DETERMINISM.md`](docs/architecture/SYSTEM_DETERMINISM.md), [`docs/architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](docs/architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md), [`docs/architecture/INTERACTION_CONTINUITY.md`](docs/architecture/INTERACTION_CONTINUITY.md)
+
 ## Constitutional audit standard
 
 A constitutional audit should evaluate every article against the entire current code path, schema, tests, configuration, and current architecture documentation. For each article, record:
@@ -252,6 +276,7 @@ A proposed change is constitutionally admissible only if all of the following ar
 5. boundedness and resource-safety invariants still hold;
 6. the change has the required deterministic and/or native evidence;
 7. any new behavioral tunable is classified and governed;
-8. the change does not make a reference implementation into an unjustified constitutional dependency.
+8. the change does not make a reference implementation into an unjustified constitutional dependency;
+9. insufficient authority or evidence still fails closed rather than being guessed past.
 
 That standard is the default review lens for future Prometheist development.
