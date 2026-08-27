@@ -9,7 +9,6 @@ disagree, callers must rebuild disposable state rather than guess across a gap.
 from __future__ import annotations
 
 import json
-import uuid
 from typing import Iterable
 
 import psycopg
