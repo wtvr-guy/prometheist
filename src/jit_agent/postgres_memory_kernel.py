@@ -40,7 +40,7 @@ from jit_agent.postgres_association_projection import (
     rebuild_associations,
 )
 
-CANDIDATE_ROUTER_VERSION = "specificity-routes-v3"
+CANDIDATE_ROUTER_VERSION = "specificity-routes-v4"
 LEXICAL_PROJECTION_NAME = LexicalProjection.name
 LEXICAL_PROJECTION_VERSION = LexicalProjection.version
 
@@ -237,10 +237,12 @@ def _candidate_event_ids(
 ) -> list[uuid.UUID]:
     """Build a bounded candidate union from independent deterministic routes.
 
-    The router deliberately separates exact-entity, lexical-specificity, and
-    recency routes. An old authoritative event must not lose its chance to reach
-    the pure kernel merely because hundreds of newer rows share one generic
-    word. The total candidate bound remains fixed; only its composition changes.
+    The router deliberately separates exact-entity, lexical-specificity,
+    historical-anchor, and recency routes. Newest-only candidate composition
+    can erase equally relevant old evidence before the pure kernel has a chance
+    to preserve temporal alternatives, so content-routed recall reserves up to
+    one output packet's worth of bounded historical anchors. The total candidate
+    bound remains fixed; only its composition changes.
 
     Source-type restrictions are applied inside each route rather than after
     truncation so disallowed event types cannot consume the bounded window.
@@ -283,18 +285,27 @@ def _candidate_event_ids(
         recency_budget = candidate_limit
     content_budget = candidate_limit - recency_budget
 
+    # When the candidate window has room beyond the requested packet, reserve
+    # bounded content capacity for earliest high-specificity matches. A
+    # candidate_limit equal to cue.limit keeps the legacy all-primary route.
+    historical_budget = min(
+        cue.limit,
+        max(0, content_budget - cue.limit),
+    ) if has_content_routes else 0
+    primary_content_budget = content_budget - historical_budget
+
     if terms and entity_terms:
         entity_budget = min(
-            content_budget,
-            max(cue.limit, content_budget // 4),
+            primary_content_budget,
+            max(cue.limit, primary_content_budget // 4),
         )
-        lexical_budget = content_budget - entity_budget
+        lexical_budget = primary_content_budget - entity_budget
     elif entity_terms:
-        entity_budget = content_budget
+        entity_budget = primary_content_budget
         lexical_budget = 0
     elif terms:
         entity_budget = 0
-        lexical_budget = content_budget
+        lexical_budget = primary_content_budget
     else:
         entity_budget = 0
         lexical_budget = 0
@@ -384,6 +395,72 @@ def _candidate_event_ids(
                 + [terms, lexical_fetch_limit],
             )
             append_rows(cur.fetchall(), lexical_budget)
+
+        if historical_budget and terms:
+            historical_fetch_limit = min(
+                candidate_limit,
+                historical_budget + len(seen),
+            )
+            cur.execute(
+                f"""
+                SELECT e.event_id,
+                       (
+                           SELECT count(*)
+                           FROM unnest(%s::text[]) AS q(term)
+                           WHERE (p.data -> 'terms') ? q.term
+                       ) AS term_matches,
+                       (
+                           SELECT count(*)
+                           FROM unnest(%s::text[]) AS q(entity)
+                           WHERE (p.data -> 'entities') ? q.entity
+                       ) AS entity_matches
+                FROM memory_projection_entries p
+                JOIN events e ON e.event_id = p.source_event_id
+                WHERE p.projection_name = %s
+                  AND p.projection_version = %s
+                  {cutoff_sql}
+                  {source_type_sql}
+                  AND (p.data -> 'terms') ?| %s::text[]
+                ORDER BY term_matches DESC, entity_matches DESC,
+                         e.global_seq ASC, e.event_id ASC
+                LIMIT %s
+                """,
+                [terms, entity_terms, LEXICAL_PROJECTION_NAME, LEXICAL_PROJECTION_VERSION]
+                + cutoff_params
+                + source_type_params
+                + [terms, historical_fetch_limit],
+            )
+            append_rows(cur.fetchall(), historical_budget)
+        elif historical_budget and entity_terms:
+            historical_fetch_limit = min(
+                candidate_limit,
+                historical_budget + len(seen),
+            )
+            cur.execute(
+                f"""
+                SELECT e.event_id,
+                       (
+                           SELECT count(*)
+                           FROM unnest(%s::text[]) AS q(entity)
+                           WHERE (p.data -> 'entities') ? q.entity
+                       ) AS entity_matches
+                FROM memory_projection_entries p
+                JOIN events e ON e.event_id = p.source_event_id
+                WHERE p.projection_name = %s
+                  AND p.projection_version = %s
+                  {cutoff_sql}
+                  {source_type_sql}
+                  AND (p.data -> 'entities') ?| %s::text[]
+                ORDER BY entity_matches DESC,
+                         e.global_seq ASC, e.event_id ASC
+                LIMIT %s
+                """,
+                [entity_terms, LEXICAL_PROJECTION_NAME, LEXICAL_PROJECTION_VERSION]
+                + cutoff_params
+                + source_type_params
+                + [entity_terms, historical_fetch_limit],
+            )
+            append_rows(cur.fetchall(), historical_budget)
 
         if recency_budget:
             conditions: list[str] = []
