@@ -29,7 +29,7 @@ from jit_agent.attention_ordering import (
 from jit_agent.models import EventType
 
 
-CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v7"
+CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v8"
 SOURCE = "capability_registry"
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
@@ -162,8 +162,9 @@ class RegisteredCapability:
 
     ``selectable_after_aperture`` controls membership in the initial catalog.
     ``follow_up_capability_ids`` names capabilities that become visible after this
-    capability has completed at least once. Initial capabilities remain visible
-    in every later round, so a capability may be selected again when warranted.
+    capability has completed with usable output. Initial capabilities remain
+    visible in every later round, so a capability may be selected again when
+    warranted.
     """
 
     descriptor: CapabilityDescriptor
@@ -255,7 +256,7 @@ class CapabilityRegistry:
         for capability_id in executed_capability_ids:
             registration = self.get(capability_id)
             for follow_up_id in registration.follow_up_capability_ids:
-                self.get(follow_up_id)  # fail closed on stale configuration
+                self.get(follow_up_id)
                 visible_ids.add(follow_up_id)
         return tuple(
             self.get(capability_id).descriptor.model_copy(deep=True)
@@ -389,11 +390,26 @@ DEFAULT_REGISTRY = CapabilityRegistry(
         ),
         RegisteredCapability(
             descriptor=CapabilityDescriptor(
+                capability_id="cross_reference",
+                kind=CapabilityKind.WORKFLOW,
+                description=(
+                    "Investigate relationships among two or more currently available internal "
+                    "memory candidates, including shared, conflicting, causal, or bridging evidence."
+                ),
+            ),
+            routing_terms=("cross reference",),
+            executor="cross_reference",
+            selectable_after_aperture=True,
+            execution_priority=95,
+            follow_up_capability_ids=("focused_recall",),
+        ),
+        RegisteredCapability(
+            descriptor=CapabilityDescriptor(
                 capability_id="deeper_research",
                 kind=CapabilityKind.WORKFLOW,
                 description=(
                     "Investigate the current question further using additional persisted "
-                    "internal evidence when the initially supplied context is insufficient."
+                    "internal evidence around one or more currently available memory candidates."
                 ),
             ),
             routing_terms=("deeper research",),
@@ -407,8 +423,8 @@ DEFAULT_REGISTRY = CapabilityRegistry(
                 capability_id="focused_recall",
                 kind=CapabilityKind.WORKFLOW,
                 description=(
-                    "Search persisted internal evidence with a more focused target when "
-                    "broader internal research still leaves a specific ambiguity unresolved."
+                    "Investigate one selected internal memory candidate with the deepest bounded "
+                    "association search when a specific ambiguity remains unresolved."
                 ),
             ),
             routing_terms=("focused recall",),
