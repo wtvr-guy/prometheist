@@ -66,7 +66,7 @@ def test_full_text_search_matches_shared_keywords(conn):
     assert result.items[0].rank is not None
 
 
-def test_limit_is_bounded_and_respected(conn):
+def test_limit_is_positive_and_respected_without_arbitrary_global_ceiling(conn):
     conversation_id = event_store.start_conversation(conn)
     correlation_id = uuid.uuid4()
     _seed(conn, conversation_id, correlation_id, [f"message {i}" for i in range(10)])
@@ -74,8 +74,13 @@ def test_limit_is_bounded_and_respected(conn):
     result = retrieval.search(conn, conversation_id, RetrievalRequest(limit=3))
     assert len(result.items) == 3
 
+    # The request contract enforces only the structural positivity invariant.
+    # Query/candidate policy owns performance bounds; a legacy magic maximum does not.
+    request = RetrievalRequest(limit=1000)
+    assert request.limit == 1000
+
     with pytest.raises(Exception):
-        RetrievalRequest(limit=1000)
+        RetrievalRequest(limit=0)
 
 
 def test_retrieval_items_include_source_event_id(conn):
