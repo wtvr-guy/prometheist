@@ -9,6 +9,7 @@ associations, PostgreSQL FTS, or future retrieval mechanisms.
 from __future__ import annotations
 
 from dataclasses import asdict
+from datetime import datetime
 import uuid
 
 import psycopg
@@ -51,6 +52,7 @@ def build_memory_need(
     *,
     supplemental_query_texts: list[str] | None = None,
     entities: list[str] | None = None,
+    reference_time: datetime | None = None,
     conversation_id: uuid.UUID | None = None,
     limit: int = 5,
 ) -> MemoryNeed:
@@ -59,6 +61,7 @@ def build_memory_need(
         query_text=query_text,
         supplemental_query_texts=supplemental_query_texts or [],
         entities=entities or [],
+        reference_time=reference_time,
         conversation_id=conversation_id,
         source_types=list(DEFAULT_EVIDENCE_TYPES),
         limit=limit,
