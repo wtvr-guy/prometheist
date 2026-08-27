@@ -20,6 +20,7 @@ from typing import Any
 
 import httpx
 
+from jit_agent.admission_diagnostics import RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX
 from jit_agent.attention_observation import ResourceSafetyPolicy, SystemHostResourceProbe
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,12 +36,16 @@ def _summary(values: list[float]) -> dict[str, float]:
 
 def measure_resources(samples: int) -> dict[str, Any]:
     probe = SystemHostResourceProbe()
+    capture_started_at = datetime.now(timezone.utc)
     captured = [probe.capture() for _ in range(samples)]
+    capture_completed_at = datetime.now(timezone.utc)
     policy = ResourceSafetyPolicy()
     return {
         "benchmark_id": "RES-NATIVE-001",
         "result": "PILOT_NATIVE_MEASUREMENT",
         "sample_count": samples,
+        "capture_started_at": capture_started_at.isoformat(),
+        "capture_completed_at": capture_completed_at.isoformat(),
         "policy_under_measurement": policy.model_dump(mode="json"),
         "platforms": sorted({item.platform for item in captured}),
         "logical_cpu_counts": sorted({item.logical_cpu_count for item in captured}),
@@ -58,6 +63,19 @@ def measure_resources(samples: int) -> dict[str, Any]:
             "changing or verifying admission margins."
         ),
     }
+
+
+def measure_pre_cap_resources() -> dict[str, Any]:
+    """Capture host pressure immediately before the real capability-loop probe."""
+
+    result = measure_resources(1)
+    result["benchmark_id"] = "RES-PRE-CAP-001"
+    result["decision"] = (
+        "This single immediate sample is ordered after Ollama calibration and directly before "
+        "CAP-LOOP-001. Compare it with RES-NATIVE-001 and the scheduler's structured admission "
+        "diagnostics to detect resident-model memory double counting without changing policy."
+    )
+    return result
 
 
 def measure_ollama(token_caps: tuple[int, ...]) -> dict[str, Any]:
@@ -159,6 +177,21 @@ def measure_worker_runtime() -> dict[str, Any]:
     }
 
 
+def _extract_admission_diagnostics(text: str) -> dict[str, Any] | None:
+    for line in text.splitlines():
+        if RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX not in line:
+            continue
+        raw = line.split(RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX, 1)[1].strip()
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError:
+            return {"parse_error": raw}
+        if isinstance(parsed, dict):
+            return parsed
+        return {"parse_error": raw}
+    return None
+
+
 def measure_capability_loop() -> dict[str, Any]:
     """Collect one real-model recurrent-loop trace without claiming an optimum."""
 
@@ -184,6 +217,7 @@ def measure_capability_loop() -> dict[str, Any]:
     executed = "1 passed" in lowered
     skipped = "1 skipped" in lowered
     round_limit_failure = "capability round limit reached" in lowered
+    admission_diagnostics = _extract_admission_diagnostics(combined)
     return {
         "benchmark_id": "CAP-LOOP-001",
         "result": "PILOT_NATIVE_MEASUREMENT" if executed else "NO_NATIVE_EVIDENCE",
@@ -192,6 +226,7 @@ def measure_capability_loop() -> dict[str, Any]:
         "acceptance_executed": executed,
         "acceptance_skipped": skipped,
         "round_limit_failure_observed": round_limit_failure,
+        "admission_diagnostics": admission_diagnostics,
         "stdout_tail": completed.stdout[-12000:],
         "stderr_tail": completed.stderr[-4000:],
         "decision": (
@@ -251,6 +286,8 @@ def main() -> None:
     if not args.skip_ollama:
         results["LLM-NATIVE-001"] = measure_ollama(token_caps)
     if not args.skip_capability_loop:
+        if not args.skip_resources:
+            results["RES-PRE-CAP-001"] = measure_pre_cap_resources()
         results["CAP-LOOP-001"] = measure_capability_loop()
 
     complete, failures = _requested_measurements_complete(results)
