@@ -68,11 +68,18 @@ def _strip_thinking(text: str) -> str:
     return stripped
 
 
+def _is_qwen3_instruct(model: str) -> bool:
+    """Return whether Ollama is serving a dedicated non-thinking Qwen3 instruct model."""
+
+    leaf = model.rsplit("/", 1)[-1].strip().casefold()
+    return leaf.startswith("qwen3") and "instruct" in leaf
+
+
 def _uses_qwen3_soft_switch(model: str) -> bool:
     """Return whether a hybrid Qwen3 model may need the legacy /no_think hint."""
 
     leaf = model.rsplit("/", 1)[-1].strip().casefold()
-    return leaf.startswith("qwen3") and "instruct" not in leaf
+    return leaf.startswith("qwen3") and not _is_qwen3_instruct(model)
 
 
 def _nonthinking_user_input(model: str, user: str) -> str:
@@ -385,22 +392,27 @@ class OllamaClient:
         max_tokens: int,
     ) -> str:
         t0 = time.monotonic()
+        request_json: dict[str, Any] = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system},
+                {
+                    "role": "user",
+                    "content": _nonthinking_user_input(self.model, user),
+                },
+            ],
+            "format": schema,
+            "stream": False,
+            "options": {"num_predict": max_tokens, "temperature": 0},
+        }
+        # Dedicated Qwen3 Instruct 2507 models are intrinsically non-thinking.
+        # Omitting Ollama's think control lets its instruct parser route generated
+        # tokens directly to message.content instead of a reasoning channel.
+        if not _is_qwen3_instruct(self.model):
+            request_json["think"] = False
         response = self._client.post(
             "/api/chat",
-            json={
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": system},
-                    {
-                        "role": "user",
-                        "content": _nonthinking_user_input(self.model, user),
-                    },
-                ],
-                "format": schema,
-                "think": False,
-                "stream": False,
-                "options": {"num_predict": max_tokens, "temperature": 0},
-            },
+            json=request_json,
         )
         response.raise_for_status()
         body = response.json()
