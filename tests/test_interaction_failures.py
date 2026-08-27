@@ -8,6 +8,8 @@ from jit_agent.attention_observation import HostResourceMetrics
 from jit_agent.capability_registry import CapabilityDescriptor
 from jit_agent.interaction_policy import (
     INTERACTION_STAGES,
+    CapabilityResultSummary,
+    InteractionAction,
     InteractionDecision,
     InteractionStage,
 )
@@ -15,12 +17,7 @@ from jit_agent.interaction_runtime import (
     begin_interaction,
     execute_next_interaction_step,
 )
-from jit_agent.models import (
-    EventType,
-    MemoryNeedDecision,
-    MemoryPacket,
-    MemoryRetrievalScope,
-)
+from jit_agent.models import EventType, MemoryPacket
 
 
 NOW = datetime(2026, 8, 26, 21, 0, tzinfo=timezone.utc)
@@ -44,24 +41,16 @@ class DirectLLM:
         prompt: str,
         memory_packet: MemoryPacket,
         capability_catalog: tuple[CapabilityDescriptor, ...],
+        completed_results: tuple[CapabilityResultSummary, ...] = (),
     ) -> InteractionDecision:
-        del prompt, memory_packet, capability_catalog
-        return InteractionDecision(capability_indices=[])
+        del prompt, memory_packet, capability_catalog, completed_results
+        return InteractionDecision(
+            next_action=InteractionAction.RESPOND,
+            capability_indices=[],
+        )
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
         return "completed response"
-
-    def plan_memory(
-        self,
-        task: str,
-        *,
-        active_state_available: bool,
-    ) -> MemoryNeedDecision:
-        del task, active_state_available
-        return MemoryNeedDecision(
-            scope=MemoryRetrievalScope.HISTORY_ONLY,
-            anchor_indices=[0],
-        )
 
 
 @pytest.fixture
