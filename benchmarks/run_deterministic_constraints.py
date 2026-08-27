@@ -7,7 +7,6 @@ unique/non-arbitrary production setting.
 """
 from __future__ import annotations
 
-from dataclasses import asdict
 from datetime import datetime
 import json
 from pathlib import Path
@@ -188,9 +187,7 @@ def _evaluate_graph_policy(max_hops: int, decay: float) -> dict[str, Any]:
 
 
 def run_memory_graph() -> dict[str, Any]:
-    # Hop depth is exhaustively extended through the largest frozen event graph.
     max_graph_depth = max(len(_frozen_corpus(name).events) for name in ALL_CORPORA)
-    # Decay is continuous; these values deliberately span strong attenuation to no attenuation.
     decay_values = (0.25, 0.50, 0.75, 0.85, 0.90, 1.0)
     evaluations = [
         _evaluate_graph_policy(hops, decay)
@@ -284,7 +281,6 @@ def run_capability_discovery() -> dict[str, Any]:
         if not ids or ids[0] != expected:
             hard_failures.append({"query": query, "expected": expected, "ranked": ids})
 
-    # Verify the benchmark-local parameterization exactly mirrors production ordering.
     baseline_coefficients = (8.0, 3.0, 0.25, 1.5, 0.15)
     for case in production:
         query = case["query"]
@@ -340,9 +336,6 @@ def run_capability_discovery() -> dict[str, Any]:
 
 
 def run_scheduler_service() -> dict[str, Any]:
-    # The scheduler's service guarantee is a deterministic threshold transform.
-    # This experiment verifies threshold semantics and asks whether the current
-    # wait vector can be distinguished from scaled vectors absent an external SLA.
     current = {
         "INTERACTIVE": 1,
         "USER_WORK": 4,
@@ -357,8 +350,6 @@ def run_scheduler_service() -> dict[str, Any]:
         "double": {key: value * 2 for key, value in current.items()},
         "quadruple": {key: value * 4 for key, value in current.items()},
     }
-    # All candidates preserve monotonic service-class ordering, which is the only
-    # invariant derivable without specifying workload arrival distributions/SLA.
     valid = {
         name: (
             vector["INTERACTIVE"] <= vector["USER_WORK"] <= vector["SUPPORT"]
