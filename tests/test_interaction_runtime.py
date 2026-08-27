@@ -63,8 +63,15 @@ class FakeLLM:
         memory_packet: MemoryPacket,
         capability_catalog: tuple[CapabilityDescriptor, ...],
         completed_results=(),
+        capability_results=(),
     ) -> InteractionDecision:
-        del prompt, memory_packet, capability_catalog, completed_results
+        del (
+            prompt,
+            memory_packet,
+            capability_catalog,
+            completed_results,
+            capability_results,
+        )
         return InteractionDecision(
             next_action=InteractionAction.RESPOND,
             capability_indices=[],
@@ -145,6 +152,7 @@ def test_end_to_end_interaction_uses_only_durable_task_neutral_workers(conn):
         "next_action": "RESPOND",
         "capability_indices": [],
     }
+    assert round_event.payload["round"]["capability_results"] == []
     response_event = next(
         event for event in events if event.event_type is EventType.INTERACTION_RESPONSE
     )
@@ -257,6 +265,7 @@ def test_selected_deeper_research_gets_fresh_second_decision_before_final_respon
         def __init__(self):
             self.classify_calls = 0
             self.respond_calls = 0
+            self.routing_capability_results = []
 
         def classify(
             self,
@@ -264,9 +273,11 @@ def test_selected_deeper_research_gets_fresh_second_decision_before_final_respon
             memory_packet: MemoryPacket,
             capability_catalog: tuple[CapabilityDescriptor, ...],
             completed_results=(),
+            capability_results=(),
         ) -> InteractionDecision:
             del prompt, memory_packet, completed_results
             self.classify_calls += 1
+            self.routing_capability_results.append(tuple(capability_results))
             if self.classify_calls == 1:
                 index = next(
                     index
@@ -320,12 +331,19 @@ def test_selected_deeper_research_gets_fresh_second_decision_before_final_respon
     assert token in response
     assert llm.classify_calls == 2
     assert llm.respond_calls == 1
+    assert llm.routing_capability_results[0] == ()
+    assert len(llm.routing_capability_results[1]) == 1
+    assert llm.routing_capability_results[1][0]["capability_id"] == "deeper_research"
+    assert "result_data" in llm.routing_capability_results[1][0]
     execute_id = deterministic_worker_step_id(
         interaction.assignment_id,
         InteractionStage.EXECUTE_CAPABILITY.value,
     )
     execution = load_worker_result(conn, execute_id)
     assert len(execution.output["rounds"]) == 2
+    assert execution.output["rounds"][1]["capability_results"][0][
+        "capability_id"
+    ] == "deeper_research"
     assert [item["capability_id"] for item in execution.output["executions"]] == [
         "deeper_research"
     ]
