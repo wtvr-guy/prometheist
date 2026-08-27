@@ -55,7 +55,8 @@ class FakeLLM:
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
         if memory_packet and memory_packet.items:
             match = re.search(r"[0-9a-f]{10}", memory_packet.items[0].content)
-            return f"You asked me to remember {match.group(0)}."
+            if match:
+                return f"You asked me to remember {match.group(0)}."
         return "Got it."
 
     def plan_memory(self, task: str) -> MemoryNeedDecision:
@@ -76,16 +77,13 @@ def _kwargs():
     return {"probe": FixedProbe(), "clock": lambda: NOW}
 
 
-def test_reference_policy_is_reusable_and_does_not_claim_general_coreference():
-    assert requires_persisted_context("What did we just rule out?") is True
-    assert requires_persisted_context("Use that approach.") is True
-    assert requires_persisted_context(
-        "Compare caching and recomputation; which of those approaches is safer?"
-    ) is False
+def test_phrase_based_reference_detector_is_deprecated_and_disabled():
+    assert requires_persisted_context("What did we just rule out?") is False
+    assert requires_persisted_context("Use that approach.") is False
     assert requires_persisted_context("Tell me about PostgreSQL.") is False
 
 
-def test_reference_policy_preserves_canonical_memory_capability_input():
+def test_working_state_continuity_policy_preserves_memory_capability_input():
     decision = InteractionDecision(
         action=InteractionAction.REQUEST_CAPABILITY,
         capability_query="internal_memory",
@@ -93,9 +91,9 @@ def test_reference_policy_preserves_canonical_memory_capability_input():
     )
 
     adjusted, applied_policy = apply_continuity_policy(
-        "What number did I ask you to remember, as we just discussed?",
+        "arbitrary wording",
         decision,
-        ReferenceAnalysis(requires_persisted_context=True),
+        ReferenceAnalysis(working_state_available=True),
     )
 
     assert adjusted == decision
@@ -117,13 +115,52 @@ def test_end_to_end_interaction_uses_only_durable_task_neutral_workers(conn):
     assert [event.event_type for event in events] == [
         EventType.USER_PROMPT,
         EventType.INTERACTION_RESPONSE,
+        EventType.INTERACTION_WORKING_STATE,
     ]
-    assert events[-1].source == "attention_interaction"
+    response_event = next(
+        event for event in events if event.event_type is EventType.INTERACTION_RESPONSE
+    )
+    assert response_event.source == "attention_interaction"
     with conn.cursor() as cur:
         cur.execute("SELECT count(*) FROM attention_worker_results")
         assert cur.fetchone()[0] == len(INTERACTION_STAGES)
         cur.execute("SELECT status FROM attention_tasks")
         assert cur.fetchone()[0] == "COMPLETED"
+
+
+def test_existing_working_state_forces_memory_without_phrase_matching(conn):
+    conversation_id = uuid.uuid4()
+    handle_interaction(conn, FakeLLM(), "hello", conversation_id, **_kwargs())
+
+    interaction = begin_interaction(
+        conn,
+        "entirely arbitrary follow-up wording",
+        conversation_id,
+        **_kwargs(),
+    )
+    execute_next_interaction_step(
+        conn,
+        FakeLLM(),
+        interaction,
+        worker_id="state-resolution-worker",
+        **_kwargs(),
+    )
+    execute_next_interaction_step(
+        conn,
+        FakeLLM(),
+        interaction,
+        worker_id="state-selection-worker",
+        **_kwargs(),
+    )
+
+    classify_id = deterministic_worker_step_id(
+        interaction.assignment_id,
+        InteractionStage.SELECT_CAPABILITY.value,
+    )
+    classified = load_worker_result(conn, classify_id)
+    assert classified.output["continuity_policy"] == CONTINUITY_POLICY_VERSION
+    assert classified.output["decision"]["action"] == InteractionAction.REQUEST_CAPABILITY.value
+    assert classified.output["decision"]["capability_query"] == "internal_memory"
 
 
 def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(conn):
@@ -153,8 +190,6 @@ def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(
     )
     assert first is InteractionStage.RESOLVE_REFERENCES
 
-    # Every following call reconstructs inputs from PostgreSQL and uses a new
-    # worker and stateless LLM object; no Python transcript or coordinator state survives.
     for index in range(1, len(INTERACTION_STAGES)):
         execute_next_interaction_step(
             conn,
@@ -178,15 +213,14 @@ def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(
         InteractionStage.SELECT_CAPABILITY.value,
     )
     classified = load_worker_result(conn, classify_id)
-    assert classified.output["continuity_policy"] == CONTINUITY_POLICY_VERSION
-    assert (
-        classified.output["decision"]["action"]
-        == InteractionAction.REQUEST_CAPABILITY.value
-    )
+    # No phrase heuristic is required: the fresh classifier requested memory itself.
+    assert classified.output["continuity_policy"] is None
+    assert classified.output["decision"]["action"] == InteractionAction.REQUEST_CAPABILITY.value
     events = event_store.get_events_by_conversation(conn, recall_conversation)
     assert EventType.CAPABILITY_REQUEST in [event.event_type for event in events]
     assert EventType.CAPABILITY_PACKET in [event.event_type for event in events]
     assert EventType.CAPABILITY_RESULT in [event.event_type for event in events]
+    assert EventType.INTERACTION_WORKING_STATE in [event.event_type for event in events]
 
 
 def test_selected_memory_analysis_registration_executes_real_profile(conn):
@@ -250,6 +284,7 @@ def test_deterministic_response_event_retry_does_not_duplicate_history(conn):
     assert finish_interaction(conn, interaction, **_kwargs()) == "Got it."
     events = event_store.get_events_by_conversation(conn, conversation_id)
     assert [event.event_type for event in events].count(EventType.INTERACTION_RESPONSE) == 1
+    assert [event.event_type for event in events].count(EventType.INTERACTION_WORKING_STATE) == 1
 
 
 def test_step_publication_repair_is_idempotent(conn):
