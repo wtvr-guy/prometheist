@@ -7,12 +7,22 @@ def _load_auditor():
     return runpy.run_path(str(root / "scripts" / "audit_constraints.py"))
 
 
-def test_every_policy_like_numeric_constraint_is_registered():
+def test_every_behavioral_numeric_constraint_is_registered_and_classified():
     auditor = _load_auditor()
     findings = auditor["discover_python_constraints"]()
     registry = auditor["load_registry"]()
     uncovered = auditor["uncovered_findings"](findings, registry)
-    assert not uncovered, "Unregistered behavioral constraints:\n" + "\n".join(
-        f"- {item.key} value={item.value!r} line={item.line} role={item.role} :: {item.source}"
+    stale = auditor["stale_registry_keys"](findings, registry)
+    errors = auditor["registry_errors"](registry)
+
+    messages = []
+    messages.extend(
+        f"UNREGISTERED {item.key} value={item.value!r} line={item.line} "
+        f"role={item.role} :: {item.source}"
         for item in uncovered
+    )
+    messages.extend(f"STALE {key}" for key in stale)
+    messages.extend(f"INVALID {error}" for error in errors)
+    assert not messages, "Constraint governance violations:\n" + "\n".join(
+        f"- {message}" for message in messages
     )
