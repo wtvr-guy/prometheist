@@ -9,6 +9,7 @@ from jit_agent.capability_registry import (
     CapabilityMatch,
     CapabilityNeed,
     CapabilityPacket,
+    deterministic_capability_request_id,
 )
 from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
 
@@ -27,7 +28,7 @@ def test_persisted_memory_capabilities_are_not_walled_by_conversation(
     memory_request_id = uuid.uuid4()
     task_id = uuid.uuid4()
     step_id = uuid.uuid4()
-    capability_request_id = uuid.uuid4()
+    capability_request_id = deterministic_capability_request_id(step_id)
     registration = DEFAULT_REGISTRY.get(capability_id)
     discovery_packet = CapabilityPacket(
         capability_request_id=capability_request_id,
