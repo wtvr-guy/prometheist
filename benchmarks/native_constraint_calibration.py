@@ -158,6 +158,9 @@ def measure_worker_runtime() -> dict[str, Any]:
         "tests/test_v07_increment_h.py",
         "tests/test_worker_protocol.py::test_forced_process_loss_recovers_same_step_from_postgres",
         "tests/test_cli.py",
+        "tests/test_cli_admission_diagnostics.py",
+        "tests/test_admission_diagnostics.py",
+        "tests/test_native_constraint_calibration.py",
         "tests/test_interaction_runtime.py",
     ]
     started = time.monotonic()
