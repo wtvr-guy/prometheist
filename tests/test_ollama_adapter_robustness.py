@@ -84,7 +84,7 @@ def test_qwen3_structured_call_appends_latest_no_think_soft_switch():
     assert fake.calls[0][1]["messages"][1]["content"].endswith("/no_think")
 
 
-def test_qwen3_instruct_call_does_not_append_hybrid_no_think_soft_switch():
+def test_qwen3_instruct_call_omits_thinking_controls():
     client = OllamaClient(
         base_url="http://ollama.test",
         model="qwen3:4b-instruct-2507-q4_K_M",
@@ -95,7 +95,9 @@ def test_qwen3_instruct_call_does_not_append_hybrid_no_think_soft_switch():
     decision = client.classify("Answer from established memory.", _packet(), _catalog())
 
     assert decision.next_action is InteractionAction.RESPOND
-    user_content = fake.calls[0][1]["messages"][1]["content"]
+    request = fake.calls[0][1]
+    assert "think" not in request
+    user_content = request["messages"][1]["content"]
     assert not user_content.endswith("/no_think")
     assert "/no_think" not in user_content
 
