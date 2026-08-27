@@ -21,9 +21,16 @@ class Planner:
     def __init__(self, scope: MemoryRetrievalScope = MemoryRetrievalScope.ACTIVE_AND_HISTORY) -> None:
         self.scope = scope
         self.inputs: list[str] = []
+        self.active_state_flags: list[bool] = []
 
-    def plan_memory(self, task: str) -> MemoryNeedDecision:
+    def plan_memory(
+        self,
+        task: str,
+        *,
+        active_state_available: bool,
+    ) -> MemoryNeedDecision:
         self.inputs.append(task)
+        self.active_state_flags.append(active_state_available)
         if self.scope is MemoryRetrievalScope.ACTIVE_ONLY:
             return MemoryNeedDecision(scope=self.scope, anchor_indices=[])
 
@@ -135,6 +142,7 @@ def test_internal_memory_uses_active_context_and_index_only_memory_routing(monke
     captured, planner, state_event_id, conversation_id, correlation_id = _execute(monkeypatch)
 
     assert len(planner.inputs) == 1
+    assert planner.active_state_flags == [True]
     planner_input = planner.inputs[0]
     assert "[Current task]" in planner_input
     assert "[Active canonical context]" in planner_input
@@ -154,11 +162,12 @@ def test_internal_memory_uses_active_context_and_index_only_memory_routing(monke
 
 
 def test_active_only_scope_disables_long_term_search_without_phrase_policy(monkeypatch):
-    captured, _, state_event_id, _, _ = _execute(
+    captured, planner, state_event_id, _, _ = _execute(
         monkeypatch,
         scope=MemoryRetrievalScope.ACTIVE_ONLY,
     )
 
+    assert planner.active_state_flags == [True]
     need = captured["need"]
     assert need.active_event_ids == [state_event_id]
     assert need.include_persisted_history is False
@@ -168,6 +177,7 @@ def test_active_only_scope_disables_long_term_search_without_phrase_policy(monke
 def test_memory_analysis_uses_same_index_only_memory_boundary(monkeypatch):
     captured, planner, state_event_id, _, _ = _execute(monkeypatch, "memory_analysis")
 
+    assert planner.active_state_flags == [True]
     assert "[Anchor catalog]" in planner.inputs[0]
     need = captured["need"]
     assert need.active_event_ids == [state_event_id]
