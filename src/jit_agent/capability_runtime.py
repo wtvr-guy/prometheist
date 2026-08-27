@@ -174,6 +174,7 @@ def execute_registered_capability(
             *[item.source_event_id for item in packet.items],
             prompt_event_id,
         ],
+        activation_key="memory",
     )
 
     execution = CapabilityExecution(
