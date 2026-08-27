@@ -44,6 +44,7 @@ def build_memory_need(
     supplemental_query_texts: list[str] | None = None,
     entities: list[str] | None = None,
     active_event_ids: list[uuid.UUID] | None = None,
+    include_persisted_history: bool = True,
     reference_time: datetime | None = None,
     conversation_id: uuid.UUID | None = None,
     limit: int = 5,
@@ -53,6 +54,7 @@ def build_memory_need(
         supplemental_query_texts=supplemental_query_texts or [],
         entities=entities or [],
         active_event_ids=active_event_ids or [],
+        include_persisted_history=include_persisted_history,
         reference_time=reference_time,
         conversation_id=conversation_id,
         source_types=list(DEFAULT_EVIDENCE_TYPES),
@@ -244,13 +246,14 @@ def _recall_for_query(
     query_text: str | None,
     before_global_seq: int | None,
 ):
+    recall_limit = min(20, need.limit + len(need.active_event_ids))
     cue = CueState(
         query_text=query_text,
         entities=tuple(need.entities),
         reference_time=need.reference_time,
         conversation_id=str(need.conversation_id) if need.conversation_id else None,
         source_types=tuple(item.value for item in _effective_source_types(need)),
-        limit=need.limit,
+        limit=recall_limit,
         minimum_score=MINIMUM_SCORE,
     )
     return postgres_memory_kernel.associative_recall_from_postgres(
@@ -261,6 +264,64 @@ def _recall_for_query(
         association_limit=ASSOCIATION_LIMIT,
         max_hops=MAX_HOPS,
         decay=ASSOCIATION_DECAY,
+    )
+
+
+def _compose_evidence(
+    active: list[MemoryEvidence],
+    historical: list[MemoryEvidence],
+    *,
+    limit: int,
+) -> list[MemoryEvidence]:
+    """Bound both evidence classes without allowing either to starve the other."""
+
+    if not active:
+        return historical[:limit]
+    if not historical:
+        return active[:limit]
+
+    history_budget = max(1, (limit + 1) // 2)
+    active_budget = max(1, limit - history_budget)
+    merged: list[MemoryEvidence] = []
+    seen: set[uuid.UUID] = set()
+
+    def append(items: list[MemoryEvidence], count: int) -> None:
+        added = 0
+        for item in items:
+            if item.source_event_id in seen:
+                continue
+            seen.add(item.source_event_id)
+            merged.append(item)
+            added += 1
+            if added == count or len(merged) == limit:
+                break
+
+    append(historical, history_budget)
+    append(active, active_budget)
+    if len(merged) < limit:
+        append(historical, limit - len(merged))
+    if len(merged) < limit:
+        append(active, limit - len(merged))
+    return merged[:limit]
+
+
+def _persist_packet(
+    conn: psycopg.Connection,
+    *,
+    conversation_id: uuid.UUID,
+    correlation_id: uuid.UUID,
+    requesting_component: str,
+    memory_request_id: uuid.UUID,
+    packet: MemoryPacket,
+) -> None:
+    event_store.record_event(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        event_type=EventType.MEMORY_PACKET,
+        source=SOURCE,
+        payload={"requesting_component": requesting_component, "packet": packet.model_dump(mode="json")},
+        event_id=uuid.uuid5(memory_request_id, "memory-packet-event"),
     )
 
 
@@ -298,8 +359,31 @@ def request_memory(
         effective_need,
         before_global_seq=before_global_seq,
     )
-    _ensure_projection_fresh(conn, before_global_seq=before_global_seq)
 
+    if not effective_need.include_persisted_history:
+        packet = MemoryPacket(
+            memory_request_id=memory_request_id,
+            need=effective_need,
+            supported=bool(active_evidence),
+            items=active_evidence[: effective_need.limit],
+            retrieval_trace={
+                "kernel": None,
+                "query_strategy": "working_state_only",
+                "working_state_event_ids": [str(item.source_event_id) for item in active_evidence],
+                "query_attempts": [],
+            },
+        )
+        _persist_packet(
+            conn,
+            conversation_id=conversation_id,
+            correlation_id=correlation_id,
+            requesting_component=requesting_component,
+            memory_request_id=memory_request_id,
+            packet=packet,
+        )
+        return packet
+
+    _ensure_projection_fresh(conn, before_global_seq=before_global_seq)
     attempts: list[dict[str, object]] = []
     selected_kernel_packet = None
     selected_role: str | None = None
@@ -329,15 +413,15 @@ def request_memory(
 
     assert selected_kernel_packet is not None
     kernel_result = _packet_from_kernel(memory_request_id, effective_need, selected_kernel_packet)
-    merged: list[MemoryEvidence] = []
-    seen: set[uuid.UUID] = set()
-    for item in [*active_evidence, *kernel_result.items]:
-        if item.source_event_id in seen:
-            continue
-        seen.add(item.source_event_id)
-        merged.append(item)
-        if len(merged) == effective_need.limit:
-            break
+    active_ids = {item.source_event_id for item in active_evidence}
+    historical_evidence = [
+        item for item in kernel_result.items if item.source_event_id not in active_ids
+    ]
+    merged = _compose_evidence(
+        active_evidence,
+        historical_evidence,
+        limit=effective_need.limit,
+    )
 
     packet = kernel_result.model_copy(
         update={
@@ -345,7 +429,7 @@ def request_memory(
             "items": merged,
             "retrieval_trace": {
                 **kernel_result.retrieval_trace,
-                "query_strategy": "working_state_then_canonical_then_supplemental_on_empty",
+                "query_strategy": "working_state_plus_history",
                 "working_state_event_ids": [str(item.source_event_id) for item in active_evidence],
                 "selected_query_role": selected_role,
                 "selected_query_text": selected_query_text,
@@ -354,13 +438,12 @@ def request_memory(
         }
     )
 
-    event_store.record_event(
+    _persist_packet(
         conn,
         conversation_id=conversation_id,
         correlation_id=correlation_id,
-        event_type=EventType.MEMORY_PACKET,
-        source=SOURCE,
-        payload={"requesting_component": requesting_component, "packet": packet.model_dump(mode="json")},
-        event_id=uuid.uuid5(memory_request_id, "memory-packet-event"),
+        requesting_component=requesting_component,
+        memory_request_id=memory_request_id,
+        packet=packet,
     )
     return packet
