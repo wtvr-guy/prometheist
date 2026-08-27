@@ -449,41 +449,53 @@ def associative_recall_from_postgres(
     association_limit: int = 250,
     max_hops: int = 2,
     decay: float = 0.85,
+    seed_event_ids: tuple[str, ...] = (),
 ) -> AssociativeMemoryPacket:
     """Indexed recall plus bounded traversal of persisted association routes.
 
-    The candidate router supplies a bounded direct-candidate union. Only direct
-    candidates that clear the kernel's minimum score become event-node sources
-    for association expansion. Query/entity terms are the other source nodes.
-    Reachable association targets are then fetched as canonical events and the
-    pure associative kernel performs final deterministic ranking.
+    The candidate router supplies a bounded direct-candidate union. Direct
+    candidates that clear the kernel minimum score become event-node sources;
+    application-owned ``seed_event_ids`` are also first-class event-node sources
+    even when their lexical score is low. Query/entity terms are the other source
+    nodes. Reachable association targets are then fetched as canonical events and
+    the pure associative kernel performs final deterministic ranking.
 
-    The global-sequence boundary applies to both direct candidates and every
-    EVENT endpoint reached through the association projection. A full-history
-    projection must never reveal evidence newer than the caller's cutoff.
+    The global-sequence boundary applies to direct candidates, explicit seeds,
+    and every EVENT endpoint reached through the association projection. A
+    full-history projection must never reveal evidence newer than the caller's
+    cutoff.
     """
     if candidate_limit < cue.limit:
         raise ValueError("candidate_limit must be >= cue.limit")
 
+    normalized_seed_ids = tuple(
+        dict.fromkeys(value.strip() for value in seed_event_ids if value.strip())
+    )
+    seed_uuid_ids = [uuid.UUID(value) for value in normalized_seed_ids]
     candidate_ids = _candidate_event_ids(
         conn,
         cue,
         before_global_seq=before_global_seq,
         candidate_limit=candidate_limit,
     )
+    all_direct_ids = list(dict.fromkeys([*candidate_ids, *seed_uuid_ids]))
     candidates = _load_events_by_ids(
         conn,
-        candidate_ids,
+        all_direct_ids,
         before_global_seq=before_global_seq,
     )
+    loaded_seed_ids = {event.event_id for event in candidates} & set(normalized_seed_ids)
+    if loaded_seed_ids != set(normalized_seed_ids):
+        raise ValueError("seed_event_ids must reference canonical events before the recall boundary")
 
     allowed_types = set(cue.source_types)
-    directly_activated_ids = [
+    directly_activated_ids = {
         event.event_id
         for event in candidates
         if (not allowed_types or event.event_type in allowed_types)
         and score_event(event, cue).total >= cue.minimum_score
-    ]
+    }
+    directly_activated_ids.update(normalized_seed_ids)
     ignored = {
         token
         for value in cue.ignored_terms
@@ -502,7 +514,7 @@ def associative_recall_from_postgres(
     associations = load_reachable_associations(
         conn,
         cue_terms=cue_terms,
-        source_event_ids=directly_activated_ids,
+        source_event_ids=sorted(directly_activated_ids),
         before_global_seq=before_global_seq,
         max_hops=max_hops,
         association_limit=association_limit,
@@ -532,4 +544,5 @@ def associative_recall_from_postgres(
         associations,
         max_hops=max_hops,
         decay=decay,
+        seed_event_ids=normalized_seed_ids,
     )
