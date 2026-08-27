@@ -13,15 +13,16 @@ from jit_agent.models import (
 )
 
 
-def test_interaction_decision_schema_contains_only_categorical_capability_requirement():
+def test_interaction_decision_schema_contains_only_post_aperture_capability_enum():
     schema = InteractionDecision.model_json_schema()
 
     assert set(schema["properties"]) == {"required_capability"}
+    assert {value.value for value in CapabilityRequirement} == {"NONE", "MEMORY_ANALYSIS"}
     decision = InteractionDecision(
-        required_capability=CapabilityRequirement.INTERNAL_MEMORY
+        required_capability=CapabilityRequirement.MEMORY_ANALYSIS
     )
     assert decision.action is InteractionAction.REQUEST_CAPABILITY
-    assert decision.capability_id == "internal_memory"
+    assert decision.capability_id == "memory_analysis"
 
 
 def test_direct_interaction_decision_is_enum_only():
@@ -37,7 +38,7 @@ def test_interaction_decision_rejects_stray_natural_language_fields(field):
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         InteractionDecision.model_validate(
             {
-                "required_capability": "INTERNAL_MEMORY",
+                "required_capability": "MEMORY_ANALYSIS",
                 field: "free-form model text",
             }
         )
