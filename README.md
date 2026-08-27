@@ -22,7 +22,7 @@ v0.6 proved that separate fresh LLM-backed components can obtain persistent inte
 
 The Primary Agent/specialist structure used to prove that result is **superseded architecture**. v0.7 removes that execution path after reproducing its useful continuity baseline through durable task-neutral workers. Historical event names and documentation remain readable as evidence; they are not current executive architecture.
 
-### v0.7 — release candidate: durable JIT Attention Fabric + WorkingState + default memory context
+### v0.7 — release candidate: durable JIT Attention Fabric + WorkingState + recurrent bounded cognition
 
 v0.7 establishes deterministic durable task scheduling, structured priority metadata, service guarantees, interruption policies, dependency gating, resumable PostgreSQL state, live CPU/RAM discovery, conservative observed-capacity snapshots, configured safe headroom, quantitative resource admission/reservations, a default single local-LLM slot, atomic durable scheduling epochs and assignment sets, contention-driven multi-assignment preemption, and a durable claim/lease/checkpoint/result protocol for disposable workers.
 
@@ -34,21 +34,34 @@ Native release-candidate testing exposed several important negative results.
 
 First, natural continuity was becoming dependent on a growing application-owned vocabulary of entity/recency/reference phrases. That approach is deprecated. v0.7 now maintains a minimal durable `InteractionWorkingState` containing only bounded canonical active-event IDs.
 
-Second, asking a fresh stateless model whether it needed unseen persistent memory proved circular: the evidence required to make that decision may itself be in memory. The live path therefore supplies a small, bounded, provenance-bearing JIT Memory packet for every percept **before** model capability selection. This default memory activation combines active WorkingState with high-recall deterministic candidate activation.
+Second, asking a fresh stateless model whether it needed unseen persistent memory proved circular: the evidence required to make that decision may itself be in memory. The live path therefore supplies a small, bounded, provenance-bearing JIT Memory packet for every percept **before** model capability selection. This default activation intentionally casts a wide deterministic net while exposing only a small packet.
 
-Third, once the model can select several optional capabilities, the returned list cannot safely become an execution schedule. The model now selects only a bounded set of application-owned capability indices. Prometheist expands declared dependencies and deterministically orders them by topological constraints, execution priority, and canonical capability ID.
+Third, once the model can select several optional capabilities, the returned list cannot safely become an execution schedule. The model selects a bounded set of application-owned capability indices. Prometheist expands declared dependencies and deterministically chooses the highest-priority currently runnable item, recomputing readiness after each completion. Canonical capability ID is the stable tie-breaker.
 
-Fourth, capabilities no longer generate intermediate prose in the live path. They return structured evidence/state whenever possible; one fresh final response worker is summoned only after all planned capabilities have durable terminal results.
+Fourth, one capability pass followed inevitably by a response proved too shallow. Routing is now a bounded recurrent loop of **fresh stateless model calls**. Each routing call explicitly chooses either `RESPOND` or `USE_CAPABILITIES`. If it selects capabilities, that model call ends; Prometheist runs the required work, persists structured results, rebuilds bounded context, and invokes a new stateless selector. The loop fails closed if it reaches its deterministic round bound without an explicit `RESPOND`.
 
-If the initial memory context is insufficient, the model can select `deeper_research`, whose public meaning is: **investigate the current question further using additional persisted internal evidence when the initially supplied context is insufficient.** The capability name and description use task semantics rather than the internal attention-aperture metaphor.
+Fifth, capabilities no longer generate intermediate prose in the live path. They return structured evidence/state whenever possible. Only after a fresh selector explicitly chooses `RESPOND` is a new final response worker summoned to produce user-facing language.
 
-The default activation boundary and conservative evidence boundary are intentionally different. Default activation means “potentially relevant enough to keep available now”; ordinary JIT Memory evidence admission retains stricter support/abstention semantics.
+Persistent-memory investigation is progressive:
+
+- **automatic activation** is broad and shallow on every percept;
+- **`deeper_research`** selects 1–4 current canonical memory candidates and broadens association traversal around them;
+- **`cross_reference`** selects 2–4 candidates and jointly searches for shared, conflicting, causal, or bridging evidence;
+- **`focused_recall`** becomes available after broader research and selects exactly one candidate for the deepest bounded association traversal.
+
+As candidate focus narrows, associative depth increases. Evidence-admission thresholds remain conservative and unchanged: increased attention does not promote retrieved material to truth.
+
+A failed focused search does not force a response. The next fresh selector may respond with what it has, investigate a different candidate, broaden again, cross-reference another set, or use another installed capability.
+
+Transient host-pressure claim denials are also treated as **delay/re-observe conditions**, not reasons to weaken safety policy. The guarded launcher retries a small bounded number of fresh resource observations while preserving the exact configured RAM/CPU thresholds and headroom. Structural denials remain terminal.
 
 > **Working-state invariant:** current cognitive activation belongs to Prometheist itself. It is not reconstructed by an ever-growing regex vocabulary and is not stored in an LLM context window.
 
 > **Memory-access invariant:** basic access to Prometheist's own persistent memory is cognitive substrate, not an optional model-selected capability.
 
-> **Capability invariant:** models select required capabilities; Prometheist owns dependencies, execution order, resource policy, and final-response readiness.
+> **Capability invariant:** models select required capabilities; Prometheist owns dependencies, execution order, resource policy, and capability availability.
+
+> **Routing invariant:** every optional-capability round ends in a new stateless decision. Only an explicit `RESPOND` permits final language generation.
 
 > **Model-output invariant:** model-generated natural language is the representation of last resort. Control/state schemas prefer enums, booleans, application-owned IDs, bounded indices, and mechanically verified selections. Free-form model language is reserved for boundaries where language is genuinely the product.
 
@@ -74,37 +87,43 @@ external world / users / devices / software
                   |
                   v
        DEFAULT MEMORY ACTIVATION
-   bounded deterministic JIT activation
+      wide/shallow bounded recall
                   |
                   v
-       fresh stateless capability choice
-     [] or bounded capability indices
+      fresh stateless routing call
+       RESPOND | USE_CAPABILITIES
                   |
+        USE_CAPABILITIES selected
                   v
       SYSTEM-OWNED EXECUTION PLAN
  dependencies + priority + resources
                   |
                   v
       structured capability results
-       deeper_research / code / web / ...
-                  |
-        all required results ready
-                  |
-                  v
-      fresh stateless final response
+ deeper_research / cross_reference /
+ focused_recall / code / web / ...
                   |
                   v
-          results + observations
+       recomposed bounded context
                   |
-                  v
-            internal history
-                  |
-             retention / indexes
-                  |
-                  +----------> next cycle
+                  +------> fresh routing call
+                              |
+                       explicit RESPOND
+                              v
+                  fresh final response
+                              |
+                              v
+                  results + observations
+                              |
+                              v
+                       internal history
+                              |
+                       retention / indexes
+                              |
+                              +------> next cycle
 ```
 
-Basic memory activation is part of the cognitive substrate. `deeper_research` is an optional capability because it performs additional investigation over persistent internal evidence. Other installed tools/workflows can be selected alongside it. The model does not determine their execution order.
+Basic memory activation is part of the cognitive substrate. Deeper memory operations are optional capabilities because they perform additional investigation over persistent internal evidence. Other installed tools/workflows can be selected alongside them. The model neither determines their execution order nor keeps a hidden context between rounds.
 
 ## Human-like interaction continuity
 
@@ -139,27 +158,30 @@ WorkingState and memory activation do not replace or summarize source evidence. 
 6. **Working state is distinct from long-term memory.** Active canonical evidence is bounded and durable.
 7. **Default memory activation precedes model routing.** A model is not asked to decide whether unseen memory exists or matters before it has received bounded internal evidence.
 8. **Activation is distinct from evidence sufficiency.** High-recall activation must not silently weaken conservative evidence admission or abstention.
-9. **Capabilities are requirements, not model-authored schedules.** Models select bounded capability indices; Prometheist expands dependencies and owns deterministic execution order.
-10. **Final response is a barriered synthesis.** The response worker is not summoned until all selected capabilities have durable results and the bounded final evidence context is complete.
-11. **Bounded attention.** Prometheist may remember and intend much more than it actively processes at once.
-12. **Natural language is last-resort state/control.** Prefer enums, booleans, IDs, bounded indices, and mechanically verified extractive selections; use generated language when language is the product.
-13. **Model interpretation is advisory where policy must be deterministic.** Models may select among bounded semantic alternatives; deterministic policy owns scheduling, deletion, permissions, evidence boundaries, capability IDs, dependencies, execution ordering, and validation.
-14. **Evidence and provenance survive interpretation changes.** Derived memory and activation are replaceable; retained source evidence remains traceable.
-15. **Unknown facts may remain unknown.** Topical similarity is not evidence.
-16. **Complexity must earn its place.** Freeze a baseline, add one mechanism, rerun the experiment, keep it only if evidence justifies it.
-17. **No vocabulary patchwork.** Natural-language continuity must not depend on an ever-growing list of phrase-specific application rules.
+9. **Memory research narrows candidates while widening associations.** Progressively focused investigation means fewer selected subjects with greater bounded associative depth, not merely a smaller context window.
+10. **Capabilities are requirements, not model-authored schedules.** Models select bounded capability indices; Prometheist expands dependencies and owns deterministic execution order.
+11. **Capability use is recurrent.** After every capability round, a fresh stateless selector reassesses whether to respond or gather more evidence/work.
+12. **Final response requires explicit readiness.** The final prose worker is summoned only after a fresh selector explicitly chooses `RESPOND`.
+13. **Bounded attention.** Prometheist may remember and intend much more than it actively processes at once.
+14. **Natural language is last-resort state/control.** Prefer enums, booleans, IDs, bounded indices, and mechanically verified extractive selections; use generated language when language is the product.
+15. **Model interpretation is advisory where policy must be deterministic.** Models may select among bounded semantic alternatives; deterministic policy owns scheduling, deletion, permissions, evidence boundaries, capability IDs, dependencies, execution ordering, and validation.
+16. **Evidence and provenance survive interpretation changes.** Derived memory and activation are replaceable; retained source evidence remains traceable.
+17. **Unknown facts may remain unknown.** Topical similarity is not evidence.
+18. **Complexity must earn its place.** Freeze a baseline, add one mechanism, rerun the experiment, keep it only if evidence justifies it.
+19. **No vocabulary patchwork.** Natural-language continuity must not depend on an ever-growing list of phrase-specific application rules.
+20. **Transient capacity means wait, not weaken safety.** Resource-pressure denials may trigger bounded re-observation; configured headroom and admission thresholds are not reduced to force progress.
 
 ## Current implementation versus target architecture
 
-Implemented/verified foundations include PostgreSQL authoritative history, deterministic ordering, the Memory Kernel, provenance-bearing `MemoryPacket`s, conservative evidence recall, high-recall default memory activation, deterministic attention/task state, resource admission, durable epoch-wide assignments, contention preemption, task-neutral capability discovery/execution, durable disposable-worker claims/checkpoints/results, guarded interaction workers, bounded active WorkingState, index-only multi-capability selection, deterministic dependency-aware capability execution planning, a response-stage completion barrier, and restart/replay tests.
+Implemented/verified foundations include PostgreSQL authoritative history, deterministic ordering, the Memory Kernel, provenance-bearing `MemoryPacket`s, conservative evidence recall, high-recall default memory activation, deterministic attention/task state, resource admission, durable epoch-wide assignments, contention preemption, task-neutral capability discovery/execution, durable disposable-worker claims/checkpoints/results, guarded interaction workers, bounded active WorkingState, explicit recurrent routing actions, index-only multi-capability selection, deterministic dependency-aware capability ordering, progressive candidate-index memory research, cross-reference and focused recall, a final-response readiness barrier, bounded transient resource re-observation, and restart/replay tests.
 
-The legacy Primary Agent and memory-specialist ownership architecture has been removed. Historical event types remain supported so existing ledgers stay readable. Perception/salience, deterministic external-data retention, harder memory generalization, richer epistemic working state/recurrent inference, broader typed capability-result composition, and the fully integrated cognitive loop remain roadmap work.
+The legacy Primary Agent and memory-specialist ownership architecture has been removed. Historical event types remain supported so existing ledgers stay readable. Perception/salience, deterministic external-data retention, harder memory generalization, richer epistemic working state, broader typed external-capability result composition, and the fully integrated cognitive loop remain roadmap work.
 
 ## Roadmap
 
 The currently published forward path remains:
 
-- **v0.7** — durable resource-aware JIT Attention Fabric + minimal active WorkingState + automatic bounded memory activation + deterministic capability planning;
+- **v0.7** — durable resource-aware JIT Attention Fabric + minimal active WorkingState + automatic bounded memory activation + recurrent deterministic capability execution;
 - **v0.8** — deterministic perception and salience, subject to a post-v0.7 rebaseline against the WorkingState/neuroscience evidence;
 - **v0.9** — deterministic retention and memory admission;
 - **v0.10** — memory generalization and natural topic-resumption failure discovery;
@@ -167,7 +189,7 @@ The currently published forward path remains:
 - **v0.12** — operational hardening and portability;
 - **v1.0** — first complete attention-centric Prometheist cognitive architecture.
 
-The roadmap explicitly requires rebaselining after v0.7 before choosing whether richer epistemic WorkingState/bounded recurrent inference should precede perception/salience. Do not silently combine those mechanisms.
+The roadmap explicitly requires rebaselining after v0.7 before choosing whether richer epistemic WorkingState should precede perception/salience. Do not silently combine those mechanisms.
 
 ## Quick start
 
@@ -214,4 +236,4 @@ Historical evidence:
 - [`docs/milestones/v0.6/README.md`](docs/milestones/v0.6/README.md)
 - [`docs/milestones/v0.5/README.md`](docs/milestones/v0.5/README.md)
 
-Prometheist remains a cognitive-architecture research project. The current objective is not to reproduce biological neuroscience literally, but to test whether selective attention, bounded working state, automatic bounded memory activation, deterministic system mechanics, capability scheduling, and disposable model cognition can provide continuous machine identity without persistent model context.
+Prometheist remains a cognitive-architecture research project. The current objective is not to reproduce biological neuroscience literally, but to test whether selective attention, bounded working state, automatic bounded memory activation, progressive associative focus, deterministic system mechanics, recurrent capability use, and disposable model cognition can provide continuous machine identity without persistent model context.
