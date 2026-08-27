@@ -1,48 +1,45 @@
 import pytest
 
-from tests.test_acceptance_conversation_continuity import (
-    _affirms_docker_compose_conflicts,
-    _affirms_docker_compose_was_ruled_out,
-    _affirms_virtualization_was_disabled,
-)
+from tests.test_acceptance_conversation_continuity import _contains_answer_slots
 
 
 @pytest.mark.parametrize(
-    "answer,expected",
+    "answer,required,expected",
     [
-        ("Docker Compose conflicts with the rule.", True),
-        ("The rule prohibits Docker Compose.", True),
-        ("Native Windows conflicts; Docker Compose does not conflict.", False),
-        ("Docker Compose wasn't ruled out.", False),
-        ("Neither approach conflicts.", False),
+        (
+            "The approach is Docker Compose; it was ruled out because virtualization is disabled.",
+            ("Docker Compose", "virtualization", "disabled"),
+            True,
+        ),
+        (
+            "Because virtualization is disabled, Docker Compose cannot be used.",
+            ("Docker Compose", "virtualization", "disabled"),
+            True,
+        ),
+        (
+            "Docker Compose is the approach.",
+            ("Docker Compose", "virtualization", "disabled"),
+            False,
+        ),
+        (
+            "Virtualization is disabled.",
+            ("Docker Compose", "virtualization", "disabled"),
+            False,
+        ),
     ],
 )
-def test_conflict_assertion_preserves_polarity(answer, expected):
-    assert _affirms_docker_compose_conflicts(answer) is expected
+def test_continuity_oracle_checks_required_slots_without_grammar_rules(
+    answer,
+    required,
+    expected,
+):
+    assert _contains_answer_slots(answer, *required) is expected
 
 
-@pytest.mark.parametrize(
-    "answer,expected",
-    [
-        ("We ruled out Docker Compose.", True),
-        ("The ruled-out approach was Docker Compose.", True),
-        ("We did not rule out Docker Compose.", False),
-        ("We ruled out native Windows, not Docker Compose.", False),
-    ],
-)
-def test_ruled_out_assertion_preserves_polarity(answer, expected):
-    assert _affirms_docker_compose_was_ruled_out(answer) is expected
-
-
-@pytest.mark.parametrize(
-    "answer,expected",
-    [
-        ("Virtualization is disabled.", True),
-        ("Virtualization was disabled, not enabled.", True),
-        ("Virtualization isn't disabled.", False),
-        ("Virtualization is enabled.", False),
-        ("The disabled feature was not virtualization.", False),
-    ],
-)
-def test_reason_assertion_preserves_polarity(answer, expected):
-    assert _affirms_virtualization_was_disabled(answer) is expected
+def test_continuity_oracle_is_case_insensitive_for_semantic_slots():
+    assert _contains_answer_slots(
+        "DOCKER COMPOSE is unavailable because VIRTUALIZATION is DISABLED.",
+        "Docker Compose",
+        "virtualization",
+        "disabled",
+    )
