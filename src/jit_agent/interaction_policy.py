@@ -17,8 +17,9 @@ INTERACTION_CAPABILITIES = (
     "interaction.respond",
     "interaction.persist_result",
 )
-_MAX_SELECTED_CAPABILITIES = 4
-_MAX_CAPABILITY_CATALOG_INDEX = 63
+# This is an empirical convergence guard, not a mathematical invariant. It stays
+# explicit until CAP-LOOP-001 establishes a better bound or a state-based
+# convergence rule can replace it entirely.
 MAX_CAPABILITY_ROUNDS = 4
 
 
@@ -34,26 +35,26 @@ class InteractionDecision(BaseModel):
 
     The model never writes a capability name, query, entity, explanation,
     dependency, or ordering instruction. It receives an application-owned
-    deterministic catalog and emits only one closed action plus bounded integer
-    indices.
+    deterministic catalog and emits only one closed action plus non-negative
+    integer indices.
 
+    The concrete catalog supplied for a call is the authoritative upper bound;
+    there is deliberately no unrelated global index/count ceiling here.
     ``RESPOND`` is explicit and requires no capability indices.
-    ``USE_CAPABILITIES`` requires 1-4 indices. The indices are a requirement set,
-    not an execution order; Prometheist owns dependency expansion and scheduling.
+    ``USE_CAPABILITIES`` requires at least one index. The indices are a
+    requirement set, not an execution order; Prometheist owns dependency
+    expansion and scheduling.
     """
 
     model_config = ConfigDict(extra="forbid")
     next_action: InteractionAction
-    capability_indices: list[int] = Field(
-        default_factory=list,
-        max_length=_MAX_SELECTED_CAPABILITIES,
-    )
+    capability_indices: list[int] = Field(default_factory=list)
 
     @field_validator("capability_indices")
     @classmethod
     def validate_capability_indices(cls, values: list[int]) -> list[int]:
-        if any(index < 0 or index > _MAX_CAPABILITY_CATALOG_INDEX for index in values):
-            raise ValueError("capability_indices must be between 0 and 63")
+        if any(index < 0 for index in values):
+            raise ValueError("capability_indices must be non-negative")
         if len(values) != len(set(values)):
             raise ValueError("capability_indices must not contain duplicates")
         return values
@@ -68,13 +69,12 @@ class InteractionDecision(BaseModel):
 
 
 class CapabilityResultSummary(BaseModel):
-    """Bounded machine-owned result supplied to later fresh routing calls.
+    """Machine-owned result supplied to later fresh routing calls.
 
-    Memory-oriented capabilities communicate their substantive evidence through
-    the accumulated MemoryPacket. ``result_keys`` exposes only the available
-    structured result shape today; ``result_data`` is retained as a bounded
-    application-owned extension point for future non-memory capabilities without
-    introducing intermediate model-authored prose.
+    Memory-oriented capabilities communicate substantive evidence through the
+    accumulated MemoryPacket. ``result_keys`` is mechanically derived from the
+    actual structured result object; it therefore has no independent arbitrary
+    count cap.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -82,7 +82,7 @@ class CapabilityResultSummary(BaseModel):
     capability_id: str = Field(min_length=1)
     supported: bool | None = None
     item_count: int | None = Field(default=None, ge=0)
-    result_keys: list[str] = Field(default_factory=list, max_length=16)
+    result_keys: list[str] = Field(default_factory=list)
     result_data: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("capability_id")
@@ -126,7 +126,7 @@ INTERACTION_STAGES = tuple(InteractionStage)
 
 
 class ReferenceAnalysis(BaseModel):
-    """Bounded durable-state signal retained for stage compatibility.
+    """Durable-state signal retained for stage compatibility.
 
     ``requires_persisted_context`` is retained only so pre-pivot worker payloads
     and tests remain readable. Live phrase detection is disabled; every percept
