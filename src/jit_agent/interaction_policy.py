@@ -78,10 +78,22 @@ INTERACTION_STAGES = tuple(InteractionStage)
 
 
 class ReferenceAnalysis(BaseModel):
-    """State-driven continuity signal produced without linguistic heuristics."""
+    """Continuity signal with a temporary compatibility field.
+
+    ``requires_persisted_context`` is retained only so pre-pivot worker payloads
+    and tests remain readable. Live phrase detection is disabled; new code should
+    set ``working_state_available`` from durable WorkingState instead.
+    """
 
     policy_version: str = CONTINUITY_POLICY_VERSION
-    working_state_available: bool
+    working_state_available: bool = False
+    requires_persisted_context: bool | None = None
+
+    @model_validator(mode="after")
+    def accept_legacy_signal(self) -> "ReferenceAnalysis":
+        if self.requires_persisted_context is not None and not self.working_state_available:
+            self.working_state_available = self.requires_persisted_context
+        return self
 
 
 class DurableInteraction(BaseModel):
@@ -104,17 +116,19 @@ class DurableInteraction(BaseModel):
         return normalized
 
 
+def requires_persisted_context(user_text: str) -> bool:
+    """Deprecated compatibility hook; phrase-based continuity is disabled."""
+
+    del user_text
+    return False
+
+
 def apply_continuity_policy(
     user_text: str,
     decision: InteractionDecision,
     analysis: ReferenceAnalysis,
 ) -> tuple[InteractionDecision, str | None]:
-    """Use durable active state as the continuity signal.
-
-    No phrase list is consulted. Once a situation has active working state, a
-    fresh worker must either use memory or explicitly invoke another requested
-    capability. This makes continuity independent of surface wording.
-    """
+    """Use durable active state rather than surface wording as continuity signal."""
 
     if not analysis.working_state_available:
         return decision, None
