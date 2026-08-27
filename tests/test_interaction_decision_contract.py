@@ -3,6 +3,7 @@ from pydantic import ValidationError
 
 from jit_agent.interaction_policy import InteractionAction, InteractionDecision
 from jit_agent.models import (
+    CrossReferenceCandidateSelection,
     FocusedMemoryCandidateSelection,
     MemoryCandidateSelection,
 )
@@ -93,6 +94,23 @@ def test_deeper_research_selects_only_bounded_packet_candidates():
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         MemoryCandidateSelection.model_validate(
             {"candidate_indices": [0], "query_text": "generated query"}
+        )
+
+
+def test_cross_reference_requires_two_to_four_packet_candidates():
+    schema = CrossReferenceCandidateSelection.model_json_schema()
+    assert set(schema["properties"]) == {"candidate_indices"}
+    selection = CrossReferenceCandidateSelection(candidate_indices=[1, 4, 7])
+    assert selection.model_dump(mode="json") == {"candidate_indices": [1, 4, 7]}
+    with pytest.raises(ValidationError):
+        CrossReferenceCandidateSelection(candidate_indices=[1])
+    with pytest.raises(ValidationError, match="must not contain duplicates"):
+        CrossReferenceCandidateSelection(candidate_indices=[1, 1])
+    with pytest.raises(ValidationError):
+        CrossReferenceCandidateSelection(candidate_indices=[0, 1, 2, 3, 4])
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        CrossReferenceCandidateSelection.model_validate(
+            {"candidate_indices": [0, 1], "relationship": "generated text"}
         )
 
 
