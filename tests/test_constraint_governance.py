@@ -13,6 +13,7 @@ def test_every_behavioral_numeric_constraint_is_registered_and_classified():
     registry = auditor["load_registry"]()
     uncovered = auditor["uncovered_findings"](findings, registry)
     stale = auditor["stale_registry_keys"](findings, registry)
+    mismatches = auditor["value_mismatches"](findings, registry)
     errors = auditor["registry_errors"](registry)
 
     messages = []
@@ -22,6 +23,7 @@ def test_every_behavioral_numeric_constraint_is_registered_and_classified():
         for item in uncovered
     )
     messages.extend(f"STALE {key}" for key in stale)
+    messages.extend(f"MISMATCH {message}" for message in mismatches)
     messages.extend(f"INVALID {error}" for error in errors)
     assert not messages, "Constraint governance violations:\n" + "\n".join(
         f"- {message}" for message in messages
