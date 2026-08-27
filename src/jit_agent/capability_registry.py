@@ -1,4 +1,4 @@
-"""Deterministic, task-neutral discovery of installed executable capabilities.
+"""Deterministic, task-neutral discovery and planning of executable capabilities.
 
 The registry is runtime configuration, not autobiographical memory. Generic
 non-model callers may still use lexical discovery. The live interaction model
@@ -9,6 +9,10 @@ Basic JIT-memory activation is cognitive substrate and is therefore not exposed
 as a post-percept capability. Deeper internal research, tools, workflows, and
 other installed functionality may be exposed as ordinary selectable
 capabilities.
+
+The model selects *which* capabilities are needed. Prometheist owns *how* they
+are ordered. Application-owned dependency metadata is expanded deterministically
+and topologically sorted with stable priority/id tie-breaking before execution.
 """
 from __future__ import annotations
 
@@ -19,15 +23,16 @@ from typing import Literal
 from uuid import UUID, uuid5
 
 import psycopg
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from jit_agent import event_store
 from jit_agent.models import EventType
 
 
-CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v3"
+CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v4"
 SOURCE = "capability_registry"
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
+_MAX_CAPABILITY_EXECUTION_PRIORITY = 10_000
 
 
 class CapabilityKind(str, Enum):
@@ -116,35 +121,87 @@ class CapabilityPacket(BaseModel):
         return self
 
 
+class CapabilityExecutionPlanItem(BaseModel):
+    """One scheduler-owned capability execution requirement."""
+
+    model_config = ConfigDict(extra="forbid")
+    catalog_index: int = Field(ge=0)
+    capability_id: str = Field(min_length=1)
+    execution_priority: int = Field(ge=0, le=_MAX_CAPABILITY_EXECUTION_PRIORITY)
+    depends_on_capability_ids: list[str] = Field(default_factory=list)
+
+
+class CapabilityExecutionPlan(BaseModel):
+    """Deterministic dependency-closed order for one selected capability set."""
+
+    model_config = ConfigDict(extra="forbid")
+    registry_version: str = CAPABILITY_REGISTRY_VERSION
+    requested_catalog_indices: list[int] = Field(default_factory=list)
+    items: list[CapabilityExecutionPlanItem] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_plan(self) -> "CapabilityExecutionPlan":
+        if self.registry_version != CAPABILITY_REGISTRY_VERSION:
+            raise ValueError("capability execution plan uses an unsupported registry version")
+        if len(self.requested_catalog_indices) != len(set(self.requested_catalog_indices)):
+            raise ValueError("requested capability indices must not contain duplicates")
+        ids = [item.capability_id for item in self.items]
+        if len(ids) != len(set(ids)):
+            raise ValueError("capability execution plan must not contain duplicate capabilities")
+        positions = {capability_id: index for index, capability_id in enumerate(ids)}
+        for item in self.items:
+            for dependency in item.depends_on_capability_ids:
+                if dependency not in positions:
+                    raise ValueError("capability execution plan omits a declared dependency")
+                if positions[dependency] >= positions[item.capability_id]:
+                    raise ValueError("capability execution plan violates dependency order")
+        return self
+
+
 @dataclass(frozen=True)
 class RegisteredCapability:
     """Private application-owned registration and executable binding.
 
     ``selectable_after_aperture`` controls whether the capability appears in the
     live routing catalog after the default memory exposure has already occurred.
-    It is application policy, never model output.
+    ``execution_priority`` and ``depends_on_capability_ids`` are scheduler-owned
+    execution policy; they are never model output.
     """
 
     descriptor: CapabilityDescriptor
     routing_terms: tuple[str, ...]
     executor: str
     selectable_after_aperture: bool = True
+    execution_priority: int = 100
+    depends_on_capability_ids: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         normalized_executor = self.executor.strip()
         normalized_terms = tuple(term.strip() for term in self.routing_terms)
+        normalized_dependencies = tuple(
+            dependency.strip() for dependency in self.depends_on_capability_ids
+        )
         if not normalized_executor:
             raise ValueError("capability executor must not be empty")
         if not normalized_terms or any(not term for term in normalized_terms):
             raise ValueError("capability routing terms must not be empty")
         if len(normalized_terms) != len(set(normalized_terms)):
             raise ValueError("capability routing terms must not contain duplicates")
+        if not 0 <= self.execution_priority <= _MAX_CAPABILITY_EXECUTION_PRIORITY:
+            raise ValueError("capability execution_priority is outside the supported range")
+        if any(not dependency for dependency in normalized_dependencies):
+            raise ValueError("capability dependencies must not be empty")
+        if len(normalized_dependencies) != len(set(normalized_dependencies)):
+            raise ValueError("capability dependencies must not contain duplicates")
+        if self.descriptor.capability_id in normalized_dependencies:
+            raise ValueError("capability must not depend on itself")
         object.__setattr__(self, "executor", normalized_executor)
         object.__setattr__(self, "routing_terms", normalized_terms)
+        object.__setattr__(self, "depends_on_capability_ids", normalized_dependencies)
 
 
 class CapabilityRegistry:
-    """Deterministic registry with progressive disclosure and abstention."""
+    """Deterministic registry with progressive disclosure and execution planning."""
 
     def __init__(self, registrations: tuple[RegisteredCapability, ...] = ()) -> None:
         self._registrations: dict[str, RegisteredCapability] = {}
@@ -194,6 +251,78 @@ class CapabilityRegistry:
         if any(index < 0 or index >= len(catalog) for index in indices):
             raise ValueError("capability index is outside the supplied catalog")
         return tuple(self.get(catalog[index].capability_id) for index in indices)
+
+    def plan_post_aperture_execution(
+        self,
+        indices: list[int],
+    ) -> CapabilityExecutionPlan:
+        """Expand dependencies and return a deterministic topological order.
+
+        Model output is treated as a requirement set, not an execution plan.
+        Dependency closure and ordering are system-owned. Among simultaneously
+        ready capabilities, lower ``execution_priority`` runs first; ties break
+        by canonical capability id.
+        """
+
+        catalog = self.post_aperture_catalog()
+        selected = self.resolve_post_aperture_indices(indices)
+        catalog_index_by_id = {
+            descriptor.capability_id: index for index, descriptor in enumerate(catalog)
+        }
+        required_ids = {registration.descriptor.capability_id for registration in selected}
+        pending = list(sorted(required_ids))
+        while pending:
+            capability_id = pending.pop()
+            registration = self.get(capability_id)
+            for dependency in registration.depends_on_capability_ids:
+                dependent_registration = self.get(dependency)
+                if not dependent_registration.selectable_after_aperture:
+                    raise ValueError(
+                        "post-aperture capability depends on non-selectable capability "
+                        f"{dependency!r}"
+                    )
+                if dependency not in required_ids:
+                    required_ids.add(dependency)
+                    pending.append(dependency)
+
+        dependencies = {
+            capability_id: set(self.get(capability_id).depends_on_capability_ids)
+            for capability_id in required_ids
+        }
+        ordered_ids: list[str] = []
+        remaining = set(required_ids)
+        while remaining:
+            ready = [
+                capability_id
+                for capability_id in remaining
+                if not (dependencies[capability_id] & remaining)
+            ]
+            if not ready:
+                raise ValueError("selected capability dependencies contain a cycle")
+            ready.sort(
+                key=lambda capability_id: (
+                    self.get(capability_id).execution_priority,
+                    capability_id,
+                )
+            )
+            for capability_id in ready:
+                ordered_ids.append(capability_id)
+                remaining.remove(capability_id)
+
+        return CapabilityExecutionPlan(
+            requested_catalog_indices=list(indices),
+            items=[
+                CapabilityExecutionPlanItem(
+                    catalog_index=catalog_index_by_id[capability_id],
+                    capability_id=capability_id,
+                    execution_priority=self.get(capability_id).execution_priority,
+                    depends_on_capability_ids=list(
+                        self.get(capability_id).depends_on_capability_ids
+                    ),
+                )
+                for capability_id in ordered_ids
+            ],
+        )
 
     def discover(self, need: CapabilityNeed) -> list[CapabilityMatch]:
         matches, _role, _text = self.discover_with_trace(need)
@@ -279,6 +408,7 @@ DEFAULT_REGISTRY = CapabilityRegistry(
             routing_terms=("deeper research",),
             executor="deeper_research",
             selectable_after_aperture=True,
+            execution_priority=100,
         ),
     )
 )
