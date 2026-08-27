@@ -7,22 +7,54 @@ import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Json
 
+from jit_agent.association_feature_projection import AssociationFeatureProjection
 from jit_agent.association_projection import (
     ASSOCIATION_PROJECTION_VERSION,
     derive_associations,
 )
 from jit_agent.associative_memory import Association
 from jit_agent.memory_kernel import MemoryEvent, tokenize
+from jit_agent.memory_projection import build_projection
 
 
 def rebuild_associations(
     conn: psycopg.Connection,
     events: Iterable[MemoryEvent],
 ) -> tuple[Association, ...]:
-    """Replace disposable association rows with a deterministic rebuild."""
-    associations = derive_associations(events)
+    """Replace disposable association rows and predecessor features deterministically."""
+    ordered_events = tuple(events)
+    associations = derive_associations(ordered_events)
+    feature_projection = AssociationFeatureProjection()
+    feature_entries = build_projection(ordered_events, feature_projection)
     with conn.cursor() as cur:
         cur.execute("DELETE FROM memory_association_entries")
+        cur.execute(
+            """
+            DELETE FROM memory_projection_entries
+            WHERE projection_name = %s AND projection_version = %s
+            """,
+            (feature_projection.name, feature_projection.version),
+        )
+        if feature_entries:
+            cur.executemany(
+                """
+                INSERT INTO memory_projection_entries (
+                    projection_name, projection_version, source_event_id,
+                    source_global_seq, source_hash, data
+                ) VALUES (%s, %s, %s, %s, %s, %s)
+                """,
+                [
+                    (
+                        entry.projection_name,
+                        entry.projection_version,
+                        entry.source_event_id,
+                        entry.source_global_seq,
+                        entry.source_hash,
+                        Json(dict(entry.data)),
+                    )
+                    for entry in feature_entries
+                ],
+            )
         if associations:
             cur.executemany(
                 """
