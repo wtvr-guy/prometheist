@@ -20,7 +20,16 @@ from jit_agent.models import (
 
 
 class FakeLLM:
-    def plan_memory(self, task: str) -> MemoryNeedDecision:
+    def __init__(self) -> None:
+        self.active_state_flags: list[bool] = []
+
+    def plan_memory(
+        self,
+        task: str,
+        *,
+        active_state_available: bool,
+    ) -> MemoryNeedDecision:
+        self.active_state_flags.append(active_state_available)
         catalog = task.split("[Anchor catalog]\n", 1)[1]
         first_index = int(catalog.splitlines()[0].split(": ", 1)[0])
         return MemoryNeedDecision(
@@ -97,9 +106,10 @@ def test_persisted_memory_capabilities_are_not_walled_by_conversation(
     )
 
     active_conversation_id = uuid.uuid4()
+    llm = FakeLLM()
     capability_runtime.execute_registered_capability(
         object(),
-        FakeLLM(),
+        llm,
         registration=registration,
         capability_request_id=capability_request_id,
         requester_task_id=task_id,
@@ -111,6 +121,7 @@ def test_persisted_memory_capabilities_are_not_walled_by_conversation(
         memory_request_id=memory_request_id,
     )
 
+    assert llm.active_state_flags == [False]
     assert captured["event_conversation_id"] == active_conversation_id
     assert captured["need"].conversation_id is None
     assert captured["need"].include_persisted_history is True
