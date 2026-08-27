@@ -1,10 +1,17 @@
-"""Shared JIT Memory boundary for every stateless Prometheist agent.
+"""Shared JIT Memory boundaries for stateless Prometheist cognition.
 
-Agents express *what* internal persisted information they need through
-``MemoryNeed``. This module owns *how* the current verified Memory Kernel is
-used, persists request/result provenance, and returns a bounded ``MemoryPacket``.
-No caller needs to know about candidate routing, lexical projections,
-associations, PostgreSQL FTS, or future retrieval mechanisms.
+``request_memory`` is the conservative evidence boundary used when a task needs
+persisted internal evidence. ``request_attention_activation`` is the smaller,
+higher-recall activation boundary used by the default attention aperture before
+model reasoning. Both operate only over canonical persisted events, preserve
+provenance, and use the same deterministic PostgreSQL projection/candidate
+infrastructure; they differ only in what question they answer.
+
+Evidence recall asks: "is this support strong enough to return as evidence for
+an explicit memory need?" Aperture activation asks: "which bounded canonical
+events are plausible enough to keep cognitively available right now?" Keeping
+those roles distinct lets the aperture be sensitive without weakening the
+support-aware evidence gate.
 """
 from __future__ import annotations
 
@@ -198,6 +205,49 @@ def _packet_from_kernel(memory_request_id: uuid.UUID, need: MemoryNeed, kernel_p
     )
 
 
+def _packet_from_activation_kernel(
+    memory_request_id: uuid.UUID,
+    need: MemoryNeed,
+    kernel_packet,
+) -> MemoryPacket:
+    """Translate baseline recall into an explicitly non-sufficiency activation packet."""
+
+    trace_by_id = {item.event_id: item for item in kernel_packet.trace.items}
+    items: list[MemoryEvidence] = []
+    for event in kernel_packet.items:
+        trace_item = trace_by_id.get(event.event_id)
+        score = float(trace_item.score.total) if trace_item is not None else None
+        reasons = ["ATTENTION_APERTURE"]
+        if trace_item is not None:
+            reasons.extend(trace_item.reasons)
+        items.append(
+            MemoryEvidence(
+                source_event_id=uuid.UUID(event.event_id),
+                event_type=EventType(event.event_type),
+                source=event.source,
+                created_at=event.created_at,
+                conversation_id=uuid.UUID(event.conversation_id),
+                conversation_seq=event.conversation_seq,
+                global_seq=event.global_seq,
+                content=event.text,
+                score=score,
+                retrieval_reasons=reasons,
+                provenance_event_ids=[],
+            )
+        )
+    return MemoryPacket(
+        memory_request_id=memory_request_id,
+        need=need,
+        supported=bool(items),
+        items=items,
+        retrieval_trace={
+            "kernel": "recall_from_postgres",
+            "retrieval_role": "ATTENTION_ACTIVATION",
+            "kernel_trace": asdict(kernel_packet.trace),
+        },
+    )
+
+
 def _active_working_state_evidence(
     conn: psycopg.Connection,
     need: MemoryNeed,
@@ -267,6 +317,32 @@ def _recall_for_query(
     )
 
 
+def _activation_recall(
+    conn: psycopg.Connection,
+    *,
+    need: MemoryNeed,
+    before_global_seq: int | None,
+):
+    """High-recall bounded activation without weakening evidence admission."""
+
+    recall_limit = min(20, need.limit + len(need.active_event_ids))
+    cue = CueState(
+        query_text=need.query_text,
+        entities=tuple(need.entities),
+        reference_time=need.reference_time,
+        conversation_id=str(need.conversation_id) if need.conversation_id else None,
+        source_types=tuple(item.value for item in _effective_source_types(need)),
+        limit=recall_limit,
+        minimum_score=MINIMUM_SCORE,
+    )
+    return postgres_memory_kernel.recall_from_postgres(
+        conn,
+        cue,
+        before_global_seq=before_global_seq,
+        candidate_limit=CANDIDATE_LIMIT,
+    )
+
+
 def _compose_evidence(
     active: list[MemoryEvidence],
     historical: list[MemoryEvidence],
@@ -325,6 +401,115 @@ def _persist_packet(
     )
 
 
+def _persist_request(
+    conn: psycopg.Connection,
+    *,
+    conversation_id: uuid.UUID,
+    correlation_id: uuid.UUID,
+    requesting_component: str,
+    memory_request_id: uuid.UUID,
+    need: MemoryNeed,
+    retrieval_role: str,
+) -> None:
+    event_store.record_event(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        event_type=EventType.MEMORY_REQUEST,
+        source=requesting_component,
+        payload={
+            "memory_request_id": str(memory_request_id),
+            "origin": KnowledgeOrigin.INTERNAL_MEMORY.value,
+            "retrieval_role": retrieval_role,
+            "need": need.model_dump(mode="json"),
+        },
+        payload_text=need.query_text,
+        event_id=uuid.uuid5(memory_request_id, "memory-request-event"),
+    )
+
+
+def request_attention_activation(
+    conn: psycopg.Connection,
+    *,
+    conversation_id: uuid.UUID,
+    correlation_id: uuid.UUID,
+    requesting_component: str,
+    need: MemoryNeed,
+    before_global_seq: int | None,
+    memory_request_id: uuid.UUID | None = None,
+) -> MemoryPacket:
+    """Persist and satisfy one high-recall, bounded attention-aperture activation.
+
+    Returned events are canonical and provenance-bearing, but their presence
+    means "potentially relevant enough to activate," not "sufficient evidence
+    for the current claim." The response/routing model may use them as context;
+    deeper `request_memory`/`MEMORY_ANALYSIS` keeps the stricter support gate.
+    """
+
+    memory_request_id = memory_request_id or uuid.uuid4()
+    effective_need = need.model_copy(update={"source_types": list(_effective_source_types(need))})
+    _persist_request(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        requesting_component=requesting_component,
+        memory_request_id=memory_request_id,
+        need=effective_need,
+        retrieval_role="ATTENTION_ACTIVATION",
+    )
+    active_evidence = _active_working_state_evidence(
+        conn,
+        effective_need,
+        before_global_seq=before_global_seq,
+    )
+    historical: list[MemoryEvidence] = []
+    kernel_trace: dict[str, object] | None = None
+    if effective_need.include_persisted_history:
+        _ensure_projection_fresh(conn, before_global_seq=before_global_seq)
+        kernel_packet = _activation_recall(
+            conn,
+            need=effective_need,
+            before_global_seq=before_global_seq,
+        )
+        kernel_result = _packet_from_activation_kernel(
+            memory_request_id,
+            effective_need,
+            kernel_packet,
+        )
+        active_ids = {item.source_event_id for item in active_evidence}
+        historical = [
+            item for item in kernel_result.items if item.source_event_id not in active_ids
+        ]
+        kernel_trace = kernel_result.retrieval_trace
+
+    merged = _compose_evidence(
+        active_evidence,
+        historical,
+        limit=effective_need.limit,
+    )
+    packet = MemoryPacket(
+        memory_request_id=memory_request_id,
+        need=effective_need,
+        supported=bool(merged),
+        items=merged,
+        retrieval_trace={
+            "retrieval_role": "ATTENTION_ACTIVATION",
+            "query_strategy": "working_state_plus_baseline_activation",
+            "working_state_event_ids": [str(item.source_event_id) for item in active_evidence],
+            "activation_kernel": kernel_trace,
+        },
+    )
+    _persist_packet(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        requesting_component=requesting_component,
+        memory_request_id=memory_request_id,
+        packet=packet,
+    )
+    return packet
+
+
 def request_memory(
     conn: psycopg.Connection,
     *,
@@ -335,23 +520,18 @@ def request_memory(
     before_global_seq: int | None,
     memory_request_id: uuid.UUID | None = None,
 ) -> MemoryPacket:
-    """Persist and satisfy one internal-memory request for any task component."""
+    """Persist and satisfy one conservative evidence request for any task component."""
 
     memory_request_id = memory_request_id or uuid.uuid4()
     effective_need = need.model_copy(update={"source_types": list(_effective_source_types(need))})
-    event_store.record_event(
+    _persist_request(
         conn,
         conversation_id=conversation_id,
         correlation_id=correlation_id,
-        event_type=EventType.MEMORY_REQUEST,
-        source=requesting_component,
-        payload={
-            "memory_request_id": str(memory_request_id),
-            "origin": KnowledgeOrigin.INTERNAL_MEMORY.value,
-            "need": effective_need.model_dump(mode="json"),
-        },
-        payload_text=effective_need.query_text,
-        event_id=uuid.uuid5(memory_request_id, "memory-request-event"),
+        requesting_component=requesting_component,
+        memory_request_id=memory_request_id,
+        need=effective_need,
+        retrieval_role="EVIDENCE",
     )
 
     active_evidence = _active_working_state_evidence(
@@ -368,6 +548,7 @@ def request_memory(
             items=active_evidence[: effective_need.limit],
             retrieval_trace={
                 "kernel": None,
+                "retrieval_role": "EVIDENCE",
                 "query_strategy": "working_state_only",
                 "working_state_event_ids": [str(item.source_event_id) for item in active_evidence],
                 "query_attempts": [],
@@ -429,6 +610,7 @@ def request_memory(
             "items": merged,
             "retrieval_trace": {
                 **kernel_result.retrieval_trace,
+                "retrieval_role": "EVIDENCE",
                 "query_strategy": "working_state_plus_history",
                 "working_state_event_ids": [str(item.source_event_id) for item in active_evidence],
                 "selected_query_role": selected_role,
