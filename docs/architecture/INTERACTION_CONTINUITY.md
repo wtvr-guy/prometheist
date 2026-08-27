@@ -2,7 +2,7 @@
 
 **Status:** active architecture requirement. Revised 2026-08-27 from native v0.7 acceptance evidence.
 
-**Constitutional status:** primary architecture authority for Articles 5, 6, 7, 8, 15, 16, and 20 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md). This document explains those constitutional rules in depth and is subordinate to the Constitution where wording conflicts.
+**Constitutional status:** primary architecture authority for Articles 5, 6, 7, 8, 15, 16, 20, 27, and 29 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md). This document explains those constitutional rules in depth and is subordinate to the Constitution where wording conflicts.
 
 ## Governing invariant
 
@@ -242,6 +242,10 @@ This does **not** deprecate canonical text retrieval inside JIT Memory. Lexical 
 Activation and retrieval are attention operations, not truth promotion. A surfaced event means it is relevant enough to expose. It does not mean every proposition in it is correct, current, or objectively true.
 
 Evidence, user belief, world belief, contradictions, corrections, confidence, and derived conclusions remain distinct epistemic concerns. The Constitution requires the distinction even where a richer structured epistemic WorkingState remains future work.
+
+## Fail-closed interaction authority
+
+Invalid or ambiguous control output does not get repaired by guessing intent. Missing explicit `RESPOND`, out-of-range/duplicate capability indices, illegal capability requests, exhausted recurrent bounds, and insufficient historical evidence must result in the structured failure/abstention behavior defined by policy rather than fabricated readiness.
 
 ## Frozen v0.7 experiment
 
