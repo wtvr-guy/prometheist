@@ -11,7 +11,13 @@ import httpx
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from jit_agent.interaction_policy import InteractionDecision
-from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
+from jit_agent.models import (
+    EventType,
+    HistoricalMemoryAnchorDecision,
+    MemoryNeedDecision,
+    MemoryPacket,
+    MemoryRetrievalScope,
+)
 
 logger = logging.getLogger(__name__)
 _THINK_BLOCK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
@@ -119,9 +125,9 @@ insufficient. Do not claim unsupported memory.
 
 _SPECIALIST_PLAN_PROMPT = """\
 You are a disposable Prometheist memory-routing worker with no inherited
-transcript. The user input contains the current task, optional active canonical
-context, and a numbered anchor catalog built deterministically from those exact
-texts.
+transcript. Active canonical WorkingState exists. The user input contains the
+current task, that active canonical context, and a numbered anchor catalog built
+deterministically from those exact texts.
 
 Choose only:
 - scope = ACTIVE_ONLY when the active canonical context already contains all
@@ -139,6 +145,22 @@ no anchor indices.
 
 Do not write a query, entity, explanation, phrase, or answer. Return only the
 enum and integer indices from the structured schema.
+"""
+
+_HISTORY_ONLY_PLAN_PROMPT = """\
+You are a disposable Prometheist historical-memory routing worker with no
+inherited transcript. Prometheist has already determined that no active
+WorkingState exists, so historical retrieval is mandatory and scope is owned by
+the system rather than by you.
+
+The user input contains the current task and a numbered anchor catalog built
+deterministically from that exact text. Select 1-4 anchor_indices from the
+supplied catalog. Choose the most distinctive subject/reference tokens likely
+to occur in older source evidence. Prefer project/person/object names and opaque
+identifiers over generic relationship or instruction words.
+
+Do not write a scope, query, entity, explanation, phrase, or answer. Return only
+the integer indices from the structured schema.
 """
 
 _SPECIALIST_ANSWER_PROMPT = """\
@@ -159,7 +181,12 @@ class LLMClient(Protocol):
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str: ...
 
-    def plan_memory(self, task: str) -> MemoryNeedDecision: ...
+    def plan_memory(
+        self,
+        task: str,
+        *,
+        active_state_available: bool,
+    ) -> MemoryNeedDecision: ...
 
     def answer_memory_task(self, task: str, packet: MemoryPacket) -> str: ...
 
@@ -326,11 +353,42 @@ class OllamaClient:
             prompt + _format_memory_packet(memory_packet) + causal_clauses,
         )
 
-    def plan_memory(self, task: str) -> MemoryNeedDecision:
-        schema = MemoryNeedDecision.model_json_schema()
+    def plan_memory(
+        self,
+        task: str,
+        *,
+        active_state_available: bool,
+    ) -> MemoryNeedDecision:
         last_error: Exception | None = None
+        if not active_state_available:
+            schema = HistoricalMemoryAnchorDecision.model_json_schema()
+            for _ in range(2):
+                content = self._structured(
+                    "SPECIALIST_HISTORY_ANCHORS",
+                    _HISTORY_ONLY_PLAN_PROMPT,
+                    task,
+                    schema,
+                    32,
+                )
+                try:
+                    selection = HistoricalMemoryAnchorDecision.model_validate_json(content)
+                    return MemoryNeedDecision(
+                        scope=MemoryRetrievalScope.HISTORY_ONLY,
+                        anchor_indices=selection.anchor_indices,
+                    )
+                except ValidationError as exc:
+                    last_error = exc
+            raise ValueError(f"historical memory anchors failed to validate: {last_error}")
+
+        schema = MemoryNeedDecision.model_json_schema()
         for _ in range(2):
-            content = self._structured("SPECIALIST_PLAN", _SPECIALIST_PLAN_PROMPT, task, schema, 48)
+            content = self._structured(
+                "SPECIALIST_PLAN",
+                _SPECIALIST_PLAN_PROMPT,
+                task,
+                schema,
+                48,
+            )
             try:
                 return MemoryNeedDecision.model_validate_json(content)
             except ValidationError as exc:
