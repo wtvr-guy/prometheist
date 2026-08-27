@@ -157,6 +157,7 @@ def test_internal_memory_uses_active_context_and_index_only_memory_routing(monke
     assert need.entities == ["oriole"]
     assert need.reference_time is None
     assert need.supplemental_query_texts == []
+    assert need.limit == 6
     assert captured["activation"]["conversation_id"] == conversation_id
     assert captured["activation"]["correlation_id"] == correlation_id
 
@@ -172,6 +173,7 @@ def test_active_only_scope_disables_long_term_search_without_phrase_policy(monke
     assert need.active_event_ids == [state_event_id]
     assert need.include_persisted_history is False
     assert need.entities == []
+    assert need.limit == 1
 
 
 def test_memory_analysis_uses_same_index_only_memory_boundary(monkeypatch):
@@ -183,3 +185,21 @@ def test_memory_analysis_uses_same_index_only_memory_boundary(monkeypatch):
     assert need.active_event_ids == [state_event_id]
     assert need.include_persisted_history is True
     assert need.entities == ["oriole"]
+    assert need.limit == 6
+
+
+def test_memory_packet_limit_never_retruncates_bounded_active_working_state():
+    active_ids = [uuid.uuid4() for _ in range(6)]
+
+    assert capability_runtime._memory_packet_limit(
+        active_event_ids=active_ids,
+        include_history=False,
+    ) == 6
+    assert capability_runtime._memory_packet_limit(
+        active_event_ids=active_ids,
+        include_history=True,
+    ) == 11
+    assert capability_runtime._memory_packet_limit(
+        active_event_ids=[],
+        include_history=True,
+    ) == 5
