@@ -64,9 +64,10 @@ class MemoryNeed(BaseModel):
 
     This contract intentionally contains no candidate-router, association,
     full-text, embedding, or other retrieval-implementation controls. Active
-    event IDs are provenance pointers supplied by durable working state; they
-    identify canonical evidence already active in the current situation rather
-    than bypassing or replacing the event ledger.
+    event IDs are provenance pointers supplied by durable working state and are
+    rehydrated as direct context. Focus event IDs are canonical candidate events
+    selected by bounded index from a prior MemoryPacket; they seed deterministic
+    association expansion but are not model-authored identifiers.
     """
 
     query_text: str | None = None
@@ -87,6 +88,14 @@ class MemoryNeed(BaseModel):
             "These are provenance cues, not copied memory content."
         ),
     )
+    focus_event_ids: list[UUID] = Field(
+        default_factory=list,
+        max_length=4,
+        description=(
+            "Canonical candidate events selected from a prior MemoryPacket. "
+            "They seed deeper deterministic association traversal."
+        ),
+    )
     include_persisted_history: bool = True
     reference_time: datetime | None = None
     conversation_id: UUID | None = Field(
@@ -96,9 +105,17 @@ class MemoryNeed(BaseModel):
     source_types: list[EventType] | None = None
     limit: int = Field(default=5, ge=1, le=20)
 
+    @model_validator(mode="after")
+    def validate_event_cues(self) -> "MemoryNeed":
+        if len(self.active_event_ids) != len(set(self.active_event_ids)):
+            raise ValueError("active_event_ids must not contain duplicates")
+        if len(self.focus_event_ids) != len(set(self.focus_event_ids)):
+            raise ValueError("focus_event_ids must not contain duplicates")
+        return self
+
 
 class MemoryRetrievalScope(str, Enum):
-    """Categorical scope chosen only when active state actually exists."""
+    """Historical compatibility scope retained for pre-candidate-selection tests."""
 
     ACTIVE_ONLY = "ACTIVE_ONLY"
     HISTORY_ONLY = "HISTORY_ONLY"
@@ -114,12 +131,7 @@ def _validate_anchor_indices(values: list[int]) -> list[int]:
 
 
 class HistoricalMemoryAnchorDecision(BaseModel):
-    """Model output when no active WorkingState exists.
-
-    The system already knows the only legal scope is HISTORY_ONLY, so scope is
-    intentionally absent from this schema. The model may only select existing
-    deterministic anchor-catalog indices.
-    """
+    """Historical constrained anchor-selection schema retained for compatibility."""
 
     model_config = ConfigDict(extra="forbid")
     anchor_indices: list[int] = Field(min_length=1, max_length=4)
@@ -131,12 +143,7 @@ class HistoricalMemoryAnchorDecision(BaseModel):
 
 
 class MemoryNeedDecision(BaseModel):
-    """Constrained model proposal when active WorkingState is available.
-
-    The model never writes a search query or entity string. The application
-    supplies a deterministic numbered anchor catalog derived from canonical
-    input text; the model may only select existing catalog entries by index.
-    """
+    """Historical scope+anchor model proposal retained for compatibility."""
 
     model_config = ConfigDict(extra="forbid")
     scope: MemoryRetrievalScope
@@ -154,6 +161,33 @@ class MemoryNeedDecision(BaseModel):
         if self.scope is not MemoryRetrievalScope.ACTIVE_ONLY and not self.anchor_indices:
             raise ValueError("historical retrieval requires at least one anchor index")
         return self
+
+
+def _validate_candidate_indices(values: list[int]) -> list[int]:
+    if any(index < 0 or index > 19 for index in values):
+        raise ValueError("candidate_indices must be between 0 and 19")
+    if len(values) != len(set(values)):
+        raise ValueError("candidate_indices must not contain duplicates")
+    return values
+
+
+class MemoryCandidateSelection(BaseModel):
+    """Select one-or-more canonical MemoryPacket candidates by bounded index."""
+
+    model_config = ConfigDict(extra="forbid")
+    candidate_indices: list[int] = Field(min_length=1, max_length=4)
+
+    @field_validator("candidate_indices")
+    @classmethod
+    def validate_candidate_indices(cls, values: list[int]) -> list[int]:
+        return _validate_candidate_indices(values)
+
+
+class FocusedMemoryCandidateSelection(BaseModel):
+    """Select exactly one canonical candidate for deepest bounded recall."""
+
+    model_config = ConfigDict(extra="forbid")
+    candidate_index: int = Field(ge=0, le=19)
 
 
 class MemoryEvidence(BaseModel):
