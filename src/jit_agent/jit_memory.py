@@ -7,8 +7,9 @@ evidence boundary used by explicit research capabilities.
 Focused research never asks a model to write a query. A model may select prior
 MemoryPacket candidates by bounded index; Prometheist resolves those indices to
 canonical event IDs and uses those events as first-class deterministic
-association seeds. As focus narrows, direct-candidate breadth decreases while
-the bounded association neighborhood becomes deeper/wider.
+association seeds. The current percept remains the semantic cue throughout the
+research loop. As focus narrows, direct-candidate breadth decreases while the
+bounded association neighborhood becomes deeper/wider.
 """
 from __future__ import annotations
 
@@ -364,6 +365,7 @@ def _recall_for_query(
     query_text: str | None,
     before_global_seq: int | None,
     recall_profile: MemoryRecallProfile,
+    seed_event_ids: tuple[uuid.UUID, ...] = (),
 ):
     policy = _RECALL_POLICIES[recall_profile]
     recall_limit = min(20, need.limit + len(need.active_event_ids))
@@ -384,7 +386,7 @@ def _recall_for_query(
         association_limit=policy.association_limit,
         max_hops=policy.max_hops,
         decay=policy.decay,
-        seed_event_ids=tuple(str(value) for value in need.focus_event_ids),
+        seed_event_ids=tuple(str(value) for value in seed_event_ids),
     )
 
 
@@ -615,9 +617,10 @@ def request_memory(
     from a prior MemoryPacket. ``DEEPER_RESEARCH`` expands each selected candidate
     with a moderate graph budget. ``CROSS_REFERENCE`` investigates 2-4 selected
     candidates jointly with a larger graph budget. ``FOCUSED_RECALL`` expands
-    exactly one candidate with the deepest bounded graph budget. The selected
-    canonical events are first-class association seeds at every focused level.
-    The evidence admission threshold remains unchanged across all profiles.
+    exactly one candidate with the deepest bounded graph budget. The current
+    percept supplies semantic/relationship cues while selected canonical events
+    supply the focused association frontier. The evidence admission threshold
+    remains unchanged across all profiles.
     """
 
     memory_request_id = memory_request_id or uuid.uuid4()
@@ -688,13 +691,13 @@ def request_memory(
         }
 
         if recall_profile is MemoryRecallProfile.CROSS_REFERENCE:
-            joint_query = "\n".join(text for _event_id, text in focus_sources)
             kernel_packet = _recall_for_query(
                 conn,
                 need=effective_need,
-                query_text=joint_query,
+                query_text=effective_need.query_text,
                 before_global_seq=before_global_seq,
                 recall_profile=recall_profile,
+                seed_event_ids=tuple(effective_need.focus_event_ids),
             )
             translated = _packet_from_kernel(
                 memory_request_id,
@@ -723,6 +726,7 @@ def request_memory(
                     "association_limit": policy.association_limit,
                     "association_hops": policy.max_hops,
                     "association_decay": policy.decay,
+                    "semantic_query_text": effective_need.query_text,
                     "focus_event_ids": [str(value) for value in effective_need.focus_event_ids],
                     "kernel_trace": asdict(kernel_packet.trace),
                 },
@@ -739,13 +743,14 @@ def request_memory(
 
         focus_packets: list[MemoryPacket] = []
         attempts: list[dict[str, object]] = []
-        for focus_event_id, focus_text in focus_sources:
+        for focus_event_id, _focus_text in focus_sources:
             kernel_packet = _recall_for_query(
                 conn,
                 need=effective_need,
-                query_text=focus_text,
+                query_text=effective_need.query_text,
                 before_global_seq=before_global_seq,
                 recall_profile=recall_profile,
+                seed_event_ids=(focus_event_id,),
             )
             translated = _packet_from_kernel(
                 memory_request_id,
@@ -756,6 +761,7 @@ def request_memory(
             attempts.append(
                 {
                     "focus_event_id": str(focus_event_id),
+                    "semantic_query_text": effective_need.query_text,
                     "supported": bool(translated.items),
                     "kernel_trace": asdict(kernel_packet.trace),
                 }
@@ -788,6 +794,7 @@ def request_memory(
                 "association_limit": policy.association_limit,
                 "association_hops": policy.max_hops,
                 "association_decay": policy.decay,
+                "semantic_query_text": effective_need.query_text,
                 "focus_event_ids": [str(value) for value in effective_need.focus_event_ids],
                 "focus_attempts": attempts,
             },
