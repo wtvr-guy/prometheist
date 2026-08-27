@@ -5,9 +5,9 @@ import pytest
 
 from jit_agent import db, event_store
 from jit_agent.attention_observation import HostResourceMetrics
+from jit_agent.capability_registry import CapabilityDescriptor
 from jit_agent.interaction_policy import (
     INTERACTION_STAGES,
-    CapabilityRequirement,
     InteractionDecision,
     InteractionStage,
 )
@@ -39,9 +39,14 @@ class FixedProbe:
 
 
 class DirectLLM:
-    def classify(self, prompt: str, memory_packet: MemoryPacket) -> InteractionDecision:
-        del prompt, memory_packet
-        return InteractionDecision(required_capability=CapabilityRequirement.NONE)
+    def classify(
+        self,
+        prompt: str,
+        memory_packet: MemoryPacket,
+        capability_catalog: tuple[CapabilityDescriptor, ...],
+    ) -> InteractionDecision:
+        del prompt, memory_packet, capability_catalog
+        return InteractionDecision(capability_indices=[])
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
         return "completed response"
@@ -57,9 +62,6 @@ class DirectLLM:
             scope=MemoryRetrievalScope.HISTORY_ONLY,
             anchor_indices=[0],
         )
-
-    def answer_memory_task(self, task: str, packet: MemoryPacket) -> str:
-        return "completed analysis"
 
 
 @pytest.fixture
