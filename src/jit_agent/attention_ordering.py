@@ -9,12 +9,15 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
+MAX_ATTENTION_WORK_PRIORITY = 10_000
+
+
 class AttentionWorkItem(BaseModel):
     """One bounded work item with application-owned dependency metadata."""
 
     model_config = ConfigDict(extra="forbid")
     item_id: str = Field(min_length=1)
-    priority: int = Field(default=100, ge=0)
+    priority: int = Field(default=100, ge=0, le=MAX_ATTENTION_WORK_PRIORITY)
     dependency_ids: list[str] = Field(default_factory=list)
 
     @field_validator("item_id")
