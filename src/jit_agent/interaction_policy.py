@@ -4,10 +4,10 @@ from __future__ import annotations
 from enum import Enum
 from uuid import UUID, uuid5
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
-INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v5"
+INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v6"
 CONTINUITY_POLICY_VERSION = "ATTENTION_APERTURE_V1"
 INTERACTION_CAPABILITIES = (
     "interaction.resolve_references",
@@ -16,55 +16,49 @@ INTERACTION_CAPABILITIES = (
     "interaction.respond",
     "interaction.persist_result",
 )
+_MAX_SELECTED_CAPABILITIES = 4
+_MAX_CAPABILITY_CATALOG_INDEX = 63
 
 
 class InteractionAction(str, Enum):
-    """Derived compatibility view of the post-aperture routing decision."""
+    """Derived view of the post-aperture routing decision."""
 
     RESPOND_DIRECTLY = "RESPOND_DIRECTLY"
-    REQUEST_CAPABILITY = "REQUEST_CAPABILITY"
-
-
-class CapabilityRequirement(str, Enum):
-    """Optional functionality a model may request after default memory exposure.
-
-    Basic internal-memory access is intentionally absent. Every percept receives
-    a bounded JIT Memory attention aperture before this decision is made. The
-    model may only decide whether that default aperture is sufficient or whether
-    focused memory analysis is warranted.
-    """
-
-    NONE = "NONE"
-    MEMORY_ANALYSIS = "MEMORY_ANALYSIS"
-
-    @property
-    def capability_id(self) -> str | None:
-        return {
-            CapabilityRequirement.NONE: None,
-            CapabilityRequirement.MEMORY_ANALYSIS: "memory_analysis",
-        }[self]
+    REQUEST_CAPABILITIES = "REQUEST_CAPABILITIES"
 
 
 class InteractionDecision(BaseModel):
     """Constrained post-aperture routing intent.
 
-    The model chooses one enum only. It never writes a capability query,
-    capability id, search query, entity, explanation, or other natural-language
-    control value.
+    The model never writes a capability name, query, entity, explanation, or
+    other natural-language control value. It receives an application-owned
+    deterministic catalog and may select zero or more entries by integer index.
+
+    An empty selection means "respond now." A non-empty selection means "invoke
+    these capabilities before responding." Order is preserved so future
+    capability dependencies can be represented without free-form planning text.
     """
 
     model_config = ConfigDict(extra="forbid")
-    required_capability: CapabilityRequirement = CapabilityRequirement.NONE
+    capability_indices: list[int] = Field(
+        default_factory=list,
+        max_length=_MAX_SELECTED_CAPABILITIES,
+    )
+
+    @field_validator("capability_indices")
+    @classmethod
+    def validate_capability_indices(cls, values: list[int]) -> list[int]:
+        if any(index < 0 or index > _MAX_CAPABILITY_CATALOG_INDEX for index in values):
+            raise ValueError("capability_indices must be between 0 and 63")
+        if len(values) != len(set(values)):
+            raise ValueError("capability_indices must not contain duplicates")
+        return values
 
     @property
     def action(self) -> InteractionAction:
-        if self.required_capability is CapabilityRequirement.NONE:
+        if not self.capability_indices:
             return InteractionAction.RESPOND_DIRECTLY
-        return InteractionAction.REQUEST_CAPABILITY
-
-    @property
-    def capability_id(self) -> str | None:
-        return self.required_capability.capability_id
+        return InteractionAction.REQUEST_CAPABILITIES
 
 
 class InteractionStage(str, Enum):
@@ -131,12 +125,7 @@ def apply_continuity_policy(
     decision: InteractionDecision,
     analysis: ReferenceAnalysis,
 ) -> tuple[InteractionDecision, str | None]:
-    """Deprecated no-op retained for readable pre-aperture tests/payloads.
-
-    Continuity is no longer implemented by rewriting a model decision. The
-    interaction runtime opens a bounded memory aperture before the model makes
-    this decision at all.
-    """
+    """Deprecated no-op retained for readable pre-aperture tests/payloads."""
 
     del user_text, analysis
     return decision, None
@@ -156,6 +145,22 @@ def deterministic_interaction_event_id(interaction_id: UUID, role: str) -> UUID:
 
 def deterministic_memory_request_id(interaction_id: UUID) -> UUID:
     return uuid5(interaction_id, "memory-request")
+
+
+def deterministic_capability_memory_request_id(
+    interaction_id: UUID,
+    catalog_index: int,
+    capability_id: str,
+) -> UUID:
+    if catalog_index < 0:
+        raise ValueError("catalog_index must be >= 0")
+    normalized = capability_id.strip()
+    if not normalized:
+        raise ValueError("capability_id must not be empty")
+    return uuid5(
+        interaction_id,
+        f"capability-memory-request:{catalog_index}:{normalized}",
+    )
 
 
 def deterministic_aperture_request_id(interaction_id: UUID) -> UUID:
