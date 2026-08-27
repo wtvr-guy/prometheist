@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 
 from jit_agent import llm
+from jit_agent.capability_registry import CapabilityDescriptor, CapabilityKind
 from jit_agent.llm import _strip_thinking
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 
@@ -56,12 +57,12 @@ def test_strip_thinking_rejects_empty_response():
         _strip_thinking("   ")
 
 
-def test_response_prompts_do_not_leak_acceptance_scenario_facts():
-    prompts = (llm._RESPOND_SYSTEM_PROMPT + llm._SPECIALIST_ANSWER_PROMPT).casefold()
-    assert "project kestrel" not in prompts
-    assert "virtualization is disabled" not in prompts
-    assert "blueharbor" not in prompts
-    assert "vx-" not in prompts
+def test_response_prompt_does_not_leak_acceptance_scenario_facts():
+    prompt = llm._RESPOND_SYSTEM_PROMPT.casefold()
+    assert "project kestrel" not in prompt
+    assert "virtualization is disabled" not in prompt
+    assert "blueharbor" not in prompt
+    assert "vx-" not in prompt
 
 
 def test_user_facing_answers_use_a_deterministic_structured_envelope():
@@ -109,6 +110,41 @@ def _evidence(event_type: EventType, content: str, seq: int) -> MemoryEvidence:
     )
 
 
+def _packet() -> MemoryPacket:
+    return MemoryPacket(
+        memory_request_id=uuid4(),
+        need=MemoryNeed(query_text="Question"),
+        supported=False,
+        items=[],
+    )
+
+
+def test_capability_selection_returns_only_bounded_indices():
+    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
+    fake_http = _FakeHTTPClient(['{"capability_indices":[1,0]}'])
+    client._client = fake_http
+    catalog = (
+        CapabilityDescriptor(
+            capability_id="alpha",
+            kind=CapabilityKind.TOOL,
+            description="First test capability.",
+        ),
+        CapabilityDescriptor(
+            capability_id="beta",
+            kind=CapabilityKind.WORKFLOW,
+            description="Second test capability.",
+        ),
+    )
+
+    decision = client.classify("Do the task", _packet(), catalog)
+
+    assert decision.capability_indices == [1, 0]
+    payload = fake_http.calls[0][1]
+    assert set(payload["format"]["properties"]) == {"capability_indices"}
+    assert "alpha" in payload["messages"][1]["content"]
+    assert "beta" in payload["messages"][1]["content"]
+
+
 def test_verbatim_placeholders_prevent_model_from_respelling_opaque_literals():
     exact_code = "A66673AD"
     packet = MemoryPacket(
@@ -150,52 +186,3 @@ def test_verbatim_placeholders_cover_hyphenated_labels_and_current_input():
     assert llm._restore_verbatim_literals(masked, placeholder_to_literal) == (
         f"Call this plan {exact_label}."
     )
-
-
-def test_causal_highlight_uses_asserted_user_authored_clauses_only():
-    packet = MemoryPacket(
-        memory_request_id=uuid4(),
-        need=MemoryNeed(query_text="Why?"),
-        supported=True,
-        items=[
-            _evidence(
-                EventType.INTERACTION_RESPONSE,
-                "Avoid option A because an invented response rationale applies.",
-                2,
-            ),
-            _evidence(
-                EventType.USER_PROMPT,
-                (
-                    "It was not because virtualization is disabled; "
-                    "avoid option A because the service account is unavailable. "
-                    "Was it because the network is offline?"
-                ),
-                1,
-            ),
-        ],
-    )
-
-    highlight = llm._format_explicit_causal_clauses(packet)
-
-    assert "- the service account is unavailable" in highlight
-    assert "virtualization is disabled" not in highlight
-    assert "network is offline" not in highlight
-    assert "invented response rationale" not in highlight
-
-
-@pytest.mark.parametrize(
-    "content",
-    [
-        "Tell me whether it was because the service account is unavailable.",
-        "Maybe it failed because the service account is unavailable.",
-        "Was it because the service account is unavailable?",
-    ],
-)
-def test_causal_highlight_rejects_uncertain_or_interrogative_sources(content):
-    packet = MemoryPacket(
-        memory_request_id=uuid4(),
-        need=MemoryNeed(query_text="Why?"),
-        supported=True,
-        items=[_evidence(EventType.USER_PROMPT, content, 1)],
-    )
-    assert llm._format_explicit_causal_clauses(packet) == ""
