@@ -4,7 +4,7 @@ from __future__ import annotations
 from enum import Enum
 from uuid import UUID, uuid5
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v4"
@@ -48,6 +48,7 @@ class InteractionDecision(BaseModel):
     capability id, or natural-language capability input.
     """
 
+    model_config = ConfigDict(extra="forbid")
     required_capability: CapabilityRequirement = CapabilityRequirement.NONE
 
     @property
