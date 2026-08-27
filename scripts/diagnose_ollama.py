@@ -13,7 +13,7 @@ import httpx
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
-from jit_agent.models import AgentAction, AgentDecision
+from jit_agent.interaction_policy import InteractionAction, InteractionDecision
 
 load_dotenv()
 
@@ -22,12 +22,12 @@ MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:4b")
 
 
 class ActionOnly(BaseModel):
-    action: AgentAction
+    action: InteractionAction
 
 
 class ActionWithQuery(BaseModel):
-    action: AgentAction
-    query_text: str | None = None
+    action: InteractionAction
+    capability_query: str | None = None
 
 
 def _call(label: str, payload: dict) -> None:
@@ -90,7 +90,7 @@ def main() -> None:
     )
 
     _call(
-        "D: action + optional query_text",
+        "D: action + optional capability_query",
         {
             "model": MODEL,
             "messages": [
@@ -106,7 +106,7 @@ def main() -> None:
     )
 
     _call(
-        "E: full AgentDecision schema (for comparison only)",
+        "E: full InteractionDecision schema (for comparison only)",
         {
             "model": MODEL,
             "messages": [
@@ -115,7 +115,7 @@ def main() -> None:
                     "content": "What was the codename I gave you for Project Oriole?",
                 }
             ],
-            "format": AgentDecision.model_json_schema(),
+            "format": InteractionDecision.model_json_schema(),
             "think": False,
             "stream": False,
         },

@@ -14,7 +14,7 @@ from jit_agent.associative_memory import Association
 from jit_agent.memory_kernel import MemoryEvent, normalize_text, tokenize
 
 ASSOCIATION_PROJECTION_NAME = "associations"
-ASSOCIATION_PROJECTION_VERSION = "2"
+ASSOCIATION_PROJECTION_VERSION = "3"
 
 _CONCEPT_TERMS: dict[str, frozenset[str]] = {
     "beverage": frozenset(
@@ -43,10 +43,6 @@ _CONCEPT_TERMS: dict[str, frozenset[str]] = {
             "civic",
             "outback",
             "escape",
-            # Shallow deterministic manufacturer taxonomy. This allows an
-            # unseen model in entity metadata (for example a Mazda model not
-            # named elsewhere in the benchmark) to enter the vehicle concept
-            # without creating an answer-specific model edge.
             "acura",
             "audi",
             "bmw",
@@ -166,7 +162,7 @@ def _association_id(
             target,
         )
     )
-    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:20]
+    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     return f"derived-{digest}"
 
 
@@ -300,4 +296,4 @@ def derive_associations(events: Iterable[MemoryEvent]) -> tuple[Association, ...
             required_cue_terms=("own",),
         )
 
-    return tuple(derived[key] for key in sorted(derived))
+    return tuple(sorted(derived.values(), key=lambda item: item.association_id))

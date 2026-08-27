@@ -20,8 +20,8 @@ import random
 import time
 import uuid
 
-from jit_agent import db, event_store, primary_agent
-from jit_agent.llm import OllamaClient
+from jit_agent import db, event_store
+from jit_agent.interaction_runtime import handle_interaction_in_worker_processes
 from jit_agent.models import EventType
 
 _SUBJECTS = ["my neighbor", "the team", "our cat", "the intern", "my sister", "the vendor"]
@@ -72,7 +72,6 @@ def main() -> None:
     fact_sentence = f"The codename for Project Kestrel is {fact}."
     question = "What codename did I give Project Kestrel?"
 
-    llm = OllamaClient()
     with db.get_connection() as conn:
         conversation_id = event_store.start_conversation(conn)
 
@@ -92,13 +91,13 @@ def main() -> None:
         print(f"seeded {args.count} noise events + 1 target fact in conversation {conversation_id}")
 
         t0 = time.monotonic()
-        answer = primary_agent.handle_interaction(conn, llm, question, conversation_id)
+        answer = handle_interaction_in_worker_processes(conn, question, conversation_id)
         elapsed = time.monotonic() - t0
 
         events = event_store.get_events_by_conversation(conn, conversation_id)
-        retrieval_results = [e for e in events if e.event_type == EventType.RETRIEVAL_RESULT]
+        retrieval_results = [e for e in events if e.event_type == EventType.MEMORY_PACKET]
         last_result = retrieval_results[-1] if retrieval_results else None
-        items = last_result.payload.get("items", []) if last_result else []
+        items = last_result.payload.get("packet", {}).get("items", []) if last_result else []
         context_chars = sum(len(item.get("content", "")) for item in items)
         found_target = any(fact in item.get("content", "") for item in items)
 

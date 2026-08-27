@@ -1,5 +1,4 @@
-"""The next-milestone acceptance test: proves persistent *agent* memory, not
-just persistent *conversation* memory.
+"""Acceptance test for system memory across fresh processes and sessions.
 
 Process A (Conversation A) is told an arbitrary fact and exits completely.
 Process B (a brand-new Conversation B) asks about it and must still find it
@@ -17,7 +16,10 @@ import pytest
 
 from tests._cli_helpers import ollama_available, run_once
 
-pytestmark = pytest.mark.skipif(not ollama_available(), reason="Ollama is not reachable")
+pytestmark = [
+    pytest.mark.ollama,
+    pytest.mark.skipif(not ollama_available(), reason="Ollama is not reachable"),
+]
 
 
 def test_cross_conversation_cross_process_memory_recall():

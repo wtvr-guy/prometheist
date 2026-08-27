@@ -1,0 +1,97 @@
+"""System-owned default memory exposure for every percept.
+
+The attention aperture is deliberately not a capability and does not depend on
+an LLM deciding whether unseen memory might matter. Every interaction receives
+one bounded, provenance-bearing activation packet derived from the current
+percept plus durable WorkingState. Valid active WorkingState is guaranteed
+exposure; the aperture recall budget limits only additional baseline history.
+A later model decision may request ``deeper_research`` when the initially
+supplied context is insufficient, but basic memory availability is part of
+Prometheist's cognitive substrate.
+
+The aperture uses JIT Memory's activation boundary rather than its stricter
+evidence-admission boundary. An aperture item means "potentially relevant enough
+to keep available now," not "proved sufficient support for a claim."
+"""
+from __future__ import annotations
+
+from uuid import UUID
+
+import psycopg
+
+from jit_agent import jit_memory
+from jit_agent.interaction_policy import (
+    deterministic_aperture_request_id,
+    deterministic_interaction_event_id,
+    deterministic_interaction_id,
+)
+from jit_agent.interaction_working_state import (
+    MAX_ACTIVE_EVENT_IDS,
+    activate_working_state,
+    load_working_state,
+)
+from jit_agent.models import MemoryPacket
+
+
+ATTENTION_APERTURE_VERSION = "v0.7-attention-aperture-v3"
+# This is the budget for additional baseline recall beyond guaranteed active
+# WorkingState, not a total MemoryPacket item limit.
+DEFAULT_ATTENTION_APERTURE_LIMIT = 6
+MAX_ATTENTION_APERTURE_ITEMS = MAX_ACTIVE_EVENT_IDS + DEFAULT_ATTENTION_APERTURE_LIMIT
+
+
+def open_attention_aperture(
+    conn: psycopg.Connection,
+    *,
+    conversation_id: UUID,
+    correlation_id: UUID,
+    requester_task_id: UUID,
+    user_text: str,
+    before_global_seq: int,
+) -> MemoryPacket:
+    """Return the bounded default activation packet for one current percept.
+
+    Retrieval policy is application-owned and deterministic for the same event
+    ledger, WorkingState, current percept, and kernel version. No model-written
+    query/entity/capability text is accepted at this boundary. The maximum
+    default exposure is bounded WorkingState plus the baseline recall budget.
+    """
+
+    interaction_id = deterministic_interaction_id(conversation_id, correlation_id)
+    working_state = load_working_state(conn, conversation_id)
+    active_event_ids = (
+        list(working_state.active_event_ids) if working_state is not None else []
+    )
+    need = jit_memory.build_memory_need(
+        user_text,
+        active_event_ids=active_event_ids,
+        include_persisted_history=True,
+        conversation_id=None,
+        limit=DEFAULT_ATTENTION_APERTURE_LIMIT,
+    )
+    packet = jit_memory.request_attention_activation(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        requesting_component=(
+            f"attention-aperture:{ATTENTION_APERTURE_VERSION}/task:{requester_task_id}"
+        ),
+        need=need,
+        before_global_seq=before_global_seq,
+        memory_request_id=deterministic_aperture_request_id(interaction_id),
+    )
+
+    prompt_event_id = deterministic_interaction_event_id(interaction_id, "user-prompt")
+    activate_working_state(
+        conn,
+        interaction_id=interaction_id,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        activated_event_ids=[
+            # Current perception must survive WorkingState's bounded truncation.
+            prompt_event_id,
+            *[item.source_event_id for item in packet.items],
+        ],
+        activation_key="aperture",
+    )
+    return packet

@@ -12,7 +12,10 @@ import pytest
 
 from tests._cli_helpers import ollama_available, run_once
 
-pytestmark = pytest.mark.skipif(not ollama_available(), reason="Ollama is not reachable")
+pytestmark = [
+    pytest.mark.ollama,
+    pytest.mark.skipif(not ollama_available(), reason="Ollama is not reachable"),
+]
 
 
 @pytest.mark.parametrize(
@@ -39,7 +42,7 @@ def test_cross_process_restart_recalls_randomized_fact(codename_sentence, questi
     assert random_fact in answer
 
 
-def test_v06_cross_process_specialist_recalls_without_hidden_transcript():
+def test_cross_process_memory_analysis_recalls_without_hidden_transcript():
     fact_conversation = uuid.uuid4()
     task_conversation = uuid.uuid4()
     random_fact = uuid.uuid4().hex[:8].upper()
@@ -47,8 +50,8 @@ def test_v06_cross_process_specialist_recalls_without_hidden_transcript():
     # Process A persists the event and exits completely.
     run_once(f"The codename for Project Oriole is {random_fact}.", fact_conversation)
 
-    # Process B has a fresh Primary invocation. The explicit wording makes the
-    # desired v0.6 control path unambiguous: Primary -> specialist -> JIT Memory.
+    # Process B uses the neutral capability registry and a fresh memory-analysis
+    # worker before JIT Memory supplies bounded evidence.
     answer = run_once(
         "Use the memory specialist to tell me the codename for Project Oriole.",
         task_conversation,
