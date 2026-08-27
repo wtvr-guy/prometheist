@@ -209,9 +209,18 @@ Return only the closed action and bounded integer indices required by the schema
 _RESPOND_SYSTEM_PROMPT = """\
 You are a fresh disposable Prometheist response worker. You are summoned only
 after a fresh routing worker explicitly selected RESPOND. Use the current
-message, the supplied bounded final MemoryPacket, completed structured capability
-results, and general model knowledge as appropriate. Never invent personal or
-history-specific information absent from those sources.
+message, the supplied bounded final evidence timeline, completed structured
+capability results, and general model knowledge as appropriate. Never invent
+personal or history-specific information absent from those sources.
+
+The evidence timeline is presented in chronological order from oldest to newest.
+Event types identify who or what produced each statement. Resolve temporal and
+relational references such as "just", "previous", "this", and "that" against
+the latest relevant evidence, not merely the closest lexical match. When a
+request asks for multiple named fields, resolve each field independently from
+its most specific supporting evidence, then place the fields in exactly the
+user-requested order. Do not substitute a semantically related value for a
+differently named field.
 
 Put every requested value in the first sentence and copy opaque user-provided
 identifiers exactly. Some opaque literals may be represented as application-
@@ -377,6 +386,51 @@ def _format_router_memory_packet(packet: MemoryPacket) -> str:
     ]
     return (
         "\n\n[Activated memory]\n"
+        f"supported: {str(packet.supported).lower()}\n"
+        + "\n\n".join(blocks)
+    )
+
+
+def _format_response_memory_packet(
+    packet: MemoryPacket | None,
+    *,
+    literal_to_placeholder: dict[str, str] | None = None,
+) -> str:
+    """Render a compact chronology for final answer synthesis.
+
+    Retrieval ranking, event identifiers, timestamps, and provenance remain
+    application-owned. The response worker receives only evidence content,
+    event role, relative chronology, and whether evidence belongs to the most
+    recent conversation represented in the bounded packet.
+    """
+
+    if packet is None:
+        return ""
+    if not packet.items:
+        return "\n\n[Evidence timeline: oldest to newest]\nsupported: false\nitems: []"
+
+    literal_to_placeholder = literal_to_placeholder or {}
+    ordered_items = sorted(
+        packet.items,
+        key=lambda item: (item.global_seq, item.conversation_seq, str(item.source_event_id)),
+    )
+    recent_conversation_id = ordered_items[-1].conversation_id
+    blocks = []
+    for index, item in enumerate(ordered_items):
+        content = _mask_verbatim_literals(item.content, literal_to_placeholder)
+        scope = (
+            "recent_conversation"
+            if item.conversation_id == recent_conversation_id
+            else "historical_context"
+        )
+        blocks.append(
+            f"evidence_order: {index}\n"
+            f"conversation_scope: {scope}\n"
+            f"event_type: {item.event_type.value}\n"
+            f"content: {content}"
+        )
+    return (
+        "\n\n[Evidence timeline: oldest to newest]\n"
         f"supported: {str(packet.supported).lower()}\n"
         + "\n\n".join(blocks)
     )
@@ -561,7 +615,7 @@ class OllamaClient:
             "RESPOND",
             _RESPOND_SYSTEM_PROMPT,
             masked_prompt
-            + _format_memory_packet(
+            + _format_response_memory_packet(
                 memory_packet,
                 literal_to_placeholder=literal_to_placeholder,
             )
