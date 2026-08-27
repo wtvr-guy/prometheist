@@ -23,6 +23,9 @@ def _registration(
     kind: CapabilityKind,
     *terms: str,
     executor: str = "test.executor",
+    execution_priority: int = 100,
+    depends_on_capability_ids: tuple[str, ...] = (),
+    selectable_after_aperture: bool = True,
 ) -> RegisteredCapability:
     return RegisteredCapability(
         descriptor=CapabilityDescriptor(
@@ -32,6 +35,9 @@ def _registration(
         ),
         routing_terms=terms,
         executor=executor,
+        execution_priority=execution_priority,
+        depends_on_capability_ids=depends_on_capability_ids,
+        selectable_after_aperture=selectable_after_aperture,
     )
 
 
@@ -127,6 +133,91 @@ def test_registry_rejects_duplicate_ids_and_exposes_only_public_descriptors():
         CapabilityKind.MODEL,
         CapabilityKind.WORKFLOW,
     }
+
+
+def test_post_aperture_plan_ignores_model_order_and_expands_dependencies():
+    registry = CapabilityRegistry(
+        (
+            _registration(
+                "collect_external_evidence",
+                CapabilityKind.TOOL,
+                "collect",
+                execution_priority=40,
+            ),
+            _registration(
+                "reconcile_evidence",
+                CapabilityKind.WORKFLOW,
+                "reconcile",
+                execution_priority=10,
+                depends_on_capability_ids=("collect_external_evidence",),
+            ),
+            _registration(
+                "independent_check",
+                CapabilityKind.TOOL,
+                "check",
+                execution_priority=20,
+            ),
+        )
+    )
+    catalog = registry.post_aperture_catalog()
+    index = {item.capability_id: position for position, item in enumerate(catalog)}
+
+    # The model deliberately returns a non-execution order. Prometheist owns the plan.
+    plan = registry.plan_post_aperture_execution(
+        [index["reconcile_evidence"], index["independent_check"]]
+    )
+
+    assert plan.requested_catalog_indices == [
+        index["reconcile_evidence"],
+        index["independent_check"],
+    ]
+    assert [item.capability_id for item in plan.items] == [
+        "collect_external_evidence",
+        "independent_check",
+        "reconcile_evidence",
+    ]
+
+
+def test_post_aperture_plan_stably_breaks_ready_ties_by_priority_then_id():
+    registry = CapabilityRegistry(
+        (
+            _registration("zeta", CapabilityKind.TOOL, "zeta", execution_priority=30),
+            _registration("alpha", CapabilityKind.TOOL, "alpha", execution_priority=30),
+            _registration("middle", CapabilityKind.TOOL, "middle", execution_priority=20),
+        )
+    )
+    catalog = registry.post_aperture_catalog()
+    indices = list(reversed(range(len(catalog))))
+
+    plan = registry.plan_post_aperture_execution(indices)
+
+    assert [item.capability_id for item in plan.items] == ["middle", "alpha", "zeta"]
+
+
+def test_post_aperture_plan_rejects_cycles():
+    registry = CapabilityRegistry(
+        (
+            _registration(
+                "alpha",
+                CapabilityKind.WORKFLOW,
+                "alpha",
+                depends_on_capability_ids=("beta",),
+            ),
+            _registration(
+                "beta",
+                CapabilityKind.WORKFLOW,
+                "beta",
+                depends_on_capability_ids=("alpha",),
+            ),
+        )
+    )
+    catalog = registry.post_aperture_catalog()
+    alpha_index = next(
+        index for index, item in enumerate(catalog) if item.capability_id == "alpha"
+    )
+
+    with pytest.raises(ValueError, match="cycle"):
+        registry.plan_post_aperture_execution([alpha_index])
 
 
 def test_persisted_capability_lookup_is_idempotent_and_task_neutral(conn):
