@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from types import SimpleNamespace
 import uuid
 
@@ -10,6 +11,9 @@ from jit_agent.capability_registry import (
     deterministic_capability_request_id,
 )
 from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
+
+
+DISCOVERY_TIME = datetime(2026, 8, 26, 17, 18, tzinfo=timezone.utc)
 
 
 class Planner:
@@ -52,6 +56,7 @@ def _install_fakes(monkeypatch, packet: CapabilityPacket, captured: dict) -> Non
         lambda _conn, _event_id: SimpleNamespace(
             event_type=EventType.CAPABILITY_PACKET,
             payload={"packet": packet.model_dump(mode="json")},
+            created_at=DISCOVERY_TIME,
         ),
     )
     monkeypatch.setattr(
@@ -106,10 +111,38 @@ def test_internal_memory_preserves_discovery_supplemental_and_cross_conversation
     need = captured["need"]
     assert need.conversation_id is None
     assert need.entities == ["Kestrel"]
+    assert need.reference_time is None
     assert need.supplemental_query_texts == [
         "access to persisted internal history to identify established kestrel rule "
         "and its associated constraint profile"
     ]
+
+
+def test_internal_memory_uses_durable_reference_time_for_recent_context(monkeypatch):
+    task_id = uuid.uuid4()
+    step_id = uuid.uuid4()
+    packet = _packet(step_id, task_id)
+    captured = {}
+    _install_fakes(monkeypatch, packet, captured)
+
+    capability_runtime.execute_registered_capability(
+        object(),
+        Planner(),
+        registration=DEFAULT_REGISTRY.get("internal_memory"),
+        capability_request_id=packet.capability_request_id,
+        requester_task_id=task_id,
+        requester_step_id=step_id,
+        conversation_id=uuid.uuid4(),
+        correlation_id=uuid.uuid4(),
+        task_text="What nickname are we using for this plan, and which approach did you just rule out?",
+        capability_input=None,
+        before_global_seq=100,
+        memory_request_id=uuid.uuid4(),
+    )
+
+    need = captured["need"]
+    assert need.reference_time == DISCOVERY_TIME
+    assert need.conversation_id is None
 
 
 def test_memory_analysis_merges_discovery_and_planned_supplementals(monkeypatch):
@@ -147,6 +180,7 @@ def test_memory_analysis_merges_discovery_and_planned_supplementals(monkeypatch)
     need = captured["need"]
     assert need.conversation_id is None
     assert need.entities == ["Project Oriole"]
+    assert need.reference_time is None
     assert need.supplemental_query_texts == [
         "access to persisted internal history to identify established kestrel rule "
         "and its associated constraint profile",
