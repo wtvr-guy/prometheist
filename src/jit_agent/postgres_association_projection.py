@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import Iterable, Sequence
+import uuid
 
 import psycopg
 from psycopg.rows import dict_row
@@ -47,7 +48,7 @@ def rebuild_associations(
                     (
                         entry.projection_name,
                         entry.projection_version,
-                        entry.source_event_id,
+                        uuid.UUID(entry.source_event_id),
                         entry.source_global_seq,
                         entry.source_hash,
                         Json(dict(entry.data)),
