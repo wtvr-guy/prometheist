@@ -1,9 +1,14 @@
 """Deterministic, task-neutral discovery of installed executable capabilities.
 
-The registry is runtime configuration, not autobiographical memory.  Durable
+The registry is runtime configuration, not autobiographical memory. Durable
 tasks ask what functionality is available; application policy returns only a
-bounded set of relevant public descriptors.  Private routing terms and executor
+bounded set of relevant public descriptors. Private routing terms and executor
 bindings never enter model context or the persisted public packet.
+
+The v0.7 live model path resolves a constrained capability enum to an exact
+capability id before calling this registry. Lexical discovery remains available
+for generic non-model callers, but default registrations intentionally avoid an
+ever-growing natural-language continuity phrase catalog.
 """
 from __future__ import annotations
 
@@ -53,8 +58,9 @@ class CapabilityDescriptor(BaseModel):
 class CapabilityNeed(BaseModel):
     """Functionality requested by a durable task/step.
 
-    ``query_text`` is always the canonical task text.  Supplemental cues may be
-    tried only after canonical discovery abstains.
+    ``query_text`` is application-owned. The live model path supplies an exact
+    capability id; generic callers may still use lexical discovery and bounded
+    supplemental queries.
     """
 
     query_text: str = Field(min_length=1)
@@ -234,30 +240,9 @@ DEFAULT_REGISTRY = CapabilityRegistry(
             descriptor=CapabilityDescriptor(
                 capability_id="internal_memory",
                 kind=CapabilityKind.SERVICE,
-                description=(
-                    "Retrieve bounded persisted internal evidence with exact provenance."
-                ),
+                description="Retrieve bounded persisted internal evidence with exact provenance.",
             ),
-            routing_terms=(
-                "internal memory",
-                "persisted history",
-                "persisted context",
-                "memory",
-                "remember",
-                "recall",
-                "earlier",
-                "previous",
-                "prior",
-                "historical",
-                "those approaches",
-                "that approach",
-                "just discussed",
-                "ruled out",
-                "codename",
-                "launch code",
-                "profile",
-                "nickname",
-            ),
+            routing_terms=("internal memory",),
             executor="jit_memory",
         ),
         RegisteredCapability(
@@ -268,14 +253,7 @@ DEFAULT_REGISTRY = CapabilityRegistry(
                     "Analyze, compare, or reconcile bounded persisted evidence in a fresh model call."
                 ),
             ),
-            routing_terms=(
-                "memory analysis",
-                "memory specialist",
-                "analyze persisted history",
-                "compare persisted history",
-                "reconcile persisted history",
-                "historical analysis",
-            ),
+            routing_terms=("memory analysis",),
             executor="memory_analysis",
         ),
     )
