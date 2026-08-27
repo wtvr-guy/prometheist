@@ -7,8 +7,8 @@ from uuid import UUID, uuid5
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
-INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v4"
-CONTINUITY_POLICY_VERSION = "STANDARD_RESPONSE_MEMORY_V3"
+INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v5"
+CONTINUITY_POLICY_VERSION = "ATTENTION_APERTURE_V1"
 INTERACTION_CAPABILITIES = (
     "interaction.resolve_references",
     "capability.discover",
@@ -19,33 +19,38 @@ INTERACTION_CAPABILITIES = (
 
 
 class InteractionAction(str, Enum):
-    """Derived compatibility view of the categorical capability requirement."""
+    """Derived compatibility view of the post-aperture routing decision."""
 
     RESPOND_DIRECTLY = "RESPOND_DIRECTLY"
     REQUEST_CAPABILITY = "REQUEST_CAPABILITY"
 
 
 class CapabilityRequirement(str, Enum):
-    """Finite functionality classes the interaction model may request."""
+    """Optional functionality a model may request after default memory exposure.
+
+    Basic internal-memory access is intentionally absent. Every percept receives
+    a bounded JIT Memory attention aperture before this decision is made. The
+    model may only decide whether that default aperture is sufficient or whether
+    focused memory analysis is warranted.
+    """
 
     NONE = "NONE"
-    INTERNAL_MEMORY = "INTERNAL_MEMORY"
     MEMORY_ANALYSIS = "MEMORY_ANALYSIS"
 
     @property
     def capability_id(self) -> str | None:
         return {
             CapabilityRequirement.NONE: None,
-            CapabilityRequirement.INTERNAL_MEMORY: "internal_memory",
             CapabilityRequirement.MEMORY_ANALYSIS: "memory_analysis",
         }[self]
 
 
 class InteractionDecision(BaseModel):
-    """Constrained model-proposed routing intent.
+    """Constrained post-aperture routing intent.
 
     The model chooses one enum only. It never writes a capability query,
-    capability id, or natural-language capability input.
+    capability id, search query, entity, explanation, or other natural-language
+    control value.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -84,11 +89,11 @@ INTERACTION_STAGES = tuple(InteractionStage)
 
 
 class ReferenceAnalysis(BaseModel):
-    """Continuity signal with a temporary compatibility field.
+    """Bounded durable-state signal retained for stage compatibility.
 
     ``requires_persisted_context`` is retained only so pre-pivot worker payloads
-    and tests remain readable. Live phrase detection is disabled; new code should
-    set ``working_state_available`` from durable WorkingState instead.
+    and tests remain readable. Live phrase detection is disabled; every percept
+    receives an attention aperture independently of this flag.
     """
 
     policy_version: str = CONTINUITY_POLICY_VERSION
@@ -126,26 +131,14 @@ def apply_continuity_policy(
     decision: InteractionDecision,
     analysis: ReferenceAnalysis,
 ) -> tuple[InteractionDecision, str | None]:
-    """Make bounded internal memory standard context for ordinary responses.
+    """Deprecated no-op retained for readable pre-aperture tests/payloads.
 
-    ``NONE`` means that the model did not request a *special* capability; it no
-    longer means that persisted state is hidden from the response worker. Every
-    ordinary interaction is allowed one bounded JIT Memory attempt. The packet
-    may be empty when no relevant evidence exists. Explicit ``MEMORY_ANALYSIS``
-    remains a distinct specialist route, and an explicit ``INTERNAL_MEMORY``
-    request is preserved as-is.
-
-    WorkingState still determines which canonical events are active, but a
-    probabilistic classifier no longer decides whether persisted evidence is
-    allowed to constrain an ordinary answer.
+    Continuity is no longer implemented by rewriting a model decision. The
+    interaction runtime opens a bounded memory aperture before the model makes
+    this decision at all.
     """
 
     del user_text, analysis
-    if decision.required_capability is CapabilityRequirement.NONE:
-        return (
-            InteractionDecision(required_capability=CapabilityRequirement.INTERNAL_MEMORY),
-            CONTINUITY_POLICY_VERSION,
-        )
     return decision, None
 
 
@@ -163,3 +156,7 @@ def deterministic_interaction_event_id(interaction_id: UUID, role: str) -> UUID:
 
 def deterministic_memory_request_id(interaction_id: UUID) -> UUID:
     return uuid5(interaction_id, "memory-request")
+
+
+def deterministic_aperture_request_id(interaction_id: UUID) -> UUID:
+    return uuid5(interaction_id, "attention-aperture-memory-request")
