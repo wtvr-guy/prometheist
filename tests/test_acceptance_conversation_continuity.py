@@ -145,6 +145,13 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
     answer1 = run_once(turn1, active_conversation)
     _print_turn(1, turn1, answer1)
     turn1_event = _event_for_text(active_conversation, EventType.USER_PROMPT, turn1)
+    turn1_sources = _memory_source_ids_for_correlation(
+        active_conversation,
+        turn1_event.correlation_id,
+    )
+    failure_trace = _trace(historical_conversation, active_conversation)
+    assert _contains_answer_slots(answer1, "PostgreSQL", "Windows"), failure_trace
+    assert historical_rule_event.event_id in turn1_sources, failure_trace
 
     turn2 = (
         "Which of those approaches conflicts with my established Kestrel rule, "
@@ -160,7 +167,6 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
     )
     failure_trace = _trace(historical_conversation, active_conversation)
     assert _contains_answer_slots(answer2, "Docker Compose", profile_token), failure_trace
-    assert profile_token in answer2, failure_trace
     assert historical_rule_event.event_id in turn2_sources, failure_trace
     assert turn1_event.event_id in turn2_sources, failure_trace
 
@@ -174,7 +180,6 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         turn3_event.correlation_id,
     )
     failure_trace = _trace(historical_conversation, active_conversation)
-    assert plan_label in answer3, failure_trace
     assert _contains_answer_slots(answer3, plan_label, "Docker Compose"), failure_trace
     assert turn1_event.event_id in turn3_sources, failure_trace
     assert answer2_event.event_id in turn3_sources, failure_trace
@@ -204,7 +209,7 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
     active_events = _events(active_conversation)
     prompts = [event for event in active_events if event.event_type is EventType.USER_PROMPT]
     assert [event.payload["text"] for event in prompts] == [turn1, turn2, turn3, turn4]
-    for prompt_event in (turn2_event, turn3_event, turn4_event):
+    for prompt_event in (turn1_event, turn2_event, turn3_event, turn4_event):
         assert any(
             event.event_type is EventType.MEMORY_REQUEST
             and event.correlation_id == prompt_event.correlation_id
