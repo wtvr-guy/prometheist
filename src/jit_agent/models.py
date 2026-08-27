@@ -183,6 +183,18 @@ class MemoryCandidateSelection(BaseModel):
         return _validate_candidate_indices(values)
 
 
+class CrossReferenceCandidateSelection(BaseModel):
+    """Select two-or-more canonical candidates for one joint investigation."""
+
+    model_config = ConfigDict(extra="forbid")
+    candidate_indices: list[int] = Field(min_length=2, max_length=4)
+
+    @field_validator("candidate_indices")
+    @classmethod
+    def validate_candidate_indices(cls, values: list[int]) -> list[int]:
+        return _validate_candidate_indices(values)
+
+
 class FocusedMemoryCandidateSelection(BaseModel):
     """Select exactly one canonical candidate for deepest bounded recall."""
 
