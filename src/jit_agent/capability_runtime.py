@@ -31,6 +31,8 @@ CAPABILITY_EXECUTION_VERSION = "v0.7-capability-execution-v1"
 SOURCE = "capability_runtime"
 _MAX_PLANNER_CONTEXT_EVENTS = 12
 _MAX_ANCHOR_CATALOG = 48
+_BASE_HISTORICAL_EVIDENCE_BUDGET = 5
+_MAX_MEMORY_PACKET_LIMIT = 20
 _PLANNER_CONTEXT_EVENT_TYPES = {
     EventType.USER_PROMPT,
     EventType.INTERACTION_RESPONSE,
@@ -172,6 +174,32 @@ def _resolve_memory_plan(
     return list(active_event_ids), True, anchors
 
 
+def _memory_packet_limit(
+    *,
+    active_event_ids: list[UUID],
+    include_history: bool,
+) -> int:
+    """Size one bounded packet without silently truncating active WorkingState.
+
+    WorkingState itself is already bounded to twelve canonical event IDs. When
+    a model selects ACTIVE_ONLY, all of those active events must remain available
+    to the fresh response worker; truncating them a second time by the default
+    five-item MemoryNeed limit defeats the purpose of durable active state.
+
+    When history is also requested, preserve room for the complete active set
+    plus the normal five-item historical evidence budget, capped by the stable
+    MemoryNeed contract maximum.
+    """
+
+    active_count = len(active_event_ids)
+    if not include_history:
+        return min(_MAX_MEMORY_PACKET_LIMIT, max(1, active_count))
+    return min(
+        _MAX_MEMORY_PACKET_LIMIT,
+        max(_BASE_HISTORICAL_EVIDENCE_BUDGET, active_count + _BASE_HISTORICAL_EVIDENCE_BUDGET),
+    )
+
+
 def execute_registered_capability(
     conn: psycopg.Connection,
     llm: CapabilityExecutionLLM,
@@ -223,6 +251,10 @@ def execute_registered_capability(
         active_event_ids=available_active_ids,
         anchor_catalog=catalog,
     )
+    packet_limit = _memory_packet_limit(
+        active_event_ids=active_event_ids,
+        include_history=include_history,
+    )
 
     need = jit_memory.build_memory_need(
         task_text,
@@ -230,6 +262,7 @@ def execute_registered_capability(
         active_event_ids=active_event_ids,
         include_persisted_history=include_history,
         conversation_id=None,
+        limit=packet_limit,
     )
 
     packet = jit_memory.request_memory(
