@@ -1,10 +1,16 @@
+from types import SimpleNamespace
 import uuid
 
 import pytest
 
 from jit_agent import capability_runtime
-from jit_agent.capability_registry import DEFAULT_REGISTRY
-from jit_agent.models import MemoryNeedDecision, MemoryPacket
+from jit_agent.capability_registry import (
+    DEFAULT_REGISTRY,
+    CapabilityMatch,
+    CapabilityNeed,
+    CapabilityPacket,
+)
+from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
 
 
 class FakeLLM:
@@ -19,6 +25,38 @@ def test_persisted_memory_capabilities_are_not_walled_by_conversation(
 ):
     captured = {}
     memory_request_id = uuid.uuid4()
+    task_id = uuid.uuid4()
+    step_id = uuid.uuid4()
+    capability_request_id = uuid.uuid4()
+    registration = DEFAULT_REGISTRY.get(capability_id)
+    discovery_packet = CapabilityPacket(
+        capability_request_id=capability_request_id,
+        requester_task_id=task_id,
+        requester_step_id=step_id,
+        need=CapabilityNeed(query_text="What did I establish previously?", limit=1),
+        matches=[CapabilityMatch(descriptor=registration.descriptor, score=1.0)],
+        selected_query_role="canonical",
+        selected_query_text="What did I establish previously?",
+    )
+
+    monkeypatch.setattr(
+        capability_runtime.event_store,
+        "get_event_by_id",
+        lambda _conn, _event_id: SimpleNamespace(
+            event_type=EventType.CAPABILITY_PACKET,
+            payload={"packet": discovery_packet.model_dump(mode="json")},
+        ),
+    )
+    monkeypatch.setattr(
+        capability_runtime,
+        "load_working_state",
+        lambda _conn, _conversation_id: None,
+    )
+    monkeypatch.setattr(
+        capability_runtime,
+        "activate_working_state",
+        lambda *args, **kwargs: None,
+    )
 
     def fake_request_memory(
         conn,
@@ -49,12 +87,12 @@ def test_persisted_memory_capabilities_are_not_walled_by_conversation(
 
     active_conversation_id = uuid.uuid4()
     capability_runtime.execute_registered_capability(
-        None,
+        object(),
         FakeLLM(),
-        registration=DEFAULT_REGISTRY.get(capability_id),
-        capability_request_id=uuid.uuid4(),
-        requester_task_id=uuid.uuid4(),
-        requester_step_id=uuid.uuid4(),
+        registration=registration,
+        capability_request_id=capability_request_id,
+        requester_task_id=task_id,
+        requester_step_id=step_id,
         conversation_id=active_conversation_id,
         correlation_id=uuid.uuid4(),
         task_text="What did I establish previously?",
@@ -63,9 +101,6 @@ def test_persisted_memory_capabilities_are_not_walled_by_conversation(
         memory_request_id=memory_request_id,
     )
 
-    # Interaction provenance remains attached to the active conversation, but
-    # the MemoryNeed itself must be system-wide.  ``before_global_seq`` is the
-    # hard leakage boundary instead of a conversation/session wall.
     assert captured["event_conversation_id"] == active_conversation_id
     assert captured["need"].conversation_id is None
     assert captured["before_global_seq"] == 73
