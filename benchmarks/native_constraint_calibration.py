@@ -185,6 +185,7 @@ def measure_worker_runtime() -> dict[str, Any]:
         "tests/test_cli_admission_diagnostics.py",
         "tests/test_admission_diagnostics.py",
         "tests/test_native_constraint_calibration.py",
+        "tests/test_native_policy.py",
         "tests/test_ollama_runtime.py",
         "tests/test_interaction_runtime.py",
     ]
