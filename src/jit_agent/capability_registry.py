@@ -1,14 +1,13 @@
 """Deterministic, task-neutral discovery of installed executable capabilities.
 
-The registry is runtime configuration, not autobiographical memory. Durable
-tasks ask what functionality is available; application policy returns only a
-bounded set of relevant public descriptors. Private routing terms and executor
-bindings never enter model context or the persisted public packet.
+The registry is runtime configuration, not autobiographical memory. Generic
+non-model callers may still use lexical discovery. The live interaction model
+receives a deterministic bounded catalog of explicitly selectable public
+descriptors and returns only integer indices into that catalog.
 
-The v0.7 live model path resolves a constrained capability enum to an exact
-capability id before calling this registry. Lexical discovery remains available
-for generic non-model callers, but default registrations intentionally avoid an
-ever-growing natural-language continuity phrase catalog.
+Basic JIT-memory activation is cognitive substrate and is therefore not exposed
+as a post-aperture capability. Deeper memory work, tools, workflows, and other
+installed functionality may be exposed as ordinary selectable capabilities.
 """
 from __future__ import annotations
 
@@ -25,7 +24,7 @@ from jit_agent import event_store
 from jit_agent.models import EventType
 
 
-CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v1"
+CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v2"
 SOURCE = "capability_registry"
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
@@ -40,7 +39,7 @@ class CapabilityKind(str, Enum):
 
 
 class CapabilityDescriptor(BaseModel):
-    """Small public descriptor safe to reveal after a relevant match."""
+    """Small public descriptor safe to reveal to a disposable routing model."""
 
     capability_id: str = Field(min_length=1)
     kind: CapabilityKind
@@ -56,12 +55,7 @@ class CapabilityDescriptor(BaseModel):
 
 
 class CapabilityNeed(BaseModel):
-    """Functionality requested by a durable task/step.
-
-    ``query_text`` is application-owned. The live model path supplies an exact
-    capability id; generic callers may still use lexical discovery and bounded
-    supplemental queries.
-    """
+    """Functionality requested by deterministic/generic discovery callers."""
 
     query_text: str = Field(min_length=1)
     supplemental_query_texts: list[str] = Field(default_factory=list, max_length=3)
@@ -94,7 +88,7 @@ class CapabilityMatch(BaseModel):
 
 
 class CapabilityPacket(BaseModel):
-    """Bounded, auditable capability-discovery result for one worker step."""
+    """Bounded, auditable generic capability-discovery result."""
 
     registry_version: str = CAPABILITY_REGISTRY_VERSION
     capability_request_id: UUID
@@ -123,11 +117,17 @@ class CapabilityPacket(BaseModel):
 
 @dataclass(frozen=True)
 class RegisteredCapability:
-    """Private application-owned registration and executable binding."""
+    """Private application-owned registration and executable binding.
+
+    ``selectable_after_aperture`` controls whether the capability appears in the
+    live routing catalog after the default memory aperture has already opened.
+    It is application policy, never model output.
+    """
 
     descriptor: CapabilityDescriptor
     routing_terms: tuple[str, ...]
     executor: str
+    selectable_after_aperture: bool = True
 
     def __post_init__(self) -> None:
         normalized_executor = self.executor.strip()
@@ -173,6 +173,26 @@ class CapabilityRegistry:
             self._registrations[key].descriptor.model_copy(deep=True)
             for key in sorted(self._registrations)
         )
+
+    def post_aperture_catalog(self) -> tuple[CapabilityDescriptor, ...]:
+        """Return the stable public catalog visible after default memory exposure."""
+
+        return tuple(
+            self._registrations[key].descriptor.model_copy(deep=True)
+            for key in sorted(self._registrations)
+            if self._registrations[key].selectable_after_aperture
+        )
+
+    def resolve_post_aperture_indices(
+        self,
+        indices: list[int],
+    ) -> tuple[RegisteredCapability, ...]:
+        catalog = self.post_aperture_catalog()
+        if len(indices) != len(set(indices)):
+            raise ValueError("capability indices must not contain duplicates")
+        if any(index < 0 or index >= len(catalog) for index in indices):
+            raise ValueError("capability index is outside the supplied catalog")
+        return tuple(self.get(catalog[index].capability_id) for index in indices)
 
     def discover(self, need: CapabilityNeed) -> list[CapabilityMatch]:
         matches, _role, _text = self.discover_with_trace(need)
@@ -244,17 +264,20 @@ DEFAULT_REGISTRY = CapabilityRegistry(
             ),
             routing_terms=("internal memory",),
             executor="jit_memory",
+            selectable_after_aperture=False,
         ),
         RegisteredCapability(
             descriptor=CapabilityDescriptor(
                 capability_id="memory_analysis",
                 kind=CapabilityKind.WORKFLOW,
                 description=(
-                    "Analyze, compare, or reconcile bounded persisted evidence in a fresh model call."
+                    "Focus or deepen the memory aperture: retrieve, compare, or reconcile "
+                    "additional persisted evidence before responding."
                 ),
             ),
             routing_terms=("memory analysis",),
             executor="memory_analysis",
+            selectable_after_aperture=True,
         ),
     )
 )
@@ -268,6 +291,22 @@ def deterministic_capability_event_id(request_id: UUID, role: str) -> UUID:
     return uuid5(request_id, f"event:{role}")
 
 
+def deterministic_selected_capability_step_id(
+    requester_step_id: UUID,
+    catalog_index: int,
+    capability_id: str,
+) -> UUID:
+    if catalog_index < 0:
+        raise ValueError("catalog_index must be >= 0")
+    normalized = capability_id.strip()
+    if not normalized:
+        raise ValueError("capability_id must not be empty")
+    return uuid5(
+        requester_step_id,
+        f"post-aperture-capability:{catalog_index}:{normalized}",
+    )
+
+
 def request_capability(
     conn: psycopg.Connection,
     *,
@@ -278,7 +317,7 @@ def request_capability(
     need: CapabilityNeed,
     registry: CapabilityRegistry = DEFAULT_REGISTRY,
 ) -> CapabilityPacket:
-    """Persist one deterministic lookup and return its bounded public packet."""
+    """Persist one deterministic generic lookup and return its bounded packet."""
 
     request_id = deterministic_capability_request_id(requester_step_id)
     event_store.record_event(
