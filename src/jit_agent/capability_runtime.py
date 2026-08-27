@@ -13,7 +13,14 @@ from jit_agent.capability_registry import (
     RegisteredCapability,
     deterministic_capability_event_id,
 )
-from jit_agent.interaction_working_state import load_working_state
+from jit_agent.interaction_policy import (
+    deterministic_interaction_event_id,
+    deterministic_interaction_id,
+)
+from jit_agent.interaction_working_state import (
+    activate_working_state,
+    load_working_state,
+)
 from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
 
 
@@ -135,7 +142,6 @@ def execute_registered_capability(
     planned = llm.plan_memory(capability_input or task_text)
     planned_queries = [planned.query_text] if planned.query_text != task_text else []
 
-    # Conversation/session identifiers remain provenance, not memory walls.
     need = jit_memory.build_memory_need(
         task_text,
         supplemental_query_texts=_supplemental_queries(
@@ -156,6 +162,20 @@ def execute_registered_capability(
         before_global_seq=before_global_seq,
         memory_request_id=memory_request_id,
     )
+
+    interaction_id = deterministic_interaction_id(conversation_id, correlation_id)
+    prompt_event_id = deterministic_interaction_event_id(interaction_id, "user-prompt")
+    activate_working_state(
+        conn,
+        interaction_id=interaction_id,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        activated_event_ids=[
+            *[item.source_event_id for item in packet.items],
+            prompt_event_id,
+        ],
+    )
+
     execution = CapabilityExecution(
         capability_request_id=capability_request_id,
         requester_task_id=requester_task_id,
