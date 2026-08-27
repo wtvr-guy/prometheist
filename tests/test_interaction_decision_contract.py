@@ -6,7 +6,11 @@ from jit_agent.interaction_policy import (
     InteractionAction,
     InteractionDecision,
 )
-from jit_agent.models import MemoryNeedDecision, MemoryRetrievalScope
+from jit_agent.models import (
+    HistoricalMemoryAnchorDecision,
+    MemoryNeedDecision,
+    MemoryRetrievalScope,
+)
 
 
 def test_interaction_decision_schema_contains_only_categorical_capability_requirement():
@@ -51,6 +55,21 @@ def test_memory_routing_schema_contains_only_scope_and_anchor_indices():
         "scope": "ACTIVE_AND_HISTORY",
         "anchor_indices": [2, 7],
     }
+
+
+def test_no_working_state_schema_cannot_represent_scope():
+    schema = HistoricalMemoryAnchorDecision.model_json_schema()
+
+    assert set(schema["properties"]) == {"anchor_indices"}
+    selection = HistoricalMemoryAnchorDecision(anchor_indices=[2, 7])
+    assert selection.model_dump(mode="json") == {"anchor_indices": [2, 7]}
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        HistoricalMemoryAnchorDecision.model_validate(
+            {
+                "scope": "ACTIVE_ONLY",
+                "anchor_indices": [2],
+            }
+        )
 
 
 def test_active_only_memory_routing_cannot_emit_anchor_text_or_indices():
