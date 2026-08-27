@@ -4,15 +4,8 @@ import uuid
 import pytest
 
 from jit_agent import capability_runtime
-from jit_agent.capability_registry import (
-    DEFAULT_REGISTRY,
-    CapabilityMatch,
-    CapabilityNeed,
-    CapabilityPacket,
-    deterministic_capability_request_id,
-)
+from jit_agent.capability_registry import DEFAULT_REGISTRY
 from jit_agent.models import (
-    EventType,
     MemoryNeedDecision,
     MemoryPacket,
     MemoryRetrievalScope,
@@ -38,7 +31,7 @@ class FakeLLM:
         )
 
 
-@pytest.mark.parametrize("capability_id", ["internal_memory", "memory_analysis"])
+@pytest.mark.parametrize("capability_id", ["internal_memory", "deeper_research"])
 def test_persisted_memory_capabilities_are_not_walled_by_conversation(
     monkeypatch,
     capability_id: str,
@@ -47,26 +40,8 @@ def test_persisted_memory_capabilities_are_not_walled_by_conversation(
     memory_request_id = uuid.uuid4()
     task_id = uuid.uuid4()
     step_id = uuid.uuid4()
-    capability_request_id = deterministic_capability_request_id(step_id)
     registration = DEFAULT_REGISTRY.get(capability_id)
-    discovery_packet = CapabilityPacket(
-        capability_request_id=capability_request_id,
-        requester_task_id=task_id,
-        requester_step_id=step_id,
-        need=CapabilityNeed(query_text=capability_id, limit=1),
-        matches=[CapabilityMatch(descriptor=registration.descriptor, score=8.0)],
-        selected_query_role="canonical",
-        selected_query_text=capability_id,
-    )
 
-    monkeypatch.setattr(
-        capability_runtime.event_store,
-        "get_event_by_id",
-        lambda _conn, _event_id: SimpleNamespace(
-            event_type=EventType.CAPABILITY_PACKET,
-            payload={"packet": discovery_packet.model_dump(mode="json")},
-        ),
-    )
     monkeypatch.setattr(
         capability_runtime,
         "load_working_state",
@@ -111,7 +86,7 @@ def test_persisted_memory_capabilities_are_not_walled_by_conversation(
         object(),
         llm,
         registration=registration,
-        capability_request_id=capability_request_id,
+        capability_execution_id=uuid.uuid4(),
         requester_task_id=task_id,
         requester_step_id=step_id,
         conversation_id=active_conversation_id,
