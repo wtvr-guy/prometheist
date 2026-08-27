@@ -1,14 +1,14 @@
-"""Target-specific Ollama residency observations for guarded local worker claims.
+"""Target-specific Ollama residency observations for local interaction admission.
 
 The operating-system memory probe reports resident model pages as unavailable.
-A worker that will reuse the same already-loaded local model must not budget
-those pages as a second cold model load.  This module therefore exposes a
-claim-only effective-memory probe: raw host metrics stay authoritative, while a
-bounded credit may be added only when Ollama confirms the configured model is
-currently resident.
+Prometheist therefore distinguishes a cold local-LLM launch from a warm launch
+that reuses the configured model already resident in Ollama. Scheduler admission
+uses the state-dependent incremental requirement; guarded worker claims recheck
+residency and conservatively compensate if the state changed after scheduling.
 """
 from __future__ import annotations
 
+import math
 import os
 from typing import Any
 
@@ -79,7 +79,7 @@ class OllamaRuntimeState(BaseModel):
         return system_bytes // _MIB
 
     def reusable_memory_credit_mib(self, policy: ResourceSafetyPolicy) -> int:
-        """Return the bounded cold-load RAM that this resident model can satisfy."""
+        """Return the bounded cold-load RAM already represented by resident pages."""
 
         if not self.probe_ok or not self.resident:
             return 0
@@ -89,6 +89,24 @@ class OllamaRuntimeState(BaseModel):
             - policy.default_process_memory_mib,
         )
         return min(max_credit, self.system_memory_mib)
+
+    def incremental_process_memory_mib(self, policy: ResourceSafetyPolicy) -> int:
+        """RAM that starting this interaction can add to current host pressure.
+
+        A verified resident match needs only ordinary worker/process overhead.
+        Every nonresident or failed observation falls back to the full cold local
+        LLM budget. This is intentionally fail-closed.
+        """
+
+        if self.probe_ok and self.resident:
+            return policy.default_process_memory_mib
+        return policy.default_llm_process_memory_mib
+
+    @property
+    def residency_label(self) -> str:
+        if not self.probe_ok:
+            return "unverified-cold-fallback"
+        return "warm-resident" if self.resident else "cold-nonresident"
 
 
 class OllamaRuntimeProbe:
@@ -161,13 +179,14 @@ class OllamaRuntimeProbe:
 
 
 class OllamaClaimHostResourceProbe:
-    """Target-specific effective RAM view for a guarded Ollama worker claim.
+    """Reconcile scheduling-time and claim-time Ollama residency safely.
 
-    This wrapper must not be used for scheduler-wide admission because its
-    resident-model credit is reusable only by work targeting the same configured
-    Ollama model.  The scheduler continues to reserve the full cold-load budget;
-    this probe only prevents claim-time revalidation from charging that already
-    resident footprint again.
+    The task's durable reservation records the incremental RAM required when it
+    was admitted. Immediately before each worker launch, this probe rechecks the
+    configured model. If the model became warm after a cold reservation, a
+    bounded credit prevents double-counting. If a warm model unloaded after a
+    small reservation, an uncertainty-adjusted debit forces the claim gate to
+    prove enough physical RAM exists for a cold load before launch.
     """
 
     def __init__(
@@ -176,28 +195,70 @@ class OllamaClaimHostResourceProbe:
         base_probe: HostResourceProbe | None = None,
         runtime_probe: OllamaRuntimeProbe | None = None,
         policy: ResourceSafetyPolicy | None = None,
+        scheduled_memory_mib: int | None = None,
     ) -> None:
         self.base_probe = base_probe or SystemHostResourceProbe()
         self.runtime_probe = runtime_probe or OllamaRuntimeProbe()
         self.policy = policy or ResourceSafetyPolicy()
+        self.scheduled_memory_mib = (
+            scheduled_memory_mib
+            if scheduled_memory_mib is not None
+            else self.policy.default_llm_process_memory_mib
+        )
+        if self.scheduled_memory_mib < 1:
+            raise ValueError("scheduled_memory_mib must be positive")
         self.last_physical_metrics: HostResourceMetrics | None = None
         self.last_runtime_state: OllamaRuntimeState | None = None
+        self.last_effective_required_memory_mib = self.scheduled_memory_mib
         self.last_memory_credit_mib = 0
+        self.last_memory_debit_mib = 0
 
     def capture(self) -> HostResourceMetrics:
         physical = self.base_probe.capture()
         runtime = self.runtime_probe.capture()
-        credit = runtime.reusable_memory_credit_mib(self.policy)
+        required = runtime.incremental_process_memory_mib(self.policy)
+        delta = self.scheduled_memory_mib - required
+
         self.last_physical_metrics = physical.model_copy(deep=True)
         self.last_runtime_state = runtime.model_copy(deep=True)
-        self.last_memory_credit_mib = credit
-        if credit <= 0:
+        self.last_effective_required_memory_mib = required
+        self.last_memory_credit_mib = max(0, delta)
+        self.last_memory_debit_mib = 0
+
+        if delta == 0:
             return physical
+
+        if delta > 0:
+            # A cold reservation is larger than the now-warm incremental need.
+            # Under-crediting is conservative because uncertainty is applied
+            # again by the normal host-safety calculation.
+            return physical.model_copy(
+                update={
+                    "memory_available_mib": min(
+                        physical.memory_total_mib,
+                        physical.memory_available_mib + delta,
+                    )
+                },
+                deep=True,
+            )
+
+        # A task admitted while warm now needs a cold load. The normal claim
+        # gate will compare against the smaller durable reservation, so reduce
+        # the observed free-RAM input enough that, after uncertainty is applied,
+        # the smaller comparison remains at least as strict as the cold need.
+        missing = -delta
+        retained_percent = 100 - self.policy.uncertainty_headroom_percent
+        debit = (
+            math.ceil(missing * 100 / retained_percent)
+            if retained_percent > 0
+            else missing
+        )
+        self.last_memory_debit_mib = debit
         return physical.model_copy(
             update={
-                "memory_available_mib": min(
-                    physical.memory_total_mib,
-                    physical.memory_available_mib + credit,
+                "memory_available_mib": max(
+                    0,
+                    physical.memory_available_mib - debit,
                 )
             },
             deep=True,
