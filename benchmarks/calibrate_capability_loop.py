@@ -17,7 +17,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
-from pathlib import Path
 from typing import Iterable
 
 from jit_agent.interaction_policy import (
@@ -121,8 +120,6 @@ def execute_script(round_budget: int, scenario: Scenario) -> dict[str, object]:
             }
 
         capability_rounds += 1
-        # Production raises here after executing the final allowed capability
-        # round rather than constructing another routing round.
         if round_index + 1 >= round_budget:
             return {
                 "outcome": "ROUND_LIMIT_FAIL_CLOSED",
