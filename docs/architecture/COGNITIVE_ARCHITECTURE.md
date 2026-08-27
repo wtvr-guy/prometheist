@@ -2,6 +2,8 @@
 
 **Status:** target architecture beginning with v0.7. Revised 2026-08-27 after native continuity experiments established the default attention-aperture boundary.
 
+**Constitutional status:** primary architecture authority for Articles 1, 2, 15, 16, 17, 18, and 19 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md). This document explains those constitutional rules in depth and is subordinate to the Constitution where wording conflicts.
+
 Prometheist is evolving from a stateless multi-agent prototype into a persistent cognitive system whose identity, memory, attention, execution state, interaction continuity, and policy remain outside all LLM contexts and worker processes.
 
 The central architectural rule is:
@@ -136,6 +138,8 @@ The number of execution slots must not be hard-coded to CPU thread count. Differ
 
 > **Concurrency is bounded by declared resource capacity, while task selection and assignment remain globally deterministic.**
 
+Detailed constitutional execution rules now live in [`ATTENTION_AND_EXECUTION_GOVERNANCE.md`](ATTENTION_AND_EXECUTION_GOVERNANCE.md).
+
 ## 5. Scheduling epochs and determinism
 
 Workers must not race independently to claim arbitrary tasks. Scheduling occurs in deterministic epochs:
@@ -149,6 +153,8 @@ Workers must not race independently to claim arbitrary tasks. Scheduling occurs 
 7. allow workers to execute only persisted assignments.
 
 Determinism means identical durable task state + identical captured resource state + identical policy version produces the same scheduling result.
+
+The repository-wide determinism contract is defined in [`SYSTEM_DETERMINISM.md`](SYSTEM_DETERMINISM.md).
 
 ## 6. Priority, service guarantees, interruption, and resource safety
 
@@ -319,6 +325,14 @@ Capabilities expose explicit schemas, permissions, resource requirements, idempo
 
 Basic memory activation is intentionally outside this optional capability boundary because it is part of the cognitive substrate. Deeper memory analysis is inside it.
 
+### 16.1 Internal memory versus external knowledge
+
+Prometheist's persistent internal memory and knowledge fetched from outside the system are distinct evidence domains.
+
+Internal memory answers questions about the system's retained experience, user/system history, prior evidence, commitments, observations, and internal state. External capabilities such as web/API/tool retrieval obtain information from the outside world now. External evidence must retain source and freshness provenance and must not silently masquerade as something Prometheist previously remembered. Conversely, an old internal memory is not automatically evidence of the current external state of the world.
+
+A result may combine both domains, but their provenance and authority remain explicit.
+
 ## 17. Epistemic boundary
 
 Attention, activation, retrieval, interpretation, and truth are distinct.
@@ -351,6 +365,8 @@ Architectural mechanisms are experimental claims:
 > **Freeze baseline -> add one mechanism -> rerun the same experiment -> keep it only if the evidence justifies it.**
 
 Negative results are retained. Phrase-cue continuity and “ask the model whether it needs unseen memory” are now explicit negative results from v0.7 acceptance.
+
+The engineering rules for constraints, benchmarks, and evidence are defined in [`../engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md`](../engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md) and [`../engineering/TESTING_AND_ACCEPTANCE.md`](../engineering/TESTING_AND_ACCEPTANCE.md).
 
 ## 20. v1.0 target invariant
 
