@@ -338,6 +338,32 @@ def _format_memory_packet(
     )
 
 
+def _format_router_memory_packet(packet: MemoryPacket) -> str:
+    """Expose only cognition-relevant memory evidence to the routing worker.
+
+    Durable event identifiers, chronology, scores, retrieval diagnostics, and
+    association provenance remain application-owned. The router needs evidence
+    content to decide whether another capability is required, not transport or
+    audit metadata.
+    """
+
+    if not packet.items:
+        return "\n\n[Activated memory]\nsupported: false\nitems: []"
+    blocks = [
+        (
+            f"item: {index}\n"
+            f"event_type: {item.event_type.value}\n"
+            f"content: {item.content}"
+        )
+        for index, item in enumerate(packet.items)
+    ]
+    return (
+        "\n\n[Activated memory]\n"
+        f"supported: {str(packet.supported).lower()}\n"
+        + "\n\n".join(blocks)
+    )
+
+
 def _format_capability_catalog(catalog: tuple[CapabilityDescriptor, ...]) -> str:
     if not catalog:
         return "\n\n[Capability catalog]\nnone"
@@ -471,7 +497,7 @@ class OllamaClient:
         last_error: Exception | None = None
         user = (
             prompt
-            + _format_memory_packet(memory_packet)
+            + _format_router_memory_packet(memory_packet)
             + _format_completed_results(completed_results)
             + _format_capability_result_data(capability_results)
             + _format_capability_catalog(capability_catalog)
