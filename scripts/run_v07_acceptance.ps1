@@ -28,14 +28,18 @@ try {
         tests/test_interaction_runtime.py
     if ($LASTEXITCODE -ne 0) { throw "worker/runtime acceptance failed" }
 
+    # Run the complete deterministic regression suite before the expensive
+    # native Ollama gate. This catches policy/contract regressions in seconds
+    # instead of allowing them to surface only after multi-minute model runs.
+    uv run --locked pytest -q -m "not ollama"
+    if ($LASTEXITCODE -ne 0) { throw "deterministic regression suite failed" }
+
     uv run --locked pytest -vv -s -m ollama `
         tests/test_acceptance_restart.py `
         tests/test_cross_conversation_memory.py `
         tests/test_acceptance_conversation_continuity.py
-    if ($LASTEXITCODE -ne 0) { throw "Ollama continuity acceptance failed" }
-
-    uv run --locked pytest -q -m "not ollama"
     $exitCode = $LASTEXITCODE
+    if ($exitCode -ne 0) { throw "Ollama continuity acceptance failed" }
 }
 finally {
     [Environment]::SetEnvironmentVariable(
