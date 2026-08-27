@@ -6,7 +6,7 @@ import sys
 from uuid import UUID
 
 from jit_agent import db
-from jit_agent.evidence_bound_llm import EvidenceBoundOllamaClient
+from jit_agent.budgeted_evidence_llm import BudgetedEvidenceBoundOllamaClient
 from jit_agent.interaction_runtime import execute_claimed_interaction_step
 
 
@@ -32,7 +32,7 @@ def main() -> None:
     with db.get_connection() as conn:
         execute_claimed_interaction_step(
             conn,
-            EvidenceBoundOllamaClient(),
+            BudgetedEvidenceBoundOllamaClient(),
             claim_id=claim_id,
             worker_id=worker_id,
             scheduler_key=scheduler_key,
