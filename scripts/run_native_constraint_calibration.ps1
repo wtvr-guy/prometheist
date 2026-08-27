@@ -6,6 +6,10 @@ try {
     $locationPushed = $true
     $env:PYTHONUTF8 = "1"
 
+    if ($env:OS -ne "Windows_NT") {
+        throw "Native constraint calibration must run on the intended Windows host."
+    }
+
     uv sync --frozen
     if ($LASTEXITCODE -ne 0) { throw "uv sync failed" }
 
