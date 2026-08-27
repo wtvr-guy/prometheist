@@ -39,13 +39,20 @@ class FixedProbe:
 
 
 class DirectLLM:
-    def classify(self, prompt: str) -> InteractionDecision:
+    def classify(self, prompt: str, memory_packet: MemoryPacket) -> InteractionDecision:
+        del prompt, memory_packet
         return InteractionDecision(required_capability=CapabilityRequirement.NONE)
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
         return "completed response"
 
-    def plan_memory(self, task: str) -> MemoryNeedDecision:
+    def plan_memory(
+        self,
+        task: str,
+        *,
+        active_state_available: bool,
+    ) -> MemoryNeedDecision:
+        del task, active_state_available
         return MemoryNeedDecision(
             scope=MemoryRetrievalScope.HISTORY_ONLY,
             anchor_indices=[0],
