@@ -162,12 +162,14 @@ def measure_ollama_runtime() -> dict[str, Any]:
         "benchmark_id": "OLLAMA-RUNTIME-001",
         "result": "PILOT_NATIVE_MEASUREMENT" if state.probe_ok else "NO_NATIVE_EVIDENCE",
         "runtime_state": state.model_dump(mode="json"),
+        "incremental_process_memory_mib": state.incremental_process_memory_mib(policy),
         "reusable_system_memory_credit_mib": state.reusable_memory_credit_mib(policy),
         "policy_under_measurement": policy.model_dump(mode="json"),
         "decision": (
-            "The running-model observation determines whether claim-time RAM may credit part of "
-            "the configured cold-load budget. Probe failure or a nonresident model earns zero "
-            "credit; the full cold-load requirement remains authoritative."
+            "The running-model observation determines the interaction's incremental RAM "
+            "requirement before scheduler admission. A verified resident configured model uses "
+            "ordinary worker overhead; a nonresident or failed probe uses the full cold-load "
+            "budget. Worker claims recheck this state before every process launch."
         ),
     }
 
@@ -187,6 +189,7 @@ def measure_worker_runtime() -> dict[str, Any]:
         "tests/test_native_constraint_calibration.py",
         "tests/test_native_policy.py",
         "tests/test_ollama_runtime.py",
+        "tests/test_interaction_resource_admission.py",
         "tests/test_interaction_runtime.py",
     ]
     started = time.monotonic()
