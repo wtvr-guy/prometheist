@@ -140,7 +140,7 @@ def test_deeper_research_resolves_model_indices_to_canonical_focus_events(monkey
 
     assert planner.research_packets == [packet]
     need = captured["need"]
-    assert need.query_text is None
+    assert need.query_text == "Investigate the unresolved question."
     assert need.entities == []
     assert need.focus_event_ids == [
         packet.items[2].source_event_id,
@@ -166,7 +166,7 @@ def test_cross_reference_resolves_two_or_more_candidates_as_one_joint_need(monke
 
     assert planner.cross_packets == [packet]
     need = captured["need"]
-    assert need.query_text is None
+    assert need.query_text == "Investigate the unresolved question."
     assert need.focus_event_ids == [
         packet.items[3].source_event_id,
         packet.items[1].source_event_id,
@@ -189,7 +189,7 @@ def test_focused_recall_resolves_exactly_one_canonical_candidate(monkeypatch):
 
     assert planner.focused_packets == [packet]
     need = captured["need"]
-    assert need.query_text is None
+    assert need.query_text == "Investigate the unresolved question."
     assert need.focus_event_ids == [packet.items[1].source_event_id]
     assert captured["profile"] is jit_memory.MemoryRecallProfile.FOCUSED_RECALL
     assert execution.result_data["candidate_index"] == 1
