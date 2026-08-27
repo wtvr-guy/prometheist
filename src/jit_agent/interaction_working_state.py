@@ -40,8 +40,8 @@ def deterministic_working_state_id(conversation_id: UUID) -> UUID:
     return uuid5(conversation_id, "interaction-working-state")
 
 
-def deterministic_working_state_event_id(interaction_id: UUID) -> UUID:
-    return uuid5(interaction_id, "working-state-event")
+def deterministic_working_state_event_id(interaction_id: UUID, revision: int) -> UUID:
+    return uuid5(interaction_id, f"working-state-event:{revision}")
 
 
 def load_working_state(
@@ -87,7 +87,8 @@ def activate_working_state(
 
     Activation order is significant: newly used evidence comes first, then the
     older active set. No linguistic interpretation or copied event content is
-    stored in the state itself.
+    stored in the state itself. Multiple activation points in one interaction
+    create append-only revisions rather than rewriting a prior state event.
     """
 
     previous = load_working_state(conn, conversation_id)
@@ -121,7 +122,7 @@ def activate_working_state(
         event_type=EventType.INTERACTION_WORKING_STATE,
         source=SOURCE,
         payload={"state": state.model_dump(mode="json")},
-        event_id=deterministic_working_state_event_id(interaction_id),
+        event_id=deterministic_working_state_event_id(interaction_id, revision),
     )
     return state
 
