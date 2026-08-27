@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from types import SimpleNamespace
 import uuid
 
@@ -13,9 +12,6 @@ from jit_agent.capability_registry import (
 from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
 
 
-DISCOVERY_TIME = datetime(2026, 8, 26, 17, 18, tzinfo=timezone.utc)
-
-
 class Planner:
     def plan_memory(self, task: str) -> MemoryNeedDecision:
         return MemoryNeedDecision(
@@ -24,45 +20,43 @@ class Planner:
         )
 
 
-def _packet(step_id: uuid.UUID, task_id: uuid.UUID) -> CapabilityPacket:
-    registration = DEFAULT_REGISTRY.get("internal_memory")
+def _packet(step_id: uuid.UUID, task_id: uuid.UUID, capability_id="internal_memory"):
+    registration = DEFAULT_REGISTRY.get(capability_id)
     return CapabilityPacket(
         capability_request_id=deterministic_capability_request_id(step_id),
         requester_task_id=task_id,
         requester_step_id=step_id,
         need=CapabilityNeed(
             query_text="What did I establish?",
-            supplemental_query_texts=[
-                "access to persisted internal history to identify established kestrel rule "
-                "and its associated constraint profile"
-            ],
+            supplemental_query_texts=["persisted internal history"],
             limit=1,
         ),
-        matches=[
-            CapabilityMatch(
-                descriptor=registration.descriptor,
-                score=1.0,
-            )
-        ],
+        matches=[CapabilityMatch(descriptor=registration.descriptor, score=1.0)],
         selected_query_role="canonical",
         selected_query_text="What did I establish?",
     )
 
 
-def _install_fakes(monkeypatch, packet: CapabilityPacket, captured: dict) -> None:
+def _install_fakes(monkeypatch, packet, captured, active_event_ids):
     monkeypatch.setattr(
         capability_runtime.event_store,
         "get_event_by_id",
         lambda _conn, _event_id: SimpleNamespace(
             event_type=EventType.CAPABILITY_PACKET,
             payload={"packet": packet.model_dump(mode="json")},
-            created_at=DISCOVERY_TIME,
         ),
     )
     monkeypatch.setattr(
         capability_runtime.event_store,
         "record_event",
         lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        capability_runtime,
+        "load_working_state",
+        lambda _conn, _conversation_id: SimpleNamespace(
+            active_event_ids=list(active_event_ids)
+        ),
     )
 
     def fake_request_memory(_conn, **kwargs):
@@ -74,115 +68,61 @@ def _install_fakes(monkeypatch, packet: CapabilityPacket, captured: dict) -> Non
             items=[],
         )
 
+    monkeypatch.setattr(capability_runtime.jit_memory, "request_memory", fake_request_memory)
     monkeypatch.setattr(
-        capability_runtime.jit_memory,
-        "request_memory",
-        fake_request_memory,
+        capability_runtime,
+        "activate_working_state",
+        lambda *args, **kwargs: captured.setdefault("activation", kwargs),
     )
 
 
-def test_internal_memory_preserves_discovery_supplemental_and_cross_conversation_scope(
-    monkeypatch,
-):
+def _execute(monkeypatch, capability_id="internal_memory"):
     task_id = uuid.uuid4()
     step_id = uuid.uuid4()
-    packet = _packet(step_id, task_id)
+    conversation_id = uuid.uuid4()
+    correlation_id = uuid.uuid4()
+    state_event_id = uuid.uuid4()
+    packet = _packet(step_id, task_id, capability_id)
     captured = {}
-    _install_fakes(monkeypatch, packet, captured)
+    _install_fakes(monkeypatch, packet, captured, [state_event_id])
 
     capability_runtime.execute_registered_capability(
         object(),
         Planner(),
-        registration=DEFAULT_REGISTRY.get("internal_memory"),
+        registration=DEFAULT_REGISTRY.get(capability_id),
         capability_request_id=packet.capability_request_id,
         requester_task_id=task_id,
         requester_step_id=step_id,
-        conversation_id=uuid.uuid4(),
-        correlation_id=uuid.uuid4(),
-        task_text=(
-            "Which of those approaches conflicts with my established Kestrel rule, "
-            "and what constraint profile did I give that rule?"
-        ),
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        task_text="Natural-language request whose wording is not application policy.",
         capability_input=None,
         before_global_seq=100,
         memory_request_id=uuid.uuid4(),
     )
+    return captured, state_event_id, conversation_id, correlation_id
+
+
+def test_internal_memory_uses_working_state_and_stateless_semantic_plan(monkeypatch):
+    captured, state_event_id, conversation_id, correlation_id = _execute(monkeypatch)
 
     need = captured["need"]
     assert need.conversation_id is None
-    assert need.entities == ["Kestrel"]
-    assert need.reference_time is None
-    assert need.supplemental_query_texts == [
-        "access to persisted internal history to identify established kestrel rule "
-        "and its associated constraint profile"
-    ]
-
-
-def test_internal_memory_uses_durable_reference_time_for_recent_context(monkeypatch):
-    task_id = uuid.uuid4()
-    step_id = uuid.uuid4()
-    packet = _packet(step_id, task_id)
-    captured = {}
-    _install_fakes(monkeypatch, packet, captured)
-
-    capability_runtime.execute_registered_capability(
-        object(),
-        Planner(),
-        registration=DEFAULT_REGISTRY.get("internal_memory"),
-        capability_request_id=packet.capability_request_id,
-        requester_task_id=task_id,
-        requester_step_id=step_id,
-        conversation_id=uuid.uuid4(),
-        correlation_id=uuid.uuid4(),
-        task_text="What nickname are we using for this plan, and which approach did you just rule out?",
-        capability_input=None,
-        before_global_seq=100,
-        memory_request_id=uuid.uuid4(),
-    )
-
-    need = captured["need"]
-    assert need.reference_time == DISCOVERY_TIME
-    assert need.conversation_id is None
-
-
-def test_memory_analysis_merges_discovery_and_planned_supplementals(monkeypatch):
-    task_id = uuid.uuid4()
-    step_id = uuid.uuid4()
-    packet = _packet(step_id, task_id)
-    packet = packet.model_copy(
-        update={
-            "matches": [
-                CapabilityMatch(
-                    descriptor=DEFAULT_REGISTRY.get("memory_analysis").descriptor,
-                    score=1.0,
-                )
-            ]
-        }
-    )
-    captured = {}
-    _install_fakes(monkeypatch, packet, captured)
-
-    capability_runtime.execute_registered_capability(
-        object(),
-        Planner(),
-        registration=DEFAULT_REGISTRY.get("memory_analysis"),
-        capability_request_id=packet.capability_request_id,
-        requester_task_id=task_id,
-        requester_step_id=step_id,
-        conversation_id=uuid.uuid4(),
-        correlation_id=uuid.uuid4(),
-        task_text="Use memory analysis to recall the codename.",
-        capability_input=None,
-        before_global_seq=100,
-        memory_request_id=uuid.uuid4(),
-    )
-
-    need = captured["need"]
-    assert need.conversation_id is None
+    assert need.active_event_ids == [state_event_id]
     assert need.entities == ["Project Oriole"]
     assert need.reference_time is None
     assert need.supplemental_query_texts == [
-        "access to persisted internal history to identify established kestrel rule "
-        "and its associated constraint profile",
         "Project Oriole codename",
+        "persisted internal history",
     ]
+    assert captured["activation"]["conversation_id"] == conversation_id
+    assert captured["activation"]["correlation_id"] == correlation_id
+
+
+def test_memory_analysis_uses_same_state_driven_memory_boundary(monkeypatch):
+    captured, state_event_id, _, _ = _execute(monkeypatch, "memory_analysis")
+
+    need = captured["need"]
+    assert need.active_event_ids == [state_event_id]
+    assert need.entities == ["Project Oriole"]
+    assert need.supplemental_query_texts[0] == "Project Oriole codename"
