@@ -88,8 +88,9 @@ def open_attention_aperture(
         conversation_id=conversation_id,
         correlation_id=correlation_id,
         activated_event_ids=[
-            *[item.source_event_id for item in packet.items],
+            # Current perception must survive WorkingState's bounded truncation.
             prompt_event_id,
+            *[item.source_event_id for item in packet.items],
         ],
         activation_key="aperture",
     )
