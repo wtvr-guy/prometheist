@@ -62,19 +62,19 @@ def _catalog() -> tuple[CapabilityDescriptor, ...]:
     )
 
 
+def _respond_payload() -> dict:
+    return {
+        "message": {
+            "content": '{"next_action":"RESPOND","capability_indices":[]}',
+        },
+        "done_reason": "stop",
+        "eval_count": 12,
+    }
+
+
 def test_qwen3_structured_call_appends_latest_no_think_soft_switch():
     client = OllamaClient(base_url="http://ollama.test", model="qwen3:4b")
-    fake = _FakeHTTPClient(
-        [
-            {
-                "message": {
-                    "content": '{"next_action":"RESPOND","capability_indices":[]}',
-                },
-                "done_reason": "stop",
-                "eval_count": 12,
-            }
-        ]
-    )
+    fake = _FakeHTTPClient([_respond_payload()])
     client._client = fake
 
     decision = client.classify("Answer from established memory.", _packet(), _catalog())
@@ -82,6 +82,22 @@ def test_qwen3_structured_call_appends_latest_no_think_soft_switch():
     assert decision.next_action is InteractionAction.RESPOND
     assert fake.calls[0][1]["think"] is False
     assert fake.calls[0][1]["messages"][1]["content"].endswith("/no_think")
+
+
+def test_qwen3_instruct_call_does_not_append_hybrid_no_think_soft_switch():
+    client = OllamaClient(
+        base_url="http://ollama.test",
+        model="qwen3:4b-instruct-2507-q4_K_M",
+    )
+    fake = _FakeHTTPClient([_respond_payload()])
+    client._client = fake
+
+    decision = client.classify("Answer from established memory.", _packet(), _catalog())
+
+    assert decision.next_action is InteractionAction.RESPOND
+    user_content = fake.calls[0][1]["messages"][1]["content"]
+    assert not user_content.endswith("/no_think")
+    assert "/no_think" not in user_content
 
 
 def test_qwen3_empty_or_thinking_only_output_retries_with_larger_budget():
