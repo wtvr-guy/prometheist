@@ -1,43 +1,45 @@
-# v0.7 Working-State Continuity Pivot — 2026-08-26
+# v0.7 Working-State and Attention-Aperture Pivot — 2026-08-26/27
 
 ## Status
 
-Accepted design correction inside the v0.7 release candidate. This does not pull the full future epistemic/cognitive-state roadmap into v0.7. It adds only the minimal durable active-state mechanism required to test natural stateless continuity without phrase-specific application policy.
+Accepted design correction inside the v0.7 release candidate. This does not pull the full future epistemic/cognitive-state roadmap into v0.7. It adds only the minimal durable active-state and default-memory-exposure mechanisms required by the frozen native continuity experiment.
 
-## Why this changed
+## Experimental sequence
 
-The native Windows/PostgreSQL/Ollama acceptance gate repeatedly exposed the same architectural weakness in different forms. The v0.7 interaction path attempted to reconstruct the current cognitive situation directly from each new utterance by progressively adding application-owned text cues:
+Native Windows/PostgreSQL/Ollama acceptance exposed two separate architectural failures.
 
-- canonical and supplemental query formulations;
-- conversation-scope corrections;
-- explicit entity extraction;
-- singleton proper-name extraction;
-- recency/reference-time phrase detection.
+### Negative result A — phrase-cue continuity
 
-Each individual repair was locally defensible, but the sequence created an undesirable pattern: a new natural-language failure tended to require another term, phrase, or regex rule. One repair also regressed a previously passing turn when a temporal heuristic fired on `those approaches`. This is evidence against the hypothesis that natural interaction continuity should be primarily reconstructed from a hand-maintained vocabulary of surface forms.
+The first v0.7 interaction path attempted to reconstruct the current cognitive situation from each new utterance by progressively adding application-owned text cues: supplemental formulations, scope corrections, entity extraction, singleton proper-name extraction, and recency/reference-time phrase detection.
 
-The important result is therefore a negative one:
+Each repair was locally defensible, but the sequence created an ever-growing vocabulary problem and one temporal heuristic regressed a previously passing turn.
 
-> **The v0.7 acceptance experiment did not support direct utterance -> phrase/entity/recency cues -> MemoryNeed as a sufficiently general continuity mechanism.**
+> **Result A:** direct utterance -> hand-maintained phrase/entity/recency cues -> MemoryNeed is not accepted as the general continuity mechanism.
 
-That result is retained rather than tuned away.
+The intervention was a minimal durable `InteractionWorkingState` containing only bounded canonical active-event IDs.
 
-## Research synthesis that informed the replacement
+### Negative result B — ask before remembering
 
-Two concept reports added to `docs/concepts/` independently point toward the same missing mechanism:
+After WorkingState and constrained routing were introduced, the Kestrel scenario exposed a deeper problem on its first active turn. The current percept explicitly mentioned Project Kestrel, Docker Compose, and PostgreSQL on Windows, while persistent memory already contained a user-authored rule forbidding Docker. The classifier nevertheless selected no memory capability because it saw only the current percept. The response worker therefore never saw the historical rule and recommended the conflicting option.
 
-- `lessons_from_cognitive_neuroscience.md` identifies the absence of an explicit durable working state, distinct from autobiographical/long-term memory, as one of Prometheist's largest mechanism-level gaps. It recommends durable working state plus bounded recurrent inference rather than forcing long-term retrieval to reconstruct the entire present situation on every inference call.
-- `lessons_from_similar_projects.md` identifies current-situation / working-state representations in Soar, LIDA, related cognitive architectures, and durable agent runtimes as mature precedents worth borrowing while preserving Prometheist's system-owned continuity and disposable-worker model.
+That failure is not specific to Kestrel. It reveals a circular dependency:
 
-These are design inputs, not appeals to analogy. The change is justified by the observed acceptance failure and remains subject to the project's experimental rule.
+> **A stateless model cannot reliably decide whether unseen persistent memory is relevant when the evidence required to make that decision may itself be in persistent memory.**
 
-## New v0.7 hypothesis
+> **Result B:** basic access to Prometheist's own persistent memory must not depend on a model first requesting a memory capability.
 
-> **Natural stateless interaction continuity requires a bounded durable representation of which canonical events are currently active, separate from long-term memory retrieval.**
+## Research synthesis
 
-The minimal v0.7 mechanism is `InteractionWorkingState`.
+The concept reports in `docs/concepts/` support the same separation without being treated as authority by analogy:
 
-It deliberately does **not** store a free-form summary, inferred truth, user profile, parsed nickname table, option table, or an ever-growing vocabulary of referential phrases. Its initial state is only:
+- `lessons_from_cognitive_neuroscience.md` identifies a bounded working state distinct from long-term memory as a major missing mechanism and emphasizes selective activation rather than full-history context.
+- `lessons_from_similar_projects.md` identifies current-situation/working-state representations and memory/system separation across mature cognitive and agent architectures.
+
+The change is justified by the observed native failures; the research synthesis helps explain why the replacement mechanism is plausible.
+
+## Minimal v0.7 WorkingState
+
+`InteractionWorkingState` remains deliberately small:
 
 ```text
 state_id
@@ -46,138 +48,118 @@ conversation_ids       # provenance/binding only
 active_event_ids       # bounded canonical event pointers
 ```
 
-The active set is an activation record, not a second memory store. Canonical event content remains authoritative in the append-only event ledger.
+It does not store a free-form summary, inferred truth, user profile, parsed nickname table, option table, or referential phrase vocabulary. The append-only event ledger remains authoritative.
 
-## Additional refinement: minimize model-authored control text
+## Attention aperture
 
-The first WorkingState native run produced another useful failure. WorkingState correctly rehydrated the active Kestrel turn, but the stateless memory planner generated descriptive strings such as `Kestrel rule` and `constraint profile` rather than a stable historical anchor. The kernel therefore had present context but still failed to surface the older rule.
-
-That failure exposed a more general control-plane principle:
-
-> **Use model-generated natural language only when natural language is the required product. Prefer closed categorical or mechanically verifiable outputs for routing and state transitions.**
-
-The v0.7 model-output contracts are therefore tightened again:
-
-### Interaction routing
-
-The model returns only one enum:
+Every percept now automatically receives a small, bounded, provenance-bearing JIT Memory packet before any model routing decision.
 
 ```text
-required_capability:
-  NONE
-  INTERNAL_MEMORY
-  MEMORY_ANALYSIS
+percept + durable WorkingState
+        |
+        v
+system-owned bounded JIT recall
+        |
+        v
+default attention-aperture MemoryPacket
+        |
+        v
+fresh stateless routing model
+        |
+        +--> NONE -> ordinary response
+        |
+        +--> MEMORY_ANALYSIS -> deeper/focused memory work
 ```
 
-The application maps that enum to an exact installed capability id. The model no longer emits `capability_query` or `capability_input` strings.
+The default aperture is intentionally small rather than exhaustive. It exposes immediately relevant canonical evidence while preserving bounded context.
 
-### Memory routing
+`MEMORY_ANALYSIS` remains an optional capability because it is an operation performed on memory. Basic memory exposure is cognitive substrate and is not model-selected.
 
-The application deterministically builds a bounded anchor catalog from the exact current task plus active canonical event text. The memory-routing model returns only:
+The default registry may retain `internal_memory` for generic/historical compatibility, but the live interaction model no longer emits or selects it.
 
-```text
-scope:
-  ACTIVE_ONLY
-  HISTORY_ONLY
-  ACTIVE_AND_HISTORY
+## Model-output rule
 
-anchor_indices: [bounded integer indices into the supplied catalog]
-```
+The native failures also establish a system-wide protocol preference:
 
-The model cannot invent an entity or retrieval query. The system validates every selected index against the catalog and converts the selected canonical tokens into retrieval anchors. Extra output fields are rejected.
+> **Model-generated natural language is the representation of last resort. Use it only when natural language is genuinely the product or when no smaller mechanically verifiable representation can express the required semantics.**
 
-This means the semantic model is used for the part models are useful at—choosing among bounded interpretations—without letting it author the control language consumed by deterministic subsystems.
-
-The preference order for model-output design is now:
+Preferred order:
 
 ```text
-enum / boolean / id / bounded index
+enum / boolean / application-owned id / bounded integer
     before
-extractive exact-span selection
+mechanically verified extractive selection
     before
 free-form generated natural language
 ```
 
-Final user-facing answers remain natural language because language is the product in that stage.
+For the live v0.7 path:
 
-## Execution model
+- post-aperture interaction routing returns only `NONE` or `MEMORY_ANALYSIS`;
+- the model cannot emit a basic-memory option because the aperture has already occurred;
+- capability IDs are application-owned;
+- the model emits no capability query/input, retrieval query, entity string, executor name, event ID, explanation, or phrase rule;
+- deeper memory routing returns only a scope enum plus bounded indices into an application-generated anchor catalog;
+- invalid/duplicate/out-of-range indices and unexpected fields are rejected;
+- final user-facing response text remains natural language because language is the product at that boundary.
 
-The revised continuity path is:
+The same rule applies to tests. Acceptance must not grow a hand-written English parser or keyword-slot list to decide whether model prose is semantically correct. Where the experiment needs a deterministic verdict, the fixture asks for an exact machine-verifiable value or tuple and checks source-event provenance separately.
+
+## Revised live interaction path
 
 ```text
-new interaction
+new percept
+    -> durable interaction task
     -> load bounded durable WorkingState
-    -> fresh stateless capability enum selection
-    -> if memory is required, rehydrate bounded active canonical text
-    -> deterministically build anchor catalog from current task + active canonical text
-    -> fresh stateless memory router selects scope enum + anchor indices only
-    -> JIT Memory rehydrates active canonical event IDs
-    -> when requested, deterministic long-term retrieval uses canonical task text + validated anchors
-    -> compose bounded active and historical evidence without either class starving the other
+    -> AUTOMATIC bounded attention-aperture recall
+    -> fresh stateless enum-only post-aperture routing
+       -> NONE: answer from percept + aperture packet
+       -> MEMORY_ANALYSIS: focused/deeper memory retrieval/analysis
     -> fresh stateless response synthesis
     -> persist response
-    -> promote newly used canonical evidence + current prompt/response into WorkingState
+    -> promote surfaced canonical evidence + prompt/response into WorkingState
 ```
 
-This separates three concerns:
+This separates:
 
 - **WorkingState:** what canonical evidence is active now?
-- **JIT Memory:** what older persisted evidence is relevant to the unresolved need?
+- **default attention aperture:** what bounded potentially relevant persistent evidence should every fresh inference be allowed to see?
+- **MEMORY_ANALYSIS:** what deeper/focused historical investigation is warranted?
 - **JIT Attention:** what durable task deserves execution/resources now?
 
 No LLM invocation owns any of those states.
 
-## Deprecation of phrase-specific continuity policy
+## Deprecations
 
-The old `requires_persisted_context()` phrase detector is deprecated and disabled in the live path. The interaction runtime now checks whether durable WorkingState exists rather than trying to infer continuity from a list of English phrases.
+The old `requires_persisted_context()` phrase detector remains disabled. v0.7 does not generate interaction-layer project/proper-name/recency cues through hand-maintained regex policy, and the default capability registry does not carry a continuity phrase vocabulary.
 
-Likewise, v0.7 no longer generates interaction-layer project/proper-name/recency cues through hand-maintained regex policy. The default capability registry no longer contains a growing continuity vocabulary such as `those approaches`, `just discussed`, `ruled out`, `nickname`, and similar terms. The live model path resolves a constrained capability enum to an exact capability id instead.
+Lexical/entity/association/temporal mechanisms remain valid inside JIT Memory. Canonical user text is source data, not model-authored policy.
 
-The deterministic lexical/entity/association routes inside JIT Memory remain valid long-term-memory mechanisms. The canonical current user text is still a legitimate retrieval cue because it is user-authored source data, not model-authored policy. Validated anchor values are likewise copied from canonical input through selected indices rather than invented by the model.
+## Skepticism boundary
 
-## Skepticism / epistemic boundary
+WorkingState activation and aperture retrieval are relevance operations, not truth promotion.
 
-WorkingState must not silently promote interpretation into fact.
+An active or retrieved canonical event means only that it is currently relevant enough to expose. It does not mean every proposition inside it is objectively true/current. Evidence, interpretation, user belief, world belief, corrections, contradictions, confidence, and future hypotheses remain separate concerns.
 
-An active event pointer means only:
+## Frozen acceptance experiment
 
-> this canonical event is currently relevant/active.
+The four-turn Kestrel continuity scenario remains the fixed experiment. The intervention is accepted only if it:
 
-It does **not** mean:
+1. retrieves the pre-existing Kestrel rule on Turn 1 before model routing;
+2. chooses PostgreSQL directly on Windows rather than the Docker option;
+3. preserves the already-passing cross-process Oriole/Falcon and cross-conversation cases;
+4. completes all four Kestrel turns without inherited model context;
+5. survives fresh worker processes between stages/turns;
+6. returns canonical source-event provenance;
+7. keeps WorkingState and MemoryPackets bounded;
+8. uses no phrase-specific continuity regexes;
+9. uses no model-generated natural-language capability/search/entity fields;
+10. passes the deterministic non-Ollama suite before native Ollama acceptance.
 
-> every statement in this event is objectively true.
-
-JIT Memory rehydrates canonical source evidence, and later epistemic working-state milestones may add explicit claim/hypothesis/confidence/counterevidence structures. v0.7 intentionally does not smuggle those future semantics into a text summary.
-
-The categorical/extractive schema rule supports the same skepticism goal. A model may choose a route or select an existing anchor; it cannot silently transform its own generated interpretation into new canonical evidence.
-
-## Scientific-method acceptance
-
-Baseline A is the now-observed direct-cue design. Intervention B is durable active-event WorkingState with categorical/extractive model routing.
-
-Keep the model, database, hardware, randomized tokens, process-destruction requirements, and four-turn Kestrel scenario fixed. The intervention is accepted only if it:
-
-1. preserves the already-passing cross-process Oriole/Falcon and cross-conversation cases;
-2. completes the four-turn Kestrel scenario without inherited model context;
-3. survives fresh worker processes between stages/turns;
-4. returns canonical source-event provenance;
-5. does not depend on phrase-specific continuity regexes;
-6. keeps active state bounded;
-7. preserves abstention and conservative long-term evidence admission;
-8. does not require model-generated natural-language capability/search/entity fields;
-9. rejects invented/invalid anchor indices or stray schema fields;
-10. does not regress deterministic non-Ollama tests.
-
-If the same frozen benchmark still fails, inspect the WorkingState/JIT-Memory boundary and the bounded routing schema rather than adding another phrase rule or free-form search field. A broader mechanism is justified only by a measured failure.
+If the benchmark fails, diagnose the aperture/WorkingState/JIT-Memory boundary or constrained model protocol. Do not add another English phrase rule or generated search field merely to make the fixture green.
 
 ## Scope boundary
 
-This is **minimal v0.7 active state**, not full epistemic cognition.
+This remains minimal v0.7 cognition. Goals/subgoals, hypotheses, confidence, alternatives, contradictions, prediction error, episode formation, consolidation/replay, procedural memory, and richer situation assembly remain later experimentally justified mechanisms.
 
-Deferred work still includes goals/subgoals, hypotheses, confidence, alternatives, contradictions, prediction error, episode formation, consolidation/replay, procedural memory, and richer situation assembly. Those mechanisms should be introduced one at a time under frozen experiments.
-
-The v0.7 invariant remains:
-
-> **Prometheist owns continuity; models and workers are disposable compute.**
-
-The correction makes that invariant more literal: current cognitive context and control-plane routing are explicit system state/contracts rather than something hidden in worker context or encoded in model-authored natural-language control strings.
+> **v0.7 invariant: Prometheist owns continuity and basic access to its memory; models and workers are disposable compute.**
