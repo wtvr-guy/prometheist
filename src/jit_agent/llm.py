@@ -90,6 +90,18 @@ def _nonthinking_user_input(model: str, user: str) -> str:
     return f"{user}\n\n/no_think"
 
 
+def _render_qwen3_instruct_raw_prompt(system: str, user: str) -> str:
+    """Render the official no-tools Qwen3 Instruct 2507 chat-template shape."""
+
+    return (
+        "<|im_start|>system\n"
+        f"{system}<|im_end|>\n"
+        "<|im_start|>user\n"
+        f"{user}<|im_end|>\n"
+        "<|im_start|>assistant\n"
+    )
+
+
 def _retry_token_caps(initial: int) -> tuple[int, int]:
     if initial < 1:
         raise ValueError("initial token cap must be positive")
@@ -145,7 +157,13 @@ def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> Non
     if not isinstance(message, dict):
         message = {}
     content = message.get("content")
+    if not isinstance(content, str):
+        generated = response_json.get("response")
+        content = generated if isinstance(generated, str) else ""
     thinking = message.get("thinking")
+    if not isinstance(thinking, str):
+        raw_thinking = response_json.get("thinking")
+        thinking = raw_thinking if isinstance(raw_thinking, str) else ""
     logger.info(
         "%s model=%s elapsed=%.2fs load_duration=%sns prompt_eval_duration=%sns "
         "eval_duration=%sns prompt_eval_count=%s eval_count=%s done_reason=%s "
@@ -159,8 +177,8 @@ def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> Non
         response_json.get("prompt_eval_count"),
         response_json.get("eval_count"),
         response_json.get("done_reason"),
-        len(content) if isinstance(content, str) else 0,
-        len(thinking) if isinstance(thinking, str) else 0,
+        len(content),
+        len(thinking),
     )
 
 
@@ -418,42 +436,54 @@ class OllamaClient:
         max_tokens: int,
     ) -> str:
         t0 = time.monotonic()
-        request_json: dict[str, Any] = {
-            "model": self.model,
-            "messages": [
-                {"role": "system", "content": system},
-                {
-                    "role": "user",
-                    "content": _nonthinking_user_input(self.model, user),
-                },
-            ],
-            "format": schema,
-            "stream": False,
-            "options": {"num_predict": max_tokens, "temperature": 0},
-        }
-        # Dedicated Qwen3 Instruct 2507 models are intrinsically non-thinking.
-        # Omitting Ollama's think control lets its instruct parser route generated
-        # tokens directly to message.content instead of a reasoning channel.
-        if not _is_qwen3_instruct(self.model):
-            request_json["think"] = False
-        response = self._client.post(
-            "/api/chat",
-            json=request_json,
-        )
+        if _is_qwen3_instruct(self.model):
+            request_path = "/api/generate"
+            request_json: dict[str, Any] = {
+                "model": self.model,
+                "prompt": _render_qwen3_instruct_raw_prompt(system, user),
+                "raw": True,
+                "format": schema,
+                "stream": False,
+                "options": {"num_predict": max_tokens, "temperature": 0},
+            }
+        else:
+            request_path = "/api/chat"
+            request_json = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {
+                        "role": "user",
+                        "content": _nonthinking_user_input(self.model, user),
+                    },
+                ],
+                "format": schema,
+                "think": False,
+                "stream": False,
+                "options": {"num_predict": max_tokens, "temperature": 0},
+            }
+        response = self._client.post(request_path, json=request_json)
         response.raise_for_status()
         body = response.json()
         _log_call(kind, self.model, time.monotonic() - t0, body)
-        message = body.get("message")
-        if not isinstance(message, dict):
-            raise OllamaStructuredOutputError(
-                "Ollama response omitted the chat message object"
-            )
-        raw_content = message.get("content")
+
+        raw_thinking: Any = None
+        if request_path == "/api/generate":
+            raw_content = body.get("response")
+            raw_thinking = body.get("thinking")
+        else:
+            message = body.get("message")
+            if not isinstance(message, dict):
+                raise OllamaStructuredOutputError(
+                    "Ollama response omitted the chat message object"
+                )
+            raw_content = message.get("content")
+            raw_thinking = message.get("thinking")
+
         content = raw_content if isinstance(raw_content, str) else ""
         try:
             return _strip_thinking(content)
         except ValueError as exc:
-            raw_thinking = message.get("thinking")
             diagnostics = {
                 "content_length": len(content),
                 "done_reason": body.get("done_reason"),
@@ -463,6 +493,7 @@ class OllamaClient:
                 "thinking_length": (
                     len(raw_thinking) if isinstance(raw_thinking, str) else 0
                 ),
+                "transport": "raw-generate" if request_path == "/api/generate" else "chat",
             }
             raise OllamaStructuredOutputError(
                 "Ollama produced no usable final content: "
