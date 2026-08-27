@@ -59,6 +59,26 @@ The long-lived invariant remains:
 association/index -> candidate activation -> canonical source memory -> evidence
 ```
 
+## Append-only history and correction
+
+Canonical historical events are append-only under ordinary system operation.
+
+If a prior observation, statement, belief, interpretation, or derived claim is later discovered to be wrong, stale, contradicted, or superseded, Prometheist records the new evidence and the correction/supersession relationship. It does not edit the earlier record to make the historical state appear as though the correction had always been known.
+
+Conceptually:
+
+```text
+original canonical event
+        |
+        +<---- correction / contradiction / supersession relation
+        |
+new provenance-bearing event
+```
+
+This preserves both current understanding and historical reconstructability: the system can distinguish “what is now believed/supported” from “what was actually present in the record when an earlier decision was made.”
+
+Explicit user-directed erasure, if implemented, is a separate governance path and must define its audit/integrity semantics explicitly. It is not an ordinary correction mechanism.
+
 ## No memory summaries
 
 Prometheist must not create or persist summaries of durable memories as memory substitutes, retrieval substitutes, or supposedly equivalent compressed representations.
