@@ -4,7 +4,8 @@ Canonical events remain authoritative evidence; associations are derived,
 replaceable routing hints with explicit provenance. The algorithm performs
 bounded spreading activation over a small typed graph and then ranks source
 events using the stronger of deterministic cue score and association
-activation.
+activation. Tunable admission/scoring policy is explicit so benchmarks can
+sweep candidates without changing code between trials.
 """
 from __future__ import annotations
 
@@ -12,8 +13,10 @@ from dataclasses import dataclass
 from typing import Iterable, Literal, Sequence
 
 from jit_agent.memory_kernel import (
+    DEFAULT_MEMORY_SCORING_POLICY,
     CueState,
     MemoryEvent,
+    MemoryScoringPolicy,
     normalize_text,
     score_event,
     tokenize,
@@ -34,7 +37,7 @@ _DIRECT_SUPPORT_MODIFIERS = frozenset(
         "usually",
     }
 )
-_MIN_DIRECT_SUPPORT_COVERAGE = 0.60
+MINIMUM_DIRECT_SUPPORT_COVERAGE = 0.60
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,11 +110,7 @@ def _node(kind: NodeKind, value: str) -> str:
 
 
 def _cue_nodes(cue: CueState) -> tuple[str, ...]:
-    ignored = {
-        token
-        for term in cue.ignored_terms
-        for token in tokenize(term)
-    }
+    ignored = {token for term in cue.ignored_terms for token in tokenize(term)}
     nodes = {
         f"term:{token}"
         for token in tokenize(cue.query_text or "")
@@ -159,12 +158,15 @@ def _direct_evidence_is_admissible(
     *,
     has_association_support: bool,
     has_entity_support: bool,
+    minimum_direct_support_coverage: float = MINIMUM_DIRECT_SUPPORT_COVERAGE,
 ) -> bool:
+    if not 0.0 <= minimum_direct_support_coverage <= 1.0:
+        raise ValueError("minimum_direct_support_coverage must be between 0 and 1")
     if has_association_support or has_entity_support:
         return True
 
     coverage = _direct_support_coverage(event, cue)
-    if coverage >= _MIN_DIRECT_SUPPORT_COVERAGE:
+    if coverage >= minimum_direct_support_coverage:
         return True
 
     if cue.reference_time is not None and coverage > 0.0:
@@ -181,6 +183,8 @@ def associative_recall(
     max_hops: int = 2,
     decay: float = 0.85,
     seed_event_ids: Sequence[str] = (),
+    scoring_policy: MemoryScoringPolicy = DEFAULT_MEMORY_SCORING_POLICY,
+    minimum_direct_support_coverage: float = MINIMUM_DIRECT_SUPPORT_COVERAGE,
 ) -> AssociativeMemoryPacket:
     """Recall canonical evidence using cues plus bounded spreading activation.
 
@@ -196,6 +200,8 @@ def associative_recall(
         raise ValueError("max_hops must be >= 1")
     if not 0.0 < decay <= 1.0:
         raise ValueError("decay must be in (0, 1]")
+    if not 0.0 <= minimum_direct_support_coverage <= 1.0:
+        raise ValueError("minimum_direct_support_coverage must be between 0 and 1")
 
     event_list = tuple(events)
     event_ids = {event.event_id for event in event_list}
@@ -206,7 +212,7 @@ def associative_recall(
 
     allowed_types = set(cue.source_types)
     baseline = {
-        event.event_id: score_event(event, cue)
+        event.event_id: score_event(event, cue, policy=scoring_policy)
         for event in event_list
         if not allowed_types or event.event_type in allowed_types
     }
@@ -235,9 +241,7 @@ def associative_recall(
             activation[f"event:{event.event_id}"] = 1.0
 
     hops_by_target: dict[str, list[AssociationHop]] = {}
-    ordered_associations = tuple(
-        sorted(associations, key=lambda item: item.association_id)
-    )
+    ordered_associations = tuple(sorted(associations, key=lambda item: item.association_id))
 
     for hop_number in range(1, max_hops + 1):
         prior = dict(activation)
@@ -276,9 +280,7 @@ def associative_recall(
         if not changed:
             break
 
-    ranked: list[
-        tuple[float, MemoryEvent, float, float, tuple[AssociationHop, ...]]
-    ] = []
+    ranked: list[tuple[float, MemoryEvent, float, float, tuple[AssociationHop, ...]]] = []
     has_cues = bool(
         cue.query_text
         or cue.entities
@@ -301,22 +303,13 @@ def associative_recall(
             cue,
             has_association_support=bool(hops),
             has_entity_support=score.entity > 0.0,
+            minimum_direct_support_coverage=minimum_direct_support_coverage,
         ):
             continue
-        ranked.append(
-            (
-                total,
-                event,
-                score.total,
-                assoc_activation,
-                hops,
-            )
-        )
+        ranked.append((total, event, score.total, assoc_activation, hops))
 
     if has_cues:
-        ranked.sort(
-            key=lambda row: (-row[0], -row[1].global_seq, row[1].event_id)
-        )
+        ranked.sort(key=lambda row: (-row[0], -row[1].global_seq, row[1].event_id))
     else:
         ranked.sort(key=lambda row: (-row[1].global_seq, row[1].event_id))
 
