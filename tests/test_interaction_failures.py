@@ -49,7 +49,13 @@ class DirectLLM:
             capability_indices=[],
         )
 
-    def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
+    def respond(
+        self,
+        prompt: str,
+        memory_packet: MemoryPacket | None,
+        capability_results=(),
+    ) -> str:
+        del prompt, memory_packet, capability_results
         return "completed response"
 
 
