@@ -479,6 +479,7 @@ def _execute_claimed_stage(
             memory_packet=aperture_packet,
             catalog=catalog,
             completed_results=(),
+            capability_results=(),
             registry=registry,
         )
         return {
@@ -588,6 +589,9 @@ def _execute_claimed_stage(
                 )
 
             summaries = _capability_result_summaries(executions)
+            structured_results = tuple(
+                _structured_capability_result(item) for item in executions
+            )
             catalog = registry.capability_catalog(
                 executed_capability_ids=tuple(catalog_eligible_ids)
             )
@@ -599,6 +603,7 @@ def _execute_claimed_stage(
                 memory_packet=context_packet,
                 catalog=catalog,
                 completed_results=summaries,
+                capability_results=structured_results,
                 registry=registry,
             )
             rounds.append(current_round)
@@ -627,7 +632,7 @@ def _execute_claimed_stage(
         response_text = llm.respond(
             interaction.user_text,
             final_packet,
-            tuple(_structured_result_for_response(item) for item in executions),
+            tuple(_structured_capability_result(item) for item in executions),
         )
         return {"response_text": response_text}, []
 
@@ -668,6 +673,7 @@ def _load_or_create_round(
     memory_packet: MemoryPacket,
     catalog: tuple[CapabilityDescriptor, ...],
     completed_results: tuple[CapabilityResultSummary, ...],
+    capability_results: tuple[dict, ...],
     registry: CapabilityRegistry,
 ) -> dict:
     """Return one durable recurrent decision, reusing it after worker restart."""
@@ -691,6 +697,7 @@ def _load_or_create_round(
         memory_packet,
         catalog,
         completed_results,
+        capability_results,
     )
     plan = registry.plan_execution(catalog, decision.capability_indices)
     round_record = {
@@ -699,6 +706,7 @@ def _load_or_create_round(
         "capability_catalog": [item.model_dump(mode="json") for item in catalog],
         "execution_plan": plan.model_dump(mode="json"),
         "completed_results": [item.model_dump(mode="json") for item in completed_results],
+        "capability_results": list(capability_results),
     }
     event_store.record_event(
         conn,
@@ -740,7 +748,7 @@ def _capability_result_summaries(
     )
 
 
-def _structured_result_for_response(execution: CapabilityExecution) -> dict:
+def _structured_capability_result(execution: CapabilityExecution) -> dict:
     return {
         "round_index": execution.round_index,
         "plan_position": execution.plan_position,
