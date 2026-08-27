@@ -55,6 +55,9 @@ jobs:
           uv run ruff check .
           uv run python scripts/audit_constraints.py --fail-unregistered
 
+      - name: Run deterministic constraint calibration
+        run: uv run python benchmarks/run_deterministic_constraints.py
+
       - name: Collect local-model acceptance gates
         run: >-
           uv run pytest --collect-only -q -m ollama
