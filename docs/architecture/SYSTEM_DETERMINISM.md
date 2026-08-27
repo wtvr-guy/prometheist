@@ -1,7 +1,7 @@
 # System Determinism
 
 **Status:** constitutional architecture deep dive.  
-**Constitutional authority:** implements Articles 9 and 10 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).
+**Constitutional authority:** implements Articles 9, 10, and 29 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).
 
 Prometheist uses probabilistic models as disposable semantic compute inside a deterministic application envelope. The system does not require every physical execution detail to be deterministic; it requires every durable control-plane decision that can be made deterministically to be owned, recorded, and replayable by ordinary software.
 
@@ -130,6 +130,20 @@ free-form natural language
 ```
 
 Validation failure is an explicit failure, not permission to infer what the model “probably meant.”
+
+## Fail-closed authority
+
+The deterministic envelope must not fabricate authority when its required inputs are invalid or insufficient.
+
+Examples include:
+
+- invalid or unrecognized model-control output;
+- stale/missing policy revisions;
+- incomplete dependency authority;
+- contradictory or malformed durable state;
+- missing provenance needed for an irreversible decision.
+
+The appropriate outcome may be rejection, abstention, waiting, retry under an explicit policy, or reconciliation. It is not an untracked guess.
 
 ## No race-based authority
 
