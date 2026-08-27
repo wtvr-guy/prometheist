@@ -33,11 +33,49 @@ from jit_agent.interaction_working_state import (
 from jit_agent.models import MemoryPacket
 
 
-ATTENTION_APERTURE_VERSION = "v0.7-attention-aperture-v3"
+ATTENTION_APERTURE_VERSION = "v0.7-attention-aperture-v4"
 # This is the budget for additional baseline recall beyond guaranteed active
 # WorkingState, not a total MemoryPacket item limit.
 DEFAULT_ATTENTION_APERTURE_LIMIT = 6
 MAX_ATTENTION_APERTURE_ITEMS = MAX_ACTIVE_EVENT_IDS + DEFAULT_ATTENTION_APERTURE_LIMIT
+
+
+def _working_state_activation_order(
+    *,
+    prompt_event_id: UUID,
+    packet: MemoryPacket,
+    prior_active_event_ids: list[UUID],
+) -> list[UUID]:
+    """Order bounded attention promotion without making stale focus immortal.
+
+    The current percept is always first. Evidence recalled because of that
+    percept and not already present in WorkingState is promoted next, in the
+    deterministic order returned by JIT Memory. Previously active evidence is
+    retained only after those two classes and therefore competes for the
+    remaining bounded slots.
+
+    This is deliberately an activation policy, not a retrieval policy: the
+    MemoryPacket itself is left unchanged, and no natural-language labels or
+    phrase-specific rules are persisted in WorkingState.
+    """
+
+    prior_active = set(prior_active_event_ids)
+    newly_recalled = [
+        item.source_event_id
+        for item in packet.items
+        if item.source_event_id not in prior_active
+    ]
+    packet_prior_active = [
+        item.source_event_id
+        for item in packet.items
+        if item.source_event_id in prior_active
+    ]
+    return [
+        prompt_event_id,
+        *newly_recalled,
+        *packet_prior_active,
+        *prior_active_event_ids,
+    ]
 
 
 def open_attention_aperture(
@@ -87,11 +125,11 @@ def open_attention_aperture(
         interaction_id=interaction_id,
         conversation_id=conversation_id,
         correlation_id=correlation_id,
-        activated_event_ids=[
-            # Current perception must survive WorkingState's bounded truncation.
-            prompt_event_id,
-            *[item.source_event_id for item in packet.items],
-        ],
+        activated_event_ids=_working_state_activation_order(
+            prompt_event_id=prompt_event_id,
+            packet=packet,
+            prior_active_event_ids=active_event_ids,
+        ),
         activation_key="aperture",
     )
     return packet
