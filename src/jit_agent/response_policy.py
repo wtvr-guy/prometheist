@@ -9,10 +9,14 @@ model-facing packet for one stateless response invocation.
 from __future__ import annotations
 
 from enum import Enum
+from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from jit_agent.models import EventType, MemoryPacket
+
+
+RESPONSE_POLICY_VERSION = "response-source-authority-v1"
 
 
 class HistoricalEvidenceScope(str, Enum):
@@ -63,6 +67,21 @@ class ExactSourceSelection(BaseModel):
         if not self.verbatim_value:
             raise ValueError("verbatim_value must not be empty")
         return self
+
+
+@runtime_checkable
+class ResponsePolicyAwareClient(Protocol):
+    """Optional production protocol for durable response-policy provenance."""
+
+    def response_policy(self, prompt: str) -> ResponsePolicy: ...
+
+    def respond_with_policy(
+        self,
+        prompt: str,
+        memory_packet: MemoryPacket | None,
+        capability_results: tuple[dict[str, Any], ...],
+        policy: ResponsePolicy,
+    ) -> str: ...
 
 
 _MODEL_OUTPUT_TYPES = frozenset(
