@@ -38,6 +38,14 @@ _QUESTION_CAUSAL_PREFIX_RE = re.compile(
     r"^\s*(?:is|are|was|were|do|does|did|can|could|would|should|has|have|had)\b",
     re.IGNORECASE,
 )
+_VERBATIM_LITERAL_RE = re.compile(
+    r"(?<![\w-])"
+    r"(?=[A-Za-z0-9-]{6,}(?![\w-]))"
+    r"(?=[A-Za-z0-9-]*[A-Za-z])"
+    r"(?=[A-Za-z0-9-]*\d)"
+    r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*(?![\w-])"
+)
+_MAX_VERBATIM_LITERALS = 16
 
 
 class _TextAnswer(BaseModel):
@@ -68,6 +76,56 @@ def _strip_thinking(text: str) -> str:
     if not stripped:
         raise ValueError("LLM response contained no answer content after stripping thinking")
     return stripped
+
+
+def _build_verbatim_placeholder_maps(
+    *texts: str,
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Replace opaque literals with application-restored placeholders.
+
+    Mixed alphanumeric identifiers are data, not prose. A generative model may
+    otherwise respell or re-punctuate them even when instructed to copy exactly.
+    Prometheist therefore presents stable placeholders to the model and restores
+    the canonical source literal after generation.
+    """
+
+    literal_to_placeholder: dict[str, str] = {}
+    placeholder_to_literal: dict[str, str] = {}
+    for text in texts:
+        for match in _VERBATIM_LITERAL_RE.finditer(text):
+            literal = match.group(0)
+            if literal in literal_to_placeholder:
+                continue
+            if len(literal_to_placeholder) == _MAX_VERBATIM_LITERALS:
+                return literal_to_placeholder, placeholder_to_literal
+            placeholder = f"[[VERBATIM_{len(literal_to_placeholder)}]]"
+            literal_to_placeholder[literal] = placeholder
+            placeholder_to_literal[placeholder] = literal
+    return literal_to_placeholder, placeholder_to_literal
+
+
+def _mask_verbatim_literals(text: str, literal_to_placeholder: dict[str, str]) -> str:
+    if not literal_to_placeholder:
+        return text
+    return _VERBATIM_LITERAL_RE.sub(
+        lambda match: literal_to_placeholder.get(match.group(0), match.group(0)),
+        text,
+    )
+
+
+def _restore_verbatim_literals(text: str, placeholder_to_literal: dict[str, str]) -> str:
+    restored = text
+    for placeholder, literal in placeholder_to_literal.items():
+        restored = restored.replace(placeholder, literal)
+    if "VERBATIM_" in restored:
+        raise ValueError("model altered an application-owned verbatim placeholder")
+    return restored
+
+
+def _verbatim_source_texts(prompt: str, packet: MemoryPacket | None) -> tuple[str, ...]:
+    if packet is None:
+        return (prompt,)
+    return (prompt, *(item.content for item in packet.items))
 
 
 def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> None:
@@ -105,10 +163,16 @@ the supplied bounded MemoryPacket, and general model knowledge as appropriate.
 Never invent personal or history-specific information absent from those sources.
 
 Put every requested value in the first sentence and copy opaque user-provided
-identifiers exactly. Unless the user requests detail, use at most three concise
-sentences with no headings, source quotations, or prefatory analysis. Reconcile
-all source statements before answering. Do not expose packet labels, event ids,
-scores, retrieval mechanics, or hidden reasoning unless asked.
+identifiers exactly. Some opaque literals may be represented as application-
+owned placeholders such as [[VERBATIM_0]]. Treat each placeholder as one exact,
+indivisible source literal: copy the placeholder exactly when that literal is
+needed and never edit, reformat, abbreviate, or add punctuation inside it. The
+application restores the original source bytes after generation.
+
+Unless the user requests detail, use at most three concise sentences with no
+headings, source quotations, or prefatory analysis. Reconcile all source
+statements before answering. Do not expose packet labels, event ids, scores,
+retrieval mechanics, or hidden reasoning unless asked.
 
 When asked for a profile, code, nickname, name, or ID, return the exact source
 label. When asked why, state the explicit underlying cause from user-authored
@@ -167,10 +231,14 @@ _SPECIALIST_ANSWER_PROMPT = """\
 You are a disposable memory-analysis worker. Complete the bounded task using
 only the supplied MemoryPacket and general model knowledge where appropriate.
 Never invent personal or history-specific information absent from the source
-events. Put requested values first, copy opaque identifiers exactly, preserve
-the polarity and direction of relationships, and state explicit user-authored
-causes for why/reason questions. If evidence is insufficient, say so. Return
-only the useful result, never hidden reasoning or retrieval mechanics.
+events. Put requested values first and preserve the polarity and direction of
+relationships. Some opaque literals may be represented as application-owned
+placeholders such as [[VERBATIM_0]]. Treat each placeholder as one exact,
+indivisible source literal: copy it exactly when needed and never edit or
+reformat it. The application restores the original source bytes after
+generation. State explicit user-authored causes for why/reason questions. If
+evidence is insufficient, say so. Return only the useful result, never hidden
+reasoning or retrieval mechanics.
 """
 
 
@@ -191,15 +259,21 @@ class LLMClient(Protocol):
     def answer_memory_task(self, task: str, packet: MemoryPacket) -> str: ...
 
 
-def _format_memory_packet(packet: MemoryPacket | None) -> str:
+def _format_memory_packet(
+    packet: MemoryPacket | None,
+    *,
+    literal_to_placeholder: dict[str, str] | None = None,
+) -> str:
     if packet is None:
         return ""
     if not packet.items:
         return "\n\n[Internal MemoryPacket]\nsupported: false\nitems: []"
 
+    literal_to_placeholder = literal_to_placeholder or {}
     blocks = []
     for index, item in enumerate(packet.items, start=1):
         provenance = ", ".join(str(value) for value in item.provenance_event_ids) or "none"
+        content = _mask_verbatim_literals(item.content, literal_to_placeholder)
         blocks.append(
             f"{index}. event_id: {item.source_event_id}\n"
             f"   conversation_id: {item.conversation_id}\n"
@@ -211,7 +285,7 @@ def _format_memory_packet(packet: MemoryPacket | None) -> str:
             f"   score: {item.score}\n"
             f"   retrieval_reasons: {', '.join(item.retrieval_reasons) or 'none'}\n"
             f"   association_provenance_event_ids: {provenance}\n"
-            f"   content: {item.content}"
+            f"   content: {content}"
         )
     return (
         "\n\n[Internal MemoryPacket]\n"
@@ -346,12 +420,25 @@ class OllamaClient:
         raise ValueError(f"interaction classification failed to validate: {last_error}")
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
-        causal_clauses = _causal_highlight_for_request(prompt, memory_packet)
-        return self._text(
+        literal_to_placeholder, placeholder_to_literal = _build_verbatim_placeholder_maps(
+            *_verbatim_source_texts(prompt, memory_packet)
+        )
+        masked_prompt = _mask_verbatim_literals(prompt, literal_to_placeholder)
+        causal_clauses = _mask_verbatim_literals(
+            _causal_highlight_for_request(prompt, memory_packet),
+            literal_to_placeholder,
+        )
+        answer = self._text(
             "RESPOND",
             _RESPOND_SYSTEM_PROMPT,
-            prompt + _format_memory_packet(memory_packet) + causal_clauses,
+            masked_prompt
+            + _format_memory_packet(
+                memory_packet,
+                literal_to_placeholder=literal_to_placeholder,
+            )
+            + causal_clauses,
         )
+        return _restore_verbatim_literals(answer, placeholder_to_literal)
 
     def plan_memory(
         self,
@@ -396,9 +483,22 @@ class OllamaClient:
         raise ValueError(f"specialist memory routing failed to validate: {last_error}")
 
     def answer_memory_task(self, task: str, packet: MemoryPacket) -> str:
-        causal_clauses = _causal_highlight_for_request(task, packet)
-        return self._text(
+        literal_to_placeholder, placeholder_to_literal = _build_verbatim_placeholder_maps(
+            *_verbatim_source_texts(task, packet)
+        )
+        masked_task = _mask_verbatim_literals(task, literal_to_placeholder)
+        causal_clauses = _mask_verbatim_literals(
+            _causal_highlight_for_request(task, packet),
+            literal_to_placeholder,
+        )
+        answer = self._text(
             "SPECIALIST_ANSWER",
             _SPECIALIST_ANSWER_PROMPT,
-            task + _format_memory_packet(packet) + causal_clauses,
+            masked_task
+            + _format_memory_packet(
+                packet,
+                literal_to_placeholder=literal_to_placeholder,
+            )
+            + causal_clauses,
         )
+        return _restore_verbatim_literals(answer, placeholder_to_literal)
