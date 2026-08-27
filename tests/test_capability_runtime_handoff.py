@@ -1,74 +1,83 @@
+from datetime import datetime, timezone
 from types import SimpleNamespace
 import uuid
 
-from jit_agent import capability_runtime
+from jit_agent import capability_runtime, jit_memory
 from jit_agent.capability_registry import DEFAULT_REGISTRY
 from jit_agent.models import (
     EventType,
-    MemoryNeedDecision,
+    FocusedMemoryCandidateSelection,
+    MemoryCandidateSelection,
+    MemoryEvidence,
+    MemoryNeed,
     MemoryPacket,
-    MemoryRetrievalScope,
 )
 
 
 class Planner:
-    def __init__(self, scope: MemoryRetrievalScope = MemoryRetrievalScope.ACTIVE_AND_HISTORY) -> None:
-        self.scope = scope
-        self.inputs: list[str] = []
-        self.active_state_flags: list[bool] = []
+    def __init__(self, research_indices=(0,), focused_index=0) -> None:
+        self.research_indices = list(research_indices)
+        self.focused_index = focused_index
+        self.research_packets: list[MemoryPacket] = []
+        self.focused_packets: list[MemoryPacket] = []
 
-    def plan_memory(
+    def select_research_candidates(
         self,
         task: str,
-        *,
-        active_state_available: bool,
-    ) -> MemoryNeedDecision:
-        self.inputs.append(task)
-        self.active_state_flags.append(active_state_available)
-        if self.scope is MemoryRetrievalScope.ACTIVE_ONLY:
-            return MemoryNeedDecision(scope=self.scope, anchor_indices=[])
+        packet: MemoryPacket,
+    ) -> MemoryCandidateSelection:
+        del task
+        self.research_packets.append(packet)
+        return MemoryCandidateSelection(candidate_indices=self.research_indices)
 
-        catalog = task.split("[Anchor catalog]\n", 1)[1]
-        entries = {}
-        for line in catalog.splitlines():
-            index_text, value = line.split(": ", 1)
-            entries[value] = int(index_text)
-        return MemoryNeedDecision(
-            scope=self.scope,
-            anchor_indices=[entries["oriole"]],
-        )
+    def select_focused_candidate(
+        self,
+        task: str,
+        packet: MemoryPacket,
+    ) -> FocusedMemoryCandidateSelection:
+        del task
+        self.focused_packets.append(packet)
+        return FocusedMemoryCandidateSelection(candidate_index=self.focused_index)
 
 
-def _install_fakes(monkeypatch, captured, active_event_ids):
-    active_events = {
-        event_id: SimpleNamespace(
+def _candidate_packet(count=3):
+    conversation_id = uuid.uuid4()
+    items = [
+        MemoryEvidence(
+            source_event_id=uuid.uuid4(),
             event_type=EventType.USER_PROMPT,
-            payload={"text": "The active situation is Project Oriole planning."},
-            global_seq=25,
+            source="user",
+            created_at=datetime.now(timezone.utc),
+            conversation_id=conversation_id,
+            conversation_seq=index + 1,
+            global_seq=index + 1,
+            content=f"Canonical candidate {index}",
         )
-        for event_id in active_event_ids
-    }
+        for index in range(count)
+    ]
+    return MemoryPacket(
+        memory_request_id=uuid.uuid4(),
+        need=MemoryNeed(query_text="current percept", limit=max(1, count)),
+        supported=bool(items),
+        items=items,
+    )
 
+
+def _install_fakes(monkeypatch, captured):
     monkeypatch.setattr(
         capability_runtime.event_store,
         "get_event_by_id",
-        lambda _conn, event_id: active_events.get(event_id),
+        lambda *_args, **_kwargs: None,
     )
     monkeypatch.setattr(
         capability_runtime.event_store,
         "record_event",
         lambda *args, **kwargs: None,
     )
-    monkeypatch.setattr(
-        capability_runtime,
-        "load_working_state",
-        lambda _conn, _conversation_id: SimpleNamespace(
-            active_event_ids=list(active_event_ids)
-        ),
-    )
 
     def fake_request_memory(_conn, **kwargs):
         captured["need"] = kwargs["need"]
+        captured["profile"] = kwargs["recall_profile"]
         return MemoryPacket(
             memory_request_id=kwargs["memory_request_id"],
             need=kwargs["need"],
@@ -84,105 +93,117 @@ def _install_fakes(monkeypatch, captured, active_event_ids):
     )
 
 
-def _execute(
-    monkeypatch,
-    capability_id="internal_memory",
-    scope: MemoryRetrievalScope = MemoryRetrievalScope.ACTIVE_AND_HISTORY,
-):
-    task_id = uuid.uuid4()
-    step_id = uuid.uuid4()
-    conversation_id = uuid.uuid4()
-    correlation_id = uuid.uuid4()
-    state_event_id = uuid.uuid4()
+def _execute(monkeypatch, capability_id, packet, planner=None):
     captured = {}
-    _install_fakes(monkeypatch, captured, [state_event_id])
-    planner = Planner(scope)
-
+    _install_fakes(monkeypatch, captured)
+    planner = planner or Planner()
     execution = capability_runtime.execute_registered_capability(
         object(),
         planner,
         registration=DEFAULT_REGISTRY.get(capability_id),
         capability_execution_id=uuid.uuid4(),
-        requester_task_id=task_id,
-        requester_step_id=step_id,
-        conversation_id=conversation_id,
-        correlation_id=correlation_id,
-        task_text="What codename applies to Project Oriole in the active plan?",
+        requester_task_id=uuid.uuid4(),
+        requester_step_id=uuid.uuid4(),
+        round_index=1,
+        plan_position=0,
+        conversation_id=uuid.uuid4(),
+        correlation_id=uuid.uuid4(),
+        task_text="Investigate the unresolved question.",
         before_global_seq=100,
         memory_request_id=uuid.uuid4(),
+        candidate_packet=packet,
     )
-    return captured, planner, state_event_id, conversation_id, correlation_id, execution
+    return captured, planner, execution
 
 
-def test_internal_memory_uses_active_context_and_index_only_memory_routing(monkeypatch):
-    captured, planner, state_event_id, conversation_id, correlation_id, _ = _execute(monkeypatch)
+def test_deeper_research_resolves_model_indices_to_canonical_focus_events(monkeypatch):
+    packet = _candidate_packet(3)
+    planner = Planner(research_indices=(2, 0))
 
-    assert len(planner.inputs) == 1
-    assert planner.active_state_flags == [True]
-    planner_input = planner.inputs[0]
-    assert "[Current task]" in planner_input
-    assert "[Active canonical context]" in planner_input
-    assert "The active situation is Project Oriole planning." in planner_input
-    assert "[Anchor catalog]" in planner_input
-    assert "oriole" in planner_input
-
-    need = captured["need"]
-    assert need.conversation_id is None
-    assert need.active_event_ids == [state_event_id]
-    assert need.include_persisted_history is True
-    assert need.entities == ["oriole"]
-    assert need.reference_time is None
-    assert need.supplemental_query_texts == []
-    assert need.limit == 6
-    assert captured["activation"]["conversation_id"] == conversation_id
-    assert captured["activation"]["correlation_id"] == correlation_id
-
-
-def test_active_only_scope_disables_long_term_search_without_phrase_policy(monkeypatch):
-    captured, planner, state_event_id, _, _, _ = _execute(
-        monkeypatch,
-        scope=MemoryRetrievalScope.ACTIVE_ONLY,
-    )
-
-    assert planner.active_state_flags == [True]
-    need = captured["need"]
-    assert need.active_event_ids == [state_event_id]
-    assert need.include_persisted_history is False
-    assert need.entities == []
-    assert need.limit == 1
-
-
-def test_deeper_research_uses_same_index_only_memory_boundary_and_returns_no_prose(monkeypatch):
-    captured, planner, state_event_id, _, _, execution = _execute(
+    captured, planner, execution = _execute(
         monkeypatch,
         "deeper_research",
+        packet,
+        planner,
     )
 
-    assert planner.active_state_flags == [True]
-    assert "[Anchor catalog]" in planner.inputs[0]
+    assert planner.research_packets == [packet]
     need = captured["need"]
-    assert need.active_event_ids == [state_event_id]
+    assert need.query_text is None
+    assert need.entities == []
+    assert need.focus_event_ids == [
+        packet.items[2].source_event_id,
+        packet.items[0].source_event_id,
+    ]
+    assert need.active_event_ids == []
     assert need.include_persisted_history is True
-    assert need.entities == ["oriole"]
-    assert need.limit == 6
-    assert execution.capability_id == "deeper_research"
-    assert execution.executor == "deeper_research"
-    assert execution.memory_packet is not None
+    assert captured["profile"] is jit_memory.MemoryRecallProfile.DEEPER_RESEARCH
+    assert execution.result_data["candidate_indices"] == [2, 0]
+    assert execution.result_data["focus_event_ids"] == [
+        str(packet.items[2].source_event_id),
+        str(packet.items[0].source_event_id),
+    ]
     assert "answer" not in execution.model_dump(mode="json")
 
 
-def test_memory_packet_limit_never_retruncates_bounded_active_working_state():
-    active_ids = [uuid.uuid4() for _ in range(6)]
+def test_focused_recall_resolves_exactly_one_canonical_candidate(monkeypatch):
+    packet = _candidate_packet(3)
+    planner = Planner(focused_index=1)
 
-    assert capability_runtime._memory_packet_limit(
-        active_event_ids=active_ids,
-        include_history=False,
-    ) == 6
-    assert capability_runtime._memory_packet_limit(
-        active_event_ids=active_ids,
-        include_history=True,
-    ) == 11
-    assert capability_runtime._memory_packet_limit(
-        active_event_ids=[],
-        include_history=True,
-    ) == 5
+    captured, planner, execution = _execute(
+        monkeypatch,
+        "focused_recall",
+        packet,
+        planner,
+    )
+
+    assert planner.focused_packets == [packet]
+    need = captured["need"]
+    assert need.query_text is None
+    assert need.focus_event_ids == [packet.items[1].source_event_id]
+    assert captured["profile"] is jit_memory.MemoryRecallProfile.FOCUSED_RECALL
+    assert execution.result_data["candidate_index"] == 1
+    assert execution.result_data["focus_event_ids"] == [
+        str(packet.items[1].source_event_id)
+    ]
+
+
+def test_internal_memory_compatibility_path_uses_system_owned_current_task(monkeypatch):
+    packet = _candidate_packet(1)
+
+    captured, _, execution = _execute(monkeypatch, "internal_memory", packet)
+
+    need = captured["need"]
+    assert need.query_text == "Investigate the unresolved question."
+    assert need.focus_event_ids == []
+    assert captured["profile"] is jit_memory.MemoryRecallProfile.STANDARD
+    assert execution.executor == "jit_memory"
+
+
+def test_memory_capability_rejects_out_of_range_candidate_selection(monkeypatch):
+    packet = _candidate_packet(1)
+    planner = Planner(research_indices=(1,))
+    captured = {}
+    _install_fakes(monkeypatch, captured)
+
+    try:
+        capability_runtime.execute_registered_capability(
+            object(),
+            planner,
+            registration=DEFAULT_REGISTRY.get("deeper_research"),
+            capability_execution_id=uuid.uuid4(),
+            requester_task_id=uuid.uuid4(),
+            requester_step_id=uuid.uuid4(),
+            round_index=0,
+            plan_position=0,
+            conversation_id=uuid.uuid4(),
+            correlation_id=uuid.uuid4(),
+            task_text="Investigate.",
+            before_global_seq=100,
+            memory_request_id=uuid.uuid4(),
+            candidate_packet=packet,
+        )
+    except RuntimeError as exc:
+        assert "outside the supplied packet" in str(exc)
+    else:
+        raise AssertionError("expected out-of-range candidate selection to fail closed")
