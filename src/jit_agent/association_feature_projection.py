@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any, Mapping
 
 from jit_agent.association_projection import (
+    ASSOCIATION_PROJECTION_VERSION,
     _CHANGE_PHRASES,
     _RESOLVED_PHRASES,
     _UNRESOLVED_PHRASES,
@@ -24,7 +25,7 @@ class AssociationFeatureProjection:
     """Index only the event-local facts needed by association predecessor lookup."""
 
     name = "association_features"
-    version = "1"
+    version = ASSOCIATION_PROJECTION_VERSION
 
     def project(self, event: MemoryEvent) -> Mapping[str, Any]:
         return {
