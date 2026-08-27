@@ -80,6 +80,7 @@ from jit_agent.worker_store import (
 
 SOURCE = "attention_interaction"
 _MAX_FINAL_MEMORY_ITEMS = 20
+_RESEARCH_EVIDENCE_EXECUTORS = {"deeper_research", "cross_reference"}
 
 
 def begin_interaction(
@@ -499,7 +500,7 @@ def _execute_claimed_stage(
         executions: list[CapabilityExecution] = []
         catalog_eligible_ids: list[str] = []
         context_packet = aperture_packet.model_copy(deep=True)
-        last_deeper_packet: MemoryPacket | None = None
+        last_research_packet: MemoryPacket | None = None
         output_refs: list[str] = []
 
         for round_index in range(MAX_CAPABILITY_ROUNDS):
@@ -536,11 +537,11 @@ def _execute_claimed_stage(
                     plan_item.capability_id,
                 )
                 if registration.executor == "focused_recall":
-                    if last_deeper_packet is None or not last_deeper_packet.items:
+                    if last_research_packet is None or not last_research_packet.items:
                         raise RuntimeError(
-                            "focused_recall requires a prior non-empty deeper_research result"
+                            "focused_recall requires prior non-empty broader research"
                         )
-                    candidate_packet = last_deeper_packet
+                    candidate_packet = last_research_packet
                 else:
                     candidate_packet = context_packet
 
@@ -569,11 +570,11 @@ def _execute_claimed_stage(
                 if supported is not False:
                     catalog_eligible_ids.append(execution.capability_id)
                 if (
-                    execution.executor == "deeper_research"
+                    execution.executor in _RESEARCH_EVIDENCE_EXECUTORS
                     and execution.memory_packet is not None
                     and execution.memory_packet.items
                 ):
-                    last_deeper_packet = execution.memory_packet.model_copy(deep=True)
+                    last_research_packet = execution.memory_packet.model_copy(deep=True)
 
             context_packet = _compose_memory_context(
                 interaction.interaction_id,
