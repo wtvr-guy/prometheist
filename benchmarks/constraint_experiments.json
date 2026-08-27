@@ -70,6 +70,15 @@
       "quality_order": ["safety_violation_count", "false_admission_count", "false_denial_count", "interactive_latency", "throughput", "unused_safe_capacity"],
       "search": "Collect real peak/pressure distributions first; derive candidate margins from observed distributions, then replay/load-test them. Do not infer these values from GitHub CI."
     },
+    "OLLAMA-RUNTIME-001": {
+      "title": "Ollama residency observation and warm/cold admission calibration",
+      "environment": "target_windows_host_with_ollama",
+      "parameters": ["ollama_runtime_probe_timeout_seconds", "resident_model_memory_credit", "warm_incremental_process_memory", "cold_incremental_process_memory"],
+      "scenario_families": ["resident_configured_model", "nonresident_configured_model", "different_model_resident", "probe_failure", "warm_to_cold_transition", "cold_to_warm_transition"],
+      "hard_invariants": ["probe failure remains fail-closed", "only the configured model can satisfy residency", "warm credit never exceeds the cold-load reservation difference", "claim-time residency changes cannot weaken admission safety"],
+      "quality_order": ["false_admission_count", "false_denial_count", "probe_latency", "unused_safe_capacity"],
+      "search": "Measure /api/ps latency and resident-memory observations on the target host, then exercise warm/cold transition cases. Keep the probe timeout above observed healthy tails while preserving prompt failure on an unavailable runtime."
+    },
     "WORKER-NATIVE-001": {
       "title": "Worker leases, launch retries, retry delay, and process timeouts",
       "environment": "target_windows_host_and_fault_injection",
