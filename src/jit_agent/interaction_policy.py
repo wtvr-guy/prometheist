@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Any
 from uuid import UUID, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
-INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v8"
+INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v9"
 CONTINUITY_POLICY_VERSION = "ATTENTION_APERTURE_V1"
 INTERACTION_CAPABILITIES = (
     "interaction.resolve_references",
@@ -67,14 +68,20 @@ class InteractionDecision(BaseModel):
 
 
 class CapabilityResultSummary(BaseModel):
-    """Bounded machine-owned summary supplied to later fresh routing calls."""
+    """Bounded structured result supplied to later fresh routing calls.
+
+    The summary contains no model-authored explanation. ``result_data`` is the
+    application-owned structured payload produced by the capability, so future
+    non-memory capabilities can inform the next routing decision without forcing
+    an intermediate natural-language summary.
+    """
 
     model_config = ConfigDict(extra="forbid")
     round_index: int = Field(ge=0)
     capability_id: str = Field(min_length=1)
     supported: bool | None = None
     item_count: int | None = Field(default=None, ge=0)
-    result_keys: list[str] = Field(default_factory=list, max_length=16)
+    result_data: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("capability_id")
     @classmethod
@@ -82,16 +89,6 @@ class CapabilityResultSummary(BaseModel):
         normalized = value.strip()
         if not normalized:
             raise ValueError("capability_id must not be blank")
-        return normalized
-
-    @field_validator("result_keys")
-    @classmethod
-    def validate_result_keys(cls, values: list[str]) -> list[str]:
-        normalized = [value.strip() for value in values]
-        if any(not value for value in normalized):
-            raise ValueError("result_keys must not contain blanks")
-        if len(normalized) != len(set(normalized)):
-            raise ValueError("result_keys must not contain duplicates")
         return normalized
 
 
