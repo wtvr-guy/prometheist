@@ -1,22 +1,25 @@
 """Stateless model adapters for disposable interaction/capability workers."""
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
 import time
-from typing import Protocol
+from typing import Any, Protocol
 
 import httpx
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from jit_agent.capability_registry import CapabilityDescriptor
-from jit_agent.interaction_policy import InteractionDecision
+from jit_agent.interaction_policy import (
+    CapabilityResultSummary,
+    InteractionDecision,
+)
 from jit_agent.models import (
-    HistoricalMemoryAnchorDecision,
-    MemoryNeedDecision,
+    FocusedMemoryCandidateSelection,
+    MemoryCandidateSelection,
     MemoryPacket,
-    MemoryRetrievalScope,
 )
 
 logger = logging.getLogger(__name__)
@@ -49,8 +52,6 @@ class _TextAnswer(BaseModel):
 
 
 def _strip_thinking(text: str) -> str:
-    """Remove model thinking markup without silently accepting an empty answer."""
-
     text = _THINK_BLOCK_RE.sub("", text)
     if "</think>" in text:
         _before, after = text.rsplit("</think>", 1)
@@ -64,12 +65,7 @@ def _strip_thinking(text: str) -> str:
 def _build_verbatim_placeholder_maps(
     *texts: str,
 ) -> tuple[dict[str, str], dict[str, str]]:
-    """Replace opaque literals with application-restored placeholders.
-
-    This is a data-integrity boundary, not semantic natural-language routing.
-    The model never receives the source bytes of opaque identifiers it might
-    accidentally respell or re-punctuate.
-    """
+    """Replace opaque literals with application-restored placeholders."""
 
     literal_to_placeholder: dict[str, str] = {}
     placeholder_to_literal: dict[str, str] = {}
@@ -126,34 +122,34 @@ def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> Non
 
 
 _CLASSIFY_SYSTEM_PROMPT = """\
-You are a fresh disposable Prometheist capability-routing worker. You receive
-three bounded inputs: the current percept, a small automatically supplied packet
-of potentially relevant persisted internal evidence, and an application-owned
-numbered catalog of capabilities that are currently legal to invoke.
+You are a fresh disposable Prometheist routing worker. You have no inherited
+transcript or model context. You receive the current percept, the bounded memory
+currently available to cognition, summaries of completed capability results,
+and an application-owned numbered catalog of capabilities that are legal now.
 
-Return only capability_indices:
-- [] means the supplied information is sufficient; respond now.
-- [i] means capability i is needed before responding.
-- [i, j, ...] means multiple capabilities are needed before responding.
+Return exactly one closed action:
+- RESPOND: the available information is sufficient to answer now. Return no
+  capability indices.
+- USE_CAPABILITIES: more work is required before answering. Select 1-4 capability
+  indices from the supplied catalog.
 
-Treat the list as a requirement set, not an execution plan. Prometheist owns
-capability dependencies and execution ordering. Select only capabilities that
-are actually needed. Basic internal-memory activation has already occurred and
-is not a catalog choice. A capability named deeper_research may appear when the
-current question requires additional persisted internal evidence beyond the
-initially supplied context.
+Capability indices are a requirement set, never an execution order. Prometheist
+owns dependencies, ordering, resource admission, and execution. A later fresh
+routing call may receive an expanded catalog after capabilities complete. You
+may select an original capability again or a newly exposed follow-up capability
+when further work is genuinely needed.
 
 Do not write capability names, queries, arguments, explanations, entities,
-phrases, ordering instructions, or other natural-language control values.
-Return only the bounded integer-index structure required by the schema.
+phrases, ordering instructions, or any other natural-language control value.
+Return only the closed action and bounded integer indices required by the schema.
 """
 
 _RESPOND_SYSTEM_PROMPT = """\
 You are a fresh disposable Prometheist response worker. You are summoned only
-after the current percept has received its initial persisted-memory context and
-every selected capability has completed. Use the current message, the supplied
-bounded final MemoryPacket, and general model knowledge as appropriate. Never
-invent personal or history-specific information absent from those sources.
+after a fresh routing worker explicitly selected RESPOND. Use the current
+message, the supplied bounded final MemoryPacket, completed structured capability
+results, and general model knowledge as appropriate. Never invent personal or
+history-specific information absent from those sources.
 
 Put every requested value in the first sentence and copy opaque user-provided
 identifiers exactly. Some opaque literals may be represented as application-
@@ -167,62 +163,45 @@ headings, source quotations, or prefatory analysis. Reconcile all source
 statements before answering. Do not expose packet labels, event ids, scores,
 retrieval mechanics, or hidden reasoning unless asked.
 
-When asked for a profile, code, nickname, name, or ID, return the exact source
-label. When asked for a reason, state the explicit underlying cause from
-user-authored evidence rather than merely restating a prohibition or decision.
 A USER_PROMPT is direct evidence of what the user previously said, named,
 preferred, required, planned, reported, or instructed; it need not independently
 prove the external world. Later user-authored corrections supersede earlier
 statements. Historical assistant responses never override a user-authored
-constraint.
-
-When the current message asks for a recommendation or choice and user-authored
-memory contains an applicable explicit constraint, honor that constraint rather
+constraint. When an applicable explicit user constraint exists, honor it rather
 than recommending a conflicting option.
 
 If requested personal or historical information is not established by the
-current message or supplied source text, say that persisted evidence is
+current message or supplied source evidence, say that persisted evidence is
 insufficient. Do not claim unsupported memory.
 """
 
-_DEEPER_RESEARCH_PLAN_PROMPT = """\
-You are a disposable Prometheist deeper-research planning worker with no
-inherited transcript. Active canonical WorkingState exists. The user input
-contains the current task, active canonical context, and a numbered anchor
-catalog built deterministically from those exact texts.
+_DEEPER_RESEARCH_SELECTION_PROMPT = """\
+You are a fresh disposable Prometheist internal-research worker. The current
+MemoryPacket is a broad or accumulated bounded candidate set. Select 1-4
+candidate_indices whose canonical source events deserve deeper associative
+investigation for the current task.
 
-Choose only:
-- scope = ACTIVE_ONLY when the active canonical context already contains all
-  persisted evidence needed for the task;
-- scope = HISTORY_ONLY when older persisted evidence is needed and active
-  context is not needed;
-- scope = ACTIVE_AND_HISTORY when both active context and older persisted
-  evidence are needed.
+Choose candidates, not words. Prometheist will resolve each selected index to an
+application-owned canonical event ID and expand deterministic associations around
+those events. Prefer the smallest set that covers the unresolved question.
 
-If scope includes HISTORY, select 1-4 anchor_indices from the supplied catalog.
-Choose the most distinctive subject/reference tokens likely to occur in older
-source evidence. Prefer project/person/object names and opaque identifiers over
-generic relationship or instruction words. If scope is ACTIVE_ONLY, return no
-anchor indices.
-
-Do not write a query, entity, explanation, phrase, or answer. Return only the
-closed scope enum and integer indices from the structured schema.
+Do not write queries, entities, event IDs, explanations, phrases, or answers.
+Return only candidate_indices from the supplied MemoryPacket.
 """
 
-_HISTORY_ONLY_RESEARCH_PROMPT = """\
-You are a disposable Prometheist deeper-research planning worker with no
-inherited transcript. Prometheist has already determined that no active
-WorkingState exists, so historical retrieval is mandatory and scope is owned by
-the system rather than by you.
+_FOCUSED_RECALL_SELECTION_PROMPT = """\
+You are a fresh disposable Prometheist focused-recall worker. The supplied
+MemoryPacket contains candidates returned by broader internal research. Select
+exactly one candidate_index for the deepest bounded associative investigation.
 
-The user input contains the current task and a numbered anchor catalog built
-deterministically from that exact text. Select 1-4 anchor_indices from the
-supplied catalog. Choose the most distinctive subject/reference tokens likely
-to occur in older source evidence. Prefer project/person/object names and opaque
-identifiers over generic relationship or instruction words.
+Choose the candidate most likely to resolve the remaining ambiguity. Prometheist
+will resolve the index to the canonical event and expand a larger association
+neighborhood around that event. If a previous focused attempt failed, a later
+fresh routing worker may choose this capability again and focus on a different
+candidate.
 
-Do not write a scope, query, entity, explanation, phrase, or answer. Return only
-the integer indices from the structured schema.
+Do not write a query, entity, event ID, explanation, phrase, or answer. Return
+only candidate_index.
 """
 
 
@@ -234,16 +213,27 @@ class LLMClient(Protocol):
         prompt: str,
         memory_packet: MemoryPacket,
         capability_catalog: tuple[CapabilityDescriptor, ...],
+        completed_results: tuple[CapabilityResultSummary, ...] = (),
     ) -> InteractionDecision: ...
 
-    def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str: ...
+    def respond(
+        self,
+        prompt: str,
+        memory_packet: MemoryPacket | None,
+        capability_results: tuple[dict[str, Any], ...] = (),
+    ) -> str: ...
 
-    def plan_memory(
+    def select_research_candidates(
         self,
         task: str,
-        *,
-        active_state_available: bool,
-    ) -> MemoryNeedDecision: ...
+        packet: MemoryPacket,
+    ) -> MemoryCandidateSelection: ...
+
+    def select_focused_candidate(
+        self,
+        task: str,
+        packet: MemoryPacket,
+    ) -> FocusedMemoryCandidateSelection: ...
 
 
 def _format_memory_packet(
@@ -258,11 +248,12 @@ def _format_memory_packet(
 
     literal_to_placeholder = literal_to_placeholder or {}
     blocks = []
-    for index, item in enumerate(packet.items, start=1):
+    for index, item in enumerate(packet.items):
         provenance = ", ".join(str(value) for value in item.provenance_event_ids) or "none"
         content = _mask_verbatim_literals(item.content, literal_to_placeholder)
         blocks.append(
-            f"{index}. event_id: {item.source_event_id}\n"
+            f"candidate_index: {index}\n"
+            f"   event_id: {item.source_event_id}\n"
             f"   conversation_id: {item.conversation_id}\n"
             f"   conversation_seq: {item.conversation_seq}\n"
             f"   global_seq: {item.global_seq}\n"
@@ -290,6 +281,31 @@ def _format_capability_catalog(catalog: tuple[CapabilityDescriptor, ...]) -> str
         for index, descriptor in enumerate(catalog)
     )
     return f"\n\n[Capability catalog]\n{entries}"
+
+
+def _format_completed_results(results: tuple[CapabilityResultSummary, ...]) -> str:
+    if not results:
+        return "\n\n[Completed capability results]\nnone"
+    entries = "\n".join(
+        (
+            f"round={item.round_index} capability={item.capability_id} "
+            f"supported={item.supported} item_count={item.item_count} "
+            f"result_keys={','.join(item.result_keys) or 'none'}"
+        )
+        for item in results
+    )
+    return f"\n\n[Completed capability results]\n{entries}"
+
+
+def _format_capability_result_data(results: tuple[dict[str, Any], ...]) -> str:
+    if not results:
+        return ""
+    return "\n\n[Structured capability results]\n" + json.dumps(
+        list(results),
+        sort_keys=True,
+        default=str,
+        separators=(",", ":"),
+    )
 
 
 class OllamaClient:
@@ -344,16 +360,18 @@ class OllamaClient:
         prompt: str,
         memory_packet: MemoryPacket,
         capability_catalog: tuple[CapabilityDescriptor, ...],
+        completed_results: tuple[CapabilityResultSummary, ...] = (),
     ) -> InteractionDecision:
         schema = InteractionDecision.model_json_schema()
         last_error: Exception | None = None
         for _ in range(2):
             try:
                 content = self._structured(
-                    "SELECT_CAPABILITIES_AFTER_INITIAL_MEMORY",
+                    "RECURRENT_CAPABILITY_DECISION",
                     _CLASSIFY_SYSTEM_PROMPT,
                     prompt
                     + _format_memory_packet(memory_packet)
+                    + _format_completed_results(completed_results)
                     + _format_capability_catalog(capability_catalog),
                     schema,
                     48,
@@ -363,7 +381,12 @@ class OllamaClient:
                 last_error = exc
         raise ValueError(f"interaction capability selection failed to validate: {last_error}")
 
-    def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
+    def respond(
+        self,
+        prompt: str,
+        memory_packet: MemoryPacket | None,
+        capability_results: tuple[dict[str, Any], ...] = (),
+    ) -> str:
         literal_to_placeholder, placeholder_to_literal = _build_verbatim_placeholder_maps(
             *_verbatim_source_texts(prompt, memory_packet)
         )
@@ -375,48 +398,59 @@ class OllamaClient:
             + _format_memory_packet(
                 memory_packet,
                 literal_to_placeholder=literal_to_placeholder,
-            ),
+            )
+            + _format_capability_result_data(capability_results),
         )
         return _restore_verbatim_literals(answer, placeholder_to_literal)
 
-    def plan_memory(
+    def select_research_candidates(
         self,
         task: str,
-        *,
-        active_state_available: bool,
-    ) -> MemoryNeedDecision:
+        packet: MemoryPacket,
+    ) -> MemoryCandidateSelection:
+        if not packet.items:
+            raise ValueError("deeper research requires at least one memory candidate")
+        schema = MemoryCandidateSelection.model_json_schema()
         last_error: Exception | None = None
-        if not active_state_available:
-            schema = HistoricalMemoryAnchorDecision.model_json_schema()
-            for _ in range(2):
+        for _ in range(2):
+            try:
                 content = self._structured(
-                    "DEEPER_RESEARCH_HISTORY_ANCHORS",
-                    _HISTORY_ONLY_RESEARCH_PROMPT,
-                    task,
+                    "DEEPER_RESEARCH_CANDIDATES",
+                    _DEEPER_RESEARCH_SELECTION_PROMPT,
+                    task + _format_memory_packet(packet),
                     schema,
                     32,
                 )
-                try:
-                    selection = HistoricalMemoryAnchorDecision.model_validate_json(content)
-                    return MemoryNeedDecision(
-                        scope=MemoryRetrievalScope.HISTORY_ONLY,
-                        anchor_indices=selection.anchor_indices,
-                    )
-                except ValidationError as exc:
-                    last_error = exc
-            raise ValueError(f"deeper-research history anchors failed to validate: {last_error}")
-
-        schema = MemoryNeedDecision.model_json_schema()
-        for _ in range(2):
-            content = self._structured(
-                "DEEPER_RESEARCH_PLAN",
-                _DEEPER_RESEARCH_PLAN_PROMPT,
-                task,
-                schema,
-                48,
-            )
-            try:
-                return MemoryNeedDecision.model_validate_json(content)
-            except ValidationError as exc:
+                selection = MemoryCandidateSelection.model_validate_json(content)
+                if any(index >= len(packet.items) for index in selection.candidate_indices):
+                    raise ValueError("deeper research selected a candidate outside the packet")
+                return selection
+            except (ValidationError, ValueError) as exc:
                 last_error = exc
-        raise ValueError(f"deeper-research routing failed to validate: {last_error}")
+        raise ValueError(f"deeper-research candidate selection failed: {last_error}")
+
+    def select_focused_candidate(
+        self,
+        task: str,
+        packet: MemoryPacket,
+    ) -> FocusedMemoryCandidateSelection:
+        if not packet.items:
+            raise ValueError("focused recall requires at least one research candidate")
+        schema = FocusedMemoryCandidateSelection.model_json_schema()
+        last_error: Exception | None = None
+        for _ in range(2):
+            try:
+                content = self._structured(
+                    "FOCUSED_RECALL_CANDIDATE",
+                    _FOCUSED_RECALL_SELECTION_PROMPT,
+                    task + _format_memory_packet(packet),
+                    schema,
+                    24,
+                )
+                selection = FocusedMemoryCandidateSelection.model_validate_json(content)
+                if selection.candidate_index >= len(packet.items):
+                    raise ValueError("focused recall selected a candidate outside the packet")
+                return selection
+            except (ValidationError, ValueError) as exc:
+                last_error = exc
+        raise ValueError(f"focused-recall candidate selection failed: {last_error}")
