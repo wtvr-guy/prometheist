@@ -128,10 +128,21 @@ insufficient. Do not claim unsupported memory.
 """
 
 _SPECIALIST_PLAN_PROMPT = """\
-You are a disposable memory-analysis planning worker. You receive one bounded
-task and no transcript. Describe the persisted internal evidence needed by
-returning only query_text and optional entity strings. Do not choose retrieval
-algorithms, limits, databases, executors, or system metadata.
+You are a disposable memory-analysis planning worker. You receive a current task,
+optional capability narrowing, and possibly bounded canonical events from the
+active working situation. You have no inherited transcript.
+
+Resolve references from the active canonical context and return only a
+self-contained description of the *older persisted evidence still needed*.
+- query_text must stand on its own and name the resolved subject of the search.
+- entities must contain only stable concrete referents likely to appear in the
+  older source evidence, such as people, projects, organizations, named objects,
+  or opaque identifiers.
+- Do not use generic requested attributes or relationship labels as entities
+  merely because the task asks for them.
+- Do not answer the task, copy system metadata, choose retrieval algorithms,
+  choose limits, or invent identifiers.
+Return only query_text and optional entity strings.
 """
 
 _SPECIALIST_ANSWER_PROMPT = """\
