@@ -34,11 +34,11 @@ This file is intentionally concise. Each article states the hard rule, why it ma
 
 **Deep dive:** [`docs/architecture/COGNITIVE_ARCHITECTURE.md`](docs/architecture/COGNITIVE_ARCHITECTURE.md)
 
-### Article 3 — Admitted durable memory is lossless canonical evidence
+### Article 3 — Admitted durable memory is lossless, append-only canonical evidence
 
-**Rule.** Once information is admitted as canonical durable memory or authoritative internal history, ordinary retention, indexing, summarization, aggregation, or storage-pressure policy must not replace or delete the exact canonical evidence. Derived structures are navigation aids, not substitute memories.
+**Rule.** Once information is admitted as canonical durable memory or authoritative internal history, ordinary retention, indexing, summarization, aggregation, or storage-pressure policy must not replace, rewrite, or delete the exact canonical evidence. Canonical historical events are append-only: corrections, contradictions, and supersession are represented by new provenance-bearing records that refer to earlier evidence rather than mutating history. Derived structures are navigation aids, not substitute memories.
 
-**Why it matters.** Prometheist's accuracy objective depends on being able to return to exact source evidence rather than trusting successively lossy reconstructions.
+**Why it matters.** Prometheist's accuracy objective depends on being able to return to exact source evidence and reconstruct what the system actually knew at a point in time rather than trusting successively lossy or retrospectively rewritten history.
 
 **Deep dive:** [`docs/architecture/LOSSLESS_PROGRESSIVE_MEMORY.md`](docs/architecture/LOSSLESS_PROGRESSIVE_MEMORY.md)
 
