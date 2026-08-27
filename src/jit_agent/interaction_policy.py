@@ -8,8 +8,8 @@ from uuid import UUID, uuid5
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v2"
-CONTINUITY_POLICY_VERSION = "REFERENTIAL_CONTINUITY_REQUIRES_MEMORY_V1"
+INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v3"
+CONTINUITY_POLICY_VERSION = "ACTIVE_WORKING_STATE_REQUIRES_MEMORY_V1"
 INTERACTION_CAPABILITIES = (
     "interaction.resolve_references",
     "capability.discover",
@@ -18,15 +18,6 @@ INTERACTION_CAPABILITIES = (
     "interaction.persist_result",
 )
 
-_CONTEXT_REFERENCE_PATTERNS = tuple(
-    re.compile(pattern, re.IGNORECASE)
-    for pattern in (
-        r"\b(?:this\s+(?:one|ones)|that\s+(?:one|ones|option|approach|plan|rule|choice|step|item|idea))\b",
-        r"\b(?:these|those)\s+(?:options?|approaches?|plans?|rules?|choices?|steps?|items?|ideas?)\b",
-        r"\b(?:we|you|i)\s+(?:just|previously|earlier)\s+(?:said|mentioned|decided|chose|selected|ruled|discussed|called|named|agreed)\b",
-        r"\b(?:did|do|have|are|were)\s+(?:we|you|i)\s+(?:(?:just|previously|earlier)\s+)?(?:say|mention|decide|choose|select|rule|discuss|call|calling|name|naming|agree|use|using)\b",
-    )
-)
 _EXPLICIT_CAPABILITY_REQUEST_PATTERN = re.compile(
     r"\b(?:use|ask|delegate\s+to)\s+(?:a\s+|an\s+|the\s+)?"
     r"(?:[a-z][\w-]*\s+){0,2}(?:service|workflow|tool|model|specialist|agent)\b",
@@ -39,8 +30,6 @@ _MEMORY_CAPABILITY_PATTERN = re.compile(
 
 
 class InteractionAction(str, Enum):
-    """Bounded semantic choices proposed by one disposable model call."""
-
     RESPOND_DIRECTLY = "RESPOND_DIRECTLY"
     REQUEST_CAPABILITY = "REQUEST_CAPABILITY"
 
@@ -55,15 +44,6 @@ class InteractionDecision(BaseModel):
     @field_validator("capability_query", "capability_input", mode="before")
     @classmethod
     def normalize_optional_text(cls, value: object) -> object:
-        """Treat blank structured-output optionals as absent.
-
-        Local structured-output models commonly emit ``""`` for optional
-        JSON-schema string fields. For fields whose absence is semantically
-        unambiguous, canonicalize blank/whitespace-only strings to ``None`` at
-        the protocol boundary while leaving non-string inputs for Pydantic to
-        validate normally.
-        """
-
         if isinstance(value, str):
             normalized = value.strip()
             return normalized or None
@@ -74,15 +54,6 @@ class InteractionDecision(BaseModel):
         if self.action is InteractionAction.REQUEST_CAPABILITY and self.capability_query is None:
             raise ValueError("REQUEST_CAPABILITY requires capability_query")
         return self
-
-
-_INLINE_ANTECEDENT_PATTERNS = tuple(
-    re.compile(pattern, re.IGNORECASE | re.DOTALL)
-    for pattern in (
-        r"\b(?:between|compare)\b.{1,240}\band\b.{0,160}\b(?:which|what)\s+of\s+those\s+(?:options?|approaches?|plans?|rules?|choices?|steps?|items?|ideas?)\b",
-        r"\bthese\s+(?:options?|approaches?|plans?|rules?|choices?|steps?|items?|ideas?)\s+(?:are|include)\b.{1,240}\band\b.{0,160}\b(?:which|what)\s+of\s+those\s+(?:options?|approaches?|plans?|rules?|choices?|steps?|items?|ideas?)\b",
-    )
-)
 
 
 class InteractionStage(str, Enum):
@@ -107,8 +78,10 @@ INTERACTION_STAGES = tuple(InteractionStage)
 
 
 class ReferenceAnalysis(BaseModel):
+    """State-driven continuity signal produced without linguistic heuristics."""
+
     policy_version: str = CONTINUITY_POLICY_VERSION
-    requires_persisted_context: bool
+    working_state_available: bool
 
 
 class DurableInteraction(BaseModel):
@@ -131,33 +104,24 @@ class DurableInteraction(BaseModel):
         return normalized
 
 
-def requires_persisted_context(user_text: str) -> bool:
-    """Detect bounded references whose antecedent is outside this message."""
-
-    remaining = user_text
-    for pattern in _INLINE_ANTECEDENT_PATTERNS:
-        remaining = pattern.sub(" ", remaining)
-    return any(pattern.search(remaining) for pattern in _CONTEXT_REFERENCE_PATTERNS)
-
-
 def apply_continuity_policy(
     user_text: str,
     decision: InteractionDecision,
     analysis: ReferenceAnalysis,
 ) -> tuple[InteractionDecision, str | None]:
-    """Move the v0.6 continuity behavior out of Primary-Agent ownership."""
+    """Use durable active state as the continuity signal.
 
-    if not analysis.requires_persisted_context:
+    No phrase list is consulted. Once a situation has active working state, a
+    fresh worker must either use memory or explicitly invoke another requested
+    capability. This makes continuity independent of surface wording.
+    """
+
+    if not analysis.working_state_available:
         return decision, None
-    normalized_capability_query = re.sub(
-        r"[_-]+",
-        " ",
-        decision.capability_query or "",
-    )
+    normalized_capability_query = re.sub(r"[_-]+", " ", decision.capability_query or "")
     requests_memory = (
         decision.action is InteractionAction.REQUEST_CAPABILITY
-        and _MEMORY_CAPABILITY_PATTERN.search(normalized_capability_query)
-        is not None
+        and _MEMORY_CAPABILITY_PATTERN.search(normalized_capability_query) is not None
     )
     if (
         decision.action is InteractionAction.REQUEST_CAPABILITY
