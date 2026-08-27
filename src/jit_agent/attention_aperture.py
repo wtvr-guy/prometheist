@@ -4,8 +4,8 @@ The attention aperture is deliberately not a capability and does not depend on
 an LLM deciding whether unseen memory might matter. Every interaction receives
 one small, bounded, provenance-bearing activation packet derived from the
 current percept plus durable WorkingState. A later model decision may request
-``MEMORY_ANALYSIS`` to focus more deeply, but basic memory availability is part
-of Prometheist's cognitive substrate.
+``deeper_research`` when the initially supplied context is insufficient, but
+basic memory availability is part of Prometheist's cognitive substrate.
 
 The aperture uses JIT Memory's activation boundary rather than its stricter
 evidence-admission boundary. An aperture item means "potentially relevant enough
