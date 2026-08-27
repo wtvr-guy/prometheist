@@ -35,6 +35,10 @@ _VERBATIM_LITERAL_RE = re.compile(
 _MAX_VERBATIM_LITERALS = 16
 
 
+class OllamaStructuredOutputError(ValueError):
+    """Ollama completed a request without usable final structured content."""
+
+
 class _TextAnswer(BaseModel):
     """Validated envelope for irreducibly user-facing natural language."""
 
@@ -61,6 +65,25 @@ def _strip_thinking(text: str) -> str:
     if not stripped:
         raise ValueError("LLM response contained no answer content after stripping thinking")
     return stripped
+
+
+def _uses_qwen3_soft_switch(model: str) -> bool:
+    leaf = model.rsplit("/", 1)[-1].strip().casefold()
+    return leaf.startswith("qwen3")
+
+
+def _nonthinking_user_input(model: str, user: str) -> str:
+    """Apply Qwen3's documented per-turn soft switch after all task content."""
+
+    if not _uses_qwen3_soft_switch(model):
+        return user
+    return f"{user}\n\n/no_think"
+
+
+def _retry_token_caps(initial: int) -> tuple[int, int]:
+    if initial < 1:
+        raise ValueError("initial token cap must be positive")
+    return initial, min(512, max(initial + 16, initial * 2))
 
 
 def _build_verbatim_placeholder_maps(
@@ -108,9 +131,15 @@ def _verbatim_source_texts(prompt: str, packet: MemoryPacket | None) -> tuple[st
 
 
 def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> None:
+    message = response_json.get("message")
+    if not isinstance(message, dict):
+        message = {}
+    content = message.get("content")
+    thinking = message.get("thinking")
     logger.info(
         "%s model=%s elapsed=%.2fs load_duration=%sns prompt_eval_duration=%sns "
-        "eval_duration=%sns prompt_eval_count=%s eval_count=%s",
+        "eval_duration=%sns prompt_eval_count=%s eval_count=%s done_reason=%s "
+        "content_chars=%s thinking_chars=%s",
         kind,
         model,
         elapsed,
@@ -119,6 +148,9 @@ def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> Non
         response_json.get("eval_duration"),
         response_json.get("prompt_eval_count"),
         response_json.get("eval_count"),
+        response_json.get("done_reason"),
+        len(content) if isinstance(content, str) else 0,
+        len(thinking) if isinstance(thinking, str) else 0,
     )
 
 
@@ -341,7 +373,14 @@ class OllamaClient:
             trust_env=False,
         )
 
-    def _structured(self, kind: str, system: str, user: str, schema: dict, max_tokens: int) -> str:
+    def _structured(
+        self,
+        kind: str,
+        system: str,
+        user: str,
+        schema: dict,
+        max_tokens: int,
+    ) -> str:
         t0 = time.monotonic()
         response = self._client.post(
             "/api/chat",
@@ -349,7 +388,10 @@ class OllamaClient:
                 "model": self.model,
                 "messages": [
                     {"role": "system", "content": system},
-                    {"role": "user", "content": user},
+                    {
+                        "role": "user",
+                        "content": _nonthinking_user_input(self.model, user),
+                    },
                 ],
                 "format": schema,
                 "think": False,
@@ -360,18 +402,42 @@ class OllamaClient:
         response.raise_for_status()
         body = response.json()
         _log_call(kind, self.model, time.monotonic() - t0, body)
-        return _strip_thinking(body["message"]["content"])
+        message = body.get("message")
+        if not isinstance(message, dict):
+            raise OllamaStructuredOutputError(
+                "Ollama response omitted the chat message object"
+            )
+        raw_content = message.get("content")
+        content = raw_content if isinstance(raw_content, str) else ""
+        try:
+            return _strip_thinking(content)
+        except ValueError as exc:
+            raw_thinking = message.get("thinking")
+            diagnostics = {
+                "content_length": len(content),
+                "done_reason": body.get("done_reason"),
+                "eval_count": body.get("eval_count"),
+                "max_tokens": max_tokens,
+                "prompt_eval_count": body.get("prompt_eval_count"),
+                "thinking_length": (
+                    len(raw_thinking) if isinstance(raw_thinking, str) else 0
+                ),
+            }
+            raise OllamaStructuredOutputError(
+                "Ollama produced no usable final content: "
+                + json.dumps(diagnostics, sort_keys=True, separators=(",", ":"))
+            ) from exc
 
     def _text(self, kind: str, system: str, user: str, max_tokens: int = 256) -> str:
         last_error: Exception | None = None
-        for _ in range(2):
+        for token_cap in _retry_token_caps(max_tokens):
             try:
                 content = self._structured(
                     kind,
                     system,
                     user,
                     _TextAnswer.model_json_schema(),
-                    max_tokens,
+                    token_cap,
                 )
                 return _TextAnswer.model_validate_json(content).answer
             except (ValidationError, ValueError) as exc:
@@ -388,18 +454,21 @@ class OllamaClient:
     ) -> InteractionDecision:
         schema = InteractionDecision.model_json_schema()
         last_error: Exception | None = None
-        for _ in range(2):
+        user = (
+            prompt
+            + _format_memory_packet(memory_packet)
+            + _format_completed_results(completed_results)
+            + _format_capability_result_data(capability_results)
+            + _format_capability_catalog(capability_catalog)
+        )
+        for token_cap in _retry_token_caps(48):
             try:
                 content = self._structured(
                     "RECURRENT_CAPABILITY_DECISION",
                     _CLASSIFY_SYSTEM_PROMPT,
-                    prompt
-                    + _format_memory_packet(memory_packet)
-                    + _format_completed_results(completed_results)
-                    + _format_capability_result_data(capability_results)
-                    + _format_capability_catalog(capability_catalog),
+                    user,
                     schema,
-                    48,
+                    token_cap,
                 )
                 return InteractionDecision.model_validate_json(content)
             except (ValidationError, ValueError) as exc:
@@ -437,14 +506,15 @@ class OllamaClient:
             raise ValueError("deeper research requires at least one memory candidate")
         schema = MemoryCandidateSelection.model_json_schema()
         last_error: Exception | None = None
-        for _ in range(2):
+        user = task + _format_memory_packet(packet)
+        for token_cap in _retry_token_caps(32):
             try:
                 content = self._structured(
                     "DEEPER_RESEARCH_CANDIDATES",
                     _DEEPER_RESEARCH_SELECTION_PROMPT,
-                    task + _format_memory_packet(packet),
+                    user,
                     schema,
-                    32,
+                    token_cap,
                 )
                 selection = MemoryCandidateSelection.model_validate_json(content)
                 if any(index >= len(packet.items) for index in selection.candidate_indices):
@@ -463,14 +533,15 @@ class OllamaClient:
             raise ValueError("cross reference requires at least two memory candidates")
         schema = CrossReferenceCandidateSelection.model_json_schema()
         last_error: Exception | None = None
-        for _ in range(2):
+        user = task + _format_memory_packet(packet)
+        for token_cap in _retry_token_caps(32):
             try:
                 content = self._structured(
                     "CROSS_REFERENCE_CANDIDATES",
                     _CROSS_REFERENCE_SELECTION_PROMPT,
-                    task + _format_memory_packet(packet),
+                    user,
                     schema,
-                    32,
+                    token_cap,
                 )
                 selection = CrossReferenceCandidateSelection.model_validate_json(content)
                 if any(index >= len(packet.items) for index in selection.candidate_indices):
@@ -489,14 +560,15 @@ class OllamaClient:
             raise ValueError("focused recall requires at least one research candidate")
         schema = FocusedMemoryCandidateSelection.model_json_schema()
         last_error: Exception | None = None
-        for _ in range(2):
+        user = task + _format_memory_packet(packet)
+        for token_cap in _retry_token_caps(24):
             try:
                 content = self._structured(
                     "FOCUSED_RECALL_CANDIDATE",
                     _FOCUSED_RECALL_SELECTION_PROMPT,
-                    task + _format_memory_packet(packet),
+                    user,
                     schema,
-                    24,
+                    token_cap,
                 )
                 selection = FocusedMemoryCandidateSelection.model_validate_json(content)
                 if selection.candidate_index >= len(packet.items):
