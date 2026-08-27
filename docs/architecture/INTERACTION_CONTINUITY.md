@@ -1,131 +1,169 @@
 # Interaction Continuity
 
-**Status:** active architecture requirement. Revised 2026-08-27 after native v0.7 acceptance exposed failed continuity and routing assumptions.
+**Status:** active architecture requirement. Revised 2026-08-27 from native v0.7 acceptance evidence.
 
-## Principle
+## Governing invariant
 
-Prometheist must not require a user to manage conversations as memory namespaces, and it must not require application code to enumerate every natural-language way a user can refer to recent or historical context.
+> **Conversations, sessions, devices, and interfaces are provenance metadata—not cognitive boundaries. Current context and basic access to persistent memory are system-owned cognitive substrate.**
 
-The governing invariant is:
+Three durable mechanisms remain distinct:
 
-> **Conversations, sessions, devices, and interfaces are provenance metadata—not cognitive boundaries. Current context and access to persistent memory are system-owned cognitive substrate.**
+- **WorkingState**: which canonical events are active now?
+- **JIT Memory**: which canonical persisted evidence is potentially relevant now?
+- **JIT Attention**: which durable work receives execution/resources now?
 
-Three mechanisms remain distinct:
-
-- **WorkingState** answers: which canonical events are active now?
-- **JIT Memory** answers: which persisted canonical evidence is potentially relevant now?
-- **JIT Attention** answers: which durable work receives execution/resources now?
-
-No LLM invocation owns any of those states.
+No LLM call owns any of those states.
 
 ## Experimental corrections
 
-### Rejected mechanism 1: phrase-cue continuity
+Native acceptance rejected several earlier assumptions.
 
-The first v0.7 release candidate reconstructed continuity from each utterance using progressively more text/entity/recency cues. Native acceptance required increasingly specific repairs and one temporal heuristic regressed an already-passing turn.
+1. **Phrase-cue continuity failed as a general mechanism.** A growing vocabulary of entity/recency/reference phrases produced local fixes and regressions. The live phrase detector is therefore disabled. Minimal WorkingState now contains bounded canonical active-event IDs.
+2. **Ask-before-remembering is circular.** A stateless model cannot reliably decide whether unseen memory matters when the evidence required for that decision may itself be in memory. Every percept therefore receives bounded memory activation before model routing.
+3. **A capability list is not an execution schedule.** Models select requirements. Prometheist owns dependency closure, deterministic ordering, resource policy, and execution.
+4. **One capability pass is too shallow.** A worker may discover after one capability round that it still lacks evidence. Capability use therefore forms a bounded recurrent loop of fresh stateless model calls.
+5. **Generated search text is unnecessary control state.** Memory research now selects canonical candidates by bounded index rather than generating queries, entities, event IDs, or explanations.
 
-The project therefore records a negative result:
+These changes are architectural responses to observed failures, not Kestrel-specific patches.
 
-> **Direct utterance -> hand-maintained text/entity/recency rules -> MemoryNeed is not accepted as the general continuity architecture.**
+## Default memory activation: broad and shallow
 
-WorkingState replaced that approach with a bounded set of canonical active-event IDs.
-
-### Rejected mechanism 2: ask before remembering
-
-A later native run exposed a deeper problem. On the first Kestrel turn, the stateless classifier saw only the current percept and selected no memory capability. The response model therefore never saw the already-persisted rule that ruled out Docker and recommended the conflicting option.
-
-That is not a Kestrel-specific routing error. It is a circular dependency:
-
-> **A stateless model cannot reliably decide whether unseen persistent memory is relevant when the evidence required to make that decision may itself be in persistent memory.**
-
-Accordingly, basic internal-memory access is no longer a model-selected capability in the live interaction path.
-
-### Rejected mechanism 3: model-owned capability ordering
-
-Once a post-memory model may select multiple capabilities, its returned list must not silently become the execution schedule. Capability dependencies, resource constraints, and stable ordering are system policy.
-
-Therefore:
-
-> **The model selects the required capability set; Prometheist deterministically expands dependencies and owns execution order.**
-
-The registry stores private execution metadata. The scheduler-facing plan expands dependency closure, then uses topological ordering with stable priority and capability-id tie-breaking. Cycles fail closed.
-
-## Default memory exposure and deeper research
-
-Every percept automatically receives a small, bounded JIT Memory packet before any model routing decision.
+Every percept automatically opens a small, bounded memory context before any routing model is called.
 
 ```text
-percept
-  +
-durable WorkingState
-  |
-  v
-system-owned bounded JIT recall
-  |
-  v
-initial MemoryPacket
-  |
-  v
-fresh stateless capability-selection model
-  |
-  +--> capability_indices = []
-  |       -> respond
-  |
-  +--> capability_indices = [i, j, ...]
-          -> deterministic dependency closure/order
-          -> execute every selected capability
-          -> wait for every durable result
-          -> one final response inference
+current percept
+    +
+bounded WorkingState event IDs
+    |
+    v
+deterministic high-recall candidate activation
+    |
+    v
+small initial MemoryPacket
 ```
 
-The initial packet is deliberately small. It is not intended to reconstruct all persistent history. It gives the fresh model immediately relevant canonical evidence while keeping context bounded.
+The initial activation intentionally **casts a relatively wide deterministic net but exposes only a small packet**. It uses a larger bounded candidate window and no association traversal. An item means “potentially relevant enough to keep available,” not “proved sufficient evidence.”
 
-If that context is insufficient, the installed `deeper_research` capability means:
+This is cognitive substrate, not a model-selected capability.
 
-> **Investigate the current question further using additional persisted internal evidence when the initially supplied context is insufficient.**
+## Recurrent stateless capability loop
 
-`deeper_research` is intentionally named in task semantics rather than after an internal architectural metaphor. It returns structured evidence, not a prose answer. The final response worker remains the sole live user-facing language generator.
+After initial activation, a fresh routing model receives:
 
-The distinction is:
+- the original percept;
+- the currently accumulated bounded MemoryPacket;
+- structured summaries/results from completed capabilities;
+- the currently legal application-owned capability catalog.
 
-- **basic recall exposure** = automatic cognitive substrate;
-- **deeper research** = optional investigation performed on persistent evidence;
-- **final response** = one fresh synthesis after required capabilities have completed.
-
-The default capability registry may retain `internal_memory` for generic or historical compatibility, but the live interaction model does not select it.
-
-## Multiple capabilities and deterministic execution
-
-The capability-selection model receives an application-owned bounded catalog and returns only integer indices. It may select zero, one, or several capabilities.
-
-The returned indices are a **requirement set**, not an execution plan. The model does not emit:
-
-- capability names;
-- queries or arguments;
-- dependency declarations;
-- execution order;
-- resource policy;
-- explanations.
-
-Prometheist converts the selected set into a persisted `CapabilityExecutionPlan` using private registry metadata:
+Its output is closed and mechanically validated:
 
 ```text
-selected indices
-    -> resolve canonical capability IDs
-    -> expand declared dependencies
-    -> reject unavailable/non-selectable dependencies
-    -> reject cycles
+RESPOND
+    capability_indices = []
+
+or
+
+USE_CAPABILITIES
+    capability_indices = [i, ...]   # 1-4 unique catalog indices
+```
+
+`RESPOND` must be explicit. An omitted/invalid action does not silently become a response.
+
+If `USE_CAPABILITIES` is selected, that LLM call ends. Prometheist then:
+
+1. resolves the selected catalog indices;
+2. expands application-owned dependencies;
+3. deterministically orders runnable work;
+4. executes the selected capabilities;
+5. persists structured results and evidence;
+6. composes the next bounded cognitive context;
+7. exposes any legal follow-up capabilities;
+8. invokes a **new stateless routing model call**.
+
+The original public capabilities remain available in later rounds, so the fresh worker may reuse them. Follow-up capabilities may also become visible after prerequisite research produced usable evidence.
+
+The loop is bounded to four capability rounds. Reaching the bound without an explicit `RESPOND` fails closed rather than forcing a potentially unsupported answer.
+
+## Progressive memory focus
+
+The internal retrieval strategy deliberately narrows candidate subjects while increasing the bounded associative neighborhood around those subjects.
+
+### Level 1 — automatic broad activation
+
+- happens on every percept;
+- wide deterministic candidate window;
+- small surfaced packet;
+- zero association hops;
+- intended for high recall, not evidentiary sufficiency.
+
+### Level 2 — `deeper_research`
+
+Public meaning:
+
+> **Investigate the current question further using additional persisted internal evidence around one or more currently available memory candidates.**
+
+The fresh capability worker selects **1-4 candidate indices** from the current MemoryPacket. It does not generate search text. Prometheist resolves those indices to canonical event IDs and performs a narrower direct search with a broader association budget around each selected candidate.
+
+Current deterministic profile: 350 direct candidates, up to 600 association edges, up to 3 hops, bounded output.
+
+### Level 2b — `cross_reference`
+
+Public meaning:
+
+> **Investigate relationships among two or more currently available internal memory candidates, including shared, conflicting, causal, or bridging evidence.**
+
+The worker selects **2-4 candidate indices** only. Prometheist resolves them to canonical events and performs one joint bounded associative investigation over the selected set. The model does not write a relationship description.
+
+Current deterministic profile: 250 direct candidates, up to 900 association edges, up to 4 hops, bounded output.
+
+### Level 3 — `focused_recall`
+
+Public meaning:
+
+> **Investigate one selected internal memory candidate with the deepest bounded association search when a specific ambiguity remains unresolved.**
+
+`focused_recall` is hidden from the initial catalog and becomes available after broader research produces usable evidence. The worker selects **exactly one candidate index** from the most recent non-empty broader-research packet.
+
+Current deterministic profile: 150 direct candidates, up to 1200 association edges, up to 5 hops, bounded output.
+
+If focused recall returns no useful evidence, no response is forced. The next fresh routing worker may:
+
+- explicitly `RESPOND` with the evidence already available;
+- run `focused_recall` again against a different candidate;
+- return to `deeper_research`;
+- cross-reference another candidate set;
+- invoke another installed capability.
+
+The conservative evidence-admission threshold is unchanged at every research depth. Narrowing attention must not silently weaken skepticism.
+
+## Multiple capabilities and deterministic ordering
+
+Capability indices are a requirement set, never an execution order. Private registry metadata defines dependencies and execution priority. Prometheist computes dependency closure and applies the generic Attention ordering primitive:
+
+```text
+selected capability indices
+    -> canonical capability IDs
+    -> dependency closure
+    -> reject missing dependencies/cycles
     -> topological order
-    -> stable ready-node ordering by execution_priority, then capability_id
+    -> stable ready-item tie break by execution_priority, then capability_id
 ```
 
-The interaction `RESPOND` stage is downstream of the complete capability-execution stage. It validates that durable results exist for every planned item in exactly the scheduler-owned order. If any capability fails or is missing, the execution stage has no terminal success result and the response worker is not summoned.
+For v0.7, selected capabilities execute as bounded substeps inside the already admitted interaction assignment. The ordering primitive is Attention-owned and generic; later releases may promote capability plan items to independently scheduled child tasks without changing the model-selection contract.
 
-For v0.7, optional live capabilities return bounded structured evidence. The final response context is composed deterministically from completed capability evidence plus the initial MemoryPacket, deduplicated by canonical source-event ID and bounded by the stable MemoryNeed maximum.
+## Final-response barrier
+
+A user-facing response worker is summoned only after a fresh routing call explicitly chooses `RESPOND`.
+
+The final worker receives:
+
+- the original percept;
+- the bounded accumulated MemoryPacket;
+- the structured results of completed capabilities.
+
+It does not inherit a previous LLM context window. User-facing language is generated once, after Prometheist has determined that the required evidence/work is ready.
 
 ## Minimal v0.7 WorkingState
-
-v0.7 keeps `InteractionWorkingState` deliberately small:
 
 ```text
 state_id
@@ -134,118 +172,64 @@ conversation_ids
 active_event_ids
 ```
 
-`active_event_ids` are bounded pointers to canonical event-log entries that are currently activated by cognition.
-
-WorkingState is not a copied transcript, LLM summary, second autobiographical store, user-profile blob, parsed nickname/options table, or assertion that active content is objectively true. The append-only event ledger remains authoritative.
-
-The default memory exposure combines the current percept with those active canonical pointers and deterministic long-term recall. Evidence surfaced through recall may itself be activated into WorkingState for subsequent stateless calls.
+`active_event_ids` are bounded pointers to canonical events. WorkingState is not a copied transcript, summary, user-profile blob, parsed nickname table, or truth store. The append-only event ledger remains authoritative.
 
 ## System-wide model-output rule
 
-Native v0.7 failures established a broader protocol rule:
-
-> **Model-generated natural language is the representation of last resort. Use it only when natural language is genuinely the product or when no smaller mechanically verifiable representation can express the required semantics.**
+> **Model-generated natural language is the representation of last resort. Use it only when language is genuinely the product or no smaller mechanically verifiable representation can express the required semantics.**
 
 Preferred order:
 
 ```text
-enum / boolean / bounded integer / application-owned id
+enum / boolean / bounded integer / application-owned ID
     before
 mechanically verified extractive selection
     before
 free-form generated natural language
 ```
 
-This is stronger than "use JSON." A JSON string field can still smuggle probabilistic natural-language policy into the control plane.
+The live v0.7 control path therefore uses:
 
-For the live v0.7 model path:
+- explicit action enums;
+- bounded capability indices;
+- bounded MemoryPacket candidate indices;
+- application-owned capability IDs, dependencies, resource policies, event IDs, and execution order;
+- structured capability results.
 
-- capability selection returns only bounded integer indices into an application-owned catalog;
-- an empty index list means respond; a non-empty list means capabilities are required;
-- the model may select several capabilities but does not control their order;
-- basic internal-memory access is absent from the selectable catalog because it already happened;
-- capability IDs, dependencies, execution priorities, executor bindings, and resource policy are application-owned;
-- the model emits no capability query/input, retrieval query, entity string, event ID, executor name, database control, explanation, or phrase rule;
-- deeper-research routing returns only a closed scope enum plus bounded integer indices into an application-generated anchor catalog;
-- invalid/duplicate/out-of-range indices and unexpected fields are rejected;
-- capability execution returns structured evidence rather than intermediate generated prose;
-- final user-facing response text remains natural language because language is the product at that boundary.
+It does **not** use model-generated capability names, queries, entities, event IDs, relationship descriptions, execution orders, dependency declarations, or explanations as machine control state.
 
-Tests must follow the same philosophy. A continuity acceptance test must not grow a hand-written English parser or keyword-list semantic oracle. Where a deterministic verdict is required, the fixture should request an exact machine-verifiable value/tuple and independently verify canonical source-event provenance.
+Final user-facing response text remains free-form because language is the product at that boundary.
 
-## Revised interaction path
-
-```text
-external percept
-    -> durable interaction task
-    -> load current WorkingState
-    -> automatic bounded JIT recall
-    -> fresh stateless capability selector sees percept + initial MemoryPacket + catalog
-       -> []: no optional capability
-       -> [indices...]: one or more optional capabilities required
-    -> deterministic dependency closure and execution ordering
-    -> execute all planned capabilities to durable structured results
-    -> barrier: verify every planned result exists
-    -> compose bounded final evidence context
-    -> one fresh stateless response synthesis
-    -> persist response
-    -> activate prompt/response and surfaced canonical evidence
-```
-
-This removes both the "do I need memory?" decision from a model that has not yet seen memory and the "what order should tools run?" decision from a probabilistic model.
+Tests follow the same principle. Acceptance tests must not grow hand-written English parsers or keyword-list semantic oracles. Where deterministic verification is required, tests should request machine-verifiable values and independently verify canonical source-event provenance.
 
 ## Text cues: deprecated versus valid
 
-The old interaction-layer phrase detector (`requires_persisted_context`) is deprecated and disabled. The application layer does not maintain a growing regex vocabulary for phrases such as `just`, `those approaches`, or `this plan`, and the default capability registry does not maintain a continuity phrase catalog.
+The old interaction-layer `requires_persisted_context()` phrase detector is deprecated and disabled. Application policy does not maintain a vocabulary for phrases such as `just`, `those approaches`, or `this plan`.
 
-The response layer likewise does not maintain special keyword lists such as `why/reason/cause` to decide which semantic helper should run. A fresh response model receives the bounded canonical evidence directly.
-
-This does not deprecate text retrieval inside JIT Memory. Canonical current text is user-authored evidence, not model-authored policy. Lexical specificity, deterministic associations, entity/anchor matching, temporal scoring, and future experimentally justified learned candidate generators remain valid internal retrieval mechanisms.
-
-The line is:
-
-```text
-rejected:
-  model/application authors or accumulates natural-language control phrases
-
-accepted:
-  canonical source text
-  + bounded active state
-  + deterministic candidate retrieval
-  + categorical/index-based control
-  + scheduler-owned execution policy
-  + provenance-bearing evidence
-```
+This does **not** deprecate canonical text retrieval inside JIT Memory. Lexical specificity, deterministic associations, temporal cues, canonical candidate text, and future experimentally justified candidate generators remain valid retrieval mechanisms. The rejected pattern is model/application-authored natural-language control policy, not source evidence.
 
 ## Epistemic boundary
 
-Attention and retrieval are not truth claims.
+Activation and retrieval are attention operations, not truth promotion. A surfaced event means it is relevant enough to expose. It does not mean every proposition in it is correct, current, or objectively true.
 
-An active or retrieved event means only that the event is currently relevant enough to expose. It does not mean every proposition inside it is correct, current, or objectively true.
-
-Canonical evidence, corrections, contradictions, confidence, user-belief versus world-belief, and later epistemic-state mechanisms remain separate concerns. This preserves the project skepticism requirement: evidence, interpretation, belief, and derived conclusion must not silently collapse into one representation.
+Evidence, user belief, world belief, contradictions, corrections, confidence, and derived conclusions remain distinct future epistemic concerns.
 
 ## Frozen v0.7 experiment
 
-The four-turn Kestrel scenario remains the compatibility experiment, but the oracle itself is machine-verifiable rather than a list of English keywords. The mechanism is accepted only if it:
+The Kestrel continuity scenario remains an end-to-end experiment, not a special-case rule source. It must demonstrate that:
 
-- retrieves the pre-existing Kestrel constraint on Turn 1 before capability selection;
-- chooses the compatible PostgreSQL-on-Windows path rather than Docker;
-- preserves restart/cross-conversation recall;
-- survives fresh worker/model calls with no inherited transcript;
-- keeps WorkingState and MemoryPackets bounded;
-- preserves exact source-event provenance and opaque identifiers;
-- uses no phrase-specific continuity rules or model-generated control/search text;
-- allows deeper research only after the initial bounded memory exposure;
-- supports zero/one/multiple capability selections through constrained indices;
-- makes capability dependencies/order deterministic and system-owned;
-- does not summon the final response worker before every planned capability has completed;
-- passes deterministic CI before native Ollama acceptance.
+- Turn 1 automatically exposes the pre-existing Kestrel constraint before capability choice;
+- the response respects that constraint and selects PostgreSQL directly on Windows rather than Docker;
+- cross-process and cross-conversation recall still work;
+- every model call remains stateless;
+- WorkingState and MemoryPackets remain bounded;
+- provenance and opaque identifiers remain exact;
+- no phrase-specific continuity rules or generated search/control text are required;
+- the fresh worker can respond or run one/multiple capabilities repeatedly;
+- memory research can progress broad -> candidate-focused/cross-referenced -> single-candidate focused;
+- final response occurs only after explicit `RESPOND`;
+- deterministic CI passes before native Ollama acceptance.
 
-If it fails, diagnose the WorkingState/JIT-Memory/capability-planning boundary or constrained routing contract. Do not add another English phrase rule simply to make the fixture green.
-
-## v1.0 requirement
-
-A defensible v1.0 must demonstrate continuous interaction across sessions, devices, worker destruction, and model replacement. The user should experience one persistent Prometheist while physical interface boundaries remain provenance only.
+If the experiment fails, diagnose the general WorkingState/JIT-Memory/recurrent-capability boundary. Do not add another English phrase rule merely to make the fixture green.
 
 > **Current cognitive context and basic access to persistent memory belong to Prometheist itself—not to a chat transcript, worker, model context window, phrase heuristic, or model-authored request to remember.**
