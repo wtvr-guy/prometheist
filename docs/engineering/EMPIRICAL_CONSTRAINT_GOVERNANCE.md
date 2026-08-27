@@ -1,5 +1,18 @@
 # Empirical Constraint Governance
 
+**Status:** constitutional engineering deep dive.  
+**Constitutional authority:** primary engineering authority for Articles 23 and 24 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md). This document is subordinate to the Constitution where wording conflicts.
+
+## Constitutional experimental method
+
+Prometheist treats architectural mechanisms as falsifiable claims.
+
+> **Freeze a measurable baseline, change exactly one mechanism, rerun the same experiment, and keep the mechanism only if the evidence justifies it.**
+
+Negative results are retained. A failure mode discovered during development becomes part of the permanent experimental record and, where practical, a frozen regression scenario before recalibration or replacement.
+
+New infrastructure, retrieval mechanisms, models, orchestration layers, optimization solvers, heuristic policy, or other complexity must earn its place by repairing a frozen measured failure or materially improving a declared objective without violating harder invariants. “It is standard,” “it might help,” or “the current tests pass” is not sufficient evidence.
+
 ## Rule
 
 Prometheist must not treat an arbitrary numeric bound as correct merely because it passes the tests that happened to exist when it was introduced.
@@ -128,8 +141,23 @@ Native calibration is deliberately separate from release acceptance. On the inte
 
 That writes a timestamped `benchmarks/results/NATIVE-CONSTRAINTS_*.json` file containing host-resource samples, the frozen worker/runtime block duration/result, and controlled Ollama token-cap/latency observations. A pilot does not automatically verify a value; it establishes actual native data from which the required cold/warm/pressure/fault scenarios can be expanded if the evidence remains non-discriminating.
 
+## Relationship to constitutional constants
+
+Constitutional rules intentionally do not freeze most numeric implementation bounds.
+
+Examples:
+
+- “LLM context remains bounded” is constitutional; the exact token cap is classified here.
+- “resource safety preserves headroom” is constitutional; exact RAM/CPU reserves are safety/environment tunables.
+- “capability routing is recurrent and bounded” is constitutional; the exact round count is empirical.
+- “service guarantees prevent starvation” is a constitutional execution requirement; exact wait-cycle thresholds are empirical.
+
+This separation prevents a provisional calibration from becoming permanent architecture by accident.
+
 ## Release rule
 
 A release is not considered empirically calibrated merely because all functional tests pass. Before release, every runtime constraint discovered by the audit must be classified, every empirical/safety/environment tunable must have a benchmark specification, and every release-required calibration must have a result artifact tied to the release revision.
 
 When current evidence cannot establish an optimum, the registry must say so explicitly. The accepted value is then a documented provisional bound, not falsely presented as optimal.
+
+Testing and environment-evidence requirements are further defined in [`TESTING_AND_ACCEPTANCE.md`](TESTING_AND_ACCEPTANCE.md).
