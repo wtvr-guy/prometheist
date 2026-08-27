@@ -89,13 +89,13 @@
       "search": "Fault-injection distributions plus native duration samples. Lease and timeout candidates are derived from observed tails; retry schedules are tested against measured resource-pressure durations."
     },
     "LLM-NATIVE-001": {
-      "title": "Local-model HTTP timeout, output token caps, and schema retry budget",
+      "title": "Local-model HTTP timeout, output token caps, schema retries, and model-facing evidence budget",
       "environment": "target_windows_host_with_supported_ollama_models",
-      "parameters": ["ollama_http_timeout_seconds", "text_max_tokens", "structured_output_token_caps", "structured_output_retry_attempts", "verbatim_literal_bound"],
-      "scenario_families": ["cold_start", "warm_start", "short_prompt", "largest_supported_context_payload", "simple_schema", "candidate_selection_schema", "malformed_first_output", "host_contention", "long_literal_answer", "long_user_facing_answer"],
-      "hard_invariants": ["valid required output is not truncated", "invalid structured output never crosses the schema boundary", "timeout failure remains explicit"],
-      "quality_order": ["valid_output_rate", "worst_scenario_valid_output_rate", "truncation_count", "timeout_count", "inference_calls", "latency"],
-      "search": "Pilot samples estimate latency/output-length distributions. Candidate bounds are generated from observed tails and tested under cold/warm/contention conditions; sample size is increased when competing settings cannot be distinguished."
+      "parameters": ["ollama_http_timeout_seconds", "text_max_tokens", "structured_output_token_caps", "structured_output_retry_attempts", "verbatim_literal_bound", "max_model_evidence_item_bytes", "max_model_evidence_total_bytes"],
+      "scenario_families": ["cold_start", "warm_start", "short_prompt", "largest_supported_context_payload", "oversized_single_memory_item", "aggregate_memory_pressure", "capability_result_payload_pressure", "multibyte_utf8_evidence", "simple_schema", "candidate_selection_schema", "malformed_first_output", "host_contention", "long_literal_answer", "long_user_facing_answer"],
+      "hard_invariants": ["valid required output is not truncated", "invalid structured output never crosses the schema boundary", "timeout failure remains explicit", "canonical evidence is never truncated or rewritten to satisfy an LLM budget", "model-facing evidence remains finite as canonical history grows", "oversized evidence fails closed before model inference unless a separately validated bounded derived representation exists"],
+      "quality_order": ["valid_output_rate", "worst_scenario_valid_output_rate", "required_evidence_coverage", "oversize_fail_closed_rate", "truncation_count", "timeout_count", "inference_calls", "prompt_evidence_bytes", "latency"],
+      "search": "Pilot samples estimate latency, output-length, useful-evidence-size, and supported-context distributions on the configured model. Sweep per-item and aggregate evidence byte caps jointly with the existing model-output constraints. Reject any candidate that admits unbounded payloads or silently truncates canonical evidence; among quality-equivalent finite candidates, prefer the lower prompt/resource cost. Expand any boundary-selected cap before accepting it."
     },
     "ID-COLLISION-001": {
       "title": "Truncated deterministic identifier collision risk",
