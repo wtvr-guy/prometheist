@@ -25,6 +25,7 @@ from typing import Iterable
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SCAN_ROOTS = (ROOT / "src" / "jit_agent", ROOT / "scripts")
 DEFAULT_REGISTRY = ROOT / "benchmarks" / "constraint_registry.json"
+DEFAULT_EXPERIMENTS = ROOT / "benchmarks" / "constraint_experiments.json"
 
 # Benchmark implementation knobs affect measurement design rather than runtime
 # behavior. They are reviewed in the benchmark spec itself and are excluded from
@@ -35,6 +36,7 @@ _EXCLUDED_FILE_PATTERNS = (
     re.compile(r"(?:^|/).*benchmark\.py$"),
     re.compile(r"(?:^|/)scale_test\.py$"),
     re.compile(r"(?:^|/)adversarial_benchmark\.py$"),
+    re.compile(r"(?:^|/)scale_corpus\.py$"),
     re.compile(r"(?:^|/)audit_constraints\.py$"),
 )
 
@@ -99,6 +101,20 @@ def _numeric_literal(node: ast.AST | None) -> int | float | None:
     return None
 
 
+def _numeric_literals(node: ast.AST) -> tuple[int | float, ...]:
+    values: list[int | float] = []
+    for child in ast.walk(node):
+        value = _numeric_literal(child)
+        if value is None:
+            continue
+        # Unary literals are represented by both UnaryOp and Constant in the
+        # AST; only retain the signed outer value in that case.
+        parent_is_signed = isinstance(node, ast.UnaryOp) and child is node.operand
+        if not parent_is_signed:
+            values.append(value)
+    return tuple(values)
+
+
 def _name_of_target(node: ast.AST) -> str | None:
     if isinstance(node, ast.Name):
         return node.id
@@ -124,12 +140,7 @@ def _policy_name(name: str | None) -> bool:
 
 
 def _field_bound_is_behavioral(field_name: str, bound: str, value: int | float) -> bool:
-    """Return True only for schema bounds that constrain behavioral breadth.
-
-    `min_length=1`, `ge=0`, positive sequence numbers, and [0,100] percentage
-    domains are structural validation. Multi-item maxima/minima and unusual
-    numeric ceilings are policy and must be justified.
-    """
+    """Return True only for schema bounds that constrain behavioral breadth."""
     if bound == "max_length":
         return value > 1
     if bound == "min_length":
@@ -141,9 +152,9 @@ def _field_bound_is_behavioral(field_name: str, bound: str, value: int | float) 
     if bound in {"le", "lt"}:
         if value == 100 and ("percent" in field_name or "percentage" in field_name):
             return False
-        if value in _STRUCTURAL_NUMBERS:
-            return False
-        return True
+        if _policy_name(field_name):
+            return True
+        return value not in _STRUCTURAL_NUMBERS
     return value not in _STRUCTURAL_NUMBERS
 
 
@@ -273,7 +284,10 @@ class _Visitor(ast.NodeVisitor):
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
         name = _name_of_target(node.target)
         value = _numeric_literal(node.value)
-        if value is not None and (_policy_name(name) or (not self.stack and name and name.isupper() and value not in _STRUCTURAL_NUMBERS)):
+        if value is not None and (
+            _policy_name(name)
+            or (not self.stack and name and name.isupper() and value not in _STRUCTURAL_NUMBERS)
+        ):
             self._add(node, role="annotated_assignment", value=value, name=name, source=ast.unparse(node))
 
         if isinstance(node.value, ast.Call) and _call_name(node.value) == "Field" and name:
@@ -307,6 +321,19 @@ class _Visitor(ast.NodeVisitor):
                 )
         self.generic_visit(node)
 
+    def visit_AugAssign(self, node: ast.AugAssign) -> None:
+        name = _name_of_target(node.target)
+        if _policy_name(name):
+            for value in _numeric_literals(node.value):
+                self._add(
+                    node.value,
+                    role="policy_coefficient",
+                    value=value,
+                    name=f"{name}.coefficient",
+                    source=ast.unparse(node),
+                )
+        self.generic_visit(node)
+
     def visit_Call(self, node: ast.Call) -> None:
         func_name = _call_name(node)
         if id(node) in self._field_calls or func_name == "Field":
@@ -331,6 +358,16 @@ class _Visitor(ast.NodeVisitor):
                 value = _numeric_literal(arg)
                 if value is not None and value > 1:
                     self._add(arg, role="range_bound", value=value, name=f"range_arg{index}", source=ast.unparse(node))
+        elif func_name == "_structured" and len(node.args) >= 5:
+            value = _numeric_literal(node.args[4])
+            if value is not None:
+                self._add(
+                    node.args[4],
+                    role="positional_max_tokens",
+                    value=value,
+                    name="_structured.max_tokens",
+                    source=ast.unparse(node),
+                )
         self.generic_visit(node)
 
 
@@ -355,26 +392,104 @@ def discover_python_constraints(paths: Iterable[Path] = DEFAULT_SCAN_ROOTS) -> l
     return findings
 
 
-def load_registry(path: Path = DEFAULT_REGISTRY) -> dict[str, dict[str, object]]:
+def _load_registry_document(path: Path = DEFAULT_REGISTRY) -> dict[str, object]:
     if not path.exists():
         return {}
     payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("constraint_registry.json must contain an object")
+    return payload
+
+
+def load_registry(path: Path = DEFAULT_REGISTRY) -> dict[str, dict[str, object]]:
+    """Flatten exact entries and grouped exact members into one lookup.
+
+    Groups remove metadata repetition only. Every member remains an exact audit
+    key with an expected value, so a newly introduced constraint or changed
+    literal still fails CI instead of inheriting a broad classification rule.
+    """
+    payload = _load_registry_document(path)
     constraints = payload.get("constraints", {})
-    if not isinstance(constraints, dict):
-        raise ValueError("constraint_registry.json must contain an object at 'constraints'")
-    return constraints
+    groups = payload.get("groups", {})
+    if not isinstance(constraints, dict) or not isinstance(groups, dict):
+        raise ValueError("constraint registry 'constraints' and 'groups' must be objects")
+
+    flattened: dict[str, dict[str, object]] = {}
+    for key, raw in constraints.items():
+        if not isinstance(raw, dict):
+            raise ValueError(f"constraint registry entry {key!r} must be an object")
+        flattened[key] = dict(raw)
+
+    for group_name, raw_group in groups.items():
+        if not isinstance(raw_group, dict):
+            raise ValueError(f"constraint registry group {group_name!r} must be an object")
+        members = raw_group.get("members", {})
+        if not isinstance(members, dict):
+            raise ValueError(f"constraint registry group {group_name!r} members must be an object")
+        metadata = {key: value for key, value in raw_group.items() if key != "members"}
+        for member_key, member_value in members.items():
+            if member_key in flattened:
+                raise ValueError(f"constraint registry key appears more than once: {member_key}")
+            entry = dict(metadata)
+            entry["group"] = group_name
+            if isinstance(member_value, dict):
+                entry.update(member_value)
+            else:
+                entry["expected_value"] = member_value
+            flattened[member_key] = entry
+    return flattened
 
 
-def uncovered_findings(findings: Iterable[ConstraintFinding], registry: dict[str, dict[str, object]]) -> list[ConstraintFinding]:
+def uncovered_findings(
+    findings: Iterable[ConstraintFinding],
+    registry: dict[str, dict[str, object]],
+) -> list[ConstraintFinding]:
     return [finding for finding in findings if finding.key not in registry]
 
 
-def stale_registry_keys(findings: Iterable[ConstraintFinding], registry: dict[str, dict[str, object]]) -> list[str]:
+def stale_registry_keys(
+    findings: Iterable[ConstraintFinding],
+    registry: dict[str, dict[str, object]],
+) -> list[str]:
     discovered = {finding.key for finding in findings}
-    return sorted(key for key in registry if key not in discovered and not bool(registry[key].get("manual")))
+    return sorted(
+        key
+        for key in registry
+        if key not in discovered and not bool(registry[key].get("manual"))
+    )
 
 
-def validate_registry_entry(key: str, entry: dict[str, object]) -> list[str]:
+def value_mismatches(
+    findings: Iterable[ConstraintFinding],
+    registry: dict[str, dict[str, object]],
+) -> list[str]:
+    mismatches: list[str] = []
+    for finding in findings:
+        entry = registry.get(finding.key)
+        if entry is None or "expected_value" not in entry:
+            continue
+        expected = entry["expected_value"]
+        if finding.value != expected:
+            mismatches.append(
+                f"{finding.key}: expected {expected!r}, discovered {finding.value!r}"
+            )
+    return mismatches
+
+
+def _experiment_ids(path: Path = DEFAULT_EXPERIMENTS) -> set[str]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    experiments = payload.get("experiments", {})
+    if not isinstance(experiments, dict):
+        raise ValueError("constraint_experiments.json must contain an object at 'experiments'")
+    return set(experiments)
+
+
+def validate_registry_entry(
+    key: str,
+    entry: dict[str, object],
+    *,
+    experiment_ids: set[str],
+) -> list[str]:
     errors: list[str] = []
     classification = entry.get("classification")
     allowed = {
@@ -389,22 +504,56 @@ def validate_registry_entry(key: str, entry: dict[str, object]) -> list[str]:
         errors.append(f"{key}: invalid/missing classification")
     if not str(entry.get("rationale", "")).strip():
         errors.append(f"{key}: missing rationale")
+
+    benchmarked = classification in {
+        "EMPIRICAL_TUNABLE",
+        "SAFETY_TUNABLE",
+        "ENVIRONMENT_CALIBRATED",
+        "IDENTIFIER_COLLISION_BOUND",
+    }
+    if benchmarked:
+        benchmark_id = str(entry.get("benchmark_id", "")).strip()
+        if not benchmark_id:
+            errors.append(f"{key}: benchmarked constraint has no benchmark_id")
+        elif benchmark_id not in experiment_ids:
+            errors.append(f"{key}: benchmark_id {benchmark_id!r} is not registered")
+
     if classification in {"EMPIRICAL_TUNABLE", "SAFETY_TUNABLE", "ENVIRONMENT_CALIBRATED"}:
-        if not str(entry.get("benchmark_id", "")).strip():
-            errors.append(f"{key}: tunable has no benchmark_id")
         status = entry.get("status")
-        if status not in {"PROVISIONAL", "VERIFIED", "NATIVE_REQUIRED"}:
+        if status not in {
+            "PROVISIONAL",
+            "VERIFIED",
+            "NATIVE_REQUIRED",
+            "INSUFFICIENT_DISCRIMINATION",
+        }:
             errors.append(f"{key}: tunable has invalid/missing status")
+        if status in {"VERIFIED", "INSUFFICIENT_DISCRIMINATION"} and not str(
+            entry.get("evidence", "")
+        ).strip():
+            errors.append(f"{key}: status {status} requires an evidence artifact")
+
+    if entry.get("manual"):
+        source_path = str(entry.get("source_path", "")).strip()
+        source_fragment = str(entry.get("source_fragment", ""))
+        if not source_path or not source_fragment:
+            errors.append(f"{key}: manual constraint requires source_path/source_fragment")
+        else:
+            path = ROOT / source_path
+            if not path.exists():
+                errors.append(f"{key}: manual source path does not exist: {source_path}")
+            elif source_fragment not in path.read_text(encoding="utf-8"):
+                errors.append(f"{key}: manual source fragment no longer matches")
     return errors
 
 
 def registry_errors(registry: dict[str, dict[str, object]]) -> list[str]:
     errors: list[str] = []
+    experiment_ids = _experiment_ids()
     for key, entry in registry.items():
         if not isinstance(entry, dict):
             errors.append(f"{key}: entry must be an object")
             continue
-        errors.extend(validate_registry_entry(key, entry))
+        errors.extend(validate_registry_entry(key, entry, experiment_ids=experiment_ids))
     return errors
 
 
@@ -418,6 +567,7 @@ def main() -> int:
     registry = load_registry()
     uncovered = uncovered_findings(findings, registry)
     stale = stale_registry_keys(findings, registry)
+    mismatches = value_mismatches(findings, registry)
     errors = registry_errors(registry)
 
     if args.json:
@@ -425,17 +575,23 @@ def main() -> int:
     else:
         print(
             f"discovered={len(findings)} registered={len(findings) - len(uncovered)} "
-            f"uncovered={len(uncovered)} stale={len(stale)} invalid={len(errors)}"
+            f"uncovered={len(uncovered)} stale={len(stale)} "
+            f"mismatched={len(mismatches)} invalid={len(errors)}"
         )
         for item in findings:
             status = "REGISTERED" if item.key in registry else "UNREGISTERED"
-            print(f"{status} {item.key} value={item.value!r} line={item.line} role={item.role} :: {item.source}")
+            print(
+                f"{status} {item.key} value={item.value!r} line={item.line} "
+                f"role={item.role} :: {item.source}"
+            )
         for key in stale:
             print(f"STALE {key}")
+        for mismatch in mismatches:
+            print(f"MISMATCH {mismatch}")
         for error in errors:
             print(f"INVALID {error}")
 
-    failed = bool(uncovered or stale or errors)
+    failed = bool(uncovered or stale or mismatches or errors)
     return 1 if args.fail_unregistered and failed else 0
 
 
