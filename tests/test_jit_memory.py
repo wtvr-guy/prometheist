@@ -102,6 +102,50 @@ def test_memory_boundary_uses_supplemental_query_only_after_canonical_abstains(c
     assert packet.retrieval_trace["kernel_trace"] == attempts[1]["kernel_trace"]
 
 
+def test_working_state_context_composes_with_required_historical_evidence(conn):
+    historical_conversation = uuid.uuid4()
+    active_conversation = uuid.uuid4()
+    historical = _record_text(
+        conn,
+        historical_conversation,
+        "For Project Kestrel, never use Docker; deploy PostgreSQL directly on Windows "
+        "because virtualization is disabled. I track that constraint under profile VX-TEST1234.",
+    )
+    active = _record_text(
+        conn,
+        active_conversation,
+        "I'm revisiting Project Kestrel and choosing between Docker Compose and "
+        "running PostgreSQL directly on Windows.",
+    )
+    current_prompt = _record_text(
+        conn,
+        active_conversation,
+        "Which approach conflicts with my established rule, and what profile did I give it?",
+    )
+
+    packet = jit_memory.request_memory(
+        conn,
+        conversation_id=active_conversation,
+        correlation_id=current_prompt.correlation_id,
+        requesting_component="working-state-composition-test",
+        need=jit_memory.build_memory_need(
+            "Which approach conflicts with my established rule, and what profile did I give it?",
+            supplemental_query_texts=["Project Kestrel established rule constraint profile"],
+            entities=["Project Kestrel"],
+            active_event_ids=[active.event_id],
+            conversation_id=None,
+        ),
+        before_global_seq=current_prompt.global_seq,
+    )
+
+    source_ids = {item.source_event_id for item in packet.items}
+    assert active.event_id in source_ids
+    assert historical.event_id in source_ids
+    assert packet.supported is True
+    assert packet.retrieval_trace["working_state_event_ids"] == [str(active.event_id)]
+    assert packet.retrieval_trace["selected_query_role"] in {"canonical", "supplemental"}
+
+
 def test_memory_boundary_preserves_unknown_fact_abstention(conn):
     source_conversation = uuid.uuid4()
     request_conversation = uuid.uuid4()
