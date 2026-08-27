@@ -12,13 +12,14 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from datetime import datetime
+from functools import lru_cache
 import json
 from itertools import product
 from pathlib import Path
 from typing import Any, Iterable
 
 from jit_agent.association_projection import derive_associations
-from jit_agent.associative_memory import associative_recall
+from jit_agent.associative_memory import Association, associative_recall
 from jit_agent.memory_kernel import CueState, MemoryEvent, MemoryScoringPolicy
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,6 +51,16 @@ class CandidatePolicy:
 
 
 @dataclass(frozen=True, slots=True)
+class FrozenCorpus:
+    name: str
+    document: dict[str, Any]
+    events: tuple[MemoryEvent, ...]
+    associations: tuple[Association, ...]
+    principal_name: str
+    principal_terms: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class CorpusScore:
     corpus: str
     questions: int
@@ -67,11 +78,7 @@ class CorpusScore:
 
     @property
     def unknown_abstention_rate(self) -> float:
-        return (
-            self.unknown_abstained / self.unknown_questions
-            if self.unknown_questions
-            else 1.0
-        )
+        return self.unknown_abstained / self.unknown_questions if self.unknown_questions else 1.0
 
     @property
     def evidence_recall(self) -> float:
@@ -91,17 +98,13 @@ class Evaluation:
 
     def quality_key(self) -> tuple[float, float, float, float, float, float, float, float]:
         all_scores = (*self.exploratory, *self.holdout)
-        exploratory = self.exploratory
-        holdout = self.holdout
-        # No weighted average: worst-corpus performance dominates, then pooled
-        # family-wide quality. Holdout is kept explicit in the key.
         return (
             min(score.success_rate for score in all_scores),
             min(score.unknown_abstention_rate for score in all_scores),
             min(score.evidence_recall for score in all_scores),
             min(score.mean_reciprocal_rank for score in all_scores),
-            sum(score.successes for score in holdout),
-            sum(score.successes for score in exploratory),
+            sum(score.successes for score in self.holdout),
+            sum(score.successes for score in self.exploratory),
             sum(score.required_found for score in all_scores),
             sum(score.reciprocal_rank_sum for score in all_scores),
         )
@@ -125,12 +128,23 @@ def _event(raw: dict[str, Any]) -> MemoryEvent:
     )
 
 
-def _evaluate_corpus(path: Path, policy: CandidatePolicy, *, limit: int = 5) -> CorpusScore:
-    document = _load(path)
+@lru_cache(maxsize=None)
+def _frozen_corpus(name: str) -> FrozenCorpus:
+    document = _load(BENCHMARK_DIR / name)
     events = tuple(_event(raw) for raw in document["events"])
-    associations = derive_associations(events)
     principal_name = document["persona"]["name"]
-    principal_terms = tuple(principal_name.split())
+    return FrozenCorpus(
+        name=name,
+        document=document,
+        events=events,
+        associations=tuple(derive_associations(events)),
+        principal_name=principal_name,
+        principal_terms=tuple(principal_name.split()),
+    )
+
+
+def _evaluate_corpus(name: str, policy: CandidatePolicy, *, limit: int = 5) -> CorpusScore:
+    corpus = _frozen_corpus(name)
     successes = 0
     unknown_questions = 0
     unknown_abstained = 0
@@ -139,29 +153,25 @@ def _evaluate_corpus(path: Path, policy: CandidatePolicy, *, limit: int = 5) -> 
     reciprocal_rank_sum = 0.0
     failures: list[str] = []
 
-    for question in document["questions"]:
-        reference_time = (
-            datetime.fromisoformat(question["reference_time"])
-            if question.get("reference_time")
-            else None
-        )
+    for question in corpus.document["questions"]:
+        reference_time = datetime.fromisoformat(question["reference_time"]) if question.get("reference_time") else None
         entities = tuple(
             entity
             for entity in question.get("entities", [])
-            if entity.casefold() != principal_name.casefold()
+            if entity.casefold() != corpus.principal_name.casefold()
         )
         cue = CueState(
             query_text=question["query"],
             entities=entities,
-            ignored_terms=principal_terms,
+            ignored_terms=corpus.principal_terms,
             reference_time=reference_time,
             limit=limit,
             minimum_score=policy.minimum_score,
         )
         packet = associative_recall(
-            events,
+            corpus.events,
             cue,
-            associations,
+            corpus.associations,
             scoring_policy=policy.scoring_policy(),
             minimum_direct_support_coverage=policy.minimum_direct_support_coverage,
         )
@@ -187,13 +197,11 @@ def _evaluate_corpus(path: Path, policy: CandidatePolicy, *, limit: int = 5) -> 
         if passed:
             successes += 1
         else:
-            failures.append(
-                f"{question['id']}: required={sorted(required)} returned={returned}"
-            )
+            failures.append(f"{question['id']}: required={sorted(required)} returned={returned}")
 
     return CorpusScore(
-        corpus=path.name,
-        questions=len(document["questions"]),
+        corpus=name,
+        questions=len(corpus.document["questions"]),
         successes=successes,
         unknown_questions=unknown_questions,
         unknown_abstained=unknown_abstained,
@@ -207,14 +215,8 @@ def _evaluate_corpus(path: Path, policy: CandidatePolicy, *, limit: int = 5) -> 
 def evaluate(policy: CandidatePolicy) -> Evaluation:
     return Evaluation(
         policy=policy,
-        exploratory=tuple(
-            _evaluate_corpus(BENCHMARK_DIR / name, policy)
-            for name in EXPLORATORY_CORPORA
-        ),
-        holdout=tuple(
-            _evaluate_corpus(BENCHMARK_DIR / name, policy)
-            for name in HOLDOUT_CORPORA
-        ),
+        exploratory=tuple(_evaluate_corpus(name, policy) for name in EXPLORATORY_CORPORA),
+        holdout=tuple(_evaluate_corpus(name, policy) for name in HOLDOUT_CORPORA),
     )
 
 
@@ -256,8 +258,6 @@ def run_staged_sweep() -> dict[str, Any]:
     )
     baseline_eval = evaluate(baseline)
 
-    # Stage A: complete mathematical domains for the two admission thresholds at
-    # 0.05 resolution. A selected endpoint is explicitly reported as a boundary.
     threshold_values = _frange(0, 20, 20)
     stage_a = [
         evaluate(
@@ -273,8 +273,6 @@ def run_staged_sweep() -> dict[str, Any]:
     ]
     stage_a_best, stage_a_tied = _best(stage_a)
 
-    # Stage B: complete four-dimensional weight simplex at 0.10 resolution.
-    # Phrase/temporal scale are swept jointly across broad orders of magnitude.
     weight_evaluations: list[Evaluation] = []
     stage_a_policy = stage_a_best.policy
     for weights, phrase_bonus, temporal_scale in product(
@@ -293,17 +291,12 @@ def run_staged_sweep() -> dict[str, Any]:
                     phrase_bonus=phrase_bonus,
                     temporal_scale_days=temporal_scale,
                     minimum_score=stage_a_policy.minimum_score,
-                    minimum_direct_support_coverage=(
-                        stage_a_policy.minimum_direct_support_coverage
-                    ),
+                    minimum_direct_support_coverage=stage_a_policy.minimum_direct_support_coverage,
                 )
             )
         )
     stage_b_best, stage_b_tied = _best(weight_evaluations)
 
-    # Stage C: re-sweep admission thresholds around the newly selected scoring
-    # policy to expose first-order interactions between score composition and
-    # evidence admission.
     stage_c = [
         evaluate(
             CandidatePolicy(
@@ -329,8 +322,7 @@ def run_staged_sweep() -> dict[str, Any]:
     selected = stage_c_best.policy
     threshold_boundary = (
         selected.minimum_score in {threshold_values[0], threshold_values[-1]}
-        or selected.minimum_direct_support_coverage
-        in {threshold_values[0], threshold_values[-1]}
+        or selected.minimum_direct_support_coverage in {threshold_values[0], threshold_values[-1]}
     )
     temporal_scale_boundary = selected.temporal_scale_days in {1.0, 365.0}
     phrase_boundary = selected.phrase_bonus in {0.0, 1.0}
@@ -343,9 +335,7 @@ def run_staged_sweep() -> dict[str, Any]:
         "stage_b_equivalent_optima": len(stage_b_tied),
         "stage_c_best": compact(stage_c_best),
         "stage_c_equivalent_optima": len(stage_c_tied),
-        "boundary_winner": bool(
-            threshold_boundary or temporal_scale_boundary or phrase_boundary
-        ),
+        "boundary_winner": bool(threshold_boundary or temporal_scale_boundary or phrase_boundary),
         "resolution_notes": {
             "threshold_step": 0.05,
             "weight_step": 0.10,
