@@ -7,7 +7,7 @@ from uuid import UUID, uuid5
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
-INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v6"
+INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v7"
 CONTINUITY_POLICY_VERSION = "ATTENTION_APERTURE_V1"
 INTERACTION_CAPABILITIES = (
     "interaction.resolve_references",
@@ -18,28 +18,31 @@ INTERACTION_CAPABILITIES = (
 )
 _MAX_SELECTED_CAPABILITIES = 4
 _MAX_CAPABILITY_CATALOG_INDEX = 63
+MAX_CAPABILITY_ROUNDS = 4
 
 
 class InteractionAction(str, Enum):
-    """Derived view of the post-aperture routing decision."""
+    """Closed next-step choice emitted by one fresh stateless routing call."""
 
-    RESPOND_DIRECTLY = "RESPOND_DIRECTLY"
-    REQUEST_CAPABILITIES = "REQUEST_CAPABILITIES"
+    RESPOND = "RESPOND"
+    USE_CAPABILITIES = "USE_CAPABILITIES"
 
 
 class InteractionDecision(BaseModel):
-    """Constrained post-aperture routing intent.
+    """Constrained recurrent interaction-routing intent.
 
-    The model never writes a capability name, query, entity, explanation, or
-    other natural-language control value. It receives an application-owned
-    deterministic catalog and may select zero or more entries by integer index.
+    The model never writes a capability name, query, entity, explanation,
+    dependency, or ordering instruction. It receives an application-owned
+    deterministic catalog and emits only one closed action plus bounded integer
+    indices.
 
-    An empty selection means "respond now." A non-empty selection means "invoke
-    these capabilities before responding." Order is preserved so future
-    capability dependencies can be represented without free-form planning text.
+    ``RESPOND`` is explicit and requires no capability indices.
+    ``USE_CAPABILITIES`` requires 1-4 indices. The indices are a requirement set,
+    not an execution order; Prometheist owns dependency expansion and scheduling.
     """
 
     model_config = ConfigDict(extra="forbid")
+    next_action: InteractionAction
     capability_indices: list[int] = Field(
         default_factory=list,
         max_length=_MAX_SELECTED_CAPABILITIES,
@@ -54,11 +57,13 @@ class InteractionDecision(BaseModel):
             raise ValueError("capability_indices must not contain duplicates")
         return values
 
-    @property
-    def action(self) -> InteractionAction:
-        if not self.capability_indices:
-            return InteractionAction.RESPOND_DIRECTLY
-        return InteractionAction.REQUEST_CAPABILITIES
+    @model_validator(mode="after")
+    def validate_action_contract(self) -> "InteractionDecision":
+        if self.next_action is InteractionAction.RESPOND and self.capability_indices:
+            raise ValueError("RESPOND must not select capabilities")
+        if self.next_action is InteractionAction.USE_CAPABILITIES and not self.capability_indices:
+            raise ValueError("USE_CAPABILITIES requires at least one capability index")
+        return self
 
 
 class InteractionStage(str, Enum):
@@ -87,7 +92,7 @@ class ReferenceAnalysis(BaseModel):
 
     ``requires_persisted_context`` is retained only so pre-pivot worker payloads
     and tests remain readable. Live phrase detection is disabled; every percept
-    receives an attention aperture independently of this flag.
+    receives bounded memory activation independently of this flag.
     """
 
     policy_version: str = CONTINUITY_POLICY_VERSION
@@ -125,7 +130,7 @@ def apply_continuity_policy(
     decision: InteractionDecision,
     analysis: ReferenceAnalysis,
 ) -> tuple[InteractionDecision, str | None]:
-    """Deprecated no-op retained for readable pre-aperture tests/payloads."""
+    """Deprecated no-op retained for readable pre-default-memory tests/payloads."""
 
     del user_text, analysis
     return decision, None
@@ -149,18 +154,24 @@ def deterministic_memory_request_id(interaction_id: UUID) -> UUID:
 
 def deterministic_capability_memory_request_id(
     interaction_id: UUID,
-    catalog_index: int,
+    round_index: int,
     capability_id: str,
 ) -> UUID:
-    if catalog_index < 0:
-        raise ValueError("catalog_index must be >= 0")
+    if round_index < 0:
+        raise ValueError("round_index must be >= 0")
     normalized = capability_id.strip()
     if not normalized:
         raise ValueError("capability_id must not be empty")
     return uuid5(
         interaction_id,
-        f"capability-memory-request:{catalog_index}:{normalized}",
+        f"capability-memory-request:{round_index}:{normalized}",
     )
+
+
+def deterministic_capability_round_event_id(interaction_id: UUID, round_index: int) -> UUID:
+    if round_index < 0:
+        raise ValueError("round_index must be >= 0")
+    return uuid5(interaction_id, f"capability-round:{round_index}")
 
 
 def deterministic_aperture_request_id(interaction_id: UUID) -> UUID:
