@@ -2,10 +2,14 @@
 
 The attention aperture is deliberately not a capability and does not depend on
 an LLM deciding whether unseen memory might matter. Every interaction receives
-one small, bounded, provenance-bearing JIT Memory packet derived from the
+one small, bounded, provenance-bearing activation packet derived from the
 current percept plus durable WorkingState. A later model decision may request
 ``MEMORY_ANALYSIS`` to focus more deeply, but basic memory availability is part
 of Prometheist's cognitive substrate.
+
+The aperture uses JIT Memory's activation boundary rather than its stricter
+evidence-admission boundary. An aperture item means "potentially relevant enough
+to keep available now," not "proved sufficient support for a claim."
 """
 from __future__ import annotations
 
@@ -23,7 +27,7 @@ from jit_agent.interaction_working_state import activate_working_state, load_wor
 from jit_agent.models import MemoryPacket
 
 
-ATTENTION_APERTURE_VERSION = "v0.7-attention-aperture-v1"
+ATTENTION_APERTURE_VERSION = "v0.7-attention-aperture-v2"
 DEFAULT_ATTENTION_APERTURE_LIMIT = 6
 
 
@@ -36,7 +40,7 @@ def open_attention_aperture(
     user_text: str,
     before_global_seq: int,
 ) -> MemoryPacket:
-    """Return the bounded default memory packet for one current percept.
+    """Return the bounded default activation packet for one current percept.
 
     Retrieval policy is application-owned and deterministic for the same event
     ledger, WorkingState, current percept, and kernel version. No model-written
@@ -55,7 +59,7 @@ def open_attention_aperture(
         conversation_id=None,
         limit=DEFAULT_ATTENTION_APERTURE_LIMIT,
     )
-    packet = jit_memory.request_memory(
+    packet = jit_memory.request_attention_activation(
         conn,
         conversation_id=conversation_id,
         correlation_id=correlation_id,
