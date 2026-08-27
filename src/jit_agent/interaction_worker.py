@@ -6,8 +6,8 @@ import sys
 from uuid import UUID
 
 from jit_agent import db
+from jit_agent.evidence_bound_llm import EvidenceBoundOllamaClient
 from jit_agent.interaction_runtime import execute_claimed_interaction_step
-from jit_agent.llm import OllamaClient
 
 
 def _configure_utf8_streams() -> None:
@@ -32,7 +32,7 @@ def main() -> None:
     with db.get_connection() as conn:
         execute_claimed_interaction_step(
             conn,
-            OllamaClient(),
+            EvidenceBoundOllamaClient(),
             claim_id=claim_id,
             worker_id=worker_id,
             scheduler_key=scheduler_key,
