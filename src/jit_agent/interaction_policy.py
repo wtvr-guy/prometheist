@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v4"
-CONTINUITY_POLICY_VERSION = "ACTIVE_WORKING_STATE_REQUIRES_MEMORY_V2"
+CONTINUITY_POLICY_VERSION = "STANDARD_RESPONSE_MEMORY_V3"
 INTERACTION_CAPABILITIES = (
     "interaction.resolve_references",
     "capability.discover",
@@ -126,17 +126,27 @@ def apply_continuity_policy(
     decision: InteractionDecision,
     analysis: ReferenceAnalysis,
 ) -> tuple[InteractionDecision, str | None]:
-    """Use durable active state rather than surface wording as continuity signal."""
+    """Make bounded internal memory standard context for ordinary responses.
 
-    del user_text
-    if not analysis.working_state_available:
-        return decision, None
-    if decision.required_capability is not CapabilityRequirement.NONE:
-        return decision, CONTINUITY_POLICY_VERSION
-    return (
-        InteractionDecision(required_capability=CapabilityRequirement.INTERNAL_MEMORY),
-        CONTINUITY_POLICY_VERSION,
-    )
+    ``NONE`` means that the model did not request a *special* capability; it no
+    longer means that persisted state is hidden from the response worker. Every
+    ordinary interaction is allowed one bounded JIT Memory attempt. The packet
+    may be empty when no relevant evidence exists. Explicit ``MEMORY_ANALYSIS``
+    remains a distinct specialist route, and an explicit ``INTERNAL_MEMORY``
+    request is preserved as-is.
+
+    WorkingState still determines which canonical events are active, but a
+    probabilistic classifier no longer decides whether persisted evidence is
+    allowed to constrain an ordinary answer.
+    """
+
+    del user_text, analysis
+    if decision.required_capability is CapabilityRequirement.NONE:
+        return (
+            InteractionDecision(required_capability=CapabilityRequirement.INTERNAL_MEMORY),
+            CONTINUITY_POLICY_VERSION,
+        )
+    return decision, None
 
 
 def deterministic_interaction_id(conversation_id: UUID, correlation_id: UUID) -> UUID:
