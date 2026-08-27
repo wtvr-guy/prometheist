@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-24
 
-**Status:** accepted design clarification for the v0.7 Attention Fabric.
+**Status:** accepted v0.7 design clarification and implementation evidence. The timeless normative rules represented here are now constitutionalized by Articles 11–13 of [`../../../CONSTITUTION.md`](../../../CONSTITUTION.md) and governed in depth by [`../../architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](../../architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md). This dated record remains evidence for why those rules were adopted; it is subordinate to the constitutional authority.
 
 This note records a distinction that became explicit after Increment B introduced durable execution-resource definitions.
 
@@ -79,10 +79,7 @@ LLM_INFERENCE: 1 exclusive unit
 DATABASE: 1 unit
 ```
 
-`MEMORY_RAM` was added only after the live-observation gate demonstrated that
-RAM safety could not be represented by CPU/concurrency units. Further
-dimensions should still be added only when tests demonstrate that they are
-required.
+`MEMORY_RAM` was added only after the live-observation gate demonstrated that RAM safety could not be represented by CPU/concurrency units. Further dimensions should still be added only when tests demonstrate that they are required.
 
 ## Determinism boundary
 
@@ -208,23 +205,11 @@ Increment B remains valid and is not reverted. It established explicit durable r
 
 Increments C and D now implement **resource reservations, deterministic admission semantics, and atomically published assignment epochs** without treating fixed durable lanes as the central capacity abstraction.
 
-Increment E now implements contention-driven preemption while retaining this
-clarification's rule that priority alone is insufficient: committed work yields
-only when a higher-priority task is blocked on relevant capacity and
-deterministic interruption policy permits the minimum selected release.
+Increment E now implements contention-driven preemption while retaining this clarification's rule that priority alone is insufficient: committed work yields only when a higher-priority task is blocked on relevant capacity and deterministic interruption policy permits the minimum selected release.
 
-The pre-worker resource-observation gate now discovers local CPU/RAM capacity,
-samples current pressure outside policy, applies versioned OS and uncertainty
-headroom, persists the complete freshness-bounded input, and makes the
-consuming epoch reference that snapshot explicitly. Missing, stale, mismatched,
-or failed observations fail closed. Local LLM inference defaults to one slot;
-tasks carry persisted peak estimates, using conservative policy guesses until
-profiled or historical peak data is available.
+The pre-worker resource-observation gate now discovers local CPU/RAM capacity, samples current pressure outside policy, applies versioned OS and uncertainty headroom, persists the complete freshness-bounded input, and makes the consuming epoch reference that snapshot explicitly. Missing, stale, mismatched, or failed observations fail closed. Local LLM inference defaults to one slot; tasks carry persisted peak estimates, using conservative policy guesses until profiled or historical peak data is available.
 
-Increment F now consumes this assignment-admission foundation at the worker
-boundary: it re-observes immediately before process launch, binds the decision
-to the exact committed safety policy, and makes the guarded claim the exclusive
-Prometheist-owned worker-start path.
+Increment F now consumes this assignment-admission foundation at the worker boundary: it re-observes immediately before process launch, binds the decision to the exact committed safety policy, and makes the guarded claim the exclusive Prometheist-owned worker-start path.
 
 Any discrete lanes introduced later should be derived from resource contracts where discrete slots are actually appropriate.
 
