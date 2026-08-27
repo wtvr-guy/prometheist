@@ -141,8 +141,20 @@ def test_capability_selection_returns_only_explicit_action_and_bounded_indices()
             description="Second test capability.",
         ),
     )
+    structured_results = (
+        {
+            "round_index": 0,
+            "capability_id": "alpha",
+            "result_data": {"status": "complete", "count": 2},
+        },
+    )
 
-    decision = client.classify("Do the task", _packet(), catalog)
+    decision = client.classify(
+        "Do the task",
+        _packet(),
+        catalog,
+        capability_results=structured_results,
+    )
 
     assert decision.next_action is InteractionAction.USE_CAPABILITIES
     assert decision.capability_indices == [1, 0]
@@ -151,8 +163,12 @@ def test_capability_selection_returns_only_explicit_action_and_bounded_indices()
         "next_action",
         "capability_indices",
     }
-    assert "alpha" in payload["messages"][1]["content"]
-    assert "beta" in payload["messages"][1]["content"]
+    model_input = payload["messages"][1]["content"]
+    assert "alpha" in model_input
+    assert "beta" in model_input
+    assert "[Structured capability results]" in model_input
+    assert '"status":"complete"' in model_input
+    assert '"count":2' in model_input
 
 
 def test_deeper_research_selects_packet_candidates_not_query_text():
