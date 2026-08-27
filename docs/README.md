@@ -6,13 +6,22 @@ This directory contains the current architecture, research/concept inputs, histo
 
 These documents define the forward architecture beginning with v0.7:
 
-- [`architecture/COGNITIVE_ARCHITECTURE.md`](architecture/COGNITIVE_ARCHITECTURE.md) — authoritative target architecture: persistent cognitive system, resource-aware Attention Fabric, perception/salience, retention, capabilities, disposable workers, session-independent interaction continuity, and system-owned continuity.
+- [`architecture/COGNITIVE_ARCHITECTURE.md`](architecture/COGNITIVE_ARCHITECTURE.md) — authoritative target architecture: persistent cognitive system, resource-aware Attention Fabric, bounded WorkingState, automatic per-percept memory attention aperture, perception/salience, retention, optional capabilities, disposable workers, session-independent continuity, and system-owned state.
 - [`architecture/LOSSLESS_PROGRESSIVE_MEMORY.md`](architecture/LOSSLESS_PROGRESSIVE_MEMORY.md) — authoritative lossless-memory and scaling constraints: durable source memories are never replaced by summaries/aggregations, derived structures remain routing aids, recall is progressive and source-backed, model context is bounded, and ordinary recall must avoid inference growth proportional to corpus size.
-- [`architecture/INTERACTION_CONTINUITY.md`](architecture/INTERACTION_CONTINUITY.md) — current continuity model: bounded durable WorkingState owns present activation; JIT Memory resolves older evidence; conversations/sessions/devices remain provenance rather than cognitive boundaries. Revised after the 2026-08-26 native acceptance experiment rejected phrase-specific continuity policy.
+- [`architecture/INTERACTION_CONTINUITY.md`](architecture/INTERACTION_CONTINUITY.md) — current continuity model: bounded durable WorkingState owns present activation; every percept receives a small system-owned JIT Memory attention aperture before model routing; `MEMORY_ANALYSIS` is reserved for deeper/focused work; conversations/sessions/devices remain provenance rather than cognitive boundaries.
 - [`architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](architecture/ARCHITECTURAL_PIVOT_2026-08-24.md) — decision record explaining the move away from a privileged Primary Agent, permanent agent hierarchy, rigid conversation-scoped cognition, and unconditional persistence of raw external input.
-- [`ROADMAP.md`](ROADMAP.md) — milestone path from the accepted v0.5/v0.6 baselines through the first complete attention-centric v1.0 architecture. v0.7 now includes minimal active WorkingState; the post-v0.7 roadmap must be rebaselined before choosing whether richer epistemic WorkingState or perception/salience comes next.
+- [`ROADMAP.md`](ROADMAP.md) — milestone path from the accepted v0.5/v0.6 baselines through the first complete attention-centric v1.0 architecture. v0.7 now includes minimal active WorkingState and the default attention aperture; the post-v0.7 roadmap must be rebaselined before choosing whether richer epistemic WorkingState or perception/salience comes next.
 
 There is intentionally no current `PRIMARY_AGENT_SPEC_SHEET` under `docs/architecture/`. Permanent agents are no longer first-class architectural primitives. Historical Primary-Agent material lives under `docs/history/`.
+
+## Current protocol rules
+
+Two experimental corrections from native v0.7 acceptance now apply across the current architecture:
+
+1. **Basic internal-memory access is substrate, not a live model-selected capability.** A fresh stateless model cannot reliably decide whether unseen memory matters before potentially relevant memory has been exposed. Every percept therefore receives a bounded attention-aperture activation packet first; the model may request `MEMORY_ANALYSIS` only when deeper focus is needed.
+2. **Model-generated natural language is a representation of last resort.** Prefer enums, booleans, application-owned IDs, bounded integers, and mechanically verified selections for machine control/state. Free-form model language is appropriate where language is genuinely the product. Tests must not substitute hand-maintained keyword/phrase parsers for semantic verification.
+
+Aperture activation is intentionally higher-recall than conservative evidence admission. An activated event is potentially relevant enough to expose; it is not automatically sufficient evidence or a truth claim.
 
 ## Concept and research inputs
 
@@ -22,7 +31,7 @@ The [`concepts/`](concepts/) directory contains research and long-horizon design
 - [`concepts/lessons_from_similar_projects.md`](concepts/lessons_from_similar_projects.md) — architecture mapping against Letta/MemGPT, AIOS, Soar, ACT-R, LIDA, OpenCog/Hyperon, LangGraph, Generative Agents, Voyager, M3-Agent, ABot-AgentOS, and related work. Use it to borrow tested mechanisms while preserving Prometheist's system-owned authority/failure model.
 - [`concepts/a_future_history_of_mankind.txt`](concepts/a_future_history_of_mankind.txt) — long-horizon conceptual/vision context. It is not an implementation specification.
 
-The 2026-08-26 WorkingState correction is an example of the intended research discipline: the concept reports suggested a mechanism, but the mechanism was pulled into v0.7 only after a frozen native acceptance test exposed the corresponding architectural gap.
+The v0.7 WorkingState/aperture corrections illustrate the intended research discipline: concept reports suggested related mechanisms, but changes entered the release candidate only after frozen native acceptance exposed the corresponding gaps.
 
 ## Architecture baselines
 
@@ -44,12 +53,12 @@ Historical documents describe what was built or believed at a particular milesto
 ## Active milestone
 
 - [`milestones/v0.7/README.md`](milestones/v0.7/README.md) — v0.7 scope, implementation record, release-candidate evidence, task-neutral capability execution, forced-restart acceptance, and native-machine gate.
-- [`milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md`](milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md) — dated experimental record of why phrase/entity/recency continuity heuristics were rejected and replaced with bounded durable active canonical-event state.
+- [`milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md`](milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md) — dated experimental record of why phrase/entity/recency continuity heuristics and “ask before remembering” were rejected, and why bounded WorkingState + the automatic attention aperture replaced them.
 - [`milestones/v0.7/JIT_ATTENTION_DESIGN.md`](milestones/v0.7/JIT_ATTENTION_DESIGN.md) — deterministic scheduler invariants, quantitative admission/reservations, atomic epoch assignments, contention preemption, and durable worker claims/checkpoint recovery.
 - [`milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md`](milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md) — distinction between attention priority and safe concurrent hardware-resource admission.
 - [`milestones/v0.7/ATTENTION_FOCUS_CONCENTRATION_2026-08-26.md`](milestones/v0.7/ATTENTION_FOCUS_CONCENTRATION_2026-08-26.md) — safe concurrency versus focused resource concentration.
 - [`milestones/v0.7/INCREMENT_F_WORKER_PROTOCOL_2026-08-26.md`](milestones/v0.7/INCREMENT_F_WORKER_PROTOCOL_2026-08-26.md) — agent-neutral worker steps, guarded claim-time admission, leases, checkpoints, idempotent recovery, terminal results, and process-launch boundary.
-- [`milestones/v0.7/INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md`](milestones/v0.7/INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md) — original Increment G durable interaction implementation record. Its phrase-based reference policy is superseded by the later WorkingState pivot above.
+- [`milestones/v0.7/INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md`](milestones/v0.7/INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md) — original Increment G durable interaction implementation record. Its phrase-based reference policy is superseded by the later WorkingState/aperture corrections above.
 - [`milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md`](milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md) — migration policy for the divergent v0.6 continuity/capability work.
 
 ## Accepted milestones
