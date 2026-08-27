@@ -7,7 +7,7 @@ from jit_agent import db, event_store
 from jit_agent.attention_observation import HostResourceMetrics
 from jit_agent.interaction_policy import (
     INTERACTION_STAGES,
-    InteractionAction,
+    CapabilityRequirement,
     InteractionDecision,
     InteractionStage,
 )
@@ -15,7 +15,12 @@ from jit_agent.interaction_runtime import (
     begin_interaction,
     execute_next_interaction_step,
 )
-from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
+from jit_agent.models import (
+    EventType,
+    MemoryNeedDecision,
+    MemoryPacket,
+    MemoryRetrievalScope,
+)
 
 
 NOW = datetime(2026, 8, 26, 21, 0, tzinfo=timezone.utc)
@@ -35,13 +40,16 @@ class FixedProbe:
 
 class DirectLLM:
     def classify(self, prompt: str) -> InteractionDecision:
-        return InteractionDecision(action=InteractionAction.RESPOND_DIRECTLY)
+        return InteractionDecision(required_capability=CapabilityRequirement.NONE)
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
         return "completed response"
 
     def plan_memory(self, task: str) -> MemoryNeedDecision:
-        return MemoryNeedDecision(query_text="missing evidence")
+        return MemoryNeedDecision(
+            scope=MemoryRetrievalScope.HISTORY_ONLY,
+            anchor_indices=[0],
+        )
 
     def answer_memory_task(self, task: str, packet: MemoryPacket) -> str:
         return "completed analysis"
