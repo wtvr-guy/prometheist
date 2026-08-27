@@ -8,7 +8,7 @@ Models and worker processes are disposable compute. They are never the durable o
 
 > **Core thesis:** continuity belongs to Prometheist itself, not to an LLM context window, chat session, agent, or worker process.
 
-Prometheist began as a stateless multi-agent prototype. v0.6 used a Primary Agent plus specialists to prove that fresh model invocations could participate in one continuous system through shared JIT Memory without inherited transcripts. That hierarchy is now historical. Beginning with v0.7, **permanent agents are not first-class architectural primitives**. The system is being rebuilt around durable attention, tasks, capabilities, active working state, perception, retention, and disposable workers.
+Prometheist began as a stateless multi-agent prototype. v0.6 used a Primary Agent plus specialists to prove that fresh model invocations could participate in one continuous system through shared JIT Memory without inherited transcripts. That hierarchy is now historical. Beginning with v0.7, **permanent agents are not first-class architectural primitives**. The system is being rebuilt around durable attention, tasks, active working state, memory, capabilities, perception, retention, and disposable workers.
 
 ## Current status
 
@@ -22,7 +22,7 @@ v0.6 proved that separate fresh LLM-backed components can obtain persistent inte
 
 The Primary Agent/specialist structure used to prove that result is **superseded architecture**. v0.7 removes that execution path after reproducing its useful continuity baseline through durable task-neutral workers. Historical event names and documentation remain readable as evidence; they are not current executive architecture.
 
-### v0.7 — release candidate: durable JIT Attention Fabric + minimal WorkingState
+### v0.7 — release candidate: durable JIT Attention Fabric + WorkingState + attention aperture
 
 v0.7 establishes deterministic durable task scheduling, structured priority metadata, service guarantees, interruption policies, dependency gating, resumable PostgreSQL state, live CPU/RAM discovery, conservative observed-capacity snapshots, configured safe headroom, quantitative resource admission/reservations, a default single local-LLM slot, atomic durable scheduling epochs and assignment sets, contention-driven multi-assignment preemption, and a durable claim/lease/checkpoint/result protocol for disposable workers.
 
@@ -30,17 +30,21 @@ The target is a resource-aware **Attention Fabric** that determines which durabl
 
 The goal is not to put a scheduler in front of the old Primary Agent. The goal is to remove permanent agents from executive architecture entirely.
 
-The host-aware path samples CPU pressure and available RAM outside scheduling policy, applies explicit operating-system and uncertainty headroom, and persists the exact freshness-bounded observation consumed by each epoch. Missing, stale, or failed observations do not fall back to optimistic configured capacity. Increment F adds an immutable agent-neutral `WorkerStep`, stable idempotency keys, fresh claim-time reobservation bound to the exact committed policy, expiring leases and heartbeats, append-only checkpoints, exactly one terminal result, abandoned-work recovery, and an exclusive guarded process launcher.
+Native release-candidate testing exposed two important negative results.
 
-Increment G decomposes external interactions into durable reference, capability discovery/execution, response, and persistence steps executed through fresh guarded worker claims. The new path resumes from PostgreSQL and does not require a Primary Agent.
+First, natural continuity was becoming dependent on a growing application-owned vocabulary of entity/recency/reference phrases. That approach is deprecated. v0.7 now maintains a minimal durable `InteractionWorkingState` containing only bounded canonical active-event IDs.
 
-Native release-candidate testing then exposed a missing mechanism: natural continuity was becoming dependent on a growing application-owned vocabulary of entity/recency/reference phrases. That approach is now deprecated. v0.7 adds a minimal durable `InteractionWorkingState` containing only bounded canonical active-event IDs. Fresh workers rehydrate those source events through JIT Memory; when older evidence may be needed, a fresh stateless router chooses only a closed retrieval-scope enum plus bounded indices into a deterministic anchor catalog built from canonical text. JIT Memory then performs deterministic long-term retrieval and composes historical evidence with active WorkingState evidence.
+Second, asking a fresh stateless model whether it needed unseen persistent memory proved circular: the evidence required to make that decision may itself be in memory. The live path therefore opens a small, bounded, provenance-bearing **attention aperture** for every percept before model routing. The aperture combines active WorkingState with high-recall deterministic memory activation. A fresh model then either responds from that bounded context or requests `MEMORY_ANALYSIS` for deeper/focused memory work.
+
+The aperture and the conservative evidence boundary are intentionally different. Aperture activation means “potentially relevant enough to keep available now”; ordinary JIT Memory evidence admission retains stricter support/abstention semantics.
 
 > **Working-state invariant:** current cognitive activation belongs to Prometheist itself. It is not reconstructed by an ever-growing regex vocabulary and is not stored in an LLM context window.
 
-> **Model-output invariant:** models generate natural language only when natural language is the product. Control-plane schemas prefer enums, booleans, IDs, and bounded indices; model-authored search/capability strings are not system policy.
+> **Attention-aperture invariant:** basic access to Prometheist's own persistent memory is cognitive substrate, not an optional model-selected capability.
 
-The release candidate also ports deterministic capability discovery into task/worker-neutral terminology, connects real JIT Memory execution, migrates the CLI to one guarded child process per durable stage, removes the compatibility Primary Agent/specialist path, and adds integrated forced-destruction tests covering concurrent assignments, checkpoint preemption, abandoned claims, readmission, and duplicate-effect prevention.
+> **Model-output invariant:** model-generated natural language is the representation of last resort. Control/state schemas prefer enums, booleans, application-owned IDs, bounded indices, and mechanically verified selections. Free-form model language is reserved for boundaries where language is genuinely the product.
+
+The release candidate also ports deterministic capability discovery into task/worker-neutral terminology, connects real JIT Memory execution, migrates the CLI to guarded child processes, removes the compatibility Primary Agent/specialist path, and adds forced-destruction/recovery tests covering concurrent assignments, checkpoint preemption, abandoned claims, readmission, and duplicate-effect prevention.
 
 ## Target architecture
 
@@ -48,41 +52,32 @@ The release candidate also ports deterministic capability discovery into task/wo
 external world / users / devices / software
                   |
                   v
-        ephemeral input buffers
-                  |
-                  v
               perception
                   |
-          +-------+-------+
-          |               |
-       reflex          salience
-          |               |
-          |        situation assembly
-          |               |
-          |          task formation
-          |               |
-          +-------+-------+
+          situation / task formation
                   |
                   v
            ATTENTION FABRIC
-                  |
-      priority + safe resource admission
-                  |
-       +----------+----------+
-       |          |          |
-   assignment  assignment  assignment ...
-       |          |          |
-       +----------+----------+
+        priority + safe admission
                   |
                   v
           ACTIVE WORKING STATE
        bounded canonical event refs
                   |
                   v
-              capabilities
-       memory / models / code /
-       web / files / devices /
-             actuators / ...
+       DEFAULT ATTENTION APERTURE
+   bounded deterministic JIT activation
+                  |
+                  v
+        fresh stateless cognition
+                  |
+          +-------+-------+
+          |               |
+       respond       capabilities
+                     MEMORY_ANALYSIS /
+                     code / web / ...
+          |               |
+          +-------+-------+
                   |
                   v
           results + observations
@@ -90,39 +85,33 @@ external world / users / devices / software
                   v
             internal history
                   |
-          +-------+-------+
-          |               |
-       JIT Memory      retention
-          |               |
-          +-------+-------+
+             retention / indexes
                   |
                   +----------> next cycle
 ```
 
-JIT Memory is one capability among many. WorkingState preserves bounded present activation; JIT Memory supplies older historical context when current work needs it.
+Basic memory activation is part of the cognitive substrate. `MEMORY_ANALYSIS` is a capability because it is a deeper operation performed on memory.
 
 ## Human-like interaction continuity
 
-Prometheist should not require users to manage conversation IDs or explicitly switch between stored chats. Current context is maintained as bounded durable active state, while older context is reconstructed from persistent evidence only when needed.
+Prometheist should not require users to manage conversation IDs or explicitly switch between stored chats. Current context is maintained as bounded durable active state, and every percept receives a bounded memory aperture before fresh inference.
 
 Conversation/session/device identifiers remain useful provenance and ordering metadata, but they are not intended cognitive boundaries. Topics and situations are overlapping associations, not rigid replacement containers.
 
-> **Interaction invariant:** conversations, sessions, devices, and interfaces are provenance metadata—not cognitive boundaries. Present context is durable WorkingState; older context is retrieved just in time from canonical history.
+> **Interaction invariant:** conversations, sessions, devices, and interfaces are provenance metadata—not cognitive boundaries.
 
-The old phrase-specific `requires_persisted_context` mechanism is deprecated from the live path. Lexical/entity/temporal retrieval remains valid *inside JIT Memory*; what is rejected is application policy that grows a special-case list every time natural language exposes a new surface form.
+The old phrase-specific `requires_persisted_context` mechanism is deprecated from the live path. Lexical/entity/temporal/associative retrieval remains valid *inside memory*; what is rejected is application policy that grows a special-case list every time natural language exposes a new surface form.
 
 ## Persistence model
 
-Prometheist no longer assumes that every raw external datum should be stored forever.
-
-It distinguishes:
+Prometheist distinguishes:
 
 1. **ephemeral raw experience** — high-volume source data that may exist only in bounded buffers;
 2. **observational memory** — external observations retained according to explicit deterministic policy;
 3. **internal history** — durable system state needed to explain what Prometheist knew, focused on, decided, attempted, committed to, or did;
 4. **active working state** — bounded pointers to canonical events currently activated for cognition.
 
-WorkingState does not replace or summarize source evidence. An active event pointer means the event is currently relevant, not that every proposition inside it is true.
+WorkingState and aperture activation do not replace or summarize source evidence. An active/retrieved event means it is relevant enough to expose, not that every proposition inside it is true.
 
 > **Persistence invariant:** anything that materially influences Prometheist's attention, reasoning, decisions, commitments, or actions must leave enough durable provenance to explain that behavior later.
 
@@ -133,27 +122,28 @@ WorkingState does not replace or summarize source evidence. An active event poin
 3. **Disposable cognition.** LLM calls and workers may disappear after every bounded step.
 4. **Deterministic mechanics.** IDs, ordering, priority derivation, scheduling, retention rules, resource limits, and policy state belong to ordinary software whenever possible.
 5. **Attention is distinct from resource admission.** Priority determines what deserves execution; resource policy determines what can safely run concurrently.
-6. **Working state is distinct from long-term memory.** Active canonical evidence is bounded and durable; older evidence is retrieved only when needed.
-7. **Demand-driven JIT Memory.** Historical context is retrieved only when current work requires it.
-8. **Bounded attention.** Prometheist may remember and intend much more than it actively processes at once.
-9. **Constrain model control outputs.** Prefer enums, booleans, IDs, bounded indices, and mechanically verified extractive selections over model-generated control text; free-form model language is reserved for language products.
-10. **Model interpretation is advisory where policy must be deterministic.** Models may select among bounded semantic alternatives; deterministic policy owns scheduling, deletion, permissions, evidence boundaries, capability IDs, and validation.
-11. **Evidence and provenance survive interpretation changes.** Derived memory and activation are replaceable; retained source evidence remains traceable.
-12. **Unknown facts may remain unknown.** Topical similarity is not evidence.
-13. **Complexity must earn its place.** Freeze a baseline, add one mechanism, rerun the experiment, keep it only if evidence justifies it.
-14. **No vocabulary patchwork.** Natural-language continuity must not depend on an ever-growing list of phrase-specific application rules.
+6. **Working state is distinct from long-term memory.** Active canonical evidence is bounded and durable.
+7. **Default memory activation precedes model routing.** A model is not asked to decide whether unseen memory exists or matters before it has received the bounded attention aperture.
+8. **Activation is distinct from evidence sufficiency.** High-recall aperture activation must not silently weaken conservative evidence admission or abstention.
+9. **Bounded attention.** Prometheist may remember and intend much more than it actively processes at once.
+10. **Natural language is last-resort state/control.** Prefer enums, booleans, IDs, bounded indices, and mechanically verified extractive selections; use generated language when language is the product.
+11. **Model interpretation is advisory where policy must be deterministic.** Models may select among bounded semantic alternatives; deterministic policy owns scheduling, deletion, permissions, evidence boundaries, capability IDs, and validation.
+12. **Evidence and provenance survive interpretation changes.** Derived memory and activation are replaceable; retained source evidence remains traceable.
+13. **Unknown facts may remain unknown.** Topical similarity is not evidence.
+14. **Complexity must earn its place.** Freeze a baseline, add one mechanism, rerun the experiment, keep it only if evidence justifies it.
+15. **No vocabulary patchwork.** Natural-language continuity must not depend on an ever-growing list of phrase-specific application rules.
 
 ## Current implementation versus target architecture
 
-Implemented/verified foundations include PostgreSQL authoritative history, deterministic ordering, the Memory Kernel, provenance-bearing `MemoryPacket`s, shared JIT Memory contracts, deterministic attention/task state, resource admission, durable epoch-wide assignments, atomic PostgreSQL publication, contention preemption, task-neutral capability discovery/execution, durable disposable-worker claims/checkpoints/results, guarded interaction workers, bounded active WorkingState, constrained categorical/extractive model routing, and restart/replay tests.
+Implemented/verified foundations include PostgreSQL authoritative history, deterministic ordering, the Memory Kernel, provenance-bearing `MemoryPacket`s, conservative evidence recall, high-recall attention activation, deterministic attention/task state, resource admission, durable epoch-wide assignments, contention preemption, task-neutral capability discovery/execution, durable disposable-worker claims/checkpoints/results, guarded interaction workers, bounded active WorkingState, post-aperture categorical model routing, and restart/replay tests.
 
-The legacy Primary Agent, memory-specialist implementation, and their ownership tests have been removed. Historical event types remain supported so existing ledgers stay readable. Perception/salience, deterministic external-data retention, harder memory generalization, richer epistemic working state/recurrent inference, and the fully integrated cognitive loop remain roadmap work.
+The legacy Primary Agent and memory-specialist ownership architecture has been removed. Historical event types remain supported so existing ledgers stay readable. Perception/salience, deterministic external-data retention, harder memory generalization, richer epistemic working state/recurrent inference, and the fully integrated cognitive loop remain roadmap work.
 
 ## Roadmap
 
 The currently published forward path remains:
 
-- **v0.7** — durable resource-aware JIT Attention Fabric + minimal active WorkingState;
+- **v0.7** — durable resource-aware JIT Attention Fabric + minimal active WorkingState + default attention aperture;
 - **v0.8** — deterministic perception and salience, subject to a post-v0.7 rebaseline against the WorkingState/neuroscience evidence;
 - **v0.9** — deterministic retention and memory admission;
 - **v0.10** — memory generalization and natural topic-resumption failure discovery;
@@ -208,4 +198,4 @@ Historical evidence:
 - [`docs/milestones/v0.6/README.md`](docs/milestones/v0.6/README.md)
 - [`docs/milestones/v0.5/README.md`](docs/milestones/v0.5/README.md)
 
-Prometheist remains a cognitive-architecture research project. The current objective is not to reproduce biological neuroscience literally, but to test whether selective attention, bounded working state, demand-driven memory, deterministic system mechanics, and disposable model cognition can provide continuous machine identity without persistent model context.
+Prometheist remains a cognitive-architecture research project. The current objective is not to reproduce biological neuroscience literally, but to test whether selective attention, bounded working state, automatic bounded memory activation, deterministic system mechanics, and disposable model cognition can provide continuous machine identity without persistent model context.
