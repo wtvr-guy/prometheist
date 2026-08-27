@@ -1,6 +1,7 @@
 """Application-owned execution bindings for selected v0.7 capabilities."""
 from __future__ import annotations
 
+from datetime import datetime
 import re
 from typing import Protocol
 from uuid import UUID, uuid5
@@ -23,6 +24,12 @@ _ENTITY_SPAN_RE = re.compile(
     r"\b[A-Z][A-Za-z0-9_-]*(?:\s+[A-Z][A-Za-z0-9_-]*)+\b"
 )
 _SINGLETON_ENTITY_RE = re.compile(r"\b[A-Z][A-Za-z0-9_-]{2,}\b")
+_RECENT_CONTEXT_RE = re.compile(
+    r"\b(?:just|recently|immediately)\b"
+    r"|\b(?:this|that)\s+(?:plan|approach|option|choice|step|item|idea|one)\b"
+    r"|\b(?:these|those)\s+(?:plans?|approaches?|options?|choices?|steps?|items?|ideas?)\b",
+    re.IGNORECASE,
+)
 _SINGLETON_ENTITY_STOPWORDS = frozenset(
     {
         "A",
@@ -105,7 +112,7 @@ class CapabilityExecution(BaseModel):
 def _load_discovery_packet(
     conn: psycopg.Connection,
     capability_request_id: UUID,
-) -> CapabilityPacket:
+) -> tuple[CapabilityPacket, datetime]:
     """Reconstruct the authoritative discovery handoff from durable history."""
 
     event = event_store.get_event_by_id(
@@ -117,9 +124,10 @@ def _load_discovery_packet(
     if event.event_type is not EventType.CAPABILITY_PACKET:
         raise RuntimeError("capability discovery event has the wrong event type")
     try:
-        return CapabilityPacket.model_validate(event.payload["packet"])
+        packet = CapabilityPacket.model_validate(event.payload["packet"])
     except (KeyError, TypeError, ValueError) as exc:
         raise RuntimeError("capability discovery packet is invalid") from exc
+    return packet, event.created_at
 
 
 def _supplemental_queries(*groups: list[str] | tuple[str, ...]) -> list[str]:
@@ -204,6 +212,12 @@ def _merge_entities(*groups: list[str] | tuple[str, ...]) -> list[str]:
     return merged
 
 
+def _recent_reference_time(task_text: str, discovery_created_at: datetime) -> datetime | None:
+    """Use durable event time only for explicit immediate-context references."""
+
+    return discovery_created_at if _RECENT_CONTEXT_RE.search(task_text) else None
+
+
 def execute_registered_capability(
     conn: psycopg.Connection,
     llm: CapabilityExecutionLLM,
@@ -221,7 +235,10 @@ def execute_registered_capability(
 ) -> CapabilityExecution:
     """Execute a selected binding without granting policy authority to a worker."""
 
-    discovery_packet = _load_discovery_packet(conn, capability_request_id)
+    discovery_packet, discovery_created_at = _load_discovery_packet(
+        conn,
+        capability_request_id,
+    )
     if discovery_packet.requester_task_id != requester_task_id:
         raise RuntimeError("capability discovery task does not match execution task")
 
@@ -231,6 +248,7 @@ def execute_registered_capability(
     # turn leakage boundary.
     memory_scope_conversation_id = None
     discovery_supplemental = discovery_packet.need.supplemental_query_texts
+    reference_time = _recent_reference_time(task_text, discovery_created_at)
 
     if registration.executor == "jit_memory":
         explicit_input = [capability_input] if capability_input else []
@@ -247,6 +265,7 @@ def execute_registered_capability(
             task_text,
             supplemental_query_texts=supplemental,
             entities=entities,
+            reference_time=reference_time,
             conversation_id=memory_scope_conversation_id,
         )
     elif registration.executor == "memory_analysis":
@@ -269,6 +288,7 @@ def execute_registered_capability(
             task_text,
             supplemental_query_texts=supplemental,
             entities=entities,
+            reference_time=reference_time,
             conversation_id=memory_scope_conversation_id,
         )
     else:
