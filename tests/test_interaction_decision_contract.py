@@ -1,48 +1,79 @@
 import pytest
 from pydantic import ValidationError
 
-from jit_agent.interaction_policy import InteractionAction, InteractionDecision
-
-
-@pytest.mark.parametrize(
-    "payload",
-    [
-        {"action": "RESPOND_DIRECTLY", "capability_query": ""},
-        {"action": "RESPOND_DIRECTLY", "capability_input": ""},
-        {
-            "action": "RESPOND_DIRECTLY",
-            "capability_query": "   ",
-            "capability_input": "\t\n",
-        },
-    ],
+from jit_agent.interaction_policy import (
+    CapabilityRequirement,
+    InteractionAction,
+    InteractionDecision,
 )
-def test_direct_response_normalizes_blank_optional_capability_fields(payload):
-    decision = InteractionDecision.model_validate(payload)
+from jit_agent.models import MemoryNeedDecision, MemoryRetrievalScope
+
+
+def test_interaction_decision_schema_contains_only_categorical_capability_requirement():
+    schema = InteractionDecision.model_json_schema()
+
+    assert set(schema["properties"]) == {"required_capability"}
+    decision = InteractionDecision(
+        required_capability=CapabilityRequirement.INTERNAL_MEMORY
+    )
+    assert decision.action is InteractionAction.REQUEST_CAPABILITY
+    assert decision.capability_id == "internal_memory"
+
+
+def test_direct_interaction_decision_is_enum_only():
+    decision = InteractionDecision(required_capability=CapabilityRequirement.NONE)
 
     assert decision.action is InteractionAction.RESPOND_DIRECTLY
-    assert decision.capability_query is None
-    assert decision.capability_input is None
+    assert decision.capability_id is None
+    assert decision.model_dump(mode="json") == {"required_capability": "NONE"}
 
 
-def test_optional_capability_fields_are_trimmed_when_present():
-    decision = InteractionDecision.model_validate(
-        {
-            "action": "REQUEST_CAPABILITY",
-            "capability_query": "  internal_memory  ",
-            "capability_input": "  remembered fact  ",
-        }
-    )
-
-    assert decision.capability_query == "internal_memory"
-    assert decision.capability_input == "remembered fact"
-
-
-@pytest.mark.parametrize("query", [None, "", " ", "\t\n"])
-def test_capability_request_still_requires_nonblank_query(query):
-    with pytest.raises(ValidationError, match="REQUEST_CAPABILITY requires capability_query"):
+@pytest.mark.parametrize("field", ["capability_query", "capability_input", "explanation"])
+def test_interaction_decision_rejects_stray_natural_language_fields(field):
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         InteractionDecision.model_validate(
             {
-                "action": "REQUEST_CAPABILITY",
-                "capability_query": query,
+                "required_capability": "INTERNAL_MEMORY",
+                field: "free-form model text",
             }
+        )
+
+
+def test_memory_routing_schema_contains_only_scope_and_anchor_indices():
+    schema = MemoryNeedDecision.model_json_schema()
+
+    assert set(schema["properties"]) == {"scope", "anchor_indices"}
+    decision = MemoryNeedDecision(
+        scope=MemoryRetrievalScope.ACTIVE_AND_HISTORY,
+        anchor_indices=[2, 7],
+    )
+    assert decision.model_dump(mode="json") == {
+        "scope": "ACTIVE_AND_HISTORY",
+        "anchor_indices": [2, 7],
+    }
+
+
+def test_active_only_memory_routing_cannot_emit_anchor_text_or_indices():
+    with pytest.raises(ValidationError, match="ACTIVE_ONLY must not select historical anchors"):
+        MemoryNeedDecision(
+            scope=MemoryRetrievalScope.ACTIVE_ONLY,
+            anchor_indices=[1],
+        )
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        MemoryNeedDecision.model_validate(
+            {
+                "scope": "ACTIVE_ONLY",
+                "anchor_indices": [],
+                "query_text": "generated query",
+            }
+        )
+
+
+def test_historical_memory_routing_requires_bounded_unique_indices():
+    with pytest.raises(ValidationError, match="requires at least one anchor index"):
+        MemoryNeedDecision(scope=MemoryRetrievalScope.HISTORY_ONLY)
+    with pytest.raises(ValidationError, match="must not contain duplicates"):
+        MemoryNeedDecision(
+            scope=MemoryRetrievalScope.HISTORY_ONLY,
+            anchor_indices=[2, 2],
         )
