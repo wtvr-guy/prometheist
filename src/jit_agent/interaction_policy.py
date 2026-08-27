@@ -7,7 +7,7 @@ from uuid import UUID, uuid5
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
-INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v7"
+INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v8"
 CONTINUITY_POLICY_VERSION = "ATTENTION_APERTURE_V1"
 INTERACTION_CAPABILITIES = (
     "interaction.resolve_references",
@@ -64,6 +64,35 @@ class InteractionDecision(BaseModel):
         if self.next_action is InteractionAction.USE_CAPABILITIES and not self.capability_indices:
             raise ValueError("USE_CAPABILITIES requires at least one capability index")
         return self
+
+
+class CapabilityResultSummary(BaseModel):
+    """Bounded machine-owned summary supplied to later fresh routing calls."""
+
+    model_config = ConfigDict(extra="forbid")
+    round_index: int = Field(ge=0)
+    capability_id: str = Field(min_length=1)
+    supported: bool | None = None
+    item_count: int | None = Field(default=None, ge=0)
+    result_keys: list[str] = Field(default_factory=list, max_length=16)
+
+    @field_validator("capability_id")
+    @classmethod
+    def normalize_capability_id(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("capability_id must not be blank")
+        return normalized
+
+    @field_validator("result_keys")
+    @classmethod
+    def validate_result_keys(cls, values: list[str]) -> list[str]:
+        normalized = [value.strip() for value in values]
+        if any(not value for value in normalized):
+            raise ValueError("result_keys must not contain blanks")
+        if len(normalized) != len(set(normalized)):
+            raise ValueError("result_keys must not contain duplicates")
+        return normalized
 
 
 class InteractionStage(str, Enum):
