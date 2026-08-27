@@ -2,13 +2,7 @@ from types import SimpleNamespace
 import uuid
 
 from jit_agent import capability_runtime
-from jit_agent.capability_registry import (
-    DEFAULT_REGISTRY,
-    CapabilityMatch,
-    CapabilityNeed,
-    CapabilityPacket,
-    deterministic_capability_request_id,
-)
+from jit_agent.capability_registry import DEFAULT_REGISTRY
 from jit_agent.models import (
     EventType,
     MemoryNeedDecision,
@@ -45,20 +39,7 @@ class Planner:
         )
 
 
-def _packet(step_id: uuid.UUID, task_id: uuid.UUID, capability_id="internal_memory"):
-    registration = DEFAULT_REGISTRY.get(capability_id)
-    return CapabilityPacket(
-        capability_request_id=deterministic_capability_request_id(step_id),
-        requester_task_id=task_id,
-        requester_step_id=step_id,
-        need=CapabilityNeed(query_text=capability_id, limit=1),
-        matches=[CapabilityMatch(descriptor=registration.descriptor, score=8.0)],
-        selected_query_role="canonical",
-        selected_query_text=capability_id,
-    )
-
-
-def _install_fakes(monkeypatch, packet, captured, active_event_ids):
+def _install_fakes(monkeypatch, captured, active_event_ids):
     active_events = {
         event_id: SimpleNamespace(
             event_type=EventType.USER_PROMPT,
@@ -68,15 +49,11 @@ def _install_fakes(monkeypatch, packet, captured, active_event_ids):
         for event_id in active_event_ids
     }
 
-    def fake_get_event(_conn, event_id):
-        if event_id in active_events:
-            return active_events[event_id]
-        return SimpleNamespace(
-            event_type=EventType.CAPABILITY_PACKET,
-            payload={"packet": packet.model_dump(mode="json")},
-        )
-
-    monkeypatch.setattr(capability_runtime.event_store, "get_event_by_id", fake_get_event)
+    monkeypatch.setattr(
+        capability_runtime.event_store,
+        "get_event_by_id",
+        lambda _conn, event_id: active_events.get(event_id),
+    )
     monkeypatch.setattr(
         capability_runtime.event_store,
         "record_event",
@@ -117,16 +94,15 @@ def _execute(
     conversation_id = uuid.uuid4()
     correlation_id = uuid.uuid4()
     state_event_id = uuid.uuid4()
-    packet = _packet(step_id, task_id, capability_id)
     captured = {}
-    _install_fakes(monkeypatch, packet, captured, [state_event_id])
+    _install_fakes(monkeypatch, captured, [state_event_id])
     planner = Planner(scope)
 
-    capability_runtime.execute_registered_capability(
+    execution = capability_runtime.execute_registered_capability(
         object(),
         planner,
         registration=DEFAULT_REGISTRY.get(capability_id),
-        capability_request_id=packet.capability_request_id,
+        capability_execution_id=uuid.uuid4(),
         requester_task_id=task_id,
         requester_step_id=step_id,
         conversation_id=conversation_id,
@@ -135,11 +111,11 @@ def _execute(
         before_global_seq=100,
         memory_request_id=uuid.uuid4(),
     )
-    return captured, planner, state_event_id, conversation_id, correlation_id
+    return captured, planner, state_event_id, conversation_id, correlation_id, execution
 
 
 def test_internal_memory_uses_active_context_and_index_only_memory_routing(monkeypatch):
-    captured, planner, state_event_id, conversation_id, correlation_id = _execute(monkeypatch)
+    captured, planner, state_event_id, conversation_id, correlation_id, _ = _execute(monkeypatch)
 
     assert len(planner.inputs) == 1
     assert planner.active_state_flags == [True]
@@ -163,7 +139,7 @@ def test_internal_memory_uses_active_context_and_index_only_memory_routing(monke
 
 
 def test_active_only_scope_disables_long_term_search_without_phrase_policy(monkeypatch):
-    captured, planner, state_event_id, _, _ = _execute(
+    captured, planner, state_event_id, _, _, _ = _execute(
         monkeypatch,
         scope=MemoryRetrievalScope.ACTIVE_ONLY,
     )
@@ -176,8 +152,11 @@ def test_active_only_scope_disables_long_term_search_without_phrase_policy(monke
     assert need.limit == 1
 
 
-def test_memory_analysis_uses_same_index_only_memory_boundary(monkeypatch):
-    captured, planner, state_event_id, _, _ = _execute(monkeypatch, "memory_analysis")
+def test_deeper_research_uses_same_index_only_memory_boundary_and_returns_no_prose(monkeypatch):
+    captured, planner, state_event_id, _, _, execution = _execute(
+        monkeypatch,
+        "deeper_research",
+    )
 
     assert planner.active_state_flags == [True]
     assert "[Anchor catalog]" in planner.inputs[0]
@@ -186,6 +165,10 @@ def test_memory_analysis_uses_same_index_only_memory_boundary(monkeypatch):
     assert need.include_persisted_history is True
     assert need.entities == ["oriole"]
     assert need.limit == 6
+    assert execution.capability_id == "deeper_research"
+    assert execution.executor == "deeper_research"
+    assert execution.memory_packet is not None
+    assert "answer" not in execution.model_dump(mode="json")
 
 
 def test_memory_packet_limit_never_retruncates_bounded_active_working_state():
