@@ -21,8 +21,9 @@ import uuid
 import psycopg
 from psycopg.types.json import Json
 
-from jit_agent import event_store, postgres_memory_kernel
-from jit_agent.association_projection import ASSOCIATION_PROJECTION_VERSION, derive_associations
+from jit_agent import event_store, postgres_memory_kernel, projection_freshness
+from jit_agent.association_feature_projection import AssociationFeatureProjection
+from jit_agent.association_projection import ASSOCIATION_PROJECTION_VERSION
 from jit_agent.memory_kernel import CueState
 from jit_agent.memory_projection import LexicalProjection, build_projection
 from jit_agent.models import EventType, KnowledgeOrigin, MemoryEvidence, MemoryNeed, MemoryPacket
@@ -139,71 +140,114 @@ def _query_variants(need: MemoryNeed) -> tuple[tuple[str, str | None], ...]:
     return tuple(variants)
 
 
+def _insert_projection_entries(cur, entries) -> None:
+    if not entries:
+        return
+    cur.executemany(
+        """
+        INSERT INTO memory_projection_entries (
+            projection_name, projection_version, source_event_id,
+            source_global_seq, source_hash, data
+        ) VALUES (%s, %s, %s, %s, %s, %s)
+        ON CONFLICT (projection_name, projection_version, source_event_id) DO NOTHING
+        """,
+        [
+            (
+                entry.projection_name,
+                entry.projection_version,
+                uuid.UUID(entry.source_event_id),
+                entry.source_global_seq,
+                entry.source_hash,
+                Json(dict(entry.data)),
+            )
+            for entry in entries
+        ],
+    )
+
+
 def _ensure_projection_fresh(conn: psycopg.Connection, *, before_global_seq: int | None) -> None:
-    events = postgres_memory_kernel.load_events(conn, before_global_seq=before_global_seq)
-    if not events:
+    """Catch disposable memory projections up without rereading lifetime history."""
+    target_high_water = projection_freshness.canonical_high_water(
+        conn,
+        before_global_seq=before_global_seq,
+    )
+    if target_high_water == 0:
         return
-    projection = LexicalProjection()
-    with conn.cursor() as cur:
-        cur.execute(
-            "SELECT source_event_id FROM memory_projection_entries WHERE projection_name = %s AND projection_version = %s",
-            (projection.name, projection.version),
+
+    lexical_high_water, feature_high_water = (
+        projection_freshness.committed_projection_high_waters(conn)
+    )
+
+    # A disagreement means the derived structures were created by an older
+    # projection version or were interrupted/corrupted outside the current
+    # atomic maintenance path. Rebuild disposable state rather than guessing
+    # across a possible gap. This is recovery/migration work, not steady-state
+    # ordinary recall.
+    if lexical_high_water != feature_high_water:
+        postgres_memory_kernel.rebuild(conn)
+        return
+
+    committed_high_water = lexical_high_water
+    if committed_high_water >= target_high_water:
+        return
+
+    delta = projection_freshness.load_event_delta(
+        conn,
+        after_global_seq=committed_high_water,
+        before_global_seq=before_global_seq,
+    )
+    if not delta or delta[-1].global_seq != target_high_water:
+        raise RuntimeError("projection delta did not reach the canonical high-water mark")
+
+    lexical_projection = LexicalProjection()
+    feature_projection = AssociationFeatureProjection()
+    lexical_entries = build_projection(delta, lexical_projection)
+    feature_entries = build_projection(delta, feature_projection)
+
+    try:
+        # PostgreSQL exposes writes from this transaction to the predecessor
+        # queries below. Inserting the complete delta's feature rows first lets
+        # association derivation bridge both committed history and earlier
+        # events in the same delta without a lifetime scan.
+        with conn.cursor() as cur:
+            _insert_projection_entries(cur, lexical_entries)
+            _insert_projection_entries(cur, feature_entries)
+
+        associations = projection_freshness.derive_incremental_associations(
+            conn,
+            delta,
         )
-        projected_ids = {str(row[0]) for row in cur.fetchall()}
-    missing_events = [event for event in events if event.event_id not in projected_ids]
-    if not missing_events:
-        return
-    entries = build_projection(missing_events, projection)
-    associations = derive_associations(events)
-    with conn.cursor() as cur:
-        if entries:
-            cur.executemany(
-                """
-                INSERT INTO memory_projection_entries (
-                    projection_name, projection_version, source_event_id,
-                    source_global_seq, source_hash, data
-                ) VALUES (%s, %s, %s, %s, %s, %s)
-                ON CONFLICT (projection_name, projection_version, source_event_id) DO NOTHING
-                """,
-                [
-                    (
-                        entry.projection_name,
-                        entry.projection_version,
-                        uuid.UUID(entry.source_event_id),
-                        entry.source_global_seq,
-                        entry.source_hash,
-                        Json(dict(entry.data)),
-                    )
-                    for entry in entries
-                ],
-            )
         if associations:
-            cur.executemany(
-                """
-                INSERT INTO memory_association_entries (
-                    association_id, projection_version, source_kind, source,
-                    target_kind, target, relationship, strength,
-                    provenance_event_ids, required_cue_terms
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (association_id) DO NOTHING
-                """,
-                [
-                    (
-                        association.association_id,
-                        ASSOCIATION_PROJECTION_VERSION,
-                        association.source_kind,
-                        association.source,
-                        association.target_kind,
-                        association.target,
-                        association.relationship,
-                        association.strength,
-                        Json(list(association.provenance_event_ids)),
-                        Json(list(association.required_cue_terms)),
-                    )
-                    for association in associations
-                ],
-            )
-    conn.commit()
+            with conn.cursor() as cur:
+                cur.executemany(
+                    """
+                    INSERT INTO memory_association_entries (
+                        association_id, projection_version, source_kind, source,
+                        target_kind, target, relationship, strength,
+                        provenance_event_ids, required_cue_terms
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (association_id) DO NOTHING
+                    """,
+                    [
+                        (
+                            association.association_id,
+                            ASSOCIATION_PROJECTION_VERSION,
+                            association.source_kind,
+                            association.source,
+                            association.target_kind,
+                            association.target,
+                            association.relationship,
+                            association.strength,
+                            Json(list(association.provenance_event_ids)),
+                            Json(list(association.required_cue_terms)),
+                        )
+                        for association in associations
+                    ],
+                )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
 
 
 def _packet_from_kernel(memory_request_id: uuid.UUID, need: MemoryNeed, kernel_packet) -> MemoryPacket:
