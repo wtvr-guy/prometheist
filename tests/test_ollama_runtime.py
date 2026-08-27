@@ -22,6 +22,9 @@ def _client(payload: dict, *, status_code: int = 200) -> httpx.Client:
 
 
 class FixedHostProbe:
+    def __init__(self, available_mib: int = 3_877) -> None:
+        self.available_mib = available_mib
+
     def capture(self) -> HostResourceMetrics:
         return HostResourceMetrics(
             platform="test",
@@ -29,12 +32,12 @@ class FixedHostProbe:
             cpu_utilization_percent=10,
             load_1m=0,
             memory_total_mib=16_118,
-            memory_available_mib=3_877,
+            memory_available_mib=self.available_mib,
         )
 
 
-def test_running_model_is_detected_without_loading_it():
-    probe = OllamaRuntimeProbe(
+def _warm_runtime_probe() -> OllamaRuntimeProbe:
+    return OllamaRuntimeProbe(
         model="qwen3:4b",
         client=_client(
             {
@@ -51,13 +54,24 @@ def test_running_model_is_detected_without_loading_it():
         ),
     )
 
-    state = probe.capture()
+
+def _cold_runtime_probe() -> OllamaRuntimeProbe:
+    return OllamaRuntimeProbe(
+        model="qwen3:4b",
+        client=_client({"models": [{"name": "other:latest", "size": 1}]}),
+    )
+
+
+def test_running_model_is_detected_without_loading_it():
+    state = _warm_runtime_probe().capture()
 
     assert state.probe_ok is True
     assert state.resident is True
     assert state.reported_name == "qwen3:4b"
     assert state.system_memory_mib == 3_000
     assert state.reusable_memory_credit_mib(native_resource_safety_policy()) == 2_560
+    assert state.incremental_process_memory_mib(native_resource_safety_policy()) == 512
+    assert state.residency_label == "warm-resident"
 
 
 def test_running_model_credit_excludes_reported_vram_and_stays_bounded():
@@ -80,13 +94,12 @@ def test_running_model_credit_excludes_reported_vram_and_stays_bounded():
 
     assert state.system_memory_mib == 1_000
     assert state.reusable_memory_credit_mib(native_resource_safety_policy()) == 1_000
+    assert state.incremental_process_memory_mib(native_resource_safety_policy()) == 512
 
 
-def test_nonresident_or_failed_runtime_probe_earns_zero_credit():
-    cold = OllamaRuntimeProbe(
-        model="qwen3:4b",
-        client=_client({"models": [{"name": "other:latest", "size": 1}]}),
-    ).capture()
+def test_nonresident_or_failed_runtime_probe_falls_back_to_full_cold_requirement():
+    policy = native_resource_safety_policy()
+    cold = _cold_runtime_probe().capture()
     failed = OllamaRuntimeProbe(
         model="qwen3:4b",
         client=_client({}, status_code=503),
@@ -94,32 +107,23 @@ def test_nonresident_or_failed_runtime_probe_earns_zero_credit():
 
     assert cold.probe_ok is True
     assert cold.resident is False
-    assert cold.reusable_memory_credit_mib(native_resource_safety_policy()) == 0
+    assert cold.reusable_memory_credit_mib(policy) == 0
+    assert cold.incremental_process_memory_mib(policy) == 3_072
+    assert cold.residency_label == "cold-nonresident"
     assert failed.probe_ok is False
     assert failed.resident is False
-    assert failed.reusable_memory_credit_mib(native_resource_safety_policy()) == 0
+    assert failed.reusable_memory_credit_mib(policy) == 0
+    assert failed.incremental_process_memory_mib(policy) == 3_072
+    assert failed.residency_label == "unverified-cold-fallback"
 
 
-def test_claim_probe_credits_only_reusable_resident_system_memory():
+def test_cold_reservation_that_becomes_warm_gets_bounded_claim_credit():
     policy = native_resource_safety_policy()
-    runtime_probe = OllamaRuntimeProbe(
-        model="qwen3:4b",
-        client=_client(
-            {
-                "models": [
-                    {
-                        "name": "qwen3:4b",
-                        "size": 3_000 * _MIB,
-                        "size_vram": 0,
-                    }
-                ]
-            }
-        ),
-    )
     probe = OllamaClaimHostResourceProbe(
         base_probe=FixedHostProbe(),
-        runtime_probe=runtime_probe,
+        runtime_probe=_warm_runtime_probe(),
         policy=policy,
+        scheduled_memory_mib=3_072,
     )
 
     effective = probe.capture()
@@ -128,5 +132,41 @@ def test_claim_probe_credits_only_reusable_resident_system_memory():
     assert probe.last_physical_metrics.memory_available_mib == 3_877
     assert probe.last_runtime_state is not None
     assert probe.last_runtime_state.resident is True
+    assert probe.last_effective_required_memory_mib == 512
     assert probe.last_memory_credit_mib == 2_560
+    assert probe.last_memory_debit_mib == 0
     assert effective.memory_available_mib == 6_437
+
+
+def test_warm_reservation_that_remains_warm_uses_physical_ram_without_credit():
+    policy = native_resource_safety_policy()
+    probe = OllamaClaimHostResourceProbe(
+        base_probe=FixedHostProbe(available_mib=4_146),
+        runtime_probe=_warm_runtime_probe(),
+        policy=policy,
+        scheduled_memory_mib=512,
+    )
+
+    effective = probe.capture()
+
+    assert probe.last_effective_required_memory_mib == 512
+    assert probe.last_memory_credit_mib == 0
+    assert probe.last_memory_debit_mib == 0
+    assert effective.memory_available_mib == 4_146
+
+
+def test_warm_reservation_that_turns_cold_is_debited_before_claim_gate():
+    policy = native_resource_safety_policy()
+    probe = OllamaClaimHostResourceProbe(
+        base_probe=FixedHostProbe(available_mib=4_146),
+        runtime_probe=_cold_runtime_probe(),
+        policy=policy,
+        scheduled_memory_mib=512,
+    )
+
+    effective = probe.capture()
+
+    assert probe.last_effective_required_memory_mib == 3_072
+    assert probe.last_memory_credit_mib == 0
+    assert probe.last_memory_debit_mib == 2_695
+    assert effective.memory_available_mib == 1_451
