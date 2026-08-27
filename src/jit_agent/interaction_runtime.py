@@ -22,6 +22,7 @@ from jit_agent.attention_observation import (
     HostResourceProbe,
     LocalResourceAdmissionController,
     ResourceSafetyPolicy,
+    SystemHostResourceProbe,
 )
 from jit_agent.attention_resources import ProcessResourceEstimate, ResourceEstimateSource
 from jit_agent.attention_store import (
@@ -62,6 +63,8 @@ from jit_agent.interaction_store import (
 from jit_agent.interaction_working_state import activate_working_state, load_working_state
 from jit_agent.llm import LLMClient
 from jit_agent.models import EventType, MemoryPacket
+from jit_agent.native_policy import native_resource_safety_policy
+from jit_agent.ollama_runtime import OllamaClaimHostResourceProbe, OllamaRuntimeProbe
 from jit_agent.worker_protocol import (
     WorkerClaimEnvelope,
     WorkerEffectPolicy,
@@ -99,6 +102,7 @@ def begin_interaction(
     normalized = user_text.strip()
     if not normalized:
         raise ValueError("user_text must not be empty")
+    effective_policy = policy or native_resource_safety_policy()
     event_store.start_conversation(conn, conversation_id)
     correlation = correlation_id or uuid4()
     interaction_id = deterministic_interaction_id(conversation_id, correlation)
@@ -125,11 +129,14 @@ def begin_interaction(
             interruption_policy=InterruptionPolicy.CHECKPOINT_ONLY,
             required_capabilities=list(INTERACTION_CAPABILITIES),
             process_resource_estimate=ProcessResourceEstimate(
-                cpu_units=1,
-                memory_mib=4096,
+                cpu_units=effective_policy.default_process_cpu_units,
+                memory_mib=effective_policy.default_llm_process_memory_mib,
                 llm_slots=1,
                 source=ResourceEstimateSource.CONSERVATIVE_DEFAULT,
-                basis="v0.7-g bounded stateless interaction worker",
+                basis=(
+                    f"{effective_policy.policy_version}: bounded stateless interaction "
+                    "cold local-LLM budget"
+                ),
             ),
         ),
         resumable_state={"interaction_id": str(interaction_id)},
@@ -138,7 +145,7 @@ def begin_interaction(
     controller = LocalResourceAdmissionController(
         scheduler,
         probe=probe,
-        policy=policy,
+        policy=effective_policy,
         clock=clock,
     )
     controller.plan_scheduling_epoch()
@@ -337,10 +344,16 @@ def finish_interaction(
             interaction.task_id,
             {"interaction_id": str(interaction.interaction_id), "response_text": response_text},
         )
+        observation = scheduler.current_resource_observation()
+        effective_policy = (
+            policy
+            or (observation.policy.model_copy(deep=True) if observation is not None else None)
+            or native_resource_safety_policy()
+        )
         controller = LocalResourceAdmissionController(
             scheduler,
             probe=probe,
-            policy=policy,
+            policy=effective_policy,
             clock=clock,
         )
         controller.plan_scheduling_epoch()
@@ -360,12 +373,13 @@ def handle_interaction(
     scheduler_key: str = DEFAULT_SCHEDULER_KEY,
     registry: CapabilityRegistry = DEFAULT_REGISTRY,
 ) -> str:
+    effective_policy = policy or native_resource_safety_policy()
     interaction = begin_interaction(
         conn,
         user_text,
         conversation_id,
         probe=probe,
-        policy=policy,
+        policy=effective_policy,
         clock=clock,
         scheduler_key=scheduler_key,
     )
@@ -376,7 +390,7 @@ def handle_interaction(
             interaction,
             worker_id=f"interaction-{interaction.interaction_id}-stage-{index}",
             probe=probe,
-            policy=policy,
+            policy=effective_policy,
             clock=clock,
             scheduler_key=scheduler_key,
             registry=registry,
@@ -387,7 +401,7 @@ def handle_interaction(
         conn,
         interaction,
         probe=probe,
-        policy=policy,
+        policy=effective_policy,
         clock=clock,
         scheduler_key=scheduler_key,
     )
@@ -398,20 +412,35 @@ def handle_interaction_in_worker_processes(
     user_text: str,
     conversation_id: UUID,
     *,
+    probe: HostResourceProbe | None = None,
+    policy: ResourceSafetyPolicy | None = None,
+    ollama_runtime_probe: OllamaRuntimeProbe | None = None,
     scheduler_key: str = DEFAULT_SCHEDULER_KEY,
     worker_lease_seconds: int = 600,
     worker_timeout_seconds: int = 660,
 ) -> str:
     """Run every durable interaction stage in a separately guarded process."""
 
+    effective_policy = policy or native_resource_safety_policy()
+    physical_probe = probe or SystemHostResourceProbe()
+    runtime_probe = ollama_runtime_probe or OllamaRuntimeProbe()
     interaction = begin_interaction(
         conn,
         user_text,
         conversation_id,
+        probe=physical_probe,
+        policy=effective_policy,
         scheduler_key=scheduler_key,
+    )
+    claim_probe = OllamaClaimHostResourceProbe(
+        base_probe=physical_probe,
+        runtime_probe=runtime_probe,
+        policy=effective_policy,
     )
     launcher = GuardedWorkerLauncher(
         db.get_connection,
+        probe=claim_probe,
+        policy=effective_policy,
         scheduler_key=scheduler_key,
     )
     for stage in INTERACTION_STAGES:
@@ -439,6 +468,8 @@ def handle_interaction_in_worker_processes(
     return finish_interaction(
         conn,
         interaction,
+        probe=physical_probe,
+        policy=effective_policy,
         scheduler_key=scheduler_key,
     )
 
