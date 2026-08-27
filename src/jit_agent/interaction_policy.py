@@ -1,15 +1,14 @@
 """Reusable deterministic interaction policy for the attention-centric path."""
 from __future__ import annotations
 
-import re
 from enum import Enum
 from uuid import UUID, uuid5
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 
-INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v3"
-CONTINUITY_POLICY_VERSION = "ACTIVE_WORKING_STATE_REQUIRES_MEMORY_V1"
+INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v4"
+CONTINUITY_POLICY_VERSION = "ACTIVE_WORKING_STATE_REQUIRES_MEMORY_V2"
 INTERACTION_CAPABILITIES = (
     "interaction.resolve_references",
     "capability.discover",
@@ -18,42 +17,48 @@ INTERACTION_CAPABILITIES = (
     "interaction.persist_result",
 )
 
-_EXPLICIT_CAPABILITY_REQUEST_PATTERN = re.compile(
-    r"\b(?:use|ask|delegate\s+to)\s+(?:a\s+|an\s+|the\s+)?"
-    r"(?:[a-z][\w-]*\s+){0,2}(?:service|workflow|tool|model|specialist|agent)\b",
-    re.IGNORECASE,
-)
-_MEMORY_CAPABILITY_PATTERN = re.compile(
-    r"\b(?:memory|history|historical|persisted|recall|retrieve)\b",
-    re.IGNORECASE,
-)
-
 
 class InteractionAction(str, Enum):
+    """Derived compatibility view of the categorical capability requirement."""
+
     RESPOND_DIRECTLY = "RESPOND_DIRECTLY"
     REQUEST_CAPABILITY = "REQUEST_CAPABILITY"
 
 
+class CapabilityRequirement(str, Enum):
+    """Finite functionality classes the interaction model may request."""
+
+    NONE = "NONE"
+    INTERNAL_MEMORY = "INTERNAL_MEMORY"
+    MEMORY_ANALYSIS = "MEMORY_ANALYSIS"
+
+    @property
+    def capability_id(self) -> str | None:
+        return {
+            CapabilityRequirement.NONE: None,
+            CapabilityRequirement.INTERNAL_MEMORY: "internal_memory",
+            CapabilityRequirement.MEMORY_ANALYSIS: "memory_analysis",
+        }[self]
+
+
 class InteractionDecision(BaseModel):
-    """Model-proposed intent; discovery and execution remain system-owned."""
+    """Constrained model-proposed routing intent.
 
-    action: InteractionAction
-    capability_query: str | None = None
-    capability_input: str | None = None
+    The model chooses one enum only. It never writes a capability query,
+    capability id, or natural-language capability input.
+    """
 
-    @field_validator("capability_query", "capability_input", mode="before")
-    @classmethod
-    def normalize_optional_text(cls, value: object) -> object:
-        if isinstance(value, str):
-            normalized = value.strip()
-            return normalized or None
-        return value
+    required_capability: CapabilityRequirement = CapabilityRequirement.NONE
 
-    @model_validator(mode="after")
-    def require_capability_query(self) -> "InteractionDecision":
-        if self.action is InteractionAction.REQUEST_CAPABILITY and self.capability_query is None:
-            raise ValueError("REQUEST_CAPABILITY requires capability_query")
-        return self
+    @property
+    def action(self) -> InteractionAction:
+        if self.required_capability is CapabilityRequirement.NONE:
+            return InteractionAction.RESPOND_DIRECTLY
+        return InteractionAction.REQUEST_CAPABILITY
+
+    @property
+    def capability_id(self) -> str | None:
+        return self.required_capability.capability_id
 
 
 class InteractionStage(str, Enum):
@@ -107,14 +112,6 @@ class DurableInteraction(BaseModel):
     assignment_id: UUID
     user_text: str = Field(min_length=1)
 
-    @field_validator("user_text")
-    @classmethod
-    def normalize_user_text(cls, value: str) -> str:
-        normalized = value.strip()
-        if not normalized:
-            raise ValueError("user_text must not be empty")
-        return normalized
-
 
 def requires_persisted_context(user_text: str) -> bool:
     """Deprecated compatibility hook; phrase-based continuity is disabled."""
@@ -130,26 +127,13 @@ def apply_continuity_policy(
 ) -> tuple[InteractionDecision, str | None]:
     """Use durable active state rather than surface wording as continuity signal."""
 
+    del user_text
     if not analysis.working_state_available:
         return decision, None
-    normalized_capability_query = re.sub(r"[_-]+", " ", decision.capability_query or "")
-    requests_memory = (
-        decision.action is InteractionAction.REQUEST_CAPABILITY
-        and _MEMORY_CAPABILITY_PATTERN.search(normalized_capability_query) is not None
-    )
-    if (
-        decision.action is InteractionAction.REQUEST_CAPABILITY
-        and not requests_memory
-        and _EXPLICIT_CAPABILITY_REQUEST_PATTERN.search(user_text)
-    ):
-        return decision, None
-    if requests_memory:
+    if decision.required_capability is not CapabilityRequirement.NONE:
         return decision, CONTINUITY_POLICY_VERSION
     return (
-        InteractionDecision(
-            action=InteractionAction.REQUEST_CAPABILITY,
-            capability_query="internal_memory",
-        ),
+        InteractionDecision(required_capability=CapabilityRequirement.INTERNAL_MEMORY),
         CONTINUITY_POLICY_VERSION,
     )
 
