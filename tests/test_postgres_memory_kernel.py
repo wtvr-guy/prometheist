@@ -261,3 +261,35 @@ def test_postgres_associative_recall_does_not_cross_global_cutoff(conn):
         event.event_id for event in packet.items
     }
     assert packet.items == ()
+
+
+def test_explicit_canonical_event_seed_is_first_class_association_frontier(conn):
+    conversation_id = event_store.start_conversation(conn)
+    prior = _record(
+        conn,
+        conversation_id,
+        "I usually get a latte in the morning.",
+        entities=("latte",),
+    )
+    selected = _record(
+        conn,
+        conversation_id,
+        "I stopped adding milk to coffee and drink it black.",
+        entities=("coffee",),
+    )
+    rebuild(conn)
+
+    packet = associative_recall_from_postgres(
+        conn,
+        CueState(query_text=None, limit=2),
+        seed_event_ids=(str(selected.event_id),),
+        candidate_limit=2,
+        max_hops=3,
+    )
+
+    assert f"event:{selected.event_id}" in packet.trace.cue_nodes
+    assert str(prior.event_id) in {event.event_id for event in packet.items}
+    prior_trace = next(
+        item for item in packet.trace.items if item.event_id == str(prior.event_id)
+    )
+    assert prior_trace.associative_activation > 0
