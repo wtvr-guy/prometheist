@@ -30,7 +30,6 @@ SCHEMA_PATH = pathlib.Path(__file__).resolve().parent.parent / "schema.sql"
 
 def pytest_sessionstart(session) -> None:
     """Fail closed when an explicitly requested real-machine gate is unavailable."""
-
     require_ollama = os.environ.get("REQUIRE_OLLAMA_ACCEPTANCE") == "1"
     require_v07_local = os.environ.get("REQUIRE_V07_LOCAL_ACCEPTANCE") == "1"
     if require_v07_local and platform.system() != "Windows":
@@ -64,7 +63,6 @@ def _require_disposable_database(conn) -> str:
 
 @pytest.fixture(scope="session", autouse=True)
 def _prepare_test_database():
-    """Apply the idempotent schema once after verifying the database target."""
     conn = db.get_connection()
     try:
         _require_disposable_database(conn)
@@ -78,11 +76,11 @@ def _prepare_test_database():
 
 @pytest.fixture(autouse=True)
 def _reset_test_database(_prepare_test_database):
-    """Give every test a clean authoritative ledger and derived-memory state."""
     conn = db.get_connection()
     try:
         _require_disposable_database(conn)
         with conn.cursor() as cur:
+            cur.execute("SET LOCAL prometheist.user_erasure = 'on'")
             cur.execute(
                 """
                 TRUNCATE TABLE
