@@ -27,10 +27,6 @@ DEFAULT_SCAN_ROOTS = (ROOT / "src" / "jit_agent", ROOT / "scripts")
 DEFAULT_REGISTRY = ROOT / "benchmarks" / "constraint_registry.json"
 DEFAULT_EXPERIMENTS = ROOT / "benchmarks" / "constraint_experiments.json"
 
-# Benchmark implementation knobs affect measurement design rather than runtime
-# behavior. They are reviewed in the benchmark spec itself and are excluded from
-# the runtime constraint registry to avoid circularly treating a test grid as a
-# production policy.
 _EXCLUDED_FILE_PATTERNS = (
     re.compile(r"(?:^|/)test_"),
     re.compile(r"(?:^|/).*benchmark\.py$"),
@@ -75,6 +71,7 @@ _PROMPT_BOUND_RE = re.compile(
     r"(\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten)\b",
     re.IGNORECASE,
 )
+_REGEX_QUANTIFIER_RE = re.compile(r"\{(\d+)(?:,(\d*))?\}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,15 +101,24 @@ def _numeric_literal(node: ast.AST | None) -> int | float | None:
 def _numeric_literals(node: ast.AST) -> tuple[int | float, ...]:
     values: list[int | float] = []
     for child in ast.walk(node):
-        value = _numeric_literal(child)
-        if value is None:
-            continue
-        # Unary literals are represented by both UnaryOp and Constant in the
-        # AST; only retain the signed outer value in that case.
-        parent_is_signed = isinstance(node, ast.UnaryOp) and child is node.operand
-        if not parent_is_signed:
-            values.append(value)
+        if isinstance(child, ast.Constant) and isinstance(child.value, (int, float)) and not isinstance(child.value, bool):
+            values.append(child.value)
+        elif isinstance(child, ast.UnaryOp) and isinstance(child.op, (ast.USub, ast.UAdd)):
+            value = _numeric_literal(child)
+            if value is not None:
+                values.append(value)
     return tuple(values)
+
+
+def _string_literal(node: ast.AST | None) -> str | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        left = _string_literal(node.left)
+        right = _string_literal(node.right)
+        if left is not None and right is not None:
+            return left + right
+    return None
 
 
 def _name_of_target(node: ast.AST) -> str | None:
@@ -140,7 +146,6 @@ def _policy_name(name: str | None) -> bool:
 
 
 def _field_bound_is_behavioral(field_name: str, bound: str, value: int | float) -> bool:
-    """Return True only for schema bounds that constrain behavioral breadth."""
     if bound == "max_length":
         return value > 1
     if bound == "min_length":
@@ -252,33 +257,17 @@ class _Visitor(ast.NodeVisitor):
         if (
             isinstance(node.value, ast.Constant)
             and isinstance(node.value.value, str)
-            and any(
-                isinstance(target, ast.Name) and target.id.endswith("_PROMPT")
-                for target in node.targets
-            )
+            and any(isinstance(target, ast.Name) and target.id.endswith("_PROMPT") for target in node.targets)
         ):
             prompt_name = next(
-                target.id
-                for target in node.targets
+                target.id for target in node.targets
                 if isinstance(target, ast.Name) and target.id.endswith("_PROMPT")
             )
             text = node.value.value
             for match in _PROMPT_RANGE_RE.finditer(text):
-                self._add(
-                    node,
-                    role="prompt_range_max",
-                    value=int(match.group(2)),
-                    name=f"{prompt_name}.range_max",
-                    source=match.group(0),
-                )
+                self._add(node, role="prompt_range_max", value=int(match.group(2)), name=f"{prompt_name}.range_max", source=match.group(0))
             for match in _PROMPT_BOUND_RE.finditer(text):
-                self._add(
-                    node,
-                    role="prompt_numeric_bound",
-                    value=_prompt_number(match.group(1)),
-                    name=f"{prompt_name}.numeric_bound",
-                    source=match.group(0),
-                )
+                self._add(node, role="prompt_numeric_bound", value=_prompt_number(match.group(1)), name=f"{prompt_name}.numeric_bound", source=match.group(0))
         self.generic_visit(node)
 
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
@@ -299,39 +288,39 @@ class _Visitor(ast.NodeVisitor):
                 if keyword.arg == "default":
                     default_value = _numeric_literal(keyword.value)
             if default_value is not None and _policy_name(name):
-                self._add(
-                    node.value,
-                    role="field_default",
-                    value=default_value,
-                    name=f"{name}.default",
-                    source=ast.unparse(node.value),
-                )
+                self._add(node.value, role="field_default", value=default_value, name=f"{name}.default", source=ast.unparse(node.value))
             for keyword in node.value.keywords:
                 if keyword.arg not in _FIELD_BOUND_NAMES:
                     continue
                 bound_value = _numeric_literal(keyword.value)
                 if bound_value is None or not _field_bound_is_behavioral(name, keyword.arg, bound_value):
                     continue
-                self._add(
-                    keyword.value,
-                    role=f"field_bound:{keyword.arg}",
-                    value=bound_value,
-                    name=f"{name}.{keyword.arg}",
-                    source=ast.unparse(node.value),
-                )
+                self._add(keyword.value, role=f"field_bound:{keyword.arg}", value=bound_value, name=f"{name}.{keyword.arg}", source=ast.unparse(node.value))
         self.generic_visit(node)
 
     def visit_AugAssign(self, node: ast.AugAssign) -> None:
         name = _name_of_target(node.target)
         if _policy_name(name):
             for value in _numeric_literals(node.value):
-                self._add(
-                    node.value,
-                    role="policy_coefficient",
-                    value=value,
-                    name=f"{name}.coefficient",
-                    source=ast.unparse(node),
-                )
+                self._add(node.value, role="policy_coefficient", value=value, name=f"{name}.coefficient", source=ast.unparse(node))
+        self.generic_visit(node)
+
+    def visit_Compare(self, node: ast.Compare) -> None:
+        operands = [node.left, *node.comparators]
+        names = [_name_of_target(operand) for operand in operands]
+        policy_context = any(_policy_name(name) for name in names)
+        for operand in operands:
+            value = _numeric_literal(operand)
+            if value is not None and (abs(value) > 1 or policy_context):
+                self._add(operand, role="comparison_bound", value=value, name="comparison", source=ast.unparse(node))
+        self.generic_visit(node)
+
+    def visit_Subscript(self, node: ast.Subscript) -> None:
+        if isinstance(node.slice, ast.Slice):
+            for label, bound in (("slice_lower", node.slice.lower), ("slice_upper", node.slice.upper)):
+                value = _numeric_literal(bound)
+                if value is not None and abs(value) > 1:
+                    self._add(bound, role=label, value=value, name=label, source=ast.unparse(node))
         self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call) -> None:
@@ -345,13 +334,7 @@ class _Visitor(ast.NodeVisitor):
             if value is None or keyword.arg is None:
                 continue
             if _policy_name(keyword.arg):
-                self._add(
-                    keyword.value,
-                    role=f"call_keyword:{keyword.arg}",
-                    value=value,
-                    name=f"{func_name or 'call'}.{keyword.arg}",
-                    source=ast.unparse(node),
-                )
+                self._add(keyword.value, role=f"call_keyword:{keyword.arg}", value=value, name=f"{func_name or 'call'}.{keyword.arg}", source=ast.unparse(node))
 
         if func_name == "range":
             for index, arg in enumerate(node.args):
@@ -361,13 +344,18 @@ class _Visitor(ast.NodeVisitor):
         elif func_name == "_structured" and len(node.args) >= 5:
             value = _numeric_literal(node.args[4])
             if value is not None:
-                self._add(
-                    node.args[4],
-                    role="positional_max_tokens",
-                    value=value,
-                    name="_structured.max_tokens",
-                    source=ast.unparse(node),
-                )
+                self._add(node.args[4], role="positional_max_tokens", value=value, name="_structured.max_tokens", source=ast.unparse(node))
+        elif func_name == "compile" and node.args:
+            pattern = _string_literal(node.args[0])
+            if pattern is not None:
+                for match in _REGEX_QUANTIFIER_RE.finditer(pattern):
+                    lower = int(match.group(1))
+                    if lower > 1:
+                        self._add(node.args[0], role="regex_quantifier_lower", value=lower, name="compile.quantifier_lower", source=match.group(0))
+                    if match.group(2):
+                        upper = int(match.group(2))
+                        if upper > 1:
+                            self._add(node.args[0], role="regex_quantifier_upper", value=upper, name="compile.quantifier_upper", source=match.group(0))
         self.generic_visit(node)
 
 
@@ -402,12 +390,7 @@ def _load_registry_document(path: Path = DEFAULT_REGISTRY) -> dict[str, object]:
 
 
 def load_registry(path: Path = DEFAULT_REGISTRY) -> dict[str, dict[str, object]]:
-    """Flatten exact entries and grouped exact members into one lookup.
-
-    Groups remove metadata repetition only. Every member remains an exact audit
-    key with an expected value, so a newly introduced constraint or changed
-    literal still fails CI instead of inheriting a broad classification rule.
-    """
+    """Flatten exact entries and grouped exact members into one lookup."""
     payload = _load_registry_document(path)
     constraints = payload.get("constraints", {})
     groups = payload.get("groups", {})
@@ -440,29 +423,16 @@ def load_registry(path: Path = DEFAULT_REGISTRY) -> dict[str, dict[str, object]]
     return flattened
 
 
-def uncovered_findings(
-    findings: Iterable[ConstraintFinding],
-    registry: dict[str, dict[str, object]],
-) -> list[ConstraintFinding]:
+def uncovered_findings(findings: Iterable[ConstraintFinding], registry: dict[str, dict[str, object]]) -> list[ConstraintFinding]:
     return [finding for finding in findings if finding.key not in registry]
 
 
-def stale_registry_keys(
-    findings: Iterable[ConstraintFinding],
-    registry: dict[str, dict[str, object]],
-) -> list[str]:
+def stale_registry_keys(findings: Iterable[ConstraintFinding], registry: dict[str, dict[str, object]]) -> list[str]:
     discovered = {finding.key for finding in findings}
-    return sorted(
-        key
-        for key in registry
-        if key not in discovered and not bool(registry[key].get("manual"))
-    )
+    return sorted(key for key in registry if key not in discovered and not bool(registry[key].get("manual")))
 
 
-def value_mismatches(
-    findings: Iterable[ConstraintFinding],
-    registry: dict[str, dict[str, object]],
-) -> list[str]:
+def value_mismatches(findings: Iterable[ConstraintFinding], registry: dict[str, dict[str, object]]) -> list[str]:
     mismatches: list[str] = []
     for finding in findings:
         entry = registry.get(finding.key)
@@ -470,9 +440,7 @@ def value_mismatches(
             continue
         expected = entry["expected_value"]
         if finding.value != expected:
-            mismatches.append(
-                f"{finding.key}: expected {expected!r}, discovered {finding.value!r}"
-            )
+            mismatches.append(f"{finding.key}: expected {expected!r}, discovered {finding.value!r}")
     return mismatches
 
 
@@ -484,33 +452,16 @@ def _experiment_ids(path: Path = DEFAULT_EXPERIMENTS) -> set[str]:
     return set(experiments)
 
 
-def validate_registry_entry(
-    key: str,
-    entry: dict[str, object],
-    *,
-    experiment_ids: set[str],
-) -> list[str]:
+def validate_registry_entry(key: str, entry: dict[str, object], *, experiment_ids: set[str]) -> list[str]:
     errors: list[str] = []
     classification = entry.get("classification")
-    allowed = {
-        "EMPIRICAL_TUNABLE",
-        "SAFETY_TUNABLE",
-        "ENVIRONMENT_CALIBRATED",
-        "STRUCTURAL_INVARIANT",
-        "EXTERNAL_CONTRACT",
-        "IDENTIFIER_COLLISION_BOUND",
-    }
+    allowed = {"EMPIRICAL_TUNABLE", "SAFETY_TUNABLE", "ENVIRONMENT_CALIBRATED", "STRUCTURAL_INVARIANT", "EXTERNAL_CONTRACT", "IDENTIFIER_COLLISION_BOUND"}
     if classification not in allowed:
         errors.append(f"{key}: invalid/missing classification")
     if not str(entry.get("rationale", "")).strip():
         errors.append(f"{key}: missing rationale")
 
-    benchmarked = classification in {
-        "EMPIRICAL_TUNABLE",
-        "SAFETY_TUNABLE",
-        "ENVIRONMENT_CALIBRATED",
-        "IDENTIFIER_COLLISION_BOUND",
-    }
+    benchmarked = classification in {"EMPIRICAL_TUNABLE", "SAFETY_TUNABLE", "ENVIRONMENT_CALIBRATED", "IDENTIFIER_COLLISION_BOUND"}
     if benchmarked:
         benchmark_id = str(entry.get("benchmark_id", "")).strip()
         if not benchmark_id:
@@ -520,16 +471,9 @@ def validate_registry_entry(
 
     if classification in {"EMPIRICAL_TUNABLE", "SAFETY_TUNABLE", "ENVIRONMENT_CALIBRATED"}:
         status = entry.get("status")
-        if status not in {
-            "PROVISIONAL",
-            "VERIFIED",
-            "NATIVE_REQUIRED",
-            "INSUFFICIENT_DISCRIMINATION",
-        }:
+        if status not in {"PROVISIONAL", "VERIFIED", "NATIVE_REQUIRED", "INSUFFICIENT_DISCRIMINATION"}:
             errors.append(f"{key}: tunable has invalid/missing status")
-        if status in {"VERIFIED", "INSUFFICIENT_DISCRIMINATION"} and not str(
-            entry.get("evidence", "")
-        ).strip():
+        if status in {"VERIFIED", "INSUFFICIENT_DISCRIMINATION"} and not str(entry.get("evidence", "")).strip():
             errors.append(f"{key}: status {status} requires an evidence artifact")
 
     if entry.get("manual"):
@@ -573,17 +517,10 @@ def main() -> int:
     if args.json:
         print(json.dumps([asdict(item) for item in findings], indent=2, sort_keys=True))
     else:
-        print(
-            f"discovered={len(findings)} registered={len(findings) - len(uncovered)} "
-            f"uncovered={len(uncovered)} stale={len(stale)} "
-            f"mismatched={len(mismatches)} invalid={len(errors)}"
-        )
+        print(f"discovered={len(findings)} registered={len(findings) - len(uncovered)} uncovered={len(uncovered)} stale={len(stale)} mismatched={len(mismatches)} invalid={len(errors)}")
         for item in findings:
             status = "REGISTERED" if item.key in registry else "UNREGISTERED"
-            print(
-                f"{status} {item.key} value={item.value!r} line={item.line} "
-                f"role={item.role} :: {item.source}"
-            )
+            print(f"{status} {item.key} value={item.value!r} line={item.line} role={item.role} :: {item.source}")
         for key in stale:
             print(f"STALE {key}")
         for mismatch in mismatches:
