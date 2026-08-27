@@ -5,14 +5,10 @@ from typing import Protocol
 from uuid import UUID, uuid5
 
 import psycopg
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from jit_agent import event_store, jit_memory
-from jit_agent.capability_registry import (
-    CapabilityPacket,
-    RegisteredCapability,
-    deterministic_capability_event_id,
-)
+from jit_agent.capability_registry import RegisteredCapability
 from jit_agent.interaction_policy import (
     deterministic_interaction_event_id,
     deterministic_interaction_id,
@@ -27,12 +23,13 @@ from jit_agent.models import (
 )
 
 
-CAPABILITY_EXECUTION_VERSION = "v0.7-capability-execution-v1"
+CAPABILITY_EXECUTION_VERSION = "v0.7-capability-execution-v2"
 SOURCE = "capability_runtime"
 _MAX_PLANNER_CONTEXT_EVENTS = 12
 _MAX_ANCHOR_CATALOG = 48
 _BASE_HISTORICAL_EVIDENCE_BUDGET = 5
 _MAX_MEMORY_PACKET_LIMIT = 20
+_MEMORY_EVIDENCE_EXECUTORS = {"jit_memory", "deeper_research"}
 _PLANNER_CONTEXT_EVENT_TYPES = {
     EventType.USER_PROMPT,
     EventType.INTERACTION_RESPONSE,
@@ -44,7 +41,7 @@ _PLANNER_CONTEXT_EVENT_TYPES = {
 
 
 class CapabilityExecutionLLM(Protocol):
-    """Fresh stateless categorical planning used to route memory access."""
+    """Fresh stateless categorical planning used by deeper internal research."""
 
     def plan_memory(
         self,
@@ -55,10 +52,16 @@ class CapabilityExecutionLLM(Protocol):
 
 
 class CapabilityExecution(BaseModel):
-    """Immutable structured result of one selected capability invocation."""
+    """Immutable structured result of one selected capability invocation.
 
+    Capability execution produces machine-consumable evidence/state. It does not
+    produce an intermediate prose answer. The interaction response worker is
+    summoned only after all selected executions have durable results.
+    """
+
+    model_config = ConfigDict(extra="forbid")
     execution_version: str = CAPABILITY_EXECUTION_VERSION
-    capability_request_id: UUID
+    capability_execution_id: UUID
     requester_task_id: UUID
     requester_step_id: UUID
     capability_id: str = Field(min_length=1)
@@ -69,27 +72,9 @@ class CapabilityExecution(BaseModel):
     def validate_execution(self) -> "CapabilityExecution":
         if self.execution_version != CAPABILITY_EXECUTION_VERSION:
             raise ValueError("capability execution version is unsupported")
-        if self.executor in {"jit_memory", "memory_analysis"} and self.memory_packet is None:
-            raise ValueError("memory capability execution requires a MemoryPacket")
+        if self.executor in _MEMORY_EVIDENCE_EXECUTORS and self.memory_packet is None:
+            raise ValueError("memory-evidence capability execution requires a MemoryPacket")
         return self
-
-
-def _load_discovery_packet(
-    conn: psycopg.Connection,
-    capability_request_id: UUID,
-) -> CapabilityPacket:
-    event = event_store.get_event_by_id(
-        conn,
-        deterministic_capability_event_id(capability_request_id, "packet"),
-    )
-    if event is None:
-        raise RuntimeError("selected capability has no durable discovery packet")
-    if event.event_type is not EventType.CAPABILITY_PACKET:
-        raise RuntimeError("capability discovery event has the wrong event type")
-    try:
-        return CapabilityPacket.model_validate(event.payload["packet"])
-    except (KeyError, TypeError, ValueError) as exc:
-        raise RuntimeError("capability discovery packet is invalid") from exc
 
 
 def _active_planner_context(
@@ -138,7 +123,7 @@ def _memory_planner_task(
     active_context: tuple[str, ...],
     anchor_catalog: tuple[str, ...],
 ) -> str:
-    """Render semantic input while keeping the model output non-generative."""
+    """Render semantic input while keeping model output non-generative."""
 
     sections = [f"[Current task]\n{task_text.strip()}"]
     if active_context:
@@ -179,24 +164,17 @@ def _memory_packet_limit(
     active_event_ids: list[UUID],
     include_history: bool,
 ) -> int:
-    """Size one bounded packet without silently truncating active WorkingState.
-
-    WorkingState itself is already bounded to twelve canonical event IDs. When
-    a model selects ACTIVE_ONLY, all of those active events must remain available
-    to the fresh response worker; truncating them a second time by the default
-    five-item MemoryNeed limit defeats the purpose of durable active state.
-
-    When history is also requested, preserve room for the complete active set
-    plus the normal five-item historical evidence budget, capped by the stable
-    MemoryNeed contract maximum.
-    """
+    """Size one bounded packet without silently truncating active WorkingState."""
 
     active_count = len(active_event_ids)
     if not include_history:
         return min(_MAX_MEMORY_PACKET_LIMIT, max(1, active_count))
     return min(
         _MAX_MEMORY_PACKET_LIMIT,
-        max(_BASE_HISTORICAL_EVIDENCE_BUDGET, active_count + _BASE_HISTORICAL_EVIDENCE_BUDGET),
+        max(
+            _BASE_HISTORICAL_EVIDENCE_BUDGET,
+            active_count + _BASE_HISTORICAL_EVIDENCE_BUDGET,
+        ),
     )
 
 
@@ -205,7 +183,7 @@ def execute_registered_capability(
     llm: CapabilityExecutionLLM,
     *,
     registration: RegisteredCapability,
-    capability_request_id: UUID,
+    capability_execution_id: UUID,
     requester_task_id: UUID,
     requester_step_id: UUID,
     conversation_id: UUID,
@@ -214,19 +192,18 @@ def execute_registered_capability(
     before_global_seq: int,
     memory_request_id: UUID,
 ) -> CapabilityExecution:
-    """Execute selected memory bindings through WorkingState + JIT Memory.
+    """Execute one scheduler-selected capability and return structured evidence.
 
-    The model chooses only values that are legal for the current application
-    state. Without active WorkingState, Prometheist owns HISTORY_ONLY and the
-    model schema contains only bounded anchor indices. With active state, the
-    model may additionally choose among active/history scope enums. The model
-    never generates a search query, entity string, capability id, or
-    phrase-specific continuity cue.
+    v0.7 supports the internal-memory evidence executors ``jit_memory`` and
+    ``deeper_research``. Both use the same categorical/index-only memory-planning
+    boundary. The final user-facing response is generated later by the response
+    stage after every selected capability has completed.
     """
 
-    discovery_packet = _load_discovery_packet(conn, capability_request_id)
-    if discovery_packet.requester_task_id != requester_task_id:
-        raise RuntimeError("capability discovery task does not match execution task")
+    if registration.executor not in _MEMORY_EVIDENCE_EXECUTORS:
+        raise NotImplementedError(
+            f"capability executor {registration.executor!r} has no v0.7 execution binding"
+        )
 
     working_state = load_working_state(conn, conversation_id)
     available_active_ids = (
@@ -264,12 +241,14 @@ def execute_registered_capability(
         conversation_id=None,
         limit=packet_limit,
     )
-
     packet = jit_memory.request_memory(
         conn,
         conversation_id=conversation_id,
         correlation_id=correlation_id,
-        requesting_component=f"task:{requester_task_id}/worker-step:{requester_step_id}",
+        requesting_component=(
+            f"task:{requester_task_id}/capability:{registration.descriptor.capability_id}/"
+            f"step:{requester_step_id}"
+        ),
         need=need,
         before_global_seq=before_global_seq,
         memory_request_id=memory_request_id,
@@ -286,11 +265,11 @@ def execute_registered_capability(
             *[item.source_event_id for item in packet.items],
             prompt_event_id,
         ],
-        activation_key="memory",
+        activation_key=f"capability:{registration.descriptor.capability_id}",
     )
 
     execution = CapabilityExecution(
-        capability_request_id=capability_request_id,
+        capability_execution_id=capability_execution_id,
         requester_task_id=requester_task_id,
         requester_step_id=requester_step_id,
         capability_id=registration.descriptor.capability_id,
@@ -304,16 +283,10 @@ def execute_registered_capability(
         event_type=EventType.CAPABILITY_RESULT,
         source=SOURCE,
         payload={
-            "execution_version": execution.execution_version,
-            "capability_request_id": str(capability_request_id),
-            "requester_task_id": str(requester_task_id),
-            "requester_step_id": str(requester_step_id),
-            "capability_id": execution.capability_id,
-            "executor": execution.executor,
-            "memory_request_id": str(packet.memory_request_id),
+            "execution": execution.model_dump(mode="json"),
             "memory_scope": plan.scope.value,
             "anchor_indices": list(plan.anchor_indices),
         },
-        event_id=uuid5(capability_request_id, "event:result"),
+        event_id=uuid5(capability_execution_id, "event:result"),
     )
     return execution
