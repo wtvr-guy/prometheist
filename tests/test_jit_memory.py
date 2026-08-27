@@ -187,6 +187,47 @@ def test_working_state_context_composes_with_required_historical_evidence(conn):
     assert packet.retrieval_trace["selected_query_role"] in {"canonical", "supplemental"}
 
 
+def test_focused_research_keeps_current_semantics_for_guarded_association_edges(conn):
+    conversation_id = uuid.uuid4()
+    prior = _record_text(
+        conn,
+        conversation_id,
+        "I usually get a latte in the morning.",
+    )
+    selected = _record_text(
+        conn,
+        conversation_id,
+        "I stopped adding milk to coffee and drink it black.",
+    )
+    question = "What did I drink before that change?"
+    current_prompt = _record_text(conn, conversation_id, question)
+
+    packet = jit_memory.request_memory(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=current_prompt.correlation_id,
+        requesting_component="focused-semantics-test",
+        need=jit_memory.build_memory_need(
+            question,
+            focus_event_ids=[selected.event_id],
+            conversation_id=None,
+            limit=3,
+        ),
+        before_global_seq=current_prompt.global_seq,
+        memory_request_id=uuid.uuid4(),
+        recall_profile=jit_memory.MemoryRecallProfile.DEEPER_RESEARCH,
+    )
+
+    assert prior.event_id in {item.source_event_id for item in packet.items}
+    assert selected.event_id not in {item.source_event_id for item in packet.items}
+    assert packet.retrieval_trace["semantic_query_text"] == question
+    attempt = packet.retrieval_trace["focus_attempts"][0]
+    assert attempt["semantic_query_text"] == question
+    cue_nodes = attempt["kernel_trace"]["cue_nodes"]
+    assert "term:before" in cue_nodes
+    assert f"event:{selected.event_id}" in cue_nodes
+
+
 def test_memory_boundary_preserves_unknown_fact_abstention(conn):
     source_conversation = uuid.uuid4()
     request_conversation = uuid.uuid4()
