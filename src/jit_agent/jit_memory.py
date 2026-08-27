@@ -19,13 +19,7 @@ from jit_agent import event_store, postgres_memory_kernel
 from jit_agent.association_projection import ASSOCIATION_PROJECTION_VERSION, derive_associations
 from jit_agent.memory_kernel import CueState
 from jit_agent.memory_projection import LexicalProjection, build_projection
-from jit_agent.models import (
-    EventType,
-    KnowledgeOrigin,
-    MemoryEvidence,
-    MemoryNeed,
-    MemoryPacket,
-)
+from jit_agent.models import EventType, KnowledgeOrigin, MemoryEvidence, MemoryNeed, MemoryPacket
 
 SOURCE = "jit_memory"
 CANDIDATE_LIMIT = 500
@@ -34,9 +28,6 @@ MAX_HOPS = 2
 ASSOCIATION_DECAY = 0.85
 MINIMUM_SCORE = 0.15
 
-# Control-plane events are intentionally excluded by default. Memory packets,
-# memory requests, decisions, delegations, and errors should not recursively
-# become evidence merely because they mention the same words as a later query.
 DEFAULT_EVIDENCE_TYPES = (
     EventType.USER_PROMPT,
     EventType.INTERACTION_RESPONSE,
@@ -52,15 +43,16 @@ def build_memory_need(
     *,
     supplemental_query_texts: list[str] | None = None,
     entities: list[str] | None = None,
+    active_event_ids: list[uuid.UUID] | None = None,
     reference_time: datetime | None = None,
     conversation_id: uuid.UUID | None = None,
     limit: int = 5,
 ) -> MemoryNeed:
-    """Application policy for a normal internal-memory request."""
     return MemoryNeed(
         query_text=query_text,
         supplemental_query_texts=supplemental_query_texts or [],
         entities=entities or [],
+        active_event_ids=active_event_ids or [],
         reference_time=reference_time,
         conversation_id=conversation_id,
         source_types=list(DEFAULT_EVIDENCE_TYPES),
@@ -73,13 +65,6 @@ def _effective_source_types(need: MemoryNeed) -> tuple[EventType, ...]:
 
 
 def _query_variants(need: MemoryNeed) -> tuple[tuple[str, str | None], ...]:
-    """Return deterministic canonical-then-fallback query formulations.
-
-    The canonical query always gets first refusal. Supplemental formulations are
-    only useful if the canonical kernel pass produces no admissible evidence.
-    Duplicate/blank formulations are removed without changing the persisted
-    ``MemoryNeed`` itself, so request provenance remains exact.
-    """
     variants: list[tuple[str, str | None]] = []
     seen: set[str] = set()
 
@@ -95,52 +80,27 @@ def _query_variants(need: MemoryNeed) -> tuple[tuple[str, str | None], ...]:
     add("canonical", need.query_text)
     for value in need.supplemental_query_texts:
         add("supplemental", value)
-
     if not variants:
         variants.append(("canonical", None))
     return tuple(variants)
 
 
-def _ensure_projection_fresh(
-    conn: psycopg.Connection,
-    *,
-    before_global_seq: int | None,
-) -> None:
-    """Incrementally make the v0.5 derived routes usable by the live MAS.
-
-    v0.5 benchmark setup explicitly rebuilt projections before recall. The live
-    event store, correctly, only appends authoritative events. v0.6 therefore
-    needs a bridge that projects newly visible events without rewriting history
-    or forcing a destructive full rebuild on each memory request.
-
-    Lexical rows are genuinely incremental. Association derivation is computed
-    from the visible append-only history and inserted idempotently; v0.5's rule
-    families only add relationships as new events arrive, so previously derived
-    association rows remain valid. This keeps the frozen kernel untouched.
-    """
+def _ensure_projection_fresh(conn: psycopg.Connection, *, before_global_seq: int | None) -> None:
     events = postgres_memory_kernel.load_events(conn, before_global_seq=before_global_seq)
     if not events:
         return
-
     projection = LexicalProjection()
     with conn.cursor() as cur:
         cur.execute(
-            """
-            SELECT source_event_id
-            FROM memory_projection_entries
-            WHERE projection_name = %s AND projection_version = %s
-            """,
+            "SELECT source_event_id FROM memory_projection_entries WHERE projection_name = %s AND projection_version = %s",
             (projection.name, projection.version),
         )
         projected_ids = {str(row[0]) for row in cur.fetchall()}
-
     missing_events = [event for event in events if event.event_id not in projected_ids]
     if not missing_events:
         return
-
     entries = build_projection(missing_events, projection)
     associations = derive_associations(events)
-
     with conn.cursor() as cur:
         if entries:
             cur.executemany(
@@ -149,8 +109,7 @@ def _ensure_projection_fresh(
                     projection_name, projection_version, source_event_id,
                     source_global_seq, source_hash, data
                 ) VALUES (%s, %s, %s, %s, %s, %s)
-                ON CONFLICT (projection_name, projection_version, source_event_id)
-                DO NOTHING
+                ON CONFLICT (projection_name, projection_version, source_event_id) DO NOTHING
                 """,
                 [
                     (
@@ -164,7 +123,6 @@ def _ensure_projection_fresh(
                     for entry in entries
                 ],
             )
-
         if associations:
             cur.executemany(
                 """
@@ -194,20 +152,14 @@ def _ensure_projection_fresh(
     conn.commit()
 
 
-def _packet_from_kernel(
-    memory_request_id: uuid.UUID,
-    need: MemoryNeed,
-    kernel_packet,
-) -> MemoryPacket:
+def _packet_from_kernel(memory_request_id: uuid.UUID, need: MemoryNeed, kernel_packet) -> MemoryPacket:
     trace_by_id = {item.event_id: item for item in kernel_packet.trace.items}
     evidence: list[MemoryEvidence] = []
-
     for event in kernel_packet.items:
         trace_item = trace_by_id.get(event.event_id)
         reasons: list[str] = []
         provenance: set[uuid.UUID] = set()
         score: float | None = None
-
         if trace_item is not None:
             score = float(trace_item.total_score)
             if trace_item.baseline_score > 0:
@@ -220,7 +172,6 @@ def _packet_from_kernel(
                         provenance.add(uuid.UUID(event_id))
                     except (ValueError, TypeError):
                         continue
-
         evidence.append(
             MemoryEvidence(
                 source_event_id=uuid.UUID(event.event_id),
@@ -236,17 +187,54 @@ def _packet_from_kernel(
                 provenance_event_ids=sorted(provenance, key=str),
             )
         )
-
     return MemoryPacket(
         memory_request_id=memory_request_id,
         need=need,
         supported=bool(evidence),
         items=evidence,
-        retrieval_trace={
-            "kernel": "associative_recall_from_postgres",
-            "kernel_trace": asdict(kernel_packet.trace),
-        },
+        retrieval_trace={"kernel": "associative_recall_from_postgres", "kernel_trace": asdict(kernel_packet.trace)},
     )
+
+
+def _active_working_state_evidence(
+    conn: psycopg.Connection,
+    need: MemoryNeed,
+    *,
+    before_global_seq: int | None,
+) -> list[MemoryEvidence]:
+    """Rehydrate canonical events explicitly activated by durable working state."""
+
+    allowed_types = set(_effective_source_types(need))
+    evidence: list[MemoryEvidence] = []
+    for event_id in need.active_event_ids:
+        event = event_store.get_event_by_id(conn, event_id)
+        if event is None:
+            continue
+        if before_global_seq is not None and event.global_seq >= before_global_seq:
+            continue
+        if allowed_types and event.event_type not in allowed_types:
+            continue
+        text = event.payload.get("text")
+        if not isinstance(text, str) or not text.strip():
+            continue
+        evidence.append(
+            MemoryEvidence(
+                source_event_id=event.event_id,
+                event_type=event.event_type,
+                source=event.source,
+                created_at=event.created_at,
+                conversation_id=event.conversation_id,
+                conversation_seq=event.conversation_seq,
+                global_seq=event.global_seq,
+                content=text,
+                score=1.0,
+                retrieval_reasons=["ACTIVE_WORKING_STATE"],
+                provenance_event_ids=[],
+            )
+        )
+        if len(evidence) == need.limit:
+            break
+    return evidence
 
 
 def _recall_for_query(
@@ -286,16 +274,10 @@ def request_memory(
     before_global_seq: int | None,
     memory_request_id: uuid.UUID | None = None,
 ) -> MemoryPacket:
-    """Persist and satisfy one internal-memory request for any task component.
+    """Persist and satisfy one internal-memory request for any task component."""
 
-    The exact canonical query is evaluated first. Only an empty admissible result
-    permits a bounded supplemental formulation to be tried. This keeps the
-    verified v0.5 kernel unchanged while preventing either a verbose user query
-    or a lossy LLM compression from becoming a single point of recall failure.
-    """
     memory_request_id = memory_request_id or uuid.uuid4()
     effective_need = need.model_copy(update={"source_types": list(_effective_source_types(need))})
-
     event_store.record_event(
         conn,
         conversation_id=conversation_id,
@@ -311,13 +293,17 @@ def request_memory(
         event_id=uuid.uuid5(memory_request_id, "memory-request-event"),
     )
 
+    active_evidence = _active_working_state_evidence(
+        conn,
+        effective_need,
+        before_global_seq=before_global_seq,
+    )
     _ensure_projection_fresh(conn, before_global_seq=before_global_seq)
 
     attempts: list[dict[str, object]] = []
     selected_kernel_packet = None
     selected_role: str | None = None
     selected_query_text: str | None = None
-
     for role, query_text in _query_variants(effective_need):
         kernel_packet = _recall_for_query(
             conn,
@@ -342,16 +328,29 @@ def request_memory(
             break
 
     assert selected_kernel_packet is not None
-    packet = _packet_from_kernel(memory_request_id, effective_need, selected_kernel_packet)
-    packet = packet.model_copy(
+    kernel_result = _packet_from_kernel(memory_request_id, effective_need, selected_kernel_packet)
+    merged: list[MemoryEvidence] = []
+    seen: set[uuid.UUID] = set()
+    for item in [*active_evidence, *kernel_result.items]:
+        if item.source_event_id in seen:
+            continue
+        seen.add(item.source_event_id)
+        merged.append(item)
+        if len(merged) == effective_need.limit:
+            break
+
+    packet = kernel_result.model_copy(
         update={
+            "supported": bool(merged),
+            "items": merged,
             "retrieval_trace": {
-                **packet.retrieval_trace,
-                "query_strategy": "canonical_then_supplemental_on_empty",
+                **kernel_result.retrieval_trace,
+                "query_strategy": "working_state_then_canonical_then_supplemental_on_empty",
+                "working_state_event_ids": [str(item.source_event_id) for item in active_evidence],
                 "selected_query_role": selected_role,
                 "selected_query_text": selected_query_text,
                 "query_attempts": attempts,
-            }
+            },
         }
     )
 
@@ -361,10 +360,7 @@ def request_memory(
         correlation_id=correlation_id,
         event_type=EventType.MEMORY_PACKET,
         source=SOURCE,
-        payload={
-            "requesting_component": requesting_component,
-            "packet": packet.model_dump(mode="json"),
-        },
+        payload={"requesting_component": requesting_component, "packet": packet.model_dump(mode="json")},
         event_id=uuid.uuid5(memory_request_id, "memory-packet-event"),
     )
     return packet
