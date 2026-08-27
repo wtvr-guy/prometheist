@@ -17,6 +17,7 @@ from jit_agent.attention import (
     ServiceClass,
     TaskCriticality,
 )
+from jit_agent.attention_aperture import ATTENTION_APERTURE_VERSION, open_attention_aperture
 from jit_agent.attention_observation import (
     HostResourceProbe,
     LocalResourceAdmissionController,
@@ -45,7 +46,6 @@ from jit_agent.interaction_policy import (
     InteractionDecision,
     InteractionStage,
     ReferenceAnalysis,
-    apply_continuity_policy,
     deterministic_interaction_event_id,
     deterministic_interaction_id,
     deterministic_interaction_task_id,
@@ -58,7 +58,7 @@ from jit_agent.interaction_store import (
 )
 from jit_agent.interaction_working_state import activate_working_state, load_working_state
 from jit_agent.llm import LLMClient
-from jit_agent.models import EventType
+from jit_agent.models import EventType, MemoryPacket
 from jit_agent.worker_protocol import (
     WorkerClaimEnvelope,
     WorkerEffectPolicy,
@@ -454,21 +454,23 @@ def _execute_claimed_stage(
         return analysis.model_dump(mode="json"), []
 
     if stage is InteractionStage.SELECT_CAPABILITY:
-        raw = llm.classify(interaction.user_text)
-        analysis = ReferenceAnalysis.model_validate(
-            _stage_result(conn, interaction, InteractionStage.RESOLVE_REFERENCES, scheduler_key)
+        # Basic access to persistent memory is cognitive substrate, not an
+        # optional capability. Open the small system-owned aperture first.
+        aperture_packet = open_attention_aperture(
+            conn,
+            conversation_id=interaction.conversation_id,
+            correlation_id=interaction.correlation_id,
+            requester_task_id=interaction.task_id,
+            user_text=interaction.user_text,
+            before_global_seq=interaction.before_global_seq,
         )
-        decision, applied_policy = apply_continuity_policy(
-            interaction.user_text,
-            raw,
-            analysis,
-        )
-        packet = None
+        decision = llm.classify(interaction.user_text, aperture_packet)
+        capability_packet = None
         if decision.action is InteractionAction.REQUEST_CAPABILITY:
             capability_id = decision.capability_id
             if capability_id is None:
                 raise RuntimeError("capability decision has no deterministic capability id")
-            packet = request_capability(
+            capability_packet = request_capability(
                 conn,
                 conversation_id=interaction.conversation_id,
                 correlation_id=interaction.correlation_id,
@@ -477,17 +479,19 @@ def _execute_claimed_stage(
                 need=CapabilityNeed(query_text=capability_id, limit=1),
                 registry=registry,
             )
+        refs = [f"memory-request:{aperture_packet.memory_request_id}"]
+        if capability_packet is not None:
+            refs.append(f"capability-request:{capability_packet.capability_request_id}")
         return {
             "decision": decision.model_dump(mode="json"),
-            "continuity_policy": applied_policy,
+            "attention_aperture_version": ATTENTION_APERTURE_VERSION,
+            "aperture_packet": aperture_packet.model_dump(mode="json"),
             "capability_packet": (
-                packet.model_dump(mode="json") if packet is not None else None
+                capability_packet.model_dump(mode="json")
+                if capability_packet is not None
+                else None
             ),
-        }, (
-            [f"capability-request:{packet.capability_request_id}"]
-            if packet is not None
-            else []
-        )
+        }, refs
 
     decision = _load_decision(conn, interaction, scheduler_key)
     if stage is InteractionStage.EXECUTE_CAPABILITY:
@@ -531,6 +535,13 @@ def _execute_claimed_stage(
         }, [f"memory-request:{execution.memory_packet.memory_request_id}"]
 
     if stage is InteractionStage.RESPOND:
+        selection = _stage_result(
+            conn,
+            interaction,
+            InteractionStage.SELECT_CAPABILITY,
+            scheduler_key,
+        )
+        aperture_packet = MemoryPacket.model_validate(selection["aperture_packet"])
         capability_output = _stage_result(
             conn,
             interaction,
@@ -541,7 +552,7 @@ def _execute_claimed_stage(
         if execution_payload is None and capability_output["no_match"]:
             response_text = "No installed capability matches that request."
         elif execution_payload is None:
-            response_text = llm.respond(interaction.user_text, None)
+            response_text = llm.respond(interaction.user_text, aperture_packet)
         else:
             execution = CapabilityExecution.model_validate(execution_payload)
             packet = execution.memory_packet
