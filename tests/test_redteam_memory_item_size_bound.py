@@ -3,16 +3,29 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from jit_agent.llm import _format_memory_packet
+import pytest
+
+from jit_agent.budgeted_evidence_llm import BudgetedEvidenceBoundOllamaClient
+from jit_agent.model_evidence_budget import ModelEvidenceBudgetExceeded
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+
+
+class _NoModelCallAllowed:
+    def post(self, *args, **kwargs):
+        del args, kwargs
+        raise AssertionError("oversized evidence reached the model transport")
+
+    def close(self):
+        return None
 
 
 def test_single_oversized_memory_event_cannot_expand_llm_context_without_bound():
     """A bounded item count is not a bounded cognitive context if one item is unbounded.
 
-    The system may truncate, summarize through an explicitly bounded mechanism, or
-    fail closed. It must not blindly serialize an arbitrarily large canonical event
-    into the next model prompt merely because the MemoryPacket contains only one item.
+    This preserves the original 2 MB attack but exercises the current production
+    model boundary. Canonical evidence may remain arbitrarily large in durable
+    storage; the disposable worker must fail closed before formatting or sending
+    the full event to Ollama.
     """
 
     huge_content = "OVERSIZED-CANONICAL-EVIDENCE " + ("x" * 2_000_000)
@@ -34,12 +47,11 @@ def test_single_oversized_memory_event_cannot_expand_llm_context_without_bound()
         ],
     )
 
-    try:
-        rendered = _format_memory_packet(packet)
-    except (ValueError, RuntimeError):
-        return  # Explicit fail-closed handling is acceptable.
-
-    assert huge_content not in rendered, (
-        "One oversized canonical event was copied into the model context in full. "
-        "MemoryPacket item-count bounds therefore do not bound actual prompt size."
+    client = BudgetedEvidenceBoundOllamaClient(
+        base_url="http://ollama.test",
+        model="model:test",
     )
+    client._client = _NoModelCallAllowed()
+
+    with pytest.raises(ModelEvidenceBudgetExceeded, match="item exceeds"):
+        client.respond("What does the stored evidence say?", packet)
