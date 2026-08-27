@@ -42,8 +42,15 @@ class DirectLLM:
         memory_packet: MemoryPacket,
         capability_catalog: tuple[CapabilityDescriptor, ...],
         completed_results: tuple[CapabilityResultSummary, ...] = (),
+        capability_results=(),
     ) -> InteractionDecision:
-        del prompt, memory_packet, capability_catalog, completed_results
+        del (
+            prompt,
+            memory_packet,
+            capability_catalog,
+            completed_results,
+            capability_results,
+        )
         return InteractionDecision(
             next_action=InteractionAction.RESPOND,
             capability_indices=[],
