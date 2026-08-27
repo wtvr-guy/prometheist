@@ -109,6 +109,49 @@ def _evidence(event_type: EventType, content: str, seq: int) -> MemoryEvidence:
     )
 
 
+def test_verbatim_placeholders_prevent_model_from_respelling_opaque_literals():
+    exact_code = "A66673AD"
+    packet = MemoryPacket(
+        memory_request_id=uuid4(),
+        need=MemoryNeed(query_text="What codename did I give Project Oriole?"),
+        supported=True,
+        items=[
+            _evidence(
+                EventType.USER_PROMPT,
+                f"The codename for Project Oriole is {exact_code}.",
+                1,
+            )
+        ],
+    )
+    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
+    fake_http = _FakeHTTPClient(['{"answer":"The codename is [[VERBATIM_0]]."}'])
+    client._client = fake_http
+
+    answer = client.respond("What codename did I give Project Oriole?", packet)
+
+    assert answer == f"The codename is {exact_code}."
+    model_input = fake_http.calls[0][1]["messages"][1]["content"]
+    assert exact_code not in model_input
+    assert "[[VERBATIM_0]]" in model_input
+
+
+def test_verbatim_placeholders_cover_hyphenated_labels_and_current_input():
+    exact_label = "BlueHarbor-4E0FF9"
+    literal_to_placeholder, placeholder_to_literal = llm._build_verbatim_placeholder_maps(
+        f"Call this plan {exact_label}."
+    )
+
+    assert literal_to_placeholder == {exact_label: "[[VERBATIM_0]]"}
+    masked = llm._mask_verbatim_literals(
+        f"Call this plan {exact_label}.",
+        literal_to_placeholder,
+    )
+    assert masked == "Call this plan [[VERBATIM_0]]."
+    assert llm._restore_verbatim_literals(masked, placeholder_to_literal) == (
+        f"Call this plan {exact_label}."
+    )
+
+
 def test_causal_highlight_uses_asserted_user_authored_clauses_only():
     packet = MemoryPacket(
         memory_request_id=uuid4(),
