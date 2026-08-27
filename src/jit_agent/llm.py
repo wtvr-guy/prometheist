@@ -10,6 +10,7 @@ from typing import Protocol
 import httpx
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from jit_agent.capability_registry import CapabilityDescriptor
 from jit_agent.interaction_policy import InteractionDecision
 from jit_agent.models import (
     EventType,
@@ -81,13 +82,7 @@ def _strip_thinking(text: str) -> str:
 def _build_verbatim_placeholder_maps(
     *texts: str,
 ) -> tuple[dict[str, str], dict[str, str]]:
-    """Replace opaque literals with application-restored placeholders.
-
-    Mixed alphanumeric identifiers are data, not prose. A generative model may
-    otherwise respell or re-punctuate them even when instructed to copy exactly.
-    Prometheist therefore presents stable placeholders to the model and restores
-    the canonical source literal after generation.
-    """
+    """Replace opaque literals with application-restored placeholders."""
 
     literal_to_placeholder: dict[str, str] = {}
     placeholder_to_literal: dict[str, str] = {}
@@ -144,20 +139,26 @@ def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> Non
 
 
 _CLASSIFY_SYSTEM_PROMPT = """\
-You are a fresh disposable Prometheist attention-aperture routing worker. You
-receive the current percept plus the small bounded JIT Memory packet that the
-system automatically exposes for every percept.
+You are a fresh disposable Prometheist post-aperture routing worker. You receive
+three bounded inputs: the current percept, the small JIT Memory attention packet
+automatically exposed for every percept, and an application-owned numbered
+catalog of capabilities that are currently legal to invoke.
 
-Choose exactly one enum value for required_capability:
-- NONE: the current percept plus the supplied default memory aperture is enough
-  to produce the ordinary response; no deeper memory investigation is needed.
-- MEMORY_ANALYSIS: focused/deeper persisted-memory investigation is needed
-  before answering, such as when the task requires analysis, comparison,
-  reconciliation, or evidence not adequately resolved by the default aperture.
+Return only capability_indices:
+- [] means the percept plus default aperture is sufficient; respond now.
+- [i] means invoke capability i before responding.
+- [i, j, ...] means invoke every selected capability before responding, in the
+  listed order when ordering matters.
 
-Basic internal-memory access is not a capability choice and is already present.
-Do not write a capability name, query, explanation, entity, phrase, or
-natural-language input. Return only the structured enum decision.
+Select only capabilities that are actually needed. You may select more than one
+when the task requires multiple kinds of functionality. Basic internal-memory
+activation is already present and is not a catalog choice; a memory-analysis or
+memory-expansion capability may appear in the catalog when deeper/focused memory
+work is needed.
+
+Do not write capability names, queries, arguments, explanations, entities,
+phrases, or other natural-language control values. Return only the bounded
+integer-index structure required by the schema.
 """
 
 _RESPOND_SYSTEM_PROMPT = """\
@@ -252,7 +253,12 @@ reasoning or retrieval mechanics.
 class LLMClient(Protocol):
     """Every method call is an independent disposable model invocation."""
 
-    def classify(self, prompt: str, memory_packet: MemoryPacket) -> InteractionDecision: ...
+    def classify(
+        self,
+        prompt: str,
+        memory_packet: MemoryPacket,
+        capability_catalog: tuple[CapabilityDescriptor, ...],
+    ) -> InteractionDecision: ...
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str: ...
 
@@ -300,6 +306,16 @@ def _format_memory_packet(
         f"supported: {str(packet.supported).lower()}\n"
         + "\n\n".join(blocks)
     )
+
+
+def _format_capability_catalog(catalog: tuple[CapabilityDescriptor, ...]) -> str:
+    if not catalog:
+        return "\n\n[Capability catalog]\nnone"
+    entries = "\n".join(
+        f"{index}: {descriptor.capability_id} | {descriptor.kind.value} | {descriptor.description}"
+        for index, descriptor in enumerate(catalog)
+    )
+    return f"\n\n[Capability catalog]\n{entries}"
 
 
 def _causal_clause_is_asserted(content: str, match: re.Match[str]) -> bool:
@@ -409,7 +425,12 @@ class OllamaClient:
                 last_error = exc
         raise ValueError(f"model answer failed to validate: {last_error}")
 
-    def classify(self, prompt: str, memory_packet: MemoryPacket) -> InteractionDecision:
+    def classify(
+        self,
+        prompt: str,
+        memory_packet: MemoryPacket,
+        capability_catalog: tuple[CapabilityDescriptor, ...],
+    ) -> InteractionDecision:
         schema = InteractionDecision.model_json_schema()
         last_error: Exception | None = None
         for _ in range(2):
@@ -417,9 +438,11 @@ class OllamaClient:
                 content = self._structured(
                     "CLASSIFY_AFTER_APERTURE",
                     _CLASSIFY_SYSTEM_PROMPT,
-                    prompt + _format_memory_packet(memory_packet),
+                    prompt
+                    + _format_memory_packet(memory_packet)
+                    + _format_capability_catalog(capability_catalog),
                     schema,
-                    32,
+                    48,
                 )
                 return InteractionDecision.model_validate_json(content)
             except (ValidationError, ValueError) as exc:
