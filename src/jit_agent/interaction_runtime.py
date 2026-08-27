@@ -32,6 +32,7 @@ from jit_agent.attention_store import (
 )
 from jit_agent.capability_registry import (
     DEFAULT_REGISTRY,
+    CapabilityDescriptor,
     CapabilityExecutionPlan,
     CapabilityRegistry,
     deterministic_selected_capability_step_id,
@@ -40,11 +41,15 @@ from jit_agent.capability_runtime import CapabilityExecution, execute_registered
 from jit_agent.interaction_policy import (
     INTERACTION_CAPABILITIES,
     INTERACTION_STAGES,
+    MAX_CAPABILITY_ROUNDS,
+    CapabilityResultSummary,
     DurableInteraction,
+    InteractionAction,
     InteractionDecision,
     InteractionStage,
     ReferenceAnalysis,
     deterministic_capability_memory_request_id,
+    deterministic_capability_round_event_id,
     deterministic_interaction_event_id,
     deterministic_interaction_id,
     deterministic_interaction_task_id,
@@ -318,7 +323,12 @@ def finish_interaction(
 ) -> str:
     """Close the durable task and return its already-persisted response."""
 
-    persist_result = _stage_result(conn, interaction, InteractionStage.PERSIST_RESULT, scheduler_key)
+    persist_result = _stage_result(
+        conn,
+        interaction,
+        InteractionStage.PERSIST_RESULT,
+        scheduler_key,
+    )
     response_text = str(persist_result["response_text"])
     scheduler = load_scheduler(conn, scheduler_key=scheduler_key)
     if scheduler.tasks[interaction.task_id].status.value != "COMPLETED":
@@ -349,8 +359,6 @@ def handle_interaction(
     scheduler_key: str = DEFAULT_SCHEDULER_KEY,
     registry: CapabilityRegistry = DEFAULT_REGISTRY,
 ) -> str:
-    """Compatibility-shaped entry point backed entirely by durable workers."""
-
     interaction = begin_interaction(
         conn,
         user_text,
@@ -393,7 +401,7 @@ def handle_interaction_in_worker_processes(
     worker_lease_seconds: int = 600,
     worker_timeout_seconds: int = 660,
 ) -> str:
-    """Run every interaction stage in a separately guarded Python process."""
+    """Run every durable interaction stage in a separately guarded process."""
 
     interaction = begin_interaction(
         conn,
@@ -453,8 +461,6 @@ def _execute_claimed_stage(
         return analysis.model_dump(mode="json"), []
 
     if stage is InteractionStage.SELECT_CAPABILITY:
-        # Basic persistent-memory activation is cognitive substrate. It happens
-        # before a fresh model decides whether any optional capabilities are needed.
         aperture_packet = open_attention_aperture(
             conn,
             conversation_id=interaction.conversation_id,
@@ -463,18 +469,23 @@ def _execute_claimed_stage(
             user_text=interaction.user_text,
             before_global_seq=interaction.before_global_seq,
         )
-        catalog = registry.post_aperture_catalog()
-        decision = llm.classify(interaction.user_text, aperture_packet, catalog)
-        execution_plan = registry.plan_post_aperture_execution(decision.capability_indices)
+        catalog = registry.capability_catalog()
+        round_record = _load_or_create_round(
+            conn,
+            llm,
+            interaction=interaction,
+            round_index=0,
+            memory_packet=aperture_packet,
+            catalog=catalog,
+            completed_results=(),
+            registry=registry,
+        )
         return {
-            "decision": decision.model_dump(mode="json"),
             "attention_aperture_version": ATTENTION_APERTURE_VERSION,
             "aperture_packet": aperture_packet.model_dump(mode="json"),
-            "capability_catalog": [item.model_dump(mode="json") for item in catalog],
-            "execution_plan": execution_plan.model_dump(mode="json"),
+            "initial_round": round_record,
         }, [f"memory-request:{aperture_packet.memory_request_id}"]
 
-    decision = _load_decision(conn, interaction, scheduler_key)
     if stage is InteractionStage.EXECUTE_CAPABILITY:
         selection = _stage_result(
             conn,
@@ -482,81 +493,141 @@ def _execute_claimed_stage(
             InteractionStage.SELECT_CAPABILITY,
             scheduler_key,
         )
-        persisted_plan = CapabilityExecutionPlan.model_validate(selection["execution_plan"])
-        current_plan = registry.plan_post_aperture_execution(decision.capability_indices)
-        if current_plan.model_dump(mode="json") != persisted_plan.model_dump(mode="json"):
-            raise RuntimeError("capability configuration changed after selection")
-
+        aperture_packet = MemoryPacket.model_validate(selection["aperture_packet"])
+        current_round = dict(selection["initial_round"])
+        rounds: list[dict] = [current_round]
         executions: list[CapabilityExecution] = []
+        catalog_eligible_ids: list[str] = []
+        context_packet = aperture_packet.model_copy(deep=True)
+        last_deeper_packet: MemoryPacket | None = None
         output_refs: list[str] = []
-        for plan_item in persisted_plan.items:
-            registration = registry.get(plan_item.capability_id)
-            selected_step_id = deterministic_selected_capability_step_id(
-                envelope.step.step_id,
-                plan_item.catalog_index,
-                plan_item.capability_id,
+
+        for round_index in range(MAX_CAPABILITY_ROUNDS):
+            decision = InteractionDecision.model_validate(current_round["decision"])
+            if decision.next_action is InteractionAction.RESPOND:
+                return {
+                    "rounds": rounds,
+                    "executions": [item.model_dump(mode="json") for item in executions],
+                    "final_decision": decision.model_dump(mode="json"),
+                    "final_memory_packet": context_packet.model_dump(mode="json"),
+                }, output_refs
+
+            catalog = tuple(
+                CapabilityDescriptor.model_validate(item)
+                for item in current_round["capability_catalog"]
             )
-            memory_request_id = deterministic_capability_memory_request_id(
+            persisted_plan = CapabilityExecutionPlan.model_validate(
+                current_round["execution_plan"]
+            )
+            current_plan = registry.plan_execution(catalog, decision.capability_indices)
+            if current_plan.model_dump(mode="json") != persisted_plan.model_dump(mode="json"):
+                raise RuntimeError("capability configuration changed after round selection")
+
+            for plan_position, plan_item in enumerate(persisted_plan.items):
+                registration = registry.get(plan_item.capability_id)
+                selected_step_id = deterministic_selected_capability_step_id(
+                    envelope.step.step_id,
+                    round_index,
+                    plan_item.capability_id,
+                )
+                memory_request_id = deterministic_capability_memory_request_id(
+                    interaction.interaction_id,
+                    round_index,
+                    plan_item.capability_id,
+                )
+                if registration.executor == "focused_recall":
+                    if last_deeper_packet is None or not last_deeper_packet.items:
+                        raise RuntimeError(
+                            "focused_recall requires a prior non-empty deeper_research result"
+                        )
+                    candidate_packet = last_deeper_packet
+                else:
+                    candidate_packet = context_packet
+
+                execution = execute_registered_capability(
+                    conn,
+                    llm,
+                    registration=registration,
+                    capability_execution_id=selected_step_id,
+                    requester_task_id=interaction.task_id,
+                    requester_step_id=selected_step_id,
+                    round_index=round_index,
+                    plan_position=plan_position,
+                    conversation_id=interaction.conversation_id,
+                    correlation_id=interaction.correlation_id,
+                    task_text=interaction.user_text,
+                    before_global_seq=interaction.before_global_seq,
+                    memory_request_id=memory_request_id,
+                    candidate_packet=candidate_packet,
+                )
+                executions.append(execution)
+                if execution.memory_packet is not None:
+                    output_refs.append(
+                        f"memory-request:{execution.memory_packet.memory_request_id}"
+                    )
+                supported = execution.result_data.get("supported")
+                if supported is not False:
+                    catalog_eligible_ids.append(execution.capability_id)
+                if (
+                    execution.executor == "deeper_research"
+                    and execution.memory_packet is not None
+                    and execution.memory_packet.items
+                ):
+                    last_deeper_packet = execution.memory_packet.model_copy(deep=True)
+
+            context_packet = _compose_memory_context(
                 interaction.interaction_id,
-                plan_item.catalog_index,
-                plan_item.capability_id,
+                aperture_packet,
+                executions,
+                round_index=round_index + 1,
             )
-            execution = execute_registered_capability(
-                conn,
-                llm,
-                registration=registration,
-                capability_execution_id=selected_step_id,
-                requester_task_id=interaction.task_id,
-                requester_step_id=selected_step_id,
-                conversation_id=interaction.conversation_id,
-                correlation_id=interaction.correlation_id,
-                task_text=interaction.user_text,
-                before_global_seq=interaction.before_global_seq,
-                memory_request_id=memory_request_id,
-            )
-            executions.append(execution)
-            if execution.memory_packet is not None:
-                output_refs.append(
-                    f"memory-request:{execution.memory_packet.memory_request_id}"
+            if round_index + 1 >= MAX_CAPABILITY_ROUNDS:
+                raise RuntimeError(
+                    "capability round limit reached without an explicit RESPOND decision"
                 )
 
-        return {
-            "execution_plan": persisted_plan.model_dump(mode="json"),
-            "executions": [execution.model_dump(mode="json") for execution in executions],
-        }, output_refs
+            summaries = _capability_result_summaries(executions)
+            catalog = registry.capability_catalog(
+                executed_capability_ids=tuple(catalog_eligible_ids)
+            )
+            current_round = _load_or_create_round(
+                conn,
+                llm,
+                interaction=interaction,
+                round_index=round_index + 1,
+                memory_packet=context_packet,
+                catalog=catalog,
+                completed_results=summaries,
+                registry=registry,
+            )
+            rounds.append(current_round)
+
+        raise RuntimeError("unreachable capability round state")
 
     if stage is InteractionStage.RESPOND:
-        selection = _stage_result(
-            conn,
-            interaction,
-            InteractionStage.SELECT_CAPABILITY,
-            scheduler_key,
-        )
-        aperture_packet = MemoryPacket.model_validate(selection["aperture_packet"])
         capability_output = _stage_result(
             conn,
             interaction,
             InteractionStage.EXECUTE_CAPABILITY,
             scheduler_key,
         )
-        execution_plan = CapabilityExecutionPlan.model_validate(
-            capability_output["execution_plan"]
+        final_decision = InteractionDecision.model_validate(
+            capability_output["final_decision"]
+        )
+        if final_decision.next_action is not InteractionAction.RESPOND:
+            raise RuntimeError("final response worker requires an explicit RESPOND decision")
+        final_packet = MemoryPacket.model_validate(
+            capability_output["final_memory_packet"]
         )
         executions = [
             CapabilityExecution.model_validate(payload)
             for payload in capability_output["executions"]
         ]
-        if [execution.capability_id for execution in executions] != [
-            item.capability_id for item in execution_plan.items
-        ]:
-            raise RuntimeError("final response is missing or reorders capability results")
-
-        response_packet = _compose_response_memory_packet(
-            interaction.interaction_id,
-            aperture_packet,
-            executions,
+        response_text = llm.respond(
+            interaction.user_text,
+            final_packet,
+            tuple(_structured_result_for_response(item) for item in executions),
         )
-        response_text = llm.respond(interaction.user_text, response_packet)
         return {"response_text": response_text}, []
 
     response_text = str(
@@ -587,26 +658,121 @@ def _execute_claimed_stage(
     }, [f"event:{response_event.event_id}"]
 
 
-def _compose_response_memory_packet(
+def _load_or_create_round(
+    conn: psycopg.Connection,
+    llm: LLMClient,
+    *,
+    interaction: DurableInteraction,
+    round_index: int,
+    memory_packet: MemoryPacket,
+    catalog: tuple[CapabilityDescriptor, ...],
+    completed_results: tuple[CapabilityResultSummary, ...],
+    registry: CapabilityRegistry,
+) -> dict:
+    """Return one durable recurrent decision, reusing it after worker restart."""
+
+    event_id = deterministic_capability_round_event_id(
+        interaction.interaction_id,
+        round_index,
+    )
+    existing = event_store.get_event_by_id(conn, event_id)
+    if existing is not None:
+        if existing.payload.get("kind") != "CAPABILITY_DECISION_ROUND":
+            raise RuntimeError("persisted capability round has an invalid kind")
+        if existing.payload.get("round_index") != round_index:
+            raise RuntimeError("persisted capability round index mismatch")
+        if existing.payload.get("memory_request_id") != str(memory_packet.memory_request_id):
+            raise RuntimeError("persisted capability round references different memory context")
+        return dict(existing.payload["round"])
+
+    decision = llm.classify(
+        interaction.user_text,
+        memory_packet,
+        catalog,
+        completed_results,
+    )
+    plan = registry.plan_execution(catalog, decision.capability_indices)
+    round_record = {
+        "round_index": round_index,
+        "decision": decision.model_dump(mode="json"),
+        "capability_catalog": [item.model_dump(mode="json") for item in catalog],
+        "execution_plan": plan.model_dump(mode="json"),
+        "completed_results": [item.model_dump(mode="json") for item in completed_results],
+    }
+    event_store.record_event(
+        conn,
+        conversation_id=interaction.conversation_id,
+        correlation_id=interaction.correlation_id,
+        event_type=EventType.SYSTEM_EVENT,
+        source=SOURCE,
+        payload={
+            "kind": "CAPABILITY_DECISION_ROUND",
+            "round_index": round_index,
+            "memory_request_id": str(memory_packet.memory_request_id),
+            "round": round_record,
+        },
+        event_id=event_id,
+    )
+    return round_record
+
+
+def _capability_result_summaries(
+    executions: list[CapabilityExecution],
+) -> tuple[CapabilityResultSummary, ...]:
+    return tuple(
+        CapabilityResultSummary(
+            round_index=execution.round_index,
+            capability_id=execution.capability_id,
+            supported=(
+                execution.memory_packet.supported
+                if execution.memory_packet is not None
+                else None
+            ),
+            item_count=(
+                len(execution.memory_packet.items)
+                if execution.memory_packet is not None
+                else None
+            ),
+            result_keys=sorted(execution.result_data),
+        )
+        for execution in executions
+    )
+
+
+def _structured_result_for_response(execution: CapabilityExecution) -> dict:
+    return {
+        "round_index": execution.round_index,
+        "plan_position": execution.plan_position,
+        "capability_id": execution.capability_id,
+        "executor": execution.executor,
+        "result_data": dict(execution.result_data),
+        "memory_request_id": (
+            str(execution.memory_packet.memory_request_id)
+            if execution.memory_packet is not None
+            else None
+        ),
+    }
+
+
+def _compose_memory_context(
     interaction_id: UUID,
     aperture_packet: MemoryPacket,
     executions: list[CapabilityExecution],
+    *,
+    round_index: int,
 ) -> MemoryPacket:
-    """Compose bounded evidence only after every selected capability completed.
+    """Compose bounded accumulated evidence for the next fresh model call.
 
-    Focused capability evidence is placed first, followed by the initial memory
-    exposure. Canonical source-event IDs are deduplicated, and the final context
-    remains bounded by the stable MemoryNeed maximum.
+    Newer capability evidence is ordered before older capability evidence and the
+    initial broad packet. Canonical source IDs are deduplicated. This is working
+    context composition, not a claim that every item is true or sufficient.
     """
 
     packets = [
         execution.memory_packet
-        for execution in executions
+        for execution in reversed(executions)
         if execution.memory_packet is not None
     ]
-    if not packets:
-        return aperture_packet.model_copy(deep=True)
-
     items = []
     seen = set()
     for packet in [*packets, aperture_packet]:
@@ -623,32 +789,22 @@ def _compose_response_memory_packet(
     need = aperture_packet.need.model_copy(deep=True)
     need.limit = _MAX_FINAL_MEMORY_ITEMS
     return MemoryPacket(
-        memory_request_id=uuid5(interaction_id, "final-response-memory-context"),
+        memory_request_id=uuid5(
+            interaction_id,
+            f"capability-context:{round_index}",
+        ),
         need=need,
         supported=bool(items),
         items=items,
         retrieval_trace={
             "composition": "initial_memory_plus_completed_capabilities",
+            "round_index": round_index,
             "initial_memory_request_id": str(aperture_packet.memory_request_id),
             "capability_memory_request_ids": [
                 str(packet.memory_request_id) for packet in packets
             ],
         },
     )
-
-
-def _load_decision(
-    conn: psycopg.Connection,
-    interaction: DurableInteraction,
-    scheduler_key: str,
-) -> InteractionDecision:
-    payload = _stage_result(
-        conn,
-        interaction,
-        InteractionStage.SELECT_CAPABILITY,
-        scheduler_key,
-    )
-    return InteractionDecision.model_validate(payload["decision"])
 
 
 def _stage_result(
