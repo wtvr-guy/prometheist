@@ -13,7 +13,7 @@ from enum import Enum
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class EventType(str, Enum):
@@ -98,15 +98,40 @@ class MemoryNeed(BaseModel):
 
 
 class MemoryRetrievalScope(str, Enum):
-    """Categorical scope chosen by a fresh stateless memory-routing call."""
+    """Categorical scope chosen only when active state actually exists."""
 
     ACTIVE_ONLY = "ACTIVE_ONLY"
     HISTORY_ONLY = "HISTORY_ONLY"
     ACTIVE_AND_HISTORY = "ACTIVE_AND_HISTORY"
 
 
+def _validate_anchor_indices(values: list[int]) -> list[int]:
+    if any(index < 0 or index > 63 for index in values):
+        raise ValueError("anchor_indices must be between 0 and 63")
+    if len(values) != len(set(values)):
+        raise ValueError("anchor_indices must not contain duplicates")
+    return values
+
+
+class HistoricalMemoryAnchorDecision(BaseModel):
+    """Model output when no active WorkingState exists.
+
+    The system already knows the only legal scope is HISTORY_ONLY, so scope is
+    intentionally absent from this schema. The model may only select existing
+    deterministic anchor-catalog indices.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+    anchor_indices: list[int] = Field(min_length=1, max_length=4)
+
+    @field_validator("anchor_indices")
+    @classmethod
+    def validate_anchor_indices(cls, values: list[int]) -> list[int]:
+        return _validate_anchor_indices(values)
+
+
 class MemoryNeedDecision(BaseModel):
-    """Constrained model proposal for one MemoryNeed.
+    """Constrained model proposal when active WorkingState is available.
 
     The model never writes a search query or entity string. The application
     supplies a deterministic numbered anchor catalog derived from canonical
@@ -117,12 +142,13 @@ class MemoryNeedDecision(BaseModel):
     scope: MemoryRetrievalScope
     anchor_indices: list[int] = Field(default_factory=list, max_length=4)
 
+    @field_validator("anchor_indices")
+    @classmethod
+    def validate_anchor_indices(cls, values: list[int]) -> list[int]:
+        return _validate_anchor_indices(values)
+
     @model_validator(mode="after")
     def validate_anchor_selection(self) -> "MemoryNeedDecision":
-        if any(index < 0 or index > 63 for index in self.anchor_indices):
-            raise ValueError("anchor_indices must be between 0 and 63")
-        if len(self.anchor_indices) != len(set(self.anchor_indices)):
-            raise ValueError("anchor_indices must not contain duplicates")
         if self.scope is MemoryRetrievalScope.ACTIVE_ONLY and self.anchor_indices:
             raise ValueError("ACTIVE_ONLY must not select historical anchors")
         if self.scope is not MemoryRetrievalScope.ACTIVE_ONLY and not self.anchor_indices:
