@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -16,6 +17,7 @@ from jit_agent.attention_observation import HostResourceProbe, ResourceSafetyPol
 from jit_agent.attention_store import DEFAULT_SCHEDULER_KEY
 from jit_agent.worker_protocol import (
     WorkerClaimAttempt,
+    WorkerClaimDecision,
     WorkerClaimEnvelope,
     WorkerClaimResourceObservation,
 )
@@ -25,6 +27,10 @@ from jit_agent.worker_store import (
     guarded_claim_worker_step,
     release_worker_claim,
 )
+
+
+DEFAULT_CLAIM_RETRY_ATTEMPTS = 4
+DEFAULT_CLAIM_RETRY_DELAY_SECONDS = 1.0
 
 
 class WorkerLaunchDenied(WorkerProtocolError):
@@ -44,6 +50,54 @@ class LaunchedWorker:
 
 
 ProcessFactory = Callable[..., Any]
+SleepFunction = Callable[[float], None]
+
+
+def _is_transient_resource_denial(
+    conn: psycopg.Connection,
+    *,
+    observation: WorkerClaimResourceObservation,
+    scheduler_key: str,
+) -> bool:
+    """Classify retryability from structured resource state, never reason text.
+
+    Probe failure and a currently insufficient/unobserved reserved resource are
+    transient capacity conditions. Structural denials (stale task/epoch,
+    policy mismatch, live claim, terminal result, at-most-once ambiguity, etc.)
+    do not satisfy this predicate and therefore fail immediately.
+    """
+
+    if observation.decision is not WorkerClaimDecision.DENIED:
+        return False
+    snapshot = observation.resource_snapshot
+    if not snapshot.healthy:
+        return True
+    reservation_ids = list(observation.target_reservation_ids)
+    if not reservation_ids:
+        return False
+
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT reservation_id, resource_id, units
+            FROM attention_resource_reservations
+            WHERE scheduler_key = %s AND reservation_id = ANY(%s)
+            ORDER BY resource_id ASC, reservation_id ASC
+            """,
+            (scheduler_key, reservation_ids),
+        )
+        rows = cur.fetchall()
+    if len(rows) != len(reservation_ids):
+        return False
+
+    capacity_by_id = snapshot.capacity_by_resource_id()
+    for _reservation_id, resource_id, units in rows:
+        capacity = capacity_by_id.get(str(resource_id))
+        if capacity is None:
+            return True
+        if float(capacity.available_for_new_work) < float(units):
+            return True
+    return False
 
 
 class GuardedWorkerLauncher:
@@ -52,6 +106,11 @@ class GuardedWorkerLauncher:
     Production code that starts a Prometheist worker belongs behind this class.
     The launcher does not select queue work: callers must register a step from
     an assignment already chosen by the deterministic Attention Fabric.
+
+    Transient resource pressure is not a terminal task failure. The launcher
+    re-observes and retries a small bounded number of times while preserving the
+    exact same fail-closed resource gate and configured headroom. Structural
+    denials are never retried.
     """
 
     def __init__(
@@ -63,13 +122,23 @@ class GuardedWorkerLauncher:
         clock: Callable[[], datetime] | None = None,
         process_factory: ProcessFactory | None = None,
         scheduler_key: str = DEFAULT_SCHEDULER_KEY,
+        claim_retry_attempts: int = DEFAULT_CLAIM_RETRY_ATTEMPTS,
+        claim_retry_delay_seconds: float = DEFAULT_CLAIM_RETRY_DELAY_SECONDS,
+        sleep: SleepFunction = time.sleep,
     ) -> None:
+        if claim_retry_attempts < 1:
+            raise ValueError("claim_retry_attempts must be >= 1")
+        if claim_retry_delay_seconds < 0:
+            raise ValueError("claim_retry_delay_seconds must be >= 0")
         self.connection_factory = connection_factory
         self.probe = probe
         self.policy = policy
         self.clock = clock
         self.process_factory = process_factory or subprocess.Popen
         self.scheduler_key = scheduler_key
+        self.claim_retry_attempts = claim_retry_attempts
+        self.claim_retry_delay_seconds = claim_retry_delay_seconds
+        self.sleep = sleep
 
     def claim(
         self,
@@ -78,25 +147,40 @@ class GuardedWorkerLauncher:
         worker_id: str,
         lease_seconds: int = DEFAULT_WORKER_LEASE_SECONDS,
     ) -> WorkerClaimEnvelope:
-        """Return an executable lease or raise without starting a process."""
+        """Return an executable lease or fail after bounded safe re-observation."""
 
-        conn = self.connection_factory()
-        try:
-            attempt: WorkerClaimAttempt = guarded_claim_worker_step(
-                conn,
-                step_id=step_id,
-                worker_id=worker_id,
-                probe=self.probe,
-                policy=self.policy,
-                clock=self.clock,
-                lease_seconds=lease_seconds,
-                scheduler_key=self.scheduler_key,
-            )
-        finally:
-            conn.close()
-        if attempt.envelope is None:
-            raise WorkerLaunchDenied(attempt.observation)
-        return attempt.envelope.model_copy(deep=True)
+        last_observation: WorkerClaimResourceObservation | None = None
+        for retry_index in range(self.claim_retry_attempts):
+            conn = self.connection_factory()
+            try:
+                attempt: WorkerClaimAttempt = guarded_claim_worker_step(
+                    conn,
+                    step_id=step_id,
+                    worker_id=worker_id,
+                    probe=self.probe,
+                    policy=self.policy,
+                    clock=self.clock,
+                    lease_seconds=lease_seconds,
+                    scheduler_key=self.scheduler_key,
+                )
+                if attempt.envelope is not None:
+                    return attempt.envelope.model_copy(deep=True)
+                last_observation = attempt.observation.model_copy(deep=True)
+                retryable = _is_transient_resource_denial(
+                    conn,
+                    observation=attempt.observation,
+                    scheduler_key=self.scheduler_key,
+                )
+            finally:
+                conn.close()
+
+            if not retryable or retry_index + 1 >= self.claim_retry_attempts:
+                if last_observation is None:
+                    raise WorkerProtocolError("guarded claim returned no decision")
+                raise WorkerLaunchDenied(last_observation)
+            self.sleep(self.claim_retry_delay_seconds)
+
+        raise WorkerProtocolError("guarded claim retry loop exited without a decision")
 
     def launch(
         self,
@@ -110,7 +194,7 @@ class GuardedWorkerLauncher:
     ) -> LaunchedWorker:
         """Create the durable guarded claim before invoking ``Popen``.
 
-        Shell execution is deliberately unavailable.  A failed process spawn
+        Shell execution is deliberately unavailable. A failed process spawn
         releases the just-created lease because no worker began executing it.
         """
 
