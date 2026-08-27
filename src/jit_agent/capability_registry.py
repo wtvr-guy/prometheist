@@ -29,7 +29,7 @@ from jit_agent.attention_ordering import (
 from jit_agent.models import EventType
 
 
-CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v6"
+CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v7"
 SOURCE = "capability_registry"
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
@@ -263,8 +263,6 @@ class CapabilityRegistry:
         )
 
     def post_aperture_catalog(self) -> tuple[CapabilityDescriptor, ...]:
-        """Compatibility alias for the initial recurrent catalog."""
-
         return self.capability_catalog()
 
     def resolve_catalog_indices(
@@ -278,10 +276,7 @@ class CapabilityRegistry:
             raise ValueError("capability index is outside the supplied catalog")
         return tuple(self.get(catalog[index].capability_id) for index in indices)
 
-    def resolve_post_aperture_indices(
-        self,
-        indices: list[int],
-    ) -> tuple[RegisteredCapability, ...]:
+    def resolve_post_aperture_indices(self, indices: list[int]) -> tuple[RegisteredCapability, ...]:
         return self.resolve_catalog_indices(self.post_aperture_catalog(), indices)
 
     def plan_execution(
@@ -320,9 +315,7 @@ class CapabilityRegistry:
                 CapabilityExecutionPlanItem(
                     capability_id=capability_id,
                     execution_priority=self.get(capability_id).execution_priority,
-                    depends_on_capability_ids=list(
-                        self.get(capability_id).depends_on_capability_ids
-                    ),
+                    depends_on_capability_ids=list(self.get(capability_id).depends_on_capability_ids),
                 )
                 for capability_id in ordered_ids
             ],
@@ -348,11 +341,7 @@ class CapabilityRegistry:
                 return matches, "supplemental", supplemental
         return [], None, None
 
-    def _discover_query(
-        self,
-        need: CapabilityNeed,
-        query_text: str,
-    ) -> list[CapabilityMatch]:
+    def _discover_query(self, need: CapabilityNeed, query_text: str) -> list[CapabilityMatch]:
         allowed_kinds = set(need.kinds) if need.kinds else None
         excluded = set(need.exclude_capability_ids)
         query_tokens = _tokens(query_text)
@@ -411,6 +400,21 @@ DEFAULT_REGISTRY = CapabilityRegistry(
             executor="deeper_research",
             selectable_after_aperture=True,
             execution_priority=100,
+            follow_up_capability_ids=("focused_recall",),
+        ),
+        RegisteredCapability(
+            descriptor=CapabilityDescriptor(
+                capability_id="focused_recall",
+                kind=CapabilityKind.WORKFLOW,
+                description=(
+                    "Search persisted internal evidence with a more focused target when "
+                    "broader internal research still leaves a specific ambiguity unresolved."
+                ),
+            ),
+            routing_terms=("focused recall",),
+            executor="focused_recall",
+            selectable_after_aperture=False,
+            execution_priority=90,
         ),
     )
 )
@@ -434,10 +438,7 @@ def deterministic_selected_capability_step_id(
     normalized = capability_id.strip()
     if not normalized:
         raise ValueError("capability_id must not be empty")
-    return uuid5(
-        requester_step_id,
-        f"capability-round:{round_index}:{normalized}",
-    )
+    return uuid5(requester_step_id, f"capability-round:{round_index}:{normalized}")
 
 
 def request_capability(
