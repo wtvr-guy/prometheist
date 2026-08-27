@@ -17,6 +17,7 @@ from jit_agent.interaction_policy import (
     InteractionDecision,
 )
 from jit_agent.models import (
+    CrossReferenceCandidateSelection,
     FocusedMemoryCandidateSelection,
     MemoryCandidateSelection,
     MemoryPacket,
@@ -189,6 +190,20 @@ Do not write queries, entities, event IDs, explanations, phrases, or answers.
 Return only candidate_indices from the supplied MemoryPacket.
 """
 
+_CROSS_REFERENCE_SELECTION_PROMPT = """\
+You are a fresh disposable Prometheist cross-reference worker. Select 2-4
+candidate_indices from the supplied MemoryPacket that should be investigated
+together because their relationship, agreement, conflict, causality, or shared
+context may resolve the current task.
+
+Prometheist will resolve the indices to canonical source events and run one joint,
+bounded associative investigation over the selected set. Do not describe the
+relationship yourself.
+
+Do not write queries, entities, event IDs, explanations, phrases, or answers.
+Return only candidate_indices from the supplied MemoryPacket.
+"""
+
 _FOCUSED_RECALL_SELECTION_PROMPT = """\
 You are a fresh disposable Prometheist focused-recall worker. The supplied
 MemoryPacket contains candidates returned by broader internal research. Select
@@ -228,6 +243,12 @@ class LLMClient(Protocol):
         task: str,
         packet: MemoryPacket,
     ) -> MemoryCandidateSelection: ...
+
+    def select_cross_reference_candidates(
+        self,
+        task: str,
+        packet: MemoryPacket,
+    ) -> CrossReferenceCandidateSelection: ...
 
     def select_focused_candidate(
         self,
@@ -428,6 +449,32 @@ class OllamaClient:
             except (ValidationError, ValueError) as exc:
                 last_error = exc
         raise ValueError(f"deeper-research candidate selection failed: {last_error}")
+
+    def select_cross_reference_candidates(
+        self,
+        task: str,
+        packet: MemoryPacket,
+    ) -> CrossReferenceCandidateSelection:
+        if len(packet.items) < 2:
+            raise ValueError("cross reference requires at least two memory candidates")
+        schema = CrossReferenceCandidateSelection.model_json_schema()
+        last_error: Exception | None = None
+        for _ in range(2):
+            try:
+                content = self._structured(
+                    "CROSS_REFERENCE_CANDIDATES",
+                    _CROSS_REFERENCE_SELECTION_PROMPT,
+                    task + _format_memory_packet(packet),
+                    schema,
+                    32,
+                )
+                selection = CrossReferenceCandidateSelection.model_validate_json(content)
+                if any(index >= len(packet.items) for index in selection.candidate_indices):
+                    raise ValueError("cross reference selected a candidate outside the packet")
+                return selection
+            except (ValidationError, ValueError) as exc:
+                last_error = exc
+        raise ValueError(f"cross-reference candidate selection failed: {last_error}")
 
     def select_focused_candidate(
         self,
