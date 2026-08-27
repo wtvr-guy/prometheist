@@ -5,6 +5,7 @@ import pytest
 
 from jit_agent import llm
 from jit_agent.capability_registry import CapabilityDescriptor, CapabilityKind
+from jit_agent.interaction_policy import InteractionAction
 from jit_agent.llm import _strip_thinking
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 
@@ -110,18 +111,23 @@ def _evidence(event_type: EventType, content: str, seq: int) -> MemoryEvidence:
     )
 
 
-def _packet() -> MemoryPacket:
+def _packet(*contents: str) -> MemoryPacket:
     return MemoryPacket(
         memory_request_id=uuid4(),
         need=MemoryNeed(query_text="Question"),
-        supported=False,
-        items=[],
+        supported=bool(contents),
+        items=[
+            _evidence(EventType.USER_PROMPT, content, index + 1)
+            for index, content in enumerate(contents)
+        ],
     )
 
 
-def test_capability_selection_returns_only_bounded_indices():
+def test_capability_selection_returns_only_explicit_action_and_bounded_indices():
     client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
-    fake_http = _FakeHTTPClient(['{"capability_indices":[1,0]}'])
+    fake_http = _FakeHTTPClient(
+        ['{"next_action":"USE_CAPABILITIES","capability_indices":[1,0]}']
+    )
     client._client = fake_http
     catalog = (
         CapabilityDescriptor(
@@ -138,11 +144,44 @@ def test_capability_selection_returns_only_bounded_indices():
 
     decision = client.classify("Do the task", _packet(), catalog)
 
+    assert decision.next_action is InteractionAction.USE_CAPABILITIES
     assert decision.capability_indices == [1, 0]
     payload = fake_http.calls[0][1]
-    assert set(payload["format"]["properties"]) == {"capability_indices"}
+    assert set(payload["format"]["properties"]) == {
+        "next_action",
+        "capability_indices",
+    }
     assert "alpha" in payload["messages"][1]["content"]
     assert "beta" in payload["messages"][1]["content"]
+
+
+def test_deeper_research_selects_packet_candidates_not_query_text():
+    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
+    fake_http = _FakeHTTPClient(['{"candidate_indices":[1,0]}'])
+    client._client = fake_http
+    packet = _packet("candidate A", "candidate B")
+
+    selection = client.select_research_candidates("Investigate", packet)
+
+    assert selection.candidate_indices == [1, 0]
+    payload = fake_http.calls[0][1]
+    assert set(payload["format"]["properties"]) == {"candidate_indices"}
+    model_input = payload["messages"][1]["content"]
+    assert "candidate_index: 0" in model_input
+    assert "candidate_index: 1" in model_input
+
+
+def test_focused_recall_selects_exactly_one_packet_candidate():
+    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
+    fake_http = _FakeHTTPClient(['{"candidate_index":1}'])
+    client._client = fake_http
+    packet = _packet("candidate A", "candidate B")
+
+    selection = client.select_focused_candidate("Resolve ambiguity", packet)
+
+    assert selection.candidate_index == 1
+    payload = fake_http.calls[0][1]
+    assert set(payload["format"]["properties"]) == {"candidate_index"}
 
 
 def test_verbatim_placeholders_prevent_model_from_respelling_opaque_literals():
