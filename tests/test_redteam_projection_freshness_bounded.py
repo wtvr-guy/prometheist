@@ -52,6 +52,7 @@ def test_fresh_projection_does_not_reload_entire_event_ledger_on_every_percept(
 
     historical_conversation = uuid.uuid4()
     active_conversation = uuid.uuid4()
+    event_store.start_conversation(conn, active_conversation)
     target = _record_prompt(
         conn,
         historical_conversation,
