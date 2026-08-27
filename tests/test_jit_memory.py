@@ -107,6 +107,61 @@ def test_attention_activation_surfaces_sparse_candidate_without_weakening_eviden
     assert activation.retrieval_trace["retrieval_role"] == "ATTENTION_ACTIVATION"
 
 
+def test_attention_activation_guarantees_active_state_beyond_recall_budget(conn):
+    conversation_id = uuid.uuid4()
+    active_events = [
+        _record_text(conn, conversation_id, f"Active working-state fact {index}.")
+        for index in range(7)
+    ]
+    critical_rule = _record_text(
+        conn,
+        conversation_id,
+        "For Project Kestrel, never use Docker because virtualization is disabled.",
+    )
+    active_events.append(critical_rule)
+    current_prompt = _record_text(
+        conn,
+        conversation_id,
+        "Name the ruled-out approach and its underlying technical reason.",
+    )
+    need = jit_memory.build_memory_need(
+        current_prompt.payload["text"],
+        active_event_ids=[event.event_id for event in active_events],
+        include_persisted_history=False,
+        limit=6,
+    )
+
+    activation = jit_memory.request_attention_activation(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=current_prompt.correlation_id,
+        requesting_component="active-state-aperture-test",
+        need=need,
+        before_global_seq=current_prompt.global_seq,
+        memory_request_id=uuid.uuid4(),
+    )
+
+    assert [item.source_event_id for item in activation.items] == [
+        event.event_id for event in active_events
+    ]
+    assert critical_rule.event_id in {item.source_event_id for item in activation.items}
+    assert activation.retrieval_trace["working_state_item_count"] == 8
+    assert activation.retrieval_trace["baseline_recall_limit"] == 6
+    assert activation.retrieval_trace["packet_item_limit"] == 14
+
+    conservative = jit_memory.request_memory(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=uuid.uuid4(),
+        requesting_component="active-state-evidence-test",
+        need=need,
+        before_global_seq=current_prompt.global_seq,
+        memory_request_id=uuid.uuid4(),
+    )
+    assert len(conservative.items) == 6
+    assert critical_rule.event_id not in {item.source_event_id for item in conservative.items}
+
+
 def test_memory_boundary_uses_supplemental_query_only_after_canonical_abstains(conn):
     source_conversation = uuid.uuid4()
     request_conversation = uuid.uuid4()
