@@ -18,6 +18,16 @@ The target is now a persistent cognitive system in which identity, memory, tasks
 
 See [`architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](architecture/ARCHITECTURAL_PIVOT_2026-08-24.md), [`architecture/COGNITIVE_ARCHITECTURE.md`](architecture/COGNITIVE_ARCHITECTURE.md), and [`architecture/INTERACTION_CONTINUITY.md`](architecture/INTERACTION_CONTINUITY.md).
 
+## Empirical continuity correction — 2026-08-26
+
+Native v0.7 acceptance falsified an important implementation assumption: natural stateless continuity should not be reconstructed primarily by growing an application-owned vocabulary of text/entity/recency cues.
+
+The release candidate therefore adds the smallest durable working-state mechanism justified by the frozen experiment: a bounded `InteractionWorkingState` containing canonical active event IDs. JIT Memory rehydrates those active events before ordinary long-term retrieval; a fresh stateless semantic planner formulates unresolved historical needs. Phrase-specific continuity detection is deprecated from the live path.
+
+This is a scoped correction, not the full future epistemic-state architecture. See [`milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md`](milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md).
+
+After v0.7 closes, the roadmap must be rebaselined against the cognitive-neuroscience and prior-project synthesis in `docs/concepts/`. In particular, the project should test whether a richer epistemic WorkingState and bounded recurrent inference should precede perception/salience rather than silently expanding v0.7.
+
 ---
 
 ## v0.5 — Deterministic memory robustness and scale
@@ -40,36 +50,47 @@ Preserve or generalize tests for cross-turn/cross-session recall, corrections, t
 
 ---
 
-## v0.7 — Durable JIT Attention Fabric
+## v0.7 — Durable JIT Attention Fabric + minimal active WorkingState
 
-**Status:** release candidate. Deterministic PostgreSQL CI is complete; native
-Windows/PostgreSQL/Ollama acceptance remains the final milestone gate.
+**Status:** release candidate. Deterministic PostgreSQL CI must be rerun against the working-state correction; native Windows/PostgreSQL/Ollama acceptance remains the final milestone gate.
 
-Primary question: can Prometheist deterministically allocate durable work across bounded concurrent execution resources, survive destruction of every worker process, and resume without any privileged Primary Agent or persistent LLM context?
+Primary question: can Prometheist deterministically allocate durable work across bounded concurrent execution resources, survive destruction of every worker process, preserve bounded current cognitive context, and resume without any privileged Primary Agent or persistent LLM context?
 
 The milestone generalizes its deterministic single-focus scheduler seed into a resource-aware concurrent Attention Fabric with explicit resource classes/capacities, safe headroom, deterministic task requirements/reservations, scheduling epochs, atomic assignments, contention-driven preemption, authoritative resource-observation snapshots, service guarantees, `PREEMPTIBLE`/`CHECKPOINT_ONLY`/`ATOMIC` interruption semantics, dependencies, task-neutral capabilities, resumable stateless workers, and process-kill/restart acceptance.
 
-> **Attention determines which durable tasks deserve execution. Resource admission determines which compatible subset can safely execute concurrently on the available hardware.**
+The late release-candidate continuity correction adds one additional primitive justified by the native experiment:
+
+```text
+InteractionWorkingState
+  state_id
+  revision
+  conversation_ids
+  active_event_ids   # bounded canonical provenance pointers
+```
+
+WorkingState is not long-term memory, a copied transcript, or a free-form summary. It records only which canonical events are currently active. JIT Memory rehydrates those events and separately resolves older historical needs.
+
+> **Attention determines which durable tasks deserve execution. Resource admission determines which compatible subset can safely execute concurrently on the available hardware. WorkingState preserves which canonical evidence is cognitively active across disposable inference calls.**
 
 Higher-priority work should execute concurrently with lower-priority work when safe capacity exists. Preemption occurs only when contention prevents admission and policy permits yielding.
 
-Configured capacity is the initial deterministic baseline, not a claim of live
-availability. Before durable workers execute real work, discovery and monitoring
-must produce persisted, freshness-bounded snapshots that epochs reference as
-authoritative inputs. Identical task state, resource snapshot, and policy must
-still produce the same scheduling decision.
+Configured capacity is the initial deterministic baseline, not a claim of live availability. Before durable workers execute real work, discovery and monitoring must produce persisted, freshness-bounded snapshots that epochs reference as authoritative inputs. Identical task state, resource snapshot, and policy must still produce the same scheduling decision.
 
 Critical invariant:
 
-> **Scheduling decisions belong to persistent deterministic system policy; workers execute admitted assignments but do not own system attention or resource-allocation authority.**
+> **Scheduling decisions and current cognitive activation belong to persistent system state; workers execute admitted assignments but do not own attention, memory, continuity, or resource-allocation authority.**
+
+v0.7 acceptance must keep the four-turn Kestrel experiment frozen and demonstrate that the WorkingState intervention repairs continuity without phrase-specific regex policy, hidden transcripts, or weakened memory evidence admission.
 
 ---
 
-## v0.8 — Deterministic perception and salience
+## v0.8 — Deterministic perception and salience (subject to post-v0.7 rebaseline)
 
 Primary question: can Prometheist continuously receive heterogeneous external observations, cheaply identify what matters, and produce appropriate reflex, orienting, deliberate, or ignore dispositions without requiring an LLM to inspect every input?
 
 Deliverables include normalized `Percept` contracts (including user interaction), pluggable sources/sensors, bounded input buffers, deterministic anomaly detection where feasible, structured threat/opportunity/goal/novelty/uncertainty/system-integrity salience, situation assembly, deterministic task formation, `REFLEX`/`ORIENT`/`DELIBERATE`/`IGNORE`, bounded pre-authorized reflexes, and optional model-assisted semantic classification without policy authority.
+
+The post-v0.7 rebaseline must explicitly compare this milestone against a possible richer epistemic WorkingState / recurrent-inference milestone motivated by `docs/concepts/lessons_from_cognitive_neuroscience.md` and the measured continuity failure. Do not silently combine both mechanisms; whichever comes next must be a frozen one-mechanism experiment.
 
 ---
 
@@ -101,11 +122,11 @@ See [`architecture/INTERACTION_CONTINUITY.md`](architecture/INTERACTION_CONTINUI
 
 ## v0.11 — Integrated persistent cognitive loop
 
-Primary question: can perception, retention, memory, attention, capabilities, disposable cognition, and natural interaction continuity operate as one continuous system even though no worker, LLM invocation, or chat session itself possesses continuity?
+Primary question: can perception, retention, memory, working state, attention, capabilities, disposable cognition, and natural interaction continuity operate as one continuous system even though no worker, LLM invocation, or chat session itself possesses continuity?
 
-The integrated loop is: perceive -> classify salience -> apply retention -> assemble situation -> form/update durable task -> allocate attention/resources -> invoke capabilities -> request JIT Memory only when required -> reason/act -> persist result -> perceive resulting state.
+The integrated loop is: perceive -> classify salience -> apply retention -> assemble situation/working state -> form/update durable task -> allocate attention/resources -> invoke capabilities -> request JIT Memory only when required -> reason/act -> persist result -> update active state -> perceive resulting state.
 
-It must have no privileged Primary Agent, no required persistent agent identities, bounded task-local context, demand-driven JIT Memory, causal provenance, nested tasks, concurrent workflows, orientation/resumption, opportunity-triggered attention, and model/backend replacement.
+It must have no privileged Primary Agent, no required persistent agent identities, bounded task-local context, bounded working state, demand-driven JIT Memory, causal provenance, nested tasks, concurrent workflows, orientation/resumption, opportunity-triggered attention, and model/backend replacement.
 
 Conversation is an interface, not the execution engine:
 
@@ -114,6 +135,7 @@ conversation != agent execution
 conversation != task
 conversation != attention lane
 conversation != memory scope
+conversation != working state
 ```
 
 A user must be able to move naturally among prior subjects without naming or switching conversations. Session/device identifiers remain provenance but do not normally bound semantic recall. Genuine ambiguity should produce natural semantic clarification rather than requests for internal identifiers.
@@ -128,21 +150,21 @@ Primary question: is the complete architecture robust enough to trust as persist
 
 Deliverables include migrations, backup/restore, export/import, crash recovery, internal-history protection, permissions, structured logging, deterministic startup/recovery, model replacement, reproducible installation, resource profiling, assignment/reservation recovery, starvation/deadlock/priority-inversion handling, oversubscription protection, capability timeout/retry semantics, sensor failure behavior, retention-policy corruption detection, protected evidence, and partial-epoch recovery.
 
-Portability must preserve authoritative history, retained evidence, durable tasks, checkpoints, causal provenance, and interaction continuity across machines with different resources and compatible model backends.
+Portability must preserve authoritative history, retained evidence, durable tasks, working state, checkpoints, causal provenance, and interaction continuity across machines with different resources and compatible model backends.
 
 ---
 
 ## v1.0 — First complete Prometheist cognitive architecture
 
-> **Prometheist is a coherent, local-first, model-agnostic persistent cognitive system in which perception, memory, attention, interaction continuity, policy, and execution state remain system-owned while all model invocations and workers are disposable.**
+> **Prometheist is a coherent, local-first, model-agnostic persistent cognitive system in which perception, memory, working state, attention, interaction continuity, policy, and execution state remain system-owned while all model invocations and workers are disposable.**
 
-A defensible v1.0 must demonstrate stateless LLM calls; no required Primary Agent; system-owned identity; deterministic retention/salience/task formation/attention/resource admission; bounded provenance-bearing JIT Memory; abstention; interruption safety and service guarantees; concurrent assignments without race-based authority or unsafe oversubscription; worker/model replacement; backup/restore/migration; modest-hardware usability; and reproducible acceptance suites.
+A defensible v1.0 must demonstrate stateless LLM calls; no required Primary Agent; system-owned identity; deterministic retention/salience/task formation/attention/resource admission; bounded current working state; bounded provenance-bearing JIT Memory; abstention; interruption safety and service guarantees; concurrent assignments without race-based authority or unsafe oversubscription; worker/model replacement; backup/restore/migration; modest-hardware usability; and reproducible acceptance suites.
 
 It must also demonstrate that conversations, sessions, devices, and interfaces are provenance metadata rather than cognitive boundaries; natural topic resumption works across those boundaries without explicit switching; topic/situation associations may overlap; genuine ambiguity produces natural clarification; and unsupported historical references can abstain.
 
 The defining invariant is:
 
-> **You can terminate every LLM and worker process, replace the model, cross chat/session/device boundaries, restart Prometheist, and the system still retains its durable identity, internal history, unfinished intentions, attention state, retained evidence, natural interaction continuity, and causal provenance—because none of those things belonged to an agent, conversation, or model context in the first place.**
+> **You can terminate every LLM and worker process, replace the model, cross chat/session/device boundaries, restart Prometheist, and the system still retains its durable identity, internal history, active working state, unfinished intentions, attention state, retained evidence, natural interaction continuity, and causal provenance—because none of those things belonged to an agent, conversation, or model context in the first place.**
 
 ## Deferred beyond v1.0 unless evidence pulls them forward
 
