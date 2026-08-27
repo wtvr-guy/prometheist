@@ -48,6 +48,58 @@ active_event_ids       # bounded canonical event pointers
 
 The active set is an activation record, not a second memory store. Canonical event content remains authoritative in the append-only event ledger.
 
+## Additional refinement: minimize model-authored control text
+
+The first WorkingState native run produced another useful failure. WorkingState correctly rehydrated the active Kestrel turn, but the stateless memory planner generated descriptive strings such as `Kestrel rule` and `constraint profile` rather than a stable historical anchor. The kernel therefore had present context but still failed to surface the older rule.
+
+That failure exposed a more general control-plane principle:
+
+> **Use model-generated natural language only when natural language is the required product. Prefer closed categorical or mechanically verifiable outputs for routing and state transitions.**
+
+The v0.7 model-output contracts are therefore tightened again:
+
+### Interaction routing
+
+The model returns only one enum:
+
+```text
+required_capability:
+  NONE
+  INTERNAL_MEMORY
+  MEMORY_ANALYSIS
+```
+
+The application maps that enum to an exact installed capability id. The model no longer emits `capability_query` or `capability_input` strings.
+
+### Memory routing
+
+The application deterministically builds a bounded anchor catalog from the exact current task plus active canonical event text. The memory-routing model returns only:
+
+```text
+scope:
+  ACTIVE_ONLY
+  HISTORY_ONLY
+  ACTIVE_AND_HISTORY
+
+anchor_indices: [bounded integer indices into the supplied catalog]
+```
+
+The model cannot invent an entity or retrieval query. The system validates every selected index against the catalog and converts the selected canonical tokens into retrieval anchors. Extra output fields are rejected.
+
+This means the semantic model is used for the part models are useful at—choosing among bounded interpretations—without letting it author the control language consumed by deterministic subsystems.
+
+The preference order for model-output design is now:
+
+```text
+enum / boolean / id / bounded index
+    before
+extractive exact-span selection
+    before
+free-form generated natural language
+```
+
+Final user-facing answers remain natural language because language is the product in that stage.
+
 ## Execution model
 
 The revised continuity path is:
@@ -55,9 +107,13 @@ The revised continuity path is:
 ```text
 new interaction
     -> load bounded durable WorkingState
-    -> fresh stateless capability classification / memory planning
-    -> JIT Memory rehydrates active canonical event IDs first
-    -> unresolved historical need falls through to deterministic long-term retrieval
+    -> fresh stateless capability enum selection
+    -> if memory is required, rehydrate bounded active canonical text
+    -> deterministically build anchor catalog from current task + active canonical text
+    -> fresh stateless memory router selects scope enum + anchor indices only
+    -> JIT Memory rehydrates active canonical event IDs
+    -> when requested, deterministic long-term retrieval uses canonical task text + validated anchors
+    -> compose bounded active and historical evidence without either class starving the other
     -> fresh stateless response synthesis
     -> persist response
     -> promote newly used canonical evidence + current prompt/response into WorkingState
@@ -75,7 +131,9 @@ No LLM invocation owns any of those states.
 
 The old `requires_persisted_context()` phrase detector is deprecated and disabled in the live path. The interaction runtime now checks whether durable WorkingState exists rather than trying to infer continuity from a list of English phrases.
 
-Likewise, v0.7 no longer generates interaction-layer `Kestrel`/proper-name/recency cues through hand-maintained regex policy. Historical `MemoryNeed` entities/query formulations are proposed by a fresh stateless semantic memory-planning call and then passed into deterministic JIT Memory. The deterministic lexical/entity/association routes inside JIT Memory remain valid long-term-memory mechanisms; what is deprecated is application policy that attempts to enumerate natural-language continuity expressions.
+Likewise, v0.7 no longer generates interaction-layer project/proper-name/recency cues through hand-maintained regex policy. The default capability registry no longer contains a growing continuity vocabulary such as `those approaches`, `just discussed`, `ruled out`, `nickname`, and similar terms. The live model path resolves a constrained capability enum to an exact capability id instead.
+
+The deterministic lexical/entity/association routes inside JIT Memory remain valid long-term-memory mechanisms. The canonical current user text is still a legitimate retrieval cue because it is user-authored source data, not model-authored policy. Validated anchor values are likewise copied from canonical input through selected indices rather than invented by the model.
 
 ## Skepticism / epistemic boundary
 
@@ -91,9 +149,11 @@ It does **not** mean:
 
 JIT Memory rehydrates canonical source evidence, and later epistemic working-state milestones may add explicit claim/hypothesis/confidence/counterevidence structures. v0.7 intentionally does not smuggle those future semantics into a text summary.
 
+The categorical/extractive schema rule supports the same skepticism goal. A model may choose a route or select an existing anchor; it cannot silently transform its own generated interpretation into new canonical evidence.
+
 ## Scientific-method acceptance
 
-Baseline A is the now-observed direct-cue design. Intervention B is durable active-event WorkingState.
+Baseline A is the now-observed direct-cue design. Intervention B is durable active-event WorkingState with categorical/extractive model routing.
 
 Keep the model, database, hardware, randomized tokens, process-destruction requirements, and four-turn Kestrel scenario fixed. The intervention is accepted only if it:
 
@@ -104,9 +164,11 @@ Keep the model, database, hardware, randomized tokens, process-destruction requi
 5. does not depend on phrase-specific continuity regexes;
 6. keeps active state bounded;
 7. preserves abstention and conservative long-term evidence admission;
-8. does not regress deterministic non-Ollama tests.
+8. does not require model-generated natural-language capability/search/entity fields;
+9. rejects invented/invalid anchor indices or stray schema fields;
+10. does not regress deterministic non-Ollama tests.
 
-If the same frozen benchmark still fails, inspect the WorkingState/JIT-Memory boundary rather than adding another phrase rule. A broader mechanism is justified only by a measured failure.
+If the same frozen benchmark still fails, inspect the WorkingState/JIT-Memory boundary and the bounded routing schema rather than adding another phrase rule or free-form search field. A broader mechanism is justified only by a measured failure.
 
 ## Scope boundary
 
@@ -118,4 +180,4 @@ The v0.7 invariant remains:
 
 > **Prometheist owns continuity; models and workers are disposable compute.**
 
-The correction makes that invariant more literal: even the current cognitive context is now explicit system state rather than something reconstructed from a worker's linguistic guesswork.
+The correction makes that invariant more literal: current cognitive context and control-plane routing are explicit system state/contracts rather than something hidden in worker context or encoded in model-authored natural-language control strings.
