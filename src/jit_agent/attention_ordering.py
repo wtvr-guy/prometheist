@@ -46,11 +46,14 @@ class AttentionWorkItem(BaseModel):
 
 
 def deterministic_dependency_order(items: list[AttentionWorkItem]) -> list[str]:
-    """Return a stable topological order or fail closed.
+    """Return a stable topological priority order or fail closed.
 
-    Dependencies always precede dependents. When several items are runnable at
-    the same time, lower numeric priority wins and canonical ``item_id`` is the
-    final deterministic tie-breaker. Input list order has no effect.
+    Dependencies always precede dependents. At each decision point, lower
+    numeric priority wins among *currently runnable* items and canonical
+    ``item_id`` is the final deterministic tie-breaker. Readiness is recomputed
+    after every item so newly unblocked higher-priority work is not delayed
+    behind a batch of previously runnable lower-priority work. Input list order
+    has no effect.
     """
 
     by_id = {item.item_id: item.model_copy(deep=True) for item in items}
@@ -77,8 +80,10 @@ def deterministic_dependency_order(items: list[AttentionWorkItem]) -> list[str]:
         ]
         if not ready:
             raise ValueError("attention work dependencies contain a cycle")
-        ready.sort(key=lambda item_id: (by_id[item_id].priority, item_id))
-        for item_id in ready:
-            ordered.append(item_id)
-            remaining.remove(item_id)
+        next_item = min(
+            ready,
+            key=lambda item_id: (by_id[item_id].priority, item_id),
+        )
+        ordered.append(next_item)
+        remaining.remove(next_item)
     return ordered
