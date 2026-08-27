@@ -40,8 +40,8 @@ def deterministic_working_state_id(conversation_id: UUID) -> UUID:
     return uuid5(conversation_id, "interaction-working-state")
 
 
-def deterministic_working_state_event_id(interaction_id: UUID, revision: int) -> UUID:
-    return uuid5(interaction_id, f"working-state-event:{revision}")
+def deterministic_working_state_event_id(interaction_id: UUID, activation_key: str) -> UUID:
+    return uuid5(interaction_id, f"working-state-event:{activation_key}")
 
 
 def load_working_state(
@@ -82,14 +82,22 @@ def activate_working_state(
     conversation_id: UUID,
     correlation_id: UUID,
     activated_event_ids: list[UUID],
+    activation_key: str = "response",
 ) -> InteractionWorkingState:
     """Promote canonical events into bounded active state.
 
-    Activation order is significant: newly used evidence comes first, then the
-    older active set. No linguistic interpretation or copied event content is
-    stored in the state itself. Multiple activation points in one interaction
-    create append-only revisions rather than rewriting a prior state event.
+    Each activation phase has a deterministic event ID. A retry of the same
+    phase therefore returns the already-persisted revision instead of advancing
+    state again. Distinct phases (for example `memory` and `response`) remain
+    append-only revisions within the same interaction.
     """
+
+    event_id = deterministic_working_state_event_id(interaction_id, activation_key)
+    existing = event_store.get_event_by_id(conn, event_id)
+    if existing is not None:
+        if existing.event_type is not EventType.INTERACTION_WORKING_STATE:
+            raise RuntimeError("working-state activation id collides with another event type")
+        return InteractionWorkingState.model_validate(existing.payload["state"])
 
     previous = load_working_state(conn, conversation_id)
     state_id = (
@@ -121,8 +129,8 @@ def activate_working_state(
         correlation_id=correlation_id,
         event_type=EventType.INTERACTION_WORKING_STATE,
         source=SOURCE,
-        payload={"state": state.model_dump(mode="json")},
-        event_id=deterministic_working_state_event_id(interaction_id, revision),
+        payload={"activation_key": activation_key, "state": state.model_dump(mode="json")},
+        event_id=event_id,
     )
     return state
 
