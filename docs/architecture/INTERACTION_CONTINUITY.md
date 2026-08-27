@@ -48,6 +48,8 @@ The initial activation intentionally **casts a relatively wide deterministic net
 
 This is cognitive substrate, not a model-selected capability.
 
+The current v0.7 deterministic profile uses a direct candidate window of 750 and zero association hops before surfacing the bounded packet. Those numbers are registered implementation constraints, not constitutional constants; changing them requires the evidence process in [`../engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md`](../engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md).
+
 ## Recurrent stateless capability loop
 
 After initial activation, a fresh routing model receives:
@@ -66,7 +68,7 @@ RESPOND
 or
 
 USE_CAPABILITIES
-    capability_indices = [i, ...]   # bounded unique catalog indices
+    capability_indices = [i, ...]   # current v0.7: 1-4 unique catalog indices
 ```
 
 `RESPOND` must be explicit. An omitted/invalid action does not silently become a response.
@@ -84,7 +86,7 @@ If `USE_CAPABILITIES` is selected, that LLM call ends. Prometheist then:
 
 The original public capabilities remain available in later rounds, so the fresh worker may reuse them. Follow-up capabilities may also become visible after prerequisite research produced usable evidence.
 
-The capability loop must be policy-bounded. The exact round bound is an empirical/runtime constraint governed by [`../engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md`](../engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md), not a constitutional constant. Reaching the configured bound without an explicit `RESPOND` fails closed rather than forcing a potentially unsupported answer.
+The current v0.7 capability loop is bounded to four capability rounds. Four is an empirical/runtime constraint, not a constitutional constant. Reaching the configured bound without an explicit `RESPOND` fails closed rather than forcing a potentially unsupported answer.
 
 ## Progressive memory focus
 
@@ -93,10 +95,10 @@ The internal retrieval strategy deliberately narrows candidate subjects while in
 ### Level 1 — automatic broad activation
 
 - happens on every percept;
-- wide deterministic candidate window;
-- small surfaced packet;
-- zero association hops;
-- intended for high recall, not evidentiary sufficiency.
+- current direct candidate window: 750;
+- association hops: 0;
+- small bounded surfaced packet;
+- high-recall activation role.
 
 ### Level 2 — `deeper_research`
 
@@ -104,9 +106,16 @@ Public meaning:
 
 > **Investigate the current question further using additional persisted internal evidence around one or more currently available memory candidates.**
 
-The fresh capability worker selects a bounded set of candidate indices from the current MemoryPacket. It does not generate search text. Prometheist resolves those indices to canonical event IDs and performs a narrower direct search with a broader association budget around each selected candidate.
+The fresh capability worker selects **1-4 candidate indices** from the current MemoryPacket. It does not generate search text. Prometheist resolves those indices to canonical event IDs and performs a narrower direct search with a broader association budget around each selected candidate.
 
-The exact direct-candidate, association-edge, and hop bounds are empirical constraints. They must remain bounded and governed by the constraint registry rather than treated as constitutional constants.
+Current v0.7 deterministic profile:
+
+- direct candidate window: 350;
+- association edges: up to 600;
+- association hops: up to 3;
+- bounded returned evidence.
+
+These are registered implementation bounds governed by empirical constraint policy.
 
 ### Level 2b — `cross_reference`
 
@@ -114,7 +123,16 @@ Public meaning:
 
 > **Investigate relationships among two or more currently available internal memory candidates, including shared, conflicting, causal, or bridging evidence.**
 
-The worker selects bounded candidate indices only. Prometheist resolves them to canonical events and performs one joint bounded associative investigation over the selected set. The model does not write a relationship description.
+The worker selects **2-4 candidate indices** only. Prometheist resolves them to canonical events and performs one joint bounded associative investigation over the selected set. The model does not write a relationship description.
+
+Current v0.7 deterministic profile:
+
+- direct candidate window: 250;
+- association edges: up to 900;
+- association hops: up to 4;
+- bounded returned evidence.
+
+These are registered implementation bounds governed by empirical constraint policy.
 
 ### Level 3 — `focused_recall`
 
@@ -124,11 +142,20 @@ Public meaning:
 
 `focused_recall` is hidden from the initial catalog and becomes available after broader research produces usable evidence. The worker selects exactly one candidate index from the most recent non-empty broader-research packet.
 
+Current v0.7 deterministic profile:
+
+- direct candidate window: 150;
+- association edges: up to 1200;
+- association hops: up to 5;
+- bounded returned evidence.
+
+These are registered implementation bounds governed by empirical constraint policy.
+
 If focused recall returns no useful evidence, no response is forced. The next fresh routing worker may:
 
 - explicitly `RESPOND` with the evidence already available;
-- run focused recall again against a different candidate;
-- return to broader research;
+- run `focused_recall` again against a different candidate;
+- return to `deeper_research`;
 - cross-reference another candidate set;
 - invoke another installed capability.
 
@@ -190,7 +217,7 @@ mechanically verified extractive selection
 free-form generated natural language
 ```
 
-The live control path therefore prefers:
+The live v0.7 control path therefore uses:
 
 - explicit action enums;
 - bounded capability indices;
