@@ -62,7 +62,7 @@ def _catalog() -> tuple[CapabilityDescriptor, ...]:
     )
 
 
-def _respond_payload() -> dict:
+def _chat_respond_payload() -> dict:
     return {
         "message": {
             "content": '{"next_action":"RESPOND","capability_indices":[]}',
@@ -72,34 +72,49 @@ def _respond_payload() -> dict:
     }
 
 
+def _generate_respond_payload() -> dict:
+    return {
+        "response": '{"next_action":"RESPOND","capability_indices":[]}',
+        "done_reason": "stop",
+        "eval_count": 12,
+    }
+
+
 def test_qwen3_structured_call_appends_latest_no_think_soft_switch():
     client = OllamaClient(base_url="http://ollama.test", model="qwen3:4b")
-    fake = _FakeHTTPClient([_respond_payload()])
+    fake = _FakeHTTPClient([_chat_respond_payload()])
     client._client = fake
 
     decision = client.classify("Answer from established memory.", _packet(), _catalog())
 
     assert decision.next_action is InteractionAction.RESPOND
+    assert fake.calls[0][0] == "/api/chat"
     assert fake.calls[0][1]["think"] is False
     assert fake.calls[0][1]["messages"][1]["content"].endswith("/no_think")
 
 
-def test_qwen3_instruct_call_omits_thinking_controls():
+def test_qwen3_instruct_call_uses_raw_structured_generate_transport():
     client = OllamaClient(
         base_url="http://ollama.test",
         model="qwen3:4b-instruct-2507-q4_K_M",
     )
-    fake = _FakeHTTPClient([_respond_payload()])
+    fake = _FakeHTTPClient([_generate_respond_payload()])
     client._client = fake
 
     decision = client.classify("Answer from established memory.", _packet(), _catalog())
 
     assert decision.next_action is InteractionAction.RESPOND
-    request = fake.calls[0][1]
+    path, request = fake.calls[0]
+    assert path == "/api/generate"
+    assert request["raw"] is True
     assert "think" not in request
-    user_content = request["messages"][1]["content"]
-    assert not user_content.endswith("/no_think")
-    assert "/no_think" not in user_content
+    assert "messages" not in request
+    assert request["format"]
+    assert request["prompt"].startswith("<|im_start|>system\n")
+    assert "<|im_end|>\n<|im_start|>user\n" in request["prompt"]
+    assert "Answer from established memory." in request["prompt"]
+    assert request["prompt"].endswith("<|im_end|>\n<|im_start|>assistant\n")
+    assert "/no_think" not in request["prompt"]
 
 
 def test_router_receives_evidence_without_application_owned_memory_metadata():
@@ -109,23 +124,23 @@ def test_router_receives_evidence_without_application_owned_memory_metadata():
         base_url="http://ollama.test",
         model="qwen3:4b-instruct-2507-q4_K_M",
     )
-    fake = _FakeHTTPClient([_respond_payload()])
+    fake = _FakeHTTPClient([_generate_respond_payload()])
     client._client = fake
 
     decision = client.classify("Answer from established memory.", packet, _catalog())
 
     assert decision.next_action is InteractionAction.RESPOND
-    user_content = fake.calls[0][1]["messages"][1]["content"]
-    assert item.content in user_content
-    assert f"event_type: {item.event_type.value}" in user_content
-    assert str(packet.memory_request_id) not in user_content
-    assert str(item.source_event_id) not in user_content
-    assert str(item.conversation_id) not in user_content
-    assert "conversation_seq:" not in user_content
-    assert "global_seq:" not in user_content
-    assert "created_at:" not in user_content
-    assert "retrieval_reasons:" not in user_content
-    assert "association_provenance_event_ids:" not in user_content
+    prompt = fake.calls[0][1]["prompt"]
+    assert item.content in prompt
+    assert f"event_type: {item.event_type.value}" in prompt
+    assert str(packet.memory_request_id) not in prompt
+    assert str(item.source_event_id) not in prompt
+    assert str(item.conversation_id) not in prompt
+    assert "conversation_seq:" not in prompt
+    assert "global_seq:" not in prompt
+    assert "created_at:" not in prompt
+    assert "retrieval_reasons:" not in prompt
+    assert "association_provenance_event_ids:" not in prompt
 
 
 def test_qwen3_empty_or_thinking_only_output_retries_with_larger_budget():
