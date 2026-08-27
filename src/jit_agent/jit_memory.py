@@ -299,6 +299,7 @@ def _active_working_state_evidence(
     need: MemoryNeed,
     *,
     before_global_seq: int | None,
+    max_items: int | None,
 ) -> list[MemoryEvidence]:
     allowed_types = set(_effective_source_types(need))
     evidence: list[MemoryEvidence] = []
@@ -328,7 +329,7 @@ def _active_working_state_evidence(
                 provenance_event_ids=[],
             )
         )
-        if len(evidence) == need.limit:
+        if max_items is not None and len(evidence) == max_items:
             break
     return evidence
 
@@ -450,6 +451,34 @@ def _compose_evidence(
     return merged[:limit]
 
 
+def _compose_attention_activation(
+    active: list[MemoryEvidence],
+    historical: list[MemoryEvidence],
+    *,
+    recalled_limit: int,
+) -> list[MemoryEvidence]:
+    """Guarantee bounded active state, then add bounded baseline recall."""
+
+    merged: list[MemoryEvidence] = []
+    seen: set[uuid.UUID] = set()
+    for item in active:
+        if item.source_event_id in seen:
+            continue
+        seen.add(item.source_event_id)
+        merged.append(item)
+
+    recalled = 0
+    for item in historical:
+        if item.source_event_id in seen:
+            continue
+        seen.add(item.source_event_id)
+        merged.append(item)
+        recalled += 1
+        if recalled == recalled_limit:
+            break
+    return merged
+
+
 def _merge_historical_packets(
     packets: list[MemoryPacket],
     *,
@@ -528,9 +557,10 @@ def request_attention_activation(
 ) -> MemoryPacket:
     """Return shallow, high-recall activation for every percept.
 
-    The candidate router intentionally casts a wider net than ordinary evidence
-    recall, but only a small bounded packet is surfaced. No association expansion
-    occurs at this level; association depth is reserved for explicit research.
+    All valid application-bounded WorkingState evidence is guaranteed exposure.
+    ``need.limit`` bounds only additional baseline recall beyond that active state.
+    No association expansion occurs at this level; association depth is reserved
+    for explicit research.
     """
 
     memory_request_id = memory_request_id or uuid.uuid4()
@@ -548,6 +578,7 @@ def request_attention_activation(
         conn,
         effective_need,
         before_global_seq=before_global_seq,
+        max_items=None,
     )
     historical: list[MemoryEvidence] = []
     kernel_trace: dict[str, object] | None = None
@@ -569,10 +600,10 @@ def request_attention_activation(
         ]
         kernel_trace = kernel_result.retrieval_trace
 
-    merged = _compose_evidence(
+    merged = _compose_attention_activation(
         active_evidence,
         historical,
-        limit=effective_need.limit,
+        recalled_limit=effective_need.limit,
     )
     packet = MemoryPacket(
         memory_request_id=memory_request_id,
@@ -586,6 +617,9 @@ def request_attention_activation(
             "association_hops": 0,
             "query_strategy": "working_state_plus_baseline_activation",
             "working_state_event_ids": [str(item.source_event_id) for item in active_evidence],
+            "working_state_item_count": len(active_evidence),
+            "baseline_recall_limit": effective_need.limit,
+            "packet_item_limit": len(active_evidence) + effective_need.limit,
             "activation_kernel": kernel_trace,
         },
     )
@@ -651,6 +685,7 @@ def request_memory(
         conn,
         effective_need,
         before_global_seq=before_global_seq,
+        max_items=effective_need.limit,
     )
 
     if not effective_need.include_persisted_history:
