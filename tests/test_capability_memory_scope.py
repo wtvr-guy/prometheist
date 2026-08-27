@@ -11,12 +11,22 @@ from jit_agent.capability_registry import (
     CapabilityPacket,
     deterministic_capability_request_id,
 )
-from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
+from jit_agent.models import (
+    EventType,
+    MemoryNeedDecision,
+    MemoryPacket,
+    MemoryRetrievalScope,
+)
 
 
 class FakeLLM:
     def plan_memory(self, task: str) -> MemoryNeedDecision:
-        return MemoryNeedDecision(query_text=task, entities=[])
+        catalog = task.split("[Anchor catalog]\n", 1)[1]
+        first_index = int(catalog.splitlines()[0].split(": ", 1)[0])
+        return MemoryNeedDecision(
+            scope=MemoryRetrievalScope.HISTORY_ONLY,
+            anchor_indices=[first_index],
+        )
 
 
 @pytest.mark.parametrize("capability_id", ["internal_memory", "memory_analysis"])
@@ -34,10 +44,10 @@ def test_persisted_memory_capabilities_are_not_walled_by_conversation(
         capability_request_id=capability_request_id,
         requester_task_id=task_id,
         requester_step_id=step_id,
-        need=CapabilityNeed(query_text="What did I establish previously?", limit=1),
-        matches=[CapabilityMatch(descriptor=registration.descriptor, score=1.0)],
+        need=CapabilityNeed(query_text=capability_id, limit=1),
+        matches=[CapabilityMatch(descriptor=registration.descriptor, score=8.0)],
         selected_query_role="canonical",
-        selected_query_text="What did I establish previously?",
+        selected_query_text=capability_id,
     )
 
     monkeypatch.setattr(
@@ -97,11 +107,12 @@ def test_persisted_memory_capabilities_are_not_walled_by_conversation(
         conversation_id=active_conversation_id,
         correlation_id=uuid.uuid4(),
         task_text="What did I establish previously?",
-        capability_input=None,
         before_global_seq=73,
         memory_request_id=memory_request_id,
     )
 
     assert captured["event_conversation_id"] == active_conversation_id
     assert captured["need"].conversation_id is None
+    assert captured["need"].include_persisted_history is True
+    assert captured["need"].active_event_ids == []
     assert captured["before_global_seq"] == 73
