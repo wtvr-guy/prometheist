@@ -102,6 +102,32 @@ Must include normal, slow, hung, killed, restarted, DB-delayed, and temporarily 
 
 Must use the actual supported local model(s), prompt/schema sizes, cold/warm state, malformed first outputs, and host contention. Measure schema success, truncation, retry recovery, latency distribution, and wasted inference.
 
+## v0.7 evidence status
+
+The v0.7 audit is fail-fast in CI and currently discovers **171** production/operational numeric constraints. All 171 are explicitly registered with exact expected values; a new constraint, stale registration, changed value, invalid classification, missing benchmark, or missing required evidence makes the static gate fail.
+
+One previously audited constraint was eliminated rather than justified: derived association IDs no longer truncate SHA-256 to a 20-character prefix. Association projection version 3 uses the full digest, removing that collision-risk knob from the production design.
+
+The current deterministic evidence is intentionally conservative:
+
+- `MEM-SCORE-001`: **INSUFFICIENT_DISCRIMINATION**. The current scoring policy passes the frozen corpora, but thousands of materially different policies are quality-equivalent under present evidence.
+- `MEM-BREADTH-001`: **INSUFFICIENT_DISCRIMINATION**. Packet limit 5 passes 31/31 frozen questions with complete required-evidence recall and abstention, but every tested limit from 3 through 24 is quality-equivalent; other breadth layers remain unresolved.
+- `MEM-GRAPH-001`: **INSUFFICIENT_DISCRIMINATION**. The current 2-hop/0.85 baseline passes, but 120 explored hop/decay policies are quality-equivalent, including a one-hop alternative.
+- `CAP-DISCOVERY-001`: **INSUFFICIENT_DISCRIMINATION**. All five materially different coefficient vectors tested preserve every current routing oracle.
+- `SCHED-SERVICE-001`: **INSUFFICIENT_DISCRIMINATION**. Quarter-, half-, current-, double-, and quadruple-scaled wait vectors preserve the only currently measurable service-order invariant; exact values cannot be identified without workload-arrival data and queue-delay objectives.
+- lexical/stemming heuristics remain **PROVISIONAL** because the current scoring benchmark does not independently vary them.
+- `CAP-LOOP-001`, `RES-NATIVE-001`, `WORKER-NATIVE-001`, and `LLM-NATIVE-001` remain **NATIVE_REQUIRED** where local-model or target-host behavior is part of the quantity being measured.
+
+The deterministic record is `benchmarks/results/DETERMINISTIC-CONSTRAINTS_2026-08-27_initial.json`. The scoring record is `benchmarks/results/MEM-SCORE-001_2026-08-27_initial.json`.
+
+Native calibration is deliberately separate from release acceptance. On the intended Windows development host, collect pilot evidence with:
+
+```powershell
+.\scripts\run_native_constraint_calibration.ps1
+```
+
+That writes a timestamped `benchmarks/results/NATIVE-CONSTRAINTS_*.json` file containing host-resource samples, the frozen worker/runtime block duration/result, and controlled Ollama token-cap/latency observations. A pilot does not automatically verify a value; it establishes actual native data from which the required cold/warm/pressure/fault scenarios can be expanded if the evidence remains non-discriminating.
+
 ## Release rule
 
 A release is not considered empirically calibrated merely because all functional tests pass. Before release, every runtime constraint discovered by the audit must be classified, every empirical/safety/environment tunable must have a benchmark specification, and every release-required calibration must have a result artifact tied to the release revision.
