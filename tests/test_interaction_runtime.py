@@ -75,10 +75,15 @@ class FakeLLM:
                     return f"You asked me to remember {match.group(0)}."
         return "Got it."
 
-    def plan_memory(self, task: str) -> MemoryNeedDecision:
+    def plan_memory(
+        self,
+        task: str,
+        *,
+        active_state_available: bool,
+    ) -> MemoryNeedDecision:
         scope = (
             MemoryRetrievalScope.ACTIVE_AND_HISTORY
-            if "[Active canonical context]" in task
+            if active_state_available
             else MemoryRetrievalScope.HISTORY_ONLY
         )
         return MemoryNeedDecision(
