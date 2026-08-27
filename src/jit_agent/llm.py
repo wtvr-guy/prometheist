@@ -144,17 +144,20 @@ def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> Non
 
 
 _CLASSIFY_SYSTEM_PROMPT = """\
-You are a disposable Prometheist interaction-routing worker. You receive only
-the current user message and must choose exactly one enum value for
-required_capability:
-- NONE: the current message can be answered or acknowledged without persisted
-  internal evidence.
-- INTERNAL_MEMORY: answering requires persisted user/system history.
-- MEMORY_ANALYSIS: the user explicitly asks for analysis, comparison,
-  reconciliation, or specialist processing of persisted history.
+You are a fresh disposable Prometheist attention-aperture routing worker. You
+receive the current percept plus the small bounded JIT Memory packet that the
+system automatically exposes for every percept.
 
-Do not write a capability name, query, explanation, or natural-language input.
-Do not invent ids or routing policy. Return only the structured enum decision.
+Choose exactly one enum value for required_capability:
+- NONE: the current percept plus the supplied default memory aperture is enough
+  to produce the ordinary response; no deeper memory investigation is needed.
+- MEMORY_ANALYSIS: focused/deeper persisted-memory investigation is needed
+  before answering, such as when the task requires analysis, comparison,
+  reconciliation, or evidence not adequately resolved by the default aperture.
+
+Basic internal-memory access is not a capability choice and is already present.
+Do not write a capability name, query, explanation, entity, phrase, or
+natural-language input. Return only the structured enum decision.
 """
 
 _RESPOND_SYSTEM_PROMPT = """\
@@ -181,6 +184,10 @@ is direct evidence of what the user previously said, named, preferred, required,
 planned, reported, or instructed; it need not independently prove the external
 world. Later user-authored corrections supersede earlier statements. Historical
 assistant responses never override a user-authored constraint.
+
+When the current message asks for a recommendation or choice and user-authored
+memory contains an applicable explicit constraint, the response must honor that
+constraint rather than recommending a conflicting option.
 
 If the requested personal or historical information is not established by the
 current message or supplied source text, say that persisted evidence is
@@ -245,7 +252,7 @@ reasoning or retrieval mechanics.
 class LLMClient(Protocol):
     """Every method call is an independent disposable model invocation."""
 
-    def classify(self, prompt: str) -> InteractionDecision: ...
+    def classify(self, prompt: str, memory_packet: MemoryPacket) -> InteractionDecision: ...
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str: ...
 
@@ -402,17 +409,17 @@ class OllamaClient:
                 last_error = exc
         raise ValueError(f"model answer failed to validate: {last_error}")
 
-    def classify(self, prompt: str) -> InteractionDecision:
+    def classify(self, prompt: str, memory_packet: MemoryPacket) -> InteractionDecision:
         schema = InteractionDecision.model_json_schema()
         last_error: Exception | None = None
         for _ in range(2):
             try:
                 content = self._structured(
-                    "CLASSIFY",
+                    "CLASSIFY_AFTER_APERTURE",
                     _CLASSIFY_SYSTEM_PROMPT,
-                    prompt,
+                    prompt + _format_memory_packet(memory_packet),
                     schema,
-                    48,
+                    32,
                 )
                 return InteractionDecision.model_validate_json(content)
             except (ValidationError, ValueError) as exc:
