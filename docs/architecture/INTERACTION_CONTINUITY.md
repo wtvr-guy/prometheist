@@ -1,38 +1,81 @@
 # Interaction Continuity
 
-**Status:** active architecture requirement. Revised 2026-08-26 after native v0.7 acceptance falsified the phrase-cue continuity approach.
+**Status:** active architecture requirement. Revised 2026-08-27 after native v0.7 acceptance exposed two failed continuity assumptions.
 
 ## Principle
 
-Prometheist must not require a user to manage conversations as memory namespaces, and it must not require application code to enumerate every natural-language way a user can refer to recent context.
+Prometheist must not require a user to manage conversations as memory namespaces, and it must not require application code to enumerate every natural-language way a user can refer to recent or historical context.
 
 The governing invariant is:
 
-> **Conversations, sessions, devices, and interfaces are provenance metadata—not cognitive boundaries. Current context is system-owned durable state; older evidence is reconstructed just in time from persistent memory.**
+> **Conversations, sessions, devices, and interfaces are provenance metadata—not cognitive boundaries. Current context and access to persistent memory are system-owned cognitive substrate.**
 
-This distinction is now explicit:
+Three mechanisms remain distinct:
 
 - **WorkingState** answers: which canonical events are active now?
-- **JIT Memory** answers: which older persisted evidence satisfies an unresolved information need?
-- **JIT Attention** answers: which durable task deserves execution/resources now?
+- **JIT Memory** answers: which persisted canonical evidence is potentially relevant now?
+- **JIT Attention** answers: which durable work receives execution/resources now?
 
 No LLM invocation owns any of those states.
 
-## Why the v0.7 mechanism changed
+## Experimental corrections
 
-The first v0.7 release-candidate implementation attempted to reconstruct continuity directly from each current utterance. Native Ollama acceptance exposed a sequence of increasingly specific repairs: supplemental query handoff, cross-conversation scope, proper-name/entity extraction, singleton entity extraction, and temporal phrase detection.
+### Rejected mechanism 1: phrase-cue continuity
 
-Those repairs improved individual cases, but the pattern itself was a warning. One temporal heuristic also regressed a previously passing turn when `those approaches` was interpreted as a recency cue.
+The first v0.7 release candidate reconstructed continuity from each utterance using progressively more text/entity/recency cues. Native acceptance required increasingly specific repairs and one temporal heuristic regressed an already-passing turn.
 
-The project therefore treats the experiment as a negative result:
+The project therefore records a negative result:
 
-> **Direct utterance -> hand-maintained text/entity/recency cues -> MemoryNeed is not accepted as the general interaction-continuity architecture.**
+> **Direct utterance -> hand-maintained text/entity/recency rules -> MemoryNeed is not accepted as the general continuity architecture.**
 
-See [`../milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md`](../milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md).
+WorkingState replaced that approach with a bounded set of canonical active-event IDs.
+
+### Rejected mechanism 2: ask before remembering
+
+A later native run exposed a deeper problem. On the first Kestrel turn, the stateless classifier saw only the current percept and selected no memory capability. The response model therefore never saw the already-persisted rule that ruled out Docker and recommended the conflicting option.
+
+That is not a Kestrel-specific routing error. It is a circular dependency:
+
+> **A stateless model cannot reliably decide whether unseen persistent memory is relevant when the evidence required to make that decision may itself be in persistent memory.**
+
+Accordingly, basic internal-memory access is no longer a model-selected capability in the live interaction path.
+
+## Attention aperture
+
+Every percept automatically opens a small, bounded JIT Memory **attention aperture** before any model routing decision.
+
+```text
+percept
+  +
+durable WorkingState
+  |
+  v
+system-owned bounded JIT recall
+  |
+  v
+default MemoryPacket
+  |
+  +--> fresh stateless routing decision
+          |
+          +--> NONE: ordinary response from percept + aperture packet
+          |
+          +--> MEMORY_ANALYSIS: focus/narrow attention for deeper memory work
+```
+
+The default aperture is deliberately small. It is not intended to reconstruct all persistent history. It gives the fresh model enough immediately relevant canonical evidence to reason about the present situation while keeping context bounded.
+
+If that aperture is insufficient, the model may request `MEMORY_ANALYSIS`. That capability can use constrained scope/index decisions to focus historical retrieval more deeply.
+
+The distinction is:
+
+- **basic recall exposure** = automatic cognitive substrate;
+- **memory analysis** = optional operation performed on memory.
+
+The default capability registry may retain `internal_memory` for generic or historical compatibility, but the live interaction model does not select it.
 
 ## Minimal v0.7 WorkingState
 
-v0.7 introduces a deliberately small `InteractionWorkingState`:
+v0.7 keeps `InteractionWorkingState` deliberately small:
 
 ```text
 state_id
@@ -41,174 +84,105 @@ conversation_ids
 active_event_ids
 ```
 
-`active_event_ids` is a bounded set of pointers to canonical event-log entries that are currently activated by the interaction process.
+`active_event_ids` are bounded pointers to canonical event-log entries that are currently activated by cognition.
 
-WorkingState is **not**:
+WorkingState is not a copied transcript, LLM summary, second autobiographical store, user-profile blob, parsed nickname/options table, or assertion that active content is objectively true. The append-only event ledger remains authoritative.
 
-- a copied transcript;
-- a free-form LLM summary;
-- a second autobiographical memory store;
-- a user-profile blob;
-- a parsed table of nicknames/options/conclusions;
-- a claim that the content of an active event is objectively true.
+The default attention aperture combines the current percept with those active canonical pointers and deterministic long-term recall. Evidence surfaced through the aperture may itself be activated into WorkingState for subsequent stateless calls.
 
-The append-only event ledger remains authoritative. WorkingState only says which source events are currently active.
+## System-wide model-output rule
 
-## Model-output minimization
+Native v0.7 failures also established a broader protocol rule:
 
-The v0.7 failures also exposed a broader control-plane rule:
+> **Model-generated natural language is the representation of last resort. Use it only when natural language is genuinely the product or when no smaller mechanically verifiable representation can express the required semantics.**
 
-> **A model should generate natural language only when natural language is the actual product. Control decisions should be represented with the smallest closed or mechanically verifiable schema that can express them.**
-
-For the live v0.7 path:
-
-- interaction routing returns one capability-requirement enum (`NONE`, `INTERNAL_MEMORY`, or `MEMORY_ANALYSIS`);
-- capability ids are application-owned deterministic mappings from that enum;
-- the model does not emit `capability_query` or `capability_input` strings;
-- memory routing returns one scope enum (`ACTIVE_ONLY`, `HISTORY_ONLY`, or `ACTIVE_AND_HISTORY`) plus bounded integer indices;
-- those indices refer to a deterministic anchor catalog built from the exact current task and active canonical event text;
-- an index outside the supplied catalog is rejected;
-- extra schema fields are rejected rather than silently ignored;
-- the model never writes a retrieval query, entity string, temporal phrase rule, executor name, limit, database control, or event id.
-
-Free-form model output remains appropriate for the final user-facing answer and other future artifacts whose purpose is language generation. It is not the default representation for system policy.
-
-This is stronger than merely using JSON. A JSON string field can still smuggle an unconstrained natural-language control decision into the system. The preferred order is:
+Preferred order:
 
 ```text
-enum / boolean / id / bounded index
+enum / boolean / bounded integer / application-owned id
     before
-extractive exact-span selection
+mechanically verified extractive selection
     before
-free-form generated text
+free-form generated natural language
 ```
+
+This is stronger than "use JSON." A JSON string field can still smuggle probabilistic natural-language policy into the control plane.
+
+For the live v0.7 model path:
+
+- post-aperture interaction routing returns one enum only: `NONE` or `MEMORY_ANALYSIS`;
+- basic internal-memory access is not represented in that enum because it already happened;
+- capability IDs are application-owned;
+- the model emits no capability query/input, retrieval query, entity string, event ID, executor name, database control, explanation, or phrase rule;
+- deeper memory routing returns only a closed scope enum plus bounded integer indices into an application-generated anchor catalog;
+- invalid/duplicate/out-of-range indices and unexpected fields are rejected;
+- final user-facing response text remains natural language because language is the product at that boundary.
+
+Tests must follow the same philosophy. A continuity acceptance test must not grow a hand-written English parser or keyword-list semantic oracle. Where a deterministic verdict is required, the fixture should request an exact machine-verifiable value/tuple and independently verify canonical source-event provenance.
 
 ## Revised interaction path
 
 ```text
-external turn
+external percept
     -> durable interaction task
     -> load current WorkingState
-    -> fresh stateless categorical capability routing
-    -> if memory is needed, build deterministic anchor catalog from current task + active canonical events
-    -> fresh stateless memory routing chooses scope enum + anchor indices only
-    -> JIT Memory rehydrates active canonical events
-    -> if requested, deterministic long-term recall retrieves older canonical evidence
-    -> compose bounded active + historical evidence without either class starving the other
+    -> AUTOMATIC bounded attention-aperture JIT recall
+    -> fresh stateless enum-only routing sees percept + aperture packet
+       -> NONE: respond from that bounded evidence
+       -> MEMORY_ANALYSIS: execute focused/deeper memory workflow
     -> fresh stateless response synthesis
     -> persist response
-    -> activate current prompt/response and newly used evidence
+    -> activate prompt/response and surfaced canonical evidence
 ```
 
-A fresh worker can therefore reconstruct the present situation without inheriting an LLM context window, reverse-engineering continuity from a phrase list, or generating its own control-plane search language.
+This removes the "do I need memory?" decision from a model that has not yet seen memory.
 
-## Text cues: what is deprecated and what remains
+## Text cues: deprecated versus valid
 
-The old interaction-layer phrase detector (`requires_persisted_context`) is deprecated and disabled in the live path. It is retained temporarily only as a compatibility symbol while pre-pivot code/tests are migrated.
+The old interaction-layer phrase detector (`requires_persisted_context`) is deprecated and disabled. The application layer does not maintain a growing regex vocabulary for phrases such as `just`, `those approaches`, or `this plan`, and the default capability registry does not maintain a continuity phrase catalog.
 
-Likewise, the application layer no longer owns a growing regex vocabulary for extracting special entities such as a particular project name or deciding whether words such as `just`, `those`, or `this plan` imply recency. The default capability registry no longer carries continuity phrases such as `those approaches`, `just discussed`, or `ruled out`; the live model path selects a constrained requirement that the application resolves to an exact capability id.
+This does not deprecate text retrieval inside JIT Memory. Canonical current text is user-authored evidence, not model-authored policy. Lexical specificity, deterministic associations, entity/anchor matching, temporal scoring, and future experimentally justified learned candidate generators remain valid internal retrieval mechanisms.
 
-This does **not** deprecate lexical retrieval itself. Lexical specificity, entity/anchor matching, temporal routing, deterministic associations, and future learned candidate generators remain legitimate mechanisms *inside JIT Memory*. The distinction is:
-
-```text
-bad target:
-  model/application policy writes or enumerates natural-language continuity/search phrases
-
-accepted target:
-  bounded active state
-  + categorical routing
-  + extractive/indexed anchors
-  + deterministic evidence retrieval
-```
-
-The canonical current user text may still be used as a deterministic retrieval cue because it is user-authored source data, not model-generated policy. Selected anchor values also come from canonical text through validated indices rather than being invented by the model.
-
-## Interaction stream, situation, and task remain distinct
-
-Prometheist distinguishes:
-
-1. **Interaction stream** — where/when communication occurred: UI/chat, device, source, sequence, timestamps.
-2. **Working/current situation** — the bounded canonical evidence currently activated for cognition.
-3. **Situation/topic associations** — broader overlapping relations among events, people, projects, causes, and episodes; richer assembly remains future work.
-4. **Task/intention** — durable work Prometheist is trying to advance.
-
-These relationships are many-to-many. A situation may span streams; a task may outlive the interaction that created it; one event may participate in several situations.
-
-The minimal v0.7 WorkingState is not a rigid replacement `topic_id`. Rich cross-stream situation assembly remains a later mechanism.
-
-## Conversation IDs remain provenance
-
-`conversation_id` and `conversation_seq` remain useful for exact ordering, audit/debugging, UI grouping, and explicitly source-scoped questions such as "what did I say in this chat?"
-
-They must not normally act as semantic memory walls.
+The line is:
 
 ```text
-conversation != agent execution
-conversation != task
-conversation != attention lane
-conversation != memory scope
-conversation != working state
+rejected:
+  model/application authors or accumulates natural-language control phrases
+
+accepted:
+  canonical source text
+  + bounded active state
+  + deterministic candidate retrieval
+  + categorical/index-based control
+  + provenance-bearing evidence
 ```
 
 ## Epistemic boundary
 
-WorkingState activation must not confuse attention with truth.
+Attention and retrieval are not truth claims.
 
-If event E is active, the state asserts only:
+An active or retrieved event means only that the event is currently relevant enough to expose. It does not mean every proposition inside it is correct, current, or objectively true.
 
-> E is currently relevant enough to keep available.
-
-It does not assert:
-
-> every proposition in E is correct/current/objectively true.
-
-Canonical evidence, corrections, provenance, contradictions, confidence, user-belief versus world-belief, and later epistemic-state mechanisms remain separate concerns. This preserves Prometheist's skepticism requirement: evidence, interpretation, belief, and derived conclusion must not silently collapse into one representation.
-
-The constrained-output rule reinforces this boundary: a routing model may select an existing anchor or evidence scope, but it does not get to turn its own natural-language interpretation into a new authoritative fact.
-
-## Accepted v0.6 behavioral baseline
-
-v0.6 remains a forward behavioral baseline for:
-
-- fresh-process execution across turns;
-- use of recent dialogue plus older history;
-- unrelated historical distractors;
-- persisted-memory access rather than plausible guessing;
-- exact source-event provenance;
-- polarity/negation correctness;
-- causal-source requirements;
-- exact opaque-token preservation.
-
-The v0.7 implementation must preserve those properties without retaining the Primary Agent or a hidden transcript.
+Canonical evidence, corrections, contradictions, confidence, user-belief versus world-belief, and later epistemic-state mechanisms remain separate concerns. This preserves the project skepticism requirement: evidence, interpretation, belief, and derived conclusion must not silently collapse into one representation.
 
 ## Frozen v0.7 experiment
 
-The four-turn Kestrel continuity scenario remains the fixed compatibility experiment. The model, randomized identifiers, database, worker destruction, and provenance assertions stay fixed while the mechanism changes.
+The four-turn Kestrel scenario remains the compatibility experiment, but the oracle itself is now machine-verifiable rather than a list of English keywords. The mechanism is accepted only if it:
 
-The WorkingState intervention is accepted only if it:
+- retrieves the pre-existing Kestrel constraint on Turn 1 before model routing;
+- chooses the compatible PostgreSQL-on-Windows path rather than Docker;
+- preserves restart/cross-conversation recall;
+- survives fresh worker/model calls with no inherited transcript;
+- keeps WorkingState and MemoryPackets bounded;
+- preserves exact source-event provenance and opaque identifiers;
+- uses no phrase-specific continuity rules or model-generated control/search text;
+- permits `MEMORY_ANALYSIS` only as deeper/focused work after the default aperture;
+- passes deterministic CI before native Ollama acceptance.
 
-- preserves the already-passing restart/cross-conversation tests;
-- completes the four-turn scenario;
-- does not use inherited model context;
-- keeps active state bounded;
-- returns canonical source evidence;
-- preserves conservative long-term memory admission/abstention;
-- no longer depends on phrase-specific continuity regexes;
-- does not require model-generated natural-language routing/search fields;
-- passes the deterministic non-Ollama suite before native Ollama acceptance.
-
-If it fails, diagnose the active-state/memory boundary or the categorical/extractive routing contract. Do not add another English phrase rule or model-generated search field simply to make the fixture green.
-
-## Broader natural topic-resumption benchmark
-
-Later benchmarks should include multi-day/session topic resumption, overlapping situations, corrections, ambiguous references, progressive disambiguation, causal chains, and explicit source-scoped questions.
-
-Measurements should include referent accuracy, retrieval precision, temporal correctness, correction/supersession correctness, unnecessary clarification rate, correct clarification under genuine ambiguity, bounded context size, provenance correctness, abstention, and categorical-routing error rate.
-
-The future goal is not a perfect rule-based coreference parser. It is a persistent cognitive system whose active situation and historical evidence remain reconstructible even when every reasoning process is destroyed.
+If it fails, diagnose the aperture/WorkingState/JIT-Memory boundary or constrained routing contract. Do not add another English phrase rule simply to make the fixture green.
 
 ## v1.0 requirement
 
-A defensible v1.0 must demonstrate continuous interaction across sessions, devices, worker destruction, and model replacement. The user should experience one persistent Prometheist, while the physical boundaries of the interface remain available for provenance only.
+A defensible v1.0 must demonstrate continuous interaction across sessions, devices, worker destruction, and model replacement. The user should experience one persistent Prometheist while physical interface boundaries remain provenance only.
 
-> **Current cognitive context belongs to Prometheist itself, not to a chat transcript, worker, model context window, phrase-matching heuristic, or model-authored control string.**
+> **Current cognitive context and basic access to persistent memory belong to Prometheist itself—not to a chat transcript, worker, model context window, phrase heuristic, or model-authored request to remember.**
