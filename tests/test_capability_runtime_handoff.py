@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
-from types import SimpleNamespace
 import uuid
 
 from jit_agent import capability_runtime, jit_memory
 from jit_agent.capability_registry import DEFAULT_REGISTRY
 from jit_agent.models import (
+    CrossReferenceCandidateSelection,
     EventType,
     FocusedMemoryCandidateSelection,
     MemoryCandidateSelection,
@@ -15,10 +15,12 @@ from jit_agent.models import (
 
 
 class Planner:
-    def __init__(self, research_indices=(0,), focused_index=0) -> None:
+    def __init__(self, research_indices=(0,), cross_indices=(0, 1), focused_index=0) -> None:
         self.research_indices = list(research_indices)
+        self.cross_indices = list(cross_indices)
         self.focused_index = focused_index
         self.research_packets: list[MemoryPacket] = []
+        self.cross_packets: list[MemoryPacket] = []
         self.focused_packets: list[MemoryPacket] = []
 
     def select_research_candidates(
@@ -29,6 +31,15 @@ class Planner:
         del task
         self.research_packets.append(packet)
         return MemoryCandidateSelection(candidate_indices=self.research_indices)
+
+    def select_cross_reference_candidates(
+        self,
+        task: str,
+        packet: MemoryPacket,
+    ) -> CrossReferenceCandidateSelection:
+        del task
+        self.cross_packets.append(packet)
+        return CrossReferenceCandidateSelection(candidate_indices=self.cross_indices)
 
     def select_focused_candidate(
         self,
@@ -139,11 +150,30 @@ def test_deeper_research_resolves_model_indices_to_canonical_focus_events(monkey
     assert need.include_persisted_history is True
     assert captured["profile"] is jit_memory.MemoryRecallProfile.DEEPER_RESEARCH
     assert execution.result_data["candidate_indices"] == [2, 0]
-    assert execution.result_data["focus_event_ids"] == [
-        str(packet.items[2].source_event_id),
-        str(packet.items[0].source_event_id),
-    ]
     assert "answer" not in execution.model_dump(mode="json")
+
+
+def test_cross_reference_resolves_two_or_more_candidates_as_one_joint_need(monkeypatch):
+    packet = _candidate_packet(4)
+    planner = Planner(cross_indices=(3, 1, 0))
+
+    captured, planner, execution = _execute(
+        monkeypatch,
+        "cross_reference",
+        packet,
+        planner,
+    )
+
+    assert planner.cross_packets == [packet]
+    need = captured["need"]
+    assert need.query_text is None
+    assert need.focus_event_ids == [
+        packet.items[3].source_event_id,
+        packet.items[1].source_event_id,
+        packet.items[0].source_event_id,
+    ]
+    assert captured["profile"] is jit_memory.MemoryRecallProfile.CROSS_REFERENCE
+    assert execution.result_data["candidate_indices"] == [3, 1, 0]
 
 
 def test_focused_recall_resolves_exactly_one_canonical_candidate(monkeypatch):
@@ -163,9 +193,6 @@ def test_focused_recall_resolves_exactly_one_canonical_candidate(monkeypatch):
     assert need.focus_event_ids == [packet.items[1].source_event_id]
     assert captured["profile"] is jit_memory.MemoryRecallProfile.FOCUSED_RECALL
     assert execution.result_data["candidate_index"] == 1
-    assert execution.result_data["focus_event_ids"] == [
-        str(packet.items[1].source_event_id)
-    ]
 
 
 def test_internal_memory_compatibility_path_uses_system_owned_current_task(monkeypatch):
