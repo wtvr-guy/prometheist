@@ -15,18 +15,26 @@ from jit_agent.interaction_policy import (
 )
 from jit_agent.interaction_working_state import activate_working_state
 from jit_agent.models import (
+    CrossReferenceCandidateSelection,
+    EventType,
     FocusedMemoryCandidateSelection,
     MemoryCandidateSelection,
     MemoryPacket,
 )
 
 
-CAPABILITY_EXECUTION_VERSION = "v0.7-capability-execution-v4"
+CAPABILITY_EXECUTION_VERSION = "v0.7-capability-execution-v5"
 SOURCE = "capability_runtime"
 _DEEPER_RESEARCH_LIMIT = 10
+_CROSS_REFERENCE_LIMIT = 10
 _FOCUSED_RECALL_LIMIT = 8
 _STANDARD_MEMORY_LIMIT = 5
-_MEMORY_EVIDENCE_EXECUTORS = {"jit_memory", "deeper_research", "focused_recall"}
+_MEMORY_EVIDENCE_EXECUTORS = {
+    "jit_memory",
+    "deeper_research",
+    "cross_reference",
+    "focused_recall",
+}
 
 
 class CapabilityExecutionLLM(Protocol):
@@ -35,6 +43,12 @@ class CapabilityExecutionLLM(Protocol):
         task: str,
         packet: MemoryPacket,
     ) -> MemoryCandidateSelection: ...
+
+    def select_cross_reference_candidates(
+        self,
+        task: str,
+        packet: MemoryPacket,
+    ) -> CrossReferenceCandidateSelection: ...
 
     def select_focused_candidate(
         self,
@@ -111,11 +125,9 @@ def execute_registered_capability(
 ) -> CapabilityExecution:
     """Execute one Attention-ordered capability and return structured evidence.
 
-    Models never author retrieval text or event IDs. ``deeper_research`` selects
-    1-4 canonical candidates from the supplied MemoryPacket by index.
-    ``focused_recall`` selects exactly one candidate by index. Prometheist then
-    resolves those indices to canonical event IDs and applies the deterministic
-    recall profile for that depth.
+    Models never author retrieval text or event IDs. Research capabilities select
+    canonical MemoryPacket candidates by bounded integer index; Prometheist
+    resolves those indices to event IDs and applies a deterministic recall profile.
     """
 
     existing = _existing_execution(conn, capability_execution_id)
@@ -148,6 +160,26 @@ def execute_registered_capability(
             limit=_DEEPER_RESEARCH_LIMIT,
         )
         recall_profile = jit_memory.MemoryRecallProfile.DEEPER_RESEARCH
+        selection_payload = {
+            "candidate_indices": list(selection.candidate_indices),
+            "focus_event_ids": [str(value) for value in focus_event_ids],
+        }
+    elif executor == "cross_reference":
+        if len(candidate_packet.items) < 2:
+            raise RuntimeError("cross_reference requires at least two current memory candidates")
+        selection = llm.select_cross_reference_candidates(task_text, candidate_packet)
+        focus_event_ids = _candidate_event_ids(
+            candidate_packet,
+            list(selection.candidate_indices),
+        )
+        need = jit_memory.build_memory_need(
+            None,
+            focus_event_ids=focus_event_ids,
+            include_persisted_history=True,
+            conversation_id=None,
+            limit=_CROSS_REFERENCE_LIMIT,
+        )
+        recall_profile = jit_memory.MemoryRecallProfile.CROSS_REFERENCE
         selection_payload = {
             "candidate_indices": list(selection.candidate_indices),
             "focus_event_ids": [str(value) for value in focus_event_ids],
