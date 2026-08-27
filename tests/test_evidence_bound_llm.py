@@ -116,7 +116,8 @@ def test_response_transport_classifies_without_memory_then_exposes_only_admitted
     assert "POISON-DEADBEEF" not in response_messages[1]["content"]
     assert "POISON-DEADBEEF" not in response_messages[2]["content"]
     assert response_messages[2]["content"].startswith("What launch key did I give Project Aster?")
-    assert "application has already removed historical source roles" in response_messages[0]["content"]
+    assert "has already removed historical source roles" in response_messages[0]["content"]
+    assert "verbatim_value must occur exactly" in response_messages[0]["content"]
 
 
 def test_router_transport_keeps_memory_separate_from_trusted_catalog():
