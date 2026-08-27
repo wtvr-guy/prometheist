@@ -9,6 +9,7 @@ from jit_agent.attention_observation import HostResourceMetrics
 from jit_agent.interaction_policy import (
     CONTINUITY_POLICY_VERSION,
     INTERACTION_STAGES,
+    CapabilityRequirement,
     InteractionAction,
     InteractionDecision,
     InteractionStage,
@@ -22,7 +23,12 @@ from jit_agent.interaction_runtime import (
     finish_interaction,
     handle_interaction,
 )
-from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
+from jit_agent.models import (
+    EventType,
+    MemoryNeedDecision,
+    MemoryPacket,
+    MemoryRetrievalScope,
+)
 from jit_agent.worker_protocol import deterministic_worker_step_id
 from jit_agent.worker_store import load_worker_result
 
@@ -42,25 +48,44 @@ class FixedProbe:
         )
 
 
+def _anchor_index(task: str, preferred: tuple[str, ...] = ("remember", "token", "oriole")) -> int:
+    catalog = task.split("[Anchor catalog]\n", 1)[1]
+    entries: dict[str, int] = {}
+    for line in catalog.splitlines():
+        index_text, value = line.split(": ", 1)
+        entries[value] = int(index_text)
+    for value in preferred:
+        if value in entries:
+            return entries[value]
+    return next(iter(entries.values()))
+
+
 class FakeLLM:
     def classify(self, prompt: str) -> InteractionDecision:
         if "what" in prompt.lower() and "remember" in prompt.lower():
             return InteractionDecision(
-                action=InteractionAction.REQUEST_CAPABILITY,
-                capability_query="internal_memory",
-                capability_input="remember",
+                required_capability=CapabilityRequirement.INTERNAL_MEMORY
             )
-        return InteractionDecision(action=InteractionAction.RESPOND_DIRECTLY)
+        return InteractionDecision(required_capability=CapabilityRequirement.NONE)
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
         if memory_packet and memory_packet.items:
-            match = re.search(r"[0-9a-f]{10}", memory_packet.items[0].content)
-            if match:
-                return f"You asked me to remember {match.group(0)}."
+            for item in memory_packet.items:
+                match = re.search(r"[0-9a-f]{10}", item.content)
+                if match:
+                    return f"You asked me to remember {match.group(0)}."
         return "Got it."
 
     def plan_memory(self, task: str) -> MemoryNeedDecision:
-        return MemoryNeedDecision(query_text=task)
+        scope = (
+            MemoryRetrievalScope.ACTIVE_AND_HISTORY
+            if "[Active canonical context]" in task
+            else MemoryRetrievalScope.HISTORY_ONLY
+        )
+        return MemoryNeedDecision(
+            scope=scope,
+            anchor_indices=[_anchor_index(task)],
+        )
 
     def answer_memory_task(self, task: str, packet: MemoryPacket) -> str:
         return packet.items[0].content
@@ -83,11 +108,9 @@ def test_phrase_based_reference_detector_is_deprecated_and_disabled():
     assert requires_persisted_context("Tell me about PostgreSQL.") is False
 
 
-def test_working_state_continuity_policy_preserves_memory_capability_input():
+def test_working_state_continuity_policy_preserves_explicit_memory_requirement():
     decision = InteractionDecision(
-        action=InteractionAction.REQUEST_CAPABILITY,
-        capability_query="internal_memory",
-        capability_input="remember",
+        required_capability=CapabilityRequirement.INTERNAL_MEMORY
     )
 
     adjusted, applied_policy = apply_continuity_policy(
@@ -159,8 +182,9 @@ def test_existing_working_state_forces_memory_without_phrase_matching(conn):
     )
     classified = load_worker_result(conn, classify_id)
     assert classified.output["continuity_policy"] == CONTINUITY_POLICY_VERSION
-    assert classified.output["decision"]["action"] == InteractionAction.REQUEST_CAPABILITY.value
-    assert classified.output["decision"]["capability_query"] == "internal_memory"
+    assert classified.output["decision"] == {
+        "required_capability": CapabilityRequirement.INTERNAL_MEMORY.value
+    }
 
 
 def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(conn):
@@ -213,9 +237,10 @@ def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(
         InteractionStage.SELECT_CAPABILITY.value,
     )
     classified = load_worker_result(conn, classify_id)
-    # No phrase heuristic is required: the fresh classifier requested memory itself.
     assert classified.output["continuity_policy"] is None
-    assert classified.output["decision"]["action"] == InteractionAction.REQUEST_CAPABILITY.value
+    assert classified.output["decision"]["required_capability"] == (
+        CapabilityRequirement.INTERNAL_MEMORY.value
+    )
     events = event_store.get_events_by_conversation(conn, recall_conversation)
     assert EventType.CAPABILITY_REQUEST in [event.event_type for event in events]
     assert EventType.CAPABILITY_PACKET in [event.event_type for event in events]
@@ -227,9 +252,7 @@ def test_selected_memory_analysis_registration_executes_real_profile(conn):
     class AnalysisLLM(FakeLLM):
         def classify(self, prompt: str) -> InteractionDecision:
             return InteractionDecision(
-                action=InteractionAction.REQUEST_CAPABILITY,
-                capability_query="memory analysis",
-                capability_input="remembered opaque token",
+                required_capability=CapabilityRequirement.MEMORY_ANALYSIS
             )
 
         def answer_memory_task(self, task: str, packet: MemoryPacket) -> str:
