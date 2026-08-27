@@ -1,22 +1,20 @@
 """Shared JIT Memory boundaries for stateless Prometheist cognition.
 
-``request_memory`` is the conservative evidence boundary used when a task needs
-persisted internal evidence. ``request_attention_activation`` is the smaller,
-higher-recall activation boundary used by the default attention aperture before
-model reasoning. Both operate only over canonical persisted events, preserve
-provenance, and use the same deterministic PostgreSQL projection/candidate
-infrastructure; they differ only in what question they answer.
+``request_attention_activation`` is the shallow, high-recall activation boundary
+used automatically for every percept. ``request_memory`` is the conservative
+evidence boundary used by explicit research capabilities.
 
-Evidence recall asks: "is this support strong enough to return as evidence for
-an explicit memory need?" Aperture activation asks: "which bounded canonical
-events are plausible enough to keep cognitively available right now?" Keeping
-those roles distinct lets the aperture be sensitive without weakening the
-support-aware evidence gate.
+Focused research never asks a model to write a query. A model may select prior
+MemoryPacket candidates by bounded index; Prometheist resolves those indices to
+canonical event IDs and uses the canonical source text to seed deterministic
+association traversal. As focus narrows, direct-candidate breadth decreases while
+the bounded association neighborhood becomes deeper/wider.
 """
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
+from enum import Enum
 import uuid
 
 import psycopg
@@ -30,10 +28,47 @@ from jit_agent.models import EventType, KnowledgeOrigin, MemoryEvidence, MemoryN
 
 SOURCE = "jit_memory"
 CANDIDATE_LIMIT = 500
+ATTENTION_ACTIVATION_CANDIDATE_LIMIT = 750
 ASSOCIATION_LIMIT = 250
 MAX_HOPS = 2
 ASSOCIATION_DECAY = 0.85
 MINIMUM_SCORE = 0.15
+
+
+class MemoryRecallProfile(str, Enum):
+    STANDARD = "STANDARD"
+    DEEPER_RESEARCH = "DEEPER_RESEARCH"
+    FOCUSED_RECALL = "FOCUSED_RECALL"
+
+
+@dataclass(frozen=True, slots=True)
+class _RecallPolicy:
+    candidate_limit: int
+    association_limit: int
+    max_hops: int
+    decay: float
+
+
+_RECALL_POLICIES = {
+    MemoryRecallProfile.STANDARD: _RecallPolicy(
+        candidate_limit=CANDIDATE_LIMIT,
+        association_limit=ASSOCIATION_LIMIT,
+        max_hops=MAX_HOPS,
+        decay=ASSOCIATION_DECAY,
+    ),
+    MemoryRecallProfile.DEEPER_RESEARCH: _RecallPolicy(
+        candidate_limit=350,
+        association_limit=600,
+        max_hops=3,
+        decay=0.88,
+    ),
+    MemoryRecallProfile.FOCUSED_RECALL: _RecallPolicy(
+        candidate_limit=200,
+        association_limit=1000,
+        max_hops=4,
+        decay=0.90,
+    ),
+}
 
 DEFAULT_EVIDENCE_TYPES = (
     EventType.USER_PROMPT,
@@ -51,6 +86,7 @@ def build_memory_need(
     supplemental_query_texts: list[str] | None = None,
     entities: list[str] | None = None,
     active_event_ids: list[uuid.UUID] | None = None,
+    focus_event_ids: list[uuid.UUID] | None = None,
     include_persisted_history: bool = True,
     reference_time: datetime | None = None,
     conversation_id: uuid.UUID | None = None,
@@ -61,6 +97,7 @@ def build_memory_need(
         supplemental_query_texts=supplemental_query_texts or [],
         entities=entities or [],
         active_event_ids=active_event_ids or [],
+        focus_event_ids=focus_event_ids or [],
         include_persisted_history=include_persisted_history,
         reference_time=reference_time,
         conversation_id=conversation_id,
@@ -201,7 +238,10 @@ def _packet_from_kernel(memory_request_id: uuid.UUID, need: MemoryNeed, kernel_p
         need=need,
         supported=bool(evidence),
         items=evidence,
-        retrieval_trace={"kernel": "associative_recall_from_postgres", "kernel_trace": asdict(kernel_packet.trace)},
+        retrieval_trace={
+            "kernel": "associative_recall_from_postgres",
+            "kernel_trace": asdict(kernel_packet.trace),
+        },
     )
 
 
@@ -210,8 +250,6 @@ def _packet_from_activation_kernel(
     need: MemoryNeed,
     kernel_packet,
 ) -> MemoryPacket:
-    """Translate baseline recall into an explicitly non-sufficiency activation packet."""
-
     trace_by_id = {item.event_id: item for item in kernel_packet.trace.items}
     items: list[MemoryEvidence] = []
     for event in kernel_packet.items:
@@ -254,8 +292,6 @@ def _active_working_state_evidence(
     *,
     before_global_seq: int | None,
 ) -> list[MemoryEvidence]:
-    """Rehydrate canonical events explicitly activated by durable working state."""
-
     allowed_types = set(_effective_source_types(need))
     evidence: list[MemoryEvidence] = []
     for event_id in need.active_event_ids:
@@ -289,13 +325,40 @@ def _active_working_state_evidence(
     return evidence
 
 
+def _focus_source_events(
+    conn: psycopg.Connection,
+    need: MemoryNeed,
+    *,
+    before_global_seq: int | None,
+) -> list[tuple[uuid.UUID, str]]:
+    """Rehydrate model-selected canonical candidates for deterministic focusing."""
+
+    allowed_types = set(_effective_source_types(need))
+    focused: list[tuple[uuid.UUID, str]] = []
+    for event_id in need.focus_event_ids:
+        event = event_store.get_event_by_id(conn, event_id)
+        if event is None:
+            raise RuntimeError("focused memory candidate no longer exists")
+        if before_global_seq is not None and event.global_seq >= before_global_seq:
+            raise RuntimeError("focused memory candidate crosses the leakage boundary")
+        if allowed_types and event.event_type not in allowed_types:
+            raise RuntimeError("focused memory candidate has a disallowed source type")
+        text = event.payload.get("text")
+        if not isinstance(text, str) or not text.strip():
+            raise RuntimeError("focused memory candidate has no canonical text")
+        focused.append((event_id, " ".join(text.split())))
+    return focused
+
+
 def _recall_for_query(
     conn: psycopg.Connection,
     *,
     need: MemoryNeed,
     query_text: str | None,
     before_global_seq: int | None,
+    recall_profile: MemoryRecallProfile,
 ):
+    policy = _RECALL_POLICIES[recall_profile]
     recall_limit = min(20, need.limit + len(need.active_event_ids))
     cue = CueState(
         query_text=query_text,
@@ -310,10 +373,10 @@ def _recall_for_query(
         conn,
         cue,
         before_global_seq=before_global_seq,
-        candidate_limit=CANDIDATE_LIMIT,
-        association_limit=ASSOCIATION_LIMIT,
-        max_hops=MAX_HOPS,
-        decay=ASSOCIATION_DECAY,
+        candidate_limit=policy.candidate_limit,
+        association_limit=policy.association_limit,
+        max_hops=policy.max_hops,
+        decay=policy.decay,
     )
 
 
@@ -323,8 +386,6 @@ def _activation_recall(
     need: MemoryNeed,
     before_global_seq: int | None,
 ):
-    """High-recall bounded activation without weakening evidence admission."""
-
     recall_limit = min(20, need.limit + len(need.active_event_ids))
     cue = CueState(
         query_text=need.query_text,
@@ -339,7 +400,7 @@ def _activation_recall(
         conn,
         cue,
         before_global_seq=before_global_seq,
-        candidate_limit=CANDIDATE_LIMIT,
+        candidate_limit=ATTENTION_ACTIVATION_CANDIDATE_LIMIT,
     )
 
 
@@ -349,8 +410,6 @@ def _compose_evidence(
     *,
     limit: int,
 ) -> list[MemoryEvidence]:
-    """Bound both evidence classes without allowing either to starve the other."""
-
     if not active:
         return historical[:limit]
     if not historical:
@@ -379,6 +438,25 @@ def _compose_evidence(
     if len(merged) < limit:
         append(active, limit - len(merged))
     return merged[:limit]
+
+
+def _merge_historical_packets(
+    packets: list[MemoryPacket],
+    *,
+    excluded_event_ids: set[uuid.UUID],
+    limit: int,
+) -> list[MemoryEvidence]:
+    merged: list[MemoryEvidence] = []
+    seen = set(excluded_event_ids)
+    for packet in packets:
+        for item in packet.items:
+            if item.source_event_id in seen:
+                continue
+            seen.add(item.source_event_id)
+            merged.append(item.model_copy(deep=True))
+            if len(merged) == limit:
+                return merged
+    return merged
 
 
 def _persist_packet(
@@ -438,12 +516,11 @@ def request_attention_activation(
     before_global_seq: int | None,
     memory_request_id: uuid.UUID | None = None,
 ) -> MemoryPacket:
-    """Persist and satisfy one high-recall, bounded attention-aperture activation.
+    """Return shallow, high-recall activation for every percept.
 
-    Returned events are canonical and provenance-bearing, but their presence
-    means "potentially relevant enough to activate," not "sufficient evidence
-    for the current claim." The response/routing model may use them as context;
-    deeper `request_memory`/`MEMORY_ANALYSIS` keeps the stricter support gate.
+    The candidate router intentionally casts a wider net than ordinary evidence
+    recall, but only a small bounded packet is surfaced. No association expansion
+    occurs at this level; association depth is reserved for explicit research.
     """
 
     memory_request_id = memory_request_id or uuid.uuid4()
@@ -494,6 +571,9 @@ def request_attention_activation(
         items=merged,
         retrieval_trace={
             "retrieval_role": "ATTENTION_ACTIVATION",
+            "depth": "BROAD_SHALLOW",
+            "candidate_limit": ATTENTION_ACTIVATION_CANDIDATE_LIMIT,
+            "association_hops": 0,
             "query_strategy": "working_state_plus_baseline_activation",
             "working_state_event_ids": [str(item.source_event_id) for item in active_evidence],
             "activation_kernel": kernel_trace,
@@ -519,11 +599,29 @@ def request_memory(
     need: MemoryNeed,
     before_global_seq: int | None,
     memory_request_id: uuid.UUID | None = None,
+    recall_profile: MemoryRecallProfile = MemoryRecallProfile.STANDARD,
 ) -> MemoryPacket:
-    """Persist and satisfy one conservative evidence request for any task component."""
+    """Persist and satisfy one conservative evidence request.
+
+    ``DEEPER_RESEARCH`` and ``FOCUSED_RECALL`` require one-or-more canonical
+    ``focus_event_ids`` selected from a prior MemoryPacket. The selected source
+    text seeds association traversal. Focusing reduces direct candidate breadth
+    while increasing association limits/hops; the evidence threshold remains the
+    same across all profiles.
+    """
 
     memory_request_id = memory_request_id or uuid.uuid4()
     effective_need = need.model_copy(update={"source_types": list(_effective_source_types(need))})
+    if recall_profile is MemoryRecallProfile.DEEPER_RESEARCH and not effective_need.focus_event_ids:
+        raise ValueError("DEEPER_RESEARCH requires selected focus_event_ids")
+    if recall_profile is MemoryRecallProfile.FOCUSED_RECALL and len(effective_need.focus_event_ids) != 1:
+        raise ValueError("FOCUSED_RECALL requires exactly one focus_event_id")
+
+    retrieval_role = (
+        "EVIDENCE"
+        if recall_profile is MemoryRecallProfile.STANDARD
+        else recall_profile.value
+    )
     _persist_request(
         conn,
         conversation_id=conversation_id,
@@ -531,7 +629,7 @@ def request_memory(
         requesting_component=requesting_component,
         memory_request_id=memory_request_id,
         need=effective_need,
-        retrieval_role="EVIDENCE",
+        retrieval_role=retrieval_role,
     )
 
     active_evidence = _active_working_state_evidence(
@@ -548,7 +646,7 @@ def request_memory(
             items=active_evidence[: effective_need.limit],
             retrieval_trace={
                 "kernel": None,
-                "retrieval_role": "EVIDENCE",
+                "retrieval_role": retrieval_role,
                 "query_strategy": "working_state_only",
                 "working_state_event_ids": [str(item.source_event_id) for item in active_evidence],
                 "query_attempts": [],
@@ -565,6 +663,80 @@ def request_memory(
         return packet
 
     _ensure_projection_fresh(conn, before_global_seq=before_global_seq)
+    policy = _RECALL_POLICIES[recall_profile]
+
+    if effective_need.focus_event_ids:
+        focus_sources = _focus_source_events(
+            conn,
+            effective_need,
+            before_global_seq=before_global_seq,
+        )
+        focus_packets: list[MemoryPacket] = []
+        attempts: list[dict[str, object]] = []
+        for focus_event_id, focus_text in focus_sources:
+            kernel_packet = _recall_for_query(
+                conn,
+                need=effective_need,
+                query_text=focus_text,
+                before_global_seq=before_global_seq,
+                recall_profile=recall_profile,
+            )
+            translated = _packet_from_kernel(
+                memory_request_id,
+                effective_need,
+                kernel_packet,
+            )
+            focus_packets.append(translated)
+            attempts.append(
+                {
+                    "focus_event_id": str(focus_event_id),
+                    "supported": bool(translated.items),
+                    "kernel_trace": asdict(kernel_packet.trace),
+                }
+            )
+        historical_evidence = _merge_historical_packets(
+            focus_packets,
+            excluded_event_ids=set(effective_need.focus_event_ids)
+            | {item.source_event_id for item in active_evidence},
+            limit=effective_need.limit,
+        )
+        merged = _compose_evidence(
+            active_evidence,
+            historical_evidence,
+            limit=effective_need.limit,
+        )
+        packet = MemoryPacket(
+            memory_request_id=memory_request_id,
+            need=effective_need,
+            supported=bool(merged),
+            items=merged,
+            retrieval_trace={
+                "kernel": "associative_recall_from_postgres",
+                "retrieval_role": retrieval_role,
+                "depth": (
+                    "CANDIDATE_FOCUSED"
+                    if recall_profile is MemoryRecallProfile.DEEPER_RESEARCH
+                    else "SINGLE_CANDIDATE_DEEPEST"
+                ),
+                "recall_profile": recall_profile.value,
+                "candidate_limit": policy.candidate_limit,
+                "association_limit": policy.association_limit,
+                "association_hops": policy.max_hops,
+                "association_decay": policy.decay,
+                "focus_event_ids": [str(value) for value in effective_need.focus_event_ids],
+                "focus_attempts": attempts,
+            },
+        )
+        _persist_packet(
+            conn,
+            conversation_id=conversation_id,
+            correlation_id=correlation_id,
+            requesting_component=requesting_component,
+            memory_request_id=memory_request_id,
+            packet=packet,
+        )
+        return packet
+
     attempts: list[dict[str, object]] = []
     selected_kernel_packet = None
     selected_role: str | None = None
@@ -575,6 +747,7 @@ def request_memory(
             need=effective_need,
             query_text=query_text,
             before_global_seq=before_global_seq,
+            recall_profile=recall_profile,
         )
         attempts.append(
             {
@@ -610,7 +783,12 @@ def request_memory(
             "items": merged,
             "retrieval_trace": {
                 **kernel_result.retrieval_trace,
-                "retrieval_role": "EVIDENCE",
+                "retrieval_role": retrieval_role,
+                "recall_profile": recall_profile.value,
+                "candidate_limit": policy.candidate_limit,
+                "association_limit": policy.association_limit,
+                "association_hops": policy.max_hops,
+                "association_decay": policy.decay,
                 "query_strategy": "working_state_plus_history",
                 "working_state_event_ids": [str(item.source_event_id) for item in active_evidence],
                 "selected_query_role": selected_role,
