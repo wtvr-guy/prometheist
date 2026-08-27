@@ -53,12 +53,15 @@ from jit_agent.interaction_policy import (
     deterministic_interaction_id,
     deterministic_interaction_task_id,
     deterministic_memory_request_id,
-    requires_persisted_context,
 )
 from jit_agent.interaction_store import (
     load_interaction,
     load_interaction_by_task,
     save_interaction,
+)
+from jit_agent.interaction_working_state import (
+    activate_working_state,
+    load_working_state,
 )
 from jit_agent.llm import LLMClient
 from jit_agent.models import EventType
@@ -450,7 +453,9 @@ def _execute_claimed_stage(
     stage = InteractionStage(envelope.step.step_key)
     if stage is InteractionStage.RESOLVE_REFERENCES:
         analysis = ReferenceAnalysis(
-            requires_persisted_context=requires_persisted_context(interaction.user_text)
+            working_state_available=(
+                load_working_state(conn, interaction.conversation_id) is not None
+            )
         )
         return analysis.model_dump(mode="json"), []
 
@@ -466,9 +471,7 @@ def _execute_claimed_stage(
         )
         packet = None
         if decision.action is InteractionAction.REQUEST_CAPABILITY:
-            supplemental = (
-                [decision.capability_query] if decision.capability_query else []
-            )
+            supplemental = [decision.capability_query] if decision.capability_query else []
             packet = request_capability(
                 conn,
                 conversation_id=interaction.conversation_id,
@@ -578,6 +581,13 @@ def _execute_claimed_stage(
         payload={"text": response_text},
         payload_text=response_text,
         event_id=deterministic_interaction_event_id(interaction.interaction_id, "response"),
+    )
+    activate_working_state(
+        conn,
+        interaction_id=interaction.interaction_id,
+        conversation_id=interaction.conversation_id,
+        correlation_id=interaction.correlation_id,
+        activated_event_ids=[response_event.event_id, interaction.user_prompt_event_id],
     )
     return {
         "response_text": response_text,
