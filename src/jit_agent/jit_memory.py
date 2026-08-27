@@ -6,8 +6,8 @@ evidence boundary used by explicit research capabilities.
 
 Focused research never asks a model to write a query. A model may select prior
 MemoryPacket candidates by bounded index; Prometheist resolves those indices to
-canonical event IDs and uses canonical source text to seed deterministic
-association traversal. As focus narrows, direct-candidate breadth decreases while
+canonical event IDs and uses those events as first-class deterministic
+association seeds. As focus narrows, direct-candidate breadth decreases while
 the bounded association neighborhood becomes deeper/wider.
 """
 from __future__ import annotations
@@ -384,6 +384,7 @@ def _recall_for_query(
         association_limit=policy.association_limit,
         max_hops=policy.max_hops,
         decay=policy.decay,
+        seed_event_ids=tuple(str(value) for value in need.focus_event_ids),
     )
 
 
@@ -614,8 +615,9 @@ def request_memory(
     from a prior MemoryPacket. ``DEEPER_RESEARCH`` expands each selected candidate
     with a moderate graph budget. ``CROSS_REFERENCE`` investigates 2-4 selected
     candidates jointly with a larger graph budget. ``FOCUSED_RECALL`` expands
-    exactly one candidate with the deepest bounded graph budget. The evidence
-    admission threshold remains unchanged across all profiles.
+    exactly one candidate with the deepest bounded graph budget. The selected
+    canonical events are first-class association seeds at every focused level.
+    The evidence admission threshold remains unchanged across all profiles.
     """
 
     memory_request_id = memory_request_id or uuid.uuid4()
