@@ -1,11 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from jit_agent.interaction_policy import (
-    CapabilityRequirement,
-    InteractionAction,
-    InteractionDecision,
-)
+from jit_agent.interaction_policy import InteractionAction, InteractionDecision
 from jit_agent.models import (
     HistoricalMemoryAnchorDecision,
     MemoryNeedDecision,
@@ -13,35 +9,49 @@ from jit_agent.models import (
 )
 
 
-def test_interaction_decision_schema_contains_only_post_aperture_capability_enum():
+def test_interaction_decision_schema_contains_only_bounded_capability_indices():
     schema = InteractionDecision.model_json_schema()
 
-    assert set(schema["properties"]) == {"required_capability"}
-    assert {value.value for value in CapabilityRequirement} == {"NONE", "MEMORY_ANALYSIS"}
-    decision = InteractionDecision(
-        required_capability=CapabilityRequirement.MEMORY_ANALYSIS
-    )
-    assert decision.action is InteractionAction.REQUEST_CAPABILITY
-    assert decision.capability_id == "memory_analysis"
+    assert set(schema["properties"]) == {"capability_indices"}
+    decision = InteractionDecision(capability_indices=[3, 1])
+    assert decision.action is InteractionAction.REQUEST_CAPABILITIES
+    assert decision.model_dump(mode="json") == {"capability_indices": [3, 1]}
 
 
-def test_direct_interaction_decision_is_enum_only():
-    decision = InteractionDecision(required_capability=CapabilityRequirement.NONE)
+def test_empty_capability_selection_means_respond():
+    decision = InteractionDecision(capability_indices=[])
 
     assert decision.action is InteractionAction.RESPOND_DIRECTLY
-    assert decision.capability_id is None
-    assert decision.model_dump(mode="json") == {"required_capability": "NONE"}
+    assert decision.model_dump(mode="json") == {"capability_indices": []}
 
 
-@pytest.mark.parametrize("field", ["capability_query", "capability_input", "explanation"])
-def test_interaction_decision_rejects_stray_natural_language_fields(field):
+@pytest.mark.parametrize(
+    "field",
+    [
+        "capability_name",
+        "capability_query",
+        "capability_input",
+        "execution_order",
+        "explanation",
+    ],
+)
+def test_interaction_decision_rejects_stray_natural_language_or_ordering_fields(field):
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         InteractionDecision.model_validate(
             {
-                "required_capability": "MEMORY_ANALYSIS",
+                "capability_indices": [0],
                 field: "free-form model text",
             }
         )
+
+
+def test_interaction_decision_requires_bounded_unique_indices():
+    with pytest.raises(ValidationError, match="must not contain duplicates"):
+        InteractionDecision(capability_indices=[1, 1])
+    with pytest.raises(ValidationError):
+        InteractionDecision(capability_indices=[0, 1, 2, 3, 4])
+    with pytest.raises(ValidationError, match="between 0 and 63"):
+        InteractionDecision(capability_indices=[64])
 
 
 def test_memory_routing_schema_contains_only_scope_and_anchor_indices():
