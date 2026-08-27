@@ -6,8 +6,9 @@ receives a deterministic bounded catalog of explicitly selectable public
 descriptors and returns only integer indices into that catalog.
 
 Basic JIT-memory activation is cognitive substrate and is therefore not exposed
-as a post-aperture capability. Deeper memory work, tools, workflows, and other
-installed functionality may be exposed as ordinary selectable capabilities.
+as a post-percept capability. Deeper internal research, tools, workflows, and
+other installed functionality may be exposed as ordinary selectable
+capabilities.
 """
 from __future__ import annotations
 
@@ -24,7 +25,7 @@ from jit_agent import event_store
 from jit_agent.models import EventType
 
 
-CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v2"
+CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v3"
 SOURCE = "capability_registry"
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
@@ -120,7 +121,7 @@ class RegisteredCapability:
     """Private application-owned registration and executable binding.
 
     ``selectable_after_aperture`` controls whether the capability appears in the
-    live routing catalog after the default memory aperture has already opened.
+    live routing catalog after the default memory exposure has already occurred.
     It is application policy, never model output.
     """
 
@@ -268,15 +269,15 @@ DEFAULT_REGISTRY = CapabilityRegistry(
         ),
         RegisteredCapability(
             descriptor=CapabilityDescriptor(
-                capability_id="memory_analysis",
+                capability_id="deeper_research",
                 kind=CapabilityKind.WORKFLOW,
                 description=(
-                    "Focus or deepen the memory aperture: retrieve, compare, or reconcile "
-                    "additional persisted evidence before responding."
+                    "Investigate the current question further using additional persisted "
+                    "internal evidence when the initially supplied context is insufficient."
                 ),
             ),
-            routing_terms=("memory analysis",),
-            executor="memory_analysis",
+            routing_terms=("deeper research",),
+            executor="deeper_research",
             selectable_after_aperture=True,
         ),
     )
