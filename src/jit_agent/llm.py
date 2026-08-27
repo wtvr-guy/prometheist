@@ -35,7 +35,7 @@ _QUESTION_CAUSAL_PREFIX_RE = re.compile(
 
 
 class _TextAnswer(BaseModel):
-    """Validated envelope that excludes hidden analysis from final text."""
+    """Validated envelope for irreducibly user-facing natural language."""
 
     answer: str = Field(
         min_length=1,
@@ -52,14 +52,7 @@ class _TextAnswer(BaseModel):
 
 
 def _strip_thinking(text: str) -> str:
-    """Remove model thinking markup without silently accepting an empty answer.
-
-    Some thinking-model chat templates can emit only reasoning followed by a
-    trailing ``</think>`` when generation is truncated. Persisting the empty
-    post-tag string would turn a model failure into an apparently successful
-    blank response. Treat missing answer content as an explicit inference
-    failure instead.
-    """
+    """Remove model thinking markup without silently accepting an empty answer."""
     text = _THINK_BLOCK_RE.sub("", text)
     if "</think>" in text:
         _before, after = text.rsplit("</think>", 1)
@@ -87,20 +80,17 @@ def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> Non
 
 
 _CLASSIFY_SYSTEM_PROMPT = """\
-You are a disposable Prometheist interaction-interpretation worker. You receive
-only the current user message. Choose exactly one action:
-- RESPOND_DIRECTLY if the current message alone is sufficient.
-- REQUEST_CAPABILITY if additional information access or functionality is needed.
-A current message may itself establish a name, preference, constraint, plan,
-correction, or other user-authored state. Do not request evidence merely to
-verify what the current message explicitly says. Conversely, unresolved phrases
-such as "those options", "what we just decided", or "that one" require access
-to persisted internal history rather than a guess.
-For REQUEST_CAPABILITY, capability_query briefly describes the needed kind of
-functionality. capability_input may contain a narrower information need; omit it
-when the whole user message should be passed unchanged. Do not invent system
-ids, limits, source filters, executors, or routing policy. Return only the
-structured decision.
+You are a disposable Prometheist interaction-routing worker. You receive only
+the current user message and must choose exactly one enum value for
+required_capability:
+- NONE: the current message can be answered or acknowledged without persisted
+  internal evidence.
+- INTERNAL_MEMORY: answering requires persisted user/system history.
+- MEMORY_ANALYSIS: the user explicitly asks for analysis, comparison,
+  reconciliation, or specialist processing of persisted history.
+
+Do not write a capability name, query, explanation, or natural-language input.
+Do not invent ids or routing policy. Return only the structured enum decision.
 """
 
 _RESPOND_SYSTEM_PROMPT = """\
@@ -128,21 +118,27 @@ insufficient. Do not claim unsupported memory.
 """
 
 _SPECIALIST_PLAN_PROMPT = """\
-You are a disposable memory-analysis planning worker. You receive a current task,
-optional capability narrowing, and possibly bounded canonical events from the
-active working situation. You have no inherited transcript.
+You are a disposable Prometheist memory-routing worker with no inherited
+transcript. The user input contains the current task, optional active canonical
+context, and a numbered anchor catalog built deterministically from those exact
+texts.
 
-Resolve references from the active canonical context and return only a
-self-contained description of the *older persisted evidence still needed*.
-- query_text must stand on its own and name the resolved subject of the search.
-- entities must contain only stable concrete referents likely to appear in the
-  older source evidence, such as people, projects, organizations, named objects,
-  or opaque identifiers.
-- Do not use generic requested attributes or relationship labels as entities
-  merely because the task asks for them.
-- Do not answer the task, copy system metadata, choose retrieval algorithms,
-  choose limits, or invent identifiers.
-Return only query_text and optional entity strings.
+Choose only:
+- scope = ACTIVE_ONLY when the active canonical context already contains all
+  persisted evidence needed for the task;
+- scope = HISTORY_ONLY when older persisted evidence is needed and active
+  context is not needed;
+- scope = ACTIVE_AND_HISTORY when both active context and older persisted
+  evidence are needed.
+
+If scope includes HISTORY, select 1-4 anchor_indices from the supplied catalog.
+Choose the most distinctive subject/reference tokens likely to occur in the
+older source evidence. Prefer project/person/object names and opaque identifiers
+over generic relationship or instruction words. If scope is ACTIVE_ONLY, return
+no anchor indices.
+
+Do not write a query, entity, explanation, phrase, or answer. Return only the
+enum and integer indices from the structured schema.
 """
 
 _SPECIALIST_ANSWER_PROMPT = """\
@@ -262,8 +258,6 @@ class OllamaClient:
     def __init__(self, base_url: str | None = None, model: str | None = None) -> None:
         self.base_url = base_url or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
         self.model = model or os.environ.get("OLLAMA_MODEL", "qwen3:4b")
-        # Ollama is a local backend. Proxy environment variables must never
-        # redirect or break loopback inference traffic.
         self._client = httpx.Client(
             base_url=self.base_url,
             timeout=300.0,
@@ -317,7 +311,7 @@ class OllamaClient:
                     _CLASSIFY_SYSTEM_PROMPT,
                     prompt,
                     schema,
-                    128,
+                    48,
                 )
                 return InteractionDecision.model_validate_json(content)
             except (ValidationError, ValueError) as exc:
@@ -336,12 +330,12 @@ class OllamaClient:
         schema = MemoryNeedDecision.model_json_schema()
         last_error: Exception | None = None
         for _ in range(2):
-            content = self._structured("SPECIALIST_PLAN", _SPECIALIST_PLAN_PROMPT, task, schema, 96)
+            content = self._structured("SPECIALIST_PLAN", _SPECIALIST_PLAN_PROMPT, task, schema, 48)
             try:
                 return MemoryNeedDecision.model_validate_json(content)
             except ValidationError as exc:
                 last_error = exc
-        raise ValueError(f"specialist memory plan failed to validate: {last_error}")
+        raise ValueError(f"specialist memory routing failed to validate: {last_error}")
 
     def answer_memory_task(self, task: str, packet: MemoryPacket) -> str:
         causal_clauses = _causal_highlight_for_request(task, packet)
