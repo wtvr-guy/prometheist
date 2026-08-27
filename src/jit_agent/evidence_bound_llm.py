@@ -129,6 +129,22 @@ def _render_qwen_evidence_bound_prompt(
     )
 
 
+def _base_text_max_tokens() -> int:
+    """Reuse the already-governed base Ollama text-output cap.
+
+    Evidence-bound transport does not introduce a second token-cap tunable; it
+    inherits the value already owned and calibrated by ``OllamaClient._text``.
+    """
+
+    defaults = OllamaClient._text.__defaults__
+    if not defaults:
+        raise RuntimeError("base Ollama text method has no governed token default")
+    value = defaults[-1]
+    if not isinstance(value, int):
+        raise RuntimeError("base Ollama text token default is not an integer")
+    return value
+
+
 class EvidenceBoundOllamaClient(OllamaClient):
     """Ollama client with an explicit evidence/instruction transport boundary."""
 
@@ -222,10 +238,13 @@ class EvidenceBoundOllamaClient(OllamaClient):
         system: str,
         current_user: str,
         evidence: str,
-        max_tokens: int = 256,
+        max_tokens: int | None = None,
     ) -> str:
+        effective_max_tokens = (
+            max_tokens if max_tokens is not None else _base_text_max_tokens()
+        )
         last_error: Exception | None = None
-        for token_cap in _retry_token_caps(max_tokens):
+        for token_cap in _retry_token_caps(effective_max_tokens):
             try:
                 content = self._structured_with_evidence(
                     kind,
@@ -332,8 +351,6 @@ class EvidenceBoundOllamaClient(OllamaClient):
         task: str,
         packet: MemoryPacket,
     ) -> CrossReferenceCandidateSelection:
-        if len(packet.items) < 2:
-            raise ValueError("cross reference requires at least two memory candidates")
         schema = CrossReferenceCandidateSelection.model_json_schema()
         last_error: Exception | None = None
         evidence = _quarantined_evidence(_format_memory_packet(packet))
