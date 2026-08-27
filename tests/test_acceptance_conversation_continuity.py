@@ -4,17 +4,15 @@ Every turn launches a new CLI process; that controller launches every durable
 stage in another freshly guarded process. The model therefore receives neither
 an inherited transcript nor persistent worker state.
 
-This test intentionally measures continuity and provenance rather than trying
-to implement a hand-written natural-language semantic parser. Required answer
-slots are checked for the expected identifiers/concepts, while canonical source
-events prove that the fresh worker had access to the evidence needed to answer.
-Polarity and causal-language correctness remain covered by their dedicated
-frozen regressions.
+This experiment does not implement a hand-written natural-language semantic
+parser. Where a deterministic behavioral verdict is required, the test asks for
+an exact machine-verifiable value/tuple. Canonical MemoryPacket provenance is
+checked independently so a correct-looking answer cannot pass without the
+required source evidence being available to the fresh worker.
 """
 from __future__ import annotations
 
 import json
-import re
 import uuid
 
 import pytest
@@ -110,13 +108,6 @@ def _print_turn(number: int, prompt: str, answer: str) -> None:
     print_transcript(f"\nTurn {number} — Prometheist:\n{answer}")
 
 
-def _contains_answer_slots(answer: str, *values: str) -> bool:
-    """Check required semantic slots without constraining grammatical form."""
-
-    normalized = " ".join(answer.casefold().replace("\u2019", "'").split())
-    return all(value.casefold() in normalized for value in values)
-
-
 def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
     historical_conversation = uuid.uuid4()
     active_conversation = uuid.uuid4()
@@ -139,8 +130,10 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
 
     turn1 = (
         f"I'm revisiting Project Kestrel. For this conversation, call the plan {plan_label}. "
-        "I'm choosing between Docker Compose and running PostgreSQL directly on Windows. "
-        "I want to keep the discussion practical."
+        "I'm choosing between Docker Compose and PostgreSQL directly on Windows. "
+        "Based on my established constraints, choose the compatible approach. "
+        "Return exactly one of these labels and nothing else: "
+        "Docker Compose | PostgreSQL directly on Windows."
     )
     answer1 = run_once(turn1, active_conversation)
     _print_turn(1, turn1, answer1)
@@ -150,12 +143,12 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         turn1_event.correlation_id,
     )
     failure_trace = _trace(historical_conversation, active_conversation)
-    assert _contains_answer_slots(answer1, "PostgreSQL", "Windows"), failure_trace
+    assert answer1.strip() == "PostgreSQL directly on Windows", failure_trace
     assert historical_rule_event.event_id in turn1_sources, failure_trace
 
     turn2 = (
-        "Which of those approaches conflicts with my established Kestrel rule, "
-        "and what constraint profile did I give that rule?"
+        "Which approach conflicts with my established Kestrel rule, and what constraint "
+        "profile did I give that rule? Return exactly '<approach> | <profile>' and nothing else."
     )
     answer2 = run_once(turn2, active_conversation)
     _print_turn(2, turn2, answer2)
@@ -166,11 +159,14 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         turn2_event.correlation_id,
     )
     failure_trace = _trace(historical_conversation, active_conversation)
-    assert _contains_answer_slots(answer2, "Docker Compose", profile_token), failure_trace
+    assert answer2.strip() == f"Docker Compose | {profile_token}", failure_trace
     assert historical_rule_event.event_id in turn2_sources, failure_trace
     assert turn1_event.event_id in turn2_sources, failure_trace
 
-    turn3 = "What nickname are we using for this plan, and which approach did you just rule out?"
+    turn3 = (
+        "What nickname are we using for this plan, and which approach did you just rule out? "
+        "Return exactly '<nickname> | <approach>' and nothing else."
+    )
     answer3 = run_once(turn3, active_conversation)
     _print_turn(3, turn3, answer3)
     turn3_event = _event_for_text(active_conversation, EventType.USER_PROMPT, turn3)
@@ -180,13 +176,13 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         turn3_event.correlation_id,
     )
     failure_trace = _trace(historical_conversation, active_conversation)
-    assert _contains_answer_slots(answer3, plan_label, "Docker Compose"), failure_trace
+    assert answer3.strip() == f"{plan_label} | Docker Compose", failure_trace
     assert turn1_event.event_id in turn3_sources, failure_trace
     assert answer2_event.event_id in turn3_sources, failure_trace
 
     turn4 = (
-        "Name that approach and give the underlying technical reason we ruled it out, "
-        "in one sentence."
+        "Name that ruled-out approach and its underlying technical reason. "
+        "Return exactly '<approach> | <reason>' and use the reason wording from my established rule."
     )
     answer4 = run_once(turn4, active_conversation)
     _print_turn(4, turn4, answer4)
@@ -196,13 +192,7 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         turn4_event.correlation_id,
     )
     failure_trace = _trace(historical_conversation, active_conversation)
-    assert _contains_answer_slots(
-        answer4,
-        "Docker Compose",
-        "virtualization",
-        "disabled",
-    ), failure_trace
-    assert len(re.findall(r"[.!?](?=\s|$)", answer4.strip())) <= 1, failure_trace
+    assert answer4.strip() == "Docker Compose | virtualization is disabled", failure_trace
     assert answer3_event.event_id in turn4_sources, failure_trace
     assert historical_rule_event.event_id in turn4_sources, failure_trace
 
