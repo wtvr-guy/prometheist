@@ -36,10 +36,7 @@ from jit_agent.capability_registry import (
     CapabilityRegistry,
     request_capability,
 )
-from jit_agent.capability_runtime import (
-    CapabilityExecution,
-    execute_registered_capability,
-)
+from jit_agent.capability_runtime import CapabilityExecution, execute_registered_capability
 from jit_agent.interaction_policy import (
     INTERACTION_CAPABILITIES,
     INTERACTION_STAGES,
@@ -59,10 +56,7 @@ from jit_agent.interaction_store import (
     load_interaction_by_task,
     save_interaction,
 )
-from jit_agent.interaction_working_state import (
-    activate_working_state,
-    load_working_state,
-)
+from jit_agent.interaction_working_state import activate_working_state, load_working_state
 from jit_agent.llm import LLMClient
 from jit_agent.models import EventType
 from jit_agent.worker_protocol import (
@@ -471,18 +465,16 @@ def _execute_claimed_stage(
         )
         packet = None
         if decision.action is InteractionAction.REQUEST_CAPABILITY:
-            supplemental = [decision.capability_query] if decision.capability_query else []
+            capability_id = decision.capability_id
+            if capability_id is None:
+                raise RuntimeError("capability decision has no deterministic capability id")
             packet = request_capability(
                 conn,
                 conversation_id=interaction.conversation_id,
                 correlation_id=interaction.correlation_id,
                 requester_task_id=interaction.task_id,
                 requester_step_id=envelope.step.step_id,
-                need=CapabilityNeed(
-                    query_text=interaction.user_text,
-                    supplemental_query_texts=supplemental,
-                    limit=1,
-                ),
+                need=CapabilityNeed(query_text=capability_id, limit=1),
                 registry=registry,
             )
         return {
@@ -530,11 +522,8 @@ def _execute_claimed_stage(
             conversation_id=interaction.conversation_id,
             correlation_id=interaction.correlation_id,
             task_text=interaction.user_text,
-            capability_input=decision.capability_input,
             before_global_seq=interaction.before_global_seq,
-            memory_request_id=deterministic_memory_request_id(
-                interaction.interaction_id
-            ),
+            memory_request_id=deterministic_memory_request_id(interaction.interaction_id),
         )
         return {
             "execution": execution.model_dump(mode="json"),
@@ -559,10 +548,7 @@ def _execute_claimed_stage(
             if packet is None:
                 raise RuntimeError("selected memory capability returned no packet")
             if execution.executor == "memory_analysis":
-                response_text = llm.answer_memory_task(
-                    decision.capability_input or interaction.user_text,
-                    packet,
-                )
+                response_text = llm.answer_memory_task(interaction.user_text, packet)
             else:
                 response_text = llm.respond(interaction.user_text, packet)
         return {"response_text": response_text}, []
