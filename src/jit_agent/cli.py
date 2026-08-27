@@ -17,6 +17,7 @@ from jit_agent.admission_diagnostics import (
 )
 from jit_agent.attention_store import load_scheduler
 from jit_agent.interaction_runtime import handle_interaction_in_worker_processes
+from jit_agent.worker_runtime import WorkerLaunchDenied
 
 
 _INTERACTION_ADMISSION_FAILURE = (
@@ -33,6 +34,14 @@ def _configure_utf8_streams() -> None:
             reconfigure(encoding="utf-8", errors="replace")
 
 
+def _emit_admission_diagnostics(diagnostics: dict) -> None:
+    print(
+        RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX
+        + json.dumps(diagnostics, sort_keys=True, separators=(",", ":")),
+        file=sys.stderr,
+    )
+
+
 def _handle_with_admission_diagnostics(
     conn,
     user_text: str,
@@ -46,23 +55,29 @@ def _handle_with_admission_diagnostics(
             user_text,
             conversation_id,
         )
+    except WorkerLaunchDenied as exc:
+        _emit_admission_diagnostics(
+            {
+                "kind": "WORKER_CLAIM_DENIED",
+                "worker_claim_observation": exc.observation.model_dump(mode="json"),
+            }
+        )
+        raise
     except RuntimeError as exc:
         if str(exc) != _INTERACTION_ADMISSION_FAILURE:
             raise
         try:
             scheduler = load_scheduler(conn)
             diagnostics = build_resource_admission_diagnostics(scheduler)
+            diagnostics["kind"] = "SCHEDULER_ADMISSION_DENIED"
         except Exception as diagnostic_exc:  # never mask the original runtime failure
             diagnostics = {
+                "kind": "SCHEDULER_ADMISSION_DIAGNOSTIC_ERROR",
                 "diagnostic_error": (
                     f"{type(diagnostic_exc).__name__}: {diagnostic_exc}"
-                )
+                ),
             }
-        print(
-            RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX
-            + json.dumps(diagnostics, sort_keys=True, separators=(",", ":")),
-            file=sys.stderr,
-        )
+        _emit_admission_diagnostics(diagnostics)
         raise
 
 
