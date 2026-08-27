@@ -102,6 +102,32 @@ def test_qwen3_instruct_call_omits_thinking_controls():
     assert "/no_think" not in user_content
 
 
+def test_router_receives_evidence_without_application_owned_memory_metadata():
+    packet = _packet()
+    item = packet.items[0]
+    client = OllamaClient(
+        base_url="http://ollama.test",
+        model="qwen3:4b-instruct-2507-q4_K_M",
+    )
+    fake = _FakeHTTPClient([_respond_payload()])
+    client._client = fake
+
+    decision = client.classify("Answer from established memory.", packet, _catalog())
+
+    assert decision.next_action is InteractionAction.RESPOND
+    user_content = fake.calls[0][1]["messages"][1]["content"]
+    assert item.content in user_content
+    assert f"event_type: {item.event_type.value}" in user_content
+    assert str(packet.memory_request_id) not in user_content
+    assert str(item.source_event_id) not in user_content
+    assert str(item.conversation_id) not in user_content
+    assert "conversation_seq:" not in user_content
+    assert "global_seq:" not in user_content
+    assert "created_at:" not in user_content
+    assert "retrieval_reasons:" not in user_content
+    assert "association_provenance_event_ids:" not in user_content
+
+
 def test_qwen3_empty_or_thinking_only_output_retries_with_larger_budget():
     client = OllamaClient(base_url="http://ollama.test", model="qwen3:4b")
     fake = _FakeHTTPClient(
