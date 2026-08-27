@@ -2,10 +2,12 @@
 
 The attention aperture is deliberately not a capability and does not depend on
 an LLM deciding whether unseen memory might matter. Every interaction receives
-one small, bounded, provenance-bearing activation packet derived from the
-current percept plus durable WorkingState. A later model decision may request
-``deeper_research`` when the initially supplied context is insufficient, but
-basic memory availability is part of Prometheist's cognitive substrate.
+one bounded, provenance-bearing activation packet derived from the current
+percept plus durable WorkingState. Valid active WorkingState is guaranteed
+exposure; the aperture recall budget limits only additional baseline history.
+A later model decision may request ``deeper_research`` when the initially
+supplied context is insufficient, but basic memory availability is part of
+Prometheist's cognitive substrate.
 
 The aperture uses JIT Memory's activation boundary rather than its stricter
 evidence-admission boundary. An aperture item means "potentially relevant enough
@@ -23,12 +25,19 @@ from jit_agent.interaction_policy import (
     deterministic_interaction_event_id,
     deterministic_interaction_id,
 )
-from jit_agent.interaction_working_state import activate_working_state, load_working_state
+from jit_agent.interaction_working_state import (
+    MAX_ACTIVE_EVENT_IDS,
+    activate_working_state,
+    load_working_state,
+)
 from jit_agent.models import MemoryPacket
 
 
-ATTENTION_APERTURE_VERSION = "v0.7-attention-aperture-v2"
+ATTENTION_APERTURE_VERSION = "v0.7-attention-aperture-v3"
+# This is the budget for additional baseline recall beyond guaranteed active
+# WorkingState, not a total MemoryPacket item limit.
 DEFAULT_ATTENTION_APERTURE_LIMIT = 6
+MAX_ATTENTION_APERTURE_ITEMS = MAX_ACTIVE_EVENT_IDS + DEFAULT_ATTENTION_APERTURE_LIMIT
 
 
 def open_attention_aperture(
@@ -44,7 +53,8 @@ def open_attention_aperture(
 
     Retrieval policy is application-owned and deterministic for the same event
     ledger, WorkingState, current percept, and kernel version. No model-written
-    query/entity/capability text is accepted at this boundary.
+    query/entity/capability text is accepted at this boundary. The maximum
+    default exposure is bounded WorkingState plus the baseline recall budget.
     """
 
     interaction_id = deterministic_interaction_id(conversation_id, correlation_id)
