@@ -24,7 +24,7 @@ from jit_agent.attention_observation import (
 
 
 DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434"
-DEFAULT_OLLAMA_MODEL = "qwen3:4b"
+DEFAULT_OLLAMA_MODEL = "qwen3:4b-instruct-2507-q4_K_M"
 _MIB = 1024 * 1024
 
 
