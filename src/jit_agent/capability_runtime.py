@@ -44,7 +44,12 @@ _PLANNER_CONTEXT_EVENT_TYPES = {
 class CapabilityExecutionLLM(Protocol):
     """Fresh stateless categorical planning used to route memory access."""
 
-    def plan_memory(self, task: str) -> MemoryNeedDecision: ...
+    def plan_memory(
+        self,
+        task: str,
+        *,
+        active_state_available: bool,
+    ) -> MemoryNeedDecision: ...
 
 
 class CapabilityExecution(BaseModel):
@@ -183,9 +188,12 @@ def execute_registered_capability(
 ) -> CapabilityExecution:
     """Execute selected memory bindings through WorkingState + JIT Memory.
 
-    The model chooses only a retrieval scope enum and indices into a bounded
-    application-generated anchor catalog. It never generates a search query,
-    entity string, capability id, or phrase-specific continuity cue.
+    The model chooses only values that are legal for the current application
+    state. Without active WorkingState, Prometheist owns HISTORY_ONLY and the
+    model schema contains only bounded anchor indices. With active state, the
+    model may additionally choose among active/history scope enums. The model
+    never generates a search query, entity string, capability id, or
+    phrase-specific continuity cue.
     """
 
     discovery_packet = _load_discovery_packet(conn, capability_request_id)
@@ -207,7 +215,8 @@ def execute_registered_capability(
             task_text=task_text,
             active_context=active_context,
             anchor_catalog=catalog,
-        )
+        ),
+        active_state_available=bool(active_context),
     )
     active_event_ids, include_history, anchors = _resolve_memory_plan(
         plan,
