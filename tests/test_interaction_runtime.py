@@ -10,6 +10,7 @@ from jit_agent.attention_observation import HostResourceMetrics
 from jit_agent.capability_registry import CapabilityDescriptor
 from jit_agent.interaction_policy import (
     INTERACTION_STAGES,
+    InteractionAction,
     InteractionDecision,
     InteractionStage,
     requires_persisted_context,
@@ -22,9 +23,9 @@ from jit_agent.interaction_runtime import (
 )
 from jit_agent.models import (
     EventType,
-    MemoryNeedDecision,
+    FocusedMemoryCandidateSelection,
+    MemoryCandidateSelection,
     MemoryPacket,
-    MemoryRetrievalScope,
 )
 from jit_agent.worker_protocol import deterministic_worker_step_id
 from jit_agent.worker_store import load_worker_result
@@ -45,16 +46,14 @@ class FixedProbe:
         )
 
 
-def _anchor_index(task: str, preferred: tuple[str, ...] = ("remember", "token", "oriole")) -> int:
-    catalog = task.split("[Anchor catalog]\n", 1)[1]
-    entries: dict[str, int] = {}
-    for line in catalog.splitlines():
-        index_text, value = line.split(": ", 1)
-        entries[value] = int(index_text)
-    for value in preferred:
-        if value in entries:
-            return entries[value]
-    return next(iter(entries.values()))
+def _candidate_index(packet: MemoryPacket, pattern: str | None = None) -> int:
+    if pattern is not None:
+        for index, item in enumerate(packet.items):
+            if pattern in item.content:
+                return index
+    if not packet.items:
+        raise AssertionError("expected at least one memory candidate")
+    return 0
 
 
 class FakeLLM:
@@ -63,11 +62,21 @@ class FakeLLM:
         prompt: str,
         memory_packet: MemoryPacket,
         capability_catalog: tuple[CapabilityDescriptor, ...],
+        completed_results=(),
     ) -> InteractionDecision:
-        del prompt, memory_packet, capability_catalog
-        return InteractionDecision(capability_indices=[])
+        del prompt, memory_packet, capability_catalog, completed_results
+        return InteractionDecision(
+            next_action=InteractionAction.RESPOND,
+            capability_indices=[],
+        )
 
-    def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
+    def respond(
+        self,
+        prompt: str,
+        memory_packet: MemoryPacket | None,
+        capability_results=(),
+    ) -> str:
+        del prompt, capability_results
         if memory_packet and memory_packet.items:
             for item in memory_packet.items:
                 match = re.search(r"[0-9a-f]{10}", item.content)
@@ -75,21 +84,21 @@ class FakeLLM:
                     return f"You asked me to remember {match.group(0)}."
         return "Got it."
 
-    def plan_memory(
+    def select_research_candidates(
         self,
         task: str,
-        *,
-        active_state_available: bool,
-    ) -> MemoryNeedDecision:
-        scope = (
-            MemoryRetrievalScope.ACTIVE_AND_HISTORY
-            if active_state_available
-            else MemoryRetrievalScope.HISTORY_ONLY
-        )
-        return MemoryNeedDecision(
-            scope=scope,
-            anchor_indices=[_anchor_index(task)],
-        )
+        packet: MemoryPacket,
+    ) -> MemoryCandidateSelection:
+        del task
+        return MemoryCandidateSelection(candidate_indices=[_candidate_index(packet)])
+
+    def select_focused_candidate(
+        self,
+        task: str,
+        packet: MemoryPacket,
+    ) -> FocusedMemoryCandidateSelection:
+        del task
+        return FocusedMemoryCandidateSelection(candidate_index=_candidate_index(packet))
 
 
 @pytest.fixture
@@ -126,9 +135,16 @@ def test_end_to_end_interaction_uses_only_durable_task_neutral_workers(conn):
         EventType.MEMORY_REQUEST,
         EventType.MEMORY_PACKET,
         EventType.INTERACTION_WORKING_STATE,
+        EventType.SYSTEM_EVENT,
         EventType.INTERACTION_RESPONSE,
         EventType.INTERACTION_WORKING_STATE,
     ]
+    round_event = next(event for event in events if event.event_type is EventType.SYSTEM_EVENT)
+    assert round_event.payload["kind"] == "CAPABILITY_DECISION_ROUND"
+    assert round_event.payload["round"]["decision"] == {
+        "next_action": "RESPOND",
+        "capability_indices": [],
+    }
     response_event = next(
         event for event in events if event.event_type is EventType.INTERACTION_RESPONSE
     )
@@ -172,8 +188,11 @@ def test_every_percept_opens_memory_context_before_capability_selection(conn):
     classified = load_worker_result(conn, classify_id)
     assert classified.output["attention_aperture_version"] == ATTENTION_APERTURE_VERSION
     assert classified.output["aperture_packet"]["memory_request_id"]
-    assert classified.output["decision"] == {"capability_indices": []}
-    assert classified.output["execution_plan"]["items"] == []
+    assert classified.output["initial_round"]["decision"] == {
+        "next_action": "RESPOND",
+        "capability_indices": [],
+    }
+    assert classified.output["initial_round"]["execution_plan"]["items"] == []
 
 
 def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(conn):
@@ -212,21 +231,17 @@ def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(
             **_kwargs(),
         )
     response = finish_interaction(conn, interaction, **_kwargs())
-    packet_events = [
-        event
-        for event in event_store.get_events_by_conversation(conn, recall_conversation)
-        if event.event_type is EventType.MEMORY_PACKET
-    ]
-    assert token in response, (
-        packet_events[-1].payload["packet"] if packet_events else "no memory packet"
-    )
+    assert token in response
 
     classify_id = deterministic_worker_step_id(
         interaction.assignment_id,
         InteractionStage.SELECT_CAPABILITY.value,
     )
     classified = load_worker_result(conn, classify_id)
-    assert classified.output["decision"] == {"capability_indices": []}
+    assert classified.output["initial_round"]["decision"] == {
+        "next_action": "RESPOND",
+        "capability_indices": [],
+    }
     events = event_store.get_events_by_conversation(conn, recall_conversation)
     event_types = [event.event_type for event in events]
     assert EventType.MEMORY_REQUEST in event_types
@@ -237,21 +252,45 @@ def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(
     assert EventType.INTERACTION_WORKING_STATE in event_types
 
 
-def test_selected_deeper_research_completes_before_one_final_response(conn):
+def test_selected_deeper_research_gets_fresh_second_decision_before_final_response(conn):
     class ResearchLLM(FakeLLM):
+        def __init__(self):
+            self.classify_calls = 0
+            self.respond_calls = 0
+
         def classify(
             self,
             prompt: str,
             memory_packet: MemoryPacket,
             capability_catalog: tuple[CapabilityDescriptor, ...],
+            completed_results=(),
         ) -> InteractionDecision:
-            del prompt, memory_packet
-            index = next(
-                index
-                for index, descriptor in enumerate(capability_catalog)
-                if descriptor.capability_id == "deeper_research"
+            del prompt, memory_packet, completed_results
+            self.classify_calls += 1
+            if self.classify_calls == 1:
+                index = next(
+                    index
+                    for index, descriptor in enumerate(capability_catalog)
+                    if descriptor.capability_id == "deeper_research"
+                )
+                return InteractionDecision(
+                    next_action=InteractionAction.USE_CAPABILITIES,
+                    capability_indices=[index],
+                )
+            return InteractionDecision(
+                next_action=InteractionAction.RESPOND,
+                capability_indices=[],
             )
-            return InteractionDecision(capability_indices=[index])
+
+        def respond(self, prompt, memory_packet, capability_results=()):
+            self.respond_calls += 1
+            return super().respond(prompt, memory_packet, capability_results)
+
+        def select_research_candidates(self, task, packet):
+            del task
+            return MemoryCandidateSelection(
+                candidate_indices=[_candidate_index(packet, token)]
+            )
 
     token = uuid.uuid4().hex[:10]
     handle_interaction(
@@ -261,6 +300,7 @@ def test_selected_deeper_research_completes_before_one_final_response(conn):
         uuid.uuid4(),
         **_kwargs(),
     )
+    llm = ResearchLLM()
     interaction = begin_interaction(
         conn,
         "Investigate my remembered opaque token more deeply before answering.",
@@ -270,7 +310,7 @@ def test_selected_deeper_research_completes_before_one_final_response(conn):
     for index in range(len(INTERACTION_STAGES)):
         execute_next_interaction_step(
             conn,
-            ResearchLLM(),
+            llm,
             interaction,
             worker_id=f"research-worker-{index}",
             **_kwargs(),
@@ -278,15 +318,21 @@ def test_selected_deeper_research_completes_before_one_final_response(conn):
 
     response = finish_interaction(conn, interaction, **_kwargs())
     assert token in response
+    assert llm.classify_calls == 2
+    assert llm.respond_calls == 1
     execute_id = deterministic_worker_step_id(
         interaction.assignment_id,
         InteractionStage.EXECUTE_CAPABILITY.value,
     )
     execution = load_worker_result(conn, execute_id)
+    assert len(execution.output["rounds"]) == 2
     assert [item["capability_id"] for item in execution.output["executions"]] == [
         "deeper_research"
     ]
-    assert execution.output["executions"][0]["executor"] == "deeper_research"
+    assert execution.output["final_decision"] == {
+        "next_action": "RESPOND",
+        "capability_indices": [],
+    }
 
 
 def test_deterministic_response_event_retry_does_not_duplicate_history(conn):
