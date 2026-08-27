@@ -171,6 +171,21 @@ def test_deeper_research_selects_packet_candidates_not_query_text():
     assert "candidate_index: 1" in model_input
 
 
+def test_cross_reference_selects_two_or_more_packet_candidates_without_relation_text():
+    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
+    fake_http = _FakeHTTPClient(['{"candidate_indices":[2,0]}'])
+    client._client = fake_http
+    packet = _packet("candidate A", "candidate B", "candidate C")
+
+    selection = client.select_cross_reference_candidates("Compare evidence", packet)
+
+    assert selection.candidate_indices == [2, 0]
+    payload = fake_http.calls[0][1]
+    assert set(payload["format"]["properties"]) == {"candidate_indices"}
+    assert "candidate_index: 0" in payload["messages"][1]["content"]
+    assert "candidate_index: 2" in payload["messages"][1]["content"]
+
+
 def test_focused_recall_selects_exactly_one_packet_candidate():
     client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
     fake_http = _FakeHTTPClient(['{"candidate_index":1}'])
