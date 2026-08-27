@@ -49,4 +49,46 @@ def test_cli_emits_structured_resource_diagnostics_for_admission_failure(
     stderr = capsys.readouterr().err.strip()
     assert stderr.startswith(RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX)
     parsed = json.loads(stderr[len(RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX) :])
-    assert parsed == expected
+    assert parsed == {**expected, "kind": "SCHEDULER_ADMISSION_DENIED"}
+
+
+def test_cli_emits_worker_claim_observation_when_launch_gate_denies(
+    monkeypatch,
+    capsys,
+):
+    class Observation:
+        def model_dump(self, *, mode):
+            assert mode == "json"
+            return {
+                "decision": "DENIED",
+                "reason": "claim resource 'host-ram-mib' lacks safe capacity",
+            }
+
+    class FakeWorkerLaunchDenied(RuntimeError):
+        def __init__(self):
+            super().__init__("worker claim denied")
+            self.observation = Observation()
+
+    def fail_interaction(conn, user_text, conversation_id):
+        del conn, user_text, conversation_id
+        raise FakeWorkerLaunchDenied()
+
+    monkeypatch.setattr(cli, "WorkerLaunchDenied", FakeWorkerLaunchDenied)
+    monkeypatch.setattr(cli, "handle_interaction_in_worker_processes", fail_interaction)
+
+    with pytest.raises(FakeWorkerLaunchDenied):
+        cli._handle_with_admission_diagnostics(
+            object(),
+            "hello",
+            uuid.uuid4(),
+        )
+
+    stderr = capsys.readouterr().err.strip()
+    parsed = json.loads(stderr[len(RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX) :])
+    assert parsed == {
+        "kind": "WORKER_CLAIM_DENIED",
+        "worker_claim_observation": {
+            "decision": "DENIED",
+            "reason": "claim resource 'host-ram-mib' lacks safe capacity",
+        },
+    }
