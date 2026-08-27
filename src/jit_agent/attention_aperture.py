@@ -1,0 +1,82 @@
+"""System-owned default memory exposure for every percept.
+
+The attention aperture is deliberately not a capability and does not depend on
+an LLM deciding whether unseen memory might matter. Every interaction receives
+one small, bounded, provenance-bearing JIT Memory packet derived from the
+current percept plus durable WorkingState. A later model decision may request
+``MEMORY_ANALYSIS`` to focus more deeply, but basic memory availability is part
+of Prometheist's cognitive substrate.
+"""
+from __future__ import annotations
+
+from uuid import UUID
+
+import psycopg
+
+from jit_agent import jit_memory
+from jit_agent.interaction_policy import (
+    deterministic_aperture_request_id,
+    deterministic_interaction_event_id,
+    deterministic_interaction_id,
+)
+from jit_agent.interaction_working_state import activate_working_state, load_working_state
+from jit_agent.models import MemoryPacket
+
+
+ATTENTION_APERTURE_VERSION = "v0.7-attention-aperture-v1"
+DEFAULT_ATTENTION_APERTURE_LIMIT = 6
+
+
+def open_attention_aperture(
+    conn: psycopg.Connection,
+    *,
+    conversation_id: UUID,
+    correlation_id: UUID,
+    requester_task_id: UUID,
+    user_text: str,
+    before_global_seq: int,
+) -> MemoryPacket:
+    """Return the bounded default memory packet for one current percept.
+
+    Retrieval policy is application-owned and deterministic for the same event
+    ledger, WorkingState, current percept, and kernel version. No model-written
+    query/entity/capability text is accepted at this boundary.
+    """
+
+    interaction_id = deterministic_interaction_id(conversation_id, correlation_id)
+    working_state = load_working_state(conn, conversation_id)
+    active_event_ids = (
+        list(working_state.active_event_ids) if working_state is not None else []
+    )
+    need = jit_memory.build_memory_need(
+        user_text,
+        active_event_ids=active_event_ids,
+        include_persisted_history=True,
+        conversation_id=None,
+        limit=DEFAULT_ATTENTION_APERTURE_LIMIT,
+    )
+    packet = jit_memory.request_memory(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        requesting_component=(
+            f"attention-aperture:{ATTENTION_APERTURE_VERSION}/task:{requester_task_id}"
+        ),
+        need=need,
+        before_global_seq=before_global_seq,
+        memory_request_id=deterministic_aperture_request_id(interaction_id),
+    )
+
+    prompt_event_id = deterministic_interaction_event_id(interaction_id, "user-prompt")
+    activate_working_state(
+        conn,
+        interaction_id=interaction_id,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        activated_event_ids=[
+            *[item.source_event_id for item in packet.items],
+            prompt_event_id,
+        ],
+        activation_key="aperture",
+    )
+    return packet
