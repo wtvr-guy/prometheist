@@ -2,6 +2,8 @@
 
 **Status:** active architecture requirement. Revised 2026-08-27 from native v0.7 acceptance evidence.
 
+**Constitutional status:** primary architecture authority for Articles 5, 6, 7, 8, 15, 16, and 20 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md). This document explains those constitutional rules in depth and is subordinate to the Constitution where wording conflicts.
+
 ## Governing invariant
 
 > **Conversations, sessions, devices, and interfaces are provenance metadata—not cognitive boundaries. Current context and basic access to persistent memory are system-owned cognitive substrate.**
@@ -64,7 +66,7 @@ RESPOND
 or
 
 USE_CAPABILITIES
-    capability_indices = [i, ...]   # 1-4 unique catalog indices
+    capability_indices = [i, ...]   # bounded unique catalog indices
 ```
 
 `RESPOND` must be explicit. An omitted/invalid action does not silently become a response.
@@ -82,7 +84,7 @@ If `USE_CAPABILITIES` is selected, that LLM call ends. Prometheist then:
 
 The original public capabilities remain available in later rounds, so the fresh worker may reuse them. Follow-up capabilities may also become visible after prerequisite research produced usable evidence.
 
-The loop is bounded to four capability rounds. Reaching the bound without an explicit `RESPOND` fails closed rather than forcing a potentially unsupported answer.
+The capability loop must be policy-bounded. The exact round bound is an empirical/runtime constraint governed by [`../engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md`](../engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md), not a constitutional constant. Reaching the configured bound without an explicit `RESPOND` fails closed rather than forcing a potentially unsupported answer.
 
 ## Progressive memory focus
 
@@ -102,9 +104,9 @@ Public meaning:
 
 > **Investigate the current question further using additional persisted internal evidence around one or more currently available memory candidates.**
 
-The fresh capability worker selects **1-4 candidate indices** from the current MemoryPacket. It does not generate search text. Prometheist resolves those indices to canonical event IDs and performs a narrower direct search with a broader association budget around each selected candidate.
+The fresh capability worker selects a bounded set of candidate indices from the current MemoryPacket. It does not generate search text. Prometheist resolves those indices to canonical event IDs and performs a narrower direct search with a broader association budget around each selected candidate.
 
-Current deterministic profile: 350 direct candidates, up to 600 association edges, up to 3 hops, bounded output.
+The exact direct-candidate, association-edge, and hop bounds are empirical constraints. They must remain bounded and governed by the constraint registry rather than treated as constitutional constants.
 
 ### Level 2b — `cross_reference`
 
@@ -112,9 +114,7 @@ Public meaning:
 
 > **Investigate relationships among two or more currently available internal memory candidates, including shared, conflicting, causal, or bridging evidence.**
 
-The worker selects **2-4 candidate indices** only. Prometheist resolves them to canonical events and performs one joint bounded associative investigation over the selected set. The model does not write a relationship description.
-
-Current deterministic profile: 250 direct candidates, up to 900 association edges, up to 4 hops, bounded output.
+The worker selects bounded candidate indices only. Prometheist resolves them to canonical events and performs one joint bounded associative investigation over the selected set. The model does not write a relationship description.
 
 ### Level 3 — `focused_recall`
 
@@ -122,15 +122,13 @@ Public meaning:
 
 > **Investigate one selected internal memory candidate with the deepest bounded association search when a specific ambiguity remains unresolved.**
 
-`focused_recall` is hidden from the initial catalog and becomes available after broader research produces usable evidence. The worker selects **exactly one candidate index** from the most recent non-empty broader-research packet.
-
-Current deterministic profile: 150 direct candidates, up to 1200 association edges, up to 5 hops, bounded output.
+`focused_recall` is hidden from the initial catalog and becomes available after broader research produces usable evidence. The worker selects exactly one candidate index from the most recent non-empty broader-research packet.
 
 If focused recall returns no useful evidence, no response is forced. The next fresh routing worker may:
 
 - explicitly `RESPOND` with the evidence already available;
-- run `focused_recall` again against a different candidate;
-- return to `deeper_research`;
+- run focused recall again against a different candidate;
+- return to broader research;
 - cross-reference another candidate set;
 - invoke another installed capability.
 
@@ -149,7 +147,9 @@ selected capability indices
     -> stable ready-item tie break by execution_priority, then capability_id
 ```
 
-For v0.7, selected capabilities execute as bounded substeps inside the already admitted interaction assignment. The ordering primitive is Attention-owned and generic; later releases may promote capability plan items to independently scheduled child tasks without changing the model-selection contract.
+For the current v0.7 implementation, selected capabilities execute as bounded substeps inside the already admitted interaction assignment. Later releases may promote capability plan items to independently scheduled child tasks without changing the model-selection contract.
+
+System-wide deterministic control is governed by [`SYSTEM_DETERMINISM.md`](SYSTEM_DETERMINISM.md); execution/resource authority is governed by [`ATTENTION_AND_EXECUTION_GOVERNANCE.md`](ATTENTION_AND_EXECUTION_GOVERNANCE.md).
 
 ## Final-response barrier
 
@@ -174,6 +174,8 @@ active_event_ids
 
 `active_event_ids` are bounded pointers to canonical events. WorkingState is not a copied transcript, summary, user-profile blob, parsed nickname table, or truth store. The append-only event ledger remains authoritative.
 
+Future WorkingState schemas may become richer only through experimentally justified structured state. They must preserve the constitutional boundedness and canonical-provenance rules.
+
 ## System-wide model-output rule
 
 > **Model-generated natural language is the representation of last resort. Use it only when language is genuinely the product or no smaller mechanically verifiable representation can express the required semantics.**
@@ -188,7 +190,7 @@ mechanically verified extractive selection
 free-form generated natural language
 ```
 
-The live v0.7 control path therefore uses:
+The live control path therefore prefers:
 
 - explicit action enums;
 - bounded capability indices;
@@ -212,7 +214,7 @@ This does **not** deprecate canonical text retrieval inside JIT Memory. Lexical 
 
 Activation and retrieval are attention operations, not truth promotion. A surfaced event means it is relevant enough to expose. It does not mean every proposition in it is correct, current, or objectively true.
 
-Evidence, user belief, world belief, contradictions, corrections, confidence, and derived conclusions remain distinct future epistemic concerns.
+Evidence, user belief, world belief, contradictions, corrections, confidence, and derived conclusions remain distinct epistemic concerns. The Constitution requires the distinction even where a richer structured epistemic WorkingState remains future work.
 
 ## Frozen v0.7 experiment
 
