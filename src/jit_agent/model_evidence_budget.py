@@ -2,15 +2,16 @@
 
 Canonical durable evidence is intentionally not size-limited here. These limits
 apply only to disposable evidence views that are about to be supplied to an LLM.
-The exact byte caps are safety tunables under Constitution Article 24, not
-constitutional constants.
+The exact byte caps are safety/environment tunables under Constitution Article 24,
+not constitutional constants.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
 import os
 from typing import Any, Iterable
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from jit_agent.models import MemoryPacket
 
@@ -25,20 +26,19 @@ class ModelEvidenceBudgetExceeded(RuntimeError):
     """Model-facing evidence cannot be represented within the governed budget."""
 
 
-@dataclass(frozen=True)
-class ModelEvidenceBudget:
+class ModelEvidenceBudget(BaseModel):
     """Safety-tunable byte limits for one disposable model invocation."""
 
-    max_item_bytes: int = DEFAULT_MAX_EVIDENCE_ITEM_BYTES
-    max_total_bytes: int = DEFAULT_MAX_EVIDENCE_TOTAL_BYTES
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
-    def __post_init__(self) -> None:
-        if self.max_item_bytes < 1:
-            raise ValueError("max_item_bytes must be positive")
-        if self.max_total_bytes < 1:
-            raise ValueError("max_total_bytes must be positive")
+    max_item_bytes: int = Field(default=DEFAULT_MAX_EVIDENCE_ITEM_BYTES, gt=0)
+    max_total_bytes: int = Field(default=DEFAULT_MAX_EVIDENCE_TOTAL_BYTES, gt=0)
+
+    @model_validator(mode="after")
+    def validate_ordering(self) -> "ModelEvidenceBudget":
         if self.max_item_bytes > self.max_total_bytes:
             raise ValueError("max_item_bytes must not exceed max_total_bytes")
+        return self
 
 
 def _positive_env_int(name: str, default: int) -> int:
