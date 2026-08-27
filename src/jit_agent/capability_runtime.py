@@ -13,35 +13,34 @@ from jit_agent.interaction_policy import (
     deterministic_interaction_event_id,
     deterministic_interaction_id,
 )
-from jit_agent.interaction_working_state import activate_working_state, load_working_state
-from jit_agent.memory_kernel import tokenize
-from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket, MemoryRetrievalScope
+from jit_agent.interaction_working_state import activate_working_state
+from jit_agent.models import (
+    FocusedMemoryCandidateSelection,
+    MemoryCandidateSelection,
+    MemoryPacket,
+)
 
 
-CAPABILITY_EXECUTION_VERSION = "v0.7-capability-execution-v3"
+CAPABILITY_EXECUTION_VERSION = "v0.7-capability-execution-v4"
 SOURCE = "capability_runtime"
-_MAX_PLANNER_CONTEXT_EVENTS = 12
-_MAX_ANCHOR_CATALOG = 48
-_BASE_HISTORICAL_EVIDENCE_BUDGET = 5
-_MAX_MEMORY_PACKET_LIMIT = 20
+_DEEPER_RESEARCH_LIMIT = 10
+_FOCUSED_RECALL_LIMIT = 8
+_STANDARD_MEMORY_LIMIT = 5
 _MEMORY_EVIDENCE_EXECUTORS = {"jit_memory", "deeper_research", "focused_recall"}
-_PLANNER_CONTEXT_EVENT_TYPES = {
-    EventType.USER_PROMPT,
-    EventType.INTERACTION_RESPONSE,
-    EventType.AGENT_RESPONSE,
-    EventType.AGENT_RESULT,
-    EventType.TOOL_RESULT,
-    EventType.SYSTEM_EVENT,
-}
 
 
 class CapabilityExecutionLLM(Protocol):
-    def plan_memory(
+    def select_research_candidates(
         self,
         task: str,
-        *,
-        active_state_available: bool,
-    ) -> MemoryNeedDecision: ...
+        packet: MemoryPacket,
+    ) -> MemoryCandidateSelection: ...
+
+    def select_focused_candidate(
+        self,
+        task: str,
+        packet: MemoryPacket,
+    ) -> FocusedMemoryCandidateSelection: ...
 
 
 class CapabilityExecution(BaseModel):
@@ -68,91 +67,29 @@ class CapabilityExecution(BaseModel):
         return self
 
 
-def _active_planner_context(
+def _candidate_event_ids(
+    packet: MemoryPacket,
+    indices: list[int],
+) -> list[UUID]:
+    if any(index < 0 or index >= len(packet.items) for index in indices):
+        raise RuntimeError("memory capability selected a candidate outside the supplied packet")
+    return [packet.items[index].source_event_id for index in indices]
+
+
+def _existing_execution(
     conn: psycopg.Connection,
-    active_event_ids: list[UUID],
-    *,
-    before_global_seq: int,
-) -> tuple[str, ...]:
-    texts: list[str] = []
-    for event_id in active_event_ids:
-        event = event_store.get_event_by_id(conn, event_id)
-        if event is None or event.global_seq >= before_global_seq:
-            continue
-        if event.event_type not in _PLANNER_CONTEXT_EVENT_TYPES:
-            continue
-        text = event.payload.get("text")
-        if not isinstance(text, str) or not text.strip():
-            continue
-        texts.append(" ".join(text.split()))
-        if len(texts) == _MAX_PLANNER_CONTEXT_EVENTS:
-            break
-    return tuple(texts)
-
-
-def _anchor_catalog(task_text: str, active_context: tuple[str, ...]) -> tuple[str, ...]:
-    anchors: list[str] = []
-    seen: set[str] = set()
-    for text in (task_text, *active_context):
-        for token in tokenize(text):
-            if token in seen:
-                continue
-            seen.add(token)
-            anchors.append(token)
-            if len(anchors) == _MAX_ANCHOR_CATALOG:
-                return tuple(anchors)
-    return tuple(anchors)
-
-
-def _memory_planner_task(
-    *,
-    task_text: str,
-    active_context: tuple[str, ...],
-    anchor_catalog: tuple[str, ...],
-) -> str:
-    sections = [f"[Current task]\n{task_text.strip()}"]
-    if active_context:
-        rendered_context = "\n".join(
-            f"{index}: {text}" for index, text in enumerate(active_context)
-        )
-        sections.append(f"[Active canonical context]\n{rendered_context}")
-    rendered_catalog = "\n".join(
-        f"{index}: {anchor}" for index, anchor in enumerate(anchor_catalog)
+    capability_execution_id: UUID,
+) -> CapabilityExecution | None:
+    event = event_store.get_event_by_id(
+        conn,
+        uuid5(capability_execution_id, "event:result"),
     )
-    sections.append(f"[Anchor catalog]\n{rendered_catalog}")
-    return "\n\n".join(sections)
-
-
-def _resolve_memory_plan(
-    plan: MemoryNeedDecision,
-    *,
-    active_event_ids: list[UUID],
-    anchor_catalog: tuple[str, ...],
-) -> tuple[list[UUID], bool, list[str]]:
-    if any(index >= len(anchor_catalog) for index in plan.anchor_indices):
-        raise RuntimeError("memory routing selected an anchor outside the supplied catalog")
-    anchors = [anchor_catalog[index] for index in plan.anchor_indices]
-    if plan.scope is MemoryRetrievalScope.ACTIVE_ONLY:
-        if not active_event_ids:
-            raise RuntimeError("ACTIVE_ONLY memory routing requires active working state")
-        return list(active_event_ids), False, []
-    if plan.scope is MemoryRetrievalScope.HISTORY_ONLY:
-        return [], True, anchors
-    return list(active_event_ids), True, anchors
-
-
-def _memory_packet_limit(
-    *,
-    active_event_ids: list[UUID],
-    include_history: bool,
-) -> int:
-    active_count = len(active_event_ids)
-    if not include_history:
-        return min(_MAX_MEMORY_PACKET_LIMIT, max(1, active_count))
-    return min(
-        _MAX_MEMORY_PACKET_LIMIT,
-        max(_BASE_HISTORICAL_EVIDENCE_BUDGET, active_count + _BASE_HISTORICAL_EVIDENCE_BUDGET),
-    )
+    if event is None:
+        return None
+    payload = event.payload.get("execution")
+    if not isinstance(payload, dict):
+        raise RuntimeError("persisted capability result has invalid execution payload")
+    return CapabilityExecution.model_validate(payload)
 
 
 def execute_registered_capability(
@@ -170,49 +107,76 @@ def execute_registered_capability(
     task_text: str,
     before_global_seq: int,
     memory_request_id: UUID,
+    candidate_packet: MemoryPacket,
 ) -> CapabilityExecution:
-    """Execute one Attention-ordered capability and return structured evidence."""
+    """Execute one Attention-ordered capability and return structured evidence.
 
-    if registration.executor not in _MEMORY_EVIDENCE_EXECUTORS:
+    Models never author retrieval text or event IDs. ``deeper_research`` selects
+    1-4 canonical candidates from the supplied MemoryPacket by index.
+    ``focused_recall`` selects exactly one candidate by index. Prometheist then
+    resolves those indices to canonical event IDs and applies the deterministic
+    recall profile for that depth.
+    """
+
+    existing = _existing_execution(conn, capability_execution_id)
+    if existing is not None:
+        return existing
+
+    executor = registration.executor
+    selection_payload: dict[str, Any] = {}
+    if executor == "jit_memory":
+        need = jit_memory.build_memory_need(
+            task_text,
+            include_persisted_history=True,
+            conversation_id=None,
+            limit=_STANDARD_MEMORY_LIMIT,
+        )
+        recall_profile = jit_memory.MemoryRecallProfile.STANDARD
+    elif executor == "deeper_research":
+        if not candidate_packet.items:
+            raise RuntimeError("deeper_research requires at least one current memory candidate")
+        selection = llm.select_research_candidates(task_text, candidate_packet)
+        focus_event_ids = _candidate_event_ids(
+            candidate_packet,
+            list(selection.candidate_indices),
+        )
+        need = jit_memory.build_memory_need(
+            None,
+            focus_event_ids=focus_event_ids,
+            include_persisted_history=True,
+            conversation_id=None,
+            limit=_DEEPER_RESEARCH_LIMIT,
+        )
+        recall_profile = jit_memory.MemoryRecallProfile.DEEPER_RESEARCH
+        selection_payload = {
+            "candidate_indices": list(selection.candidate_indices),
+            "focus_event_ids": [str(value) for value in focus_event_ids],
+        }
+    elif executor == "focused_recall":
+        if not candidate_packet.items:
+            raise RuntimeError("focused_recall requires a non-empty broader-research packet")
+        selection = llm.select_focused_candidate(task_text, candidate_packet)
+        focus_event_ids = _candidate_event_ids(
+            candidate_packet,
+            [selection.candidate_index],
+        )
+        need = jit_memory.build_memory_need(
+            None,
+            focus_event_ids=focus_event_ids,
+            include_persisted_history=True,
+            conversation_id=None,
+            limit=_FOCUSED_RECALL_LIMIT,
+        )
+        recall_profile = jit_memory.MemoryRecallProfile.FOCUSED_RECALL
+        selection_payload = {
+            "candidate_index": selection.candidate_index,
+            "focus_event_ids": [str(value) for value in focus_event_ids],
+        }
+    else:
         raise NotImplementedError(
-            f"capability executor {registration.executor!r} has no v0.7 execution binding"
+            f"capability executor {executor!r} has no v0.7 execution binding"
         )
 
-    working_state = load_working_state(conn, conversation_id)
-    available_active_ids = (
-        list(working_state.active_event_ids) if working_state is not None else []
-    )
-    active_context = _active_planner_context(
-        conn,
-        available_active_ids,
-        before_global_seq=before_global_seq,
-    )
-    catalog = _anchor_catalog(task_text, active_context)
-    plan = llm.plan_memory(
-        _memory_planner_task(
-            task_text=task_text,
-            active_context=active_context,
-            anchor_catalog=catalog,
-        ),
-        active_state_available=bool(active_context),
-    )
-    active_event_ids, include_history, anchors = _resolve_memory_plan(
-        plan,
-        active_event_ids=available_active_ids,
-        anchor_catalog=catalog,
-    )
-    packet_limit = _memory_packet_limit(
-        active_event_ids=active_event_ids,
-        include_history=include_history,
-    )
-    need = jit_memory.build_memory_need(
-        task_text,
-        entities=anchors,
-        active_event_ids=active_event_ids,
-        include_persisted_history=include_history,
-        conversation_id=None,
-        limit=packet_limit,
-    )
     packet = jit_memory.request_memory(
         conn,
         conversation_id=conversation_id,
@@ -224,6 +188,7 @@ def execute_registered_capability(
         need=need,
         before_global_seq=before_global_seq,
         memory_request_id=memory_request_id,
+        recall_profile=recall_profile,
     )
 
     interaction_id = deterministic_interaction_id(conversation_id, correlation_id)
@@ -247,9 +212,14 @@ def execute_registered_capability(
         round_index=round_index,
         plan_position=plan_position,
         capability_id=registration.descriptor.capability_id,
-        executor=registration.executor,
+        executor=executor,
         memory_packet=packet,
-        result_data={"supported": packet.supported, "item_count": len(packet.items)},
+        result_data={
+            "supported": packet.supported,
+            "item_count": len(packet.items),
+            "recall_profile": recall_profile.value,
+            **selection_payload,
+        },
     )
     event_store.record_event(
         conn,
@@ -257,11 +227,7 @@ def execute_registered_capability(
         correlation_id=correlation_id,
         event_type=EventType.CAPABILITY_RESULT,
         source=SOURCE,
-        payload={
-            "execution": execution.model_dump(mode="json"),
-            "memory_scope": plan.scope.value,
-            "anchor_indices": list(plan.anchor_indices),
-        },
+        payload={"execution": execution.model_dump(mode="json")},
         event_id=uuid5(capability_execution_id, "event:result"),
     )
     return execution
