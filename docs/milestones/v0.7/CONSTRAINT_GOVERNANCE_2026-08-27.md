@@ -12,7 +12,7 @@ The governing scientific rule is:
 
 `scripts/audit_constraints.py` scans production/operational Python for behavioral numeric constraints in constants, defaults, schema bounds, call arguments, comparisons, slices, regex quantifiers, scoring coefficients, retry/range bounds, structured-output token caps, and numeric instructions embedded in system prompts.
 
-The current branch has **171 discovered constraints and 171 registered constraints**, with zero uncovered, stale, value-mismatched, or invalid entries. GitHub Actions run 331 verified this at head `f7cf27afb98621575d11751487640fcd5d91fcea`.
+The current branch has **171 discovered constraints and 171 registered constraints**, with zero uncovered, stale, value-mismatched, or invalid entries.
 
 `benchmarks/constraint_registry.json` binds every discovered constraint to an exact key and expected value. Grouping shares classification metadata but does not wildcard future constraints. Any new numeric constraint, removed constraint, or changed registered value fails CI until it is deliberately classified.
 
@@ -28,9 +28,10 @@ CI runs the governance audit in the static-check stage so unclassified constrain
 
 ## Deterministic calibration evidence
 
-`benchmarks/run_deterministic_constraints.py` is executed in GitHub CI. The first frozen result is committed at:
+`benchmarks/run_deterministic_constraints.py` and `benchmarks/calibrate_capability_loop.py` are executed in GitHub CI. Frozen evidence is committed at:
 
-`benchmarks/results/DETERMINISTIC-CONSTRAINTS_2026-08-27_initial.json`
+- `benchmarks/results/DETERMINISTIC-CONSTRAINTS_2026-08-27_initial.json`
+- `benchmarks/results/CAP-LOOP-001_2026-08-27_scripted.json`
 
 The current evidence does **not** support claiming that several working production values are optimal:
 
@@ -50,6 +51,14 @@ The current evidence does **not** support claiming that several working producti
 
 `CAP-DISCOVERY-001` tested five materially different routing coefficient vectors. All five preserved every current routing oracle. The production coefficients therefore remain provisional; the benchmark needs more adversarial/ambiguous routing cases before it can distinguish them.
 
+### Capability-loop convergence
+
+`CAP-LOOP-001` mirrors the production recurrent-loop semantics with a deterministic scripted router. Candidate round budgets 1 through 8 were evaluated against immediate response, one-capability response, multiple independent capabilities, two-stage progressive research, three-stage progressive research, and an intentionally nonconvergent router.
+
+Budgets 1-3 truncate at least one frozen convergent workflow. Budgets 4-8 pass every frozen convergent workflow. Every finite candidate fails closed on the nonconvergent router. The production value of 4 is therefore non-binding for the frozen scripted obligations and is the smallest budget that admits the hand-authored three-stage case.
+
+That **does not make 4 empirically optimal**. The three-stage fixture is a deliberate test obligation, not a measured distribution of real Ollama routing behavior. `MAX_CAPABILITY_ROUNDS=4` therefore remains `NATIVE_REQUIRED` pending local-model convergence evidence.
+
 ### Scheduler service guarantees
 
 `SCHED-SERVICE-001` compared quarter-, half-, current-, double-, and quadruple-scaled service wait vectors. All preserve the current deterministic service-order invariant. Without a measured arrival distribution and explicit queue-delay/service objective, exact wait-cycle values cannot honestly be labeled optimal.
@@ -62,13 +71,14 @@ The audit was also expanded specifically to prevent policy numbers from hiding i
 
 ## Native-only calibration
 
-Three parameter families cannot be established by GitHub's Ubuntu runner:
+Three parameter families plus real-model capability-loop convergence cannot be established by GitHub's Ubuntu runner:
 
 - `RES-NATIVE-001`: CPU/RAM observation freshness, safety headroom, process estimates, and local-LLM concurrency;
 - `WORKER-NATIVE-001`: leases, worker/process timeouts, claim retries/delays, and recovery timing;
-- `LLM-NATIVE-001`: Ollama HTTP timeout, output-token caps, structured-output retries, and literal-preservation/output behavior.
+- `LLM-NATIVE-001`: Ollama HTTP timeout, output-token caps, structured-output retries, and literal-preservation/output behavior;
+- `CAP-LOOP-001`: the distribution and tail of recurrent routing rounds under the supported local model.
 
-`benchmarks/native_constraint_calibration.py` and `scripts/run_native_constraint_calibration.ps1` now collect target-host pilot evidence without rewriting production policy. The harness records raw host samples, controlled Ollama measurements across candidate token caps, and the frozen worker/runtime block duration. Its output is written to a timestamped `benchmarks/results/NATIVE-CONSTRAINTS_*.json` artifact.
+`benchmarks/native_constraint_calibration.py` and `scripts/run_native_constraint_calibration.ps1` collect target-host pilot evidence without rewriting production policy. The harness records raw host samples, controlled Ollama measurements across candidate token caps, and the frozen worker/runtime block duration. Its output is written to a timestamped `benchmarks/results/NATIVE-CONSTRAINTS_*.json` artifact.
 
 Run on the intended Windows development/deployment machine:
 
@@ -79,15 +89,16 @@ git pull
 .\scripts\run_native_constraint_calibration.ps1
 ```
 
-A single pilot is evidence collection, not verification. Resource margins require idle/CPU-pressure/memory-pressure/cold-model/warm-model samples. Worker timing requires normal, slow, killed, spawn-failure, and resource-denial trials. LLM bounds require cold/warm/contention and production-schema trials.
+A single pilot is evidence collection, not verification. Resource margins require idle/CPU-pressure/memory-pressure/cold-model/warm-model samples. Worker timing requires normal, slow, killed, spawn-failure, and resource-denial trials. LLM bounds require cold/warm/contention and production-schema trials. Capability-loop convergence requires observing recurrent routing behavior under representative successful and adversarial tasks rather than inferring a production optimum from scripted depth alone.
 
 ## Current verification
 
-At head `f7cf27afb98621575d11751487640fcd5d91fcea`, GitHub Actions run 331 passed:
+The latest code-bearing CI run after adding scripted `CAP-LOOP-001` passed:
 
 - Ruff;
 - constraint audit: **171 discovered / 171 registered / 0 uncovered / 0 stale / 0 mismatched / 0 invalid**;
-- deterministic constraint calibration;
+- deterministic memory/breadth/graph/discovery/service calibration;
+- deterministic scripted capability-loop calibration;
 - all 5 local-model/native acceptance tests collected;
 - deterministic/PostgreSQL suite: **233 passed, 5 environment-dependent Ollama tests skipped**.
 
