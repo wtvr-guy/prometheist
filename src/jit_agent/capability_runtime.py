@@ -1,8 +1,6 @@
 """Application-owned execution bindings for selected v0.7 capabilities."""
 from __future__ import annotations
 
-from datetime import datetime
-import re
 from typing import Protocol
 from uuid import UUID, uuid5
 
@@ -15,71 +13,15 @@ from jit_agent.capability_registry import (
     RegisteredCapability,
     deterministic_capability_event_id,
 )
+from jit_agent.interaction_working_state import (
+    load_working_state,
+    working_state_memory_cue,
+)
 from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
 
 
 CAPABILITY_EXECUTION_VERSION = "v0.7-capability-execution-v1"
 SOURCE = "capability_runtime"
-_ENTITY_SPAN_RE = re.compile(
-    r"\b[A-Z][A-Za-z0-9_-]*(?:\s+[A-Z][A-Za-z0-9_-]*)+\b"
-)
-_SINGLETON_ENTITY_RE = re.compile(r"\b[A-Z][A-Za-z0-9_-]{2,}\b")
-_RECENT_CONTEXT_RE = re.compile(
-    r"\b(?:just|recently|immediately)\b"
-    r"|\b(?:this|that)\s+(?:plan|approach|option|choice|step|item|idea|one)\b",
-    re.IGNORECASE,
-)
-_SINGLETON_ENTITY_STOPWORDS = frozenset(
-    {
-        "A",
-        "An",
-        "And",
-        "Are",
-        "As",
-        "At",
-        "Be",
-        "But",
-        "By",
-        "Did",
-        "Do",
-        "Does",
-        "For",
-        "From",
-        "Give",
-        "How",
-        "I",
-        "If",
-        "In",
-        "Is",
-        "It",
-        "My",
-        "Name",
-        "Of",
-        "On",
-        "Or",
-        "Recall",
-        "Tell",
-        "That",
-        "The",
-        "Then",
-        "This",
-        "Those",
-        "To",
-        "Use",
-        "Was",
-        "We",
-        "Were",
-        "What",
-        "When",
-        "Where",
-        "Which",
-        "Who",
-        "Why",
-        "With",
-        "You",
-        "Your",
-    }
-)
 
 
 class CapabilityExecutionLLM(Protocol):
@@ -111,7 +53,7 @@ class CapabilityExecution(BaseModel):
 def _load_discovery_packet(
     conn: psycopg.Connection,
     capability_request_id: UUID,
-) -> tuple[CapabilityPacket, datetime]:
+) -> CapabilityPacket:
     """Reconstruct the authoritative discovery handoff from durable history."""
 
     event = event_store.get_event_by_id(
@@ -123,10 +65,9 @@ def _load_discovery_packet(
     if event.event_type is not EventType.CAPABILITY_PACKET:
         raise RuntimeError("capability discovery event has the wrong event type")
     try:
-        packet = CapabilityPacket.model_validate(event.payload["packet"])
+        return CapabilityPacket.model_validate(event.payload["packet"])
     except (KeyError, TypeError, ValueError) as exc:
         raise RuntimeError("capability discovery packet is invalid") from exc
-    return packet, event.created_at
 
 
 def _supplemental_queries(*groups: list[str] | tuple[str, ...]) -> list[str]:
@@ -149,50 +90,8 @@ def _supplemental_queries(*groups: list[str] | tuple[str, ...]) -> list[str]:
     return merged
 
 
-def _deterministic_entity_cues(*texts: str | None) -> list[str]:
-    """Extract bounded explicit names without model-owned identity inference.
-
-    Prefer multi-token capitalized spans such as ``Project Oriole`` and
-    ``Docker Compose``.  Also retain proper-name-like singleton anchors such as
-    ``Kestrel`` when a natural follow-up drops the generic prefix (for example,
-    ``Project Kestrel`` -> ``Kestrel rule``).  Common sentence-function words
-    are excluded so question form does not become entity evidence.
-    """
-
-    entities: list[str] = []
-    seen: set[str] = set()
-
-    def add(value: str) -> bool:
-        normalized = " ".join(value.split())
-        key = normalized.casefold()
-        if not normalized or key in seen:
-            return False
-        seen.add(key)
-        entities.append(normalized)
-        return len(entities) == 8
-
-    for text in texts:
-        if not text:
-            continue
-        occupied: list[tuple[int, int]] = []
-        for match in _ENTITY_SPAN_RE.finditer(text):
-            occupied.append(match.span())
-            if add(match.group(0)):
-                return entities
-
-        for match in _SINGLETON_ENTITY_RE.finditer(text):
-            if any(start <= match.start() and match.end() <= end for start, end in occupied):
-                continue
-            value = match.group(0)
-            if value in _SINGLETON_ENTITY_STOPWORDS:
-                continue
-            if add(value):
-                return entities
-    return entities
-
-
 def _merge_entities(*groups: list[str] | tuple[str, ...]) -> list[str]:
-    """Merge bounded entity cues while preserving first-seen spelling/order."""
+    """Merge bounded structured entity cues while preserving first-seen order."""
 
     merged: list[str] = []
     seen: set[str] = set()
@@ -211,12 +110,6 @@ def _merge_entities(*groups: list[str] | tuple[str, ...]) -> list[str]:
     return merged
 
 
-def _recent_reference_time(task_text: str, discovery_created_at: datetime) -> datetime | None:
-    """Use durable event time only for explicit immediate-context references."""
-
-    return discovery_created_at if _RECENT_CONTEXT_RE.search(task_text) else None
-
-
 def execute_registered_capability(
     conn: psycopg.Connection,
     llm: CapabilityExecutionLLM,
@@ -232,62 +125,56 @@ def execute_registered_capability(
     before_global_seq: int,
     memory_request_id: UUID,
 ) -> CapabilityExecution:
-    """Execute a selected binding without granting policy authority to a worker."""
+    """Execute a selected binding without granting policy authority to a worker.
 
-    discovery_packet, discovery_created_at = _load_discovery_packet(
-        conn,
-        capability_request_id,
-    )
+    v0.7 continuity no longer synthesizes one-off lexical/entity/recency hints
+    from each current utterance.  The active situation is reconstructed from
+    durable InteractionWorkingState and supplied as structured evidence/event
+    cues. Ordinary lexical/entity/association retrieval remains a fallback for
+    unresolved historical needs.
+    """
+
+    discovery_packet = _load_discovery_packet(conn, capability_request_id)
     if discovery_packet.requester_task_id != requester_task_id:
         raise RuntimeError("capability discovery task does not match execution task")
 
-    # Conversation/session identifiers are provenance, not memory boundaries.
-    # Internal persisted memory must be able to recover evidence written in any
-    # earlier conversation while ``before_global_seq`` remains the hard current-
-    # turn leakage boundary.
-    memory_scope_conversation_id = None
+    working_state = load_working_state(conn, conversation_id)
+    state_entities = working_state.active_entities if working_state is not None else []
+    active_event_ids = working_state.active_event_ids if working_state is not None else []
+    state_cue = working_state_memory_cue(working_state)
+    state_queries = [state_cue] if state_cue else []
     discovery_supplemental = discovery_packet.need.supplemental_query_texts
-    reference_time = _recent_reference_time(task_text, discovery_created_at)
+
+    # Conversations/sessions remain provenance, not hard memory boundaries.
+    memory_scope_conversation_id = None
 
     if registration.executor == "jit_memory":
         explicit_input = [capability_input] if capability_input else []
         supplemental = _supplemental_queries(
+            state_queries,
             discovery_supplemental,
             explicit_input,
-        )
-        entities = _deterministic_entity_cues(
-            task_text,
-            capability_input,
-            *discovery_supplemental,
         )
         need = jit_memory.build_memory_need(
             task_text,
             supplemental_query_texts=supplemental,
-            entities=entities,
-            reference_time=reference_time,
+            entities=_merge_entities(state_entities),
+            active_event_ids=active_event_ids,
             conversation_id=memory_scope_conversation_id,
         )
     elif registration.executor == "memory_analysis":
         planned = llm.plan_memory(capability_input or task_text)
         planned_queries = [planned.query_text] if planned.query_text != task_text else []
         supplemental = _supplemental_queries(
+            state_queries,
             discovery_supplemental,
             planned_queries,
-        )
-        entities = _merge_entities(
-            planned.entities,
-            _deterministic_entity_cues(
-                task_text,
-                capability_input,
-                planned.query_text,
-                *discovery_supplemental,
-            ),
         )
         need = jit_memory.build_memory_need(
             task_text,
             supplemental_query_texts=supplemental,
-            entities=entities,
-            reference_time=reference_time,
+            entities=_merge_entities(planned.entities, state_entities),
+            active_event_ids=active_event_ids,
             conversation_id=memory_scope_conversation_id,
         )
     else:
@@ -300,9 +187,7 @@ def execute_registered_capability(
         conn,
         conversation_id=conversation_id,
         correlation_id=correlation_id,
-        requesting_component=(
-            f"task:{requester_task_id}/worker-step:{requester_step_id}"
-        ),
+        requesting_component=f"task:{requester_task_id}/worker-step:{requester_step_id}",
         need=need,
         before_global_seq=before_global_seq,
         memory_request_id=memory_request_id,
