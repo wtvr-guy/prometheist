@@ -2,9 +2,10 @@
 
 The purpose of this audit is not to outlaw numbers. It is to prevent behavioral
 policy from acquiring unexplained magic numbers. Mathematical identities,
-zero/one sentinels, protocol sequence origins, percentage-domain bounds, and
-benchmark-fixture mechanics are not empirical knobs and are excluded where the
-syntax makes that distinction reliable.
+protocol sequence origins, percentage-domain bounds, and benchmark-fixture
+mechanics may be structural, but policy-named zero/one values are still surfaced
+because values such as one worker, one LLM slot, or zero retries can be genuine
+behavioral choices.
 
 Every discovered runtime/operational constraint must be classified in
 ``benchmarks/constraint_registry.json``. Empirical and safety tunables must
@@ -46,13 +47,32 @@ _POLICY_WORDS = re.compile(
     r"count|size|length|age|days|hours|minutes|seconds|milliseconds|"
     r"batch|page|queue|wait|grace|lease|heartbeat|backoff|jitter|sample|"
     r"samples|percentile|top|beam|fanout|branch|workers|slots|tokens|items|"
-    r"events|capabilities|literals"
+    r"events|capabilities|literals|priority|concurrency|output"
     r")(?:_|$)",
     re.IGNORECASE,
 )
 
 _STRUCTURAL_NUMBERS = {0, 1, 0.0, 1.0}
 _FIELD_BOUND_NAMES = {"min_length", "max_length", "ge", "gt", "le", "lt", "multiple_of"}
+_NUMBER_WORDS = {
+    "zero": 0,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+_PROMPT_RANGE_RE = re.compile(r"\b(\d+)\s*[-–]\s*(\d+)\b")
+_PROMPT_BOUND_RE = re.compile(
+    r"\b(?:at\s+most|up\s+to|no\s+more\s+than|exactly)\s+"
+    r"(\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten)\b",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,6 +145,11 @@ def _field_bound_is_behavioral(field_name: str, bound: str, value: int | float) 
             return False
         return True
     return value not in _STRUCTURAL_NUMBERS
+
+
+def _prompt_number(token: str) -> int:
+    lowered = token.casefold()
+    return int(lowered) if lowered.isdigit() else _NUMBER_WORDS[lowered]
 
 
 class _Visitor(ast.NodeVisitor):
@@ -212,6 +237,37 @@ class _Visitor(ast.NodeVisitor):
                 )
                 if _policy_name(name) or module_policy_constant:
                     self._add(node, role="assignment", value=value, name=name, source=ast.unparse(node))
+
+        if (
+            isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+            and any(
+                isinstance(target, ast.Name) and target.id.endswith("_PROMPT")
+                for target in node.targets
+            )
+        ):
+            prompt_name = next(
+                target.id
+                for target in node.targets
+                if isinstance(target, ast.Name) and target.id.endswith("_PROMPT")
+            )
+            text = node.value.value
+            for match in _PROMPT_RANGE_RE.finditer(text):
+                self._add(
+                    node,
+                    role="prompt_range_max",
+                    value=int(match.group(2)),
+                    name=f"{prompt_name}.range_max",
+                    source=match.group(0),
+                )
+            for match in _PROMPT_BOUND_RE.finditer(text):
+                self._add(
+                    node,
+                    role="prompt_numeric_bound",
+                    value=_prompt_number(match.group(1)),
+                    name=f"{prompt_name}.numeric_bound",
+                    source=match.group(0),
+                )
         self.generic_visit(node)
 
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
@@ -228,7 +284,7 @@ class _Visitor(ast.NodeVisitor):
             for keyword in node.value.keywords:
                 if keyword.arg == "default":
                     default_value = _numeric_literal(keyword.value)
-            if default_value is not None and _policy_name(name) and default_value not in _STRUCTURAL_NUMBERS:
+            if default_value is not None and _policy_name(name):
                 self._add(
                     node.value,
                     role="field_default",
@@ -261,7 +317,7 @@ class _Visitor(ast.NodeVisitor):
             value = _numeric_literal(keyword.value)
             if value is None or keyword.arg is None:
                 continue
-            if _policy_name(keyword.arg) and value not in _STRUCTURAL_NUMBERS:
+            if _policy_name(keyword.arg):
                 self._add(
                     keyword.value,
                     role=f"call_keyword:{keyword.arg}",
