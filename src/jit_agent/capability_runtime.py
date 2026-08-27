@@ -17,16 +17,20 @@ from jit_agent.interaction_policy import (
     deterministic_interaction_event_id,
     deterministic_interaction_id,
 )
-from jit_agent.interaction_working_state import (
-    activate_working_state,
-    load_working_state,
+from jit_agent.interaction_working_state import activate_working_state, load_working_state
+from jit_agent.memory_kernel import tokenize
+from jit_agent.models import (
+    EventType,
+    MemoryNeedDecision,
+    MemoryPacket,
+    MemoryRetrievalScope,
 )
-from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
 
 
 CAPABILITY_EXECUTION_VERSION = "v0.7-capability-execution-v1"
 SOURCE = "capability_runtime"
 _MAX_PLANNER_CONTEXT_EVENTS = 12
+_MAX_ANCHOR_CATALOG = 48
 _PLANNER_CONTEXT_EVENT_TYPES = {
     EventType.USER_PROMPT,
     EventType.INTERACTION_RESPONSE,
@@ -38,7 +42,7 @@ _PLANNER_CONTEXT_EVENT_TYPES = {
 
 
 class CapabilityExecutionLLM(Protocol):
-    """Fresh stateless semantic planning used to formulate historical needs."""
+    """Fresh stateless categorical planning used to route memory access."""
 
     def plan_memory(self, task: str) -> MemoryNeedDecision: ...
 
@@ -81,95 +85,86 @@ def _load_discovery_packet(
         raise RuntimeError("capability discovery packet is invalid") from exc
 
 
-def _supplemental_queries(*groups: list[str] | tuple[str, ...]) -> list[str]:
-    merged: list[str] = []
-    seen: set[str] = set()
-    for group in groups:
-        for value in group:
-            normalized = value.strip()
-            if not normalized:
-                continue
-            key = " ".join(normalized.split()).casefold()
-            if key in seen:
-                continue
-            seen.add(key)
-            merged.append(normalized)
-            if len(merged) == 3:
-                return merged
-    return merged
-
-
-def _merge_entities(*groups: list[str] | tuple[str, ...]) -> list[str]:
-    merged: list[str] = []
-    seen: set[str] = set()
-    for group in groups:
-        for value in group:
-            normalized = value.strip()
-            if not normalized:
-                continue
-            key = " ".join(normalized.split()).casefold()
-            if key in seen:
-                continue
-            seen.add(key)
-            merged.append(normalized)
-            if len(merged) == 8:
-                return merged
-    return merged
-
-
 def _active_planner_context(
     conn: psycopg.Connection,
     active_event_ids: list[UUID],
     *,
     before_global_seq: int,
-) -> str:
-    """Render bounded canonical active events for one fresh semantic planner.
+) -> tuple[str, ...]:
+    """Rehydrate bounded canonical active text for one fresh routing call."""
 
-    WorkingState stores only event IDs. The planner receives canonical source
-    text just in time so it can resolve the current utterance against the active
-    situation without inheriting a transcript or relying on application-owned
-    phrase rules.
-    """
-
-    blocks: list[str] = []
+    texts: list[str] = []
     for event_id in active_event_ids:
         event = event_store.get_event_by_id(conn, event_id)
-        if event is None:
-            continue
-        if event.global_seq >= before_global_seq:
+        if event is None or event.global_seq >= before_global_seq:
             continue
         if event.event_type not in _PLANNER_CONTEXT_EVENT_TYPES:
             continue
         text = event.payload.get("text")
         if not isinstance(text, str) or not text.strip():
             continue
-        normalized = " ".join(text.split())
-        blocks.append(f"- {event.event_type.value}: {normalized}")
-        if len(blocks) == _MAX_PLANNER_CONTEXT_EVENTS:
+        texts.append(" ".join(text.split()))
+        if len(texts) == _MAX_PLANNER_CONTEXT_EVENTS:
             break
-    return "\n".join(blocks)
+    return tuple(texts)
+
+
+def _anchor_catalog(task_text: str, active_context: tuple[str, ...]) -> tuple[str, ...]:
+    """Build a bounded deterministic catalog; the model may only select indices."""
+
+    anchors: list[str] = []
+    seen: set[str] = set()
+    for text in (task_text, *active_context):
+        for token in tokenize(text):
+            if token in seen:
+                continue
+            seen.add(token)
+            anchors.append(token)
+            if len(anchors) == _MAX_ANCHOR_CATALOG:
+                return tuple(anchors)
+    return tuple(anchors)
 
 
 def _memory_planner_task(
     *,
     task_text: str,
-    capability_input: str | None,
-    active_context: str,
+    active_context: tuple[str, ...],
+    anchor_catalog: tuple[str, ...],
 ) -> str:
-    """Build a bounded semantic-planning input from system-owned current state."""
+    """Render semantic input while keeping the model output non-generative."""
 
     sections = [f"[Current task]\n{task_text.strip()}"]
-    if capability_input and capability_input.strip() and capability_input.strip() != task_text.strip():
-        sections.append(f"[Capability narrowing]\n{capability_input.strip()}")
     if active_context:
-        sections.append(f"[Active canonical context]\n{active_context}")
-    sections.append(
-        "[Planning objective]\n"
-        "Resolve references using the active canonical context, then describe the older "
-        "persisted evidence still needed to answer the current task. Return a self-contained "
-        "historical information need; do not answer the task."
+        rendered_context = "\n".join(
+            f"{index}: {text}" for index, text in enumerate(active_context)
+        )
+        sections.append(f"[Active canonical context]\n{rendered_context}")
+    rendered_catalog = "\n".join(
+        f"{index}: {anchor}" for index, anchor in enumerate(anchor_catalog)
     )
+    sections.append(f"[Anchor catalog]\n{rendered_catalog}")
     return "\n\n".join(sections)
+
+
+def _resolve_memory_plan(
+    plan: MemoryNeedDecision,
+    *,
+    active_event_ids: list[UUID],
+    anchor_catalog: tuple[str, ...],
+) -> tuple[list[UUID], bool, list[str]]:
+    """Validate categorical model output against application-owned state."""
+
+    if any(index >= len(anchor_catalog) for index in plan.anchor_indices):
+        raise RuntimeError("memory routing selected an anchor outside the supplied catalog")
+    anchors = [anchor_catalog[index] for index in plan.anchor_indices]
+
+    if plan.scope is MemoryRetrievalScope.ACTIVE_ONLY:
+        if not active_event_ids:
+            raise RuntimeError("ACTIVE_ONLY memory routing requires active working state")
+        return list(active_event_ids), False, []
+    if plan.scope is MemoryRetrievalScope.HISTORY_ONLY:
+        return [], True, anchors
+    return list(active_event_ids), True, anchors
 
 
 def execute_registered_capability(
@@ -183,18 +178,14 @@ def execute_registered_capability(
     conversation_id: UUID,
     correlation_id: UUID,
     task_text: str,
-    capability_input: str | None,
     before_global_seq: int,
     memory_request_id: UUID,
 ) -> CapabilityExecution:
-    """Execute selected memory bindings through working state + JIT Memory.
+    """Execute selected memory bindings through WorkingState + JIT Memory.
 
-    Interaction continuity does not depend on a hand-maintained vocabulary of
-    phrase, entity, or recency rules. Durable working state supplies bounded
-    canonical event IDs already active in the situation. A fresh stateless
-    semantic planner sees those canonical events just in time and formulates any
-    unresolved historical need; deterministic JIT Memory then retrieves and
-    validates canonical evidence.
+    The model chooses only a retrieval scope enum and indices into a bounded
+    application-generated anchor catalog. It never generates a search query,
+    entity string, capability id, or phrase-specific continuity cue.
     """
 
     discovery_packet = _load_discovery_packet(conn, capability_request_id)
@@ -202,30 +193,33 @@ def execute_registered_capability(
         raise RuntimeError("capability discovery task does not match execution task")
 
     working_state = load_working_state(conn, conversation_id)
-    active_event_ids = working_state.active_event_ids if working_state is not None else []
+    available_active_ids = (
+        list(working_state.active_event_ids) if working_state is not None else []
+    )
     active_context = _active_planner_context(
         conn,
-        active_event_ids,
+        available_active_ids,
         before_global_seq=before_global_seq,
     )
-    discovery_supplemental = discovery_packet.need.supplemental_query_texts
-    planned = llm.plan_memory(
+    catalog = _anchor_catalog(task_text, active_context)
+    plan = llm.plan_memory(
         _memory_planner_task(
             task_text=task_text,
-            capability_input=capability_input,
             active_context=active_context,
+            anchor_catalog=catalog,
         )
     )
-    planned_queries = [planned.query_text] if planned.query_text != task_text else []
+    active_event_ids, include_history, anchors = _resolve_memory_plan(
+        plan,
+        active_event_ids=available_active_ids,
+        anchor_catalog=catalog,
+    )
 
     need = jit_memory.build_memory_need(
         task_text,
-        supplemental_query_texts=_supplemental_queries(
-            planned_queries,
-            discovery_supplemental,
-        ),
-        entities=_merge_entities(planned.entities),
+        entities=anchors,
         active_event_ids=active_event_ids,
+        include_persisted_history=include_history,
         conversation_id=None,
     )
 
@@ -275,6 +269,8 @@ def execute_registered_capability(
             "capability_id": execution.capability_id,
             "executor": execution.executor,
             "memory_request_id": str(packet.memory_request_id),
+            "memory_scope": plan.scope.value,
+            "anchor_indices": list(plan.anchor_indices),
         },
         event_id=uuid5(capability_request_id, "event:result"),
     )
