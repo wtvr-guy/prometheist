@@ -171,9 +171,12 @@ def test_post_aperture_plan_ignores_model_order_and_expands_dependencies():
         index["reconcile_evidence"],
         index["independent_check"],
     ]
+    # independent_check is runnable at priority 20 while collect_external_evidence
+    # is runnable at priority 40. reconcile_evidence cannot become runnable until
+    # collect_external_evidence completes, even though reconcile has priority 10.
     assert [item.capability_id for item in plan.items] == [
-        "collect_external_evidence",
         "independent_check",
+        "collect_external_evidence",
         "reconcile_evidence",
     ]
 
