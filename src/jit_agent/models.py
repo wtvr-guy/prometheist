@@ -13,7 +13,7 @@ from enum import Enum
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class EventType(str, Enum):
@@ -113,6 +113,7 @@ class MemoryNeedDecision(BaseModel):
     input text; the model may only select existing catalog entries by index.
     """
 
+    model_config = ConfigDict(extra="forbid")
     scope: MemoryRetrievalScope
     anchor_indices: list[int] = Field(default_factory=list, max_length=4)
 
