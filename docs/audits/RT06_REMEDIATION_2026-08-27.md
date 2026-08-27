@@ -59,23 +59,45 @@ The initial defaults are:
 - `DEFAULT_MAX_EVIDENCE_ITEM_BYTES = 16 * 1024`;
 - `DEFAULT_MAX_EVIDENCE_TOTAL_BYTES = 64 * 1024`.
 
-These values are provisional environment/model tunables, not verified optima. `LLM-NATIVE-001` now explicitly includes `max_model_evidence_item_bytes` and `max_model_evidence_total_bytes`, with native scenario families for oversized single items, aggregate memory pressure, capability-result pressure, multibyte UTF-8 evidence, and largest supported useful context.
+These values remain provisional environment/model tunables, not verified optima. `LLM-NATIVE-001` explicitly includes `max_model_evidence_item_bytes` and `max_model_evidence_total_bytes`, with native scenario families for oversized single items, aggregate memory pressure, capability-result pressure, multibyte UTF-8 evidence, and largest supported useful context.
 
-The calibration objective is to preserve required-evidence coverage and valid model behavior while guaranteeing finite prompt cost. Boundary-selected values must be expanded/retested before acceptance.
+The calibration objective is to preserve required-evidence coverage and valid model behavior while guaranteeing finite prompt cost. Boundary-selected values must be expanded/retested before any claim that the exact ceilings are optimal.
 
-The current static constraint audit passes after removing accidental duplicate numeric policy introduced by the RT-05 transport. The arithmetic-form defaults above are not automatically discovered by the scanner, so they must not be treated as implicitly verified merely because the gate is green. Their native-calibration obligation remains explicit in `LLM-NATIVE-001` and this record.
+The static constraint audit passes. The arithmetic-form defaults above are not automatically discovered by the scanner, so they must not be treated as implicitly verified merely because that gate is green. Their calibration obligation remains explicit in `LLM-NATIVE-001` and this record.
+
+## Acceptance evidence
+
+Native Windows/PostgreSQL/Ollama acceptance on 2026-08-27:
+
+- `tests/test_model_evidence_budget.py`
+- `tests/test_redteam_memory_item_size_bound.py`
+- `tests/test_evidence_bound_llm.py`
+
+Result: **10 passed in 2.86 seconds**.
+
+Native model-path regression acceptance under the default budget:
+
+- `tests/test_ollama_response_native.py`
+- `tests/test_redteam_memory_prompt_injection_native.py`
+- `tests/test_redteam_memory_authority_corpus_native.py`
+
+Result: **8 passed in 98.72 seconds**.
+
+Hosted CI run #431 on the same branch passed static checks, deterministic constraint calibration, and all non-native tests except the three intentionally unresolved frozen failures RT-01, RT-02, and RT-03. Suite result: **265 passed, 16 skipped, 3 failed**. The RT-06 and RT-05 regressions were green.
 
 ## Current status
 
-**Status: MECHANISM IMPLEMENTED; DEFAULT CAPS PROVISIONAL / NATIVE CALIBRATION REQUIRED.**
+**Status: REMEDIATED FOR THE CONFIRMED RT-06 DEFECT; EXACT BYTE CAPS REMAIN PROVISIONAL CALIBRATION TUNABLES.**
 
-RT-06 should be marked fully remediated only after:
+The original correctness defect is closed because:
 
-- deterministic RT-06/budget tests pass;
-- ordinary native Ollama response behavior still passes under the default budget;
-- RT-05 authority-boundary acceptance remains green under the budgeted production worker;
-- the complete constraint-governance bookkeeping for the exact defaults is resolved; and
-- native evidence demonstrates that the selected caps are non-destructive for supported workloads or they are adjusted under `LLM-NATIVE-001`.
+- the 2 MB single-item exploit now fails closed before inference;
+- aggregate and capability-result overflow paths are deterministically bounded;
+- ordinary native Ollama response behavior passes under the default budget;
+- RT-05 authority-boundary acceptance remains green under the budgeted production worker; and
+- constraint-governance bookkeeping is clean.
+
+This status does **not** assert that 16 KiB/64 KiB are optimal ceilings. Later `LLM-NATIVE-001` calibration may change those values without reopening RT-06 so long as the finite fail-closed invariant and regression suite remain intact.
 
 ## Scope boundaries / remaining risks
 
@@ -90,4 +112,4 @@ Those are separate measurable mechanisms and should not be silently bundled into
 
 ## Constitutional fit
 
-The mechanism is designed to preserve Articles 3, 4, 5, 23, 24, and 29: canonical evidence remains lossless; only disposable derived/model-facing state is bounded; the one measured context-explosion failure receives one narrow mechanism; numeric defaults remain governed tunables rather than constitutional magic numbers; and oversize evidence fails closed instead of crossing the model boundary unchecked.
+The mechanism preserves Articles 3, 4, 5, 23, 24, and 29: canonical evidence remains lossless; only disposable derived/model-facing state is bounded; the one measured context-explosion failure receives one narrow mechanism; numeric defaults remain governed tunables rather than constitutional magic numbers; and oversize evidence fails closed instead of crossing the model boundary unchecked.
