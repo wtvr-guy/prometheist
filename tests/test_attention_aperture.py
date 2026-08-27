@@ -6,7 +6,17 @@ from jit_agent import db, event_store
 from jit_agent.attention_aperture import (
     ATTENTION_APERTURE_VERSION,
     DEFAULT_ATTENTION_APERTURE_LIMIT,
+    MAX_ATTENTION_APERTURE_ITEMS,
     open_attention_aperture,
+)
+from jit_agent.interaction_policy import (
+    deterministic_interaction_event_id,
+    deterministic_interaction_id,
+)
+from jit_agent.interaction_working_state import (
+    MAX_ACTIVE_EVENT_IDS,
+    activate_working_state,
+    load_working_state,
 )
 from jit_agent.models import EventType
 
@@ -92,3 +102,50 @@ def test_aperture_activation_does_not_require_conversation_scope(conn):
 
     assert source.event_id in {item.source_event_id for item in packet.items}
     assert packet.need.conversation_id is None
+
+
+def test_full_working_state_is_exposed_and_current_percept_survives_truncation(conn):
+    conversation_id = uuid.uuid4()
+    seeded = [
+        _record_prompt(conn, conversation_id, f"Durable active fact {index}.")
+        for index in range(MAX_ACTIVE_EVENT_IDS)
+    ]
+    activate_working_state(
+        conn,
+        interaction_id=uuid.uuid4(),
+        conversation_id=conversation_id,
+        correlation_id=uuid.uuid4(),
+        activated_event_ids=[event.event_id for event in seeded],
+        activation_key="seed-full-state",
+    )
+
+    correlation_id = uuid.uuid4()
+    interaction_id = deterministic_interaction_id(conversation_id, correlation_id)
+    prompt_event_id = deterministic_interaction_event_id(interaction_id, "user-prompt")
+    current = event_store.record_event(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        event_type=EventType.USER_PROMPT,
+        source="user",
+        payload={"text": "Which active fact still applies?"},
+        payload_text="Which active fact still applies?",
+        event_id=prompt_event_id,
+    )
+
+    packet = open_attention_aperture(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        requester_task_id=uuid.uuid4(),
+        user_text=current.payload["text"],
+        before_global_seq=current.global_seq,
+    )
+
+    packet_ids = {item.source_event_id for item in packet.items}
+    assert {event.event_id for event in seeded} <= packet_ids
+    assert len(packet.items) <= MAX_ATTENTION_APERTURE_ITEMS
+    state = load_working_state(conn, conversation_id)
+    assert state is not None
+    assert state.active_event_ids[0] == prompt_event_id
+    assert len(state.active_event_ids) == MAX_ACTIVE_EVENT_IDS
