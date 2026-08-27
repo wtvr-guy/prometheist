@@ -66,6 +66,47 @@ def test_shared_memory_boundary_projects_new_events_without_manual_rebuild(conn)
         assert cur.fetchone()[0] == 1
 
 
+def test_attention_activation_surfaces_sparse_candidate_without_weakening_evidence_gate(conn):
+    source_conversation = uuid.uuid4()
+    request_conversation = uuid.uuid4()
+    token = uuid.uuid4().hex[:10].upper()
+    source_event = _record_text(
+        conn,
+        source_conversation,
+        f"I want you to remember {token}.",
+    )
+    question = "What number did I ask you to remember, as we just discussed?"
+    current_prompt = _record_text(conn, request_conversation, question)
+
+    conservative = jit_memory.request_memory(
+        conn,
+        conversation_id=request_conversation,
+        correlation_id=current_prompt.correlation_id,
+        requesting_component="evidence-test",
+        need=jit_memory.build_memory_need(question),
+        before_global_seq=current_prompt.global_seq,
+        memory_request_id=uuid.uuid4(),
+    )
+    assert conservative.supported is False
+    assert conservative.items == []
+
+    activation = jit_memory.request_attention_activation(
+        conn,
+        conversation_id=request_conversation,
+        correlation_id=current_prompt.correlation_id,
+        requesting_component="aperture-test",
+        need=jit_memory.build_memory_need(question),
+        before_global_seq=current_prompt.global_seq,
+        memory_request_id=uuid.uuid4(),
+    )
+
+    assert activation.supported is True
+    assert source_event.event_id in {item.source_event_id for item in activation.items}
+    activated = next(item for item in activation.items if item.source_event_id == source_event.event_id)
+    assert "ATTENTION_APERTURE" in activated.retrieval_reasons
+    assert activation.retrieval_trace["retrieval_role"] == "ATTENTION_ACTIVATION"
+
+
 def test_memory_boundary_uses_supplemental_query_only_after_canonical_abstains(conn):
     source_conversation = uuid.uuid4()
     request_conversation = uuid.uuid4()
@@ -189,6 +230,7 @@ def test_memory_request_and_packet_are_persisted_with_same_request_id(conn):
     assert request_event.payload["memory_request_id"] == str(packet.memory_request_id)
     assert packet_event.payload["packet"]["memory_request_id"] == str(packet.memory_request_id)
     assert request_event.payload["origin"] == "INTERNAL_MEMORY"
+    assert request_event.payload["retrieval_role"] == "EVIDENCE"
 
 
 def test_control_plane_memory_events_do_not_become_default_evidence(conn):
