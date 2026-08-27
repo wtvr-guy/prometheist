@@ -2,6 +2,8 @@
 
 **Status:** authoritative architectural decision beginning 2026-08-26.
 
+**Constitutional status:** primary architecture authority for Articles 3, 4, 5, 17, and 18 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md). This document explains those constitutional rules in depth and is subordinate to the Constitution where wording conflicts.
+
 This document freezes the memory-scaling constraints that future Prometheist milestones must preserve. It supplements `COGNITIVE_ARCHITECTURE.md`, `MEMORY_KERNEL.md`, and `ASSOCIATIVE_MEMORY.md` and supersedes any older wording that would permit an already-admitted durable memory to be replaced by a summary, abstraction, embedding, aggregation, or other lossy derivative.
 
 ## Core rule
@@ -187,3 +189,7 @@ Memory generalization must explicitly test progressive associative recall, activ
 ### v1.0
 
 A defensible v1.0 must demonstrate lossless source-backed durable memory and bounded provenance-bearing recall whose ordinary per-invocation context and inference cost do not grow proportionally with corpus size.
+
+## Constitutional relationship
+
+Articles 3 and 4 govern canonical/derived memory fidelity; Article 5 governs bounded recall; Articles 17 and 18 govern epistemic separation and durable causal provenance. Explicit user-directed erasure is governed separately by [`LOCAL_FIRST_PORTABILITY.md`](LOCAL_FIRST_PORTABILITY.md) and must never be implemented as ordinary compaction.
