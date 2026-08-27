@@ -6,7 +6,7 @@ evidence boundary used by explicit research capabilities.
 
 Focused research never asks a model to write a query. A model may select prior
 MemoryPacket candidates by bounded index; Prometheist resolves those indices to
-canonical event IDs and uses the canonical source text to seed deterministic
+canonical event IDs and uses canonical source text to seed deterministic
 association traversal. As focus narrows, direct-candidate breadth decreases while
 the bounded association neighborhood becomes deeper/wider.
 """
@@ -38,6 +38,7 @@ MINIMUM_SCORE = 0.15
 class MemoryRecallProfile(str, Enum):
     STANDARD = "STANDARD"
     DEEPER_RESEARCH = "DEEPER_RESEARCH"
+    CROSS_REFERENCE = "CROSS_REFERENCE"
     FOCUSED_RECALL = "FOCUSED_RECALL"
 
 
@@ -62,11 +63,17 @@ _RECALL_POLICIES = {
         max_hops=3,
         decay=0.88,
     ),
-    MemoryRecallProfile.FOCUSED_RECALL: _RecallPolicy(
-        candidate_limit=200,
-        association_limit=1000,
+    MemoryRecallProfile.CROSS_REFERENCE: _RecallPolicy(
+        candidate_limit=250,
+        association_limit=900,
         max_hops=4,
         decay=0.90,
+    ),
+    MemoryRecallProfile.FOCUSED_RECALL: _RecallPolicy(
+        candidate_limit=150,
+        association_limit=1200,
+        max_hops=5,
+        decay=0.92,
     ),
 }
 
@@ -603,17 +610,20 @@ def request_memory(
 ) -> MemoryPacket:
     """Persist and satisfy one conservative evidence request.
 
-    ``DEEPER_RESEARCH`` and ``FOCUSED_RECALL`` require one-or-more canonical
-    ``focus_event_ids`` selected from a prior MemoryPacket. The selected source
-    text seeds association traversal. Focusing reduces direct candidate breadth
-    while increasing association limits/hops; the evidence threshold remains the
-    same across all profiles.
+    Research profiles require application-resolved ``focus_event_ids`` selected
+    from a prior MemoryPacket. ``DEEPER_RESEARCH`` expands each selected candidate
+    with a moderate graph budget. ``CROSS_REFERENCE`` investigates 2-4 selected
+    candidates jointly with a larger graph budget. ``FOCUSED_RECALL`` expands
+    exactly one candidate with the deepest bounded graph budget. The evidence
+    admission threshold remains unchanged across all profiles.
     """
 
     memory_request_id = memory_request_id or uuid.uuid4()
     effective_need = need.model_copy(update={"source_types": list(_effective_source_types(need))})
     if recall_profile is MemoryRecallProfile.DEEPER_RESEARCH and not effective_need.focus_event_ids:
         raise ValueError("DEEPER_RESEARCH requires selected focus_event_ids")
+    if recall_profile is MemoryRecallProfile.CROSS_REFERENCE and not 2 <= len(effective_need.focus_event_ids) <= 4:
+        raise ValueError("CROSS_REFERENCE requires two to four focus_event_ids")
     if recall_profile is MemoryRecallProfile.FOCUSED_RECALL and len(effective_need.focus_event_ids) != 1:
         raise ValueError("FOCUSED_RECALL requires exactly one focus_event_id")
 
@@ -671,6 +681,60 @@ def request_memory(
             effective_need,
             before_global_seq=before_global_seq,
         )
+        excluded_ids = set(effective_need.focus_event_ids) | {
+            item.source_event_id for item in active_evidence
+        }
+
+        if recall_profile is MemoryRecallProfile.CROSS_REFERENCE:
+            joint_query = "\n".join(text for _event_id, text in focus_sources)
+            kernel_packet = _recall_for_query(
+                conn,
+                need=effective_need,
+                query_text=joint_query,
+                before_global_seq=before_global_seq,
+                recall_profile=recall_profile,
+            )
+            translated = _packet_from_kernel(
+                memory_request_id,
+                effective_need,
+                kernel_packet,
+            )
+            historical_evidence = [
+                item for item in translated.items if item.source_event_id not in excluded_ids
+            ][: effective_need.limit]
+            merged = _compose_evidence(
+                active_evidence,
+                historical_evidence,
+                limit=effective_need.limit,
+            )
+            packet = MemoryPacket(
+                memory_request_id=memory_request_id,
+                need=effective_need,
+                supported=bool(merged),
+                items=merged,
+                retrieval_trace={
+                    "kernel": "associative_recall_from_postgres",
+                    "retrieval_role": retrieval_role,
+                    "depth": "MULTI_CANDIDATE_JOINT",
+                    "recall_profile": recall_profile.value,
+                    "candidate_limit": policy.candidate_limit,
+                    "association_limit": policy.association_limit,
+                    "association_hops": policy.max_hops,
+                    "association_decay": policy.decay,
+                    "focus_event_ids": [str(value) for value in effective_need.focus_event_ids],
+                    "kernel_trace": asdict(kernel_packet.trace),
+                },
+            )
+            _persist_packet(
+                conn,
+                conversation_id=conversation_id,
+                correlation_id=correlation_id,
+                requesting_component=requesting_component,
+                memory_request_id=memory_request_id,
+                packet=packet,
+            )
+            return packet
+
         focus_packets: list[MemoryPacket] = []
         attempts: list[dict[str, object]] = []
         for focus_event_id, focus_text in focus_sources:
@@ -696,8 +760,7 @@ def request_memory(
             )
         historical_evidence = _merge_historical_packets(
             focus_packets,
-            excluded_event_ids=set(effective_need.focus_event_ids)
-            | {item.source_event_id for item in active_evidence},
+            excluded_event_ids=excluded_ids,
             limit=effective_need.limit,
         )
         merged = _compose_evidence(
