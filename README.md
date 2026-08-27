@@ -34,9 +34,11 @@ The host-aware path samples CPU pressure and available RAM outside scheduling po
 
 Increment G decomposes external interactions into durable reference, capability discovery/execution, response, and persistence steps executed through fresh guarded worker claims. The new path resumes from PostgreSQL and does not require a Primary Agent.
 
-Native release-candidate testing then exposed a missing mechanism: natural continuity was becoming dependent on a growing application-owned vocabulary of entity/recency/reference phrases. That approach is now deprecated. v0.7 adds a minimal durable `InteractionWorkingState` containing only bounded canonical active-event IDs. Fresh workers rehydrate those source events through JIT Memory; unresolved historical needs are formulated by a fresh stateless semantic planner and resolved by deterministic long-term retrieval.
+Native release-candidate testing then exposed a missing mechanism: natural continuity was becoming dependent on a growing application-owned vocabulary of entity/recency/reference phrases. That approach is now deprecated. v0.7 adds a minimal durable `InteractionWorkingState` containing only bounded canonical active-event IDs. Fresh workers rehydrate those source events through JIT Memory; when older evidence may be needed, a fresh stateless router chooses only a closed retrieval-scope enum plus bounded indices into a deterministic anchor catalog built from canonical text. JIT Memory then performs deterministic long-term retrieval and composes historical evidence with active WorkingState evidence.
 
 > **Working-state invariant:** current cognitive activation belongs to Prometheist itself. It is not reconstructed by an ever-growing regex vocabulary and is not stored in an LLM context window.
+
+> **Model-output invariant:** models generate natural language only when natural language is the product. Control-plane schemas prefer enums, booleans, IDs, and bounded indices; model-authored search/capability strings are not system policy.
 
 The release candidate also ports deterministic capability discovery into task/worker-neutral terminology, connects real JIT Memory execution, migrates the CLI to one guarded child process per durable stage, removes the compatibility Primary Agent/specialist path, and adds integrated forced-destruction tests covering concurrent assignments, checkpoint preemption, abandoned claims, readmission, and duplicate-effect prevention.
 
@@ -134,15 +136,16 @@ WorkingState does not replace or summarize source evidence. An active event poin
 6. **Working state is distinct from long-term memory.** Active canonical evidence is bounded and durable; older evidence is retrieved only when needed.
 7. **Demand-driven JIT Memory.** Historical context is retrieved only when current work requires it.
 8. **Bounded attention.** Prometheist may remember and intend much more than it actively processes at once.
-9. **Model interpretation is advisory where policy must be deterministic.** Models may classify or propose semantic memory needs; deterministic policy owns scheduling, deletion, permissions, and evidence boundaries.
-10. **Evidence and provenance survive interpretation changes.** Derived memory and activation are replaceable; retained source evidence remains traceable.
-11. **Unknown facts may remain unknown.** Topical similarity is not evidence.
-12. **Complexity must earn its place.** Freeze a baseline, add one mechanism, rerun the experiment, keep it only if evidence justifies it.
-13. **No vocabulary patchwork.** Natural-language continuity must not depend on an ever-growing list of phrase-specific application rules.
+9. **Constrain model control outputs.** Prefer enums, booleans, IDs, bounded indices, and mechanically verified extractive selections over model-generated control text; free-form model language is reserved for language products.
+10. **Model interpretation is advisory where policy must be deterministic.** Models may select among bounded semantic alternatives; deterministic policy owns scheduling, deletion, permissions, evidence boundaries, capability IDs, and validation.
+11. **Evidence and provenance survive interpretation changes.** Derived memory and activation are replaceable; retained source evidence remains traceable.
+12. **Unknown facts may remain unknown.** Topical similarity is not evidence.
+13. **Complexity must earn its place.** Freeze a baseline, add one mechanism, rerun the experiment, keep it only if evidence justifies it.
+14. **No vocabulary patchwork.** Natural-language continuity must not depend on an ever-growing list of phrase-specific application rules.
 
 ## Current implementation versus target architecture
 
-Implemented/verified foundations include PostgreSQL authoritative history, deterministic ordering, the Memory Kernel, provenance-bearing `MemoryPacket`s, shared JIT Memory contracts, deterministic attention/task state, resource admission, durable epoch-wide assignments, atomic PostgreSQL publication, contention preemption, task-neutral capability discovery/execution, durable disposable-worker claims/checkpoints/results, guarded interaction workers, bounded active WorkingState, and restart/replay tests.
+Implemented/verified foundations include PostgreSQL authoritative history, deterministic ordering, the Memory Kernel, provenance-bearing `MemoryPacket`s, shared JIT Memory contracts, deterministic attention/task state, resource admission, durable epoch-wide assignments, atomic PostgreSQL publication, contention preemption, task-neutral capability discovery/execution, durable disposable-worker claims/checkpoints/results, guarded interaction workers, bounded active WorkingState, constrained categorical/extractive model routing, and restart/replay tests.
 
 The legacy Primary Agent, memory-specialist implementation, and their ownership tests have been removed. Historical event types remain supported so existing ledgers stay readable. Perception/salience, deterministic external-data retention, harder memory generalization, richer epistemic working state/recurrent inference, and the fully integrated cognitive loop remain roadmap work.
 
