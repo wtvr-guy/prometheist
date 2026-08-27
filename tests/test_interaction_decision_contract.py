@@ -39,7 +39,7 @@ def test_respond_is_explicit_and_cannot_select_capabilities():
         )
 
 
-def test_use_capabilities_requires_bounded_unique_indices():
+def test_use_capabilities_requires_nonnegative_unique_indices_without_magic_ceiling():
     with pytest.raises(ValidationError, match="requires at least one capability index"):
         InteractionDecision(next_action=InteractionAction.USE_CAPABILITIES)
     with pytest.raises(ValidationError, match="must not contain duplicates"):
@@ -50,13 +50,17 @@ def test_use_capabilities_requires_bounded_unique_indices():
     with pytest.raises(ValidationError):
         InteractionDecision(
             next_action=InteractionAction.USE_CAPABILITIES,
-            capability_indices=[0, 1, 2, 3, 4],
+            capability_indices=[-1],
         )
-    with pytest.raises(ValidationError, match="between 0 and 63"):
-        InteractionDecision(
-            next_action=InteractionAction.USE_CAPABILITIES,
-            capability_indices=[64],
-        )
+
+    # There is intentionally no arbitrary global upper bound here. The exact
+    # catalog supplied to a routing call is the authoritative finite domain and
+    # CapabilityRegistry.resolve_catalog_indices validates membership fail-closed.
+    decision = InteractionDecision(
+        next_action=InteractionAction.USE_CAPABILITIES,
+        capability_indices=[0, 1, 2, 3, 4, 64],
+    )
+    assert decision.capability_indices[-1] == 64
 
 
 @pytest.mark.parametrize(
@@ -80,47 +84,45 @@ def test_interaction_decision_rejects_stray_natural_language_or_ordering_fields(
         )
 
 
-def test_deeper_research_selects_only_bounded_packet_candidates():
+def test_deeper_research_selection_has_no_arbitrary_packet_index_ceiling():
     schema = MemoryCandidateSelection.model_json_schema()
     assert set(schema["properties"]) == {"candidate_indices"}
-    selection = MemoryCandidateSelection(candidate_indices=[2, 7])
-    assert selection.model_dump(mode="json") == {"candidate_indices": [2, 7]}
+    selection = MemoryCandidateSelection(candidate_indices=[2, 7, 20])
+    assert selection.model_dump(mode="json") == {"candidate_indices": [2, 7, 20]}
     with pytest.raises(ValidationError, match="must not contain duplicates"):
         MemoryCandidateSelection(candidate_indices=[2, 2])
     with pytest.raises(ValidationError):
-        MemoryCandidateSelection(candidate_indices=[0, 1, 2, 3, 4])
-    with pytest.raises(ValidationError, match="between 0 and 19"):
-        MemoryCandidateSelection(candidate_indices=[20])
+        MemoryCandidateSelection(candidate_indices=[-1])
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         MemoryCandidateSelection.model_validate(
             {"candidate_indices": [0], "query_text": "generated query"}
         )
 
 
-def test_cross_reference_requires_two_to_four_packet_candidates():
+def test_cross_reference_requires_multiple_candidates_without_arbitrary_maximum():
     schema = CrossReferenceCandidateSelection.model_json_schema()
     assert set(schema["properties"]) == {"candidate_indices"}
-    selection = CrossReferenceCandidateSelection(candidate_indices=[1, 4, 7])
-    assert selection.model_dump(mode="json") == {"candidate_indices": [1, 4, 7]}
+    selection = CrossReferenceCandidateSelection(candidate_indices=[1, 4, 7, 20, 21])
+    assert selection.model_dump(mode="json") == {"candidate_indices": [1, 4, 7, 20, 21]}
     with pytest.raises(ValidationError):
         CrossReferenceCandidateSelection(candidate_indices=[1])
     with pytest.raises(ValidationError, match="must not contain duplicates"):
         CrossReferenceCandidateSelection(candidate_indices=[1, 1])
     with pytest.raises(ValidationError):
-        CrossReferenceCandidateSelection(candidate_indices=[0, 1, 2, 3, 4])
+        CrossReferenceCandidateSelection(candidate_indices=[-1, 0])
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         CrossReferenceCandidateSelection.model_validate(
             {"candidate_indices": [0, 1], "relationship": "generated text"}
         )
 
 
-def test_focused_recall_selects_exactly_one_packet_candidate():
+def test_focused_recall_selects_one_nonnegative_candidate_without_magic_ceiling():
     schema = FocusedMemoryCandidateSelection.model_json_schema()
     assert set(schema["properties"]) == {"candidate_index"}
-    selection = FocusedMemoryCandidateSelection(candidate_index=3)
-    assert selection.model_dump(mode="json") == {"candidate_index": 3}
+    selection = FocusedMemoryCandidateSelection(candidate_index=20)
+    assert selection.model_dump(mode="json") == {"candidate_index": 20}
     with pytest.raises(ValidationError):
-        FocusedMemoryCandidateSelection(candidate_index=20)
+        FocusedMemoryCandidateSelection(candidate_index=-1)
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         FocusedMemoryCandidateSelection.model_validate(
             {"candidate_index": 0, "explanation": "free-form"}
