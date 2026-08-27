@@ -29,6 +29,7 @@ class EventType(str, Enum):
     CAPABILITY_PACKET = "CAPABILITY_PACKET"
     CAPABILITY_RESULT = "CAPABILITY_RESULT"
     INTERACTION_RESPONSE = "INTERACTION_RESPONSE"
+    INTERACTION_WORKING_STATE = "INTERACTION_WORKING_STATE"
     SYSTEM_EVENT = "SYSTEM_EVENT"
     ERROR = "ERROR"
 
@@ -59,7 +60,10 @@ class MemoryNeed(BaseModel):
     """Stable MAS-facing description of an internal information need.
 
     This contract intentionally contains no candidate-router, association,
-    full-text, embedding, or other retrieval-implementation controls.
+    full-text, embedding, or other retrieval-implementation controls. Active
+    event IDs are provenance pointers supplied by durable working state; they
+    identify canonical evidence already active in the current situation rather
+    than bypassing or replacing the event ledger.
     """
 
     query_text: str | None = None
@@ -72,6 +76,14 @@ class MemoryNeed(BaseModel):
         ),
     )
     entities: list[str] = Field(default_factory=list)
+    active_event_ids: list[UUID] = Field(
+        default_factory=list,
+        max_length=12,
+        description=(
+            "Canonical event IDs already activated by durable working state. "
+            "These are provenance cues, not copied memory content."
+        ),
+    )
     reference_time: datetime | None = None
     conversation_id: UUID | None = Field(
         default=None,
