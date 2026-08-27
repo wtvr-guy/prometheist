@@ -15,7 +15,7 @@ from psycopg.rows import dict_row
 from pydantic import BaseModel, Field
 
 from jit_agent import event_store
-from jit_agent.models import EventType, MemoryPacket
+from jit_agent.models import EventType
 
 
 WORKING_STATE_VERSION = "v0.7-working-state-v2"
@@ -75,21 +75,19 @@ def load_working_state(
     return InteractionWorkingState.model_validate(row["payload"]["state"])
 
 
-def update_working_state(
+def activate_working_state(
     conn: psycopg.Connection,
     *,
     interaction_id: UUID,
     conversation_id: UUID,
     correlation_id: UUID,
-    user_prompt_event_id: UUID,
-    response_event_id: UUID,
-    memory_packet: MemoryPacket | None,
+    activated_event_ids: list[UUID],
 ) -> InteractionWorkingState:
-    """Persist one deterministic activation revision after an interaction.
+    """Promote canonical events into bounded active state.
 
-    Newly used canonical evidence is promoted to the front of the bounded
-    active set, followed by the current prompt/response and then older active
-    events. No linguistic interpretation occurs here.
+    Activation order is significant: newly used evidence comes first, then the
+    older active set. No linguistic interpretation or copied event content is
+    stored in the state itself.
     """
 
     previous = load_working_state(conn, conversation_id)
@@ -104,22 +102,11 @@ def update_working_state(
         previous.conversation_ids if previous is not None else [],
         16,
     )
-    memory_event_ids = (
-        [item.source_event_id for item in memory_packet.items]
-        if memory_packet is not None
-        else []
-    )
     active_event_ids = _merge_uuid_lists(
-        memory_event_ids,
-        [response_event_id, user_prompt_event_id],
+        activated_event_ids,
+        previous.active_event_ids if previous is not None else [],
         MAX_ACTIVE_EVENT_IDS,
     )
-    if previous is not None:
-        active_event_ids = _merge_uuid_lists(
-            active_event_ids,
-            previous.active_event_ids,
-            MAX_ACTIVE_EVENT_IDS,
-        )
 
     state = InteractionWorkingState(
         state_id=state_id,
