@@ -1,45 +1,17 @@
-import pytest
+import inspect
 
-from tests.test_acceptance_conversation_continuity import _contains_answer_slots
-
-
-@pytest.mark.parametrize(
-    "answer,required,expected",
-    [
-        (
-            "The approach is Docker Compose; it was ruled out because virtualization is disabled.",
-            ("Docker Compose", "virtualization", "disabled"),
-            True,
-        ),
-        (
-            "Because virtualization is disabled, Docker Compose cannot be used.",
-            ("Docker Compose", "virtualization", "disabled"),
-            True,
-        ),
-        (
-            "Docker Compose is the approach.",
-            ("Docker Compose", "virtualization", "disabled"),
-            False,
-        ),
-        (
-            "Virtualization is disabled.",
-            ("Docker Compose", "virtualization", "disabled"),
-            False,
-        ),
-    ],
-)
-def test_continuity_oracle_checks_required_slots_without_grammar_rules(
-    answer,
-    required,
-    expected,
-):
-    assert _contains_answer_slots(answer, *required) is expected
+import tests.test_acceptance_conversation_continuity as continuity
 
 
-def test_continuity_oracle_is_case_insensitive_for_semantic_slots():
-    assert _contains_answer_slots(
-        "DOCKER COMPOSE is unavailable because VIRTUALIZATION is DISABLED.",
-        "Docker Compose",
-        "virtualization",
-        "disabled",
-    )
+def test_continuity_acceptance_does_not_export_keyword_slot_parser():
+    assert not hasattr(continuity, "_contains_answer_slots")
+
+
+def test_continuity_acceptance_uses_exact_machine_verifiable_outputs():
+    source = inspect.getsource(continuity.test_stateless_four_turn_continuity_survives_sessions_and_distractors)
+
+    assert "answer1.strip() ==" in source
+    assert "answer2.strip() ==" in source
+    assert "answer3.strip() ==" in source
+    assert "answer4.strip() ==" in source
+    assert "_contains_answer_slots" not in source
