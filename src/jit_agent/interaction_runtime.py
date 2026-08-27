@@ -64,7 +64,11 @@ from jit_agent.interaction_working_state import activate_working_state, load_wor
 from jit_agent.llm import LLMClient
 from jit_agent.models import EventType, MemoryPacket
 from jit_agent.native_policy import native_resource_safety_policy
-from jit_agent.ollama_runtime import OllamaClaimHostResourceProbe, OllamaRuntimeProbe
+from jit_agent.ollama_runtime import (
+    OllamaClaimHostResourceProbe,
+    OllamaRuntimeProbe,
+    OllamaRuntimeState,
+)
 from jit_agent.worker_protocol import (
     WorkerClaimEnvelope,
     WorkerEffectPolicy,
@@ -94,6 +98,7 @@ def begin_interaction(
     correlation_id: UUID | None = None,
     probe: HostResourceProbe | None = None,
     policy: ResourceSafetyPolicy | None = None,
+    ollama_runtime_state: OllamaRuntimeState | None = None,
     clock: Callable[[], datetime] | None = None,
     scheduler_key: str = DEFAULT_SCHEDULER_KEY,
 ) -> DurableInteraction:
@@ -103,6 +108,16 @@ def begin_interaction(
     if not normalized:
         raise ValueError("user_text must not be empty")
     effective_policy = policy or native_resource_safety_policy()
+    interaction_memory_mib = (
+        ollama_runtime_state.incremental_process_memory_mib(effective_policy)
+        if ollama_runtime_state is not None
+        else effective_policy.default_llm_process_memory_mib
+    )
+    residency_label = (
+        ollama_runtime_state.residency_label
+        if ollama_runtime_state is not None
+        else "unobserved-cold-fallback"
+    )
     event_store.start_conversation(conn, conversation_id)
     correlation = correlation_id or uuid4()
     interaction_id = deterministic_interaction_id(conversation_id, correlation)
@@ -130,16 +145,26 @@ def begin_interaction(
             required_capabilities=list(INTERACTION_CAPABILITIES),
             process_resource_estimate=ProcessResourceEstimate(
                 cpu_units=effective_policy.default_process_cpu_units,
-                memory_mib=effective_policy.default_llm_process_memory_mib,
+                memory_mib=interaction_memory_mib,
                 llm_slots=1,
                 source=ResourceEstimateSource.CONSERVATIVE_DEFAULT,
                 basis=(
-                    f"{effective_policy.policy_version}: bounded stateless interaction "
-                    "cold local-LLM budget"
+                    f"{effective_policy.policy_version}: bounded stateless interaction; "
+                    f"Ollama admission state={residency_label}"
                 ),
             ),
         ),
-        resumable_state={"interaction_id": str(interaction_id)},
+        resumable_state={
+            "interaction_id": str(interaction_id),
+            "resource_admission": {
+                "memory_mib": interaction_memory_mib,
+                "ollama_runtime_state": (
+                    ollama_runtime_state.model_dump(mode="json")
+                    if ollama_runtime_state is not None
+                    else None
+                ),
+            },
+        },
     )
     scheduler.submit(task)
     controller = LocalResourceAdmissionController(
@@ -424,18 +449,24 @@ def handle_interaction_in_worker_processes(
     effective_policy = policy or native_resource_safety_policy()
     physical_probe = probe or SystemHostResourceProbe()
     runtime_probe = ollama_runtime_probe or OllamaRuntimeProbe()
+    admission_runtime_state = runtime_probe.capture()
+    scheduled_memory_mib = admission_runtime_state.incremental_process_memory_mib(
+        effective_policy
+    )
     interaction = begin_interaction(
         conn,
         user_text,
         conversation_id,
         probe=physical_probe,
         policy=effective_policy,
+        ollama_runtime_state=admission_runtime_state,
         scheduler_key=scheduler_key,
     )
     claim_probe = OllamaClaimHostResourceProbe(
         base_probe=physical_probe,
         runtime_probe=runtime_probe,
         policy=effective_policy,
+        scheduled_memory_mib=scheduled_memory_mib,
     )
     launcher = GuardedWorkerLauncher(
         db.get_connection,
