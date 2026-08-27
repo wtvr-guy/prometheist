@@ -1,9 +1,10 @@
 """Collect target-host evidence for v0.7 environment-calibrated constraints.
 
 This is a measurement harness, not an optimizer. It records host samples,
-Ollama latency/output behavior across candidate token caps, and the duration of
-the frozen worker/runtime acceptance block. A pilot run remains evidence to
-inform calibration; it does not automatically rewrite production policy.
+Ollama latency/output behavior across candidate token caps, the duration of the
+frozen worker/runtime acceptance block, and a real-Ollama recurrent capability-
+loop continuity probe. A pilot run remains evidence to inform calibration; it
+does not automatically rewrite production policy.
 """
 from __future__ import annotations
 
@@ -158,6 +159,51 @@ def measure_worker_runtime() -> dict[str, Any]:
     }
 
 
+def measure_capability_loop() -> dict[str, Any]:
+    """Collect one real-model recurrent-loop trace without claiming an optimum."""
+
+    command = [
+        "uv",
+        "run",
+        "--locked",
+        "pytest",
+        "-q",
+        "-s",
+        "-m",
+        "ollama",
+        (
+            "tests/test_acceptance_conversation_continuity.py::"
+            "test_stateless_four_turn_continuity_survives_sessions_and_distractors"
+        ),
+    ]
+    started = time.monotonic()
+    completed = subprocess.run(command, cwd=ROOT, check=False, capture_output=True, text=True)
+    elapsed = time.monotonic() - started
+    combined = f"{completed.stdout}\n{completed.stderr}"
+    lowered = combined.casefold()
+    executed = "1 passed" in lowered
+    skipped = "1 skipped" in lowered
+    round_limit_failure = "capability round limit reached" in lowered
+    return {
+        "benchmark_id": "CAP-LOOP-001",
+        "result": "PILOT_NATIVE_MEASUREMENT" if executed else "NO_NATIVE_EVIDENCE",
+        "elapsed_seconds": round(elapsed, 6),
+        "returncode": completed.returncode,
+        "acceptance_executed": executed,
+        "acceptance_skipped": skipped,
+        "round_limit_failure_observed": round_limit_failure,
+        "stdout_tail": completed.stdout[-12000:],
+        "stderr_tail": completed.stderr[-4000:],
+        "decision": (
+            "A passing four-turn real-Ollama continuity run demonstrates that the production "
+            "round guard is non-binding for this frozen native workload. It does not establish "
+            "the empirical tail of capability-round demand; representative successful, "
+            "adversarial, and deliberately nonconvergent local-model tasks are still required "
+            "before changing or verifying MAX_CAPABILITY_ROUNDS."
+        ),
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--resource-samples", type=int, default=20)
@@ -169,6 +215,7 @@ def main() -> None:
     parser.add_argument("--skip-resources", action="store_true")
     parser.add_argument("--skip-ollama", action="store_true")
     parser.add_argument("--skip-worker", action="store_true")
+    parser.add_argument("--skip-capability-loop", action="store_true")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.resource_samples < 1:
@@ -184,6 +231,8 @@ def main() -> None:
         results["WORKER-NATIVE-001"] = measure_worker_runtime()
     if not args.skip_ollama:
         results["LLM-NATIVE-001"] = measure_ollama(token_caps)
+    if not args.skip_capability_loop:
+        results["CAP-LOOP-001"] = measure_capability_loop()
 
     payload = {
         "schema_version": 1,
