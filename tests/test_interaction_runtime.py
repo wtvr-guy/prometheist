@@ -5,15 +5,13 @@ from datetime import datetime, timezone
 import pytest
 
 from jit_agent import db, event_store
+from jit_agent.attention_aperture import ATTENTION_APERTURE_VERSION
 from jit_agent.attention_observation import HostResourceMetrics
 from jit_agent.interaction_policy import (
-    CONTINUITY_POLICY_VERSION,
     INTERACTION_STAGES,
     CapabilityRequirement,
     InteractionDecision,
     InteractionStage,
-    ReferenceAnalysis,
-    apply_continuity_policy,
     requires_persisted_context,
 )
 from jit_agent.interaction_runtime import (
@@ -60,11 +58,8 @@ def _anchor_index(task: str, preferred: tuple[str, ...] = ("remember", "token", 
 
 
 class FakeLLM:
-    def classify(self, prompt: str) -> InteractionDecision:
-        if "what" in prompt.lower() and "remember" in prompt.lower():
-            return InteractionDecision(
-                required_capability=CapabilityRequirement.INTERNAL_MEMORY
-            )
+    def classify(self, prompt: str, memory_packet: MemoryPacket) -> InteractionDecision:
+        del prompt, memory_packet
         return InteractionDecision(required_capability=CapabilityRequirement.NONE)
 
     def respond(self, prompt: str, memory_packet: MemoryPacket | None) -> str:
@@ -112,21 +107,6 @@ def test_phrase_based_reference_detector_is_deprecated_and_disabled():
     assert requires_persisted_context("Tell me about PostgreSQL.") is False
 
 
-def test_working_state_continuity_policy_preserves_explicit_memory_requirement():
-    decision = InteractionDecision(
-        required_capability=CapabilityRequirement.INTERNAL_MEMORY
-    )
-
-    adjusted, applied_policy = apply_continuity_policy(
-        "arbitrary wording",
-        decision,
-        ReferenceAnalysis(working_state_available=True),
-    )
-
-    assert adjusted == decision
-    assert applied_policy == CONTINUITY_POLICY_VERSION
-
-
 def test_end_to_end_interaction_uses_only_durable_task_neutral_workers(conn):
     conversation_id = uuid.uuid4()
     response = handle_interaction(
@@ -141,6 +121,9 @@ def test_end_to_end_interaction_uses_only_durable_task_neutral_workers(conn):
     events = event_store.get_events_by_conversation(conn, conversation_id)
     assert [event.event_type for event in events] == [
         EventType.USER_PROMPT,
+        EventType.MEMORY_REQUEST,
+        EventType.MEMORY_PACKET,
+        EventType.INTERACTION_WORKING_STATE,
         EventType.INTERACTION_RESPONSE,
         EventType.INTERACTION_WORKING_STATE,
     ]
@@ -155,7 +138,7 @@ def test_end_to_end_interaction_uses_only_durable_task_neutral_workers(conn):
         assert cur.fetchone()[0] == "COMPLETED"
 
 
-def test_existing_working_state_forces_memory_without_phrase_matching(conn):
+def test_every_percept_opens_aperture_without_phrase_matching(conn):
     conversation_id = uuid.uuid4()
     handle_interaction(conn, FakeLLM(), "hello", conversation_id, **_kwargs())
 
@@ -185,10 +168,12 @@ def test_existing_working_state_forces_memory_without_phrase_matching(conn):
         InteractionStage.SELECT_CAPABILITY.value,
     )
     classified = load_worker_result(conn, classify_id)
-    assert classified.output["continuity_policy"] == CONTINUITY_POLICY_VERSION
+    assert classified.output["attention_aperture_version"] == ATTENTION_APERTURE_VERSION
+    assert classified.output["aperture_packet"]["memory_request_id"]
     assert classified.output["decision"] == {
-        "required_capability": CapabilityRequirement.INTERNAL_MEMORY.value
+        "required_capability": CapabilityRequirement.NONE.value
     }
+    assert classified.output["capability_packet"] is None
 
 
 def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(conn):
@@ -241,20 +226,23 @@ def test_fresh_workers_resume_interaction_from_postgres_and_preserve_continuity(
         InteractionStage.SELECT_CAPABILITY.value,
     )
     classified = load_worker_result(conn, classify_id)
-    assert classified.output["continuity_policy"] is None
     assert classified.output["decision"]["required_capability"] == (
-        CapabilityRequirement.INTERNAL_MEMORY.value
+        CapabilityRequirement.NONE.value
     )
     events = event_store.get_events_by_conversation(conn, recall_conversation)
-    assert EventType.CAPABILITY_REQUEST in [event.event_type for event in events]
-    assert EventType.CAPABILITY_PACKET in [event.event_type for event in events]
-    assert EventType.CAPABILITY_RESULT in [event.event_type for event in events]
-    assert EventType.INTERACTION_WORKING_STATE in [event.event_type for event in events]
+    event_types = [event.event_type for event in events]
+    assert EventType.MEMORY_REQUEST in event_types
+    assert EventType.MEMORY_PACKET in event_types
+    assert EventType.CAPABILITY_REQUEST not in event_types
+    assert EventType.CAPABILITY_PACKET not in event_types
+    assert EventType.CAPABILITY_RESULT not in event_types
+    assert EventType.INTERACTION_WORKING_STATE in event_types
 
 
 def test_selected_memory_analysis_registration_executes_real_profile(conn):
     class AnalysisLLM(FakeLLM):
-        def classify(self, prompt: str) -> InteractionDecision:
+        def classify(self, prompt: str, memory_packet: MemoryPacket) -> InteractionDecision:
+            del prompt, memory_packet
             return InteractionDecision(
                 required_capability=CapabilityRequirement.MEMORY_ANALYSIS
             )
@@ -311,7 +299,7 @@ def test_deterministic_response_event_retry_does_not_duplicate_history(conn):
     assert finish_interaction(conn, interaction, **_kwargs()) == "Got it."
     events = event_store.get_events_by_conversation(conn, conversation_id)
     assert [event.event_type for event in events].count(EventType.INTERACTION_RESPONSE) == 1
-    assert [event.event_type for event in events].count(EventType.INTERACTION_WORKING_STATE) == 1
+    assert [event.event_type for event in events].count(EventType.INTERACTION_WORKING_STATE) == 2
 
 
 def test_step_publication_repair_is_idempotent(conn):
