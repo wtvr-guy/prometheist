@@ -128,6 +128,9 @@ def execute_registered_capability(
     Models never author retrieval text or event IDs. Research capabilities select
     canonical MemoryPacket candidates by bounded integer index; Prometheist
     resolves those indices to event IDs and applies a deterministic recall profile.
+    The current task text remains the semantic cue for every research profile;
+    selected canonical IDs narrow the graph topology rather than replacing the
+    meaning of the current percept.
     """
 
     existing = _existing_execution(conn, capability_execution_id)
@@ -153,7 +156,7 @@ def execute_registered_capability(
             list(selection.candidate_indices),
         )
         need = jit_memory.build_memory_need(
-            None,
+            task_text,
             focus_event_ids=focus_event_ids,
             include_persisted_history=True,
             conversation_id=None,
@@ -173,7 +176,7 @@ def execute_registered_capability(
             list(selection.candidate_indices),
         )
         need = jit_memory.build_memory_need(
-            None,
+            task_text,
             focus_event_ids=focus_event_ids,
             include_persisted_history=True,
             conversation_id=None,
@@ -193,7 +196,7 @@ def execute_registered_capability(
             [selection.candidate_index],
         )
         need = jit_memory.build_memory_need(
-            None,
+            task_text,
             focus_event_ids=focus_event_ids,
             include_persisted_history=True,
             conversation_id=None,
