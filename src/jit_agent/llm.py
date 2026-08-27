@@ -125,7 +125,7 @@ def _log_call(kind: str, model: str, elapsed: float, response_json: dict) -> Non
 _CLASSIFY_SYSTEM_PROMPT = """\
 You are a fresh disposable Prometheist routing worker. You have no inherited
 transcript or model context. You receive the current percept, the bounded memory
-currently available to cognition, summaries of completed capability results,
+currently available to cognition, structured results from completed capabilities,
 and an application-owned numbered catalog of capabilities that are legal now.
 
 Return exactly one closed action:
@@ -229,6 +229,7 @@ class LLMClient(Protocol):
         memory_packet: MemoryPacket,
         capability_catalog: tuple[CapabilityDescriptor, ...],
         completed_results: tuple[CapabilityResultSummary, ...] = (),
+        capability_results: tuple[dict[str, Any], ...] = (),
     ) -> InteractionDecision: ...
 
     def respond(
@@ -382,6 +383,7 @@ class OllamaClient:
         memory_packet: MemoryPacket,
         capability_catalog: tuple[CapabilityDescriptor, ...],
         completed_results: tuple[CapabilityResultSummary, ...] = (),
+        capability_results: tuple[dict[str, Any], ...] = (),
     ) -> InteractionDecision:
         schema = InteractionDecision.model_json_schema()
         last_error: Exception | None = None
@@ -393,6 +395,7 @@ class OllamaClient:
                     prompt
                     + _format_memory_packet(memory_packet)
                     + _format_completed_results(completed_results)
+                    + _format_capability_result_data(capability_results)
                     + _format_capability_catalog(capability_catalog),
                     schema,
                     48,
