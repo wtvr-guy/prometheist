@@ -11,8 +11,9 @@ other installed functionality may be exposed as ordinary selectable
 capabilities.
 
 The model selects *which* capabilities are needed. Prometheist owns *how* they
-are ordered. Application-owned dependency metadata is expanded deterministically
-and topologically sorted with stable priority/id tie-breaking before execution.
+are ordered. Registry dependency/priority metadata is converted into generic
+Attention work items; the Attention ordering policy returns the stable
+scheduler-owned topological order.
 """
 from __future__ import annotations
 
@@ -26,13 +27,17 @@ import psycopg
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from jit_agent import event_store
+from jit_agent.attention_ordering import (
+    MAX_ATTENTION_WORK_PRIORITY,
+    AttentionWorkItem,
+    deterministic_dependency_order,
+)
 from jit_agent.models import EventType
 
 
-CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v4"
+CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v5"
 SOURCE = "capability_registry"
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
-_MAX_CAPABILITY_EXECUTION_PRIORITY = 10_000
 
 
 class CapabilityKind(str, Enum):
@@ -127,7 +132,7 @@ class CapabilityExecutionPlanItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
     catalog_index: int = Field(ge=0)
     capability_id: str = Field(min_length=1)
-    execution_priority: int = Field(ge=0, le=_MAX_CAPABILITY_EXECUTION_PRIORITY)
+    execution_priority: int = Field(ge=0, le=MAX_ATTENTION_WORK_PRIORITY)
     depends_on_capability_ids: list[str] = Field(default_factory=list)
 
 
@@ -164,8 +169,8 @@ class RegisteredCapability:
 
     ``selectable_after_aperture`` controls whether the capability appears in the
     live routing catalog after the default memory exposure has already occurred.
-    ``execution_priority`` and ``depends_on_capability_ids`` are scheduler-owned
-    execution policy; they are never model output.
+    ``execution_priority`` and ``depends_on_capability_ids`` are scheduler inputs;
+    they are never model output.
     """
 
     descriptor: CapabilityDescriptor
@@ -187,7 +192,7 @@ class RegisteredCapability:
             raise ValueError("capability routing terms must not be empty")
         if len(normalized_terms) != len(set(normalized_terms)):
             raise ValueError("capability routing terms must not contain duplicates")
-        if not 0 <= self.execution_priority <= _MAX_CAPABILITY_EXECUTION_PRIORITY:
+        if not 0 <= self.execution_priority <= MAX_ATTENTION_WORK_PRIORITY:
             raise ValueError("capability execution_priority is outside the supported range")
         if any(not dependency for dependency in normalized_dependencies):
             raise ValueError("capability dependencies must not be empty")
@@ -256,13 +261,7 @@ class CapabilityRegistry:
         self,
         indices: list[int],
     ) -> CapabilityExecutionPlan:
-        """Expand dependencies and return a deterministic topological order.
-
-        Model output is treated as a requirement set, not an execution plan.
-        Dependency closure and ordering are system-owned. Among simultaneously
-        ready capabilities, lower ``execution_priority`` runs first; ties break
-        by canonical capability id.
-        """
+        """Expand dependencies and delegate deterministic ordering to Attention."""
 
         catalog = self.post_aperture_catalog()
         selected = self.resolve_post_aperture_indices(indices)
@@ -285,29 +284,18 @@ class CapabilityRegistry:
                     required_ids.add(dependency)
                     pending.append(dependency)
 
-        dependencies = {
-            capability_id: set(self.get(capability_id).depends_on_capability_ids)
-            for capability_id in required_ids
-        }
-        ordered_ids: list[str] = []
-        remaining = set(required_ids)
-        while remaining:
-            ready = [
-                capability_id
-                for capability_id in remaining
-                if not (dependencies[capability_id] & remaining)
-            ]
-            if not ready:
-                raise ValueError("selected capability dependencies contain a cycle")
-            ready.sort(
-                key=lambda capability_id: (
-                    self.get(capability_id).execution_priority,
-                    capability_id,
+        ordered_ids = deterministic_dependency_order(
+            [
+                AttentionWorkItem(
+                    item_id=capability_id,
+                    priority=self.get(capability_id).execution_priority,
+                    dependency_ids=list(
+                        self.get(capability_id).depends_on_capability_ids
+                    ),
                 )
-            )
-            for capability_id in ready:
-                ordered_ids.append(capability_id)
-                remaining.remove(capability_id)
+                for capability_id in sorted(required_ids)
+            ]
+        )
 
         return CapabilityExecutionPlan(
             requested_catalog_indices=list(indices),
