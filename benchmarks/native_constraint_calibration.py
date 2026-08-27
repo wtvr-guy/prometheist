@@ -11,7 +11,6 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
-import os
 from pathlib import Path
 import statistics
 import subprocess
@@ -21,7 +20,13 @@ from typing import Any
 import httpx
 
 from jit_agent.admission_diagnostics import RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX
-from jit_agent.attention_observation import ResourceSafetyPolicy, SystemHostResourceProbe
+from jit_agent.attention_observation import SystemHostResourceProbe
+from jit_agent.native_policy import native_resource_safety_policy
+from jit_agent.ollama_runtime import (
+    OllamaRuntimeProbe,
+    configured_ollama_base_url,
+    configured_ollama_model,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -39,7 +44,7 @@ def measure_resources(samples: int) -> dict[str, Any]:
     capture_started_at = datetime.now(timezone.utc)
     captured = [probe.capture() for _ in range(samples)]
     capture_completed_at = datetime.now(timezone.utc)
-    policy = ResourceSafetyPolicy()
+    policy = native_resource_safety_policy()
     return {
         "benchmark_id": "RES-NATIVE-001",
         "result": "PILOT_NATIVE_MEASUREMENT",
@@ -72,15 +77,15 @@ def measure_pre_cap_resources() -> dict[str, Any]:
     result["benchmark_id"] = "RES-PRE-CAP-001"
     result["decision"] = (
         "This single immediate sample is ordered after Ollama calibration and directly before "
-        "CAP-LOOP-001. Compare it with RES-NATIVE-001 and the scheduler's structured admission "
-        "diagnostics to detect resident-model memory double counting without changing policy."
+        "CAP-LOOP-001. Compare it with RES-NATIVE-001 and OLLAMA-RUNTIME-001 to distinguish "
+        "physical free RAM from reusable resident-model memory."
     )
     return result
 
 
 def measure_ollama(token_caps: tuple[int, ...]) -> dict[str, Any]:
-    base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-    model = os.environ.get("OLLAMA_MODEL", "qwen3:4b")
+    base_url = configured_ollama_base_url()
+    model = configured_ollama_model()
     schema = {
         "type": "object",
         "properties": {"answer": {"type": "string"}},
@@ -148,6 +153,25 @@ def measure_ollama(token_caps: tuple[int, ...]) -> dict[str, Any]:
     }
 
 
+def measure_ollama_runtime() -> dict[str, Any]:
+    """Record whether the configured model is resident immediately before CAP-LOOP."""
+
+    policy = native_resource_safety_policy()
+    state = OllamaRuntimeProbe().capture()
+    return {
+        "benchmark_id": "OLLAMA-RUNTIME-001",
+        "result": "PILOT_NATIVE_MEASUREMENT" if state.probe_ok else "NO_NATIVE_EVIDENCE",
+        "runtime_state": state.model_dump(mode="json"),
+        "reusable_system_memory_credit_mib": state.reusable_memory_credit_mib(policy),
+        "policy_under_measurement": policy.model_dump(mode="json"),
+        "decision": (
+            "The running-model observation determines whether claim-time RAM may credit part of "
+            "the configured cold-load budget. Probe failure or a nonresident model earns zero "
+            "credit; the full cold-load requirement remains authoritative."
+        ),
+    }
+
+
 def measure_worker_runtime() -> dict[str, Any]:
     command = [
         "uv",
@@ -161,6 +185,7 @@ def measure_worker_runtime() -> dict[str, Any]:
         "tests/test_cli_admission_diagnostics.py",
         "tests/test_admission_diagnostics.py",
         "tests/test_native_constraint_calibration.py",
+        "tests/test_ollama_runtime.py",
         "tests/test_interaction_runtime.py",
     ]
     started = time.monotonic()
@@ -254,6 +279,12 @@ def _requested_measurements_complete(results: dict[str, Any]) -> tuple[bool, lis
         if not any(item.get("http_or_parse_error") is None for item in observations):
             failures.append("LLM-NATIVE-001 produced no successful Ollama observation")
 
+    runtime = results.get("OLLAMA-RUNTIME-001")
+    if runtime is not None:
+        state = dict(runtime.get("runtime_state") or {})
+        if not bool(state.get("probe_ok")):
+            failures.append("OLLAMA-RUNTIME-001 could not inspect running-model state")
+
     cap_loop = results.get("CAP-LOOP-001")
     if cap_loop is not None and not bool(cap_loop.get("acceptance_executed")):
         failures.append("CAP-LOOP-001 real-Ollama acceptance did not execute and pass")
@@ -289,6 +320,7 @@ def main() -> None:
     if not args.skip_ollama:
         results["LLM-NATIVE-001"] = measure_ollama(token_caps)
     if not args.skip_capability_loop:
+        results["OLLAMA-RUNTIME-001"] = measure_ollama_runtime()
         if not args.skip_resources:
             results["RES-PRE-CAP-001"] = measure_pre_cap_resources()
         results["CAP-LOOP-001"] = measure_capability_loop()
