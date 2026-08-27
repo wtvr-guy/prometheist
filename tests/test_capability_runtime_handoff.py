@@ -9,18 +9,32 @@ from jit_agent.capability_registry import (
     CapabilityPacket,
     deterministic_capability_request_id,
 )
-from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
+from jit_agent.models import (
+    EventType,
+    MemoryNeedDecision,
+    MemoryPacket,
+    MemoryRetrievalScope,
+)
 
 
 class Planner:
-    def __init__(self) -> None:
+    def __init__(self, scope: MemoryRetrievalScope = MemoryRetrievalScope.ACTIVE_AND_HISTORY) -> None:
+        self.scope = scope
         self.inputs: list[str] = []
 
     def plan_memory(self, task: str) -> MemoryNeedDecision:
         self.inputs.append(task)
+        if self.scope is MemoryRetrievalScope.ACTIVE_ONLY:
+            return MemoryNeedDecision(scope=self.scope, anchor_indices=[])
+
+        catalog = task.split("[Anchor catalog]\n", 1)[1]
+        entries = {}
+        for line in catalog.splitlines():
+            index_text, value = line.split(": ", 1)
+            entries[value] = int(index_text)
         return MemoryNeedDecision(
-            query_text="Project Oriole codename",
-            entities=["Project Oriole"],
+            scope=self.scope,
+            anchor_indices=[entries["oriole"]],
         )
 
 
@@ -30,14 +44,10 @@ def _packet(step_id: uuid.UUID, task_id: uuid.UUID, capability_id="internal_memo
         capability_request_id=deterministic_capability_request_id(step_id),
         requester_task_id=task_id,
         requester_step_id=step_id,
-        need=CapabilityNeed(
-            query_text="What did I establish?",
-            supplemental_query_texts=["persisted internal history"],
-            limit=1,
-        ),
-        matches=[CapabilityMatch(descriptor=registration.descriptor, score=1.0)],
+        need=CapabilityNeed(query_text=capability_id, limit=1),
+        matches=[CapabilityMatch(descriptor=registration.descriptor, score=8.0)],
         selected_query_role="canonical",
-        selected_query_text="What did I establish?",
+        selected_query_text=capability_id,
     )
 
 
@@ -90,7 +100,11 @@ def _install_fakes(monkeypatch, packet, captured, active_event_ids):
     )
 
 
-def _execute(monkeypatch, capability_id="internal_memory"):
+def _execute(
+    monkeypatch,
+    capability_id="internal_memory",
+    scope: MemoryRetrievalScope = MemoryRetrievalScope.ACTIVE_AND_HISTORY,
+):
     task_id = uuid.uuid4()
     step_id = uuid.uuid4()
     conversation_id = uuid.uuid4()
@@ -99,7 +113,7 @@ def _execute(monkeypatch, capability_id="internal_memory"):
     packet = _packet(step_id, task_id, capability_id)
     captured = {}
     _install_fakes(monkeypatch, packet, captured, [state_event_id])
-    planner = Planner()
+    planner = Planner(scope)
 
     capability_runtime.execute_registered_capability(
         object(),
@@ -110,44 +124,52 @@ def _execute(monkeypatch, capability_id="internal_memory"):
         requester_step_id=step_id,
         conversation_id=conversation_id,
         correlation_id=correlation_id,
-        task_text="Natural-language request whose wording is not application policy.",
-        capability_input="narrow the historical information need",
+        task_text="What codename applies to Project Oriole in the active plan?",
         before_global_seq=100,
         memory_request_id=uuid.uuid4(),
     )
     return captured, planner, state_event_id, conversation_id, correlation_id
 
 
-def test_internal_memory_uses_working_state_and_stateless_semantic_plan(monkeypatch):
+def test_internal_memory_uses_active_context_and_index_only_memory_routing(monkeypatch):
     captured, planner, state_event_id, conversation_id, correlation_id = _execute(monkeypatch)
 
     assert len(planner.inputs) == 1
     planner_input = planner.inputs[0]
     assert "[Current task]" in planner_input
-    assert "Natural-language request whose wording is not application policy." in planner_input
-    assert "[Capability narrowing]" in planner_input
-    assert "narrow the historical information need" in planner_input
     assert "[Active canonical context]" in planner_input
     assert "The active situation is Project Oriole planning." in planner_input
+    assert "[Anchor catalog]" in planner_input
+    assert "oriole" in planner_input
 
     need = captured["need"]
     assert need.conversation_id is None
     assert need.active_event_ids == [state_event_id]
-    assert need.entities == ["Project Oriole"]
+    assert need.include_persisted_history is True
+    assert need.entities == ["oriole"]
     assert need.reference_time is None
-    assert need.supplemental_query_texts == [
-        "Project Oriole codename",
-        "persisted internal history",
-    ]
+    assert need.supplemental_query_texts == []
     assert captured["activation"]["conversation_id"] == conversation_id
     assert captured["activation"]["correlation_id"] == correlation_id
 
 
-def test_memory_analysis_uses_same_state_driven_memory_boundary(monkeypatch):
-    captured, planner, state_event_id, _, _ = _execute(monkeypatch, "memory_analysis")
+def test_active_only_scope_disables_long_term_search_without_phrase_policy(monkeypatch):
+    captured, _, state_event_id, _, _ = _execute(
+        monkeypatch,
+        scope=MemoryRetrievalScope.ACTIVE_ONLY,
+    )
 
-    assert "[Active canonical context]" in planner.inputs[0]
     need = captured["need"]
     assert need.active_event_ids == [state_event_id]
-    assert need.entities == ["Project Oriole"]
-    assert need.supplemental_query_texts[0] == "Project Oriole codename"
+    assert need.include_persisted_history is False
+    assert need.entities == []
+
+
+def test_memory_analysis_uses_same_index_only_memory_boundary(monkeypatch):
+    captured, planner, state_event_id, _, _ = _execute(monkeypatch, "memory_analysis")
+
+    assert "[Anchor catalog]" in planner.inputs[0]
+    need = captured["need"]
+    assert need.active_event_ids == [state_event_id]
+    assert need.include_persisted_history is True
+    assert need.entities == ["oriole"]
