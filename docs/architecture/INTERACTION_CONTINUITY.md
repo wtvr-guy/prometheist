@@ -1,6 +1,6 @@
 # Interaction Continuity
 
-**Status:** active architecture requirement. Revised 2026-08-27 after native v0.7 acceptance exposed two failed continuity assumptions.
+**Status:** active architecture requirement. Revised 2026-08-27 after native v0.7 acceptance exposed failed continuity and routing assumptions.
 
 ## Principle
 
@@ -40,9 +40,19 @@ That is not a Kestrel-specific routing error. It is a circular dependency:
 
 Accordingly, basic internal-memory access is no longer a model-selected capability in the live interaction path.
 
-## Attention aperture
+### Rejected mechanism 3: model-owned capability ordering
 
-Every percept automatically opens a small, bounded JIT Memory **attention aperture** before any model routing decision.
+Once a post-memory model may select multiple capabilities, its returned list must not silently become the execution schedule. Capability dependencies, resource constraints, and stable ordering are system policy.
+
+Therefore:
+
+> **The model selects the required capability set; Prometheist deterministically expands dependencies and owns execution order.**
+
+The registry stores private execution metadata. The scheduler-facing plan expands dependency closure, then uses topological ordering with stable priority and capability-id tie-breaking. Cycles fail closed.
+
+## Default memory exposure and deeper research
+
+Every percept automatically receives a small, bounded JIT Memory packet before any model routing decision.
 
 ```text
 percept
@@ -53,25 +63,65 @@ durable WorkingState
 system-owned bounded JIT recall
   |
   v
-default MemoryPacket
+initial MemoryPacket
   |
-  +--> fresh stateless routing decision
-          |
-          +--> NONE: ordinary response from percept + aperture packet
-          |
-          +--> MEMORY_ANALYSIS: focus/narrow attention for deeper memory work
+  v
+fresh stateless capability-selection model
+  |
+  +--> capability_indices = []
+  |       -> respond
+  |
+  +--> capability_indices = [i, j, ...]
+          -> deterministic dependency closure/order
+          -> execute every selected capability
+          -> wait for every durable result
+          -> one final response inference
 ```
 
-The default aperture is deliberately small. It is not intended to reconstruct all persistent history. It gives the fresh model enough immediately relevant canonical evidence to reason about the present situation while keeping context bounded.
+The initial packet is deliberately small. It is not intended to reconstruct all persistent history. It gives the fresh model immediately relevant canonical evidence while keeping context bounded.
 
-If that aperture is insufficient, the model may request `MEMORY_ANALYSIS`. That capability can use constrained scope/index decisions to focus historical retrieval more deeply.
+If that context is insufficient, the installed `deeper_research` capability means:
+
+> **Investigate the current question further using additional persisted internal evidence when the initially supplied context is insufficient.**
+
+`deeper_research` is intentionally named in task semantics rather than after an internal architectural metaphor. It returns structured evidence, not a prose answer. The final response worker remains the sole live user-facing language generator.
 
 The distinction is:
 
 - **basic recall exposure** = automatic cognitive substrate;
-- **memory analysis** = optional operation performed on memory.
+- **deeper research** = optional investigation performed on persistent evidence;
+- **final response** = one fresh synthesis after required capabilities have completed.
 
 The default capability registry may retain `internal_memory` for generic or historical compatibility, but the live interaction model does not select it.
+
+## Multiple capabilities and deterministic execution
+
+The capability-selection model receives an application-owned bounded catalog and returns only integer indices. It may select zero, one, or several capabilities.
+
+The returned indices are a **requirement set**, not an execution plan. The model does not emit:
+
+- capability names;
+- queries or arguments;
+- dependency declarations;
+- execution order;
+- resource policy;
+- explanations.
+
+Prometheist converts the selected set into a persisted `CapabilityExecutionPlan` using private registry metadata:
+
+```text
+selected indices
+    -> resolve canonical capability IDs
+    -> expand declared dependencies
+    -> reject unavailable/non-selectable dependencies
+    -> reject cycles
+    -> topological order
+    -> stable ready-node ordering by execution_priority, then capability_id
+```
+
+The interaction `RESPOND` stage is downstream of the complete capability-execution stage. It validates that durable results exist for every planned item in exactly the scheduler-owned order. If any capability fails or is missing, the execution stage has no terminal success result and the response worker is not summoned.
+
+For v0.7, optional live capabilities return bounded structured evidence. The final response context is composed deterministically from completed capability evidence plus the initial MemoryPacket, deduplicated by canonical source-event ID and bounded by the stable MemoryNeed maximum.
 
 ## Minimal v0.7 WorkingState
 
@@ -88,11 +138,11 @@ active_event_ids
 
 WorkingState is not a copied transcript, LLM summary, second autobiographical store, user-profile blob, parsed nickname/options table, or assertion that active content is objectively true. The append-only event ledger remains authoritative.
 
-The default attention aperture combines the current percept with those active canonical pointers and deterministic long-term recall. Evidence surfaced through the aperture may itself be activated into WorkingState for subsequent stateless calls.
+The default memory exposure combines the current percept with those active canonical pointers and deterministic long-term recall. Evidence surfaced through recall may itself be activated into WorkingState for subsequent stateless calls.
 
 ## System-wide model-output rule
 
-Native v0.7 failures also established a broader protocol rule:
+Native v0.7 failures established a broader protocol rule:
 
 > **Model-generated natural language is the representation of last resort. Use it only when natural language is genuinely the product or when no smaller mechanically verifiable representation can express the required semantics.**
 
@@ -110,12 +160,15 @@ This is stronger than "use JSON." A JSON string field can still smuggle probabil
 
 For the live v0.7 model path:
 
-- post-aperture interaction routing returns one enum only: `NONE` or `MEMORY_ANALYSIS`;
-- basic internal-memory access is not represented in that enum because it already happened;
-- capability IDs are application-owned;
+- capability selection returns only bounded integer indices into an application-owned catalog;
+- an empty index list means respond; a non-empty list means capabilities are required;
+- the model may select several capabilities but does not control their order;
+- basic internal-memory access is absent from the selectable catalog because it already happened;
+- capability IDs, dependencies, execution priorities, executor bindings, and resource policy are application-owned;
 - the model emits no capability query/input, retrieval query, entity string, event ID, executor name, database control, explanation, or phrase rule;
-- deeper memory routing returns only a closed scope enum plus bounded integer indices into an application-generated anchor catalog;
+- deeper-research routing returns only a closed scope enum plus bounded integer indices into an application-generated anchor catalog;
 - invalid/duplicate/out-of-range indices and unexpected fields are rejected;
+- capability execution returns structured evidence rather than intermediate generated prose;
 - final user-facing response text remains natural language because language is the product at that boundary.
 
 Tests must follow the same philosophy. A continuity acceptance test must not grow a hand-written English parser or keyword-list semantic oracle. Where a deterministic verdict is required, the fixture should request an exact machine-verifiable value/tuple and independently verify canonical source-event provenance.
@@ -126,20 +179,26 @@ Tests must follow the same philosophy. A continuity acceptance test must not gro
 external percept
     -> durable interaction task
     -> load current WorkingState
-    -> AUTOMATIC bounded attention-aperture JIT recall
-    -> fresh stateless enum-only routing sees percept + aperture packet
-       -> NONE: respond from that bounded evidence
-       -> MEMORY_ANALYSIS: execute focused/deeper memory workflow
-    -> fresh stateless response synthesis
+    -> automatic bounded JIT recall
+    -> fresh stateless capability selector sees percept + initial MemoryPacket + catalog
+       -> []: no optional capability
+       -> [indices...]: one or more optional capabilities required
+    -> deterministic dependency closure and execution ordering
+    -> execute all planned capabilities to durable structured results
+    -> barrier: verify every planned result exists
+    -> compose bounded final evidence context
+    -> one fresh stateless response synthesis
     -> persist response
     -> activate prompt/response and surfaced canonical evidence
 ```
 
-This removes the "do I need memory?" decision from a model that has not yet seen memory.
+This removes both the "do I need memory?" decision from a model that has not yet seen memory and the "what order should tools run?" decision from a probabilistic model.
 
 ## Text cues: deprecated versus valid
 
 The old interaction-layer phrase detector (`requires_persisted_context`) is deprecated and disabled. The application layer does not maintain a growing regex vocabulary for phrases such as `just`, `those approaches`, or `this plan`, and the default capability registry does not maintain a continuity phrase catalog.
+
+The response layer likewise does not maintain special keyword lists such as `why/reason/cause` to decide which semantic helper should run. A fresh response model receives the bounded canonical evidence directly.
 
 This does not deprecate text retrieval inside JIT Memory. Canonical current text is user-authored evidence, not model-authored policy. Lexical specificity, deterministic associations, entity/anchor matching, temporal scoring, and future experimentally justified learned candidate generators remain valid internal retrieval mechanisms.
 
@@ -154,6 +213,7 @@ accepted:
   + bounded active state
   + deterministic candidate retrieval
   + categorical/index-based control
+  + scheduler-owned execution policy
   + provenance-bearing evidence
 ```
 
@@ -167,19 +227,22 @@ Canonical evidence, corrections, contradictions, confidence, user-belief versus 
 
 ## Frozen v0.7 experiment
 
-The four-turn Kestrel scenario remains the compatibility experiment, but the oracle itself is now machine-verifiable rather than a list of English keywords. The mechanism is accepted only if it:
+The four-turn Kestrel scenario remains the compatibility experiment, but the oracle itself is machine-verifiable rather than a list of English keywords. The mechanism is accepted only if it:
 
-- retrieves the pre-existing Kestrel constraint on Turn 1 before model routing;
+- retrieves the pre-existing Kestrel constraint on Turn 1 before capability selection;
 - chooses the compatible PostgreSQL-on-Windows path rather than Docker;
 - preserves restart/cross-conversation recall;
 - survives fresh worker/model calls with no inherited transcript;
 - keeps WorkingState and MemoryPackets bounded;
 - preserves exact source-event provenance and opaque identifiers;
 - uses no phrase-specific continuity rules or model-generated control/search text;
-- permits `MEMORY_ANALYSIS` only as deeper/focused work after the default aperture;
+- allows deeper research only after the initial bounded memory exposure;
+- supports zero/one/multiple capability selections through constrained indices;
+- makes capability dependencies/order deterministic and system-owned;
+- does not summon the final response worker before every planned capability has completed;
 - passes deterministic CI before native Ollama acceptance.
 
-If it fails, diagnose the aperture/WorkingState/JIT-Memory boundary or constrained routing contract. Do not add another English phrase rule simply to make the fixture green.
+If it fails, diagnose the WorkingState/JIT-Memory/capability-planning boundary or constrained routing contract. Do not add another English phrase rule simply to make the fixture green.
 
 ## v1.0 requirement
 
