@@ -26,8 +26,7 @@ _ENTITY_SPAN_RE = re.compile(
 _SINGLETON_ENTITY_RE = re.compile(r"\b[A-Z][A-Za-z0-9_-]{2,}\b")
 _RECENT_CONTEXT_RE = re.compile(
     r"\b(?:just|recently|immediately)\b"
-    r"|\b(?:this|that)\s+(?:plan|approach|option|choice|step|item|idea|one)\b"
-    r"|\b(?:these|those)\s+(?:plans?|approaches?|options?|choices?|steps?|items?|ideas?)\b",
+    r"|\b(?:this|that)\s+(?:plan|approach|option|choice|step|item|idea|one)\b",
     re.IGNORECASE,
 )
 _SINGLETON_ENTITY_STOPWORDS = frozenset(
