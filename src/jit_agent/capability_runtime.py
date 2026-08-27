@@ -13,10 +13,7 @@ from jit_agent.capability_registry import (
     RegisteredCapability,
     deterministic_capability_event_id,
 )
-from jit_agent.interaction_working_state import (
-    load_working_state,
-    working_state_memory_cue,
-)
+from jit_agent.interaction_working_state import load_working_state
 from jit_agent.models import EventType, MemoryNeedDecision, MemoryPacket
 
 
@@ -25,7 +22,7 @@ SOURCE = "capability_runtime"
 
 
 class CapabilityExecutionLLM(Protocol):
-    """Fresh model call used only by the memory-analysis execution profile."""
+    """Fresh stateless semantic planning used to formulate historical needs."""
 
     def plan_memory(self, task: str) -> MemoryNeedDecision: ...
 
@@ -54,8 +51,6 @@ def _load_discovery_packet(
     conn: psycopg.Connection,
     capability_request_id: UUID,
 ) -> CapabilityPacket:
-    """Reconstruct the authoritative discovery handoff from durable history."""
-
     event = event_store.get_event_by_id(
         conn,
         deterministic_capability_event_id(capability_request_id, "packet"),
@@ -71,8 +66,6 @@ def _load_discovery_packet(
 
 
 def _supplemental_queries(*groups: list[str] | tuple[str, ...]) -> list[str]:
-    """Merge bounded equivalent cues without changing deterministic ordering."""
-
     merged: list[str] = []
     seen: set[str] = set()
     for group in groups:
@@ -91,8 +84,6 @@ def _supplemental_queries(*groups: list[str] | tuple[str, ...]) -> list[str]:
 
 
 def _merge_entities(*groups: list[str] | tuple[str, ...]) -> list[str]:
-    """Merge bounded structured entity cues while preserving first-seen order."""
-
     merged: list[str] = []
     seen: set[str] = set()
     for group in groups:
@@ -125,13 +116,13 @@ def execute_registered_capability(
     before_global_seq: int,
     memory_request_id: UUID,
 ) -> CapabilityExecution:
-    """Execute a selected binding without granting policy authority to a worker.
+    """Execute selected memory bindings through working state + JIT Memory.
 
-    v0.7 continuity no longer synthesizes one-off lexical/entity/recency hints
-    from each current utterance.  The active situation is reconstructed from
-    durable InteractionWorkingState and supplied as structured evidence/event
-    cues. Ordinary lexical/entity/association retrieval remains a fallback for
-    unresolved historical needs.
+    Interaction continuity does not depend on a hand-maintained vocabulary of
+    phrase, entity, or recency rules. Durable working state supplies bounded
+    canonical event IDs already active in the situation. A fresh stateless
+    semantic planner formulates any unresolved historical need; deterministic
+    JIT Memory then retrieves and validates canonical evidence.
     """
 
     discovery_packet = _load_discovery_packet(conn, capability_request_id)
@@ -139,49 +130,22 @@ def execute_registered_capability(
         raise RuntimeError("capability discovery task does not match execution task")
 
     working_state = load_working_state(conn, conversation_id)
-    state_entities = working_state.active_entities if working_state is not None else []
     active_event_ids = working_state.active_event_ids if working_state is not None else []
-    state_cue = working_state_memory_cue(working_state)
-    state_queries = [state_cue] if state_cue else []
     discovery_supplemental = discovery_packet.need.supplemental_query_texts
+    planned = llm.plan_memory(capability_input or task_text)
+    planned_queries = [planned.query_text] if planned.query_text != task_text else []
 
-    # Conversations/sessions remain provenance, not hard memory boundaries.
-    memory_scope_conversation_id = None
-
-    if registration.executor == "jit_memory":
-        explicit_input = [capability_input] if capability_input else []
-        supplemental = _supplemental_queries(
-            state_queries,
-            discovery_supplemental,
-            explicit_input,
-        )
-        need = jit_memory.build_memory_need(
-            task_text,
-            supplemental_query_texts=supplemental,
-            entities=_merge_entities(state_entities),
-            active_event_ids=active_event_ids,
-            conversation_id=memory_scope_conversation_id,
-        )
-    elif registration.executor == "memory_analysis":
-        planned = llm.plan_memory(capability_input or task_text)
-        planned_queries = [planned.query_text] if planned.query_text != task_text else []
-        supplemental = _supplemental_queries(
-            state_queries,
-            discovery_supplemental,
+    # Conversation/session identifiers remain provenance, not memory walls.
+    need = jit_memory.build_memory_need(
+        task_text,
+        supplemental_query_texts=_supplemental_queries(
             planned_queries,
-        )
-        need = jit_memory.build_memory_need(
-            task_text,
-            supplemental_query_texts=supplemental,
-            entities=_merge_entities(planned.entities, state_entities),
-            active_event_ids=active_event_ids,
-            conversation_id=memory_scope_conversation_id,
-        )
-    else:
-        raise ValueError(
-            f"Capability {registration.descriptor.capability_id!r} has unsupported "
-            f"executor {registration.executor!r}"
-        )
+            discovery_supplemental,
+        ),
+        entities=_merge_entities(planned.entities),
+        active_event_ids=active_event_ids,
+        conversation_id=None,
+    )
 
     packet = jit_memory.request_memory(
         conn,
