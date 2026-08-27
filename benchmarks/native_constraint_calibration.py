@@ -204,6 +204,25 @@ def measure_capability_loop() -> dict[str, Any]:
     }
 
 
+def _requested_measurements_complete(results: dict[str, Any]) -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    worker = results.get("WORKER-NATIVE-001")
+    if worker is not None and worker.get("returncode") != 0:
+        failures.append("WORKER-NATIVE-001 runtime block did not pass")
+
+    ollama = results.get("LLM-NATIVE-001")
+    if ollama is not None:
+        observations = list(ollama.get("observations", []))
+        if not any(item.get("http_or_parse_error") is None for item in observations):
+            failures.append("LLM-NATIVE-001 produced no successful Ollama observation")
+
+    cap_loop = results.get("CAP-LOOP-001")
+    if cap_loop is not None and not bool(cap_loop.get("acceptance_executed")):
+        failures.append("CAP-LOOP-001 real-Ollama acceptance did not execute and pass")
+
+    return not failures, failures
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--resource-samples", type=int, default=20)
@@ -234,10 +253,13 @@ def main() -> None:
     if not args.skip_capability_loop:
         results["CAP-LOOP-001"] = measure_capability_loop()
 
+    complete, failures = _requested_measurements_complete(results)
     payload = {
         "schema_version": 1,
         "captured_at": datetime.now(timezone.utc).isoformat(),
         "runner": "benchmarks/native_constraint_calibration.py",
+        "requested_measurements_complete": complete,
+        "completion_failures": failures,
         "results": results,
     }
     text = json.dumps(payload, indent=2, sort_keys=True)
@@ -245,6 +267,8 @@ def main() -> None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(text + "\n", encoding="utf-8")
     print(text)
+    if not complete:
+        raise SystemExit("native constraint calibration evidence is incomplete")
 
 
 if __name__ == "__main__":
