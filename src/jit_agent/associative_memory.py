@@ -19,13 +19,9 @@ from jit_agent.memory_kernel import (
     tokenize,
 )
 
-ASSOCIATIVE_POLICY_VERSION = "deterministic-associations-v3"
+ASSOCIATIVE_POLICY_VERSION = "deterministic-associations-v4"
 NodeKind = Literal["TERM", "EVENT"]
 
-# These tokens shape which state or interpretation the caller wants but are not
-# themselves evidence-bearing subject matter. Removing them from the direct
-# support denominator prevents questions such as "Where do I work now?" from
-# looking artificially weak merely because the event does not contain "now".
 _DIRECT_SUPPORT_MODIFIERS = frozenset(
     {
         "actually",
@@ -38,13 +34,6 @@ _DIRECT_SUPPORT_MODIFIERS = frozenset(
         "usually",
     }
 )
-
-# Direct lexical evidence must cover more than half of the substantive query
-# terms unless another independent cue supplies support. This rejects merely
-# topical matches such as a generic vehicle record for "Who insures my
-# vehicle?" while preserving explicitly associated, entity-anchored, and
-# temporally anchored evidence. Keep this conservative and benchmarked; it is
-# not a semantic model.
 _MIN_DIRECT_SUPPORT_COVERAGE = 0.60
 
 
@@ -103,7 +92,6 @@ class AssociativeMemoryPacket:
 
 
 def _term_token(value: str) -> str:
-    """Normalize one association TERM exactly as a query term is normalized."""
     tokens = tokenize(value)
     if len(tokens) != 1:
         raise ValueError("TERM association nodes must normalize to exactly one token")
@@ -132,8 +120,6 @@ def _cue_nodes(cue: CueState) -> tuple[str, ...]:
     for entity in cue.entities:
         normalized = normalize_text(entity)
         if normalized:
-            # Retain an exact normalized entity node for future phrase-level
-            # associations while also exposing its query-normalized term nodes.
             nodes.add(f"term:{normalized}")
         nodes.update(
             f"term:{token}"
@@ -144,19 +130,6 @@ def _cue_nodes(cue: CueState) -> tuple[str, ...]:
 
 
 def _direct_support_coverage(event: MemoryEvent, cue: CueState) -> float:
-    """Measure non-entity substantive query content supported by one event.
-
-    This is intentionally separate from ``score_event``. The baseline score is
-    an activation score and is allowed to be broad enough to seed association
-    traversal. Evidence admission is stricter: a directly returned event should
-    support the requested content rather than merely share one topical word.
-
-    Explicit entities are first-class cues elsewhere in the scoring policy, so
-    their tokens are removed from this lexical denominator. Counting them again
-    would double-charge entity-anchored queries and reject valid historical or
-    paraphrastic evidence simply because the entity itself belongs to another
-    event in the same state transition.
-    """
     ignored = {
         token
         for value in cue.ignored_terms
@@ -175,8 +148,6 @@ def _direct_support_coverage(event: MemoryEvent, cue: CueState) -> float:
         and token not in _DIRECT_SUPPORT_MODIFIERS
     }
     if not query_terms:
-        # Entity-only or non-text cues should continue to use the baseline
-        # scoring policy rather than being rejected by an empty denominator.
         return 1.0
     event_terms = set(tokenize(event.text))
     return len(query_terms & event_terms) / len(query_terms)
@@ -189,16 +160,6 @@ def _direct_evidence_is_admissible(
     has_association_support: bool,
     has_entity_support: bool,
 ) -> bool:
-    """Return whether a candidate has enough support to be surfaced as evidence.
-
-    Association-backed evidence is admitted because the explicit relationship
-    route is itself support. An explicit entity hit is also independent support:
-    the kernel is a retrieval layer, not an entailment judge, so entity-anchored
-    evidence may be useful even when the relationship is expressed by paraphrase.
-    A temporal query may likewise admit sparse direct lexical evidence because
-    time is an independent first-class cue. Otherwise a direct candidate must
-    cover a majority of substantive non-entity query terms.
-    """
     if has_association_support or has_entity_support:
         return True
 
@@ -219,26 +180,17 @@ def associative_recall(
     *,
     max_hops: int = 2,
     decay: float = 0.85,
+    seed_event_ids: Sequence[str] = (),
 ) -> AssociativeMemoryPacket:
-    """Recall source evidence using cue scoring plus bounded spreading activation.
+    """Recall canonical evidence using cues plus bounded spreading activation.
 
-    Query/entity terms begin fully activated. Any event that already clears the
-    deterministic minimum score also becomes a fully activated event node. This
-    models a two-stage process: direct cues activate an initial memory set, then
-    explicit associations can activate neighboring concepts/events.
-
-    Direct activation and associative activation are tracked separately. A
-    directly matched event may still receive a meaningful relationship-specific
-    associative boost; direct activation must not suppress evidence that a valid
-    association path reached that same event.
-
-    Baseline activation is deliberately broader than final evidence admission.
-    Weak topical matches may seed association traversal, but a directly returned
-    event must have substantive query-content support unless an association,
-    entity cue, or temporal cue independently supports it.
-
-    Associations never replace evidence. The returned items are canonical
-    MemoryEvent objects, and trace hops retain association provenance.
+    ``seed_event_ids`` is an application-owned focus mechanism. The IDs must
+    reference canonical events already loaded for this recall. Each seed starts
+    with full activation and can therefore expand its deterministic association
+    neighborhood even when the selected candidate has little lexical overlap
+    with the current percept. Models never author these IDs; they select prior
+    MemoryPacket candidates by bounded integer index and Prometheist resolves
+    those indices to canonical IDs.
     """
     if max_hops < 1:
         raise ValueError("max_hops must be >= 1")
@@ -246,6 +198,12 @@ def associative_recall(
         raise ValueError("decay must be in (0, 1]")
 
     event_list = tuple(events)
+    event_ids = {event.event_id for event in event_list}
+    seed_ids = tuple(dict.fromkeys(seed_event_ids))
+    missing_seeds = set(seed_ids) - event_ids
+    if missing_seeds:
+        raise ValueError("seed_event_ids must reference loaded canonical events")
+
     allowed_types = set(cue.source_types)
     baseline = {
         event.event_id: score_event(event, cue)
@@ -253,15 +211,21 @@ def associative_recall(
         if not allowed_types or event.event_type in allowed_types
     }
 
-    # ``activation`` controls propagation and therefore contains both cue/direct
-    # seeds and propagated activation. ``associative_activation`` contains only
-    # activation earned by traversing an Association edge. Keeping these domains
-    # separate prevents a direct 1.0 seed from masking a valid 0.85 relationship
-    # boost to the same event.
     activation: dict[str, float] = {}
     associative_activation: dict[str, float] = {}
-    cue_nodes = _cue_nodes(cue)
-    cue_term_values = {node.removeprefix("term:") for node in cue_nodes}
+    term_cue_nodes = _cue_nodes(cue)
+    cue_nodes = tuple(
+        sorted(
+            {
+                *term_cue_nodes,
+                *(f"event:{event_id}" for event_id in seed_ids),
+            }
+        )
+    )
+    cue_term_values = {
+        node.removeprefix("term:")
+        for node in term_cue_nodes
+    }
     for node in cue_nodes:
         activation[node] = 1.0
 
@@ -291,15 +255,7 @@ def associative_recall(
             if source_activation <= 0.0:
                 continue
             target_node = _node(association.target_kind, association.target)
-            # source_activation already contains decay from every prior hop.
-            # Apply exactly one additional decay factor for this edge so an
-            # N-hop path receives decay**N rather than triangular over-decay.
             propagated = source_activation * association.strength * decay
-
-            # Compare against prior *associative* activation, not the combined
-            # propagation seed. A direct event seed is intentionally 1.0, but it
-            # must not erase the fact that an association independently reached
-            # that event with a relationship-specific score.
             if propagated <= associative_activation.get(target_node, 0.0):
                 continue
             associative_activation[target_node] = propagated
@@ -328,6 +284,7 @@ def associative_recall(
         or cue.entities
         or cue.reference_time
         or cue.conversation_id
+        or seed_ids
     )
     for event in event_list:
         score = baseline.get(event.event_id)
