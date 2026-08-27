@@ -10,7 +10,6 @@ from jit_agent.interaction_policy import (
     CONTINUITY_POLICY_VERSION,
     INTERACTION_STAGES,
     CapabilityRequirement,
-    InteractionAction,
     InteractionDecision,
     InteractionStage,
     ReferenceAnalysis,
