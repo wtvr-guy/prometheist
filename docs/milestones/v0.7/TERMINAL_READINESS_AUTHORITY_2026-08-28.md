@@ -115,7 +115,7 @@ The release candidate is accepted only if both directions hold:
 
 ## Deterministic coverage
 
-Deterministic tests now require:
+Deterministic tests require:
 
 - acquisition `RESPOND` bypasses final readiness and retains the fast path;
 - acquisition `ABSTAIN` always invokes fresh terminal readiness;
@@ -123,8 +123,16 @@ Deterministic tests now require:
 - final readiness may confirm terminal `ABSTAIN`;
 - pre-cognitive insufficiency proceeds directly to capability selection without a same-station confirmation vote;
 - the model-facing final-readiness schema excludes application-owned version metadata;
+- the runtime actually passes only semantic readiness fields to the structured model call;
 - omitted model version is supplied deterministically by the application;
 - explicitly wrong persisted/application final-readiness version still fails closed.
+
+Exact head `179f7c6dae76cd0f90e407379fbf25dadbbc4bd8` passed deterministic CI with:
+
+- **345 passed, 20 skipped**;
+- Ruff green;
+- constraint audit **175 discovered / 175 registered / 0 uncovered / 0 stale / 0 mismatched / 0 invalid**;
+- exactly five native Ollama acceptance pytest items collected.
 
 ## Release gate
 
