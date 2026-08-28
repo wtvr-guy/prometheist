@@ -79,6 +79,29 @@ The correction follows the existing rule:
 
 The final-readiness event is persisted against the exact final memory request and capability-result set before the terminal response directive is constructed, preserving restart safety and causal provenance.
 
+## Native schema-authority failure after the boundary correction
+
+The first native run after this authority correction produced a new and narrower failure. In both a Project Falcon seed interaction and Kestrel Turn 2, the final-readiness worker returned the substantive terminal action `RESPOND`, but also emitted an invented decision `version` such as `1.0` or `1.0.0`. The closed validator correctly rejected those invented values and the worker process failed before terminalization.
+
+This is not evidence that terminal readiness chose the wrong semantic outcome. It exposed an information-authority mistake in the structured contract: application protocol versioning had been placed inside the model-facing `FinalReadinessDecision` JSON Schema even though the outer persisted final-readiness event already owns and validates `FINAL_READINESS_VERSION`.
+
+The correction is therefore deterministic:
+
+- `FinalReadinessDecision.version` remains part of the validated application object for restart/backward compatibility;
+- the field is omitted from the model-facing JSON Schema;
+- the application supplies the authoritative default version after model output is parsed;
+- the persisted outer event continues to store and validate the protocol version;
+- an explicitly wrong version in persisted/application data still fails closed.
+
+The model now owns only the semantic fields it can legitimately judge:
+
+```text
+action: RESPOND | ABSTAIN
+evidence_state: <closed terminal evidence state>
+```
+
+This follows the same constitutional principle used elsewhere in Prometheist: models may perform bounded semantic judgment, but application metadata and protocol identity remain application-owned.
+
 ## False-positive obligation
 
 The correction must not turn non-empty relevant memory into automatic response authority.
@@ -98,10 +121,13 @@ Deterministic tests now require:
 - acquisition `ABSTAIN` always invokes fresh terminal readiness;
 - final readiness may recover an acquisition false-negative to terminal `RESPOND`;
 - final readiness may confirm terminal `ABSTAIN`;
-- pre-cognitive insufficiency proceeds directly to capability selection without a same-station confirmation vote.
+- pre-cognitive insufficiency proceeds directly to capability selection without a same-station confirmation vote;
+- the model-facing final-readiness schema excludes application-owned version metadata;
+- omitted model version is supplied deterministically by the application;
+- explicitly wrong persisted/application final-readiness version still fails closed.
 
 ## Release gate
 
 The final release gate remains the existing five native pytest items under Windows/PostgreSQL/Ollama with Qwen3:4b fixed.
 
-A deterministic CI pass is necessary but not sufficient. The next native run must verify the corrected authority boundary on the actual local model.
+A deterministic CI pass is necessary but not sufficient. The next native run must verify the corrected authority boundary and the corrected model/application schema boundary on the actual local model.
