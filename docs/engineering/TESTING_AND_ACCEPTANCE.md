@@ -159,6 +159,8 @@ The current v0.7 pre-acquisition path must verify authority separation and the m
 
 The confirmation rule is deliberately asymmetric. Native Qwen3:4b acceptance demonstrated a false-negative case in which the admitted packet directly contained every requested historical answer component. The application still must not rewrite `INSUFFICIENT` to `SUFFICIENT` merely because a packet is non-empty or marked supported; the second fresh semantic judgment exists precisely to preserve that boundary while reducing the consequence of one measured false negative.
 
+The asymmetric retry also creates a native false-positive obligation: after relevant history is already active, an unsupported question with a non-empty final evidence packet must still terminalize as `ABSTAIN`. A confirmation mechanism is not accepted if it merely trades false negatives for fabricated support.
+
 Native tests then verify whether Qwen3:4b can perform these narrow semantic roles reliably enough in the intended environment.
 
 ## Final-response native acceptance boundary
@@ -172,6 +174,7 @@ The terminal `InteractionWorkpiece` already preserves the information needed to 
 - required canonical source-event IDs survive source-policy filtering;
 - required opaque values/facts are present in admitted evidence or admitted capability results;
 - conversational prompts that do not request an exact format retain `NATURAL_LANGUAGE` surface authority when that is part of the scenario;
+- an unsupported negative-control prompt still receives `ABSTAIN` even when relevant-but-insufficient memory keeps the final packet non-empty;
 - the generated response is printed in full for human inspection.
 
 The native continuity gate should **not** normally assert exact equality against user-facing prose. A correct answer may be phrased in multiple natural ways. Requiring a pipe-delimited or otherwise canned sentence merely because it is easy for pytest to compare trains the acceptance suite toward machine-shaped interaction rather than the system Prometheist is intended to become.
@@ -260,15 +263,15 @@ The official native gate remains:
 
 The script validates Ollama/model availability, requires explicit acceptance opt-in and a disposable PostgreSQL test database, runs focused deterministic acceptance, runs the full deterministic non-Ollama suite, and then runs the five marked native Ollama scenarios.
 
-The five current native scenarios cover:
+The five current native test items cover:
 
 - randomized Project Oriole opaque recall;
 - randomized Project Falcon opaque recall;
 - cross-process memory analysis without hidden transcript;
 - cross-conversation/cross-process memory recall;
-- four-turn conversational stateless continuity with distractors, including one historical fact request, one multi-fact historical request, one recent-plus-old memory request, and one natural recap.
+- one Kestrel scenario containing four supported conversational continuity turns plus an unsupported Kestrel-attribute negative control after relevant history is active. The negative control must `ABSTAIN` while retaining a non-empty final evidence packet.
 
-For those five continuity scenarios, automated pass/fail is based on the final responder's policy-admitted evidence/authority rather than canned final prose. Every actual Prometheist response is printed during the native run for human inspection.
+For the supported continuity turns, automated pass/fail is based on the final responder's policy-admitted evidence/authority rather than canned final prose. Every actual Prometheist response is printed during the native run for human inspection. The embedded unsupported control is machine-gated on terminal abstention because abstention itself is the behavior under test.
 
 Qwen3:4b remains fixed for this v0.7 gate. Swapping to a stronger model is a different experiment and cannot be used to hide an architectural regression.
 
@@ -280,7 +283,7 @@ For v0.7 that means:
 
 1. static checks and constraint audit green;
 2. deterministic PostgreSQL suite green;
-3. native five-scenario Qwen3:4b responder-handoff gate green, with visible final responses inspected for obvious semantic contradiction;
+3. native five-test-item Qwen3:4b responder-handoff gate green, including the non-empty-evidence unsupported negative control and visible inspection of generated responses;
 4. PR/review/branch/release bookkeeping performed only afterward.
 
 A partial pass is diagnostic evidence, not release acceptance.
