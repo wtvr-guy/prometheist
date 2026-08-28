@@ -87,18 +87,18 @@ class PreCognitiveControlComponent(BaseModel):
 
 
 class CapabilityWorkComponent(BaseModel):
+    """One executed capability tranche in chronological workpiece order."""
+
     model_config = ConfigDict(extra="forbid")
     component_type: Literal["CAPABILITY_WORK"] = "CAPABILITY_WORK"
     producer_profile_id: Literal["capability_execution"] = "capability_execution"
-    executions: list[CapabilityExecution]
-    follow_up_catalog: list[CapabilityDescriptor] = Field(default_factory=list)
-    follow_up_plan: CapabilityExecutionPlan
-    follow_up_executed: bool = False
+    tranche_index: int = Field(ge=0)
+    executions: list[CapabilityExecution] = Field(min_length=1)
 
     @model_validator(mode="after")
-    def execution_flag_matches(self) -> "CapabilityWorkComponent":
-        if self.follow_up_executed and not self.executions:
-            raise ValueError("follow_up_executed requires at least one capability execution")
+    def tranche_matches_executions(self) -> "CapabilityWorkComponent":
+        if any(item.round_index != self.tranche_index for item in self.executions):
+            raise ValueError("capability workpiece tranche does not match execution round")
         return self
 
 
