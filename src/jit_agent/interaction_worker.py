@@ -14,6 +14,7 @@ from jit_agent.pre_cognitive_response_runtime import (
     execute_claimed_finalized_interaction_step,
 )
 from jit_agent.response_policy import RESPONSE_POLICY_VERSION, ResponsePolicy
+from jit_agent.worker_profile_registry import default_worker_profile_registry
 
 
 # Compatibility provenance helpers retained for the pre-refactor audit/test
@@ -108,6 +109,11 @@ def main() -> None:
     claim_id = UUID(_required_environment("PROMETHEIST_WORKER_CLAIM_ID"))
     worker_id = _required_environment("PROMETHEIST_WORKER_ID")
     scheduler_key = _required_environment("PROMETHEIST_WORKER_SCHEDULER_KEY")
+
+    # Fail before touching model state if the private execution registry no
+    # longer resolves the public capability surface or delegated worker graph.
+    default_worker_profile_registry().validate_capability_bindings()
+
     with db.get_connection() as conn:
         execute_claimed_finalized_interaction_step(
             conn,
