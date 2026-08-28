@@ -33,16 +33,101 @@ def _events(conversation_id: uuid.UUID):
         return event_store.get_events_by_conversation(conn, conversation_id)
 
 
+def _event_by_id(event_id: uuid.UUID):
+    with db.get_connection() as conn:
+        return event_store.get_event_by_id(conn, event_id)
+
+
+def _compact_memory_item(item: dict) -> dict:
+    content = item.get("content")
+    if (
+        item.get("event_type") == EventType.SYSTEM_EVENT.value
+        and item.get("source") == "pre_cognitive_response_finalizer"
+        and isinstance(content, str)
+        and "INTERACTION_WORKPIECE_SNAPSHOT" in content
+    ):
+        content = "<interaction workpiece snapshot omitted>"
+    return {
+        "source_event_id": item.get("source_event_id"),
+        "event_type": item.get("event_type"),
+        "source": item.get("source"),
+        "score": item.get("score"),
+        "content": content,
+    }
+
+
+def _compact_event_payload(event) -> dict | None:
+    payload = event.payload
+    if event.event_type in {EventType.USER_PROMPT, EventType.INTERACTION_RESPONSE}:
+        return {"text": payload.get("text")}
+    if event.event_type is EventType.MEMORY_PACKET:
+        packet = payload.get("packet", {})
+        return {
+            "memory_request_id": packet.get("memory_request_id"),
+            "supported": packet.get("supported"),
+            "items": [_compact_memory_item(item) for item in packet.get("items", [])],
+        }
+    if event.event_type is EventType.SYSTEM_EVENT:
+        kind = payload.get("kind")
+        if kind == "PRE_COGNITIVE_ASSESSMENT":
+            return {"kind": kind, "assessment": payload.get("assessment")}
+        if kind == "FINAL_RESPONSE_DIRECTIVE":
+            return {"kind": kind, "directive": payload.get("directive")}
+        if kind == "INTERACTION_WORKPIECE_SNAPSHOT":
+            workpiece = payload.get("workpiece", {})
+            return {
+                "kind": kind,
+                "component_types": [
+                    component.get("component_type")
+                    for component in workpiece.get("components", [])
+                ],
+            }
+    return None
+
+
+def _compact_event_line(prefix: str, event) -> str:
+    payload = _compact_event_payload(event)
+    return (
+        f"{prefix}seq={event.conversation_seq} type={event.event_type.value} "
+        f"source={event.source} correlation={event.correlation_id} "
+        f"payload={json.dumps(payload, sort_keys=True, default=str)}"
+    )
+
+
 def _trace(*conversation_ids: uuid.UUID) -> str:
     lines: list[str] = []
     for conversation_id in conversation_ids:
         lines.append(f"conversation={conversation_id}")
         for event in _events(conversation_id):
-            payload = json.dumps(event.payload, sort_keys=True, default=str)
-            lines.append(
-                f"  seq={event.conversation_seq} type={event.event_type.value} "
-                f"source={event.source} correlation={event.correlation_id} payload={payload}"
-            )
+            if _compact_event_payload(event) is not None:
+                lines.append(_compact_event_line("  ", event))
+    return "\n".join(lines)
+
+
+def _failure_trace(
+    conversation_id: uuid.UUID,
+    correlation_id: uuid.UUID,
+    *expected_source_event_ids: uuid.UUID,
+) -> str:
+    lines = [
+        f"failing_conversation={conversation_id}",
+        f"failing_correlation={correlation_id}",
+    ]
+    if expected_source_event_ids:
+        lines.append("expected_source_anchors:")
+        for event_id in expected_source_event_ids:
+            event = _event_by_id(event_id)
+            if event is None:
+                lines.append(f"  missing event={event_id}")
+            else:
+                lines.append(_compact_event_line("  ", event))
+
+    lines.append("failing_turn_events:")
+    for event in _events(conversation_id):
+        if event.correlation_id != correlation_id:
+            continue
+        if _compact_event_payload(event) is not None:
+            lines.append(_compact_event_line("  ", event))
     return "\n".join(lines)
 
 
@@ -65,7 +150,7 @@ def _response_for_correlation(conversation_id: uuid.UUID, correlation_id: uuid.U
     if len(responses) != 1:
         raise AssertionError(
             f"Expected one INTERACTION_RESPONSE for {correlation_id}, got "
-            f"{len(responses)}.\n{_trace(conversation_id)}"
+            f"{len(responses)}.\n{_failure_trace(conversation_id, correlation_id)}"
         )
     return responses[0]
 
@@ -142,7 +227,11 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         active_conversation,
         turn1_event.correlation_id,
     )
-    failure_trace = _trace(historical_conversation, active_conversation)
+    failure_trace = _failure_trace(
+        active_conversation,
+        turn1_event.correlation_id,
+        historical_rule_event.event_id,
+    )
     assert answer1.strip() == "PostgreSQL directly on Windows", failure_trace
     assert historical_rule_event.event_id in turn1_sources, failure_trace
 
@@ -158,7 +247,12 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         active_conversation,
         turn2_event.correlation_id,
     )
-    failure_trace = _trace(historical_conversation, active_conversation)
+    failure_trace = _failure_trace(
+        active_conversation,
+        turn2_event.correlation_id,
+        historical_rule_event.event_id,
+        turn1_event.event_id,
+    )
     assert answer2.strip() == f"Docker Compose | {profile_token}", failure_trace
     assert historical_rule_event.event_id in turn2_sources, failure_trace
     assert turn1_event.event_id in turn2_sources, failure_trace
@@ -175,7 +269,12 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         active_conversation,
         turn3_event.correlation_id,
     )
-    failure_trace = _trace(historical_conversation, active_conversation)
+    failure_trace = _failure_trace(
+        active_conversation,
+        turn3_event.correlation_id,
+        turn1_event.event_id,
+        answer2_event.event_id,
+    )
     assert answer3.strip() == f"{plan_label} | Docker Compose", failure_trace
     assert turn1_event.event_id in turn3_sources, failure_trace
     assert answer2_event.event_id in turn3_sources, failure_trace
@@ -191,7 +290,12 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         active_conversation,
         turn4_event.correlation_id,
     )
-    failure_trace = _trace(historical_conversation, active_conversation)
+    failure_trace = _failure_trace(
+        active_conversation,
+        turn4_event.correlation_id,
+        answer3_event.event_id,
+        historical_rule_event.event_id,
+    )
     assert answer4.strip() == "Docker Compose | virtualization is disabled", failure_trace
     assert answer3_event.event_id in turn4_sources, failure_trace
     assert historical_rule_event.event_id in turn4_sources, failure_trace
