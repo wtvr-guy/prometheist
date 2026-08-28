@@ -277,14 +277,53 @@ def default_worker_profile_registry() -> WorkerProfileRegistry:
         _FOCUSED_RECALL_SELECTION_PROMPT,
     )
     from jit_agent.pre_cognitive_response_runtime import _FINAL_READINESS_SYSTEM_PROMPT
-    from jit_agent.pre_cognitive_workers import _PRE_COGNITIVE_SYSTEM_PROMPT
+    from jit_agent.pre_cognitive_specialists import (
+        _CAPABILITY_SELECTOR_SYSTEM_PROMPT,
+        _CLAIM_SCOPE_CLASSIFIER_SYSTEM_PROMPT,
+        _EVIDENCE_SUFFICIENCY_SYSTEM_PROMPT,
+        _INTENT_CLASSIFIER_SYSTEM_PROMPT,
+        _REQUIREMENT_CLASSIFIER_SYSTEM_PROMPT,
+    )
 
     registry = WorkerProfileRegistry()
 
     for profile in (
         _llm_profile(
-            "pre_cognitive_assessment",
-            "Classify intent and evidence sufficiency and select only legal capability indices.",
+            "intent_classifier",
+            "Classify only the broad intent of the current percept.",
+            ("current_percept",),
+            "IntentClassification",
+            _INTENT_CLASSIFIER_SYSTEM_PROMPT,
+        ),
+        _llm_profile(
+            "evidence_sufficiency_verifier",
+            "Decide only whether supplied current/evidence material can support the requested answer.",
+            (
+                "current_percept",
+                "phase",
+                "activated_evidence",
+                "completed_capability_results",
+            ),
+            "EvidenceSufficiencyDecision",
+            _EVIDENCE_SUFFICIENCY_SYSTEM_PROMPT,
+        ),
+        _llm_profile(
+            "claim_scope_classifier",
+            "Classify only the closed claim/source scopes implicated by the requested answer.",
+            ("current_percept", "activated_evidence", "completed_capability_results"),
+            "ClaimScopeClassification",
+            _CLAIM_SCOPE_CLASSIFIER_SYSTEM_PROMPT,
+        ),
+        _llm_profile(
+            "requirement_classifier",
+            "Classify only closed semantic task requirements.",
+            ("current_percept",),
+            "RequirementClassification",
+            _REQUIREMENT_CLASSIFIER_SYSTEM_PROMPT,
+        ),
+        _llm_profile(
+            "capability_selector",
+            "Select only application-catalog indices that could close an established evidence gap.",
             (
                 "current_percept",
                 "phase",
@@ -292,8 +331,8 @@ def default_worker_profile_registry() -> WorkerProfileRegistry:
                 "capability_catalog",
                 "completed_capability_results",
             ),
-            "PreCognitiveAssessment",
-            _PRE_COGNITIVE_SYSTEM_PROMPT,
+            "CapabilitySelectionDecision",
+            _CAPABILITY_SELECTOR_SYSTEM_PROMPT,
         ),
         _llm_profile(
             "final_readiness",
@@ -369,6 +408,25 @@ def default_worker_profile_registry() -> WorkerProfileRegistry:
         registry.register(profile)
 
     for profile in (
+        _deterministic_profile(
+            "pre_cognitive_assessment",
+            "Compose atomic semantic specialist outputs into one durable pre-cognitive assessment.",
+            (
+                "current_percept",
+                "phase",
+                "activated_evidence",
+                "capability_catalog",
+                "completed_capability_results",
+            ),
+            "PreCognitiveAssessment",
+            delegated_worker_profile_ids=(
+                "intent_classifier",
+                "evidence_sufficiency_verifier",
+                "claim_scope_classifier",
+                "requirement_classifier",
+                "capability_selector",
+            ),
+        ),
         _deterministic_profile(
             "jit_memory_executor",
             "Execute bounded internal memory retrieval under application-owned provenance rules.",
