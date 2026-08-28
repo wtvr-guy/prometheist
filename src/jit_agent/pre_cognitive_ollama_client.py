@@ -7,13 +7,11 @@ exact duplicates before applying the strict Pydantic contract. Unknown values,
 extra fields, invalid phases, illegal dispositions, and out-of-range indices
 continue to fail closed.
 
-A second native failure mode is a syntactically valid but internally inconsistent
-sufficiency judgment. The adapter rejects impossible terminal-state pairings and,
-when a model proposes terminal abstention despite a non-empty supported evidence
-packet, permits one fresh narrow reconsideration call. The reconsideration does
-not force a response or reinterpret evidence in deterministic code; it asks the
-semantic worker to re-read the exact admitted evidence before terminal abstention
-is accepted.
+When a model proposes terminal abstention despite a non-empty supported evidence
+packet, the adapter permits one fresh narrow reconsideration call. The
+reconsideration does not force a response or reinterpret evidence in deterministic
+code; it asks the semantic worker to re-read the exact admitted evidence before
+terminal abstention is accepted.
 """
 from __future__ import annotations
 
@@ -29,7 +27,6 @@ from jit_agent.models import MemoryPacket
 from jit_agent.pre_cognitive_workers import (
     CognitiveDisposition,
     CognitivePhase,
-    EvidenceState,
     PreCognitiveAssessment,
     _PRE_COGNITIVE_SYSTEM_PROMPT,
     _format_capability_result_data,
@@ -81,18 +78,6 @@ def canonicalize_pre_cognitive_payload(payload: Any) -> Any:
     return canonical
 
 
-def validate_native_assessment_consistency(assessment: PreCognitiveAssessment) -> None:
-    """Reject logically impossible terminal sufficiency/disposition pairings."""
-
-    terminal_insufficient = (
-        assessment.evidence_state is EvidenceState.INSUFFICIENT_AFTER_AVAILABLE_WORK
-    )
-    if terminal_insufficient and assessment.disposition is not CognitiveDisposition.ABSTAIN:
-        raise ValueError(
-            "INSUFFICIENT_AFTER_AVAILABLE_WORK requires terminal ABSTAIN disposition"
-        )
-
-
 def needs_supported_evidence_reconsideration(
     assessment: PreCognitiveAssessment,
     memory_packet: MemoryPacket,
@@ -121,7 +106,6 @@ class PreCognitiveDurableResponseOllamaClient(DurableResponseBudgetedOllamaClien
         if assessment.phase is not phase:
             raise ValueError("pre-cognitive assessment returned the wrong phase")
         assessment.validate_catalog(capability_catalog)
-        validate_native_assessment_consistency(assessment)
         return assessment
 
     def assess_pre_cognition(
