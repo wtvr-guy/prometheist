@@ -1,9 +1,14 @@
-"""Terminal pre-cognitive finalization layered over the staged transient-worker runtime.
+"""Terminalization layered over the staged transient-worker interaction runtime.
 
-The existing five durable interaction stages remain unchanged. This module owns
-the production boundary between capability acquisition and response synthesis:
-it converts the last acquisition assessment into one persisted terminal
-FinalResponseDirective before the RESPOND stage can invoke a final responder.
+The five durable v0.7 stage keys remain unchanged for restart compatibility, but
+the production path now carries one typed ``InteractionWorkpiece`` through those
+stages. Conditional deterministic, LLM, and capability stations contribute small
+validated components. The terminal workpiece is materialized as one JSON snapshot
+while the underlying append-only events/results remain authoritative history.
+
+The current CLI is an interactive surface, so its terminal path attaches a user
+output. The workpiece contract itself is broader: future action workflows may
+terminalize successfully without invoking any final response worker.
 """
 from __future__ import annotations
 
@@ -15,7 +20,12 @@ from pydantic import ValidationError
 
 from jit_agent import event_store
 from jit_agent.attention_store import DEFAULT_SCHEDULER_KEY
-from jit_agent.capability_registry import DEFAULT_REGISTRY, CapabilityRegistry
+from jit_agent.capability_registry import (
+    DEFAULT_REGISTRY,
+    CapabilityDescriptor,
+    CapabilityExecutionPlan,
+    CapabilityRegistry,
+)
 from jit_agent.capability_runtime import CapabilityExecution
 from jit_agent.epistemic_authority import format_authority_bound_response_memory_packet
 from jit_agent.evidence_bound_llm import (
@@ -33,8 +43,30 @@ from jit_agent.final_response_directive import (
 )
 from jit_agent.interaction_policy import DurableInteraction, InteractionStage
 from jit_agent.interaction_store import load_interaction_by_task
+from jit_agent.interaction_working_state import activate_working_state
+from jit_agent.interaction_workpiece import (
+    INTERACTION_WORKPIECE_VERSION,
+    AttentionApertureComponent,
+    CapabilityWorkComponent,
+    FinalEvidenceComponent,
+    FinalResponseDirectiveComponent,
+    InteractionWorkpiece,
+    PreCognitiveControlComponent,
+    ReferenceResolutionComponent,
+    TerminalOutcomeComponent,
+    TerminalOutcomeKind,
+    UserOutputComponent,
+    begin_interaction_workpiece,
+)
 from jit_agent.models import EventType, MemoryPacket
 from jit_agent.personality import configured_personality_prompt
+from jit_agent.pre_cognitive_specialists import (
+    CapabilitySelectionDecision,
+    CapabilitySelectionStationComponent,
+    EvidenceSufficiency,
+    EvidenceSufficiencyDecision,
+    EvidenceSufficiencyStationComponent,
+)
 from jit_agent.pre_cognitive_workers import (
     PRE_COGNITIVE_WORKER_SCHEME_VERSION,
     CognitiveDisposition,
@@ -81,6 +113,10 @@ def _final_readiness_event_id(interaction_id: UUID) -> UUID:
 
 def _final_directive_event_id(interaction_id: UUID) -> UUID:
     return uuid5(interaction_id, "pre-cognitive:FINAL_RESPONSE_DIRECTIVE")
+
+
+def _workpiece_snapshot_event_id(interaction_id: UUID) -> UUID:
+    return uuid5(interaction_id, "event:interaction-workpiece-terminal")
 
 
 def _structured_results(executions: list[CapabilityExecution]) -> tuple[dict[str, Any], ...]:
@@ -326,6 +362,170 @@ def _load_or_create_final_directive(
     return directive
 
 
+def _begin_workpiece(interaction: DurableInteraction) -> InteractionWorkpiece:
+    return begin_interaction_workpiece(
+        interaction_id=interaction.interaction_id,
+        task_id=interaction.task_id,
+        conversation_id=interaction.conversation_id,
+        correlation_id=interaction.correlation_id,
+        user_text=interaction.user_text,
+        user_prompt_event_id=interaction.user_prompt_event_id,
+    )
+
+
+def _workpiece_from_payload(payload: dict[str, Any]) -> InteractionWorkpiece | None:
+    raw = payload.get("workpiece")
+    return InteractionWorkpiece.model_validate(raw) if raw is not None else None
+
+
+def _resolved_workpiece(
+    interaction: DurableInteraction,
+    resolved: dict[str, Any],
+) -> InteractionWorkpiece:
+    existing = _workpiece_from_payload(resolved)
+    if existing is not None:
+        return existing
+    return _begin_workpiece(interaction).attach(
+        ReferenceResolutionComponent(
+            working_state_available=bool(resolved.get("working_state_available")),
+        )
+    )
+
+
+def _station_components(
+    assessment: PreCognitiveAssessment,
+    catalog: tuple[CapabilityDescriptor, ...],
+) -> tuple[EvidenceSufficiencyStationComponent | CapabilitySelectionStationComponent, ...]:
+    sufficient = assessment.disposition is CognitiveDisposition.RESPOND
+    components: list[
+        EvidenceSufficiencyStationComponent | CapabilitySelectionStationComponent
+    ] = [
+        EvidenceSufficiencyStationComponent(
+            phase=assessment.phase.value,
+            decision=EvidenceSufficiencyDecision(
+                sufficiency=(
+                    EvidenceSufficiency.SUFFICIENT
+                    if sufficient
+                    else EvidenceSufficiency.INSUFFICIENT
+                )
+            ),
+        )
+    ]
+    if not sufficient and catalog:
+        components.append(
+            CapabilitySelectionStationComponent(
+                phase=assessment.phase.value,
+                decision=CapabilitySelectionDecision(
+                    capability_indices=list(assessment.capability_indices)
+                ),
+            )
+        )
+    return tuple(components)
+
+
+def _selection_workpiece(
+    conn: psycopg.Connection,
+    interaction: DurableInteraction,
+    selection: dict[str, Any],
+    scheduler_key: str,
+) -> InteractionWorkpiece:
+    existing = _workpiece_from_payload(selection)
+    if existing is not None:
+        return existing
+
+    resolved = _stage_result(
+        conn,
+        interaction,
+        InteractionStage.RESOLVE_REFERENCES,
+        scheduler_key,
+    )
+    workpiece = _resolved_workpiece(interaction, resolved)
+    packet = MemoryPacket.model_validate(selection["aperture_packet"])
+    workpiece = workpiece.attach(
+        AttentionApertureComponent(
+            aperture_version=str(selection["attention_aperture_version"]),
+            memory_packet=packet,
+        )
+    )
+    assessment = PreCognitiveAssessment.model_validate(selection["assessment"])
+    catalog = tuple(
+        CapabilityDescriptor.model_validate(item)
+        for item in selection.get("capability_catalog", [])
+    )
+    plan = CapabilityExecutionPlan.model_validate(selection["execution_plan"])
+    for component in _station_components(assessment, catalog):
+        workpiece = workpiece.attach(component)
+    return workpiece.attach(
+        PreCognitiveControlComponent(
+            phase=assessment.phase,
+            assessment=assessment,
+            capability_catalog=list(catalog),
+            execution_plan=plan,
+        )
+    )
+
+
+def _acquisition_workpiece(
+    conn: psycopg.Connection,
+    interaction: DurableInteraction,
+    acquisition: dict[str, Any],
+    scheduler_key: str,
+    directive: FinalResponseDirective,
+) -> InteractionWorkpiece:
+    existing = _workpiece_from_payload(acquisition)
+    if existing is not None:
+        return existing
+
+    selection = _stage_result(
+        conn,
+        interaction,
+        InteractionStage.SELECT_CAPABILITY,
+        scheduler_key,
+    )
+    workpiece = _selection_workpiece(conn, interaction, selection, scheduler_key)
+    executions = [
+        CapabilityExecution.model_validate(item) for item in acquisition.get("executions", [])
+    ]
+    first_tranche = [item for item in executions if item.round_index == 0]
+    if first_tranche:
+        workpiece = workpiece.attach(
+            CapabilityWorkComponent(tranche_index=0, executions=first_tranche)
+        )
+
+    post_payload = acquisition.get("post_assessment")
+    if post_payload is not None:
+        post = PreCognitiveAssessment.model_validate(post_payload)
+        follow_up_catalog = tuple(
+            CapabilityDescriptor.model_validate(item)
+            for item in acquisition.get("follow_up_catalog", [])
+        )
+        follow_up_plan = CapabilityExecutionPlan.model_validate(acquisition["follow_up_plan"])
+        for component in _station_components(post, follow_up_catalog):
+            workpiece = workpiece.attach(component)
+        workpiece = workpiece.attach(
+            PreCognitiveControlComponent(
+                phase=post.phase,
+                assessment=post,
+                capability_catalog=list(follow_up_catalog),
+                execution_plan=follow_up_plan,
+            )
+        )
+
+    later_tranches = sorted({item.round_index for item in executions if item.round_index > 0})
+    for tranche_index in later_tranches:
+        tranche = [item for item in executions if item.round_index == tranche_index]
+        workpiece = workpiece.attach(
+            CapabilityWorkComponent(tranche_index=tranche_index, executions=tranche)
+        )
+
+    workpiece = workpiece.attach(
+        FinalEvidenceComponent(
+            memory_packet=MemoryPacket.model_validate(acquisition["final_memory_packet"])
+        )
+    )
+    return workpiece.attach(FinalResponseDirectiveComponent(directive=directive))
+
+
 def _record_error_best_effort(
     conn: psycopg.Connection,
     *,
@@ -350,8 +550,6 @@ def _record_error_best_effort(
             event_id=uuid5(claim_id, "pre-cognitive-finalized-error-event"),
         )
     except Exception:
-        # Error observability is subordinate to claim liveness. A duplicate or
-        # otherwise failed diagnostic write must never strand the worker lease.
         pass
 
 
@@ -370,9 +568,69 @@ def _release_claim_best_effort(
             scheduler_key=scheduler_key,
         )
     except Exception:
-        # Preserve the original worker exception. Lease expiry/recovery remains
-        # the scheduler's fallback if explicit release itself fails.
         pass
+
+
+def _persist_terminal_workpiece(
+    conn: psycopg.Connection,
+    *,
+    interaction: DurableInteraction,
+    workpiece: InteractionWorkpiece,
+) -> tuple[dict[str, Any], list[str]]:
+    if workpiece.state.value != "TERMINAL":
+        raise RuntimeError("PERSIST_RESULT requires a terminal interaction workpiece")
+
+    workpiece_event = event_store.record_event(
+        conn,
+        conversation_id=interaction.conversation_id,
+        correlation_id=interaction.correlation_id,
+        event_type=EventType.SYSTEM_EVENT,
+        source=FINALIZATION_SOURCE,
+        payload={
+            "kind": "INTERACTION_WORKPIECE_SNAPSHOT",
+            "version": INTERACTION_WORKPIECE_VERSION,
+            "workpiece": workpiece.model_dump(mode="json"),
+        },
+        event_id=_workpiece_snapshot_event_id(interaction.interaction_id),
+    )
+    refs = [f"event:{workpiece_event.event_id}"]
+    output = workpiece.user_output()
+    response_event = None
+    if output is not None:
+        response_event = event_store.record_event(
+            conn,
+            conversation_id=interaction.conversation_id,
+            correlation_id=interaction.correlation_id,
+            event_type=EventType.INTERACTION_RESPONSE,
+            source=FINALIZATION_SOURCE,
+            payload={
+                "text": output.text,
+                "scheme_version": PRE_COGNITIVE_WORKER_SCHEME_VERSION,
+                "workpiece_event_id": str(workpiece_event.event_id),
+            },
+            payload_text=output.text,
+            event_id=uuid5(interaction.interaction_id, "event:response"),
+        )
+        refs.append(f"event:{response_event.event_id}")
+
+    activated_event_ids = [interaction.user_prompt_event_id]
+    if response_event is not None:
+        activated_event_ids.insert(0, response_event.event_id)
+    activate_working_state(
+        conn,
+        interaction_id=interaction.interaction_id,
+        conversation_id=interaction.conversation_id,
+        correlation_id=interaction.correlation_id,
+        activated_event_ids=activated_event_ids,
+    )
+    return {
+        "scheme_version": PRE_COGNITIVE_WORKER_SCHEME_VERSION,
+        "workpiece_version": INTERACTION_WORKPIECE_VERSION,
+        "workpiece_snapshot_event_id": str(workpiece_event.event_id),
+        "response_text": output.text if output is not None else None,
+        "response_event_id": str(response_event.event_id) if response_event is not None else None,
+        "workpiece": workpiece.model_dump(mode="json"),
+    }, refs
 
 
 def _execute_finalized_stage(
@@ -385,6 +643,34 @@ def _execute_finalized_stage(
     registry: CapabilityRegistry,
 ) -> tuple[dict[str, Any], list[str]]:
     stage = InteractionStage(envelope.step.step_key)
+
+    if stage is InteractionStage.RESOLVE_REFERENCES:
+        output, refs = _execute_stage(
+            conn,
+            llm,
+            envelope,
+            interaction=interaction,
+            scheduler_key=scheduler_key,
+            registry=registry,
+        )
+        workpiece = _resolved_workpiece(interaction, output)
+        output = dict(output)
+        output["workpiece"] = workpiece.model_dump(mode="json")
+        return output, refs
+
+    if stage is InteractionStage.SELECT_CAPABILITY:
+        output, refs = _execute_stage(
+            conn,
+            llm,
+            envelope,
+            interaction=interaction,
+            scheduler_key=scheduler_key,
+            registry=registry,
+        )
+        workpiece = _selection_workpiece(conn, interaction, output, scheduler_key)
+        output = dict(output)
+        output["workpiece"] = workpiece.model_dump(mode="json")
+        return output, refs
 
     if stage is InteractionStage.EXECUTE_CAPABILITY:
         acquisition, refs = _execute_stage(
@@ -401,8 +687,16 @@ def _execute_finalized_stage(
             interaction=interaction,
             acquisition=acquisition,
         )
+        workpiece = _acquisition_workpiece(
+            conn,
+            interaction,
+            acquisition,
+            scheduler_key,
+            directive,
+        )
         acquisition = dict(acquisition)
         acquisition["final_response_directive"] = directive.model_dump(mode="json")
+        acquisition["workpiece"] = workpiece.model_dump(mode="json")
         return acquisition, refs
 
     if stage is InteractionStage.RESPOND:
@@ -420,9 +714,18 @@ def _execute_finalized_stage(
             CapabilityExecution.model_validate(item) for item in acquisition.get("executions", [])
         ]
         capability_results = _structured_results(executions)
+        workpiece = _workpiece_from_payload(acquisition) or _acquisition_workpiece(
+            conn,
+            interaction,
+            acquisition,
+            scheduler_key,
+            directive,
+        )
 
         if directive.action is FinalResponseAction.ABSTAIN:
             response_text = directive.fallback_literal or _GENERIC_INSUFFICIENT_RESPONSE
+            producer = "pre_cognitive_finalizer"
+            outcome = TerminalOutcomeKind.ABSTAINED
         else:
             respond = getattr(llm, "respond_with_final_directive", None)
             if not callable(respond):
@@ -433,12 +736,37 @@ def _execute_finalized_stage(
                 capability_results,
                 directive,
             )
+            producer = "final_response"
+            outcome = TerminalOutcomeKind.RESPONSE_EMITTED
+
+        workpiece = workpiece.attach(
+            UserOutputComponent(producer_profile_id=producer, text=response_text)
+        )
+        workpiece = workpiece.attach(
+            TerminalOutcomeComponent(outcome=outcome, user_output_required=True)
+        )
         return {
             "scheme_version": PRE_COGNITIVE_WORKER_SCHEME_VERSION,
+            "workpiece_version": INTERACTION_WORKPIECE_VERSION,
             "final_response_directive_version": FINAL_RESPONSE_DIRECTIVE_VERSION,
             "response_action": directive.action.value,
             "response_text": response_text,
+            "workpiece": workpiece.model_dump(mode="json"),
         }, []
+
+    if stage is InteractionStage.PERSIST_RESULT:
+        response = _stage_result(
+            conn,
+            interaction,
+            InteractionStage.RESPOND,
+            scheduler_key,
+        )
+        workpiece = InteractionWorkpiece.model_validate(response["workpiece"])
+        return _persist_terminal_workpiece(
+            conn,
+            interaction=interaction,
+            workpiece=workpiece,
+        )
 
     return _execute_stage(
         conn,
@@ -459,7 +787,7 @@ def execute_claimed_finalized_interaction_step(
     scheduler_key: str = DEFAULT_SCHEDULER_KEY,
     registry: CapabilityRegistry = DEFAULT_REGISTRY,
 ) -> InteractionStage:
-    """Execute one durable stage with a terminal pre-cognitive response boundary."""
+    """Execute one durable stage while carrying the typed interaction workpiece."""
 
     envelope = load_worker_claim_envelope(
         conn,
