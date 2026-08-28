@@ -8,7 +8,12 @@ from jit_agent.interaction_working_state import (
     activate_working_state,
     load_working_state,
 )
-from jit_agent.models import EventType
+from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from jit_agent.response_policy import (
+    HistoricalEvidenceScope,
+    ResponsePolicy,
+    ResponseSurfaceMode,
+)
 
 
 @pytest.fixture
@@ -27,6 +32,20 @@ def _event(conn, conversation_id, text):
         source="user",
         payload={"text": text},
         payload_text=text,
+    )
+
+
+def _memory_evidence(event):
+    return MemoryEvidence(
+        source_event_id=event.event_id,
+        event_type=event.event_type,
+        source=event.source,
+        created_at=event.created_at,
+        conversation_id=event.conversation_id,
+        conversation_seq=event.conversation_seq,
+        global_seq=event.global_seq,
+        content=event.payload["text"],
+        score=1.0,
     )
 
 
@@ -65,6 +84,88 @@ def test_working_state_is_only_bounded_canonical_event_activation(conn):
         "conversation_ids",
         "active_event_ids",
     }
+
+
+def test_response_activation_preserves_policy_admitted_canonical_support(conn):
+    conversation_id = event_store.start_conversation(conn, uuid.uuid4())
+    historical_user = _event(
+        conn,
+        conversation_id,
+        "For Project Kestrel, deploy PostgreSQL directly on Windows because virtualization is disabled.",
+    )
+    current_prompt = _event(conn, conversation_id, "Give me a short Kestrel recap.")
+    prior_model = event_store.record_event(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=uuid.uuid4(),
+        event_type=EventType.INTERACTION_RESPONSE,
+        source="test-model",
+        payload={"text": "A prior model restatement."},
+        payload_text="A prior model restatement.",
+    )
+
+    final_packet = MemoryPacket(
+        memory_request_id=uuid.uuid4(),
+        need=MemoryNeed(query_text="Kestrel recap"),
+        supported=True,
+        items=[_memory_evidence(prior_model), _memory_evidence(historical_user)],
+    )
+    policy = ResponsePolicy(
+        evidence_scope=HistoricalEvidenceScope.USER_AUTHORED,
+        surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
+    )
+    workpiece_event = event_store.record_event(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=uuid.uuid4(),
+        event_type=EventType.SYSTEM_EVENT,
+        source="test-finalizer",
+        payload={
+            "kind": "INTERACTION_WORKPIECE_SNAPSHOT",
+            "version": "interaction-workpiece-v1",
+            "workpiece": {
+                "components": [
+                    {
+                        "component_type": "FINAL_EVIDENCE",
+                        "memory_packet": final_packet.model_dump(mode="json"),
+                    },
+                    {
+                        "component_type": "FINAL_RESPONSE_DIRECTIVE",
+                        "directive": {
+                            "response_policy": policy.model_dump(mode="json"),
+                        },
+                    },
+                ]
+            },
+        },
+    )
+    response_event = event_store.record_event(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=uuid.uuid4(),
+        event_type=EventType.INTERACTION_RESPONSE,
+        source="test-finalizer",
+        payload={
+            "text": "PostgreSQL directly on Windows.",
+            "workpiece_event_id": str(workpiece_event.event_id),
+        },
+        payload_text="PostgreSQL directly on Windows.",
+    )
+
+    state = activate_working_state(
+        conn,
+        interaction_id=uuid.uuid4(),
+        conversation_id=conversation_id,
+        correlation_id=uuid.uuid4(),
+        activated_event_ids=[response_event.event_id, current_prompt.event_id],
+    )
+
+    assert state.active_event_ids[:3] == [
+        response_event.event_id,
+        historical_user.event_id,
+        current_prompt.event_id,
+    ]
+    assert prior_model.event_id not in state.active_event_ids
 
 
 def test_jit_memory_rehydrates_active_canonical_events_before_lexical_fallback(conn):
