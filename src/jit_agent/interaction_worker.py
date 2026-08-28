@@ -8,8 +8,10 @@ from uuid import UUID, uuid5
 import psycopg
 
 from jit_agent import db, event_store
-from jit_agent.durable_response_llm import DurableResponseBudgetedOllamaClient
 from jit_agent.models import EventType
+from jit_agent.pre_cognitive_ollama_client import (
+    PreCognitiveDurableResponseOllamaClient,
+)
 from jit_agent.pre_cognitive_response_runtime import (
     execute_claimed_finalized_interaction_step,
 )
@@ -117,7 +119,7 @@ def main() -> None:
     with db.get_connection() as conn:
         execute_claimed_finalized_interaction_step(
             conn,
-            DurableResponseBudgetedOllamaClient(),
+            PreCognitiveDurableResponseOllamaClient(),
             claim_id=claim_id,
             worker_id=worker_id,
             scheduler_key=scheduler_key,
