@@ -15,7 +15,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 from jit_agent.models import EventType, MemoryPacket
 
 
-RESPONSE_POLICY_VERSION = "response-source-authority-v1"
+RESPONSE_POLICY_VERSION = "response-source-authority-v2"
 
 
 class HistoricalEvidenceScope(str, Enum):
@@ -50,6 +50,20 @@ class ResponsePolicy(BaseModel):
     def validate_insufficient_literal(self) -> "ResponsePolicy":
         if self.insufficient_literal is not None and not self.insufficient_literal:
             raise ValueError("insufficient_literal must not be empty")
+        return self
+
+
+class CurrentFallbackSelection(BaseModel):
+    """Focused selection of a verbatim unsupported-history fallback from the current percept."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    verbatim_value: str | None = None
+
+    @model_validator(mode="after")
+    def validate_value(self) -> "CurrentFallbackSelection":
+        if self.verbatim_value is not None and not self.verbatim_value:
+            raise ValueError("verbatim_value must not be empty")
         return self
 
 
