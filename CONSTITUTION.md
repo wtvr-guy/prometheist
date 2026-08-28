@@ -1,7 +1,8 @@
 # Prometheist Constitution
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Adopted:** 2026-08-27  
+**Amended:** 2026-08-28 — Article 27 replaced recurrent capability reasoning with bounded staged fresh reassessment and transient-worker cognition.  
 **Status:** supreme repository-wide engineering policy for Prometheist.
 
 Prometheist is developed under a small set of architectural and engineering rules that are intended to remain true across milestones, implementations, models, storage backends, devices, and worker processes. This Constitution collects those rules in one place so that future design reviews and codebase audits can test the implementation against an explicit standard.
@@ -32,7 +33,7 @@ This file is intentionally concise. Each article states the hard rule, why it ma
 
 **Why it matters.** Stateless inference makes continuity inspectable, restart-safe, model-replaceable, and independent of process lifetime.
 
-**Deep dive:** [`docs/architecture/COGNITIVE_ARCHITECTURE.md`](docs/architecture/COGNITIVE_ARCHITECTURE.md)
+**Deep dives:** [`docs/architecture/COGNITIVE_ARCHITECTURE.md`](docs/architecture/COGNITIVE_ARCHITECTURE.md), [`docs/architecture/PRE_COGNITIVE_TRANSIENT_WORKERS.md`](docs/architecture/PRE_COGNITIVE_TRANSIENT_WORKERS.md)
 
 ### Article 3 — Admitted durable memory is lossless, append-only canonical evidence
 
@@ -56,7 +57,7 @@ This file is intentionally concise. Each article states the hard rule, why it ma
 
 **Why it matters.** External persistent memory only solves context growth if each inference remains bounded as history grows.
 
-**Deep dives:** [`docs/architecture/LOSSLESS_PROGRESSIVE_MEMORY.md`](docs/architecture/LOSSLESS_PROGRESSIVE_MEMORY.md), [`docs/architecture/INTERACTION_CONTINUITY.md`](docs/architecture/INTERACTION_CONTINUITY.md)
+**Deep dives:** [`docs/architecture/LOSSLESS_PROGRESSIVE_MEMORY.md`](docs/architecture/LOSSLESS_PROGRESSIVE_MEMORY.md), [`docs/architecture/INTERACTION_CONTINUITY.md`](docs/architecture/INTERACTION_CONTINUITY.md), [`docs/architecture/PRE_COGNITIVE_TRANSIENT_WORKERS.md`](docs/architecture/PRE_COGNITIVE_TRANSIENT_WORKERS.md)
 
 ### Article 6 — Basic persistent-memory access precedes model routing
 
@@ -128,7 +129,7 @@ This file is intentionally concise. Each article states the hard rule, why it ma
 
 **Why it matters.** Process destruction is expected behavior, so recovery and duplicate-effect prevention must be properties of the protocol rather than worker memory.
 
-**Deep dive:** [`docs/architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](docs/architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md)
+**Deep dives:** [`docs/architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](docs/architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md), [`docs/architecture/PRE_COGNITIVE_TRANSIENT_WORKERS.md`](docs/architecture/PRE_COGNITIVE_TRANSIENT_WORKERS.md)
 
 ### Article 15 — Models select semantic requirements; Prometheist owns execution policy
 
@@ -136,7 +137,7 @@ This file is intentionally concise. Each article states the hard rule, why it ma
 
 **Why it matters.** Semantic interpretation is useful; model-authored control planes are difficult to validate, replay, secure, and audit.
 
-**Deep dives:** [`docs/architecture/COGNITIVE_ARCHITECTURE.md`](docs/architecture/COGNITIVE_ARCHITECTURE.md), [`docs/architecture/INTERACTION_CONTINUITY.md`](docs/architecture/INTERACTION_CONTINUITY.md)
+**Deep dives:** [`docs/architecture/COGNITIVE_ARCHITECTURE.md`](docs/architecture/COGNITIVE_ARCHITECTURE.md), [`docs/architecture/INTERACTION_CONTINUITY.md`](docs/architecture/INTERACTION_CONTINUITY.md), [`docs/architecture/PRE_COGNITIVE_TRANSIENT_WORKERS.md`](docs/architecture/PRE_COGNITIVE_TRANSIENT_WORKERS.md)
 
 ### Article 16 — Model-generated natural language is control/state of last resort
 
@@ -144,7 +145,7 @@ This file is intentionally concise. Each article states the hard rule, why it ma
 
 **Why it matters.** Closed representations reduce ambiguity, hallucinated control data, brittle parsers, and nondeterministic protocol behavior.
 
-**Deep dives:** [`docs/architecture/COGNITIVE_ARCHITECTURE.md`](docs/architecture/COGNITIVE_ARCHITECTURE.md), [`docs/architecture/INTERACTION_CONTINUITY.md`](docs/architecture/INTERACTION_CONTINUITY.md)
+**Deep dives:** [`docs/architecture/COGNITIVE_ARCHITECTURE.md`](docs/architecture/COGNITIVE_ARCHITECTURE.md), [`docs/architecture/INTERACTION_CONTINUITY.md`](docs/architecture/INTERACTION_CONTINUITY.md), [`docs/architecture/PRE_COGNITIVE_TRANSIENT_WORKERS.md`](docs/architecture/PRE_COGNITIVE_TRANSIENT_WORKERS.md)
 
 ### Article 17 — Relevance, activation, evidence sufficiency, and truth are distinct
 
@@ -228,13 +229,13 @@ Prometheist is intended to remain usable on modest local hardware. Stronger hard
 
 **Deep dive:** [`docs/engineering/CONSTITUTIONAL_GOVERNANCE.md`](docs/engineering/CONSTITUTIONAL_GOVERNANCE.md)
 
-### Article 27 — Capability reasoning is recurrent, but every reassessment is fresh
+### Article 27 — Capability reasoning is staged; every semantic reassessment is fresh
 
-**Rule.** Completion of capability work does not inherit or extend the previous model context and does not automatically authorize a user-facing response. Prometheist persists the capability result, rebuilds a bounded system-owned context, and uses a new stateless model invocation to decide whether more work is required or the system is ready to respond. Final user-facing generation occurs only after explicit readiness under the current routing contract.
+**Rule.** Completion of capability work never inherits or extends an earlier model context and never grants a model-authored open-ended control loop. When newly acquired evidence materially requires another semantic judgment, Prometheist must persist the completed work, rebuild a bounded system-owned context, and summon a fresh stateless cognition worker. The active interaction protocol must bound where reassessment can occur and expose only application-authorized next-step capabilities. Final user-facing generation occurs from a fresh response worker after the staged control contract and evidence policy permit response or require fail-closed abstention.
 
-**Why it matters.** One-shot routing is not a valid substitute for reasoning depth, while carrying the same model context across capability rounds would violate statelessness and hide continuity inside the worker.
+**Why it matters.** Prometheist needs reasoning depth and staged evidence acquisition without making recurrent local-model inference the default executive mechanism. Fresh bounded reassessment preserves statelessness; an application-owned stage topology preserves latency bounds, replayability, and control-plane authority.
 
-**Deep dive:** [`docs/architecture/INTERACTION_CONTINUITY.md`](docs/architecture/INTERACTION_CONTINUITY.md)
+**Deep dives:** [`docs/architecture/PRE_COGNITIVE_TRANSIENT_WORKERS.md`](docs/architecture/PRE_COGNITIVE_TRANSIENT_WORKERS.md), [`docs/architecture/INTERACTION_CONTINUITY.md`](docs/architecture/INTERACTION_CONTINUITY.md)
 
 ### Article 28 — Durable queued work must have an explicit anti-starvation policy
 
