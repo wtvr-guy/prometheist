@@ -5,13 +5,20 @@ from collections.abc import Callable
 import json
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
 
-from jit_agent.budgeted_evidence_llm import BudgetedEvidenceBoundOllamaClient
+from jit_agent.budgeted_evidence_llm import (
+    BudgetedEvidenceBoundOllamaClient,
+    _PRODUCTION_RESPONSE_POLICY_SYSTEM_PROMPT,
+    _base_text_max_tokens,
+)
 from jit_agent.epistemic_authority import format_authority_bound_response_memory_packet
 from jit_agent.evidence_bound_llm import (
     _AUTHORITY_BOUND_RESPOND_SYSTEM_PROMPT,
+    _EXACT_SOURCE_SELECTION_SYSTEM_PROMPT,
     _admitted_capability_results,
+    _exact_source_texts,
+    _format_exact_source_candidates,
     _quarantined_evidence,
 )
 from jit_agent.final_response_directive import (
@@ -23,15 +30,18 @@ from jit_agent.llm import (
     _format_capability_result_data,
     _mask_verbatim_literals,
     _restore_verbatim_literals,
+    _retry_token_caps,
     _verbatim_source_texts,
 )
 from jit_agent.models import MemoryPacket
 from jit_agent.personality import configured_personality_prompt
 from jit_agent.response_policy import (
+    ExactSourceSelection,
     ResponsePolicy,
     ResponseSurfaceMode,
     filter_memory_packet_for_scope,
     scope_requires_historical_support,
+    validate_response_policy_current_authority,
 )
 
 
@@ -39,6 +49,19 @@ ResponsePolicySink = Callable[[ResponsePolicy], None]
 ResponseFallbackSink = Callable[[str | None], None]
 _CONTROL_CAPABILITY_ID = "pre_cognitive_brief"
 _CONTROL_EXECUTOR = "application_control"
+_DURABLE_RESPONSE_POLICY_SYSTEM_PROMPT = (
+    _PRODUCTION_RESPONSE_POLICY_SYSTEM_PROMPT
+    + "\n- allowed_output_literals: when the CURRENT user message explicitly enumerates "
+    "a finite closed set of legal exact final outputs (for example, 'one of these labels: "
+    "A | B'), copy each complete legal output literal verbatim in user-specified order. "
+    "Otherwise return an empty list. Never derive this list from historical evidence."
+)
+_EXACT_ENUMERATED_SELECTION_SYSTEM_PROMPT = (
+    _EXACT_SOURCE_SELECTION_SYSTEM_PROMPT
+    + "\n\nIf application-validated allowed output literals are supplied below, "
+    "verbatim_value MUST equal exactly one complete allowed literal. Do not select a "
+    "larger surrounding source sentence even when that sentence contains the answer."
+)
 
 
 class _LegacyCognitiveBrief(BaseModel):
@@ -114,16 +137,97 @@ class DurableResponseBudgetedOllamaClient(BudgetedEvidenceBoundOllamaClient):
         self._response_fallback_sink = response_fallback_sink
 
     def _response_policy(self, prompt: str) -> ResponsePolicy:
-        policy = super()._response_policy(prompt)
-        if self._response_policy_sink is not None:
-            self._response_policy_sink(policy)
-        return policy
+        """Classify current-authority source/surface policy, including closed outputs."""
+
+        last_error: Exception | None = None
+        for token_cap in _retry_token_caps(_base_text_max_tokens()):
+            try:
+                content = self._structured_with_evidence(
+                    "RESPONSE_POLICY",
+                    _DURABLE_RESPONSE_POLICY_SYSTEM_PROMPT,
+                    prompt,
+                    _quarantined_evidence(),
+                    ResponsePolicy.model_json_schema(),
+                    token_cap,
+                )
+                policy = ResponsePolicy.model_validate_json(content)
+                validate_response_policy_current_authority(prompt, policy)
+                policy = policy.model_copy(update={"insufficient_literal": None})
+                if self._response_policy_sink is not None:
+                    self._response_policy_sink(policy)
+                return policy
+            except (ValidationError, ValueError) as exc:
+                last_error = exc
+        raise ValueError(f"response policy failed to validate: {last_error}")
 
     def _select_current_fallback_literal(self, prompt: str) -> str | None:
         fallback = super()._select_current_fallback_literal(prompt)
         if self._response_fallback_sink is not None:
             self._response_fallback_sink(fallback)
         return fallback
+
+    def _select_exact_source_substring(
+        self,
+        prompt: str,
+        packet: MemoryPacket | None,
+        capability_results: tuple[dict[str, Any], ...],
+        *,
+        allowed_output_literals: tuple[str, ...] = (),
+    ) -> str:
+        """Select one exact admitted substring under any current closed-output set."""
+
+        source_texts = _exact_source_texts(packet, capability_results)
+        if not source_texts:
+            raise ValueError("exact-source response has no admitted source candidates")
+
+        literal_to_placeholder, placeholder_to_literal = _build_verbatim_placeholder_maps(
+            *source_texts
+        )
+        evidence = _quarantined_evidence(
+            _format_exact_source_candidates(source_texts, literal_to_placeholder)
+        )
+        system = _EXACT_ENUMERATED_SELECTION_SYSTEM_PROMPT
+        if allowed_output_literals:
+            system += (
+                "\n\n[APPLICATION-VALIDATED CURRENT OUTPUT LITERALS]\n"
+                + json.dumps(list(allowed_output_literals), ensure_ascii=False)
+            )
+
+        last_error: Exception | None = None
+        for token_cap in _retry_token_caps(_base_text_max_tokens()):
+            try:
+                content = self._structured_with_evidence(
+                    "EXACT_SOURCE_SELECTION",
+                    system,
+                    _mask_verbatim_literals(prompt, literal_to_placeholder),
+                    evidence,
+                    ExactSourceSelection.model_json_schema(),
+                    token_cap,
+                )
+                selection = ExactSourceSelection.model_validate_json(content)
+                restored_value = _restore_verbatim_literals(
+                    selection.verbatim_value,
+                    placeholder_to_literal,
+                )
+                restored = selection.model_copy(update={"verbatim_value": restored_value})
+                if restored.source_index not in range(len(source_texts)):
+                    raise ValueError("exact-source selection referenced an unknown candidate")
+                selected_text = source_texts[restored.source_index]
+                if restored.verbatim_value not in selected_text:
+                    raise ValueError(
+                        "exact-source value is not a verbatim substring of admitted evidence"
+                    )
+                if (
+                    allowed_output_literals
+                    and restored.verbatim_value not in allowed_output_literals
+                ):
+                    raise ValueError(
+                        "exact-source value is not one of the current-authority allowed outputs"
+                    )
+                return restored.verbatim_value
+            except (ValidationError, ValueError) as exc:
+                last_error = exc
+        raise ValueError(f"exact-source selection failed to validate: {last_error}")
 
     def classify_response_policy(self, prompt: str) -> ResponsePolicy:
         """Run the current-percept-only source/surface classifier upstream."""
@@ -216,6 +320,7 @@ class DurableResponseBudgetedOllamaClient(BudgetedEvidenceBoundOllamaClient):
                 prompt,
                 admitted_packet,
                 admitted_capability_results,
+                allowed_output_literals=tuple(policy.allowed_output_literals),
             )
 
         if policy.surface_mode is ResponseSurfaceMode.EXACT_SOURCE_COMPOSITION:
