@@ -205,6 +205,26 @@ There are two complementary representations:
 
 The snapshot is the convenient complete product for audit, debugging, evaluation, replay inspection, export, and future orchestration. The append-only records remain the underlying causal authority and allow recovery before terminalization.
 
+### Canonical audit payload versus semantic projection
+
+The complete terminal JSON and the text used for ordinary semantic recall are deliberately different representations.
+
+`INTERACTION_WORKPIECE_SNAPSHOT` retains the complete workpiece in its canonical event `payload`. However, its semantic `payload_text` is a bounded descriptor (`interaction workpiece audit snapshot`) rather than a serialization of the nested workpiece.
+
+This separation is required because the snapshot contains copies/references of material already represented by canonical source events: prompts, memory evidence, control decisions, capability results, and response data. Re-indexing the entire nested snapshot as though it were new first-class semantic evidence would:
+
+- duplicate the semantic weight of already-persisted evidence;
+- allow a derived audit record to outrank its canonical source events;
+- recursively place old workpiece JSON inside new MemoryPackets and then inside later workpieces;
+- grow model-facing evidence and diagnostic output without adding information;
+- blur provenance between original evidence and a derived audit representation.
+
+Ordinary JIT recall therefore reaches the canonical source events. Explicit audit/debug tooling may inspect the complete workpiece payload directly when the snapshot itself is the subject of the task.
+
+The rule is:
+
+> **Persist the complete audit object; project only the minimum semantic representation required for recall. Derived containers must not recursively masquerade as their contained evidence.**
+
 Micro-station outputs do not require separate database events merely because they are components. Before an effect-capable boundary, several cheap stateless station results may be accumulated and committed together as a durable control checkpoint. Once a result authorizes or records a material effect, existing append-only/idempotency rules remain authoritative.
 
 ## Terminal outcomes
@@ -268,7 +288,14 @@ The aggregate assessment remains persisted for compatibility/restart authority w
 
 `FinalResponseDirective` remains the correct terminal authority for the **current interactive response path**. It binds response authorization, evidence/source policy, final packet identity, capability identities, fallback behavior, and personality identity before response realization.
 
-It is not promoted into the universal terminal contract for every future Prometheist task. A non-language action may terminalize without any `FinalResponseDirective` or final response worker.
+When the current user percept explicitly enumerates a finite closed set of legal exact outputs, the response policy may also carry those verbatim current-authority literals in `allowed_output_literals`. The exact-source selector must then choose a value that is both:
+
+1. an exact contiguous substring of admitted evidence; and
+2. exactly one complete application-validated allowed output literal.
+
+A larger surrounding historical sentence is not acceptable merely because it contains the correct value. It fails validation and the existing bounded selector retry path may try again. This keeps the final surface contract application-owned without adding another LLM station.
+
+`FinalResponseDirective` is not promoted into the universal terminal contract for every future Prometheist task. A non-language action may terminalize without any `FinalResponseDirective` or final response worker.
 
 Future action-specific authorization/effect components should be added only when concrete execution paths require them.
 
@@ -280,7 +307,7 @@ The interaction workpiece is neither WorkingState nor long-term memory.
 - **WorkingState** — bounded canonical pointers representing what is currently activated across interactions.
 - **Long-term memory/internal history** — append-only canonical durable evidence and system history.
 
-The terminal workpiece snapshot may itself become useful internal history, but it must not be blindly activated as a giant replacement memory packet. Current interactive WorkingState continues to activate the user prompt and user-facing result rather than the entire terminal snapshot.
+The terminal workpiece snapshot is durable system/audit history, but its nested contents are not reintroduced into ordinary semantic recall as a giant replacement memory record. Current interactive WorkingState continues to activate the canonical user prompt and user-facing result rather than the entire terminal snapshot. If a later task explicitly asks about a workpiece/audit record itself, the snapshot may be inspected through an audit/system-record path appropriate to that request.
 
 ## Extension rule
 
@@ -318,8 +345,11 @@ The workpiece contract must verify at least:
 - action/deferred/waiting terminal outcomes may exist without user output;
 - JSON round-trip preserves typed components;
 - terminal snapshot persistence does not replace append-only events;
+- the complete snapshot payload remains intact while its ordinary semantic projection stays bounded and does not recursively re-index nested prompts/evidence;
+- enumerated exact-output contracts reject larger source text that is not one complete allowed current-authority literal;
+- failure diagnostics may show a compact causal slice while the canonical workpiece/ledger remains available for deeper inspection;
 - current response behavior and WorkingState regressions remain compatible.
 
 ## Architectural invariant
 
-> **Prometheist executes work by assembling typed, provenance-bearing components onto a system-owned workpiece through only the stations that the current task requires. Workers are disposable contributors, not owners of the workpiece. Terminalization is application-owned, and user-facing language is optional because language is only one possible product of the system.**
+> **Prometheist executes work by assembling typed, provenance-bearing components onto a system-owned workpiece through only the stations that the current task requires. Workers are disposable contributors, not owners of the workpiece. Terminalization is application-owned, and user-facing language is optional because language is only one possible product of the system. Complete workpieces are durable audit state, but derived containers are not allowed to recursively duplicate their contents into ordinary semantic memory.**
