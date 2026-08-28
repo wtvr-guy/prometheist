@@ -55,7 +55,8 @@ Verify user/system-level architectural claims:
 - exact provenance;
 - demand-driven station invocation;
 - capability acquisition/reassessment without hidden recurrent context;
-- exact surface realization under current-authority constraints;
+- policy-admitted final-responder evidence contains the facts/provenance required by the current task;
+- conversational prompts remain natural unless exact formatting is itself the behavior under test;
 - optional response behavior and terminal outcomes;
 - process destruction/recovery;
 - resource admission/safe execution.
@@ -154,9 +155,31 @@ The current v0.7 pre-acquisition path must verify authority separation:
 
 Native tests then verify whether Qwen3:4b can perform these narrow semantic roles reliably enough in the intended environment.
 
+## Final-response native acceptance boundary
+
+For continuity/retrieval acceptance, the machine-verifiable oracle belongs at the **handoff into the final response worker**, not at one arbitrarily canned rendering of the user's answer.
+
+The terminal `InteractionWorkpiece` already preserves the information needed to reconstruct that handoff: the current percept, `FINAL_EVIDENCE`, capability tranches, `FINAL_RESPONSE_DIRECTIVE`, and visible `USER_OUTPUT`. Native acceptance may therefore rebuild the same policy-admitted evidence projection used by production response realization and assert that:
+
+- the directive authorizes `RESPOND` when the scenario expects a supported answer;
+- the directive references the exact final evidence packet that reached response realization;
+- required canonical source-event IDs survive source-policy filtering;
+- required opaque values/facts are present in admitted evidence or admitted capability results;
+- conversational prompts that do not request an exact format retain `NATURAL_LANGUAGE` surface authority when that is part of the scenario;
+- the generated response is printed in full for human inspection.
+
+The native continuity gate should **not** normally assert exact equality against user-facing prose. A correct answer may be phrased in multiple natural ways. Requiring a pipe-delimited or otherwise canned sentence merely because it is easy for pytest to compare trains the acceptance suite toward machine-shaped interaction rather than the system Prometheist is intended to become.
+
+This intentionally separates two claims:
+
+1. **architectural continuity claim** — did a fresh stateless responder receive the correct authorized evidence after the relevant process/session/history boundaries? This is machine-gated.
+2. **response-realization quality claim** — did the local model express that evidence coherently, faithfully, and naturally? The actual output remains visible and may be evaluated by dedicated response-quality benchmarks, human review, or later semantic/contradiction evaluation rather than being silently conflated with memory continuity.
+
+A visibly incorrect answer after a passing responder-handoff assertion is valuable diagnostic evidence: it isolates the defect to response realization instead of making retrieval, routing, source authority, and prose generation indistinguishable behind one string-equality failure.
+
 ## Exact response-surface acceptance
 
-Exact-output behavior is an application authority boundary, not merely a prose-quality preference.
+Exact-output behavior remains an application authority boundary **when exactness is actually part of the task**. It is not the default testing strategy for ordinary human-facing conversation.
 
 When the current percept explicitly enumerates a finite closed set of legal outputs, tests should establish that:
 
@@ -167,6 +190,8 @@ When the current percept explicitly enumerates a finite closed set of legal outp
 - the selected source bytes must equal one complete allowed literal when such a set exists;
 - a larger source sentence that merely contains the correct literal is rejected and may be retried within the existing bounded retry policy;
 - no extra semantic worker is introduced merely to enforce a constraint that application validation can enforce directly.
+
+Appropriate exact-output tests include opaque identifiers that must not mutate, machine-to-machine contracts, explicit user requests for exact formatting, deterministic fallback literals, and the exact-source machinery itself. These tests should not force unrelated conversational acceptance scenarios into robotic output formats.
 
 ## Restart and destruction are first-class conditions
 
@@ -209,12 +234,11 @@ Acceptance failures should emit the **smallest causal slice that explains the fa
 A useful native continuity failure record normally contains:
 
 - the failing conversation/correlation identity;
-- the current prompt and actual output;
-- canonical source events the assertion expected to be available;
-- relevant MemoryPacket candidates with source ID/type, score, and bounded content;
-- the pre-cognitive assessment relevant to the turn;
-- the terminal response directive relevant to the turn;
-- workpiece component types when useful, without dumping the complete nested workpiece JSON.
+- the current prompt and visible output;
+- canonical source events the responder-handoff assertion expected to be available;
+- the policy-admitted final MemoryPacket candidates with source ID/type, score, and bounded content;
+- admitted capability results when relevant;
+- the terminal response directive relevant to the turn.
 
 The complete append-only history and terminal workpiece remain persisted in PostgreSQL for deeper forensic inspection. Compact diagnostics are an index into that canonical evidence, not a replacement for it.
 
@@ -236,7 +260,9 @@ The five current native scenarios cover:
 - randomized Project Falcon opaque recall;
 - cross-process memory analysis without hidden transcript;
 - cross-conversation/cross-process memory recall;
-- four-turn stateless continuity with distractors, including Kestrel retrieval/sufficiency and exact response-surface realization from admitted historical evidence.
+- four-turn conversational stateless continuity with distractors, including one historical fact request, one multi-fact historical request, one recent-plus-old memory request, and one natural recap.
+
+For those five continuity scenarios, automated pass/fail is based on the final responder's policy-admitted evidence/authority rather than canned final prose. Every actual Prometheist response is printed during the native run for human inspection.
 
 Qwen3:4b remains fixed for this v0.7 gate. Swapping to a stronger model is a different experiment and cannot be used to hide an architectural regression.
 
@@ -248,7 +274,7 @@ For v0.7 that means:
 
 1. static checks and constraint audit green;
 2. deterministic PostgreSQL suite green;
-3. native five-scenario Qwen3:4b gate green;
+3. native five-scenario Qwen3:4b responder-handoff gate green, with visible final responses inspected for obvious semantic contradiction;
 4. PR/review/branch/release bookkeeping performed only afterward.
 
 A partial pass is diagnostic evidence, not release acceptance.
