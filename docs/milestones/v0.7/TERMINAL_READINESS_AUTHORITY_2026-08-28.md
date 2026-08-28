@@ -127,12 +127,14 @@ Deterministic tests require:
 - omitted model version is supplied deterministically by the application;
 - explicitly wrong persisted/application final-readiness version still fails closed.
 
-Exact head `179f7c6dae76cd0f90e407379fbf25dadbbc4bd8` passed deterministic CI with:
+The code-bearing schema-fix head `179f7c6dae76cd0f90e407379fbf25dadbbc4bd8` passed deterministic CI with:
 
 - **345 passed, 20 skipped**;
 - Ruff green;
 - constraint audit **175 discovered / 175 registered / 0 uncovered / 0 stale / 0 mismatched / 0 invalid**;
 - exactly five native Ollama acceptance pytest items collected.
+
+The subsequent documentation-only release-candidate head was also revalidated by CI before the next native run.
 
 ## Release gate
 
