@@ -7,6 +7,7 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic.json_schema import SkipJsonSchema
 
 from jit_agent.response_policy import ResponsePolicy
 
@@ -60,11 +61,17 @@ class FinalAbstainReason(str, Enum):
 
 
 class FinalReadinessDecision(BaseModel):
-    """Closed terminal cognition result used only after additional work has ended."""
+    """Closed terminal cognition result used only after additional work has ended.
+
+    ``version`` is application-owned protocol metadata. It remains part of the
+    validated/persisted object for restart compatibility, but is intentionally
+    omitted from the model-facing JSON Schema so a stateless LLM is never asked
+    to author or guess infrastructure versioning.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
-    version: str = FINAL_READINESS_VERSION
+    version: SkipJsonSchema[str] = FINAL_READINESS_VERSION
     action: FinalResponseAction
     evidence_state: EvidenceStateValue
 
