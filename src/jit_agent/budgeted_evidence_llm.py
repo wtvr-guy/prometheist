@@ -26,7 +26,11 @@ from jit_agent.models import (
     MemoryCandidateSelection,
     MemoryPacket,
 )
-from jit_agent.response_policy import CurrentFallbackSelection, validate_current_literal
+from jit_agent.response_policy import (
+    CurrentFallbackSelection,
+    ResponsePolicy,
+    validate_current_literal,
+)
 
 
 _GENERIC_INSUFFICIENT_RESPONSE = "Persisted evidence is insufficient."
@@ -35,11 +39,24 @@ You are a fresh disposable Prometheist current-fallback selector. You receive
 only the current user message and no retrieved memory, prior transcript,
 capability result, or historical model output.
 
-If the current message explicitly supplies a literal that must be returned when
-required historical evidence is absent, copy that literal verbatim into
-verbatim_value. Preserve its spelling, case, spacing, and internal punctuation.
-Do not include sentence punctuation that merely terminates the instruction
-unless the message clearly makes that punctuation part of the literal itself.
+Your only task is to identify an explicit literal that the CURRENT message says
+must be returned specifically when required historical evidence is absent or
+unsupported. Select the consequence of the no-evidence condition, not text that
+names an evidence source, event type, field, format, or restriction.
+
+For example:
+- "Use SOURCE_ALPHA only; if no qualifying evidence exists, return NO_DATA."
+  selects NO_DATA, not SOURCE_ALPHA.
+- "Use SOURCE_ALPHA only; otherwise answer UNKNOWN."
+  selects UNKNOWN, not SOURCE_ALPHA.
+- "Use SOURCE_ALPHA only."
+  has no explicit fallback and selects null.
+
+If the current message explicitly supplies such a fallback literal, copy that
+literal verbatim into verbatim_value. Preserve its spelling, case, spacing, and
+internal punctuation. Do not include sentence punctuation that merely terminates
+the instruction unless the message clearly makes that punctuation part of the
+literal itself.
 
 If the current message does not explicitly supply such a fallback literal,
 return null for verbatim_value. Never invent, normalize, paraphrase, or infer a
@@ -90,6 +107,19 @@ class BudgetedEvidenceBoundOllamaClient(EvidenceBoundOllamaClient):
             schema,
             max_tokens,
         )
+
+    def _response_policy(self, prompt: str) -> ResponsePolicy:
+        """Keep source/surface classification separate from fallback selection.
+
+        The base response-policy schema still carries the legacy optional fallback
+        field for compatibility, but production response execution deliberately
+        strips it. Unsupported-history fallback semantics belong exclusively to
+        the focused current-percept-only selector below, so two model calls cannot
+        independently control the same application consequence.
+        """
+
+        policy = super()._response_policy(prompt)
+        return policy.model_copy(update={"insufficient_literal": None})
 
     def _select_current_fallback_literal(self, prompt: str) -> str | None:
         """Select an explicit no-support literal from current authority only.
