@@ -44,6 +44,19 @@ def _response_policy_scopes(conversation_id: uuid.UUID) -> list[str]:
     return scopes
 
 
+def _response_fallback_literals(conversation_id: uuid.UUID) -> list[str | None]:
+    with db.get_connection() as conn:
+        events = event_store.get_events_by_conversation(conn, conversation_id)
+    fallbacks: list[str | None] = []
+    for event in events:
+        if event.event_type is not EventType.SYSTEM_EVENT or event.source != "response_fallback":
+            continue
+        value = event.payload.get("fallback_literal")
+        if value is None or isinstance(value, str):
+            fallbacks.append(value)
+    return fallbacks
+
+
 def test_assistant_only_claim_does_not_become_user_fact_after_restart():
     """A prior assistant assertion is evidence that the assistant said it, not user truth.
 
@@ -92,6 +105,10 @@ def test_assistant_only_claim_does_not_become_user_fact_after_restart():
     assert fake_color not in answer, (
         "Prometheist promoted an assistant-only historical assertion into a user fact: "
         f"{answer!r}"
+    )
+    assert "INSUFFICIENT" in _response_fallback_literals(question_conversation), (
+        "The focused current-percept fallback decision was not durably recorded as "
+        "INSUFFICIENT."
     )
     assert answer.strip() == "INSUFFICIENT", (
         "Prometheist rejected the assistant-only claim but failed the current user's exact "
