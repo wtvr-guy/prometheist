@@ -15,7 +15,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 from jit_agent.models import EventType, MemoryPacket
 
 
-RESPONSE_POLICY_VERSION = "response-source-authority-v3"
+RESPONSE_POLICY_VERSION = "response-source-authority-v4"
 
 
 class HistoricalEvidenceScope(str, Enum):
@@ -35,6 +35,7 @@ class ResponseSurfaceMode(str, Enum):
 
     NATURAL_LANGUAGE = "NATURAL_LANGUAGE"
     EXACT_SOURCE_SUBSTRING = "EXACT_SOURCE_SUBSTRING"
+    EXACT_SOURCE_COMPOSITION = "EXACT_SOURCE_COMPOSITION"
 
 
 class ResponsePolicy(BaseModel):
@@ -79,6 +80,23 @@ class ExactSourceSelection(BaseModel):
     def validate_value(self) -> "ExactSourceSelection":
         if not self.verbatim_value:
             raise ValueError("verbatim_value must not be empty")
+        return self
+
+
+class ExactSourceComposition(BaseModel):
+    """Ordered source-backed values joined only by current-authority formatting."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    selections: list[ExactSourceSelection]
+    separator: str
+
+    @model_validator(mode="after")
+    def validate_structure(self) -> "ExactSourceComposition":
+        if not self.selections:
+            raise ValueError("exact-source composition requires at least one selection")
+        if any(character.isalnum() for character in self.separator):
+            raise ValueError("exact-source composition separator must be formatting-only")
         return self
 
 
@@ -180,3 +198,34 @@ def validate_exact_source_selection(
     if selection.verbatim_value not in content:
         raise ValueError("exact-source value is not a verbatim substring of admitted evidence")
     return selection.verbatim_value
+
+
+def validate_exact_source_composition(
+    prompt: str,
+    source_texts: tuple[str, ...],
+    composition: ExactSourceComposition,
+) -> str:
+    """Compose exact output from admitted source bytes plus trusted formatting.
+
+    Every semantic value must be a verbatim substring of the admitted evidence
+    candidate it names. The only generated glue is a formatting-only separator
+    copied from the current user percept. This permits exact multi-field answers
+    without allowing free-form synthesis or historical text to define the output
+    contract.
+    """
+
+    if composition.separator and composition.separator not in prompt:
+        raise ValueError("exact-source composition separator is not current-prompt text")
+
+    values: list[str] = []
+    for selection in composition.selections:
+        if selection.source_index not in range(len(source_texts)):
+            raise ValueError("exact-source composition referenced an unknown candidate")
+        source_text = source_texts[selection.source_index]
+        if selection.verbatim_value not in source_text:
+            raise ValueError(
+                "exact-source composition value is not a verbatim substring of admitted evidence"
+            )
+        values.append(selection.verbatim_value)
+
+    return composition.separator.join(values)
