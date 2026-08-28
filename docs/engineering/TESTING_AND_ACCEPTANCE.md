@@ -142,26 +142,33 @@ The architecture is not validated if tests cover only the current chat-like term
 
 ## Demand-driven semantic station acceptance
 
-The current v0.7 pre-acquisition path must verify authority separation and the measured negative-decision reliability rule:
+The current v0.7 pre-acquisition path must verify authority separation between acquisition and terminalization:
 
 - `evidence_sufficiency_verifier` returns only `SUFFICIENT | INSUFFICIENT`;
 - that worker cannot see/select a capability catalog;
-- a first `SUFFICIENT` remains the one-call fast path;
-- a first `INSUFFICIENT` over non-empty activated/capability evidence receives at most one fresh stateless confirmation inside the same evidence-sufficiency station;
-- confirmation recovery to `SUFFICIENT` prevents capability selection from running;
-- only confirmed insufficiency may proceed to `capability_selector` when a legal catalog exists;
-- empty-evidence insufficiency does not receive an automatic confirmation solely to obtain another model vote;
+- a `SUFFICIENT` result remains the one-call acquisition fast path;
+- `INSUFFICIENT` proceeds directly to `capability_selector` when a legal catalog exists;
+- no same-station confirmation/re-vote is inserted merely because the first semantic result was inconvenient;
 - capability selection cannot reassess sufficiency;
-- deterministic application code derives aggregate disposition/evidence state from the final station outputs;
-- the confirmation remains an internal reliability mechanism of one bounded station and does not create an extra workpiece component;
+- deterministic application code derives aggregate acquisition disposition/evidence state from the station outputs;
 - malformed/unknown/extra model-control fields fail closed;
 - no extra station exists merely to populate compatibility metadata with no downstream consumer.
 
-The confirmation rule is deliberately asymmetric. Native Qwen3:4b acceptance demonstrated a false-negative case in which the admitted packet directly contained every requested historical answer component. The application still must not rewrite `INSUFFICIENT` to `SUFFICIENT` merely because a packet is non-empty or marked supported; the second fresh semantic judgment exists precisely to preserve that boundary while reducing the consequence of one measured false negative.
+The critical lifecycle rule is separate:
 
-The asymmetric retry also creates a native false-positive obligation: after relevant history is already active, an unsupported question with a non-empty final evidence packet must still terminalize as `ABSTAIN`. A confirmation mechanism is not accepted if it merely trades false negatives for fabricated support.
+- pre-cognitive `ABSTAIN` means no useful additional acquisition work was selected;
+- it is not terminal response authority;
+- any interactive path that has not already established `RESPOND` must receive one fresh `final_readiness` judgment over the final evidence/capability results before terminal `ABSTAIN` is authorized;
+- final readiness cannot request additional capabilities, alter source policy, or draft the answer;
+- its persisted result must bind to the exact final evidence packet/capability result set used for finalization.
 
-Native tests then verify whether Qwen3:4b can perform these narrow semantic roles reliably enough in the intended environment.
+This rule exists because native Qwen3:4b acceptance repeatedly demonstrated a false-negative acquisition judgment even when the final packet directly contained every requested historical answer component. Repeating the same acquisition classifier inside the same station did not contain the failure. The correct boundary is to distinguish **whether more acquisition work should be attempted** from **whether the final evidence now supports an answer**.
+
+The application still must not rewrite `INSUFFICIENT` to `SUFFICIENT` merely because a packet is non-empty or marked supported. The separate terminal judgment preserves that epistemic boundary without allowing one acquisition false negative to become terminal authority.
+
+The lifecycle separation also creates a native false-positive obligation: after relevant history is already active, an unsupported question with a non-empty final evidence packet must still terminalize as `ABSTAIN`. The fix is not accepted if it merely trades false negatives for fabricated support.
+
+Native tests then verify whether Qwen3:4b can perform these distinct narrow semantic roles reliably enough in the intended environment.
 
 ## Final-response native acceptance boundary
 
