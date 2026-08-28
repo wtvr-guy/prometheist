@@ -170,8 +170,11 @@ class InteractionWorkpiece(BaseModel):
     @field_validator("components")
     @classmethod
     def percept_is_unique(cls, components: list[InteractionComponent]) -> list[InteractionComponent]:
-        percept_count = sum(isinstance(item, PerceptComponent) for item in components)
-        if percept_count != 1:
+        percepts = [item for item in components if isinstance(item, PerceptComponent)]
+        if not percepts:
+            raise ValueError("interaction workpiece requires exactly one percept component")
+        _percept, *extra_percepts = percepts
+        if extra_percepts:
             raise ValueError("interaction workpiece requires exactly one percept component")
         return components
 
