@@ -5,19 +5,17 @@ import pytest
 from pydantic import ValidationError
 
 from jit_agent.capability_registry import DEFAULT_REGISTRY
-from jit_agent.models import MemoryEvidence, MemoryNeed, MemoryPacket, EventType
+from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 from jit_agent.pre_cognitive_ollama_client import (
     PreCognitiveDurableResponseOllamaClient,
     canonicalize_pre_cognitive_payload,
     needs_supported_evidence_reconsideration,
-    validate_native_assessment_consistency,
 )
 from jit_agent.pre_cognitive_workers import (
     ClaimScope,
     CognitiveDisposition,
     CognitivePhase,
     EvidenceState,
-    IntentMode,
     PreCognitiveAssessment,
 )
 
@@ -73,6 +71,27 @@ class _DuplicateStructuredClient(PreCognitiveDurableResponseOllamaClient):
                 "claim_scopes": ["USER_HISTORY", "USER_HISTORY", "USER_HISTORY"],
                 "requirement_flags": ["DEEPER_RECALL", "DEEPER_RECALL"],
                 "capability_indices": [0, 0],
+            }
+        )
+
+
+class _ContradictoryRespondClient(PreCognitiveDurableResponseOllamaClient):
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def _structured(self, role, system, user, schema, max_tokens):
+        del role, system, user, schema, max_tokens
+        self.calls += 1
+        return json.dumps(
+            {
+                "scheme_version": "pre-cognitive-transient-workers-v1",
+                "phase": "PRE_CAPABILITY",
+                "disposition": "RESPOND",
+                "intent_mode": "RECALL",
+                "evidence_state": "INSUFFICIENT_AFTER_AVAILABLE_WORK",
+                "claim_scopes": ["USER_HISTORY"],
+                "requirement_flags": [],
+                "capability_indices": [],
             }
         )
 
@@ -178,25 +197,25 @@ def test_canonicalization_does_not_weaken_closed_enum_validation():
         PreCognitiveAssessment.model_validate(payload)
 
 
-def test_terminal_insufficient_state_requires_abstain():
-    contradictory = PreCognitiveAssessment(
+def test_native_pre_cognition_does_not_crash_on_respond_with_inconsistent_sufficiency_metadata():
+    client = _ContradictoryRespondClient()
+    assessment = client.assess_pre_cognition(
+        "What codename did I give Project Oriole?",
+        _supported_packet(),
+        DEFAULT_REGISTRY.capability_catalog(),
         phase=CognitivePhase.PRE_CAPABILITY,
-        disposition=CognitiveDisposition.RESPOND,
-        intent_mode=IntentMode.RECALL,
-        evidence_state=EvidenceState.INSUFFICIENT_AFTER_AVAILABLE_WORK,
-        claim_scopes=[ClaimScope.USER_HISTORY],
-        requirement_flags=[],
-        capability_indices=[],
     )
-    with pytest.raises(ValueError, match="requires terminal ABSTAIN"):
-        validate_native_assessment_consistency(contradictory)
+
+    assert assessment.disposition is CognitiveDisposition.RESPOND
+    assert assessment.evidence_state is EvidenceState.INSUFFICIENT_AFTER_AVAILABLE_WORK
+    assert client.calls == 1
 
 
 def test_supported_packet_abstain_requests_one_semantic_reconsideration():
     assessment = PreCognitiveAssessment(
         phase=CognitivePhase.PRE_CAPABILITY,
         disposition=CognitiveDisposition.ABSTAIN,
-        intent_mode=IntentMode.RECALL,
+        intent_mode="RECALL",
         evidence_state=EvidenceState.INSUFFICIENT_AFTER_AVAILABLE_WORK,
         claim_scopes=[],
         requirement_flags=[],
