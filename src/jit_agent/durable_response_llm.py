@@ -33,6 +33,8 @@ from jit_agent.response_policy import (
 
 ResponsePolicySink = Callable[[ResponsePolicy], None]
 ResponseFallbackSink = Callable[[str | None], None]
+_CONTROL_CAPABILITY_ID = "pre_cognitive_brief"
+_CONTROL_EXECUTOR = "application_control"
 
 
 class DurableResponseBudgetedOllamaClient(BudgetedEvidenceBoundOllamaClient):
@@ -66,6 +68,44 @@ class DurableResponseBudgetedOllamaClient(BudgetedEvidenceBoundOllamaClient):
         if self._response_fallback_sink is not None:
             self._response_fallback_sink(fallback)
         return fallback
+
+    def respond(
+        self,
+        prompt: str,
+        memory_packet: MemoryPacket | None,
+        capability_results: tuple[dict[str, Any], ...] = (),
+    ) -> str:
+        """Separate pre-cognitive control metadata before evidence admission.
+
+        The interaction runtime deliberately sends the brief in the existing
+        structured-result transport so fake/test clients need no new protocol.
+        Production strips that one application-owned record before evidence
+        budgeting/filtering and supplies it through the system-control channel.
+        """
+
+        briefs = [
+            result
+            for result in capability_results
+            if result.get("capability_id") == _CONTROL_CAPABILITY_ID
+            and result.get("executor") == _CONTROL_EXECUTOR
+        ]
+        if len(briefs) > 1:
+            raise ValueError("response received multiple pre-cognitive control briefs")
+        if not briefs:
+            return super().respond(prompt, memory_packet, capability_results)
+
+        brief = briefs[0].get("result_data")
+        if not isinstance(brief, dict):
+            raise ValueError("pre-cognitive control brief has invalid result_data")
+        evidence_results = tuple(
+            result for result in capability_results if result is not briefs[0]
+        )
+        return self.respond_with_cognitive_brief(
+            prompt,
+            memory_packet,
+            evidence_results,
+            dict(brief),
+        )
 
     def respond_with_cognitive_brief(
         self,
