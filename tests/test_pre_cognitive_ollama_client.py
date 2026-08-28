@@ -64,18 +64,14 @@ class _ScriptedSpecialistClient(PreCognitiveDurableResponseOllamaClient):
         *,
         sufficiency: str,
         capability_indices: list[int] | None = None,
-        confirmation_sufficiency: str | None = None,
     ):
         self.sufficiency = sufficiency
         self.capability_indices = capability_indices or []
-        self.confirmation_sufficiency = confirmation_sufficiency or sufficiency
         self.roles: list[str] = []
 
     def _structured(self, role, system, user, schema, max_tokens):
         del system, user, schema, max_tokens
         self.roles.append(role)
-        if role.endswith("_EVIDENCE_SUFFICIENCY_CONFIRMATION"):
-            return json.dumps({"sufficiency": self.confirmation_sufficiency})
         if role.endswith("_EVIDENCE_SUFFICIENCY"):
             return json.dumps({"sufficiency": self.sufficiency})
         if role.endswith("_CAPABILITY_SELECTION"):
@@ -144,11 +140,10 @@ def test_insufficient_empty_evidence_runs_capability_selector_after_sufficiency(
     assert client.roles[1].endswith("_CAPABILITY_SELECTION")
 
 
-def test_negative_over_existing_evidence_is_confirmed_and_can_recover_to_respond():
+def test_negative_over_existing_evidence_reaches_selector_without_second_vote():
     client = _ScriptedSpecialistClient(
         sufficiency="INSUFFICIENT",
         capability_indices=[0],
-        confirmation_sufficiency="SUFFICIENT",
     )
     assessment = client.assess_pre_cognition(
         (
@@ -160,35 +155,34 @@ def test_negative_over_existing_evidence_is_confirmed_and_can_recover_to_respond
         phase=CognitivePhase.PRE_CAPABILITY,
     )
 
-    assert assessment.disposition is CognitiveDisposition.RESPOND
-    assert assessment.evidence_state is EvidenceState.ACTIVATED_MEMORY_SUFFICIENT
-    assert assessment.capability_indices == []
+    assert assessment.disposition is CognitiveDisposition.ACQUIRE_CAPABILITIES
+    assert assessment.evidence_state is EvidenceState.MORE_INTERNAL_EVIDENCE_REQUIRED
+    assert assessment.capability_indices == [0]
     assert len(client.roles) == 2
     assert client.roles[0].endswith("_EVIDENCE_SUFFICIENCY")
-    assert client.roles[1].endswith("_EVIDENCE_SUFFICIENCY_CONFIRMATION")
-    assert not any(role.endswith("_CAPABILITY_SELECTION") for role in client.roles)
+    assert client.roles[1].endswith("_CAPABILITY_SELECTION")
+    assert not any("CONFIRMATION" in role for role in client.roles)
 
 
-def test_confirmed_insufficiency_reaches_capability_selector_only_after_confirmation():
+def test_insufficient_existing_evidence_without_helpful_capability_is_acquisition_abstain():
     client = _ScriptedSpecialistClient(
         sufficiency="INSUFFICIENT",
-        capability_indices=[0],
-        confirmation_sufficiency="INSUFFICIENT",
+        capability_indices=[],
     )
     assessment = client.assess_pre_cognition(
-        "Find more evidence related to my Kestrel deployment rule.",
+        "Tell me an unsupported historical fact about Project Kestrel.",
         _supported_packet(),
         DEFAULT_REGISTRY.capability_catalog(),
         phase=CognitivePhase.PRE_CAPABILITY,
     )
 
-    assert assessment.disposition is CognitiveDisposition.ACQUIRE_CAPABILITIES
-    assert assessment.evidence_state is EvidenceState.MORE_INTERNAL_EVIDENCE_REQUIRED
-    assert assessment.capability_indices == [0]
-    assert len(client.roles) == 3
+    assert assessment.disposition is CognitiveDisposition.ABSTAIN
+    assert assessment.evidence_state is EvidenceState.INSUFFICIENT_AFTER_AVAILABLE_WORK
+    assert assessment.capability_indices == []
+    assert len(client.roles) == 2
     assert client.roles[0].endswith("_EVIDENCE_SUFFICIENCY")
-    assert client.roles[1].endswith("_EVIDENCE_SUFFICIENCY_CONFIRMATION")
-    assert client.roles[2].endswith("_CAPABILITY_SELECTION")
+    assert client.roles[1].endswith("_CAPABILITY_SELECTION")
+    assert not any("CONFIRMATION" in role for role in client.roles)
 
 
 def test_insufficient_empty_evidence_without_helpful_capability_deterministically_abstains():
