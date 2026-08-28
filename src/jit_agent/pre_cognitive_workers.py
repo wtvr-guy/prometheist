@@ -59,7 +59,6 @@ from jit_agent.worker_store import (
 
 PRE_COGNITIVE_WORKER_SCHEME_VERSION = "pre-cognitive-transient-workers-v1"
 SOURCE = "pre_cognitive_transient_worker"
-_MAX_FINAL_MEMORY_ITEMS = 20
 _RESEARCH_EVIDENCE_EXECUTORS = {"deeper_research", "cross_reference"}
 
 
@@ -127,9 +126,9 @@ class PreCognitiveAssessment(BaseModel):
     disposition: CognitiveDisposition
     intent_mode: IntentMode
     evidence_state: EvidenceState
-    claim_scopes: list[ClaimScope] = Field(default_factory=list, max_length=5)
-    requirement_flags: list[RequirementFlag] = Field(default_factory=list, max_length=8)
-    capability_indices: list[int] = Field(default_factory=list, max_length=8)
+    claim_scopes: list[ClaimScope] = Field(default_factory=list)
+    requirement_flags: list[RequirementFlag] = Field(default_factory=list)
+    capability_indices: list[int] = Field(default_factory=list)
 
     @field_validator("claim_scopes", "requirement_flags")
     @classmethod
@@ -389,28 +388,36 @@ def compose_memory_context(
     *,
     tranche_index: int,
 ) -> MemoryPacket:
-    """Compose bounded exact-source context without summarizing or rewriting evidence."""
+    """Compose exact-source context under the widest already-governed source aperture.
+
+    No new arbitrary final-packet breadth is introduced here. The derived context
+    inherits the largest ``MemoryNeed.limit`` among the bounded packets that feed
+    this worker, preferring the newest capability evidence before older/aperture
+    evidence and preserving canonical source bytes.
+    """
 
     packets = [
         execution.memory_packet
         for execution in reversed(executions)
         if execution.memory_packet is not None
     ]
+    source_packets = [*packets, aperture_packet]
+    context_limit = max(packet.need.limit for packet in source_packets)
     items = []
     seen = set()
-    for packet in [*packets, aperture_packet]:
+    for packet in source_packets:
         for item in packet.items:
             if item.source_event_id in seen:
                 continue
             seen.add(item.source_event_id)
             items.append(item.model_copy(deep=True))
-            if len(items) == _MAX_FINAL_MEMORY_ITEMS:
+            if len(items) == context_limit:
                 break
-        if len(items) == _MAX_FINAL_MEMORY_ITEMS:
+        if len(items) == context_limit:
             break
 
     need = aperture_packet.need.model_copy(deep=True)
-    need.limit = _MAX_FINAL_MEMORY_ITEMS
+    need.limit = context_limit
     return MemoryPacket(
         memory_request_id=uuid5(interaction_id, f"pre-cognitive-context:{tranche_index}"),
         need=need,
