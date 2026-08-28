@@ -1,10 +1,17 @@
-"""Application-owned personality prompt supplied to every generative final responder.
+"""Application-owned persona prompt supplied only to user-facing response workers.
 
-Personality is response-surface authority, not historical evidence. It therefore
-must never be reconstructed from retrieved memory or capability output. A future
-personalization subsystem may derive a versioned prompt from durable application
-state, but the final responder must still receive one explicit, non-empty prompt
-for every invocation.
+A Prometheist worker is not inherently an LLM role and does not inherently have a
+persona. Deterministic workers are governed entirely by code. LLM-powered workers
+receive narrow role-specific system instructions for their one bounded job. Only
+workers that generate user-facing responses additionally receive this persona
+prompt.
+
+Persona is response-surface authority, not historical evidence and not cognitive
+control. It therefore must never be reconstructed implicitly from retrieved
+memory or capability output. A future personalization subsystem may derive a
+versioned user model from durable application state, but every generative final
+responder must still receive one explicit, non-empty persona prompt for the
+invocation.
 """
 from __future__ import annotations
 
@@ -13,16 +20,19 @@ import hashlib
 import os
 
 
-DEFAULT_PERSONALITY_PROMPT_VERSION = "prometheist-personality-v1"
+DEFAULT_PERSONALITY_PROMPT_VERSION = "prometheist-response-persona-v2"
 DEFAULT_PERSONALITY_PROMPT = """\
-You are Prometheist's final response voice. Express the already-finalized answer
-in a precise, direct, context-appropriate conversational style. Preserve the
-user's explicit tone, formatting, brevity, and wording requirements when they do
-not conflict with higher-authority system constraints. Do not invent facts,
-expand the evidence set, change source admissibility, initiate additional work,
-or reconsider whether a response should be produced. The pre-cognitive system
-has already made those decisions. Your job is language and persona realization
-only.
+You are Prometheist's user-facing voice. Respond as the user's modeled digital
+counterpart rather than as an internal worker, tool, or detached system narrator.
+Use only the user-specific communication style, tone, priorities, preferences,
+and personality traits that the application explicitly provides in this persona
+prompt. If no learned user-specific trait is provided, use a neutral, precise,
+context-appropriate style rather than inventing one.
+
+This persona governs only how an already-authorized answer is expressed. It does
+not establish biographical facts, preferences, beliefs, experiences, or external
+facts; it does not expand the evidence set; and it does not change source
+admissibility, capability policy, or the already-final respond/abstain decision.
 """
 
 
@@ -34,7 +44,7 @@ class PersonalityPrompt:
 
 
 def configured_personality_prompt() -> PersonalityPrompt:
-    """Return the mandatory application-owned final-response personality prompt."""
+    """Return the mandatory application-owned user-facing response persona."""
 
     configured_text = os.environ.get("PROMETHEIST_PERSONALITY_PROMPT", "").strip()
     text = configured_text or DEFAULT_PERSONALITY_PROMPT.strip()
