@@ -7,7 +7,6 @@ FinalResponseDirective before the RESPOND stage can invoke a final responder.
 """
 from __future__ import annotations
 
-import json
 from typing import Any
 from uuid import UUID, uuid5
 
@@ -38,7 +37,6 @@ from jit_agent.models import EventType, MemoryPacket
 from jit_agent.personality import configured_personality_prompt
 from jit_agent.pre_cognitive_workers import (
     PRE_COGNITIVE_WORKER_SCHEME_VERSION,
-    SOURCE,
     CognitiveDisposition,
     PreCognitiveAssessment,
     _execute_stage,
