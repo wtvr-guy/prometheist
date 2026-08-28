@@ -255,12 +255,7 @@ def _llm_profile(
 
 @lru_cache(maxsize=None)
 def default_worker_profile_registry() -> WorkerProfileRegistry:
-    """Build the production registry from the prompts used by active call sites.
-
-    Imports are intentionally lazy. The registry indexes the authoritative prompt
-    text already used by the model adapters without introducing import cycles in
-    capability or LLM modules.
-    """
+    """Build the production registry from the prompts used by active call sites."""
 
     from jit_agent.budgeted_evidence_llm import (
         _CURRENT_FALLBACK_SELECTION_SYSTEM_PROMPT,
@@ -279,22 +274,12 @@ def default_worker_profile_registry() -> WorkerProfileRegistry:
     from jit_agent.pre_cognitive_response_runtime import _FINAL_READINESS_SYSTEM_PROMPT
     from jit_agent.pre_cognitive_specialists import (
         _CAPABILITY_SELECTOR_SYSTEM_PROMPT,
-        _CLAIM_SCOPE_CLASSIFIER_SYSTEM_PROMPT,
         _EVIDENCE_SUFFICIENCY_SYSTEM_PROMPT,
-        _INTENT_CLASSIFIER_SYSTEM_PROMPT,
-        _REQUIREMENT_CLASSIFIER_SYSTEM_PROMPT,
     )
 
     registry = WorkerProfileRegistry()
 
     for profile in (
-        _llm_profile(
-            "intent_classifier",
-            "Classify only the broad intent of the current percept.",
-            ("current_percept",),
-            "IntentClassification",
-            _INTENT_CLASSIFIER_SYSTEM_PROMPT,
-        ),
         _llm_profile(
             "evidence_sufficiency_verifier",
             "Decide only whether supplied current/evidence material can support the requested answer.",
@@ -306,20 +291,6 @@ def default_worker_profile_registry() -> WorkerProfileRegistry:
             ),
             "EvidenceSufficiencyDecision",
             _EVIDENCE_SUFFICIENCY_SYSTEM_PROMPT,
-        ),
-        _llm_profile(
-            "claim_scope_classifier",
-            "Classify only the closed claim/source scopes implicated by the requested answer.",
-            ("current_percept", "activated_evidence", "completed_capability_results"),
-            "ClaimScopeClassification",
-            _CLAIM_SCOPE_CLASSIFIER_SYSTEM_PROMPT,
-        ),
-        _llm_profile(
-            "requirement_classifier",
-            "Classify only closed semantic task requirements.",
-            ("current_percept",),
-            "RequirementClassification",
-            _REQUIREMENT_CLASSIFIER_SYSTEM_PROMPT,
         ),
         _llm_profile(
             "capability_selector",
@@ -410,7 +381,7 @@ def default_worker_profile_registry() -> WorkerProfileRegistry:
     for profile in (
         _deterministic_profile(
             "pre_cognitive_assessment",
-            "Compose atomic semantic specialist outputs into one durable pre-cognitive assessment.",
+            "Compose demand-driven specialist outputs into one durable pre-cognitive assessment.",
             (
                 "current_percept",
                 "phase",
@@ -420,10 +391,7 @@ def default_worker_profile_registry() -> WorkerProfileRegistry:
             ),
             "PreCognitiveAssessment",
             delegated_worker_profile_ids=(
-                "intent_classifier",
                 "evidence_sufficiency_verifier",
-                "claim_scope_classifier",
-                "requirement_classifier",
                 "capability_selector",
             ),
         ),
