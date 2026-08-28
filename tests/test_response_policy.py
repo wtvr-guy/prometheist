@@ -18,6 +18,7 @@ from jit_agent.response_policy import (
     validate_current_literal,
     validate_exact_source_composition,
     validate_exact_source_selection,
+    validate_response_policy_current_authority,
 )
 
 
@@ -109,6 +110,29 @@ def test_insufficient_literal_must_be_verbatim_current_prompt_text():
         validate_current_literal(prompt, "UNKNOWN")
 
 
+def test_response_policy_closed_output_literals_must_be_current_authority():
+    prompt = (
+        "Return exactly one of these labels and nothing else: "
+        "Docker Compose | PostgreSQL directly on Windows."
+    )
+    policy = ResponsePolicy(
+        evidence_scope=HistoricalEvidenceScope.USER_AUTHORED,
+        surface_mode=ResponseSurfaceMode.EXACT_SOURCE_SUBSTRING,
+        allowed_output_literals=[
+            "Docker Compose",
+            "PostgreSQL directly on Windows",
+        ],
+    )
+
+    assert validate_response_policy_current_authority(prompt, policy) is policy
+
+    invalid = policy.model_copy(
+        update={"allowed_output_literals": ["Docker Compose", "Kubernetes"]}
+    )
+    with pytest.raises(ValueError, match="current prompt"):
+        validate_response_policy_current_authority(prompt, invalid)
+
+
 def test_exact_source_selection_returns_source_bytes_not_generated_wrapper():
     item = _evidence(
         EventType.USER_PROMPT,
@@ -127,6 +151,40 @@ def test_exact_source_selection_returns_source_bytes_not_generated_wrapper():
         validate_exact_source_selection(
             packet,
             ExactSourceSelection(source_index=0, verbatim_value="The key is ASTER-1234ABCD"),
+        )
+
+
+def test_exact_source_selection_enforces_current_closed_output_set():
+    item = _evidence(
+        EventType.USER_PROMPT,
+        "For Project Kestrel, never use Docker; deploy PostgreSQL directly on Windows.",
+        1,
+    )
+    packet = _packet(item)
+    allowed = ("Docker Compose", "PostgreSQL directly on Windows")
+
+    assert (
+        validate_exact_source_selection(
+            packet,
+            ExactSourceSelection(
+                source_index=0,
+                verbatim_value="PostgreSQL directly on Windows",
+            ),
+            allowed_output_literals=allowed,
+        )
+        == "PostgreSQL directly on Windows"
+    )
+
+    with pytest.raises(ValueError, match="allowed outputs"):
+        validate_exact_source_selection(
+            packet,
+            ExactSourceSelection(
+                source_index=0,
+                verbatim_value=(
+                    "For Project Kestrel, never use Docker; deploy PostgreSQL directly on Windows."
+                ),
+            ),
+            allowed_output_literals=allowed,
         )
 
 
@@ -182,6 +240,7 @@ def test_response_policy_schema_keeps_epistemic_and_surface_contract_separate():
 
     assert policy.evidence_scope is HistoricalEvidenceScope.USER_AUTHORED
     assert policy.surface_mode is ResponseSurfaceMode.EXACT_SOURCE_SUBSTRING
+    assert policy.allowed_output_literals == []
 
     composition_policy = policy.model_copy(
         update={"surface_mode": ResponseSurfaceMode.EXACT_SOURCE_COMPOSITION}
