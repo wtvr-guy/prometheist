@@ -142,6 +142,8 @@ Required before closure:
 
 The native suite must continue to include the established restart, randomized opaque-fact, cross-process/cross-conversation, and multi-turn stateless-continuity scenarios.
 
+For those continuity scenarios, the automated oracle now ends at the final response boundary: it reconstructs the policy-admitted `FINAL_EVIDENCE`/`FINAL_RESPONSE_DIRECTIVE` handoff from the terminal workpiece and verifies that the fresh responder had the required canonical facts and provenance. The actual Prometheist response is printed in full for human inspection but is not forced into pipe-delimited or other canned prose unless exact formatting is itself the behavior under test. See [`../../engineering/TESTING_AND_ACCEPTANCE.md`](../../engineering/TESTING_AND_ACCEPTANCE.md).
+
 ## What v0.7 deliberately does not claim
 
 v0.7 does not yet implement general grocery ordering, appointment booking, device control, deterministic perception/salience, retention policy, semantic embedding retrieval, or the complete integrated cognitive loop.
