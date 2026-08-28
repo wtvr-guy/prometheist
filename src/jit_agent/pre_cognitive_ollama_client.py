@@ -1,12 +1,12 @@
 """Demand-driven Ollama adapter for specialized ephemeral pre-cognition.
 
 The fast path invokes exactly one semantic LLM station: evidence sufficiency.
-Only when that station returns INSUFFICIENT and a legal catalog exists does a
-second specialist select capability indices. When insufficiency would otherwise
-be terminal because no useful capability was selected, one fresh bounded
-confirmation pass must agree before Prometheist abstains. Deterministic
-application code then derives disposition/evidence state and constructs the
-durable ``PreCognitiveAssessment``.
+When a first sufficiency pass returns INSUFFICIENT despite non-empty activated or
+capability evidence, the same bounded station performs one fresh confirmation
+pass before any capability selection. Only confirmed insufficiency may flow to a
+second specialist that selects capability indices. Deterministic application code
+then derives disposition/evidence state and constructs the durable
+``PreCognitiveAssessment``.
 
 Descriptive assessment fields that are not currently required for acquisition or
 response-boundary enforcement remain neutral rather than forcing unnecessary LLM
@@ -49,8 +49,8 @@ _SET_LIKE_FIELDS_BY_SCHEMA = {
 _TERMINAL_INSUFFICIENCY_CONFIRMATION_SYSTEM_PROMPT = (
     _EVIDENCE_SUFFICIENCY_SYSTEM_PROMPT
     + "\n\nThis is a fresh bounded confirmation pass used only because an earlier "
-    "independent sufficiency pass returned INSUFFICIENT and no legal capability "
-    "was selected to add useful evidence. Re-evaluate the supplied material from "
+    "independent sufficiency pass returned INSUFFICIENT even though activated or "
+    "capability evidence is present. Re-evaluate the supplied material from "
     "scratch. Do not preserve the earlier verdict merely for consistency. If every "
     "answer component requested by the current percept is already present or "
     "directly derivable from the supplied material, return SUFFICIENT. A historical "
@@ -135,6 +135,17 @@ class PreCognitiveDurableResponseOllamaClient(DurableResponseBudgetedOllamaClien
             EvidenceSufficiencyDecision,
         )
 
+        if (
+            sufficiency.sufficiency is EvidenceSufficiency.INSUFFICIENT
+            and (memory_packet.items or capability_results)
+        ):
+            sufficiency = self._specialist(
+                f"PRE_COGNITIVE_{phase.value}_EVIDENCE_SUFFICIENCY_CONFIRMATION",
+                _TERMINAL_INSUFFICIENCY_CONFIRMATION_SYSTEM_PROMPT,
+                evidence_context,
+                EvidenceSufficiencyDecision,
+            )
+
         capability_indices: list[int] = []
         if (
             sufficiency.sufficiency is EvidenceSufficiency.INSUFFICIENT
@@ -148,17 +159,6 @@ class PreCognitiveDurableResponseOllamaClient(DurableResponseBudgetedOllamaClien
             )
             selection.validate_catalog(capability_catalog)
             capability_indices = list(selection.capability_indices)
-
-        if (
-            sufficiency.sufficiency is EvidenceSufficiency.INSUFFICIENT
-            and not capability_indices
-        ):
-            sufficiency = self._specialist(
-                f"PRE_COGNITIVE_{phase.value}_EVIDENCE_SUFFICIENCY_CONFIRMATION",
-                _TERMINAL_INSUFFICIENCY_CONFIRMATION_SYSTEM_PROMPT,
-                evidence_context,
-                EvidenceSufficiencyDecision,
-            )
 
         if sufficiency.sufficiency is EvidenceSufficiency.SUFFICIENT:
             disposition = CognitiveDisposition.RESPOND
