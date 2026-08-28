@@ -47,7 +47,8 @@ def _supported_packet() -> MemoryPacket:
                 global_seq=1,
                 content=(
                     "For Project Kestrel, never use Docker; deploy PostgreSQL directly "
-                    "on Windows. I track that constraint under profile VX-ABC12345."
+                    "on Windows because virtualization is disabled. I track that constraint "
+                    "under profile VX-ABC12345."
                 ),
                 score=1.0,
                 retrieval_reasons=["ACTIVE_WORKING_STATE"],
@@ -58,14 +59,23 @@ def _supported_packet() -> MemoryPacket:
 
 
 class _ScriptedSpecialistClient(PreCognitiveDurableResponseOllamaClient):
-    def __init__(self, *, sufficiency: str, capability_indices: list[int] | None = None):
+    def __init__(
+        self,
+        *,
+        sufficiency: str,
+        capability_indices: list[int] | None = None,
+        confirmation_sufficiency: str | None = None,
+    ):
         self.sufficiency = sufficiency
         self.capability_indices = capability_indices or []
+        self.confirmation_sufficiency = confirmation_sufficiency or sufficiency
         self.roles: list[str] = []
 
     def _structured(self, role, system, user, schema, max_tokens):
         del system, user, schema, max_tokens
         self.roles.append(role)
+        if role.endswith("_EVIDENCE_SUFFICIENCY_CONFIRMATION"):
+            return json.dumps({"sufficiency": self.confirmation_sufficiency})
         if role.endswith("_EVIDENCE_SUFFICIENCY"):
             return json.dumps({"sufficiency": self.sufficiency})
         if role.endswith("_CAPABILITY_SELECTION"):
@@ -134,7 +144,32 @@ def test_insufficient_evidence_runs_capability_selector_only_after_sufficiency()
     assert client.roles[1].endswith("_CAPABILITY_SELECTION")
 
 
-def test_insufficient_evidence_without_helpful_capability_deterministically_abstains():
+def test_terminal_insufficiency_is_confirmed_before_abstain_and_can_recover():
+    client = _ScriptedSpecialistClient(
+        sufficiency="INSUFFICIENT",
+        capability_indices=[],
+        confirmation_sufficiency="SUFFICIENT",
+    )
+    assessment = client.assess_pre_cognition(
+        (
+            "What profile did I attach to that Kestrel deployment rule, and what "
+            "technical limitation was behind it?"
+        ),
+        _supported_packet(),
+        DEFAULT_REGISTRY.capability_catalog(),
+        phase=CognitivePhase.PRE_CAPABILITY,
+    )
+
+    assert assessment.disposition is CognitiveDisposition.RESPOND
+    assert assessment.evidence_state is EvidenceState.ACTIVATED_MEMORY_SUFFICIENT
+    assert assessment.capability_indices == []
+    assert len(client.roles) == 3
+    assert client.roles[0].endswith("_EVIDENCE_SUFFICIENCY")
+    assert client.roles[1].endswith("_CAPABILITY_SELECTION")
+    assert client.roles[2].endswith("_EVIDENCE_SUFFICIENCY_CONFIRMATION")
+
+
+def test_insufficient_evidence_without_helpful_capability_abstains_after_confirmation():
     client = _ScriptedSpecialistClient(
         sufficiency="INSUFFICIENT",
         capability_indices=[],
@@ -149,7 +184,8 @@ def test_insufficient_evidence_without_helpful_capability_deterministically_abst
     assert assessment.disposition is CognitiveDisposition.ABSTAIN
     assert assessment.evidence_state is EvidenceState.INSUFFICIENT_AFTER_AVAILABLE_WORK
     assert assessment.capability_indices == []
-    assert len(client.roles) == 2
+    assert len(client.roles) == 3
+    assert client.roles[-1].endswith("_EVIDENCE_SUFFICIENCY_CONFIRMATION")
 
 
 def test_sufficient_current_input_uses_current_input_evidence_state():
