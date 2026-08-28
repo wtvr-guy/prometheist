@@ -4,13 +4,15 @@ The production acquisition path has only two LLM-powered semantic stations:
 1. evidence sufficiency; and
 2. capability selection, invoked only after insufficiency is established.
 
-No specialist can authorize a response, execute work, or author the aggregate
-``PreCognitiveAssessment``. Deterministic application code derives the control
-state from the specialists' closed outputs.
+Each station returns one tiny validated component. Deterministic application code
+may attach those components to a larger interaction workpiece and derives the
+aggregate ``PreCognitiveAssessment``; no specialist can authorize a response,
+execute work, or author the aggregate control state.
 """
 from __future__ import annotations
 
 from enum import Enum
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -47,6 +49,32 @@ class CapabilitySelectionDecision(BaseModel):
     def validate_catalog(self, catalog: tuple[CapabilityDescriptor, ...]) -> None:
         if any(index >= len(catalog) for index in self.capability_indices):
             raise ValueError("specialist selected a capability outside the supplied catalog")
+
+
+class EvidenceSufficiencyStationComponent(BaseModel):
+    """Attachable output of exactly one evidence-sufficiency station invocation."""
+
+    model_config = ConfigDict(extra="forbid")
+    component_type: Literal["EVIDENCE_SUFFICIENCY"] = "EVIDENCE_SUFFICIENCY"
+    producer_profile_id: Literal["evidence_sufficiency_verifier"] = (
+        "evidence_sufficiency_verifier"
+    )
+    decision: EvidenceSufficiencyDecision
+
+
+class CapabilitySelectionStationComponent(BaseModel):
+    """Attachable output of exactly one capability-selection station invocation."""
+
+    model_config = ConfigDict(extra="forbid")
+    component_type: Literal["CAPABILITY_SELECTION"] = "CAPABILITY_SELECTION"
+    producer_profile_id: Literal["capability_selector"] = "capability_selector"
+    decision: CapabilitySelectionDecision
+
+
+PreCognitiveStationComponent = Annotated[
+    EvidenceSufficiencyStationComponent | CapabilitySelectionStationComponent,
+    Field(discriminator="component_type"),
+]
 
 
 _EVIDENCE_SUFFICIENCY_SYSTEM_PROMPT = """\
