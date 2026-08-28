@@ -15,7 +15,8 @@ from psycopg.rows import dict_row
 from pydantic import BaseModel, Field
 
 from jit_agent import event_store
-from jit_agent.models import EventType
+from jit_agent.models import EventType, MemoryPacket
+from jit_agent.response_policy import ResponsePolicy, filter_memory_packet_for_scope
 
 
 WORKING_STATE_VERSION = "v0.7-working-state-v2"
@@ -75,6 +76,96 @@ def load_working_state(
     return InteractionWorkingState.model_validate(row["payload"]["state"])
 
 
+def _linked_response_evidence_event_ids(
+    conn: psycopg.Connection,
+    event_id: UUID,
+) -> list[UUID]:
+    """Recover policy-admitted canonical evidence behind one persisted response.
+
+    A generated response is canonical evidence of what Prometheist said, but it
+    is not a substitute for the user/tool/system evidence that supported those
+    words. Current finalized responses point to their terminal workpiece
+    snapshot, which preserves both FINAL_EVIDENCE and FINAL_RESPONSE_DIRECTIVE.
+    Re-activating those admitted source events keeps bounded WorkingState tied to
+    the underlying authority instead of allowing accurate-or-inaccurate model
+    restatements to become self-supporting memory.
+
+    Historical/legacy response events without a workpiece link remain valid and
+    simply contribute no additional anchors.
+    """
+
+    event = event_store.get_event_by_id(conn, event_id)
+    if event is None or event.event_type is not EventType.INTERACTION_RESPONSE:
+        return []
+
+    raw_workpiece_event_id = event.payload.get("workpiece_event_id")
+    if raw_workpiece_event_id is None:
+        return []
+    try:
+        workpiece_event_id = UUID(str(raw_workpiece_event_id))
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError("response references an invalid workpiece event id") from exc
+
+    workpiece_event = event_store.get_event_by_id(conn, workpiece_event_id)
+    if workpiece_event is None:
+        raise RuntimeError("response references a missing workpiece snapshot")
+    if (
+        workpiece_event.event_type is not EventType.SYSTEM_EVENT
+        or workpiece_event.payload.get("kind") != "INTERACTION_WORKPIECE_SNAPSHOT"
+    ):
+        raise RuntimeError("response workpiece reference does not target a terminal snapshot")
+
+    raw_workpiece = workpiece_event.payload.get("workpiece")
+    if not isinstance(raw_workpiece, dict):
+        raise RuntimeError("response workpiece snapshot has no workpiece payload")
+    components = raw_workpiece.get("components")
+    if not isinstance(components, list):
+        raise RuntimeError("response workpiece snapshot has invalid components")
+
+    final_evidence_components = [
+        component
+        for component in components
+        if isinstance(component, dict)
+        and component.get("component_type") == "FINAL_EVIDENCE"
+    ]
+    directive_components = [
+        component
+        for component in components
+        if isinstance(component, dict)
+        and component.get("component_type") == "FINAL_RESPONSE_DIRECTIVE"
+    ]
+    if len(final_evidence_components) != 1 or len(directive_components) != 1:
+        raise RuntimeError("response workpiece snapshot has invalid final response components")
+
+    final_packet = MemoryPacket.model_validate(
+        final_evidence_components[0].get("memory_packet")
+    )
+    raw_directive = directive_components[0].get("directive")
+    if not isinstance(raw_directive, dict):
+        raise RuntimeError("response workpiece snapshot has invalid final directive")
+    policy = ResponsePolicy.model_validate(raw_directive.get("response_policy"))
+    admitted_packet = filter_memory_packet_for_scope(
+        final_packet,
+        policy.evidence_scope,
+    )
+    if admitted_packet is None:
+        return []
+    return [item.source_event_id for item in admitted_packet.items]
+
+
+def _expand_activation_event_ids(
+    conn: psycopg.Connection,
+    event_ids: list[UUID],
+) -> list[UUID]:
+    """Keep each explicit activation adjacent to its canonical response anchors."""
+
+    expanded: list[UUID] = []
+    for event_id in event_ids:
+        expanded.append(event_id)
+        expanded.extend(_linked_response_evidence_event_ids(conn, event_id))
+    return expanded
+
+
 def activate_working_state(
     conn: psycopg.Connection,
     *,
@@ -90,6 +181,11 @@ def activate_working_state(
     phase therefore returns the already-persisted revision instead of advancing
     state again. Distinct phases (for example `memory` and `response`) remain
     append-only revisions within the same interaction.
+
+    When a finalized response is activated, its policy-admitted source events
+    are deterministically re-activated beside it. This preserves source
+    authority across natural conversational compression without storing a free-
+    form summary or making model output authoritative.
     """
 
     event_id = deterministic_working_state_event_id(interaction_id, activation_key)
@@ -112,7 +208,7 @@ def activate_working_state(
         16,
     )
     active_event_ids = _merge_uuid_lists(
-        activated_event_ids,
+        _expand_activation_event_ids(conn, activated_event_ids),
         previous.active_event_ids if previous is not None else [],
         MAX_ACTIVE_EVENT_IDS,
     )
