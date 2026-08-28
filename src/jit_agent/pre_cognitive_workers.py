@@ -1,20 +1,20 @@
 """Pre-cognitive transient worker pipeline for production interaction execution.
 
-This module deliberately keeps the durable v0.7 interaction stage keys so that
-worker claims, restart recovery, and persisted assignments remain compatible,
-while replacing the recurrent capability-router semantics with bounded,
-disposable cognition:
+The durable v0.7 interaction stage keys are intentionally retained so existing
+worker claims, scheduler state, restart recovery, and persisted assignments stay
+compatible while production semantics move away from a recurrent model router.
 
+Production flow:
 1. deterministic reference/working-state inspection;
-2. JIT attention aperture + one fresh pre-cognitive assessment;
-3. deterministic capability execution, followed only when needed by one fresh
-   post-capability assessment and one bounded follow-up tranche;
+2. JIT attention aperture plus one fresh pre-cognitive assessment;
+3. deterministic capability execution; only when work was required, one fresh
+   post-capability assessment may expose one bounded follow-up tranche;
 4. one fresh response worker;
 5. deterministic persistence.
 
-No model invocation inherits a previous model context. Durable continuity comes
-only from PostgreSQL state, exact source events, MemoryPackets, capability
-results, and the closed cognitive-control records persisted here.
+No LLM invocation inherits model context from another invocation. Continuity is
+reconstructed solely from durable PostgreSQL state, exact source evidence,
+MemoryPackets, structured capability results, and persisted closed control data.
 """
 from __future__ import annotations
 
@@ -69,8 +69,6 @@ class CognitivePhase(str, Enum):
 
 
 class CognitiveDisposition(str, Enum):
-    """Closed control disposition; never a free-form plan."""
-
     RESPOND = "RESPOND"
     ACQUIRE_CAPABILITIES = "ACQUIRE_CAPABILITIES"
     ABSTAIN = "ABSTAIN"
@@ -114,11 +112,12 @@ class RequirementFlag(str, Enum):
 
 
 class PreCognitiveAssessment(BaseModel):
-    """Small closed control record emitted by a fresh cognition worker.
+    """Closed control record emitted by one disposable cognition worker.
 
-    The model may classify intent/evidence/claims/requirements and select indices
-    from an application-owned catalog. It may not author capability names,
-    retrieval queries, event ids, tool arguments, ordering, or prose plans.
+    The model may classify intent, evidence state, claim scopes, requirements,
+    and indices from an application-owned capability catalog. It may not author
+    capability names, retrieval queries, event ids, tool arguments, execution
+    order, prose plans, factual claims, or response text.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -134,7 +133,7 @@ class PreCognitiveAssessment(BaseModel):
 
     @field_validator("claim_scopes", "requirement_flags")
     @classmethod
-    def unique_enums(cls, values: list[Any]) -> list[Any]:
+    def unique_closed_values(cls, values: list[Any]) -> list[Any]:
         if len(values) != len(set(values)):
             raise ValueError("closed assessment lists must not contain duplicates")
         return values
@@ -149,7 +148,7 @@ class PreCognitiveAssessment(BaseModel):
         return values
 
     @model_validator(mode="after")
-    def validate_disposition(self) -> "PreCognitiveAssessment":
+    def validate_contract(self) -> "PreCognitiveAssessment":
         if self.scheme_version != PRE_COGNITIVE_WORKER_SCHEME_VERSION:
             raise ValueError("unsupported pre-cognitive worker scheme version")
         if self.disposition is CognitiveDisposition.ACQUIRE_CAPABILITIES:
@@ -170,8 +169,6 @@ class PreCognitiveAssessment(BaseModel):
 
 
 class PreCognitiveLLM(Protocol):
-    """Optional explicit adapter interface used by tests or alternate model clients."""
-
     def assess_pre_cognition(
         self,
         prompt: str,
@@ -191,35 +188,30 @@ Everything you may use is in the current percept, the bounded activated evidence
 structured completed-capability results, and the application-owned numbered
 capability catalog supplied to this call.
 
-Your job is not to answer the user. Produce only the closed structured assessment.
-Classify:
-- the broad intent mode;
-- whether currently supplied evidence is sufficient;
-- which claim scopes the eventual response will rely on;
-- which closed requirement flags apply; and
-- only when more work is genuinely required, the smallest set of capability
-  indices from the supplied catalog needed to acquire that evidence/result.
+Do not answer the user. Produce only the closed structured assessment. Classify
+the broad intent, evidence sufficiency, claim scopes, requirement flags, and only
+when more work is genuinely required the smallest set of capability indices from
+the supplied catalog needed to acquire that evidence or result.
 
 Never write capability names, queries, tool arguments, event ids, retrieval text,
 ordering instructions, plans, explanations, summaries, claims, or response prose.
-The application owns capability identity, dependency closure, scheduling,
-resource admission, ordering, execution, provenance, and persistence.
+Prometheist owns identity, dependency closure, ordering, resource admission,
+execution, provenance, and persistence.
 
 Use RESPOND when the current input plus activated evidence is sufficient. Use
-ACQUIRE_CAPABILITIES only when one or more catalog capabilities are required.
-Use ABSTAIN only when the available work represented by this phase is exhausted
-and evidence remains insufficient. During POST_CAPABILITY, the catalog contains
-only legal bounded follow-up work; do not ask to repeat work that is absent from
-that catalog.
+ACQUIRE_CAPABILITIES only when catalog work is required. Use ABSTAIN only when
+available work for this phase is exhausted and evidence remains insufficient.
+During POST_CAPABILITY the catalog contains only newly legal bounded follow-up
+work; do not request repetition of work absent from that catalog.
 """
 
 
 def _format_memory_for_cognition(packet: MemoryPacket) -> str:
     if not packet.items:
         return "\n\n[Activated evidence]\nsupported: false\nitems: []"
-    items = []
+    rendered = []
     for index, item in enumerate(packet.items):
-        items.append(
+        rendered.append(
             f"item: {index}\n"
             f"event_type: {item.event_type.value}\n"
             f"content: {item.content}"
@@ -227,7 +219,7 @@ def _format_memory_for_cognition(packet: MemoryPacket) -> str:
     return (
         "\n\n[Activated evidence]\n"
         f"supported: {str(packet.supported).lower()}\n"
-        + "\n\n".join(items)
+        + "\n\n".join(rendered)
     )
 
 
@@ -267,7 +259,7 @@ def _assessment_from_legacy_decision(
     phase: CognitivePhase,
     memory_packet: MemoryPacket,
 ) -> PreCognitiveAssessment:
-    """Compatibility fallback for fake/alternate clients that only implement classify."""
+    """Compatibility path for tests/clients that only implement legacy classify()."""
 
     if decision.next_action is InteractionAction.USE_CAPABILITIES:
         return PreCognitiveAssessment(
@@ -304,19 +296,22 @@ def assess_pre_cognition(
     completed_results: tuple[CapabilityResultSummary, ...] = (),
     capability_results: tuple[dict[str, Any], ...] = (),
 ) -> PreCognitiveAssessment:
-    """Run one independent bounded cognition call with compatibility fallbacks."""
+    """Run one independent bounded cognition call."""
 
     explicit = getattr(llm, "assess_pre_cognition", None)
     if callable(explicit):
-        assessment = explicit(
-            prompt,
-            memory_packet,
-            capability_catalog,
-            phase=phase,
-            completed_results=completed_results,
-            capability_results=capability_results,
+        assessment = PreCognitiveAssessment.model_validate(
+            explicit(
+                prompt,
+                memory_packet,
+                capability_catalog,
+                phase=phase,
+                completed_results=completed_results,
+                capability_results=capability_results,
+            )
         )
-        assessment = PreCognitiveAssessment.model_validate(assessment)
+        if assessment.phase is not phase:
+            raise ValueError("pre-cognitive assessment returned the wrong phase")
         assessment.validate_catalog(capability_catalog)
         return assessment
 
@@ -373,17 +368,17 @@ def newly_exposed_follow_up_catalog(
     initial_catalog: tuple[CapabilityDescriptor, ...],
     executed_capability_ids: tuple[str, ...],
 ) -> tuple[CapabilityDescriptor, ...]:
-    """Expose only capabilities made newly legal by the completed first tranche."""
+    """Expose only capabilities made newly legal by the first completed tranche."""
 
     if not executed_capability_ids:
         return ()
     initial_ids = {item.capability_id for item in initial_catalog}
+    executed_ids = set(executed_capability_ids)
     expanded = registry.capability_catalog(executed_capability_ids=executed_capability_ids)
     return tuple(
         item
         for item in expanded
-        if item.capability_id not in initial_ids
-        and item.capability_id not in set(executed_capability_ids)
+        if item.capability_id not in initial_ids and item.capability_id not in executed_ids
     )
 
 
@@ -394,7 +389,7 @@ def compose_memory_context(
     *,
     tranche_index: int,
 ) -> MemoryPacket:
-    """Compose bounded exact-source working context without rewriting source evidence."""
+    """Compose bounded exact-source context without summarizing or rewriting evidence."""
 
     packets = [
         execution.memory_packet
@@ -417,10 +412,7 @@ def compose_memory_context(
     need = aperture_packet.need.model_copy(deep=True)
     need.limit = _MAX_FINAL_MEMORY_ITEMS
     return MemoryPacket(
-        memory_request_id=uuid5(
-            interaction_id,
-            f"pre-cognitive-context:{tranche_index}",
-        ),
+        memory_request_id=uuid5(interaction_id, f"pre-cognitive-context:{tranche_index}"),
         need=need,
         supported=bool(items),
         items=items,
@@ -440,22 +432,14 @@ def capability_result_summaries(
 ) -> tuple[CapabilityResultSummary, ...]:
     return tuple(
         CapabilityResultSummary(
-            round_index=execution.round_index,
-            capability_id=execution.capability_id,
-            supported=(
-                execution.memory_packet.supported
-                if execution.memory_packet is not None
-                else None
-            ),
-            item_count=(
-                len(execution.memory_packet.items)
-                if execution.memory_packet is not None
-                else None
-            ),
-            result_keys=sorted(execution.result_data),
-            result_data=dict(execution.result_data),
+            round_index=item.round_index,
+            capability_id=item.capability_id,
+            supported=(item.memory_packet.supported if item.memory_packet is not None else None),
+            item_count=(len(item.memory_packet.items) if item.memory_packet is not None else None),
+            result_keys=sorted(item.result_data),
+            result_data=dict(item.result_data),
         )
-        for execution in executions
+        for item in executions
     )
 
 
@@ -480,7 +464,7 @@ def cognitive_brief_result(
     *,
     follow_up_executed: bool,
 ) -> dict[str, Any]:
-    """Non-evidentiary control metadata for the final fresh response worker."""
+    """Non-evidentiary control metadata delivered to the final response worker."""
 
     effective = post or pre
     return {
@@ -514,15 +498,57 @@ def _stage_result(
     return dict(result.output)
 
 
-def _record_assessment_event(
+def _assessment_event_id(interaction_id: UUID, phase: CognitivePhase) -> UUID:
+    return uuid5(interaction_id, f"pre-cognitive:{phase.value}")
+
+
+def _load_or_create_assessment(
     conn: psycopg.Connection,
-    interaction: DurableInteraction,
+    llm: Any,
     *,
+    interaction: DurableInteraction,
     phase: CognitivePhase,
-    assessment: PreCognitiveAssessment,
+    memory_packet: MemoryPacket,
     catalog: tuple[CapabilityDescriptor, ...],
-    plan: CapabilityExecutionPlan,
-) -> None:
+    registry: CapabilityRegistry,
+    completed_results: tuple[CapabilityResultSummary, ...] = (),
+    capability_results: tuple[dict[str, Any], ...] = (),
+) -> tuple[PreCognitiveAssessment, CapabilityExecutionPlan]:
+    """Persist once and reuse on retry so worker crashes never re-roll cognition."""
+
+    event_id = _assessment_event_id(interaction.interaction_id, phase)
+    existing = event_store.get_event_by_id(conn, event_id)
+    catalog_ids = [item.capability_id for item in catalog]
+    if existing is not None:
+        payload = existing.payload
+        if payload.get("kind") != "PRE_COGNITIVE_ASSESSMENT":
+            raise RuntimeError("persisted pre-cognitive event has invalid kind")
+        if payload.get("scheme_version") != PRE_COGNITIVE_WORKER_SCHEME_VERSION:
+            raise RuntimeError("persisted pre-cognitive event uses a different scheme")
+        if payload.get("phase") != phase.value:
+            raise RuntimeError("persisted pre-cognitive phase mismatch")
+        if payload.get("memory_request_id") != str(memory_packet.memory_request_id):
+            raise RuntimeError("persisted pre-cognitive event references different evidence")
+        if payload.get("catalog_capability_ids") != catalog_ids:
+            raise RuntimeError("capability catalog changed after cognitive decision")
+        assessment = PreCognitiveAssessment.model_validate(payload["assessment"])
+        assessment.validate_catalog(catalog)
+        persisted_plan = CapabilityExecutionPlan.model_validate(payload["execution_plan"])
+        expected_plan = registry.plan_execution(catalog, assessment.capability_indices)
+        if persisted_plan.model_dump(mode="json") != expected_plan.model_dump(mode="json"):
+            raise RuntimeError("persisted capability plan no longer matches registry policy")
+        return assessment, persisted_plan
+
+    assessment = assess_pre_cognition(
+        llm,
+        interaction.user_text,
+        memory_packet,
+        catalog,
+        phase=phase,
+        completed_results=completed_results,
+        capability_results=capability_results,
+    )
+    plan = registry.plan_execution(catalog, assessment.capability_indices)
     event_store.record_event(
         conn,
         conversation_id=interaction.conversation_id,
@@ -533,12 +559,26 @@ def _record_assessment_event(
             "kind": "PRE_COGNITIVE_ASSESSMENT",
             "scheme_version": PRE_COGNITIVE_WORKER_SCHEME_VERSION,
             "phase": phase.value,
+            "memory_request_id": str(memory_packet.memory_request_id),
+            "catalog_capability_ids": catalog_ids,
             "assessment": assessment.model_dump(mode="json"),
-            "capability_catalog": [item.model_dump(mode="json") for item in catalog],
             "execution_plan": plan.model_dump(mode="json"),
         },
-        event_id=uuid5(interaction.interaction_id, f"pre-cognitive:{phase.value}"),
+        event_id=event_id,
     )
+    return assessment, plan
+
+
+def _validate_persisted_selection(
+    registry: CapabilityRegistry,
+    catalog: tuple[CapabilityDescriptor, ...],
+    assessment: PreCognitiveAssessment,
+    persisted_plan: CapabilityExecutionPlan,
+) -> None:
+    assessment.validate_catalog(catalog)
+    expected_plan = registry.plan_execution(catalog, assessment.capability_indices)
+    if expected_plan.model_dump(mode="json") != persisted_plan.model_dump(mode="json"):
+        raise RuntimeError("capability configuration changed after pre-cognitive selection")
 
 
 def _execute_plan(
@@ -702,21 +742,14 @@ def _execute_stage(
             before_global_seq=interaction.before_global_seq,
         )
         catalog = registry.capability_catalog()
-        assessment = assess_pre_cognition(
-            llm,
-            interaction.user_text,
-            aperture_packet,
-            catalog,
-            phase=CognitivePhase.PRE_CAPABILITY,
-        )
-        plan = registry.plan_execution(catalog, assessment.capability_indices)
-        _record_assessment_event(
+        assessment, plan = _load_or_create_assessment(
             conn,
-            interaction,
+            llm,
+            interaction=interaction,
             phase=CognitivePhase.PRE_CAPABILITY,
-            assessment=assessment,
+            memory_packet=aperture_packet,
             catalog=catalog,
-            plan=plan,
+            registry=registry,
         )
         return {
             "scheme_version": PRE_COGNITIVE_WORKER_SCHEME_VERSION,
@@ -737,7 +770,18 @@ def _execute_stage(
             CapabilityDescriptor.model_validate(item)
             for item in selection["capability_catalog"]
         )
+        current_catalog = registry.capability_catalog()
+        if [item.model_dump(mode="json") for item in initial_catalog] != [
+            item.model_dump(mode="json") for item in current_catalog
+        ]:
+            raise RuntimeError("capability catalog changed after pre-cognitive selection")
         initial_plan = CapabilityExecutionPlan.model_validate(selection["execution_plan"])
+        _validate_persisted_selection(
+            registry,
+            initial_catalog,
+            pre_assessment,
+            initial_plan,
+        )
 
         executions: list[CapabilityExecution] = []
         output_refs: list[str] = []
@@ -780,26 +824,16 @@ def _execute_stage(
             )
             completed = capability_result_summaries(executions)
             structured = tuple(structured_capability_result(item) for item in executions)
-            post_assessment = assess_pre_cognition(
+            post_assessment, follow_up_plan = _load_or_create_assessment(
+                conn,
                 llm,
-                interaction.user_text,
-                context_packet,
-                follow_up_catalog,
+                interaction=interaction,
                 phase=CognitivePhase.POST_CAPABILITY,
+                memory_packet=context_packet,
+                catalog=follow_up_catalog,
+                registry=registry,
                 completed_results=completed,
                 capability_results=structured,
-            )
-            follow_up_plan = registry.plan_execution(
-                follow_up_catalog,
-                post_assessment.capability_indices,
-            )
-            _record_assessment_event(
-                conn,
-                interaction,
-                phase=CognitivePhase.POST_CAPABILITY,
-                assessment=post_assessment,
-                catalog=follow_up_catalog,
-                plan=follow_up_plan,
             )
 
             if post_assessment.disposition is CognitiveDisposition.ACQUIRE_CAPABILITIES:
@@ -830,9 +864,7 @@ def _execute_stage(
             "fast_path": not executions,
             "pre_assessment": pre_assessment.model_dump(mode="json"),
             "post_assessment": (
-                post_assessment.model_dump(mode="json")
-                if post_assessment is not None
-                else None
+                post_assessment.model_dump(mode="json") if post_assessment is not None else None
             ),
             "follow_up_catalog": [item.model_dump(mode="json") for item in follow_up_catalog],
             "follow_up_plan": follow_up_plan.model_dump(mode="json"),
