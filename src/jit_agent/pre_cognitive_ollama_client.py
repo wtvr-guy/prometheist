@@ -1,17 +1,14 @@
-"""Ollama client adapter for robust closed pre-cognitive control output.
+"""Ollama adapter that composes pre-cognition from atomic transient specialists.
 
-Small local models can occasionally repeat a value inside a list even when the
-semantic result is unambiguous. Claim scopes, requirement flags, and selected
-capability indices are set-like control fields, so production canonicalizes only
-exact duplicates before applying the strict Pydantic contract. Unknown values,
-extra fields, invalid phases, illegal dispositions, and out-of-range indices
-continue to fail closed.
+No LLM invocation authors the aggregate ``PreCognitiveAssessment``. Independent,
+stateless specialists classify intent, evidence sufficiency, claim scope, task
+requirements, and (only when needed) legal capability indices. Deterministic
+application code then derives disposition/evidence state and builds the durable
+assessment.
 
-When a model proposes terminal abstention despite a non-empty supported evidence
-packet, the adapter permits one fresh narrow reconsideration call. The
-reconsideration does not force a response or reinterpret evidence in deterministic
-code; it asks the semantic worker to re-read the exact admitted evidence before
-terminal abstention is accepted.
+Set-like specialist outputs are canonicalized only for exact duplicate members
+before strict Pydantic validation. Unknown enums, extra fields, malformed JSON,
+invalid indices, and other contract violations continue to fail closed.
 """
 from __future__ import annotations
 
@@ -24,11 +21,24 @@ from jit_agent.capability_registry import CapabilityDescriptor
 from jit_agent.durable_response_llm import DurableResponseBudgetedOllamaClient
 from jit_agent.interaction_policy import CapabilityResultSummary
 from jit_agent.models import MemoryPacket
+from jit_agent.pre_cognitive_specialists import (
+    CapabilitySelectionDecision,
+    ClaimScopeClassification,
+    EvidenceSufficiency,
+    EvidenceSufficiencyDecision,
+    IntentClassification,
+    RequirementClassification,
+    _CAPABILITY_SELECTOR_SYSTEM_PROMPT,
+    _CLAIM_SCOPE_CLASSIFIER_SYSTEM_PROMPT,
+    _EVIDENCE_SUFFICIENCY_SYSTEM_PROMPT,
+    _INTENT_CLASSIFIER_SYSTEM_PROMPT,
+    _REQUIREMENT_CLASSIFIER_SYSTEM_PROMPT,
+)
 from jit_agent.pre_cognitive_workers import (
     CognitiveDisposition,
     CognitivePhase,
+    EvidenceState,
     PreCognitiveAssessment,
-    _PRE_COGNITIVE_SYSTEM_PROMPT,
     _format_capability_result_data,
     _format_catalog,
     _format_completed_results,
@@ -36,25 +46,11 @@ from jit_agent.pre_cognitive_workers import (
 )
 
 
-_SET_LIKE_ASSESSMENT_FIELDS = (
-    "claim_scopes",
-    "requirement_flags",
-    "capability_indices",
-)
-
-_RECONSIDERATION_PROMPT = """\
-
-[Terminal-abstention reconsideration]
-Your prior assessment chose ABSTAIN even though the activated evidence packet is
-non-empty and marked supported. Re-read the exact activated evidence literally.
-Do not assume that supported means sufficient: ABSTAIN remains correct if those
-items genuinely do not supply the facts or relationships the user requested and
-no listed capability can resolve the gap. If the activated evidence already
-contains the requested answer components, choose RESPOND with
-ACTIVATED_MEMORY_SUFFICIENT and the appropriate claim scope(s). If evidence is
-still insufficient but a listed capability could resolve the gap, choose
-ACQUIRE_CAPABILITIES. Produce only the closed assessment.
-"""
+_SET_LIKE_FIELDS_BY_SCHEMA = {
+    "ClaimScopeClassification": ("claim_scopes",),
+    "RequirementClassification": ("requirement_flags",),
+    "CapabilitySelectionDecision": ("capability_indices",),
+}
 
 
 def _dedupe_preserving_order(values: list[Any]) -> list[Any]:
@@ -65,48 +61,47 @@ def _dedupe_preserving_order(values: list[Any]) -> list[Any]:
     return canonical
 
 
-def canonicalize_pre_cognitive_payload(payload: Any) -> Any:
-    """Remove only exact duplicate members from registered set-like fields."""
+def canonicalize_specialist_payload(payload: Any, schema_name: str) -> Any:
+    """Remove exact duplicate members only from registered set-like fields."""
 
     if not isinstance(payload, dict):
         return payload
     canonical = dict(payload)
-    for field in _SET_LIKE_ASSESSMENT_FIELDS:
+    for field in _SET_LIKE_FIELDS_BY_SCHEMA.get(schema_name, ()):
         values = canonical.get(field)
         if isinstance(values, list):
             canonical[field] = _dedupe_preserving_order(values)
     return canonical
 
 
-def needs_supported_evidence_reconsideration(
-    assessment: PreCognitiveAssessment,
-    memory_packet: MemoryPacket,
-) -> bool:
-    """Return whether one semantic re-read is warranted before terminal abstention."""
-
-    return bool(
-        assessment.disposition is CognitiveDisposition.ABSTAIN
-        and memory_packet.supported
-        and memory_packet.items
-    )
-
-
 class PreCognitiveDurableResponseOllamaClient(DurableResponseBudgetedOllamaClient):
-    """Production Ollama client with deterministic pre-validation canonicalization."""
+    """Production Ollama client implementing specialized ephemeral pre-cognition."""
 
-    def _parse_assessment(
+    def _specialist(
         self,
-        content: str,
-        capability_catalog: tuple[CapabilityDescriptor, ...],
-        *,
-        phase: CognitivePhase,
-    ) -> PreCognitiveAssessment:
-        payload = canonicalize_pre_cognitive_payload(json.loads(content))
-        assessment = PreCognitiveAssessment.model_validate(payload)
-        if assessment.phase is not phase:
-            raise ValueError("pre-cognitive assessment returned the wrong phase")
-        assessment.validate_catalog(capability_catalog)
-        return assessment
+        role: str,
+        system_prompt: str,
+        user: str,
+        schema: Any,
+    ) -> Any:
+        last_error: Exception | None = None
+        for token_cap in (96, 192):
+            try:
+                content = self._structured(
+                    role,
+                    system_prompt,
+                    user,
+                    schema.model_json_schema(),
+                    token_cap,
+                )
+                payload = canonicalize_specialist_payload(
+                    json.loads(content),
+                    schema.__name__,
+                )
+                return schema.model_validate(payload)
+            except (json.JSONDecodeError, ValidationError, ValueError) as exc:
+                last_error = exc
+        raise ValueError(f"{role} specialist failed to validate: {last_error}")
 
     def assess_pre_cognition(
         self,
@@ -118,55 +113,77 @@ class PreCognitiveDurableResponseOllamaClient(DurableResponseBudgetedOllamaClien
         completed_results: tuple[CapabilityResultSummary, ...] = (),
         capability_results: tuple[dict[str, Any], ...] = (),
     ) -> PreCognitiveAssessment:
-        user = (
+        current_percept = f"[Current percept]\n{prompt}"
+        evidence_context = (
             f"phase: {phase.value}\n"
-            + prompt
+            + current_percept
             + _format_memory_for_cognition(memory_packet)
             + _format_completed_results(completed_results)
             + _format_capability_result_data(capability_results)
-            + _format_catalog(capability_catalog)
         )
-        last_error: Exception | None = None
-        for token_cap in (96, 192):
-            try:
-                content = self._structured(
-                    f"PRE_COGNITIVE_{phase.value}",
-                    _PRE_COGNITIVE_SYSTEM_PROMPT,
-                    user,
-                    PreCognitiveAssessment.model_json_schema(),
-                    token_cap,
-                )
-                assessment = self._parse_assessment(
-                    content,
-                    capability_catalog,
-                    phase=phase,
-                )
-                if not needs_supported_evidence_reconsideration(
-                    assessment,
-                    memory_packet,
-                ):
-                    return assessment
 
-                # One fresh semantic re-read only. The application does not
-                # override the judgment; a second valid ABSTAIN is accepted.
-                reconsidered_content = self._structured(
-                    f"PRE_COGNITIVE_{phase.value}_RECONSIDER",
-                    _PRE_COGNITIVE_SYSTEM_PROMPT,
-                    user + _RECONSIDERATION_PROMPT,
-                    PreCognitiveAssessment.model_json_schema(),
-                    token_cap,
-                )
-                try:
-                    return self._parse_assessment(
-                        reconsidered_content,
-                        capability_catalog,
-                        phase=phase,
-                    )
-                except (json.JSONDecodeError, ValidationError, ValueError):
-                    # The first assessment was valid. A malformed optional
-                    # reconsideration must not convert safe abstention into an
-                    # interaction crash.
-                    return assessment
-            except (json.JSONDecodeError, ValidationError, ValueError) as exc:
-                last_error = exc
-        raise ValueError(f"pre-cognitive assessment failed to validate: {last_error}")
+        intent = self._specialist(
+            f"PRE_COGNITIVE_{phase.value}_INTENT",
+            _INTENT_CLASSIFIER_SYSTEM_PROMPT,
+            current_percept,
+            IntentClassification,
+        )
+        sufficiency = self._specialist(
+            f"PRE_COGNITIVE_{phase.value}_EVIDENCE_SUFFICIENCY",
+            _EVIDENCE_SUFFICIENCY_SYSTEM_PROMPT,
+            evidence_context,
+            EvidenceSufficiencyDecision,
+        )
+        claim_scope = self._specialist(
+            f"PRE_COGNITIVE_{phase.value}_CLAIM_SCOPE",
+            _CLAIM_SCOPE_CLASSIFIER_SYSTEM_PROMPT,
+            evidence_context,
+            ClaimScopeClassification,
+        )
+        requirements = self._specialist(
+            f"PRE_COGNITIVE_{phase.value}_REQUIREMENTS",
+            _REQUIREMENT_CLASSIFIER_SYSTEM_PROMPT,
+            current_percept,
+            RequirementClassification,
+        )
+
+        capability_indices: list[int] = []
+        if (
+            sufficiency.sufficiency is EvidenceSufficiency.INSUFFICIENT
+            and capability_catalog
+        ):
+            selection = self._specialist(
+                f"PRE_COGNITIVE_{phase.value}_CAPABILITY_SELECTION",
+                _CAPABILITY_SELECTOR_SYSTEM_PROMPT,
+                evidence_context + _format_catalog(capability_catalog),
+                CapabilitySelectionDecision,
+            )
+            selection.validate_catalog(capability_catalog)
+            capability_indices = list(selection.capability_indices)
+
+        if sufficiency.sufficiency is EvidenceSufficiency.SUFFICIENT:
+            disposition = CognitiveDisposition.RESPOND
+            evidence_state = (
+                EvidenceState.ACTIVATED_MEMORY_SUFFICIENT
+                if memory_packet.items
+                else EvidenceState.CURRENT_INPUT_SUFFICIENT
+            )
+            capability_indices = []
+        elif capability_indices:
+            disposition = CognitiveDisposition.ACQUIRE_CAPABILITIES
+            evidence_state = EvidenceState.MORE_INTERNAL_EVIDENCE_REQUIRED
+        else:
+            disposition = CognitiveDisposition.ABSTAIN
+            evidence_state = EvidenceState.INSUFFICIENT_AFTER_AVAILABLE_WORK
+
+        assessment = PreCognitiveAssessment(
+            phase=phase,
+            disposition=disposition,
+            intent_mode=intent.intent_mode,
+            evidence_state=evidence_state,
+            claim_scopes=list(claim_scope.claim_scopes),
+            requirement_flags=list(requirements.requirement_flags),
+            capability_indices=capability_indices,
+        )
+        assessment.validate_catalog(capability_catalog)
+        return assessment
