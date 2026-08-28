@@ -1,14 +1,14 @@
-"""Ollama adapter that composes pre-cognition from atomic transient specialists.
+"""Demand-driven Ollama adapter for specialized ephemeral pre-cognition.
 
-No LLM invocation authors the aggregate ``PreCognitiveAssessment``. Independent,
-stateless specialists classify intent, evidence sufficiency, claim scope, task
-requirements, and (only when needed) legal capability indices. Deterministic
-application code then derives disposition/evidence state and builds the durable
-assessment.
+The fast path invokes exactly one semantic LLM station: evidence sufficiency.
+Only when that station returns INSUFFICIENT and a legal catalog exists does a
+second specialist select capability indices. Deterministic application code then
+derives disposition/evidence state and constructs the durable
+``PreCognitiveAssessment``.
 
-Set-like specialist outputs are canonicalized only for exact duplicate members
-before strict Pydantic validation. Unknown enums, extra fields, malformed JSON,
-invalid indices, and other contract violations continue to fail closed.
+Descriptive assessment fields that are not currently required for acquisition or
+response-boundary enforcement remain neutral rather than forcing unnecessary LLM
+stations onto every interaction.
 """
 from __future__ import annotations
 
@@ -23,21 +23,16 @@ from jit_agent.interaction_policy import CapabilityResultSummary
 from jit_agent.models import MemoryPacket
 from jit_agent.pre_cognitive_specialists import (
     CapabilitySelectionDecision,
-    ClaimScopeClassification,
     EvidenceSufficiency,
     EvidenceSufficiencyDecision,
-    IntentClassification,
-    RequirementClassification,
     _CAPABILITY_SELECTOR_SYSTEM_PROMPT,
-    _CLAIM_SCOPE_CLASSIFIER_SYSTEM_PROMPT,
     _EVIDENCE_SUFFICIENCY_SYSTEM_PROMPT,
-    _INTENT_CLASSIFIER_SYSTEM_PROMPT,
-    _REQUIREMENT_CLASSIFIER_SYSTEM_PROMPT,
 )
 from jit_agent.pre_cognitive_workers import (
     CognitiveDisposition,
     CognitivePhase,
     EvidenceState,
+    IntentMode,
     PreCognitiveAssessment,
     _format_capability_result_data,
     _format_catalog,
@@ -47,8 +42,6 @@ from jit_agent.pre_cognitive_workers import (
 
 
 _SET_LIKE_FIELDS_BY_SCHEMA = {
-    "ClaimScopeClassification": ("claim_scopes",),
-    "RequirementClassification": ("requirement_flags",),
     "CapabilitySelectionDecision": ("capability_indices",),
 }
 
@@ -75,7 +68,7 @@ def canonicalize_specialist_payload(payload: Any, schema_name: str) -> Any:
 
 
 class PreCognitiveDurableResponseOllamaClient(DurableResponseBudgetedOllamaClient):
-    """Production Ollama client implementing specialized ephemeral pre-cognition."""
+    """Production Ollama client implementing conditional specialist stations."""
 
     def _specialist(
         self,
@@ -113,38 +106,19 @@ class PreCognitiveDurableResponseOllamaClient(DurableResponseBudgetedOllamaClien
         completed_results: tuple[CapabilityResultSummary, ...] = (),
         capability_results: tuple[dict[str, Any], ...] = (),
     ) -> PreCognitiveAssessment:
-        current_percept = f"[Current percept]\n{prompt}"
         evidence_context = (
             f"phase: {phase.value}\n"
-            + current_percept
+            f"[Current percept]\n{prompt}"
             + _format_memory_for_cognition(memory_packet)
             + _format_completed_results(completed_results)
             + _format_capability_result_data(capability_results)
         )
 
-        intent = self._specialist(
-            f"PRE_COGNITIVE_{phase.value}_INTENT",
-            _INTENT_CLASSIFIER_SYSTEM_PROMPT,
-            current_percept,
-            IntentClassification,
-        )
         sufficiency = self._specialist(
             f"PRE_COGNITIVE_{phase.value}_EVIDENCE_SUFFICIENCY",
             _EVIDENCE_SUFFICIENCY_SYSTEM_PROMPT,
             evidence_context,
             EvidenceSufficiencyDecision,
-        )
-        claim_scope = self._specialist(
-            f"PRE_COGNITIVE_{phase.value}_CLAIM_SCOPE",
-            _CLAIM_SCOPE_CLASSIFIER_SYSTEM_PROMPT,
-            evidence_context,
-            ClaimScopeClassification,
-        )
-        requirements = self._specialist(
-            f"PRE_COGNITIVE_{phase.value}_REQUIREMENTS",
-            _REQUIREMENT_CLASSIFIER_SYSTEM_PROMPT,
-            current_percept,
-            RequirementClassification,
         )
 
         capability_indices: list[int] = []
@@ -179,10 +153,10 @@ class PreCognitiveDurableResponseOllamaClient(DurableResponseBudgetedOllamaClien
         assessment = PreCognitiveAssessment(
             phase=phase,
             disposition=disposition,
-            intent_mode=intent.intent_mode,
+            intent_mode=IntentMode.OTHER,
             evidence_state=evidence_state,
-            claim_scopes=list(claim_scope.claim_scopes),
-            requirement_flags=list(requirements.requirement_flags),
+            claim_scopes=[],
+            requirement_flags=[],
             capability_indices=capability_indices,
         )
         assessment.validate_catalog(capability_catalog)
