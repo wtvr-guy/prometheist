@@ -26,6 +26,7 @@ Verify small deterministic functions and closed interfaces:
 - worker packet projections;
 - station output schemas;
 - typed workpiece component/terminal invariants;
+- exact-output/current-authority validation;
 - resource-policy calculations;
 - retry/idempotency rules.
 
@@ -40,6 +41,7 @@ Verify behavior across real persistence/control boundaries where practical:
 - WorkingState;
 - capability registry/runtime;
 - workpiece carry-forward/materialized snapshot persistence;
+- complete workpiece payload plus bounded semantic snapshot projection;
 - transaction rollback/restart reconstruction.
 
 ### End-to-end acceptance tests
@@ -53,6 +55,7 @@ Verify user/system-level architectural claims:
 - exact provenance;
 - demand-driven station invocation;
 - capability acquisition/reassessment without hidden recurrent context;
+- exact surface realization under current-authority constraints;
 - optional response behavior and terminal outcomes;
 - process destruction/recovery;
 - resource admission/safe execution.
@@ -79,6 +82,8 @@ CI should establish behavior reconstructable from controlled inputs, including:
 - workpiece chronology and terminalization;
 - action-like terminal outcomes that require no user-output component;
 - terminal snapshot persistence without replacing append-only causal history;
+- full canonical workpiece payload with bounded semantic projection so nested workpiece contents do not recursively become ordinary recall evidence;
+- enumerated exact-output contracts that require an admitted source substring to equal one complete current-authority allowed literal;
 - static constraint audits and other repository governance checks.
 
 ## Native acceptance responsibilities
@@ -129,7 +134,8 @@ Tests should establish that:
 8. `RESPONSE_EMITTED` requires user output;
 9. action/failure/wait/defer terminal paths may omit user output;
 10. terminal workpiece JSON round-trips with type identity intact;
-11. the terminal snapshot complements rather than replaces append-only recovery/provenance records.
+11. the terminal snapshot complements rather than replaces append-only recovery/provenance records;
+12. the complete snapshot remains available for audit while its semantic projection stays bounded and does not duplicate nested evidence into later ordinary recall.
 
 The architecture is not validated if tests cover only the current chat-like terminal path.
 
@@ -147,6 +153,20 @@ The current v0.7 pre-acquisition path must verify authority separation:
 - no extra station exists merely to populate compatibility metadata with no downstream consumer.
 
 Native tests then verify whether Qwen3:4b can perform these narrow semantic roles reliably enough in the intended environment.
+
+## Exact response-surface acceptance
+
+Exact-output behavior is an application authority boundary, not merely a prose-quality preference.
+
+When the current percept explicitly enumerates a finite closed set of legal outputs, tests should establish that:
+
+- the response-policy worker sees only current authority when identifying the closed set;
+- every `allowed_output_literal` is validated as a verbatim substring of the current percept;
+- the closed set is persisted inside response authority before realization;
+- an exact-source selector may choose only admitted evidence;
+- the selected source bytes must equal one complete allowed literal when such a set exists;
+- a larger source sentence that merely contains the correct literal is rejected and may be retried within the existing bounded retry policy;
+- no extra semantic worker is introduced merely to enforce a constraint that application validation can enforce directly.
 
 ## Restart and destruction are first-class conditions
 
@@ -182,6 +202,24 @@ Deterministic tests should exhaustively exercise resource math/ordering with con
 
 Transient resource pressure may delay/re-observe. Tests must not lower configured headroom/thresholds merely to force progress.
 
+## Failure diagnostics
+
+Acceptance failures should emit the **smallest causal slice that explains the failed contract**, not serialize the entire canonical ledger or workpiece by default.
+
+A useful native continuity failure record normally contains:
+
+- the failing conversation/correlation identity;
+- the current prompt and actual output;
+- canonical source events the assertion expected to be available;
+- relevant MemoryPacket candidates with source ID/type, score, and bounded content;
+- the pre-cognitive assessment relevant to the turn;
+- the terminal response directive relevant to the turn;
+- workpiece component types when useful, without dumping the complete nested workpiece JSON.
+
+The complete append-only history and terminal workpiece remain persisted in PostgreSQL for deeper forensic inspection. Compact diagnostics are an index into that canonical evidence, not a replacement for it.
+
+This distinction matters operationally: dumping a complete workpiece that itself contains MemoryPackets and prior workpiece data can obscure the actual defect, create enormous failure reports, and make derived state look more authoritative than the source event that caused the failure.
+
 ## Current v0.7 native release gate
 
 The official native gate remains:
@@ -198,7 +236,7 @@ The five current native scenarios cover:
 - randomized Project Falcon opaque recall;
 - cross-process memory analysis without hidden transcript;
 - cross-conversation/cross-process memory recall;
-- four-turn stateless continuity with distractors (including the Kestrel evidence-sufficiency case).
+- four-turn stateless continuity with distractors, including Kestrel retrieval/sufficiency and exact response-surface realization from admitted historical evidence.
 
 Qwen3:4b remains fixed for this v0.7 gate. Swapping to a stronger model is a different experiment and cannot be used to hide an architectural regression.
 
