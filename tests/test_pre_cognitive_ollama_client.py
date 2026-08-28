@@ -12,17 +12,13 @@ from jit_agent.pre_cognitive_ollama_client import (
 )
 from jit_agent.pre_cognitive_specialists import (
     CapabilitySelectionDecision,
-    ClaimScopeClassification,
     EvidenceSufficiencyDecision,
-    IntentClassification,
-    RequirementClassification,
 )
 from jit_agent.pre_cognitive_workers import (
-    ClaimScope,
     CognitiveDisposition,
     CognitivePhase,
     EvidenceState,
-    RequirementFlag,
+    IntentMode,
 )
 
 
@@ -70,18 +66,8 @@ class _ScriptedSpecialistClient(PreCognitiveDurableResponseOllamaClient):
     def _structured(self, role, system, user, schema, max_tokens):
         del system, user, schema, max_tokens
         self.roles.append(role)
-        if role.endswith("_INTENT"):
-            return json.dumps({"intent_mode": "RECALL"})
         if role.endswith("_EVIDENCE_SUFFICIENCY"):
             return json.dumps({"sufficiency": self.sufficiency})
-        if role.endswith("_CLAIM_SCOPE"):
-            return json.dumps(
-                {"claim_scopes": ["USER_HISTORY", "USER_HISTORY"]}
-            )
-        if role.endswith("_REQUIREMENTS"):
-            return json.dumps(
-                {"requirement_flags": ["EXACT_SOURCE", "EXACT_SOURCE"]}
-            )
         if role.endswith("_CAPABILITY_SELECTION"):
             return json.dumps(
                 {"capability_indices": self.capability_indices + self.capability_indices}
@@ -90,29 +76,26 @@ class _ScriptedSpecialistClient(PreCognitiveDurableResponseOllamaClient):
 
 
 def test_atomic_specialist_schemas_do_not_expose_aggregate_control_authority():
-    assert set(IntentClassification.model_fields) == {"intent_mode"}
     assert set(EvidenceSufficiencyDecision.model_fields) == {"sufficiency"}
-    assert set(ClaimScopeClassification.model_fields) == {"claim_scopes"}
-    assert set(RequirementClassification.model_fields) == {"requirement_flags"}
     assert set(CapabilitySelectionDecision.model_fields) == {"capability_indices"}
 
 
-def test_specialist_canonicalization_preserves_order_without_weakening_closed_values():
+def test_capability_selection_canonicalization_preserves_order_and_closed_validation():
     payload = canonicalize_specialist_payload(
-        {"claim_scopes": ["USER_HISTORY", "CURRENT_INPUT", "USER_HISTORY"]},
-        "ClaimScopeClassification",
+        {"capability_indices": [1, 0, 1]},
+        "CapabilitySelectionDecision",
     )
-    assert payload == {"claim_scopes": ["USER_HISTORY", "CURRENT_INPUT"]}
+    assert payload == {"capability_indices": [1, 0]}
 
     invalid = canonicalize_specialist_payload(
-        {"claim_scopes": ["INVENTED_SCOPE", "INVENTED_SCOPE"]},
-        "ClaimScopeClassification",
+        {"capability_indices": [-1, -1]},
+        "CapabilitySelectionDecision",
     )
     with pytest.raises(ValidationError):
-        ClaimScopeClassification.model_validate(invalid)
+        CapabilitySelectionDecision.model_validate(invalid)
 
 
-def test_sufficient_evidence_deterministically_composes_respond_without_capability_selection():
+def test_sufficient_evidence_fast_path_runs_only_sufficiency_station():
     client = _ScriptedSpecialistClient(sufficiency="SUFFICIENT")
     assessment = client.assess_pre_cognition(
         "Which approach conflicts with my Kestrel rule and what profile did I give it?",
@@ -123,13 +106,15 @@ def test_sufficient_evidence_deterministically_composes_respond_without_capabili
 
     assert assessment.disposition is CognitiveDisposition.RESPOND
     assert assessment.evidence_state is EvidenceState.ACTIVATED_MEMORY_SUFFICIENT
-    assert assessment.claim_scopes == [ClaimScope.USER_HISTORY]
-    assert assessment.requirement_flags == [RequirementFlag.EXACT_SOURCE]
+    assert assessment.intent_mode is IntentMode.OTHER
+    assert assessment.claim_scopes == []
+    assert assessment.requirement_flags == []
     assert assessment.capability_indices == []
-    assert not any(role.endswith("_CAPABILITY_SELECTION") for role in client.roles)
+    assert len(client.roles) == 1
+    assert client.roles[0].endswith("_EVIDENCE_SUFFICIENCY")
 
 
-def test_insufficient_evidence_with_selected_capability_deterministically_composes_acquire():
+def test_insufficient_evidence_runs_capability_selector_only_after_sufficiency():
     client = _ScriptedSpecialistClient(
         sufficiency="INSUFFICIENT",
         capability_indices=[0],
@@ -144,10 +129,12 @@ def test_insufficient_evidence_with_selected_capability_deterministically_compos
     assert assessment.disposition is CognitiveDisposition.ACQUIRE_CAPABILITIES
     assert assessment.evidence_state is EvidenceState.MORE_INTERNAL_EVIDENCE_REQUIRED
     assert assessment.capability_indices == [0]
-    assert sum(role.endswith("_CAPABILITY_SELECTION") for role in client.roles) == 1
+    assert len(client.roles) == 2
+    assert client.roles[0].endswith("_EVIDENCE_SUFFICIENCY")
+    assert client.roles[1].endswith("_CAPABILITY_SELECTION")
 
 
-def test_insufficient_evidence_without_helpful_capability_deterministically_composes_abstain():
+def test_insufficient_evidence_without_helpful_capability_deterministically_abstains():
     client = _ScriptedSpecialistClient(
         sufficiency="INSUFFICIENT",
         capability_indices=[],
@@ -162,6 +149,7 @@ def test_insufficient_evidence_without_helpful_capability_deterministically_comp
     assert assessment.disposition is CognitiveDisposition.ABSTAIN
     assert assessment.evidence_state is EvidenceState.INSUFFICIENT_AFTER_AVAILABLE_WORK
     assert assessment.capability_indices == []
+    assert len(client.roles) == 2
 
 
 def test_sufficient_current_input_uses_current_input_evidence_state():
@@ -175,3 +163,4 @@ def test_sufficient_current_input_uses_current_input_evidence_state():
 
     assert assessment.disposition is CognitiveDisposition.RESPOND
     assert assessment.evidence_state is EvidenceState.CURRENT_INPUT_SUFFICIENT
+    assert len(client.roles) == 1
