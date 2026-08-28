@@ -1,83 +1,78 @@
 # Pre-Cognitive Transient Workers
 
-**Status:** current production interaction architecture on `feature/pre-cognitive-transient-workers`  
+**Status:** current v0.7 interactive acquisition mechanism within the broader Interaction Workpiece architecture  
 **Acquisition scheme:** `pre-cognitive-transient-workers-v1`  
-**Terminal response contract:** `final-response-directive-v1`  
+**Interactive response contract:** `final-response-directive-v1`  
 **Introduced:** 2026-08-28  
-**Primary implementation:** `src/jit_agent/pre_cognitive_workers.py`, `src/jit_agent/pre_cognitive_specialists.py`, `src/jit_agent/pre_cognitive_ollama_client.py`, `src/jit_agent/pre_cognitive_response_runtime.py`, `src/jit_agent/interaction_worker.py`
+**Primary implementation:** `src/jit_agent/pre_cognitive_workers.py`, `src/jit_agent/pre_cognitive_specialists.py`, `src/jit_agent/pre_cognitive_ollama_client.py`, `src/jit_agent/pre_cognitive_response_runtime.py`
 
-## Purpose
+## Scope
 
-Prometheist needs reasoning depth without allowing any LLM invocation to become a persistent agent. All model calls remain stateless; continuity lives in durable PostgreSQL/application state.
+This document describes the current v0.7 **semantic acquisition stations** used by the interactive path. It is no longer the top-level execution abstraction.
 
-The production interaction architecture is best understood as a **demand-driven assembly line**. An interaction is a workpiece. Deterministic application logic routes that workpiece only through the specialized stations required to produce the components needed for the next legal step. Some stations are ordinary software; some are stateless LLM workers.
+The general execution model is defined in [`INTERACTION_WORKPIECE.md`](INTERACTION_WORKPIECE.md): a typed application-owned workpiece moves through only the deterministic, LLM, capability, tool, device, or future human stations required by the current task. A user-facing response worker is optional at the system level.
 
-A worker is not valuable merely because it is specialized. A station belongs on the production path only when its output changes what the system can legally or usefully do next.
+Within that architecture, the current interactive path needs bounded semantic judgments about whether evidence is already sufficient and, only when it is not, what legal capability could close the gap.
 
 ## Core invariants
 
 - Every LLM invocation begins with a fresh model context.
-- No hidden transcript, previous worker context, or model-session continuity is inherited.
-- Canonical evidence remains exact and lossless.
+- No hidden transcript or previous worker context is inherited.
 - JIT memory activation occurs before semantic evidence judgment.
 - Application code owns identifiers, ordering, dependency closure, resource admission, persistence, retries, and side effects.
-- LLM workers may emit only closed outputs appropriate to one bounded semantic role.
-- Material application control is persisted before capability execution or response effects.
+- Each LLM station emits only one closed component appropriate to its bounded role.
+- A station receives only its registered information aperture, not the entire workpiece.
+- Material application control is persisted before capability or external effects.
 - Capability execution remains deterministic/idempotent under application-owned identities.
-- Resource admission remains authoritative, including CPU/RAM headroom and one-concurrent-LLM-slot default.
-- The final responder never decides whether to respond, acquire more work, or abstain.
-- Only the final user-facing response worker receives the personality prompt.
+- Resource admission remains authoritative, including CPU/RAM headroom and the current one-concurrent-LLM-slot default.
+- Persona is forbidden from acquisition/control stations.
+- User-facing language is optional in the general architecture and is produced only when the terminal path requires it.
 
-## Durable stage protocol
+## Durable stage compatibility
 
-The existing five v0.7 durable stage keys remain unchanged for restart/migration compatibility:
+The existing five v0.7 durable stage keys remain unchanged:
 
-| Durable stage | Current production role |
+| Durable key | Current interactive role |
 | --- | --- |
-| `RESOLVE_REFERENCES` | Inspect bounded durable working-state availability. |
-| `SELECT_CAPABILITY` | Open the JIT attention aperture; run demand-driven pre-cognitive stations; persist assembled assessment and deterministic execution plan. |
-| `EXECUTE_CAPABILITY` | Execute selected first-tranche work; re-evaluate evidence; optionally run one bounded follow-up tranche; compose final evidence. |
-| `RESPOND` | Use the already-persisted terminal directive; bypass responder for `ABSTAIN`; invoke pure synthesis only for `RESPOND`. |
-| `PERSIST_RESULT` | Persist user-facing result and update bounded WorkingState. |
+| `RESOLVE_REFERENCES` | Initialize/carry the workpiece and inspect bounded WorkingState availability. |
+| `SELECT_CAPABILITY` | Open the attention aperture; run the demand-driven pre-capability semantic stations; persist control/plan. |
+| `EXECUTE_CAPABILITY` | Execute selected capability tranches, re-evaluate when material evidence changes, compose final evidence, and finalize the current interactive response directive. |
+| `RESPOND` | Compatibility key for the current interface's optional user-output/terminalization station. The LLM responder is invoked only for an already-authorized `RESPOND`. |
+| `PERSIST_RESULT` | Persist the terminal workpiece snapshot and any separate user-facing response event. |
 
-The stage names are durable protocol keys. They are not one-to-one mappings to LLM workers.
+These names are durable protocol keys, not universal cognitive stages. Future non-chat tasks do not have to conceptualize their terminal step as “responding.”
 
-## Demand-driven pre-cognitive assembly
+## Demand-driven semantic stations
 
-The old pre-cognitive design asked one LLM to emit an aggregate `PreCognitiveAssessment` containing disposition, evidence state, intent, claim scopes, requirement flags, and capability indices. Native Qwen3:4b testing showed that this coupled too many semantic responsibilities into one structured call: a wrong or contradictory field could destabilize otherwise-correct behavior.
+The earlier design asked one Qwen3:4b call to produce an aggregate `PreCognitiveAssessment` containing several responsibilities at once. Native testing showed that contradictory fields could destabilize otherwise-correct recall.
 
-Production now separates the operational decisions.
+The current production path separates only the decisions that have real downstream consumers.
 
-### Station 1: evidence sufficiency
+### Evidence sufficiency
 
-The `evidence_sufficiency_verifier` receives:
-
-- current percept;
-- phase;
-- bounded activated evidence;
-- completed capability-result context when present.
-
-It returns exactly one closed semantic value:
+`evidence_sufficiency_verifier` receives the current percept plus bounded activated/completed evidence and returns exactly:
 
 - `SUFFICIENT`
 - `INSUFFICIENT`
 
-It does **not** receive a capability catalog and therefore cannot select work.
+It does not receive a capability catalog and cannot select work.
 
-### Station 2: capability selection
+Its result is represented as an `EvidenceSufficiencyStationComponent` in the interaction workpiece.
 
-The `capability_selector` is invoked only when:
+### Capability selection
 
-1. evidence was judged `INSUFFICIENT`; and
-2. the application has a non-empty legal capability catalog for the current phase.
+`capability_selector` runs only when:
 
-It receives the current task/evidence plus the exact numbered application-owned catalog and returns only legal capability indices.
+1. sufficiency is `INSUFFICIENT`; and
+2. the application exposes a non-empty legal capability catalog for the current phase.
 
-It cannot reassess sufficiency, author capability IDs or queries, plan dependency order, execute tools, or decide `RESPOND` / `ABSTAIN`.
+It returns only application-catalog indices. It cannot reassess sufficiency, author capability IDs or queries, plan dependencies/order, execute tools, or decide terminal outcome.
 
-### Deterministic composition
+Its result is represented as a `CapabilitySelectionStationComponent` only when the station actually ran.
 
-Application code derives the aggregate control state:
+### Deterministic control composition
+
+Application code derives the compatibility `PreCognitiveAssessment`:
 
 ```text
 SUFFICIENT
@@ -93,140 +88,118 @@ INSUFFICIENT + no selected legal capability
     -> INSUFFICIENT_AFTER_AVAILABLE_WORK
 ```
 
-No LLM invocation authors the aggregate disposition/evidence-state pairing.
+No LLM authors that aggregate disposition/evidence-state pairing.
 
-`PreCognitiveAssessment` remains the durable compatibility/control envelope. Descriptive fields that are not currently required for routing or response-boundary enforcement (`intent_mode`, `claim_scopes`, `requirement_flags`) are left neutral rather than forcing unnecessary LLM calls onto every interaction.
+`intent_mode`, `claim_scopes`, and `requirement_flags` remain neutral on the production path because no current consumer justifies additional LLM stations merely to populate them.
+
+## Workpiece contribution
+
+The terminal `InteractionWorkpiece` materializes both the atomic station results and the application-composed control checkpoint.
+
+Conceptually:
+
+```text
+ATTENTION_APERTURE
+  -> EVIDENCE_SUFFICIENCY
+  -> [CAPABILITY_SELECTION]
+  -> PRE_COGNITIVE_CONTROL
+  -> [CAPABILITY_WORK tranche=0]
+  -> [EVIDENCE_SUFFICIENCY phase=POST_CAPABILITY]
+  -> [CAPABILITY_SELECTION phase=POST_CAPABILITY]
+  -> [PRE_COGNITIVE_CONTROL phase=POST_CAPABILITY]
+  -> [CAPABILITY_WORK tranche=1]
+  -> FINAL_EVIDENCE
+```
+
+The brackets indicate conditional components.
+
+The existing persisted pre/post assessment events remain authoritative restart checkpoints. The workpiece snapshot is the cumulative typed view, not a replacement for append-only history.
 
 ## Fast path
 
-A supported recall or current-input task follows:
-
 ```text
 percept
-  ↓
-Attention admission
-  ↓
-JIT attention aperture
-  ↓
-evidence_sufficiency_verifier
-  ↓ SUFFICIENT
-deterministic RESPOND assessment
-  ↓
-response-policy station
-  ↓
-persist FinalResponseDirective
-  ↓
-final response / exact-source station as required
-  ↓
-persistence
+  -> WorkingState/reference inspection
+  -> JIT attention aperture
+  -> evidence_sufficiency_verifier
+  -> SUFFICIENT
+  -> deterministic control composition
+  -> current interactive response-policy/finalization stations
+  -> optional user-output station
+  -> terminal outcome
 ```
 
-The common pre-cognitive fast path therefore still requires only **one** LLM call before response finalization. Specialization does not automatically add latency.
+The pre-acquisition fast path still uses one semantic LLM call.
 
 ## Capability path
 
-When initial evidence is insufficient:
-
 ```text
-percept + JIT aperture
-  ↓
-evidence_sufficiency_verifier
-  ↓ INSUFFICIENT
-capability_selector
-  ↓ legal indices
-application-owned execution plan
-  ↓
-first capability tranche
-  ↓
-exact bounded evidence composition
-  ↓
-evidence_sufficiency_verifier
-  ├─ SUFFICIENT -> deterministic RESPOND
-  └─ INSUFFICIENT
-        ↓
-     capability_selector only if a newly legal follow-up catalog exists
-        ↓
-     one bounded follow-up tranche
-        ↓
-     fresh terminal final-readiness decision
+percept + aperture
+  -> evidence_sufficiency_verifier
+  -> INSUFFICIENT
+  -> capability_selector
+  -> deterministic first tranche
+  -> exact bounded evidence composition
+  -> evidence_sufficiency_verifier
+  -> SUFFICIENT: terminalize current path
+     or
+  -> INSUFFICIENT + newly legal follow-up catalog
+  -> capability_selector
+  -> one bounded follow-up tranche
+  -> fresh final readiness when required
+  -> terminalize current path
 ```
 
-There is no unbounded recurrent routing loop in scheme v1.
+There is no unbounded recurrent model-owned router in scheme v1.
 
-## Why not make every field a worker?
+## Why not make every field a station?
 
-The architecture explicitly rejects that approach.
+The workpiece architecture does not imply maximum decomposition.
 
-A schema field does not justify an LLM station. Each additional model call adds:
+A station belongs on the active path only when its output changes what Prometheist can legally or usefully do next. Extra LLM calls add prompt evaluation, generation, orchestration, structured-output failure surfaces, and correlated small-model error even when the model stays warm.
 
-- prompt-evaluation cost;
-- generation cost;
-- orchestration overhead;
-- another structured-output failure surface;
-- another opportunity for correlated error from the same small model.
+Therefore:
 
-Warm Ollama model residency removes repeated weight-loading cost, but it does not make inference free.
+> **one bounded job per station + no unnecessary station**
 
-Therefore a station is added only when there is a concrete downstream consumer or a measured failure mode that the separation addresses.
+Both parts matter.
 
-## Other existing conditional stations
+## Other current conditional stations
 
-The same rule applies after acquisition:
+The current interactive path already follows the same rule:
 
-- `final_readiness` runs only after follow-up acquisition requires a fresh terminal decision;
-- `response_policy_classifier` runs because source admissibility/surface mode must be fixed before synthesis;
-- `fallback_literal_selector` runs only on relevant abstention paths;
-- exact-source substring/composition selectors run only when response policy requires them;
-- capability-specific candidate selectors run only inside capabilities requiring semantic candidate choice;
-- the persona-bearing `final_response` worker runs only after `RESPOND` is already authorized.
+- `final_readiness` only after bounded follow-up work leaves terminal sufficiency unresolved;
+- `response_policy_classifier` because source admissibility/surface mode must be fixed before interactive response synthesis;
+- `fallback_literal_selector` only on relevant abstention paths;
+- exact-source selectors only for exact-source output surfaces;
+- capability-specific candidate selectors only inside capabilities that require semantic candidate choice;
+- `final_response` only when the terminal path actually requires natural-language realization.
 
-A workpiece skips every station it does not need.
+Future action/tool paths may use entirely different stations and may terminalize without any `final_response` call.
 
-## FinalResponseDirective
+## `FinalResponseDirective`
 
-`FinalResponseDirective` remains the terminal application-owned authority object between cognition/acquisition and response synthesis.
+`FinalResponseDirective` remains the correct terminal authority for the **current interactive response path**. It is one workpiece component, not Prometheist's universal terminal object.
 
-It binds:
+It binds response authorization/abstention, evidence state, response source/surface policy, fallback literal, final memory-request identity, completed capability IDs, follow-up state, and personality identity.
 
-- `RESPOND` or `ABSTAIN`;
-- closed abstain reason when applicable;
-- evidence state and compatibility metadata;
-- current-percept-derived response source/surface policy;
-- optional current-user fallback literal;
-- exact final `memory_request_id`;
-- completed capability IDs;
-- follow-up-executed state;
-- personality-prompt version and SHA-256 digest.
+Acquisition is over before this directive exists.
 
-There is no `ACQUIRE_CAPABILITIES` state in this object. Acquisition is over before the directive exists.
+A future grocery-order, appointment-booking, device-action, or background maintenance path may terminalize with action-specific authority/results and no `FinalResponseDirective` at all.
 
-## Response boundary
+## Persona boundary
 
-`ABSTAIN` means the final generative responder is never invoked. The application emits an allowed explicit current-input fallback literal when available; otherwise it emits the governed insufficient-evidence response.
+Persona controls only optional user-facing natural-language realization. It is not evidence or control authority.
 
-`RESPOND` means synthesis is authorized. The final responder cannot:
-
-- reopen capability acquisition;
-- change source policy;
-- change surface mode;
-- abstain;
-- alter evidence bindings.
-
-Exact-source modes mechanically constrain output to admitted source bytes/fragments.
-
-## Personality boundary
-
-Only the final natural-language response worker receives the application-owned personality prompt. All pre-cognitive, readiness, policy, fallback, and candidate-selection workers are persona-free.
-
-Personality controls expression only. It is not evidence and cannot change routing, sufficiency, source authority, or acquisition permission.
+All acquisition, readiness, policy, fallback, candidate-selection, deterministic, and capability-execution stations remain persona-free. The current `final_response` worker is the only profile requiring the response persona.
 
 ## Durability and crash semantics
 
-The v0.7 durability boundary remains the assembled material control record.
+The system distinguishes component assembly from durable authority.
 
-If the process dies while running internal pre-cognitive semantic stations, no capability execution has yet been authorized or performed. Those stateless calls may therefore be rerun safely on restart. Once the assembled assessment/plan is persisted, retries reuse it rather than silently rerolling cognition after downstream effects exist.
+Cheap stateless micro-station outputs may be assembled before the next effect-capable durability boundary. Once an assembled control record authorizes downstream capability/external effects, it is persisted and reused after restart. The terminal workpiece snapshot later materializes the full component sequence in one JSON object.
 
-Prometheist does **not** yet persist every micro-station output independently. That would be justified only if a station output acquires independent durable authority or cross-process continuation inside a multi-station pass becomes a real requirement.
+Append-only events, worker results, capability evidence, and idempotency/effect policy remain the underlying authoritative history.
 
 ## Resource behavior
 
@@ -234,58 +207,46 @@ Prometheist does **not** yet persist every micro-station output independently. T
 - Resource admission owns safe concurrency.
 - Claims remain admission-guarded.
 - CPU/RAM headroom remains reserved.
-- Local inference remains limited to one concurrent LLM slot by default.
-- All current LLM stations share `ollama-primary`, allowing Qwen3:4b weights to remain warm across stateless calls.
+- Current local inference remains limited to one concurrent LLM slot by default.
+- Current LLM stations share `ollama-primary`, allowing Qwen3:4b weights to remain warm without sharing conversational state.
 
-Shared model residency is an operational optimization, not cognitive continuity.
+Model residency is an optimization, not cognition.
 
 ## Failure containment
 
 | Failure | Required behavior |
 | --- | --- |
-| malformed specialist schema | fail closed; no capability effect |
+| malformed specialist component | fail closed; no capability effect |
 | invalid capability index | fail closed |
-| duplicate set-like capability indices | canonicalize exact duplicates, then validate |
-| sufficiency worker tries to select capability | impossible by schema/information aperture |
-| capability selector tries to declare sufficiency | impossible by schema |
+| sufficiency station attempts capability control | impossible by schema/information aperture |
+| capability selector attempts sufficiency decision | impossible by schema |
 | catalog changes after persisted selection | fail closed |
-| worker dies before assembled assessment persistence | rerun stateless semantic stations; no downstream effect existed |
-| worker dies after assessment persistence | reuse persisted assessment/plan |
-| final packet/capability binding changes | fail closed |
-| source policy requires unavailable evidence | upstream `ABSTAIN` |
-| responder receives `ABSTAIN` | invariant violation; fail closed |
-| personality version/digest changes | fail closed |
-| local model unavailable | durable state remains valid; model-dependent work cannot complete |
+| worker dies before assembled control persistence | rerun stateless semantic stations; no downstream effect existed |
+| worker dies after control persistence | reuse persisted control/plan |
+| final evidence/capability binding changes | fail closed |
+| source policy requires unavailable evidence | interactive path terminalizes as `ABSTAINED` |
+| final response worker is invoked without response authority | invariant violation; fail closed |
+| personality binding changes | fail closed |
+| local model unavailable | durable state remains valid; model-dependent station cannot complete |
 
-## Acceptance criteria
+## Acceptance
 
-Deterministic CI must verify:
+Deterministic CI must cover closed specialist schemas, demand-driven station invocation, separated information apertures, deterministic aggregate control composition, bounded follow-up exposure, exact evidence composition, terminal directive invariants, workpiece assembly/terminalization, and existing restart/provenance/epistemic/resource regressions.
 
-- closed specialist schemas;
-- demand-driven station invocation;
-- no capability catalog in the sufficiency worker aperture;
-- capability selection only after insufficiency;
-- deterministic composition of `RESPOND` / `ACQUIRE_CAPABILITIES` / `ABSTAIN`;
-- invalid-index rejection;
-- bounded follow-up exposure;
-- exact evidence composition/deduplication;
-- terminal `FinalResponseDirective` invariants;
-- response-source/personality bindings;
-- existing restart, provenance, epistemic-authority, bounded-evidence, and worker-registry regressions.
-
-Native Windows/PostgreSQL/Ollama acceptance remains the release gate with Qwen3:4b. The model is intentionally unchanged so architectural improvements are measured without confounding model replacement.
+Native Windows/PostgreSQL/Ollama acceptance remains the v0.7 release gate with Qwen3:4b held constant.
 
 ## Non-goals
 
-This scheme does not:
+This mechanism does not:
 
 - make model context stateful;
 - replace PostgreSQL durability;
-- expose arbitrary worker IDs to LLMs;
-- allow LLMs to author arbitrary retrieval queries/tool calls;
-- remove host-resource admission;
-- introduce unbounded multi-agent recursion;
-- require every possible component/station on every interaction;
-- swap away from Qwen3:4b to hide architectural weakness.
+- make every possible schema section mandatory;
+- require every interaction to invoke every worker;
+- make response generation universal;
+- expose private worker IDs as model-owned routing authority;
+- remove resource admission;
+- introduce unbounded agent recursion;
+- swap models to hide architectural weakness.
 
-The objective is a conditional assembly graph: each interaction receives exactly the semantic and deterministic work required to become a safe, evidence-bound terminal response directive—and no more.
+The general architecture is the workpiece. This document defines only the current bounded semantic-acquisition stations used by one important execution path.
