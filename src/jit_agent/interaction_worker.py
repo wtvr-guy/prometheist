@@ -9,9 +9,9 @@ import psycopg
 
 from jit_agent import db, event_store
 from jit_agent.durable_response_llm import DurableResponseBudgetedOllamaClient
-from jit_agent.interaction_runtime import execute_claimed_interaction_step
 from jit_agent.interaction_store import load_interaction_by_task
 from jit_agent.models import EventType
+from jit_agent.pre_cognitive_workers import execute_claimed_transient_interaction_step
 from jit_agent.response_policy import RESPONSE_POLICY_VERSION, ResponsePolicy
 from jit_agent.worker_store import load_worker_claim_envelope
 
@@ -140,7 +140,7 @@ def main() -> None:
                 fallback_literal=fallback_literal,
             )
 
-        execute_claimed_interaction_step(
+        execute_claimed_transient_interaction_step(
             conn,
             DurableResponseBudgetedOllamaClient(
                 response_policy_sink=record_response_policy,
