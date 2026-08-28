@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
+import hashlib
 from typing import Literal
 from uuid import UUID
 
@@ -88,6 +89,8 @@ class FinalResponseDirective(BaseModel):
 
     The response worker may realize language only when ``action`` is RESPOND. It
     must never reinterpret this object into a different respond/abstain decision.
+    Closed enum element types plus duplicate rejection bound the classification
+    lists by construction rather than by an independent numeric policy knob.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -97,15 +100,15 @@ class FinalResponseDirective(BaseModel):
     abstain_reason: FinalAbstainReason | None = None
     intent_mode: IntentModeValue
     evidence_state: EvidenceStateValue
-    claim_scopes: list[ClaimScopeValue] = Field(default_factory=list, max_length=5)
-    requirement_flags: list[RequirementFlagValue] = Field(default_factory=list, max_length=8)
+    claim_scopes: list[ClaimScopeValue] = Field(default_factory=list)
+    requirement_flags: list[RequirementFlagValue] = Field(default_factory=list)
     response_policy: ResponsePolicy
     fallback_literal: str | None = None
     final_memory_request_id: UUID
     capability_ids: list[str] = Field(default_factory=list)
     follow_up_executed: bool = False
     personality_prompt_version: str = Field(min_length=1)
-    personality_prompt_sha256: str = Field(min_length=64, max_length=64)
+    personality_prompt_sha256: str
 
     @field_validator("claim_scopes", "requirement_flags", "capability_ids")
     @classmethod
@@ -125,6 +128,9 @@ class FinalResponseDirective(BaseModel):
     @classmethod
     def validate_personality_digest(cls, value: str) -> str:
         normalized = value.casefold()
+        expected_width = len(hashlib.sha256().hexdigest())
+        if len(normalized) != expected_width:
+            raise ValueError("personality_prompt_sha256 must be a SHA-256 hex digest")
         if any(character not in "0123456789abcdef" for character in normalized):
             raise ValueError("personality_prompt_sha256 must be lowercase hexadecimal")
         return normalized
