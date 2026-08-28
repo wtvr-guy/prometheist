@@ -124,7 +124,7 @@ def test_sufficient_evidence_fast_path_runs_only_sufficiency_station():
     assert client.roles[0].endswith("_EVIDENCE_SUFFICIENCY")
 
 
-def test_insufficient_evidence_runs_capability_selector_only_after_sufficiency():
+def test_insufficient_empty_evidence_runs_capability_selector_after_sufficiency():
     client = _ScriptedSpecialistClient(
         sufficiency="INSUFFICIENT",
         capability_indices=[0],
@@ -144,10 +144,10 @@ def test_insufficient_evidence_runs_capability_selector_only_after_sufficiency()
     assert client.roles[1].endswith("_CAPABILITY_SELECTION")
 
 
-def test_terminal_insufficiency_is_confirmed_before_abstain_and_can_recover():
+def test_negative_over_existing_evidence_is_confirmed_and_can_recover_to_respond():
     client = _ScriptedSpecialistClient(
         sufficiency="INSUFFICIENT",
-        capability_indices=[],
+        capability_indices=[0],
         confirmation_sufficiency="SUFFICIENT",
     )
     assessment = client.assess_pre_cognition(
@@ -163,13 +163,35 @@ def test_terminal_insufficiency_is_confirmed_before_abstain_and_can_recover():
     assert assessment.disposition is CognitiveDisposition.RESPOND
     assert assessment.evidence_state is EvidenceState.ACTIVATED_MEMORY_SUFFICIENT
     assert assessment.capability_indices == []
+    assert len(client.roles) == 2
+    assert client.roles[0].endswith("_EVIDENCE_SUFFICIENCY")
+    assert client.roles[1].endswith("_EVIDENCE_SUFFICIENCY_CONFIRMATION")
+    assert not any(role.endswith("_CAPABILITY_SELECTION") for role in client.roles)
+
+
+def test_confirmed_insufficiency_reaches_capability_selector_only_after_confirmation():
+    client = _ScriptedSpecialistClient(
+        sufficiency="INSUFFICIENT",
+        capability_indices=[0],
+        confirmation_sufficiency="INSUFFICIENT",
+    )
+    assessment = client.assess_pre_cognition(
+        "Find more evidence related to my Kestrel deployment rule.",
+        _supported_packet(),
+        DEFAULT_REGISTRY.capability_catalog(),
+        phase=CognitivePhase.PRE_CAPABILITY,
+    )
+
+    assert assessment.disposition is CognitiveDisposition.ACQUIRE_CAPABILITIES
+    assert assessment.evidence_state is EvidenceState.MORE_INTERNAL_EVIDENCE_REQUIRED
+    assert assessment.capability_indices == [0]
     assert len(client.roles) == 3
     assert client.roles[0].endswith("_EVIDENCE_SUFFICIENCY")
-    assert client.roles[1].endswith("_CAPABILITY_SELECTION")
-    assert client.roles[2].endswith("_EVIDENCE_SUFFICIENCY_CONFIRMATION")
+    assert client.roles[1].endswith("_EVIDENCE_SUFFICIENCY_CONFIRMATION")
+    assert client.roles[2].endswith("_CAPABILITY_SELECTION")
 
 
-def test_insufficient_evidence_without_helpful_capability_abstains_after_confirmation():
+def test_insufficient_empty_evidence_without_helpful_capability_deterministically_abstains():
     client = _ScriptedSpecialistClient(
         sufficiency="INSUFFICIENT",
         capability_indices=[],
@@ -184,8 +206,7 @@ def test_insufficient_evidence_without_helpful_capability_abstains_after_confirm
     assert assessment.disposition is CognitiveDisposition.ABSTAIN
     assert assessment.evidence_state is EvidenceState.INSUFFICIENT_AFTER_AVAILABLE_WORK
     assert assessment.capability_indices == []
-    assert len(client.roles) == 3
-    assert client.roles[-1].endswith("_EVIDENCE_SUFFICIENCY_CONFIRMATION")
+    assert len(client.roles) == 2
 
 
 def test_sufficient_current_input_uses_current_input_evidence_state():
