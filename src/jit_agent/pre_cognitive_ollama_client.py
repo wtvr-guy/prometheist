@@ -170,7 +170,7 @@ class PreCognitiveDurableResponseOllamaClient(DurableResponseBudgetedOllamaClien
                     _PRE_COGNITIVE_SYSTEM_PROMPT,
                     user + _RECONSIDERATION_PROMPT,
                     PreCognitiveAssessment.model_json_schema(),
-                    192,
+                    token_cap,
                 )
                 try:
                     return self._parse_assessment(
