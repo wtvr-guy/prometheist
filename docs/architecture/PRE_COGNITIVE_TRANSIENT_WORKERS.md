@@ -12,7 +12,7 @@ This document describes the current v0.7 **semantic acquisition stations** used 
 
 The general execution model is defined in [`INTERACTION_WORKPIECE.md`](INTERACTION_WORKPIECE.md): a typed application-owned workpiece moves through only the deterministic, LLM, capability, tool, device, or future human stations required by the current task. A user-facing response worker is optional at the system level.
 
-Within that architecture, the current interactive path needs bounded semantic judgments about whether evidence is already sufficient and, only when it is not, what legal capability could close the gap.
+Within that architecture, the current interactive path needs bounded semantic judgments about whether evidence appears sufficient for acquisition purposes and, only when it is not, what legal capability could close the gap. Terminal response/abstention authority is a separate lifecycle concern.
 
 ## Core invariants
 
@@ -21,12 +21,13 @@ Within that architecture, the current interactive path needs bounded semantic ju
 - JIT memory activation occurs before semantic evidence judgment.
 - Application code owns identifiers, ordering, dependency closure, resource admission, persistence, retries, and side effects.
 - Each LLM station emits only one closed component appropriate to its bounded role.
-- A bounded station implementation may use more than one stateless model invocation only when a measured failure mode justifies that internal retry/confirmation; it still contributes one station component.
 - A station receives only its registered information aperture, not the entire workpiece.
 - Material application control is persisted before capability or external effects.
 - Capability execution remains deterministic/idempotent under application-owned identities.
 - Resource admission remains authoritative, including CPU/RAM headroom and the current one-concurrent-LLM-slot default.
 - Persona is forbidden from acquisition/control stations.
+- Acquisition-time insufficiency may govern whether additional work should be attempted, but it cannot by itself become terminal abstention authority.
+- Any interactive path that has not already established sufficiency receives one fresh end-of-work readiness judgment over final evidence before terminal `ABSTAIN` is authorized.
 - User-facing language is optional in the general architecture and is produced only when the terminal path requires it.
 
 ## Durable stage compatibility
@@ -60,30 +61,28 @@ It does not receive a capability catalog and cannot select work.
 
 Its result is represented as one `EvidenceSufficiencyStationComponent` in the interaction workpiece.
 
-Native acceptance exposed a specific false-negative mode: Qwen3:4b could return `INSUFFICIENT` even when a non-empty admitted packet directly contained every answer component requested by the current percept. Because a false negative could otherwise become terminal control, the evidence-sufficiency **station implementation** now applies one asymmetric bounded confirmation rule:
+The station's result is **acquisition control**, not universal terminal epistemic authority:
 
-- a first `SUFFICIENT` remains final for that station and preserves the one-call fast path;
-- a first `INSUFFICIENT` over non-empty activated/capability evidence is re-evaluated once by a fresh stateless invocation inside the same station;
-- the confirmation must evaluate the supplied evidence from scratch and is explicitly told that a historical source statement itself can support the current question;
-- capability selection sees only the station's final sufficiency result;
-- empty-evidence insufficiency is not automatically retried merely to manufacture another model vote.
+- `SUFFICIENT` establishes the one-call fast path and permits response finalization without another readiness vote;
+- `INSUFFICIENT` permits capability selection when useful legal work exists;
+- `INSUFFICIENT` plus no selected useful capability means acquisition has no further work to offer, but does **not** itself authorize terminal abstention.
 
-This is not a third semantic station and does not add another workpiece component. It is a measured, bounded internal reliability mechanism for one already-defined job.
+Native acceptance exposed why this boundary matters. Qwen3:4b repeatedly returned `INSUFFICIENT` even when the admitted Kestrel source contained every requested value verbatim. Repeating the same sufficiency job inside the same station did not fix the false negative. That experiment was removed rather than retained as a permanent retry ritual.
 
 ### Capability selection
 
 `capability_selector` runs only when:
 
-1. the evidence-sufficiency station's final result is `INSUFFICIENT`; and
+1. the evidence-sufficiency station returns `INSUFFICIENT`; and
 2. the application exposes a non-empty legal capability catalog for the current phase.
 
 It returns only application-catalog indices. It cannot reassess sufficiency, author capability IDs or queries, plan dependencies/order, execute tools, or decide terminal outcome.
 
 Its result is represented as a `CapabilitySelectionStationComponent` only when the station actually ran.
 
-### Deterministic control composition
+### Deterministic acquisition-control composition
 
-Application code derives the compatibility `PreCognitiveAssessment` from the final station outputs:
+Application code derives the compatibility `PreCognitiveAssessment` from the station outputs:
 
 ```text
 SUFFICIENT
@@ -99,13 +98,29 @@ INSUFFICIENT + no selected legal capability
     -> INSUFFICIENT_AFTER_AVAILABLE_WORK
 ```
 
-No LLM authors that aggregate disposition/evidence-state pairing.
+The compatibility word `ABSTAIN` in this acquisition record means **no useful additional acquisition work was selected**. It is not the final interactive response directive.
+
+No LLM authors the aggregate disposition/evidence-state pairing.
 
 `intent_mode`, `claim_scopes`, and `requirement_flags` remain neutral on the production path because no current consumer justifies additional LLM stations merely to populate them.
 
+## Terminal readiness boundary
+
+The current interactive path has a separate `final_readiness` station because the question “should more acquisition work be attempted?” is not identical to the terminal question “does the final evidence support a user-facing answer now that acquisition has ended?”
+
+The boundary is asymmetric and demand-driven:
+
+- acquisition `RESPOND` already established sufficiency and remains the fast path;
+- acquisition `ACQUIRE_CAPABILITIES` ultimately reaches final readiness after bounded work when no later assessment already establishes sufficiency;
+- acquisition `ABSTAIN` must also reach fresh final readiness before terminal abstention is allowed.
+
+Therefore a pre-acquisition false negative cannot directly become `FinalResponseDirective(action=ABSTAIN)`.
+
+The final-readiness worker receives only the current percept and quarantined final evidence/capability results. It cannot request more work, alter source policy, draft response prose, or call tools. Its output is persisted before the interactive response directive is created.
+
 ## Workpiece contribution
 
-The terminal `InteractionWorkpiece` materializes both the atomic station results and the application-composed control checkpoint.
+The terminal `InteractionWorkpiece` materializes both the atomic acquisition-station results and the application-composed control checkpoints.
 
 Conceptually:
 
@@ -120,9 +135,11 @@ ATTENTION_APERTURE
   -> [PRE_COGNITIVE_CONTROL phase=POST_CAPABILITY]
   -> [CAPABILITY_WORK tranche=1]
   -> FINAL_EVIDENCE
+  -> [FINAL_READINESS when acquisition did not already establish sufficiency]
+  -> FINAL_RESPONSE_DIRECTIVE
 ```
 
-The brackets indicate conditional components. A bounded confirmation invocation inside `EVIDENCE_SUFFICIENCY` does not create a second component because it is an implementation detail of the same bounded station job; capability selection does not run if confirmation recovers the station result to `SUFFICIENT`.
+The brackets indicate conditional work. Final readiness is persisted as its own canonical control event; the current workpiece component set continues to carry the final directive rather than duplicating every internal finalization checkpoint as a mandatory component.
 
 The existing persisted pre/post assessment events remain authoritative restart checkpoints. The workpiece snapshot is the cumulative typed view, not a replacement for append-only history.
 
@@ -134,36 +151,29 @@ percept
   -> JIT attention aperture
   -> evidence_sufficiency_verifier
   -> SUFFICIENT
-  -> deterministic control composition
+  -> deterministic acquisition-control composition
   -> current interactive response-policy/finalization stations
   -> optional user-output station
   -> terminal outcome
 ```
 
-The pre-acquisition fast path still uses one semantic LLM call.
+The pre-acquisition fast path still uses one semantic LLM call and does not invoke final readiness merely for redundancy.
 
-## Capability path
+## Capability / unresolved path
 
 ```text
 percept + aperture
   -> evidence_sufficiency_verifier
   -> INSUFFICIENT
-  -> [if non-empty evidence: one fresh confirmation inside the same station]
-  -> final station result still INSUFFICIENT
   -> capability_selector
-  -> deterministic first tranche
-  -> exact bounded evidence composition
-  -> evidence_sufficiency_verifier
-  -> SUFFICIENT: terminalize current path
-     or
-  -> confirmed INSUFFICIENT + newly legal follow-up catalog
-  -> capability_selector
-  -> one bounded follow-up tranche
-  -> fresh final readiness when required
-  -> terminalize current path
+  -> [selected work: deterministic capability tranche(s)]
+  -> [fresh post-capability evidence_sufficiency_verifier when material evidence changed]
+  -> acquisition result still unresolved or no useful work selected
+  -> fresh final_readiness over final evidence
+  -> RESPOND or ABSTAIN terminal authority
 ```
 
-If the confirmation recovers to `SUFFICIENT`, capability selection is skipped. There is no unbounded recurrent model-owned router in scheme v1.
+There is no unbounded recurrent model-owned router in scheme v1 and no same-station “vote until sufficient” loop.
 
 ## Why not make every field a station?
 
@@ -175,13 +185,13 @@ Therefore:
 
 > **one bounded job per station + no unnecessary station**
 
-Both parts matter. A bounded retry inside one station is justified only by measured unreliability of that station's own job; it is not permission to create checker-for-checker chains by default.
+Both parts matter. A second semantic judgment belongs only when it answers a genuinely different downstream question at a real authority boundary. Repeating the same classifier simply because its first answer was inconvenient is not a sound architectural substitute for separating acquisition control from terminal authority.
 
 ## Other current conditional stations
 
-The current interactive path already follows the same rule:
+The current interactive path follows the same rule:
 
-- `final_readiness` only after bounded follow-up work leaves terminal sufficiency unresolved;
+- `final_readiness` when acquisition ended without already establishing sufficiency;
 - `response_policy_classifier` because source admissibility/surface mode must be fixed before interactive response synthesis;
 - `fallback_literal_selector` only on relevant abstention paths;
 - exact-source selectors only for exact-source output surfaces;
@@ -196,7 +206,7 @@ Future action/tool paths may use entirely different stations and may terminalize
 
 It binds response authorization/abstention, evidence state, response source/surface policy, fallback literal, final memory-request identity, completed capability IDs, follow-up state, and personality identity.
 
-Acquisition is over before this directive exists.
+Acquisition is over before this directive exists. An acquisition-time `ABSTAIN` value cannot be copied directly into the directive; terminal abstention requires the fresh readiness boundary described above.
 
 A future grocery-order, appointment-booking, device-action, or background maintenance path may terminalize with action-specific authority/results and no `FinalResponseDirective` at all.
 
@@ -210,7 +220,7 @@ All acquisition, readiness, policy, fallback, candidate-selection, deterministic
 
 The system distinguishes component assembly from durable authority.
 
-Cheap stateless micro-station outputs may be assembled before the next effect-capable durability boundary. Once an assembled control record authorizes downstream capability/external effects, it is persisted and reused after restart. The terminal workpiece snapshot later materializes the full component sequence in one JSON object.
+Cheap stateless micro-station outputs may be assembled before the next effect-capable durability boundary. Once an assembled control record authorizes downstream capability/external effects, it is persisted and reused after restart. Terminal readiness and the terminal response directive are likewise persisted before user-facing realization. The terminal workpiece snapshot later materializes the full component sequence in one JSON object.
 
 Append-only events, worker results, capability evidence, and idempotency/effect policy remain the underlying authoritative history.
 
@@ -232,13 +242,15 @@ Model residency is an optimization, not cognition.
 | malformed specialist component | fail closed; no capability effect |
 | invalid capability index | fail closed |
 | sufficiency station attempts capability control | impossible by schema/information aperture |
-| first sufficiency false-negative over non-empty evidence | run one fresh bounded confirmation inside the same station before capability selection |
-| confirmed insufficiency with legal helpful work | expose the capability selector; do not force response from packet presence |
+| acquisition sufficiency false-negative | may suppress unnecessary capability work, but cannot itself authorize terminal abstention |
+| insufficiency with legal helpful work | expose the capability selector; do not force response from packet presence |
+| insufficiency with no useful selected work | acquisition ends; run fresh final readiness before terminal response/abstention authority |
 | capability selector attempts sufficiency decision | impossible by schema |
 | catalog changes after persisted selection | fail closed |
 | worker dies before assembled control persistence | rerun stateless semantic stations; no downstream effect existed |
 | worker dies after control persistence | reuse persisted control/plan |
 | final evidence/capability binding changes | fail closed |
+| final readiness says `ABSTAIN` | terminal directive may abstain only after source-policy validation also completes |
 | source policy requires unavailable evidence | interactive path terminalizes as `ABSTAINED` |
 | final response worker is invoked without response authority | invariant violation; fail closed |
 | personality binding changes | fail closed |
@@ -246,9 +258,9 @@ Model residency is an optimization, not cognition.
 
 ## Acceptance
 
-Deterministic CI must cover closed specialist schemas, demand-driven station invocation, separated information apertures, deterministic aggregate control composition, the one-call sufficient fast path, bounded confirmation of an initial negative over non-empty evidence, confirmation recovery before capability selection, confirmed-insufficiency progression into capability selection, bounded follow-up exposure, exact evidence composition, terminal directive invariants, workpiece assembly/terminalization, and existing restart/provenance/epistemic/resource regressions.
+Deterministic CI must cover closed specialist schemas, demand-driven station invocation, separated information apertures, deterministic aggregate acquisition-control composition, the one-call sufficient fast path, direct progression from acquisition insufficiency to capability selection without same-station confirmation, fresh terminal-readiness invocation after acquisition `ABSTAIN`, recovery from acquisition false-negative when final readiness finds support, confirmed terminal abstention when final readiness still finds support insufficient, bounded follow-up exposure, exact evidence composition, terminal directive invariants, workpiece assembly/terminalization, and existing restart/provenance/epistemic/resource regressions.
 
-Native Windows/PostgreSQL/Ollama acceptance remains the v0.7 release gate with Qwen3:4b held constant.
+Native Windows/PostgreSQL/Ollama acceptance remains the v0.7 release gate with Qwen3:4b held constant. The Kestrel scenario specifically verifies both directions: a supported historical question must not be terminally blocked by an acquisition false-negative, while an unsupported question over non-empty related evidence must still terminalize as `ABSTAIN`.
 
 ## Non-goals
 
