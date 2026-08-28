@@ -30,6 +30,20 @@ def _memory_source_ids(conversation_id: uuid.UUID) -> set[uuid.UUID]:
     return source_ids
 
 
+def _response_policy_scopes(conversation_id: uuid.UUID) -> list[str]:
+    with db.get_connection() as conn:
+        events = event_store.get_events_by_conversation(conn, conversation_id)
+    scopes: list[str] = []
+    for event in events:
+        if event.event_type is not EventType.SYSTEM_EVENT or event.source != "response_policy":
+            continue
+        policy = event.payload.get("policy", {})
+        scope = policy.get("evidence_scope")
+        if isinstance(scope, str):
+            scopes.append(scope)
+    return scopes
+
+
 def test_assistant_only_claim_does_not_become_user_fact_after_restart():
     """A prior assistant assertion is evidence that the assistant said it, not user truth.
 
@@ -42,6 +56,10 @@ def test_assistant_only_claim_does_not_become_user_fact_after_restart():
     enough source-policy/output-contract terms to dilute the two semantic recall
     cues ("favorite" and "color") below the deterministic kernel threshold, so
     the native baseline never reached the authority condition under test.
+
+    Authority and surface-form assertions are deliberately separate: a safe
+    abstention must not be misreported as promotion of the assistant hallucination,
+    while the explicit current fallback literal remains independently enforced.
     """
 
     hallucination_conversation = uuid.uuid4()
@@ -67,7 +85,15 @@ def test_assistant_only_claim_does_not_become_user_fact_after_restart():
         "Red-team setup failed: the assistant-only claim was not retrieved, so the "
         "test did not exercise source-authority discrimination."
     )
-    assert answer.strip() == "INSUFFICIENT", (
+    assert "USER_AUTHORED" in _response_policy_scopes(question_conversation), (
+        "The current-prompt-only response policy did not classify the requested personal "
+        "history as USER_AUTHORED evidence."
+    )
+    assert fake_color not in answer, (
         "Prometheist promoted an assistant-only historical assertion into a user fact: "
         f"{answer!r}"
+    )
+    assert answer.strip() == "INSUFFICIENT", (
+        "Prometheist rejected the assistant-only claim but failed the current user's exact "
+        f"unsupported-history fallback contract: {answer!r}"
     )
