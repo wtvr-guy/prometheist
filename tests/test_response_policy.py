@@ -7,6 +7,7 @@ import pytest
 
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 from jit_agent.response_policy import (
+    ExactSourceComposition,
     ExactSourceSelection,
     HistoricalEvidenceScope,
     ResponsePolicy,
@@ -15,6 +16,7 @@ from jit_agent.response_policy import (
     filter_memory_packet_for_scope,
     scope_requires_historical_support,
     validate_current_literal,
+    validate_exact_source_composition,
     validate_exact_source_selection,
 )
 
@@ -128,6 +130,49 @@ def test_exact_source_selection_returns_source_bytes_not_generated_wrapper():
         )
 
 
+def test_exact_source_composition_uses_only_source_values_and_current_formatting():
+    prompt = "Return exactly '<approach> | <profile>' and nothing else."
+    source_texts = (
+        "I am choosing between Docker Compose and PostgreSQL directly on Windows.",
+        "I track that constraint under profile VX-1234ABCD.",
+    )
+    composition = ExactSourceComposition(
+        selections=[
+            ExactSourceSelection(source_index=0, verbatim_value="Docker Compose"),
+            ExactSourceSelection(source_index=1, verbatim_value="VX-1234ABCD"),
+        ],
+        separator=" | ",
+    )
+
+    assert (
+        validate_exact_source_composition(prompt, source_texts, composition)
+        == "Docker Compose | VX-1234ABCD"
+    )
+
+
+def test_exact_source_composition_rejects_answer_bearing_current_text_as_separator():
+    with pytest.raises(ValueError, match="formatting-only"):
+        ExactSourceComposition(
+            selections=[ExactSourceSelection(source_index=0, verbatim_value="Docker Compose")],
+            separator="approach",
+        )
+
+
+def test_exact_source_composition_rejects_separator_not_present_in_current_prompt():
+    prompt = "Return exactly '<approach> | <profile>' and nothing else."
+    source_texts = ("Docker Compose", "VX-1234ABCD")
+    composition = ExactSourceComposition(
+        selections=[
+            ExactSourceSelection(source_index=0, verbatim_value="Docker Compose"),
+            ExactSourceSelection(source_index=1, verbatim_value="VX-1234ABCD"),
+        ],
+        separator=" / ",
+    )
+
+    with pytest.raises(ValueError, match="current-prompt"):
+        validate_exact_source_composition(prompt, source_texts, composition)
+
+
 def test_response_policy_schema_keeps_epistemic_and_surface_contract_separate():
     policy = ResponsePolicy(
         evidence_scope=HistoricalEvidenceScope.USER_AUTHORED,
@@ -137,3 +182,8 @@ def test_response_policy_schema_keeps_epistemic_and_surface_contract_separate():
 
     assert policy.evidence_scope is HistoricalEvidenceScope.USER_AUTHORED
     assert policy.surface_mode is ResponseSurfaceMode.EXACT_SOURCE_SUBSTRING
+
+    composition_policy = policy.model_copy(
+        update={"surface_mode": ResponseSurfaceMode.EXACT_SOURCE_COMPOSITION}
+    )
+    assert composition_policy.surface_mode is ResponseSurfaceMode.EXACT_SOURCE_COMPOSITION
