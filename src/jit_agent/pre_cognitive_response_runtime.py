@@ -248,9 +248,11 @@ def _terminal_assessment(
 
     if effective.disposition is CognitiveDisposition.RESPOND:
         return effective, FinalResponseAction.RESPOND, effective.evidence_state.value
-    if effective.disposition is CognitiveDisposition.ABSTAIN:
-        return effective, FinalResponseAction.ABSTAIN, effective.evidence_state.value
 
+    # Acquisition-time ABSTAIN means that no useful additional capability work
+    # was selected; it is not terminal epistemic authority. Any path that did not
+    # already establish sufficiency must receive one fresh end-of-work readiness
+    # judgment over the final evidence before Prometheist may terminally abstain.
     readiness = _load_or_create_final_readiness(
         conn,
         llm,
