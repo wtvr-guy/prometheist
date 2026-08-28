@@ -18,6 +18,33 @@ from psycopg.types.json import Json
 from jit_agent.models import Event, EventType
 
 
+_WORKPIECE_SNAPSHOT_KIND = "INTERACTION_WORKPIECE_SNAPSHOT"
+_WORKPIECE_SNAPSHOT_SEMANTIC_TEXT = "interaction workpiece audit snapshot"
+
+
+def _effective_payload_text(
+    event_type: EventType,
+    payload: dict[str, Any],
+    payload_text: str | None,
+) -> str | None:
+    """Return the bounded text used by semantic projections for one event.
+
+    Canonical JSON payloads remain complete and immutable. Large derived audit
+    snapshots deliberately receive a compact semantic descriptor so their nested
+    copies of prompts/evidence cannot recursively outrank the canonical source
+    events during later JIT recall.
+    """
+
+    if payload_text is not None:
+        return payload_text
+    if (
+        event_type is EventType.SYSTEM_EVENT
+        and payload.get("kind") == _WORKPIECE_SNAPSHOT_KIND
+    ):
+        return _WORKPIECE_SNAPSHOT_SEMANTIC_TEXT
+    return None
+
+
 def start_conversation(conn: psycopg.Connection, conversation_id: uuid.UUID | None = None) -> uuid.UUID:
     """Create a new conversation, or a no-op if `conversation_id` already exists."""
     conversation_id = conversation_id or uuid.uuid4()
@@ -51,6 +78,7 @@ def record_event(
     lock the conversation row, read+use its next_event_seq, then increment it.
     """
     event_id = event_id or uuid.uuid4()
+    effective_payload_text = _effective_payload_text(event_type, payload, payload_text)
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """
@@ -70,7 +98,7 @@ def record_event(
                 or stored.event_type is not event_type
                 or stored.source != source
                 or stored.payload != payload
-                or existing["payload_text"] != payload_text
+                or existing["payload_text"] != effective_payload_text
             ):
                 raise ValueError("conflicting deterministic event retry")
             conn.commit()
@@ -103,7 +131,7 @@ def record_event(
                 event_type.value,
                 source,
                 Json(payload),
-                payload_text,
+                effective_payload_text,
             ),
         )
         inserted = cur.fetchone()
