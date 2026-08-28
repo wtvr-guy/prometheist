@@ -15,7 +15,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 from jit_agent.models import EventType, MemoryPacket
 
 
-RESPONSE_POLICY_VERSION = "response-source-authority-v2"
+RESPONSE_POLICY_VERSION = "response-source-authority-v3"
 
 
 class HistoricalEvidenceScope(str, Enum):
