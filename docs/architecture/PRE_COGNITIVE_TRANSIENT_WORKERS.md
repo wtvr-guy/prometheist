@@ -1,43 +1,47 @@
 # Pre-Cognitive Transient Workers
 
 **Status:** current production interaction architecture on `feature/pre-cognitive-transient-workers`  
-**Scheme:** `pre-cognitive-transient-workers-v1`  
+**Acquisition scheme:** `pre-cognitive-transient-workers-v1`  
+**Terminal response contract:** `final-response-directive-v1`  
 **Introduced:** 2026-08-28  
-**Primary implementation:** `src/jit_agent/pre_cognitive_workers.py`, `src/jit_agent/interaction_worker.py`
+**Primary implementation:** `src/jit_agent/pre_cognitive_workers.py`, `src/jit_agent/pre_cognitive_response_runtime.py`, `src/jit_agent/durable_response_llm.py`, `src/jit_agent/interaction_worker.py`
 
 ## Purpose
 
-Prometheist needs reasoning depth without turning any model invocation into a persistent agent and without paying for an open-ended recurrent routing loop on ordinary interactions. The pre-cognitive transient-worker scheme separates three things that had become coupled in the earlier v0.7 interaction loop:
+Prometheist needs reasoning depth without allowing any model invocation to become a persistent agent and without paying for an open-ended recurrent router loop. The pre-cognitive transient-worker architecture decomposes one interaction into disposable workers that each perform one bounded job from explicitly reconstructed durable state.
 
-1. **activation and evidence acquisition** — system-owned retrieval and capability execution;
-2. **cognitive control** — small fresh model calls that classify what kind of evidence/work is still needed;
-3. **user-facing cognition** — one fresh response worker that receives the bounded evidence assembled for the turn.
+The architecture separates four concerns:
 
-The result is a staged cognitive pipeline in which workers are summoned for one bounded purpose, leave durable output when their result matters, and can disappear immediately afterward. Workers may be LLM-powered or ordinary deterministic software. No worker owns Prometheist's continuity.
+1. **activation and evidence acquisition** — deterministic retrieval and capability execution;
+2. **pre-cognitive control** — fresh bounded semantic judgments about what work is still required;
+3. **terminal response authorization** — an application-owned decision that the interaction will either respond or abstain, including the final evidence-source and surface-form policy;
+4. **persona/language realization** — a fresh final responder that is invoked only after response authorization is already final.
 
-This design is intended to reduce latency and model burden while preserving the stronger architectural properties established by the v0.7 attention pivot: stateless inference, exact provenance, deterministic execution authority, guarded resource admission, bounded memory exposure, and restart-safe durable work.
+Workers may be LLM-powered or ordinary deterministic software. No worker owns Prometheist's continuity. Continuity belongs to durable state.
 
 ## Constitutional invariants
 
 The scheme must preserve all of the following:
 
-- Every LLM invocation starts with a fresh model context.
-- No hidden transcript, chat context, or prior worker prompt is inherited by a later LLM invocation.
-- Canonical source evidence remains exact and lossless. A worker may select or activate evidence; it may not replace canonical evidence with its summary.
-- Every model-facing evidence view is bounded independently of total corpus size.
-- Persistent memory is activated before model routing. A model is never asked whether unseen memory matters.
-- Models may classify semantics and select bounded application-owned indices; ordinary software owns identifiers, dependency expansion, ordering, scheduling, resource admission, retry semantics, and persistence.
-- Material model-control output is validated and persisted before it authorizes downstream effects.
-- A retry after worker death reuses the persisted control decision instead of asking the model to make the decision again.
-- Capability execution is idempotent under deterministic execution identity.
-- Insufficient evidence or invalid control output fails closed.
-- Resource admission remains authoritative. The worker scheme does not bypass the scheduler, claim-time admission, headroom policy, or the default one-concurrent-LLM-slot policy.
+- Every LLM invocation begins with a fresh model context.
+- No hidden transcript, chat context, or previous model state is inherited by another invocation.
+- Canonical evidence remains exact and lossless; model summaries never replace source memory.
+- Every model-facing evidence view is independently bounded.
+- JIT memory activation occurs before semantic routing. A model is never asked whether unseen memory matters.
+- Models may make bounded semantic classifications and select application-owned indices. Ordinary software owns identifiers, dependencies, ordering, execution, permissions, resource admission, retry semantics, provenance, and persistence.
+- Material model-control output is schema-validated and persisted before it can authorize downstream effects.
+- A crash retry reuses a persisted material control decision rather than silently re-rolling it after downstream effects exist.
+- Capability execution remains deterministic/idempotent under application-owned execution identity.
+- Invalid control output, inconsistent evidence bindings, or insufficient support fail closed.
+- Resource admission remains authoritative, including CPU/RAM headroom and the default one-concurrent-LLM-slot policy.
+- **The decision to respond or abstain belongs entirely to the pre-cognitive system. The final responder never makes that decision.**
+- **Every generative final responder invocation receives one explicit non-empty application-owned personality prompt.**
 
-## The central distinction: cognition is not continuity
+## Cognition is not continuity
 
-A transient cognition worker may inspect the current percept and the bounded evidence Prometheist has activated for that percept. It can classify what the task appears to require. That does not make the worker an enduring mind, agent, or conversation owner.
+A transient cognition worker can inspect a current percept plus a bounded evidence packet and return a semantic judgment. That does not make it a persistent agent.
 
-The durable state is outside the model:
+Durable state remains external to the LLM:
 
 - canonical events;
 - WorkingState activation references;
@@ -45,350 +49,329 @@ The durable state is outside the model:
 - worker step identities and leases;
 - memory requests and MemoryPackets;
 - capability results;
-- validated pre-cognitive assessments;
-- response-policy records;
-- the final response event.
+- persisted pre/post assessments;
+- persisted final-readiness decisions when needed;
+- persisted `FinalResponseDirective` records;
+- response events.
 
-If a worker process terminates, the system can reconstruct the next action from those records. If the same worker model is replaced, the state remains intelligible. If the local LLM is unavailable, the durable state is still valid even though model-dependent cognition cannot proceed.
+A worker can disappear immediately after producing its validated result. A later worker reconstructs everything it is allowed to know from durable application state.
 
 ## Production flow
 
-The existing five durable v0.7 interaction stage keys are retained as a migration and recovery boundary. Their production semantics are now:
+The existing five v0.7 durable stage keys remain for migration/restart compatibility. Their current production semantics are:
 
 | Durable stage | Production role | LLM required? |
 | --- | --- | --- |
-| `RESOLVE_REFERENCES` | Inspect whether bounded WorkingState exists for the current conversation/provenance path. It does not perform English phrase detection. | No |
-| `SELECT_CAPABILITY` | Open the default JIT attention aperture, then run one fresh **PRE_CAPABILITY** assessment and persist its closed decision and deterministic execution plan. | Usually yes |
-| `EXECUTE_CAPABILITY` | Execute any selected first-tranche capabilities deterministically. If first-tranche work ran, compose exact bounded evidence, expose only newly legal follow-up capabilities, run one fresh **POST_CAPABILITY** assessment, and optionally execute one follow-up tranche. | Conditional |
-| `RESPOND` | Run one fresh response worker over the current percept, final bounded exact-source evidence, structured capability results, and a non-evidentiary closed cognitive brief. | Yes |
-| `PERSIST_RESULT` | Persist the response event and activate the new bounded WorkingState. | No |
+| `RESOLVE_REFERENCES` | Inspect bounded WorkingState availability. No phrase-based continuity detection. | No |
+| `SELECT_CAPABILITY` | Open the JIT attention aperture and run one fresh `PRE_CAPABILITY` assessment. Persist the validated assessment and deterministic plan. | Usually yes |
+| `EXECUTE_CAPABILITY` | Execute selected first-tranche work. If needed, run fresh `POST_CAPABILITY` cognition and one bounded follow-up tranche. Then finalize and persist a terminal `FinalResponseDirective`. | Conditional |
+| `RESPOND` | Read the already-finalized directive. `ABSTAIN` bypasses the final responder. `RESPOND` invokes a pure synthesis worker with the mandatory personality prompt. | Only for authorized generative responses |
+| `PERSIST_RESULT` | Persist the user-facing result and update bounded WorkingState. | No |
 
-The names `SELECT_CAPABILITY` and `EXECUTE_CAPABILITY` are retained for durable-protocol compatibility. They no longer mean “enter an unbounded recurrent router loop.”
+The production subprocess entry point is `interaction_worker.py`, which routes through `pre_cognitive_response_runtime.py`. The older direct executor in `pre_cognitive_workers.py` remains a compatibility implementation and is not the normative production response boundary.
 
-## Common fast path
+## Fast path
 
-For an ordinary interaction whose current percept and initial JIT activation are sufficient:
+For a normal interaction whose current percept and initial JIT activation are sufficient:
 
 ```text
-external percept
-    ↓
+percept
+  ↓
 durable intake + Attention admission
-    ↓
-deterministic reference/WorkingState inspection
-    ↓
+  ↓
 JIT attention aperture
-    ↓
-fresh PRE_CAPABILITY cognition worker
-    ↓  disposition = RESPOND
-fresh response worker
-    ↓
-deterministic persistence + WorkingState activation
+  ↓
+fresh PRE_CAPABILITY worker
+  ↓ terminal RESPOND/ABSTAIN assessment
+current-percept-only response-policy classification
+  ↓
+persist FinalResponseDirective
+  ├─ ABSTAIN → deterministic fallback/insufficient result; no final responder
+  └─ RESPOND → fresh final responder + mandatory personality prompt
+                 ↓
+              persistence
 ```
 
-The normal model burden is therefore two independent LLM invocations:
-
-1. pre-cognitive assessment;
-2. final response.
-
-No capability loop is entered merely because capability machinery exists.
+A normal generative turn therefore needs one pre-cognitive LLM call plus one final response LLM call. Response-source policy classification is also a fresh bounded model operation today, but it is part of pre-cognitive finalization, not response synthesis.
 
 ## Capability path
 
-When the initial evidence is insufficient or a registered capability is required:
+When more work is required:
 
 ```text
-external percept
-    ↓
-JIT attention aperture
-    ↓
-fresh PRE_CAPABILITY cognition worker
-    ↓  ACQUIRE_CAPABILITIES + bounded catalog indices
-application validates selection
-    ↓
-deterministic dependency closure and execution plan
-    ↓
-guarded first capability tranche
-    ↓
+percept
+  ↓
+JIT aperture
+  ↓
+PRE_CAPABILITY
+  ↓ ACQUIRE_CAPABILITIES
+validated application-owned indices
+  ↓
+deterministic dependency closure / plan
+  ↓
+first capability tranche
+  ↓
 exact bounded evidence composition
-    ↓
-fresh POST_CAPABILITY cognition worker
-    ├─ RESPOND / ABSTAIN → response worker
-    └─ ACQUIRE_CAPABILITIES
-            ↓
-       newly exposed follow-up catalog only
-            ↓
-       guarded follow-up tranche
-            ↓
-       response worker
+  ↓
+POST_CAPABILITY
+  ├─ terminal RESPOND/ABSTAIN
+  │       ↓
+  │   final directive
+  │
+  └─ ACQUIRE_CAPABILITIES
+          ↓
+     newly exposed follow-up catalog only
+          ↓
+     one bounded follow-up tranche
+          ↓
+     fresh FINAL_READINESS worker
+          ↓ RESPOND/ABSTAIN only; no capabilities legal
+     current-percept-only response policy
+          ↓
+     persist FinalResponseDirective
+          ├─ ABSTAIN → no final responder
+          └─ RESPOND → final responder
 ```
 
-The main interaction-control path is bounded to one pre-capability assessment and, only after first-tranche work, one post-capability assessment. The follow-up tranche does **not** recursively reopen the original capability catalog.
+The important correction is the final-readiness step after a requested follow-up tranche. A `POST_CAPABILITY` decision that requests more work is not itself permission to respond afterward. Once that work finishes, one fresh terminal worker evaluates the completed evidence and may emit only `RESPOND` or `ABSTAIN`.
 
-Capability-specific semantic selectors may still require their own transient model call. For example, deeper associative recall may ask a disposable selector to choose one or more candidates by integer index. Those selectors do not inherit the pre-cognitive worker's context and do not author retrieval queries or event IDs.
+There is no third capability-routing round in scheme v1.
 
-## Why there is no recurrent router loop
+## Closed acquisition control
 
-The previous v0.7 path allowed up to several fresh routing rounds. It respected statelessness, but it imposed a recurrent control pattern: route, execute, rebuild context, route again, potentially repeat. That had two costs.
+`PreCognitiveAssessment` has `extra="forbid"` and exposes only:
 
-First, ordinary latency could become dominated by multiple local-model calls rather than retrieval or response synthesis. On modest CPU-only hardware, each additional 4B inference is material.
+- `phase`: `PRE_CAPABILITY` or `POST_CAPABILITY`;
+- `disposition`: `RESPOND`, `ACQUIRE_CAPABILITIES`, or `ABSTAIN`;
+- broad `intent_mode`;
+- closed `evidence_state`;
+- bounded `claim_scopes`;
+- bounded `requirement_flags`;
+- integer `capability_indices` into the exact application-owned catalog supplied to that call.
 
-Second, the router was being asked repeatedly to rediscover what the system could represent more cleanly as staged execution policy. Once the first tranche has completed, the legal next-step space is narrower. Prometheist can expose only capabilities newly enabled by that work instead of presenting the full original routing problem again.
+It cannot author capability IDs, queries, event IDs, tool arguments, dependency order, resource reservations, retry policy, prose plans, factual claims, or response text.
 
-The new invariant is therefore **staged fresh reassessment**, not unrestricted recurrence. Fresh cognition is still required after material capability work when a further semantic judgment is needed, but the architecture deliberately constrains where that judgment can occur.
+## Follow-up exposure
 
-## Closed pre-cognitive control contract
+The first post-capability assessment sees only capabilities newly made legal by successful first-tranche work. Original first-tranche capabilities are not simply re-presented to create a recurrent loop.
 
-A pre-cognitive worker returns `PreCognitiveAssessment`, a Pydantic object with `extra="forbid"`. The model can output only closed fields:
+Today, broader internal research can expose focused recall. Future capability families may expose other follow-ups, but the same rule applies: the system exposes a bounded legal next-step surface derived from durable completed work.
 
-- `phase` — `PRE_CAPABILITY` or `POST_CAPABILITY`;
-- `disposition` — `RESPOND`, `ACQUIRE_CAPABILITIES`, or terminal `ABSTAIN`;
-- `intent_mode` — broad semantic class such as `RECALL`, `ANALYZE`, `ACT`, or `RESEARCH`;
-- `evidence_state` — whether current input/activated memory is sufficient or additional work is required;
-- `claim_scopes` — bounded authority/evidence domains the eventual answer is expected to depend on;
-- `requirement_flags` — closed requirements such as exact-source handling, temporal resolution, conflict resolution, deeper recall, cross-reference, focused recall, or fail-closed behavior;
-- `capability_indices` — non-negative integer indices into the application-owned catalog supplied to that exact call.
+## Final readiness
 
-The worker cannot author:
+`FinalReadinessDecision` is a separate closed schema. It exists because after the one allowed follow-up tranche there must still be a semantic judgment about whether the acquired evidence is enough.
 
-- capability IDs;
-- tool names or implementation bindings;
-- retrieval query text;
-- event IDs or memory request IDs;
-- dependencies;
-- execution order;
-- resource reservations;
-- permissions;
-- scheduling policy;
-- retry policy;
-- prose plans;
-- factual answer text.
+It can emit only:
 
-This distinction is intentional. The model supplies semantic discrimination where ordinary software cannot reliably infer intent; Prometheist retains the control plane.
+- `RESPOND` or `ABSTAIN`;
+- one closed evidence-state value.
 
-## Pre-cognitive phase
+It cannot request another capability, write a query, write response prose, alter source policy, or create a plan.
 
-Every normal percept first receives the Attention aperture. Only then does `PRE_CAPABILITY` cognition run.
+The decision is persisted with a deterministic event identity bound to:
 
-Inputs are bounded and explicit:
+- the final MemoryPacket's `memory_request_id`;
+- the completed capability IDs;
+- the final-readiness schema version.
 
-- current user percept;
-- activated MemoryPacket evidence content;
-- current application-owned capability catalog;
-- the phase identifier.
+A retry reuses that record instead of asking the model again after it has become authoritative.
 
-The worker decides whether those inputs are sufficient for a response or whether a small set of catalog capabilities is needed. Prometheist validates all selected indices, deterministically expands dependencies, creates the execution plan, and persists both the validated assessment and the exact plan.
+## Current-percept-only response policy belongs upstream
 
-If the model returns malformed JSON, an unknown enum, an extra free-form field, an out-of-range index, or a disposition/index contradiction, the call fails closed.
+Historical source admissibility and final surface mode are still classified from the **current user percept only**. Retrieved memory is deliberately excluded from that classifier so historical text cannot alter which source role is allowed to establish the requested claim.
 
-## First capability tranche
+The resulting closed `ResponsePolicy` determines:
 
-The first tranche executes only the deterministic plan produced from the persisted pre-cognitive selection.
+- allowed historical source role (`USER_AUTHORED`, `MODEL_OUTPUT`, `EXTERNAL_TOOL`, `SYSTEM_RECORD`, `DERIVED_INTERNAL`, `MIXED_CONVERSATION`, or `GENERAL_OR_CURRENT`);
+- surface mode (`NATURAL_LANGUAGE`, `EXACT_SOURCE_SUBSTRING`, or `EXACT_SOURCE_COMPOSITION`).
 
-Capability execution retains the existing v0.7 properties:
+That classification now occurs during pre-cognitive finalization. The final responder does **not** run another response-policy classifier.
 
-- deterministic capability execution IDs;
-- deterministic memory request IDs;
-- application-owned executor binding;
-- dependency ordering owned by Attention/registry policy;
-- exact MemoryPacket evidence;
-- structured result data;
-- persisted capability-result events;
-- idempotent replay after restart.
+Application code then physically filters the final packet and capability results according to that policy. If the requested historical source role has no admitted support, the final action becomes `ABSTAIN` before the response stage can invoke a responder.
 
-Memory capabilities use the current percept as the semantic cue while selected canonical event IDs constrain associative topology. A model may select bounded candidates, but it does not create the retrieval query or event identity.
+## FinalResponseDirective
 
-## Exact bounded context composition
+`FinalResponseDirective` is the terminal application-owned authority object between pre-cognition and response synthesis.
 
-After capability work, Prometheist composes the next working evidence packet from canonical `MemoryEvidence` objects. The composer:
+It includes only validated closed/control data plus application-owned evidence bindings:
 
-1. places newer capability evidence before older capability evidence and the aperture packet for selection purposes;
-2. deduplicates by canonical `source_event_id`;
-3. copies the exact source evidence objects rather than rewriting them;
-4. applies a bounded item limit;
-5. records the contributing memory-request IDs in the retrieval trace.
+- `action`: `RESPOND` or `ABSTAIN`;
+- a closed abstain reason when applicable;
+- final intent/evidence/claim/requirement classifications;
+- the already-finalized `ResponsePolicy`;
+- an optional current-user fallback literal for `ABSTAIN`;
+- the exact final `memory_request_id`;
+- the completed capability IDs;
+- whether follow-up work executed;
+- the required personality-prompt version and SHA-256 digest.
 
-This packet is task-local working context. It is not a canonical summary and does not replace source memory.
+There is deliberately no `ACQUIRE_CAPABILITIES` state in this object. Once the directive exists, acquisition is over.
 
-A future implementation may improve evidence selection, packing, or token budgeting, but it may not solve context pressure by destructively summarizing canonical history.
+The directive is persisted as a deterministic `SYSTEM_EVENT` before the response stage can use it. On retry, the application verifies the evidence binding, capability list, personality-prompt version, and personality-prompt digest before reusing it.
 
-## Post-capability phase
+## Respond vs. abstain ownership
 
-`POST_CAPABILITY` cognition occurs only if first-tranche capability work actually ran.
+This boundary is strict:
 
-Its inputs are:
+- `ABSTAIN`: the application does not invoke the generative final responder. It emits an explicitly requested current-user fallback literal when one exists; otherwise it emits the governed generic insufficient-evidence result.
+- `RESPOND`: the final responder is invoked. It is not allowed to abstain, request more evidence, change source scope, change surface mode, or reopen capability work.
 
-- the current percept;
-- newly composed exact bounded evidence;
-- structured summaries/results of completed capabilities;
-- a catalog containing only capabilities that became newly legal because of those completed results.
+If a `RESPOND` directive reaches synthesis but the supplied packet no longer matches its `memory_request_id`, the capability-result list changed, the personality prompt changed, or policy-admitted support disappeared, the responder path raises and fails closed. It does not reinterpret the task.
 
-For the current internal-memory registry, `deeper_research` and `cross_reference` can expose `focused_recall`. The original first-tranche capabilities are not re-presented merely to create another loop.
+## Mandatory personality prompt
 
-The post-capability assessment may:
+Persona realization is explicitly separated from evidence and control.
 
-- authorize response synthesis;
-- terminate in an abstention state if no legal work can establish sufficient evidence;
-- request the smallest legal follow-up set from the newly exposed catalog.
+`src/jit_agent/personality.py` provides one non-empty application-owned personality prompt for every generative final response invocation. The default prompt can be replaced through governed application configuration, but the finalizer records both its version and SHA-256 digest in the directive. The responder verifies both before inference.
 
-If it requests follow-up work, Prometheist executes one bounded follow-up tranche. There is no third routing round in this scheme version.
+The final model-facing system authority is therefore assembled from four distinct parts:
 
-## Why the response worker still exists
+1. response safety/epistemic system contract;
+2. mandatory personality prompt;
+3. persisted terminal `FinalResponseDirective`;
+4. quarantined admitted evidence plus the current percept in their existing authority-separated channels.
 
-Pre-cognition is control, not the user-facing mind. The final response worker remains a separate fresh invocation because generation is a different task from evidence acquisition.
+The personality prompt may control voice/style. It may not create facts, expand evidence, change source admissibility, initiate capability work, or reconsider the `RESPOND` decision.
 
-The responder receives:
+Personality is never reconstructed from arbitrary retrieved historical text. A future personalized-prompt builder may itself be application-owned and versioned, but it must still produce an explicit prompt artifact before response synthesis.
 
-- current user input;
-- the final bounded exact-source MemoryPacket;
-- admitted structured capability results;
-- a small `pre_cognitive_brief` containing only closed control metadata.
+## Exact-source responses
 
-The brief is explicitly non-evidentiary. It can tell the responder that the interaction was classified as recall, that exact-source handling is required, or that acquisition terminated in an insufficient-evidence state. It cannot supply unsupported facts.
+Exact-source substring/composition modes remain mechanically constrained. The model may select exact admitted source spans under the existing validation rules, but the application returns validated source bytes rather than allowing free-form prose to rewrite an exact value.
 
-The existing response-policy and evidence-authority layers remain authoritative. Pre-cognitive readiness does not override source-role filtering, exact-source validation, or fail-closed response behavior.
+Those selector calls are not an alternate response-authorization path. The terminal directive has already authorized `RESPOND` and fixed the surface policy before exact-source selection occurs.
 
-## Transient worker taxonomy
+## Evidence composition
 
-The architecture deliberately does not equate “worker” with “LLM.”
+After capability work, Prometheist composes bounded task-local context from exact `MemoryEvidence` objects:
+
+1. capability evidence is considered before the original aperture evidence;
+2. items are deduplicated by canonical `source_event_id`;
+3. source content is copied exactly rather than summarized;
+4. the view remains bounded;
+5. contributing memory-request IDs are recorded in the retrieval trace.
+
+This is a disposable working view, not canonical memory.
+
+## Worker taxonomy
 
 ### Deterministic/non-LLM workers
 
-Current examples include:
+Examples include:
 
-- durable intake and event persistence;
-- WorkingState presence inspection;
-- attention-aperture retrieval orchestration;
+- durable event intake;
+- WorkingState inspection;
+- JIT aperture orchestration;
 - schema validation;
 - capability-index validation;
-- dependency expansion;
-- capability execution planning;
-- resource probing and admission;
-- claim/lease ownership;
-- exact evidence composition and deduplication;
-- response persistence and WorkingState activation.
-
-These should remain ordinary software unless a semantic ambiguity genuinely requires model judgment.
+- dependency closure and execution planning;
+- resource probing/admission;
+- claim/lease management;
+- evidence composition/deduplication;
+- source-policy filtering;
+- terminal directive construction/persistence;
+- response persistence.
 
 ### LLM-powered transient workers
 
 Current roles include:
 
-- PRE_CAPABILITY assessment;
-- POST_CAPABILITY assessment when first-tranche work ran;
-- bounded capability-specific candidate selection where required;
-- final response synthesis.
+- `PRE_CAPABILITY` assessment;
+- `POST_CAPABILITY` assessment after first-tranche work;
+- `FINAL_READINESS` only after the follow-up path remains non-terminal;
+- current-percept-only response-policy classification;
+- focused current-fallback selection only when an abstention requires it;
+- capability-specific candidate selectors where semantically necessary;
+- final natural-language synthesis after a `RESPOND` directive.
 
-Each invocation is independently constructed from durable inputs and discarded after validated output is obtained.
+Every call is independent and reconstructed from explicit inputs.
 
 ## Restart and crash semantics
 
-Transient does not mean ephemeral authority.
+Transient compute does not imply transient authority.
 
-A critical failure window exists whenever a worker obtains a model decision and then crashes before completing its durable worker step. Re-running the model in that window would allow model nondeterminism to change a decision after downstream state may already exist.
+Material control records are persisted before downstream use. Persisted pre/post assessments are evidence/catalog-bound and reused on retry. Final readiness is final-packet/capability-bound and reused. `FinalResponseDirective` is final-packet/capability/personality-bound and reused.
 
-The scheme therefore persists each pre/post assessment as a deterministic `SYSTEM_EVENT` before capability effects are authorized. The event identity is derived from the interaction ID and cognitive phase. On retry, `_load_or_create_assessment()`:
-
-1. loads the existing event;
-2. verifies the scheme version and phase;
-3. verifies the exact `memory_request_id` used for the decision;
-4. verifies the application-owned catalog IDs;
-5. validates the stored `PreCognitiveAssessment`;
-6. reconstructs the deterministic execution plan and compares it with the stored plan;
-7. reuses the stored decision without another model call.
-
-If the registry or evidence context has changed incompatibly, execution fails closed rather than silently applying a stale decision.
-
-This makes model nondeterminism a bounded inference property rather than a recovery-policy property.
+Diagnostic error recording is best effort. If an error event itself cannot be written, that failure must not prevent worker-claim release. Claim liveness is more important than secondary observability. Explicit claim release is also best effort so the original worker exception is preserved; lease expiry/recovery remains the scheduler fallback.
 
 ## Resource behavior
 
-This scheme does not change the constitutional resource model.
+This increment does not weaken resource governance.
 
-- Attention still decides priority.
-- Resource admission still decides safe concurrency.
-- Worker launch still requires claim-time admission.
-- The host still preserves configured CPU/RAM headroom.
-- Local LLM inference still defaults conservatively to one concurrent LLM slot.
-- Ollama residency is still observed when estimating incremental process pressure.
+- Attention chooses priority.
+- Resource admission chooses safe concurrency.
+- Claims are admission-guarded.
+- configured CPU/RAM headroom remains reserved;
+- local LLM inference remains conservatively limited to one concurrent LLM slot by default;
+- Ollama residency is considered by the resource estimator.
 
-The main expected resource win is not a new reservation rule. It is avoiding unnecessary model invocations and keeping each invocation's evidence view bounded.
+The architectural efficiency gain comes from bounded staged cognition and avoiding unnecessary recurrent model calls, not from relaxing safety margins.
 
-## Model policy for this increment
+## Model policy
 
-The architecture change is being evaluated with the existing local Qwen3 4B configuration. The model is deliberately held constant while the mechanism changes so benchmark differences can be attributed to the worker architecture rather than a simultaneous model swap.
+Qwen3:4b remains the native acceptance model for this increment. The worker architecture must demonstrate its value without simultaneously changing the model.
 
-A quantized 12–14B model may be evaluated later if native resource measurements justify it. That is a separate experiment. A larger model must not be used to hide architectural failure or bypass the host-safety policy.
+A quantized 12–14B model may be benchmarked later as a separate resource/performance experiment. Model growth must not be used to conceal an architectural failure, and no model may bypass host-safety admission.
 
-## Migration and compatibility
-
-The new implementation is production-routed through `src/jit_agent/interaction_worker.py`, which is the subprocess entry point used by `handle_interaction_in_worker_processes()` and therefore by the CLI/native acceptance path.
-
-The older in-process helper path in `interaction_runtime.py` is temporarily retained for regression coverage and compatibility with existing deterministic test fixtures. It still contains the earlier recurrent capability implementation. It is not the normative production cognitive path once this scheme is accepted.
-
-Retaining the old five stage keys prevents a protocol migration from being mixed into the cognition experiment. A later cleanup can rename or collapse stages after acceptance evidence shows that the new mechanism is stable.
-
-## Failure modes and required behavior
+## Failure modes
 
 | Failure | Required behavior |
 | --- | --- |
-| malformed/extra model control field | validation failure; no capability effect |
-| out-of-range capability index | fail closed |
-| registry changes after persisted decision | fail closed on plan/catalog mismatch |
-| worker dies after cognitive decision | reuse persisted decision; do not re-roll model cognition |
-| worker dies during idempotent capability work | load/reuse persisted capability result under deterministic execution ID |
-| focused recall requested without broader evidence | fail closed |
-| capability returns unsupported/empty evidence | preserve structured unsupported result; later cognition/response must not invent support |
-| post-capability work still insufficient | responder must obey evidence policy/abstention behavior; no recursive router loop is invented |
-| resource admission denied | wait/deny under existing Attention safety policy |
-| local model unavailable | durable state remains valid; model-dependent work cannot complete |
+| malformed/extra pre-cognitive field | validation failure; no downstream effect |
+| invalid capability index | fail closed |
+| registry changes after persisted selection | fail closed |
+| worker dies after persisted assessment | reuse persisted assessment |
+| follow-up completes after `POST_CAPABILITY=ACQUIRE_CAPABILITIES` | run fresh final-readiness cognition before response authorization |
+| final readiness says `ABSTAIN` | never invoke final responder |
+| source policy requires unavailable historical role | create `ABSTAIN` directive upstream |
+| malformed legacy `pre_cognitive_brief` | schema rejection; never inject into system prompt |
+| final packet/capability binding differs from directive | fail closed |
+| personality prompt version/digest differs from directive | fail closed |
+| responder receives `ABSTAIN` | invariant violation; fail closed |
+| error-event persistence fails while handling worker exception | continue to claim-release attempt; preserve original exception |
+| local model unavailable | durable state remains valid; model-dependent work cannot finish |
 
 ## Acceptance criteria
 
-The scheme should not be considered complete merely because deterministic unit tests pass. Acceptance should include:
+Deterministic CI should cover:
 
-### Deterministic CI
+- closed pre-cognitive schemas;
+- invalid-index rejection;
+- bounded follow-up exposure;
+- exact evidence composition/deduplication;
+- terminal readiness schema with no capability surface;
+- `FinalResponseDirective` terminal invariants;
+- source/evidence binding validation;
+- mandatory personality prompt identity/binding;
+- rejection of `ABSTAIN` by the final responder;
+- malformed legacy control-brief rejection;
+- best-effort error recording and claim release;
+- existing restart, cross-process, hidden-transcript, provenance, epistemic-authority, response-policy, and bounded-evidence regressions.
 
-- closed-schema rejection tests;
-- invalid-index failure tests;
-- exact-source composition/deduplication tests;
-- follow-up catalog tests proving original capabilities are not recurrently reopened;
-- restart tests proving persisted pre/post assessments are reused;
-- worker-lease/retry/idempotency tests;
-- existing hidden-transcript, cross-process, cross-conversation, provenance, epistemic-authority, response-policy, and bounded-evidence regression suites.
+Native acceptance must then run with Qwen3:4b on the development machine. Important scenarios include:
 
-### Native Qwen3:4b acceptance
+- fast-path conversational response;
+- obscure historical recall recovered through staged internal retrieval;
+- first-tranche capability result sufficient at `POST_CAPABILITY`;
+- follow-up recall requiring fresh final readiness;
+- unsupported historical request producing upstream `ABSTAIN` with no responder call;
+- exact-source substring and multi-field composition;
+- process restart between final directive persistence and response execution;
+- personality-prompt drift detection;
+- bounded evidence and host-resource safety under the existing v0.7 acceptance suite.
 
-On the development machine, rerun the v0.7 local-model acceptance and red-team recall cases with telemetry. Measure at minimum:
+## Non-goals
 
-- pass/fail correctness;
-- PRE_CAPABILITY latency;
-- POST_CAPABILITY latency when invoked;
-- response latency;
-- total turn latency;
-- number of LLM invocations per turn;
-- prompt/evidence size per invocation;
-- peak RAM and admission behavior;
-- whether Ollama remains resident or reloads;
-- restart behavior across real child processes.
+This increment does not:
 
-The mechanism is successful only if it preserves or improves correctness while materially reducing recurrent inference overhead and maintaining bounded resource use.
+- change the canonical event schema;
+- replace PostgreSQL persistence;
+- make model context stateful;
+- allow LLMs to author arbitrary tool calls or retrieval queries;
+- remove resource admission;
+- introduce unbounded multi-agent recursion;
+- swap away from Qwen3:4b;
+- claim that a 12–14B model is currently required;
+- make the personality prompt factual evidence.
 
-## What this scheme intentionally does not claim
-
-This is not proof that two or three model calls are universally sufficient for every future task. It is an empirical architecture boundary for the current interaction/capability system. More complex durable jobs may spawn additional transient workers when their task graph requires them.
-
-The invariant is not “never use another LLM call.” The invariant is:
-
-> summon the smallest bounded worker needed for the current unresolved requirement, persist any material control result, and discard the worker context afterward.
-
-Likewise, this scheme does not claim that all retrieval should be model-selected. Deterministic retrieval, exact lookup, graph traversal, filtering, validation, and evidence packing should remain non-LLM work whenever ordinary software can do them reliably.
-
-## Relationship to other architecture documents
-
-- [`COGNITIVE_ARCHITECTURE.md`](COGNITIVE_ARCHITECTURE.md) defines the system/worker separation and stateless cognition model.
-- [`INTERACTION_CONTINUITY.md`](INTERACTION_CONTINUITY.md) defines how every percept obtains bounded persistent context and how WorkingState participates without becoming a transcript.
-- [`LOSSLESS_PROGRESSIVE_MEMORY.md`](LOSSLESS_PROGRESSIVE_MEMORY.md) defines exact canonical evidence and staged bounded retrieval.
-- [`ATTENTION_AND_EXECUTION_GOVERNANCE.md`](ATTENTION_AND_EXECUTION_GOVERNANCE.md) defines durable scheduling, resource admission, leases, preemption, and execution safety.
-- [`SYSTEM_DETERMINISM.md`](SYSTEM_DETERMINISM.md) defines the boundary between semantic model judgment and application-owned control authority.
-
-This document is the authoritative deep dive for the staged pre-cognitive transient-worker mechanism itself.
+The architectural objective is specific: Prometheist should gather exactly as much durable evidence and capability output as the current task requires, using disposable staged workers, and arrive at a terminal response decision **before** the final persona-bearing response worker is summoned.
