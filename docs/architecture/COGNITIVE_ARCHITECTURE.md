@@ -1,73 +1,51 @@
 # Prometheist Cognitive Architecture
 
-**Status:** target architecture beginning with v0.7. Revised 2026-08-27 after native continuity experiments established the default attention-aperture boundary.
+**Status:** current target architecture beginning with v0.7; revised 2026-08-28 after the transient-worker/workpiece refactor.  
+**Constitutional status:** primary architecture authority for system-owned continuity, disposable cognition, bounded attention, typed execution, capability authority, epistemic separation, and terminalization. This document is subordinate to `CONSTITUTION.md`.
 
-**Constitutional status:** primary architecture authority for Articles 1, 2, 15, 16, 17, 18, and 19 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md). This document explains those constitutional rules in depth and is subordinate to the Constitution where wording conflicts.
+Prometheist is a local-first persistent cognitive system built around a strict rule:
 
-Prometheist is evolving from a stateless multi-agent prototype into a persistent cognitive system whose identity, memory, attention, execution state, interaction continuity, and policy remain outside all LLM contexts and worker processes.
+> **Continuity belongs to Prometheist itself. Models and workers are disposable compute.**
 
-The central architectural rule is:
+The v0.6 Primary Agent/specialist hierarchy proved useful behavioral properties but is no longer the target architecture. Beginning with v0.7, permanent agents are not first-class executive primitives.
 
-> **The system owns continuity. Models and workers are disposable compute.**
+## 1. Durable cognitive primitives
 
-This document supersedes the Primary Agent as the target top-level architecture. The removed Primary-Agent implementation remains part of the verified v0.6 historical record, not the executive structure for v0.7 and later.
+Prometheist organizes itself around durable/application-owned primitives rather than long-lived agent identities:
 
-## 1. Architectural pivot
-
-The v0.6 prototype proved that multiple fresh, stateless LLM invocations can participate in one persistent system through shared JIT Memory and durable event state. That result remains valid.
-
-The next question is no longer how to make a Primary Agent orchestrate more specialists. The more general design removes privileged agents from the center of the system and organizes Prometheist around durable cognitive primitives:
-
-- percepts;
-- interaction events and streams;
-- situations and associations;
-- retention decisions;
+- percepts and observations;
+- situations/associations;
 - tasks and intentions;
-- attention allocation;
-- execution resources;
-- active working state;
+- attention priority;
+- resource observations/admission;
+- active WorkingState;
+- persistent memory/internal history;
 - capabilities;
-- checkpoints;
-- actions and results;
-- internal events;
-- memory;
-- policy.
+- typed interaction workpieces;
+- worker/component contracts;
+- checkpoints and effect/idempotency state;
+- terminal outcomes;
+- policy and causal provenance.
 
-Named agents may still describe temporary worker roles, but they are optional compositions of capabilities rather than owners of continuity or executive authority.
+Agent-like names may describe temporary worker configurations, but no worker owns identity, memory, continuity, attention, or the cumulative work product.
 
 ## 2. System-level loop
-
-The target control loop is:
 
 ```text
 external world / user / devices / software
                   |
                   v
-        ephemeral input buffers
+          perception / intake
                   |
-                  v
-              perception
-                  |
-          +-------+-------+
-          |               |
-       reflex          salience
-          |               |
-          |        situation assembly
-          |               |
-          |          task formation
-          |               |
-          +-------+-------+
+          situation / task formation
                   |
                   v
            ATTENTION FABRIC
+       priority + safe admission
                   |
-       priority + resource admission
-                  |
-       +----------+----------+
-       |          |          |
-  assignment  assignment  assignment ...
-       |          |          |
-       +----------+----------+
+                  v
+        INTERACTION / TASK WORKPIECE
+      application-owned typed frame
                   |
                   v
           ACTIVE WORKING STATE
@@ -75,303 +53,314 @@ external world / user / devices / software
                   |
                   v
        DEFAULT ATTENTION APERTURE
-   bounded JIT activation for each percept
+     bounded JIT memory activation
                   |
                   v
-        fresh stateless cognition
+      DEMAND-DRIVEN STATION GRAPH
+   deterministic / LLM / capability /
+       tool / device / human gate
                   |
-          +-------+-------+
-          |               |
-       respond      deeper capability
-                       |
-                MEMORY_ANALYSIS /
-                 code / web / etc.
-          |               |
-          +-------+-------+
+       each station contributes
+          one typed component
                   |
                   v
-          results + observations
-                  |
+             TERMINALIZER
+        /       |        |       \
+   response   action   waiting  deferred
+      |          |        |        |
+   optional      +--------+--------+
+   language               |
                   v
-            internal history
+       durable results + provenance
                   |
-          +-------+-------+
-          |               |
-     memory indexes    retention
-          |               |
-          +-------+-------+
+          retention / indexes
                   |
-                  +----------> next cycle
+                  +------> next cycle
 ```
 
-No LLM context window is the control loop. No worker process is the durable system.
+No LLM context window is the control loop. No final response worker is universally required.
 
-## 3. Four forms of attention
+## 3. Interaction Workpiece
 
-Prometheist uses the word attention at several distinct levels.
+The general execution primitive is defined in [`INTERACTION_WORKPIECE.md`](INTERACTION_WORKPIECE.md).
 
-### 3.1 Perceptual attention
+One unit of work is represented by an `InteractionWorkpiece`: a typed application-owned frame plus a sequence of validated components contributed by only the stations that the task actually needs.
 
-Determines which external changes warrant orientation or further evaluation.
+Examples of current components include percept, WorkingState/reference availability, attention aperture, evidence-sufficiency decision, optional capability selection, application-composed pre-cognitive control, capability tranches, final evidence, current interactive response directive, optional user output, and terminal outcome.
 
-### 3.2 Executive attention
+The workpiece is **not** a giant context handed to an LLM. Worker profiles receive minimum projections of it.
 
-Determines which durable tasks deserve system execution resources now. This is the responsibility of the JIT Attention Fabric.
+The central execution rule is:
 
-### 3.3 Resource attention
+> **Each station performs one bounded responsibility, receives only the workpiece projection it needs, returns one validated component, and has no authority to attach that component or choose arbitrary next work.**
 
-Determines which compatible tasks may execute concurrently under current CPU, RAM, local-model, I/O, and other resource constraints.
+Application logic validates/attaches the component and determines next-station eligibility.
 
-### 3.4 Cognitive attention
+## 4. Demand-driven stations
 
-Determines what bounded information is made available to a particular disposable inference.
+Prometheist does not require a fixed universal pipeline. Different tasks may traverse radically different station graphs while using the same master workpiece contract.
 
-Beginning with the v0.7 attention-aperture correction, every percept receives a small system-owned JIT Memory activation packet before model routing. This packet combines current WorkingState with bounded potentially relevant canonical history. If the default aperture is insufficient, the model may request `MEMORY_ANALYSIS` for deeper/focused memory work.
+A simple recall may need:
 
-The aperture is therefore an attention mechanism, not a claim of truth or evidentiary sufficiency.
+```text
+percept -> aperture -> sufficiency -> response policy -> optional response -> terminal
+```
 
-## 4. JIT Attention Fabric
+A deeper memory task may need:
 
-The Attention Fabric maintains one globally authoritative runnable-task model while allowing bounded concurrent execution. It ranks durable work deterministically and admits as much compatible work as current safe resource capacity permits.
+```text
+percept -> aperture -> sufficiency
+ -> capability selection
+ -> research tranche
+ -> sufficiency
+ -> optional focused follow-up
+ -> final evidence
+ -> optional response
+ -> terminal
+```
 
-The number of execution slots must not be hard-coded to CPU thread count. Different resource classes have different capacity semantics. A commodity system may expose many CPU threads but only one sensible local-LLM inference slot.
+An action task may eventually need:
 
-> **Concurrency is bounded by declared resource capacity, while task selection and assignment remain globally deterministic.**
+```text
+percept -> context/preferences -> policy/authorization
+ -> external tool/action -> ACTION_COMPLETED
+```
 
-Detailed constitutional execution rules now live in [`ATTENTION_AND_EXECUTION_GOVERNANCE.md`](ATTENTION_AND_EXECUTION_GOVERNANCE.md).
+A user-facing response may be attached afterward if useful, but the action does not become conceptually incomplete merely because no prose was generated.
 
-## 5. Scheduling epochs and determinism
-
-Workers must not race independently to claim arbitrary tasks. Scheduling occurs in deterministic epochs:
-
-1. read authoritative runnable tasks;
-2. capture authoritative safe resource state;
-3. derive deterministic priorities;
-4. preserve valid assignments where possible;
-5. admit compatible work deterministically;
-6. persist the complete assignment/reservation result atomically;
-7. allow workers to execute only persisted assignments.
-
-Determinism means identical durable task state + identical captured resource state + identical policy version produces the same scheduling result.
-
-The repository-wide determinism contract is defined in [`SYSTEM_DETERMINISM.md`](SYSTEM_DETERMINISM.md).
-
-## 6. Priority, service guarantees, interruption, and resource safety
-
-Task priority is derived from structured metadata, not model preference. The current criticality mapping remains a useful baseline: `EMERGENCY/P0`, `USER_BLOCKING/P1`, `USER_REQUESTED/P2`, `SUPPORTING/P3`, `MAINTENANCE/P4`, and `OPPORTUNISTIC/P5`.
-
-Service guarantees prevent starvation. Interruption policies remain `PREEMPTIBLE`, `CHECKPOINT_ONLY`, and `ATOMIC`.
-
-Priority alone does not justify preemption. If higher- and lower-priority work can execute safely together, both continue. Preemption is considered only when resource contention blocks higher-priority work and the victim's interruption policy permits yielding.
-
-## 7. Perception and salience
-
-Continuous external input should not flow directly into an LLM or durable task queue. Sources first produce normalized percepts through cheap deterministic or conventional signal-processing logic where possible.
-
-A percept may carry structured dimensions such as source/modality, magnitude, novelty, rate of change, anomaly class, confidence, threat relevance, opportunity relevance, goal relevance, uncertainty, and system-integrity relevance.
-
-Prometheist should distinguish at least `IGNORE`, `DELIBERATE`, `ORIENT`, and `REFLEX` dispositions. Model interpretation may assist ambiguous cases, but deterministic policy retains authority over deletion, priority, permissions, and actuator use.
-
-## 8. Situation assembly
-
-Individual percepts often become meaningful only when correlated. Prometheist should assemble temporally, semantically, causally, and relationally connected percepts into overlapping situation representations where evidence justifies the mechanism.
-
-Situations are associations, not rigid containers. One event may contribute to several situations; one situation may span sessions, devices, days, and tasks.
-
-## 9. Reflex, orient, deliberate
-
-Prometheist should support three distinct response paths:
-
-- **Reflex:** known condition -> bounded deterministic action -> durable follow-up event/task.
-- **Orient:** potentially consequential but uncertain condition -> high-priority investigation.
-- **Deliberate:** meaningful but non-immediate condition -> normal durable task formation/scheduling.
-
-## 10. Retention architecture
+## 5. Four forms of attention
 
 Prometheist distinguishes:
 
-- **ephemeral raw experience** — bounded rolling data not necessarily retained;
-- **observational memory** — external observations retained by explicit policy;
-- **internal history** — durable state needed to explain what Prometheist knew, focused on, decided, attempted, committed to, or did;
-- **active working state** — bounded canonical event pointers currently activated for cognition.
+### Perceptual attention
+Which external changes warrant orientation/evaluation.
 
-An LLM may propose that input is routine or low-value, but an LLM must not possess unilateral deletion authority.
+### Executive attention
+Which durable tasks deserve execution now; owned by the Attention Fabric.
 
-## 11. Retention invariant
+### Resource attention
+Which compatible tasks can safely run concurrently under CPU/RAM/LLM/I/O constraints.
 
-> **Anything that materially influences Prometheist's attention, reasoning, decisions, commitments, or actions must leave enough durable provenance to explain that behavior later.**
+### Cognitive attention
+Which bounded information/components a disposable station receives.
 
-Raw data may expire under policy, but causal records explaining attention shifts and actions must remain sufficient for audit/reconstruction.
+The default attention aperture is a cognitive-attention mechanism, not proof of truth or sufficiency.
 
-## 12. JIT Memory: substrate, activation, and analysis
+## 6. Attention Fabric and resource admission
 
-The phrase “JIT Memory” now refers to a subsystem with two different cognitive roles that must not be conflated.
+Attention ranks durable work deterministically. Resource admission determines the safe concurrent subset.
 
-### 12.1 Default attention activation
+The number of execution slots is not CPU-thread count. Different resource classes have different semantics; current local LLM inference remains conservatively one concurrent slot until evidence justifies another value.
 
-Every percept automatically opens a small bounded memory aperture. This does not depend on a model deciding whether memory is needed.
+Higher priority does not automatically imply preemption. If higher/lower work fit together safely, both should run. Preemption exists to resolve real contention under interruption policy.
 
-The reason is structural: a stateless model cannot reliably decide whether unseen memory matters when the fact that would change its decision may itself be in unseen memory.
+Detailed rules live in [`ATTENTION_AND_EXECUTION_GOVERNANCE.md`](ATTENTION_AND_EXECUTION_GOVERNANCE.md).
 
-The default aperture uses the deterministic candidate/scoring layer in a high-recall activation role. A surfaced item means:
+## 7. Scheduling determinism
 
-> **potentially relevant enough to keep available now**
+Workers do not race to determine durable authority. Scheduling epochs consume authoritative task/resource state and atomically publish deterministic assignment/reservation results.
 
-not:
+Identical durable task state + authoritative resource observation + policy versions must reconstruct the same scheduling result.
 
-> **sufficient evidence that a proposition is true**
+See [`SYSTEM_DETERMINISM.md`](SYSTEM_DETERMINISM.md).
 
-### 12.2 Conservative evidence retrieval
+## 8. WorkingState
 
-When a task needs evidence, the normal `MemoryNeed` / `MemoryPacket` path retains support-aware admission, provenance, and abstention. This boundary may reject sparse topical overlap that the aperture is still allowed to activate.
+WorkingState is bounded system-owned current activation, primarily canonical event references. It is not:
 
-### 12.3 `MEMORY_ANALYSIS`
+- a hidden transcript;
+- a profile blob;
+- a free-form summary;
+- a substitute long-term memory;
+- the interaction workpiece itself.
 
-`MEMORY_ANALYSIS` remains an optional capability because it is an operation performed on memory. After the model has seen the current percept and default aperture, it may request deeper/focused analysis if the bounded activation packet is insufficient.
+The workpiece captures one task's cumulative assembly/provenance. WorkingState captures what canonical evidence/results remain cognitively active across interactions.
 
-The live interaction model therefore does **not** select a basic `INTERNAL_MEMORY` capability. Basic access already occurred.
+## 9. JIT Memory
 
-This yields a useful hierarchy:
+JIT Memory has distinct roles.
 
-```text
-always:
-  percept + WorkingState -> bounded activation aperture
+### Default activation
+Every percept gets a small bounded high-recall activation packet before semantic evidence judgment. A stateless model cannot reliably decide whether unseen memory matters before potentially relevant memory has been exposed.
 
-when needed:
-  MEMORY_ANALYSIS -> deeper/focused evidence retrieval and reasoning
-```
+### Conservative evidence retrieval
+When a claim requires support, normal `MemoryNeed`/`MemoryPacket` evidence admission remains provenance-bearing and support-aware. Relevance is not truth.
 
-## 13. Model-output minimization
+### Deeper memory capabilities
+`deeper_research`, `cross_reference`, and `focused_recall` perform additional bounded investigation when the current workpiece still lacks required evidence.
 
-Prometheist adopts a system-wide representation preference:
+Basic persistent-memory access is substrate; deeper investigation is optional capability work.
 
-> **Model-generated natural language is the representation of last resort.**
+## 10. Capabilities
+
+Capabilities describe semantic work Prometheist can perform. They are not worker identities and are not model-authored schedules.
+
+Models may select bounded legal capability indices through an appropriate station. Prometheist owns:
+
+- capability identity;
+- dependency closure;
+- execution order;
+- permissions;
+- resource admission;
+- durable identifiers;
+- idempotency/effect policy;
+- persistence/provenance.
+
+Capabilities may be deterministic, hybrid, or include narrow stateless LLM subworkers.
+
+## 11. Worker roles
+
+A worker is a transient execution context for one bounded role. It may be ordinary software or contain one/more stateless model invocations.
+
+Workers do not own:
+
+- durable identity;
+- continuity;
+- memory;
+- task authority;
+- the cumulative workpiece;
+- arbitrary next-step selection.
+
+See [`WORKER_PROFILE_REGISTRY.md`](WORKER_PROFILE_REGISTRY.md).
+
+## 12. Model-output minimization
+
+Model-generated natural language is representation of last resort for machine state/control.
 
 Preferred order:
 
 ```text
-enum / boolean / application-owned id / bounded integer
+enum / boolean / application-owned ID / bounded integer
     before
-mechanically verified extractive selection
+mechanically verified extraction
     before
-free-form generated natural language
+free-form generated language
 ```
 
-This applies to schemas, routing, state transitions, scheduling metadata, retrieval control, capability selection, and test oracles. JSON alone is not sufficient if it contains unconstrained model-authored control strings.
+Natural language remains appropriate when language is genuinely the product.
 
-Natural language remains appropriate when language is actually the product: user-facing responses, requested prose artifacts, or genuinely irreducible semantic content.
+This rule is one reason workpiece components are typed Pydantic sub-schemas rather than prose notes from workers.
 
-For the live v0.7 path, the post-aperture routing model can emit only `NONE` or `MEMORY_ANALYSIS`. Deeper memory planning emits only a scope enum and bounded indices into an application-generated anchor catalog. Invalid or unexpected fields fail validation.
+## 13. Current pre-cognitive acquisition mechanism
 
-## 14. Human-like interaction continuity
+The current interactive v0.7 path uses two demand-driven semantic stations:
 
-Prometheist's persistent experience must be continuous across chat/session boundaries. Conversation IDs remain provenance, ordering, debugging, UI, and explicit source-scoping metadata—not default semantic walls.
+1. `evidence_sufficiency_verifier` -> `SUFFICIENT | INSUFFICIENT`;
+2. `capability_selector` -> legal application-catalog indices, only after insufficiency.
 
-The interaction path is now:
+Application code derives the aggregate `PreCognitiveAssessment`; no one LLM authors disposition, evidence state, routing, and metadata together.
 
-```text
-current percept
-    +
-WorkingState
-    |
-    v
-default bounded attention aperture
-    |
-    v
-fresh stateless model
-    |
-    +--> respond
-    |
-    +--> MEMORY_ANALYSIS when deeper focus is required
-```
+The terminal workpiece records both atomic station contributions plus the application-composed control checkpoint.
 
-The old phrase-specific `requires_persisted_context()` mechanism is deprecated and disabled. Prometheist must not grow an application-owned vocabulary of phrases such as “just discussed,” “those approaches,” or other surface forms to decide whether continuity exists.
+See [`PRE_COGNITIVE_TRANSIENT_WORKERS.md`](PRE_COGNITIVE_TRANSIENT_WORKERS.md).
 
-Lexical, entity, temporal, associative, and future experimentally justified semantic retrieval remain legitimate *inside memory*. The rejected mechanism is natural-language phrase policy in the control plane.
+## 14. Terminalization
 
-## 15. Disposable cognition and worker roles
+A terminal outcome is broader than a response.
 
-A reasoning worker receives only bounded durable/task-local state:
+Current general outcomes include:
 
-```text
-durable task/checkpoint
-        +
-current percept/input
-        +
-default attention-aperture packet
-        +
-optional explicit capability results
-        |
-        v
-fresh stateless model invocation
-        |
-        v
-closed structured control result or user-facing language
-        |
-        v
-persist
-        |
-        v
-discard worker/model context
-```
+- `RESPONSE_EMITTED`;
+- `ABSTAINED`;
+- `ACTION_COMPLETED`;
+- `ACTION_FAILED`;
+- `WAITING_EXTERNAL`;
+- `DEFERRED`.
 
-Worker roles such as planner, researcher, code reviewer, analyst, or responder describe temporary compute behavior, not persistent cognitive entities.
+The current CLI is interactive and normally attaches a `USER_OUTPUT` component. Future grocery ordering, appointment scheduling, device control, background maintenance, or software automation may terminalize without invoking a language model for final prose.
 
-## 16. Capability boundary
+The universal boundary is therefore **terminalization**, not “final response.”
 
-Capabilities remain modular and independently invokable: model inference, memory analysis, code execution, database operations, filesystem access, web/API retrieval, artifact processing, device sensing, actuator control, and others.
+## 15. Current interactive response boundary
 
-Capabilities expose explicit schemas, permissions, resource requirements, idempotency behavior, and provenance.
+For interactive response tasks, `FinalResponseDirective` remains a narrow application-owned terminal authority component.
 
-Basic memory activation is intentionally outside this optional capability boundary because it is part of the cognitive substrate. Deeper memory analysis is inside it.
+It fixes response/abstain authorization, evidence/source policy, final packet/capability bindings, fallback behavior, and persona identity before language realization.
 
-### 16.1 Internal memory versus external knowledge
+The final natural-language worker cannot reopen acquisition, change source policy, or decide to abstain.
 
-Prometheist's persistent internal memory and knowledge fetched from outside the system are distinct evidence domains.
+This directive is not promoted into the universal terminal object for non-language actions.
 
-Internal memory answers questions about the system's retained experience, user/system history, prior evidence, commitments, observations, and internal state. External capabilities such as web/API/tool retrieval obtain information from the outside world now. External evidence must retain source and freshness provenance and must not silently masquerade as something Prometheist previously remembered. Conversely, an old internal memory is not automatically evidence of the current external state of the world.
+## 16. Persona
 
-A result may combine both domains, but their provenance and authority remain explicit.
+Persona belongs only to optional user-facing natural-language realization.
 
-## 17. Epistemic boundary
+Acquisition, evidence, routing, capability, scheduling, resource, action, and terminalization authority remain persona-free. Personality is expression, not factual evidence or policy authority.
 
-Attention, activation, retrieval, interpretation, and truth are distinct.
+## 17. Durability and terminal snapshot
 
-A WorkingState event or aperture item says only that canonical evidence is currently active/relevant enough to expose. It does not assert that every proposition in that event is correct or current.
+Prometheist keeps two complementary representations:
 
-Prometheist must preserve distinctions among:
+1. append-only authoritative events/results/checkpoints/effect records at safety boundaries;
+2. one materialized terminal `InteractionWorkpiece` JSON snapshot that captures the assembled components in causal order.
 
-- canonical observation/evidence;
-- user belief or statement;
-- system interpretation;
-- derived claim/hypothesis;
-- confidence;
-- counterevidence;
-- supersession/correction;
-- unknown.
+The snapshot improves audit/debug/replay/export ergonomics. It does not replace incremental durability or become a giant WorkingState/memory substitute.
 
-Richer epistemic working state remains future work; v0.7 must not smuggle it into free-form summaries.
+## 18. Perception, salience, and situation assembly
 
-## 18. Historical compatibility
+Continuous external input should first be normalized through deterministic/conventional processing where feasible. Future perception/salience work should distinguish ignore, deliberate, orient, and reflex behavior without giving models unilateral deletion/actuation authority.
 
-v0.5 established the deterministic Memory Kernel baseline. v0.6 established that fresh stateless LLM invocations can share persistent context through JIT Memory without hidden transcripts. Those results remain accepted evidence even though the Primary/specialist hierarchy is superseded.
+Situations are overlapping associations, not rigid chat/session containers.
 
-The replacement architecture must reproduce or improve useful cross-turn, cross-process, cross-session, correction, temporal, causal, opaque-token, and provenance behavior.
+This remains roadmap work after v0.7 rebaseline.
 
-## 19. Scientific-method rule
+## 19. Retention architecture
 
-Architectural mechanisms are experimental claims:
+Prometheist distinguishes:
 
-> **Freeze baseline -> add one mechanism -> rerun the same experiment -> keep it only if the evidence justifies it.**
+- ephemeral raw experience;
+- admitted observational memory;
+- durable internal history;
+- active WorkingState;
+- bounded task/workpiece-local state.
 
-Negative results are retained. Phrase-cue continuity and “ask the model whether it needs unseen memory” are now explicit negative results from v0.7 acceptance.
+Anything that materially influences attention, reasoning, decisions, commitments, or actions must leave enough durable provenance to explain the behavior later.
 
-The engineering rules for constraints, benchmarks, and evidence are defined in [`../engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md`](../engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md) and [`../engineering/TESTING_AND_ACCEPTANCE.md`](../engineering/TESTING_AND_ACCEPTANCE.md).
+## 20. Epistemic boundary
 
-## 20. v1.0 target invariant
+Attention, activation, retrieval, sufficiency, interpretation, and truth are distinct.
+
+Prometheist must preserve distinctions among canonical evidence, user statement/belief, system interpretation, derived hypothesis, confidence, counterevidence, correction/supersession, external-current evidence, and unknown.
+
+Internal memory and external knowledge/tool results remain distinct evidence domains with explicit provenance/freshness.
+
+## 21. Interaction continuity
+
+Conversation/session/device identifiers are provenance and interface metadata, not default cognitive walls.
+
+Current context is reconstructed from system-owned WorkingState, JIT memory, durable workpiece/task state, and explicit current inputs rather than inherited model transcripts.
+
+Natural-language continuity must not depend on growing phrase/regex vocabularies.
+
+See [`INTERACTION_CONTINUITY.md`](INTERACTION_CONTINUITY.md).
+
+## 22. Historical compatibility
+
+v0.5 remains the deterministic Memory Kernel baseline. v0.6 remains evidence that fresh stateless LLM components can share persistent continuity through system-owned memory/state.
+
+The Primary Agent hierarchy used to prove v0.6 is historical. The v0.7 workpiece/station architecture must preserve or improve the useful continuity, correction, temporal, causal, opaque-token, provenance, and restart behavior.
+
+## 23. Experimental discipline
+
+Architecture is treated as falsifiable mechanism design:
+
+> **freeze baseline -> change one mechanism -> rerun -> retain only if evidence justifies it**
+
+Recent negative/positive results include:
+
+- phrase-specific continuity control rejected;
+- asking a model whether unseen memory matters rejected;
+- recurrent general capability routing rejected for the production path;
+- one overloaded pre-cognitive classifier rejected after native contradictions;
+- demand-driven single-purpose sufficiency/capability stations retained for current testing;
+- typed workpiece added to generalize execution beyond chat-response semantics.
+
+Behavioral tunables remain governed by the constraint registry and native evidence where required.
+
+## 24. v1.0 target invariant
 
 A complete first architecture should satisfy:
 
-> **You can terminate every LLM and worker process, replace the model, restart Prometheist, and the system still retains its durable identity, internal history, unfinished intentions, attention state, active working state, retained evidence, interaction continuity, and causal provenance because none of those things belonged to an agent, chat session, or model context in the first place.**
+> **You can terminate every LLM and worker process, replace the model, restart Prometheist, and cross chat/session/device boundaries while the system retains durable identity, internal history, unfinished intentions, attention/resource state, WorkingState, retained evidence, typed work-in-progress, interaction continuity, and causal provenance because none of those things belonged to an agent or model context.**
 
-The roadmap defines the experiments required to earn that claim.
+Additionally, Prometheist must be able to complete meaningful non-language work without inventing a mandatory chatbot response stage. Language is one optional product of a general persistent cognitive/execution system.
