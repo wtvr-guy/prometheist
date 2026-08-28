@@ -55,13 +55,15 @@ capability_selector
     -> bounded application-catalog indices
 ```
 
-Deterministic application code derives aggregate control and owns capability identities, dependencies, execution order, resources, persistence, and effects.
+Deterministic application code derives aggregate acquisition control and owns capability identities, dependencies, execution order, resources, persistence, and effects.
+
+A crucial native correction now separates **acquisition insufficiency** from **terminal abstention**. Pre-cognitive `ABSTAIN` means no useful additional acquisition work was selected; it cannot directly authorize the final interactive abstention. Any path that has not already established `RESPOND` receives one fresh `final_readiness` judgment over the exact final evidence/capability results before terminal `ABSTAIN` is allowed.
 
 The design rule is:
 
 > **one bounded job per station + no unnecessary station**
 
-See [`PRE_COGNITIVE_TRANSIENT_WORKERS_2026-08-28.md`](PRE_COGNITIVE_TRANSIENT_WORKERS_2026-08-28.md).
+See [`PRE_COGNITIVE_TRANSIENT_WORKERS_2026-08-28.md`](PRE_COGNITIVE_TRANSIENT_WORKERS_2026-08-28.md) for the evolution and [`TERMINAL_READINESS_AUTHORITY_2026-08-28.md`](TERMINAL_READINESS_AUTHORITY_2026-08-28.md) for the latest native authority-boundary correction.
 
 ### Typed Interaction Workpiece
 
@@ -117,6 +119,7 @@ Automatic activation is wide/shallow; selected investigation narrows subjects wh
 - [`INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md`](INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md) — original durable interaction integration record; later continuity/routing mechanisms supersede parts of it.
 - [`WORKING_STATE_PIVOT_2026-08-26.md`](WORKING_STATE_PIVOT_2026-08-26.md) — continuity/WorkingState negative results and pivot.
 - [`PRE_COGNITIVE_TRANSIENT_WORKERS_2026-08-28.md`](PRE_COGNITIVE_TRANSIENT_WORKERS_2026-08-28.md) — transient cognition evolution and native Qwen failure evidence.
+- [`TERMINAL_READINESS_AUTHORITY_2026-08-28.md`](TERMINAL_READINESS_AUTHORITY_2026-08-28.md) — failed same-station confirmation experiment and the acquisition-versus-terminal authority correction.
 - [`INTERACTION_WORKPIECE_2026-08-28.md`](INTERACTION_WORKPIECE_2026-08-28.md) — typed workpiece/general terminalization decision.
 
 ## Constitutional changes
@@ -128,6 +131,8 @@ Constitution v1.2 now explicitly states:
 - workers receive minimum projections and cannot mutate the cumulative workpiece;
 - terminalization is general and natural-language response is optional;
 - the terminal workpiece JSON complements, rather than replaces, append-only causal history.
+
+The terminal-readiness correction is an implementation of those existing rules rather than a new constitutional principle: semantic judgments belong at the authority boundary whose question they actually answer.
 
 ## Release gates
 
@@ -142,7 +147,9 @@ Required before closure:
 
 The native suite must continue to include the established restart, randomized opaque-fact, cross-process/cross-conversation, and multi-turn stateless-continuity scenarios.
 
-For those continuity scenarios, the automated oracle now ends at the final response boundary: it reconstructs the policy-admitted `FINAL_EVIDENCE`/`FINAL_RESPONSE_DIRECTIVE` handoff from the terminal workpiece and verifies that the fresh responder had the required canonical facts and provenance. The actual Prometheist response is printed in full for human inspection but is not forced into pipe-delimited or other canned prose unless exact formatting is itself the behavior under test. See [`../../engineering/TESTING_AND_ACCEPTANCE.md`](../../engineering/TESTING_AND_ACCEPTANCE.md).
+For those continuity scenarios, the automated oracle now ends at the final response boundary: it reconstructs the policy-admitted `FINAL_EVIDENCE`/`FINAL_RESPONSE_DIRECTIVE` handoff from the terminal workpiece and verifies that the fresh responder had the required canonical facts and provenance. The actual Prometheist response is printed in full for human inspection but is not forced into pipe-delimited or other canned prose unless exact formatting is itself the behavior under test.
+
+The Kestrel item additionally checks both sides of the terminal-readiness boundary: a supported question must be able to recover from an acquisition false negative, while an unsupported office-room-number question must still terminalize as `ABSTAIN` despite a non-empty related final evidence packet. See [`../../engineering/TESTING_AND_ACCEPTANCE.md`](../../engineering/TESTING_AND_ACCEPTANCE.md).
 
 ## What v0.7 deliberately does not claim
 
