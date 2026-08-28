@@ -2,9 +2,11 @@
 
 The fast path invokes exactly one semantic LLM station: evidence sufficiency.
 Only when that station returns INSUFFICIENT and a legal catalog exists does a
-second specialist select capability indices. Deterministic application code then
-derives disposition/evidence state and constructs the durable
-``PreCognitiveAssessment``.
+second specialist select capability indices. When insufficiency would otherwise
+be terminal because no useful capability was selected, one fresh bounded
+confirmation pass must agree before Prometheist abstains. Deterministic
+application code then derives disposition/evidence state and constructs the
+durable ``PreCognitiveAssessment``.
 
 Descriptive assessment fields that are not currently required for acquisition or
 response-boundary enforcement remain neutral rather than forcing unnecessary LLM
@@ -44,6 +46,18 @@ from jit_agent.pre_cognitive_workers import (
 _SET_LIKE_FIELDS_BY_SCHEMA = {
     "CapabilitySelectionDecision": ("capability_indices",),
 }
+_TERMINAL_INSUFFICIENCY_CONFIRMATION_SYSTEM_PROMPT = (
+    _EVIDENCE_SUFFICIENCY_SYSTEM_PROMPT
+    + "\n\nThis is a fresh bounded confirmation pass used only because an earlier "
+    "independent sufficiency pass returned INSUFFICIENT and no legal capability "
+    "was selected to add useful evidence. Re-evaluate the supplied material from "
+    "scratch. Do not preserve the earlier verdict merely for consistency. If every "
+    "answer component requested by the current percept is already present or "
+    "directly derivable from the supplied material, return SUFFICIENT. A historical "
+    "source statement itself is valid support; the evidence does not need to be a "
+    "previously phrased answer to the current question. Return INSUFFICIENT only if "
+    "a required answer component is still absent or genuinely unresolved."
+)
 
 
 def _dedupe_preserving_order(values: list[Any]) -> list[Any]:
@@ -134,6 +148,17 @@ class PreCognitiveDurableResponseOllamaClient(DurableResponseBudgetedOllamaClien
             )
             selection.validate_catalog(capability_catalog)
             capability_indices = list(selection.capability_indices)
+
+        if (
+            sufficiency.sufficiency is EvidenceSufficiency.INSUFFICIENT
+            and not capability_indices
+        ):
+            sufficiency = self._specialist(
+                f"PRE_COGNITIVE_{phase.value}_EVIDENCE_SUFFICIENCY_CONFIRMATION",
+                _TERMINAL_INSUFFICIENCY_CONFIRMATION_SYSTEM_PROMPT,
+                evidence_context,
+                EvidenceSufficiencyDecision,
+            )
 
         if sufficiency.sufficiency is EvidenceSufficiency.SUFFICIENT:
             disposition = CognitiveDisposition.RESPOND
