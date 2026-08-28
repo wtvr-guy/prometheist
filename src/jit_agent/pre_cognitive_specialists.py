@@ -19,6 +19,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from jit_agent.capability_registry import CapabilityDescriptor
 
 
+CognitivePhaseValue = Literal["PRE_CAPABILITY", "POST_CAPABILITY"]
+
+
 class EvidenceSufficiency(str, Enum):
     SUFFICIENT = "SUFFICIENT"
     INSUFFICIENT = "INSUFFICIENT"
@@ -59,6 +62,7 @@ class EvidenceSufficiencyStationComponent(BaseModel):
     producer_profile_id: Literal["evidence_sufficiency_verifier"] = (
         "evidence_sufficiency_verifier"
     )
+    phase: CognitivePhaseValue
     decision: EvidenceSufficiencyDecision
 
 
@@ -68,6 +72,7 @@ class CapabilitySelectionStationComponent(BaseModel):
     model_config = ConfigDict(extra="forbid")
     component_type: Literal["CAPABILITY_SELECTION"] = "CAPABILITY_SELECTION"
     producer_profile_id: Literal["capability_selector"] = "capability_selector"
+    phase: CognitivePhaseValue
     decision: CapabilitySelectionDecision
 
 
