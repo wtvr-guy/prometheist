@@ -59,7 +59,7 @@ def test_missing_admitted_history_uses_focused_verbatim_current_fallback():
                     "content": (
                         '{"evidence_scope":"USER_AUTHORED",'
                         '"surface_mode":"NATURAL_LANGUAGE",'
-                        '"insufficient_literal":null}'
+                        '"insufficient_literal":"USER_PROMPT"}'
                     )
                 }
             },
@@ -79,6 +79,7 @@ def test_missing_admitted_history_uses_focused_verbatim_current_fallback():
     fallback_messages = fake_http.calls[1][1]["messages"]
     assert fallback_messages[-1]["content"].startswith(prompt)
     assert "current-fallback selector" in fallback_messages[0]["content"]
+    assert "not SOURCE_ALPHA" in fallback_messages[0]["content"]
 
 
 def test_missing_admitted_history_keeps_generic_abstention_without_explicit_fallback():
@@ -93,7 +94,7 @@ def test_missing_admitted_history_keeps_generic_abstention_without_explicit_fall
                     "content": (
                         '{"evidence_scope":"USER_AUTHORED",'
                         '"surface_mode":"NATURAL_LANGUAGE",'
-                        '"insufficient_literal":null}'
+                        '"insufficient_literal":"USER_PROMPT"}'
                     )
                 }
             },
