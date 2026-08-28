@@ -21,6 +21,7 @@ Within that architecture, the current interactive path needs bounded semantic ju
 - JIT memory activation occurs before semantic evidence judgment.
 - Application code owns identifiers, ordering, dependency closure, resource admission, persistence, retries, and side effects.
 - Each LLM station emits only one closed component appropriate to its bounded role.
+- A bounded station implementation may use more than one stateless model invocation only when a measured failure mode justifies that internal retry/confirmation; it still contributes one station component.
 - A station receives only its registered information aperture, not the entire workpiece.
 - Material application control is persisted before capability or external effects.
 - Capability execution remains deterministic/idempotent under application-owned identities.
@@ -57,13 +58,23 @@ The current production path separates only the decisions that have real downstre
 
 It does not receive a capability catalog and cannot select work.
 
-Its result is represented as an `EvidenceSufficiencyStationComponent` in the interaction workpiece.
+Its result is represented as one `EvidenceSufficiencyStationComponent` in the interaction workpiece.
+
+Native acceptance exposed a specific false-negative mode: Qwen3:4b could return `INSUFFICIENT` even when a non-empty admitted packet directly contained every answer component requested by the current percept. Because a false negative could otherwise become terminal control, the evidence-sufficiency **station implementation** now applies one asymmetric bounded confirmation rule:
+
+- a first `SUFFICIENT` remains final for that station and preserves the one-call fast path;
+- a first `INSUFFICIENT` over non-empty activated/capability evidence is re-evaluated once by a fresh stateless invocation inside the same station;
+- the confirmation must evaluate the supplied evidence from scratch and is explicitly told that a historical source statement itself can support the current question;
+- capability selection sees only the station's final sufficiency result;
+- empty-evidence insufficiency is not automatically retried merely to manufacture another model vote.
+
+This is not a third semantic station and does not add another workpiece component. It is a measured, bounded internal reliability mechanism for one already-defined job.
 
 ### Capability selection
 
 `capability_selector` runs only when:
 
-1. sufficiency is `INSUFFICIENT`; and
+1. the evidence-sufficiency station's final result is `INSUFFICIENT`; and
 2. the application exposes a non-empty legal capability catalog for the current phase.
 
 It returns only application-catalog indices. It cannot reassess sufficiency, author capability IDs or queries, plan dependencies/order, execute tools, or decide terminal outcome.
@@ -72,7 +83,7 @@ Its result is represented as a `CapabilitySelectionStationComponent` only when t
 
 ### Deterministic control composition
 
-Application code derives the compatibility `PreCognitiveAssessment`:
+Application code derives the compatibility `PreCognitiveAssessment` from the final station outputs:
 
 ```text
 SUFFICIENT
@@ -111,7 +122,7 @@ ATTENTION_APERTURE
   -> FINAL_EVIDENCE
 ```
 
-The brackets indicate conditional components.
+The brackets indicate conditional components. A bounded confirmation invocation inside `EVIDENCE_SUFFICIENCY` does not create a second component because it is an implementation detail of the same bounded station job; capability selection does not run if confirmation recovers the station result to `SUFFICIENT`.
 
 The existing persisted pre/post assessment events remain authoritative restart checkpoints. The workpiece snapshot is the cumulative typed view, not a replacement for append-only history.
 
@@ -137,20 +148,22 @@ The pre-acquisition fast path still uses one semantic LLM call.
 percept + aperture
   -> evidence_sufficiency_verifier
   -> INSUFFICIENT
+  -> [if non-empty evidence: one fresh confirmation inside the same station]
+  -> final station result still INSUFFICIENT
   -> capability_selector
   -> deterministic first tranche
   -> exact bounded evidence composition
   -> evidence_sufficiency_verifier
   -> SUFFICIENT: terminalize current path
      or
-  -> INSUFFICIENT + newly legal follow-up catalog
+  -> confirmed INSUFFICIENT + newly legal follow-up catalog
   -> capability_selector
   -> one bounded follow-up tranche
   -> fresh final readiness when required
   -> terminalize current path
 ```
 
-There is no unbounded recurrent model-owned router in scheme v1.
+If the confirmation recovers to `SUFFICIENT`, capability selection is skipped. There is no unbounded recurrent model-owned router in scheme v1.
 
 ## Why not make every field a station?
 
@@ -162,7 +175,7 @@ Therefore:
 
 > **one bounded job per station + no unnecessary station**
 
-Both parts matter.
+Both parts matter. A bounded retry inside one station is justified only by measured unreliability of that station's own job; it is not permission to create checker-for-checker chains by default.
 
 ## Other current conditional stations
 
@@ -219,6 +232,8 @@ Model residency is an optimization, not cognition.
 | malformed specialist component | fail closed; no capability effect |
 | invalid capability index | fail closed |
 | sufficiency station attempts capability control | impossible by schema/information aperture |
+| first sufficiency false-negative over non-empty evidence | run one fresh bounded confirmation inside the same station before capability selection |
+| confirmed insufficiency with legal helpful work | expose the capability selector; do not force response from packet presence |
 | capability selector attempts sufficiency decision | impossible by schema |
 | catalog changes after persisted selection | fail closed |
 | worker dies before assembled control persistence | rerun stateless semantic stations; no downstream effect existed |
@@ -231,7 +246,7 @@ Model residency is an optimization, not cognition.
 
 ## Acceptance
 
-Deterministic CI must cover closed specialist schemas, demand-driven station invocation, separated information apertures, deterministic aggregate control composition, bounded follow-up exposure, exact evidence composition, terminal directive invariants, workpiece assembly/terminalization, and existing restart/provenance/epistemic/resource regressions.
+Deterministic CI must cover closed specialist schemas, demand-driven station invocation, separated information apertures, deterministic aggregate control composition, the one-call sufficient fast path, bounded confirmation of an initial negative over non-empty evidence, confirmation recovery before capability selection, confirmed-insufficiency progression into capability selection, bounded follow-up exposure, exact evidence composition, terminal directive invariants, workpiece assembly/terminalization, and existing restart/provenance/epistemic/resource regressions.
 
 Native Windows/PostgreSQL/Ollama acceptance remains the v0.7 release gate with Qwen3:4b held constant.
 
