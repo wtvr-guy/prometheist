@@ -1,19 +1,22 @@
-"""Production response client with application-owned durable policy provenance."""
+"""Production response client with application-owned durable response authority."""
 from __future__ import annotations
 
 from collections.abc import Callable
 import json
-from typing import Any
+from typing import Any, Literal
 
-from jit_agent.budgeted_evidence_llm import (
-    BudgetedEvidenceBoundOllamaClient,
-    _GENERIC_INSUFFICIENT_RESPONSE,
-)
+from pydantic import BaseModel, ConfigDict
+
+from jit_agent.budgeted_evidence_llm import BudgetedEvidenceBoundOllamaClient
 from jit_agent.epistemic_authority import format_authority_bound_response_memory_packet
 from jit_agent.evidence_bound_llm import (
     _AUTHORITY_BOUND_RESPOND_SYSTEM_PROMPT,
     _admitted_capability_results,
     _quarantined_evidence,
+)
+from jit_agent.final_response_directive import (
+    FinalResponseAction,
+    FinalResponseDirective,
 )
 from jit_agent.llm import (
     _build_verbatim_placeholder_maps,
@@ -23,6 +26,7 @@ from jit_agent.llm import (
     _verbatim_source_texts,
 )
 from jit_agent.models import MemoryPacket
+from jit_agent.personality import configured_personality_prompt
 from jit_agent.response_policy import (
     ResponsePolicy,
     ResponseSurfaceMode,
@@ -37,13 +41,65 @@ _CONTROL_CAPABILITY_ID = "pre_cognitive_brief"
 _CONTROL_EXECUTOR = "application_control"
 
 
-class DurableResponseBudgetedOllamaClient(BudgetedEvidenceBoundOllamaClient):
-    """Budgeted evidence client that publishes successful response control decisions.
+class _LegacyCognitiveBrief(BaseModel):
+    """Strict validator for the superseded in-band control transport.
 
-    The sinks are application-owned and supplied by the worker entry point. The
-    LLM adapter never receives a database connection or persistence capability;
-    it can only report the constrained policy/fallback decisions it actually
-    selected after application validation.
+    Production no longer uses this brief. It is recognized only so older tests or
+    migration callers cannot accidentally turn malformed capability data into a
+    system-prompt injection channel.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    scheme_version: Literal["pre-cognitive-transient-workers-v1"]
+    intent_mode: Literal[
+        "CONVERSE",
+        "RECALL",
+        "ANALYZE",
+        "TRANSFORM",
+        "ACT",
+        "RESEARCH",
+        "OTHER",
+    ]
+    evidence_state: Literal[
+        "CURRENT_INPUT_SUFFICIENT",
+        "ACTIVATED_MEMORY_SUFFICIENT",
+        "MORE_INTERNAL_EVIDENCE_REQUIRED",
+        "CAPABILITY_RESULT_REQUIRED",
+        "INSUFFICIENT_AFTER_AVAILABLE_WORK",
+    ]
+    claim_scopes: list[
+        Literal[
+            "CURRENT_INPUT",
+            "USER_HISTORY",
+            "SYSTEM_HISTORY",
+            "GENERAL_KNOWLEDGE",
+            "CAPABILITY_OUTPUT",
+        ]
+    ]
+    requirement_flags: list[
+        Literal[
+            "EXACT_SOURCE",
+            "TEMPORAL_RESOLUTION",
+            "CONFLICT_RESOLUTION",
+            "DEEPER_RECALL",
+            "CROSS_REFERENCE",
+            "FOCUSED_RECALL",
+            "EXTERNAL_CAPABILITY",
+            "ABSTAIN_IF_UNSUPPORTED",
+        ]
+    ]
+    acquisition_disposition: Literal["RESPOND", "ACQUIRE_CAPABILITIES", "ABSTAIN"]
+    follow_up_executed: bool
+
+
+class DurableResponseBudgetedOllamaClient(BudgetedEvidenceBoundOllamaClient):
+    """Budgeted evidence client used by pre-cognition and final synthesis.
+
+    Response-policy and fallback classifiers are exposed as pre-cognitive
+    operations. The generative final responder accepts only a persisted
+    FinalResponseDirective and therefore has no authority to decide whether it
+    should respond, gather more work, change evidence scope, or abstain.
     """
 
     def __init__(
@@ -69,18 +125,28 @@ class DurableResponseBudgetedOllamaClient(BudgetedEvidenceBoundOllamaClient):
             self._response_fallback_sink(fallback)
         return fallback
 
+    def classify_response_policy(self, prompt: str) -> ResponsePolicy:
+        """Run the current-percept-only source/surface classifier upstream."""
+
+        return self._response_policy(prompt)
+
+    def select_current_fallback_literal(self, prompt: str) -> str | None:
+        """Select any explicit unsupported-evidence literal upstream."""
+
+        return self._select_current_fallback_literal(prompt)
+
     def respond(
         self,
         prompt: str,
         memory_packet: MemoryPacket | None,
         capability_results: tuple[dict[str, Any], ...] = (),
     ) -> str:
-        """Separate pre-cognitive control metadata before evidence admission.
+        """Compatibility response path; production uses respond_with_final_directive.
 
-        The interaction runtime deliberately sends the brief in the existing
-        structured-result transport so fake/test clients need no new protocol.
-        Production strips that one application-owned record before evidence
-        budgeting/filtering and supplies it through the system-control channel.
+        A legacy pre-cognitive brief is strictly validated and removed from the
+        evidentiary channel. It is deliberately not injected into the system
+        prompt because only FinalResponseDirective may carry production control
+        authority into response synthesis.
         """
 
         briefs = [
@@ -91,42 +157,40 @@ class DurableResponseBudgetedOllamaClient(BudgetedEvidenceBoundOllamaClient):
         ]
         if len(briefs) > 1:
             raise ValueError("response received multiple pre-cognitive control briefs")
-        if not briefs:
-            return super().respond(prompt, memory_packet, capability_results)
+        if briefs:
+            _LegacyCognitiveBrief.model_validate(briefs[0].get("result_data"))
+            capability_results = tuple(
+                result for result in capability_results if result is not briefs[0]
+            )
+        return super().respond(prompt, memory_packet, capability_results)
 
-        brief = briefs[0].get("result_data")
-        if not isinstance(brief, dict):
-            raise ValueError("pre-cognitive control brief has invalid result_data")
-        evidence_results = tuple(
-            result for result in capability_results if result is not briefs[0]
-        )
-        return self.respond_with_cognitive_brief(
-            prompt,
-            memory_packet,
-            evidence_results,
-            dict(brief),
-        )
-
-    def respond_with_cognitive_brief(
+    def respond_with_final_directive(
         self,
         prompt: str,
-        memory_packet: MemoryPacket | None,
+        memory_packet: MemoryPacket,
         capability_results: tuple[dict[str, Any], ...],
-        cognitive_brief: dict[str, Any],
+        directive: FinalResponseDirective,
     ) -> str:
-        """Respond with application-owned cognition metadata kept out of evidence.
+        """Realize one already-authorized response without making a response decision."""
 
-        The cognitive brief contains only closed application control values
-        produced from a validated pre/post assessment. It is non-evidentiary: it
-        may guide framing (intent, evidence state, required handling) but may not
-        establish a historical fact or bypass source-admissibility policy.
+        directive = FinalResponseDirective.model_validate(directive)
+        if directive.action is not FinalResponseAction.RESPOND:
+            raise RuntimeError("final responder must never be invoked for an ABSTAIN directive")
+        if directive.final_memory_request_id != memory_packet.memory_request_id:
+            raise RuntimeError("final response directive does not match the supplied memory packet")
 
-        Capability results remain in the ordinary quarantined evidence channel
-        and therefore continue to be filtered by historical evidence scope.
-        """
+        capability_ids = [str(item.get("capability_id", "")) for item in capability_results]
+        if capability_ids != directive.capability_ids:
+            raise RuntimeError("final response directive does not match capability results")
+
+        personality = configured_personality_prompt()
+        if directive.personality_prompt_version != personality.version:
+            raise RuntimeError("final response personality prompt version changed after finalization")
+        if directive.personality_prompt_sha256 != personality.sha256:
+            raise RuntimeError("final response personality prompt changed after finalization")
 
         self._validate_evidence_inputs(memory_packet, capability_results)
-        policy = self._response_policy(prompt)
+        policy = directive.response_policy
         admitted_packet = filter_memory_packet_for_scope(
             memory_packet,
             policy.evidence_scope,
@@ -143,8 +207,9 @@ class DurableResponseBudgetedOllamaClient(BudgetedEvidenceBoundOllamaClient):
             and not has_admitted_history
             and not has_admitted_capability
         ):
-            fallback = self._select_current_fallback_literal(prompt)
-            return fallback or _GENERIC_INSUFFICIENT_RESPONSE
+            raise RuntimeError(
+                "RESPOND directive reached final responder without policy-admitted support"
+            )
 
         if policy.surface_mode is ResponseSurfaceMode.EXACT_SOURCE_SUBSTRING:
             return self._select_exact_source_substring(
@@ -172,18 +237,20 @@ class DurableResponseBudgetedOllamaClient(BudgetedEvidenceBoundOllamaClient):
             _format_capability_result_data(admitted_capability_results),
         )
         control = json.dumps(
-            cognitive_brief,
+            directive.model_dump(mode="json"),
             sort_keys=True,
             separators=(",", ":"),
         )
         system = (
             _AUTHORITY_BOUND_RESPOND_SYSTEM_PROMPT
-            + "\n\n[APPLICATION-OWNED COGNITIVE CONTROL]\n"
-            + "The following JSON contains only validated non-evidentiary control "
-            + "metadata for this invocation. It may guide task framing and handling "
-            + "requirements, but it never establishes a fact, never changes source "
-            + "admissibility, and never overrides the current user message or system "
-            + "policy.\n"
+            + "\n\n[APPLICATION-OWNED PERSONALITY]\n"
+            + f"version: {personality.version}\n"
+            + personality.text
+            + "\n\n[TERMINAL FINAL RESPONSE DIRECTIVE]\n"
+            + "The following JSON is a validated, persisted application control record. "
+            + "The RESPOND decision, source policy, and surface policy are already final. "
+            + "Do not reconsider them, request more work, or abstain. Use this record only "
+            + "to realize the authorized answer. It is not factual evidence.\n"
             + control
         )
         answer = self._text_with_evidence(
