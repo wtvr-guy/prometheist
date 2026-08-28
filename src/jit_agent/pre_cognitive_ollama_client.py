@@ -1,16 +1,16 @@
 """Demand-driven Ollama adapter for specialized ephemeral pre-cognition.
 
 The fast path invokes exactly one semantic LLM station: evidence sufficiency.
-When a first sufficiency pass returns INSUFFICIENT despite non-empty activated or
-capability evidence, the same bounded station performs one fresh confirmation
-pass before any capability selection. Only confirmed insufficiency may flow to a
-second specialist that selects capability indices. Deterministic application code
-then derives disposition/evidence state and constructs the durable
-``PreCognitiveAssessment``.
+Only when that acquisition-time station returns INSUFFICIENT may a second
+specialist select capability indices. Pre-cognitive insufficiency governs whether
+more work should be attempted; it is not final abstention authority. A separate
+fresh terminal-readiness assessment owns the end-of-work RESPOND/ABSTAIN decision
+when acquisition did not already establish sufficiency.
 
-Descriptive assessment fields that are not currently required for acquisition or
-response-boundary enforcement remain neutral rather than forcing unnecessary LLM
-stations onto every interaction.
+Deterministic application code derives disposition/evidence state and constructs
+the durable ``PreCognitiveAssessment``. Descriptive assessment fields that are not
+currently required for acquisition or response-boundary enforcement remain neutral
+rather than forcing unnecessary LLM stations onto every interaction.
 """
 from __future__ import annotations
 
@@ -46,18 +46,6 @@ from jit_agent.pre_cognitive_workers import (
 _SET_LIKE_FIELDS_BY_SCHEMA = {
     "CapabilitySelectionDecision": ("capability_indices",),
 }
-_TERMINAL_INSUFFICIENCY_CONFIRMATION_SYSTEM_PROMPT = (
-    _EVIDENCE_SUFFICIENCY_SYSTEM_PROMPT
-    + "\n\nThis is a fresh bounded confirmation pass used only because an earlier "
-    "independent sufficiency pass returned INSUFFICIENT even though activated or "
-    "capability evidence is present. Re-evaluate the supplied material from "
-    "scratch. Do not preserve the earlier verdict merely for consistency. If every "
-    "answer component requested by the current percept is already present or "
-    "directly derivable from the supplied material, return SUFFICIENT. A historical "
-    "source statement itself is valid support; the evidence does not need to be a "
-    "previously phrased answer to the current question. Return INSUFFICIENT only if "
-    "a required answer component is still absent or genuinely unresolved."
-)
 
 
 def _dedupe_preserving_order(values: list[Any]) -> list[Any]:
@@ -134,17 +122,6 @@ class PreCognitiveDurableResponseOllamaClient(DurableResponseBudgetedOllamaClien
             evidence_context,
             EvidenceSufficiencyDecision,
         )
-
-        if (
-            sufficiency.sufficiency is EvidenceSufficiency.INSUFFICIENT
-            and (memory_packet.items or capability_results)
-        ):
-            sufficiency = self._specialist(
-                f"PRE_COGNITIVE_{phase.value}_EVIDENCE_SUFFICIENCY_CONFIRMATION",
-                _TERMINAL_INSUFFICIENCY_CONFIRMATION_SYSTEM_PROMPT,
-                evidence_context,
-                EvidenceSufficiencyDecision,
-            )
 
         capability_indices: list[int] = []
         if (
