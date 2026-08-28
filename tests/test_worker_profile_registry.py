@@ -78,7 +78,7 @@ def test_final_response_packet_explicitly_requires_personality_and_terminal_cont
     assert "full_transcript" not in profile.packet_contract.allowed_fields
 
 
-def test_pre_cognitive_assessment_is_deterministic_composition_of_atomic_llm_workers() -> None:
+def test_pre_cognitive_assessment_is_deterministic_demand_driven_composition() -> None:
     registry = default_worker_profile_registry()
     root = registry.get("pre_cognitive_assessment")
 
@@ -87,14 +87,16 @@ def test_pre_cognitive_assessment_is_deterministic_composition_of_atomic_llm_wor
     assert root.system_prompt is None
     delegates = registry.delegated_profiles(root.worker_profile_id)
     assert [profile.worker_profile_id for profile in delegates] == [
-        "intent_classifier",
         "evidence_sufficiency_verifier",
-        "claim_scope_classifier",
-        "requirement_classifier",
         "capability_selector",
     ]
     assert all(profile.execution_mode is WorkerExecutionMode.LLM for profile in delegates)
     assert all(profile.persona_access is PersonaAccess.FORBIDDEN for profile in delegates)
+
+    sufficiency = registry.get("evidence_sufficiency_verifier")
+    selector = registry.get("capability_selector")
+    assert "capability_catalog" not in sufficiency.packet_contract.allowed_fields
+    assert "capability_catalog" in selector.packet_contract.required_fields
 
 
 def test_every_capability_resolves_to_private_deterministic_root_worker() -> None:
