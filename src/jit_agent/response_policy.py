@@ -10,12 +10,12 @@ from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from jit_agent.models import EventType, MemoryPacket
 
 
-RESPONSE_POLICY_VERSION = "response-source-authority-v4"
+RESPONSE_POLICY_VERSION = "response-source-authority-v5"
 
 
 class HistoricalEvidenceScope(str, Enum):
@@ -46,11 +46,30 @@ class ResponsePolicy(BaseModel):
     evidence_scope: HistoricalEvidenceScope
     surface_mode: ResponseSurfaceMode
     insufficient_literal: str | None = None
+    allowed_output_literals: list[str] = Field(
+        default_factory=list,
+        description=(
+            "When the current user message explicitly enumerates a finite closed set of "
+            "legal exact final outputs, copy each complete allowed output literal verbatim "
+            "in user-specified order. Otherwise return an empty list."
+        ),
+    )
 
     @model_validator(mode="after")
-    def validate_insufficient_literal(self) -> "ResponsePolicy":
+    def validate_literals(self) -> "ResponsePolicy":
         if self.insufficient_literal is not None and not self.insufficient_literal:
             raise ValueError("insufficient_literal must not be empty")
+        if any(not literal for literal in self.allowed_output_literals):
+            raise ValueError("allowed_output_literals must not contain empty values")
+        if len(set(self.allowed_output_literals)) != len(self.allowed_output_literals):
+            raise ValueError("allowed_output_literals must not contain duplicates")
+        if (
+            self.allowed_output_literals
+            and self.surface_mode is not ResponseSurfaceMode.EXACT_SOURCE_SUBSTRING
+        ):
+            raise ValueError(
+                "allowed_output_literals are only valid for EXACT_SOURCE_SUBSTRING"
+            )
         return self
 
 
@@ -182,14 +201,33 @@ def validate_current_literal(prompt: str, literal: str | None) -> str | None:
     return literal
 
 
+def validate_response_policy_current_authority(
+    prompt: str,
+    policy: ResponsePolicy,
+) -> ResponsePolicy:
+    """Validate every response-policy literal against current user authority."""
+
+    validate_current_literal(prompt, policy.insufficient_literal)
+    for literal in policy.allowed_output_literals:
+        if literal not in prompt:
+            raise ValueError(
+                "allowed_output_literal must be an exact substring of the current prompt"
+            )
+    return policy
+
+
 def validate_exact_source_selection(
     packet: MemoryPacket,
     selection: ExactSourceSelection,
+    *,
+    allowed_output_literals: tuple[str, ...] = (),
 ) -> str:
     """Return the exact canonical substring selected from admitted evidence.
 
     The model selects semantics, but application code validates the source index
     and substring membership and returns source bytes rather than generated prose.
+    When current authority enumerates a closed exact-output set, the selected
+    source substring must also equal one complete allowed literal.
     """
 
     if selection.source_index not in range(len(packet.items)):
@@ -197,6 +235,8 @@ def validate_exact_source_selection(
     content = packet.items[selection.source_index].content
     if selection.verbatim_value not in content:
         raise ValueError("exact-source value is not a verbatim substring of admitted evidence")
+    if allowed_output_literals and selection.verbatim_value not in allowed_output_literals:
+        raise ValueError("exact-source value is not one of the current-authority allowed outputs")
     return selection.verbatim_value
 
 
