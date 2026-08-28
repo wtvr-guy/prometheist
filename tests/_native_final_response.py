@@ -159,7 +159,7 @@ def assert_final_responder_has(
     required_literals: tuple[str, ...] = (),
     expected_surface_mode: ResponseSurfaceMode | None = None,
 ) -> None:
-    """Score the responder handoff, not the wording it eventually realizes."""
+    """Score a supported responder handoff, not the wording it eventually realizes."""
 
     failures: list[str] = []
     if view.directive.action is not FinalResponseAction.RESPOND:
@@ -189,6 +189,19 @@ def assert_final_responder_has(
             f"{view.directive.response_policy.surface_mode.value}, "
             f"expected {expected_surface_mode.value}"
         )
+
+    if failures:
+        raise AssertionError("; ".join(failures) + "\n" + compact_final_responder_trace(view))
+
+
+def assert_final_responder_abstains_with_nonempty_evidence(view: FinalResponderView) -> None:
+    """Negative control: irrelevant existing memory must not become false support."""
+
+    failures: list[str] = []
+    if view.directive.action is not FinalResponseAction.ABSTAIN:
+        failures.append(f"directive action was {view.directive.action.value}, expected ABSTAIN")
+    if not view.final_memory_packet.items:
+        failures.append("negative control did not exercise non-empty final evidence")
 
     if failures:
         raise AssertionError("; ".join(failures) + "\n" + compact_final_responder_trace(view))
