@@ -27,6 +27,27 @@ from jit_agent.response_policy import (
 NOW = datetime(2026, 8, 28, 16, 0, tzinfo=timezone.utc)
 
 
+class _FakeResponse:
+    def __init__(self, body):
+        self._body = body
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return self._body
+
+
+class _FakeHTTPClient:
+    def __init__(self, bodies):
+        self._bodies = iter(bodies)
+        self.calls = []
+
+    def post(self, path, *, json):
+        self.calls.append((path, json))
+        return _FakeResponse(next(self._bodies))
+
+
 def _packet() -> MemoryPacket:
     conversation_id = uuid4()
     return MemoryPacket(
@@ -43,6 +64,30 @@ def _packet() -> MemoryPacket:
                 conversation_seq=1,
                 global_seq=1,
                 content="I prefer concise answers.",
+            )
+        ],
+    )
+
+
+def _kestrel_packet() -> MemoryPacket:
+    conversation_id = uuid4()
+    return MemoryPacket(
+        memory_request_id=uuid4(),
+        need=MemoryNeed(query_text="Project Kestrel", limit=1),
+        supported=True,
+        items=[
+            MemoryEvidence(
+                source_event_id=uuid4(),
+                event_type=EventType.USER_PROMPT,
+                source="user",
+                created_at=NOW,
+                conversation_id=conversation_id,
+                conversation_seq=1,
+                global_seq=1,
+                content=(
+                    "For Project Kestrel, never use Docker; deploy PostgreSQL directly on "
+                    "Windows because virtualization is disabled."
+                ),
             )
         ],
     )
@@ -156,6 +201,104 @@ def test_final_responder_rejects_personality_drift_before_model_inference():
     client = DurableResponseBudgetedOllamaClient.__new__(DurableResponseBudgetedOllamaClient)
     with pytest.raises(RuntimeError, match="personality prompt changed"):
         client.respond_with_final_directive("What did I prefer?", packet, (), directive)
+
+
+def test_durable_response_policy_captures_current_enumerated_outputs():
+    prompt = (
+        "Return exactly one of these labels and nothing else: "
+        "Docker Compose | PostgreSQL directly on Windows."
+    )
+    client = DurableResponseBudgetedOllamaClient(
+        base_url="http://ollama.test",
+        model="model:test",
+    )
+    client._client = _FakeHTTPClient(
+        [
+            {
+                "message": {
+                    "content": (
+                        '{"evidence_scope":"GENERAL_OR_CURRENT",'
+                        '"surface_mode":"EXACT_SOURCE_SUBSTRING",'
+                        '"insufficient_literal":null,'
+                        '"allowed_output_literals":["Docker Compose",'
+                        '"PostgreSQL directly on Windows"]}'
+                    )
+                }
+            }
+        ]
+    )
+
+    policy = client.classify_response_policy(prompt)
+
+    assert policy.allowed_output_literals == [
+        "Docker Compose",
+        "PostgreSQL directly on Windows",
+    ]
+    system = client._client.calls[0][1]["messages"][0]["content"]
+    assert "allowed_output_literals" in system
+    assert "Never derive this list from historical evidence" in system
+
+
+def test_final_exact_selector_rejects_surrounding_sentence_and_retries_allowed_label():
+    packet = _kestrel_packet()
+    prompt = (
+        "I'm choosing between Docker Compose and PostgreSQL directly on Windows. "
+        "Return exactly one of these labels and nothing else: "
+        "Docker Compose | PostgreSQL directly on Windows."
+    )
+    personality = configured_personality_prompt()
+    directive = FinalResponseDirective(
+        action=FinalResponseAction.RESPOND,
+        intent_mode="RECALL",
+        evidence_state="ACTIVATED_MEMORY_SUFFICIENT",
+        claim_scopes=["USER_HISTORY"],
+        requirement_flags=[],
+        response_policy=ResponsePolicy(
+            evidence_scope=HistoricalEvidenceScope.USER_AUTHORED,
+            surface_mode=ResponseSurfaceMode.EXACT_SOURCE_SUBSTRING,
+            allowed_output_literals=[
+                "Docker Compose",
+                "PostgreSQL directly on Windows",
+            ],
+        ),
+        final_memory_request_id=packet.memory_request_id,
+        capability_ids=[],
+        personality_prompt_version=personality.version,
+        personality_prompt_sha256=personality.sha256,
+    )
+    client = DurableResponseBudgetedOllamaClient(
+        base_url="http://ollama.test",
+        model="model:test",
+    )
+    client._client = _FakeHTTPClient(
+        [
+            {
+                "message": {
+                    "content": (
+                        '{"source_index":0,"verbatim_value":'
+                        '"For Project Kestrel, never use Docker; deploy PostgreSQL directly '
+                        'on Windows because virtualization is disabled."}'
+                    )
+                }
+            },
+            {
+                "message": {
+                    "content": (
+                        '{"source_index":0,"verbatim_value":'
+                        '"PostgreSQL directly on Windows"}'
+                    )
+                }
+            },
+        ]
+    )
+
+    answer = client.respond_with_final_directive(prompt, packet, (), directive)
+
+    assert answer == "PostgreSQL directly on Windows"
+    assert len(client._client.calls) == 2
+    system = client._client.calls[0][1]["messages"][0]["content"]
+    assert "APPLICATION-VALIDATED CURRENT OUTPUT LITERALS" in system
+    assert "PostgreSQL directly on Windows" in system
 
 
 def test_malformed_legacy_control_brief_is_rejected_before_system_injection():
