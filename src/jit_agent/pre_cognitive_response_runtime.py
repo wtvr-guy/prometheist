@@ -486,10 +486,18 @@ def _acquisition_workpiece(
     executions = [
         CapabilityExecution.model_validate(item) for item in acquisition.get("executions", [])
     ]
-    first_tranche = [item for item in executions if item.round_index == 0]
-    if first_tranche:
+    tranche_indices = sorted({item.round_index for item in executions})
+    later_tranche_indices: list[int] = []
+    if tranche_indices:
+        initial_tranche_index, *later_tranche_indices = tranche_indices
+        initial_tranche = [
+            item for item in executions if item.round_index == initial_tranche_index
+        ]
         workpiece = workpiece.attach(
-            CapabilityWorkComponent(tranche_index=0, executions=first_tranche)
+            CapabilityWorkComponent(
+                tranche_index=initial_tranche_index,
+                executions=initial_tranche,
+            )
         )
 
     post_payload = acquisition.get("post_assessment")
@@ -511,8 +519,7 @@ def _acquisition_workpiece(
             )
         )
 
-    later_tranches = sorted({item.round_index for item in executions if item.round_index > 0})
-    for tranche_index in later_tranches:
+    for tranche_index in later_tranche_indices:
         tranche = [item for item in executions if item.round_index == tranche_index]
         workpiece = workpiece.attach(
             CapabilityWorkComponent(tranche_index=tranche_index, executions=tranche)
