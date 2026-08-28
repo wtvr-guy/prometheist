@@ -3,9 +3,16 @@ from __future__ import annotations
 
 from typing import Any
 
+from pydantic import ValidationError
+
 from jit_agent.capability_registry import CapabilityDescriptor
-from jit_agent.evidence_bound_llm import EvidenceBoundOllamaClient
+from jit_agent.evidence_bound_llm import (
+    EvidenceBoundOllamaClient,
+    _base_text_max_tokens,
+    _quarantined_evidence,
+)
 from jit_agent.interaction_policy import CapabilityResultSummary, InteractionDecision
+from jit_agent.llm import _retry_token_caps
 from jit_agent.model_evidence_budget import (
     configured_model_evidence_budget,
     memory_packet_content_bytes,
@@ -19,6 +26,25 @@ from jit_agent.models import (
     MemoryCandidateSelection,
     MemoryPacket,
 )
+from jit_agent.response_policy import CurrentFallbackSelection, validate_current_literal
+
+
+_GENERIC_INSUFFICIENT_RESPONSE = "Persisted evidence is insufficient."
+_CURRENT_FALLBACK_SELECTION_SYSTEM_PROMPT = """\
+You are a fresh disposable Prometheist current-fallback selector. You receive
+only the current user message and no retrieved memory, prior transcript,
+capability result, or historical model output.
+
+If the current message explicitly supplies a literal that must be returned when
+required historical evidence is absent, copy that literal verbatim into
+verbatim_value. Preserve its spelling, case, spacing, and internal punctuation.
+Do not include sentence punctuation that merely terminates the instruction
+unless the message clearly makes that punctuation part of the literal itself.
+
+If the current message does not explicitly supply such a fallback literal,
+return null for verbatim_value. Never invent, normalize, paraphrase, or infer a
+fallback that does not occur verbatim in the current message.
+"""
 
 
 class BudgetedEvidenceBoundOllamaClient(EvidenceBoundOllamaClient):
@@ -65,6 +91,30 @@ class BudgetedEvidenceBoundOllamaClient(EvidenceBoundOllamaClient):
             max_tokens,
         )
 
+    def _select_current_fallback_literal(self, prompt: str) -> str | None:
+        """Select an explicit no-support literal from current authority only.
+
+        This is intentionally separate from the broad response-policy classifier.
+        The model may identify the semantic span, but application code accepts it
+        only when it is a verbatim substring of the current user percept.
+        """
+
+        for token_cap in _retry_token_caps(_base_text_max_tokens()):
+            try:
+                content = self._structured_with_evidence(
+                    "CURRENT_FALLBACK_SELECTION",
+                    _CURRENT_FALLBACK_SELECTION_SYSTEM_PROMPT,
+                    prompt,
+                    _quarantined_evidence(),
+                    CurrentFallbackSelection.model_json_schema(),
+                    token_cap,
+                )
+                selection = CurrentFallbackSelection.model_validate_json(content)
+                return validate_current_literal(prompt, selection.verbatim_value)
+            except (ValidationError, ValueError):
+                continue
+        return None
+
     def classify(
         self,
         prompt: str,
@@ -89,7 +139,11 @@ class BudgetedEvidenceBoundOllamaClient(EvidenceBoundOllamaClient):
         capability_results: tuple[dict[str, Any], ...] = (),
     ) -> str:
         self._validate_evidence_inputs(memory_packet, capability_results)
-        return super().respond(prompt, memory_packet, capability_results)
+        answer = super().respond(prompt, memory_packet, capability_results)
+        if answer != _GENERIC_INSUFFICIENT_RESPONSE:
+            return answer
+        fallback = self._select_current_fallback_literal(prompt)
+        return fallback or answer
 
     def select_research_candidates(
         self,
