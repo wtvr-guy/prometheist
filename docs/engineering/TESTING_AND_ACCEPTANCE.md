@@ -3,308 +3,214 @@
 **Status:** constitutional engineering deep dive.  
 **Constitutional authority:** implements Article 25 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).
 
-Prometheist's architecture is defined by behavioral invariants, not by documentation alone. A rule is not treated as verified merely because the implementation looks plausible or a narrow unit test passes.
+Prometheist is defined by behavioral invariants, not documentation claims. A mechanism is not accepted merely because code looks plausible, unit tests pass, or one local-model run happens to succeed.
 
 ## Core rule
 
-> **Deterministic regression evidence and representative native acceptance are complementary. Use each where it can actually establish the claim being made.**
+> **Deterministic regression evidence and representative native acceptance are complementary. Use each only for claims it can actually establish.**
 
-CI is the primary repeatable regression gate for deterministic behavior. Native/deployment-machine testing is required when the claim materially depends on real hardware, local models, operating-system processes, databases, resource pressure, or other environment-specific behavior.
+CI is the repeatable gate for deterministic behavior. Native/deployment-machine testing is required when the claim depends materially on real local models, operating-system processes, databases, resource pressure, or host-specific behavior.
 
 Neither substitutes for the other.
 
 ## Testing layers
 
-Prometheist should maintain several layers of evidence rather than one undifferentiated test suite.
-
 ### Unit and contract tests
 
 Verify small deterministic functions and closed interfaces:
 
-- schemas and validation;
-- deterministic identity/order functions;
-- state transitions;
+- schemas/validation;
+- deterministic identities/order/state transitions;
 - scoring/admission formulas;
 - capability contracts;
+- worker packet projections;
+- station output schemas;
+- typed workpiece component/terminal invariants;
 - resource-policy calculations;
 - retry/idempotency rules.
 
 ### Component integration tests
 
-Verify subsystem behavior across actual persistence boundaries where practical:
+Verify behavior across real persistence/control boundaries where practical:
 
 - event storage/retrieval;
-- memory projection and canonical dereference;
+- memory projection/canonical dereference;
 - scheduler epochs/reservations;
 - worker claims/checkpoints/results;
-- interaction WorkingState;
+- WorkingState;
 - capability registry/runtime;
-- transaction rollback and restart reconstruction.
+- workpiece carry-forward/materialized snapshot persistence;
+- transaction rollback/restart reconstruction.
 
 ### End-to-end acceptance tests
 
-Verify the architectural claim a user/system actually depends on:
+Verify user/system-level architectural claims:
 
-- cross-turn and cross-session continuity;
+- cross-turn/session/process continuity;
 - stateless model calls;
-- automatic memory activation;
-- bounded cognitive context;
+- automatic memory activation before semantic judgment;
+- bounded worker information apertures;
 - exact provenance;
-- recurrent capability execution;
-- final-response barriers;
+- demand-driven station invocation;
+- capability acquisition/reassessment without hidden recurrent context;
+- optional response behavior and terminal outcomes;
 - process destruction/recovery;
-- resource admission and safe execution.
+- resource admission/safe execution.
 
-### Benchmarks/calibration
+### Benchmarks and calibration
 
-Measure quality/cost/safety tradeoffs and justify empirical constraints. These are governed by [`EMPIRICAL_CONSTRAINT_GOVERNANCE.md`](EMPIRICAL_CONSTRAINT_GOVERNANCE.md).
+Measure quality/cost/safety tradeoffs and justify empirical constraints under [`EMPIRICAL_CONSTRAINT_GOVERNANCE.md`](EMPIRICAL_CONSTRAINT_GOVERNANCE.md).
 
 ## Deterministic CI responsibilities
 
-CI should establish behavior that can be reproduced from controlled inputs.
+CI should establish behavior reconstructable from controlled inputs, including:
 
-Examples include:
-
-- deterministic IDs and total ordering;
+- deterministic IDs/total ordering;
 - dependency gating and capability execution order;
 - synthetic resource admission/preemption;
-- atomic persistence and rollback;
+- atomic persistence/rollback;
 - restart/replay equivalence;
 - idempotency/retry semantics;
-- bounded packet/context contracts;
-- source-provenance relationships;
+- bounded packet/workpiece-projection contracts;
+- source provenance;
 - unknown-fact abstention on frozen fixtures;
-- protection against hidden conversation transcripts in contracts;
-- static audits for constraints and constitutional/documentation invariants when implemented.
-
-Synthetic snapshots are valuable precisely because they let the suite force edge cases repeatably.
+- no hidden transcript fields in worker contracts;
+- pre-cognitive station authority separation;
+- workpiece chronology and terminalization;
+- action-like terminal outcomes that require no user-output component;
+- terminal snapshot persistence without replacing append-only causal history;
+- static constraint audits and other repository governance checks.
 
 ## Native acceptance responsibilities
-
-Some claims cannot be established by CI simulation.
 
 Native testing is required when behavior depends materially on:
 
 - actual CPU/RAM pressure;
-- local-model cold/warm startup and inference;
-- host-specific process behavior;
-- PostgreSQL/local database behavior outside synthetic mocks;
-- filesystem/network timing where it affects safety/recovery;
-- process destruction and lease expiry under the real OS;
-- environment-calibrated thresholds;
-- model schema compliance, token limits, latency, or retry behavior.
+- local-model cold/warm inference;
+- model structured-output behavior;
+- real OS process creation/destruction;
+- PostgreSQL behavior in the intended local deployment;
+- filesystem/network timing relevant to safety/recovery;
+- lease expiry/recovery under the real OS;
+- environment-calibrated resource thresholds;
+- model schema compliance, latency, token budgets, and retries.
 
-A passing native run is evidence about the tested environment. It does not replace deterministic regression tests or prove universal safety on every host.
+A passing native run is evidence about the tested environment; it does not prove universal behavior on every host.
 
 ## Statelessness acceptance
 
-Because “every LLM invocation is stateless” is constitutional, acceptance must prove the absence of hidden continuity—not merely show that answers happen to be correct.
+Because every LLM invocation is constitutionally stateless, tests must prove absence of hidden continuity rather than merely observe correct answers.
 
-Tests should be designed so that required information exists only in canonical durable state and must be reconstructed through the supported system boundary.
-
-Useful patterns include:
+Useful patterns:
 
 - fresh processes between turns/stages;
-- separate LLM calls with no inherited messages;
-- cross-process recall after terminating the previous worker;
-- cross-session/conversation recall without supplying a transcript;
-- restart from PostgreSQL/canonical storage only;
-- opaque-token cases that cannot be guessed from model priors;
-- assertions over exact source-event provenance.
+- separate LLM calls with no inherited messages/KV/chat context;
+- cross-process recall after destroying the previous worker;
+- cross-session/conversation recall without transcript injection;
+- restart from PostgreSQL/application state only;
+- opaque tokens/facts that cannot be guessed from model priors;
+- exact source-event provenance assertions.
 
-If a test helper secretly carries earlier messages into a later call, the test does not establish Prometheist continuity.
+A helper that secretly carries previous messages invalidates the statelessness claim.
 
-## Restart and destruction are first-class test conditions
+## Workpiece/station acceptance
 
-A persistent system should assume processes die.
+The typed workpiece architecture creates specific obligations.
 
-Tests should deliberately destroy:
+Tests should establish that:
 
-- workers before completion;
-- workers after checkpoints;
-- workers around side-effect boundaries;
-- scheduler/controller processes;
-- interaction workers between stages;
-- model processes where practical.
+1. every workpiece has one originating percept;
+2. a station contributes only its registered closed component type;
+3. components for stations that never ran are absent;
+4. workers receive registered minimum projections rather than the master workpiece by default;
+5. deterministic application code—not workers—attaches components and chooses next-station eligibility;
+6. capability tranches retain causal chronology around fresh semantic reassessment;
+7. no component may attach after terminalization;
+8. `RESPONSE_EMITTED` requires user output;
+9. action/failure/wait/defer terminal paths may omit user output;
+10. terminal workpiece JSON round-trips with type identity intact;
+11. the terminal snapshot complements rather than replaces append-only recovery/provenance records.
 
-After restart, the system should reconstruct authority from durable state alone, respecting leases, retries, idempotency, checkpoints, assignments, WorkingState, and terminal results.
+The architecture is not validated if tests cover only the current chat-like terminal path.
 
-A recovery path tested only by graceful shutdown is incomplete.
+## Demand-driven semantic station acceptance
 
-## Provenance is part of correctness
+The current v0.7 pre-acquisition path must verify authority separation:
 
-A correct-looking answer without correct evidence lineage is not a full pass for memory-dependent behavior.
+- `evidence_sufficiency_verifier` returns only `SUFFICIENT | INSUFFICIENT`;
+- that worker cannot see/select a capability catalog;
+- `capability_selector` runs only after insufficiency and only with a legal catalog;
+- capability selection cannot reassess sufficiency;
+- deterministic application code derives aggregate disposition/evidence state;
+- the supported fast path uses only the sufficiency station;
+- malformed/unknown/extra model-control fields fail closed;
+- no extra station exists merely to populate compatibility metadata with no downstream consumer.
 
-Where a fixture depends on stored history, acceptance should verify:
+Native tests then verify whether Qwen3:4b can perform these narrow semantic roles reliably enough in the intended environment.
 
-- the canonical source event(s) actually retrieved;
-- the exact ordering/scope applied;
-- correction/supersession behavior where relevant;
-- no unsupported source was silently promoted;
-- evidence references survive process/session boundaries.
+## Restart and destruction are first-class conditions
 
-For factual memory tests, source-event provenance should be checked independently of model prose whenever possible.
+Persistent architecture must assume processes die.
 
-## Boundedness is part of correctness
+Tests should destroy/restart between meaningful boundaries and prove that:
 
-A feature does not pass merely because it returns the right answer if it violates bounded-context architecture to do so.
+- committed control is reused rather than rerolled;
+- capability/effect identities remain deterministic;
+- partial process failure does not mutate canonical history;
+- leases/claims recover correctly;
+- terminal workpiece snapshot can be reconstructed from persisted stage outputs when necessary;
+- no response/action effect is duplicated after restart.
 
-Relevant acceptance metrics/assertions include:
+Cheap micro-station outputs need not each be independently durable if no effect/authority boundary has been crossed; rerunning fresh stateless calls is acceptable there. Once a decision authorizes material downstream effects, its durable checkpoint is mandatory.
 
-- maximum WorkingState size;
-- maximum MemoryPacket size;
-- maximum total LLM input/context under the tested policy;
-- number of model calls;
-- candidate/evidence work performed;
-- association depth/breadth;
-- peak resource use;
-- latency under corpus growth.
+## Epistemic acceptance
 
-Scale tests should freeze query families while increasing corpus size so hidden context or inference growth becomes visible.
+Retrieval success is not enough. Tests must distinguish:
 
-## Negative and abstention cases
+- relevant activation versus evidence sufficiency;
+- user statement/belief versus world fact;
+- historical versus current state;
+- correction/supersession;
+- unsupported unknowns;
+- internal memory versus external/tool evidence.
 
-Prometheist must be tested on what it should **not** do.
+Unknowns may remain unknown. A test is not improved by rewarding a fabricated confident answer.
 
-Suites should include:
+## Resource-safety acceptance
 
-- unknown facts;
-- insufficient evidence;
-- ambiguous references;
-- contradictory/superseded history;
-- high-overlap distractors;
-- invalid model control outputs;
-- stale resource observations;
-- missing dependencies;
-- oversubscription;
-- ambiguous external effects after crashes;
-- unavailable optional capabilities.
+Deterministic tests should exhaustively exercise resource math/ordering with controlled snapshots. Native tests should then verify behavior under the actual host's CPU/RAM/Ollama/PostgreSQL/process conditions.
 
-Fail-closed behavior and correct abstention are positive test outcomes when evidence/authority is insufficient.
+Transient resource pressure may delay/re-observe. Tests must not lower configured headroom/thresholds merely to force progress.
 
-## Tests must not encode brittle natural-language policy
+## Current v0.7 native release gate
 
-Acceptance tests must not become a second application implementation made of keyword lists and English parsers.
+The official native gate remains:
 
-Where a deterministic verdict is needed, prefer:
-
-- exact IDs;
-- enums;
-- numeric tuples;
-- canonical evidence references;
-- explicitly requested machine-verifiable values;
-- mechanically validated structured output.
-
-Model-facing prose fixtures are still necessary to test natural interaction. The oracle should not depend on hand-maintained phrase matching when a structural assertion is available.
-
-## Frozen regression scenarios
-
-When a real failure exposes an architectural bug, the smallest representative scenario should become a permanent regression fixture before the fix is accepted.
-
-The sequence is:
-
-```text
-observe failure
- -> freeze reproducible scenario
- -> verify baseline fails
- -> change one mechanism
- -> rerun same scenario + existing suite
- -> preserve result and negative evidence
+```powershell
+.\scripts\run_v07_acceptance.ps1
 ```
 
-Do not rewrite the fixture merely to make the new mechanism look successful unless the original oracle itself was demonstrated to be invalid.
+The script validates Ollama/model availability, requires explicit acceptance opt-in and a disposable PostgreSQL test database, runs focused deterministic acceptance, runs the full deterministic non-Ollama suite, and then runs the five marked native Ollama scenarios.
 
-## Historical baselines
+The five current native scenarios cover:
 
-Accepted milestone results remain evidence even after architecture changes.
+- randomized Project Oriole opaque recall;
+- randomized Project Falcon opaque recall;
+- cross-process memory analysis without hidden transcript;
+- cross-conversation/cross-process memory recall;
+- four-turn stateless continuity with distractors (including the Kestrel evidence-sufficiency case).
 
-A later architecture should preserve or improve the useful behavior established by earlier accepted baselines unless an explicit experiment shows that the prior behavior was invalid or the invariant was intentionally amended.
+Qwen3:4b remains fixed for this v0.7 gate. Swapping to a stronger model is a different experiment and cannot be used to hide an architectural regression.
 
-Historical tests whose assertion depends on a superseded implementation detail may be archived or rewritten around the underlying invariant. The measured historical record should remain visible.
+## Release discipline
 
-## Resource-sensitive acceptance
+A milestone may be marked accepted only when its declared gates pass on the exact release-candidate code/docs state.
 
-Resource safety requires both synthetic and real-host evidence.
+For v0.7 that means:
 
-CI should be able to prove, from controlled snapshots:
+1. static checks and constraint audit green;
+2. deterministic PostgreSQL suite green;
+3. native five-scenario Qwen3:4b gate green;
+4. PR/review/branch/release bookkeeping performed only afterward.
 
-- no reservation exceeds declared safe capacity;
-- deterministic victim selection;
-- headroom formulas are applied;
-- stale/failed observations reject work;
-- atomic assignment/reservation publication;
-- worker launch is denied before spawn when admission fails.
-
-Native acceptance should measure, on representative deployment-class hardware:
-
-- actual process/model/database peaks;
-- cold/warm local-model behavior;
-- concurrent workloads;
-- host responsiveness;
-- pressure-induced denial/recovery;
-- forced process failure/restart.
-
-Changing safety thresholds because a native test is inconvenient is not acceptance. The threshold must be recalibrated through the empirical-governance process.
-
-## Model-dependent acceptance
-
-A local/model-backed test should record enough environment identity to interpret the result, such as:
-
-- model/runtime name and version/digest where available;
-- prompt/schema revision;
-- relevant generation limits/settings;
-- host/runtime state required by the benchmark;
-- raw result artifact for calibration runs.
-
-A model-dependent pass is not automatically transferable to a different model.
-
-## Release evidence
-
-A release/milestone claim should identify its evidence gate explicitly.
-
-At minimum, where applicable:
-
-1. deterministic test suite passes;
-2. static audits pass;
-3. migrations/schema bootstrap are verified;
-4. frozen end-to-end architectural acceptance passes;
-5. required native calibration/acceptance passes on the intended environment;
-6. all release-required empirical constraints have result artifacts;
-7. known skips/gaps are documented rather than silently counted as passes.
-
-A skipped environment-dependent test is not evidence that the feature works. It is a statement that the test did not run.
-
-## Constitutional audit tests
-
-Future constitutional audits should prefer executable checks when an article can be mechanized.
-
-Examples:
-
-- scan LLM call sites for inherited transcript parameters;
-- trace durable authority to PostgreSQL/canonical stores rather than process globals;
-- verify canonical memory rows are not replaced by summaries;
-- inspect worker launch surfaces for guarded admission;
-- verify control-plane model schemas contain no unconstrained generated IDs/order fields;
-- inspect resource decisions for persisted snapshots/policy versions;
-- check active contexts against configured bounds;
-- execute forced-restart acceptance.
-
-Not every constitutional rule can be proved statically, but every rule should have a documented evidence strategy.
-
-See [`CONSTITUTIONAL_GOVERNANCE.md`](CONSTITUTIONAL_GOVERNANCE.md).
-
-## Evidence hierarchy
-
-For a behavioral claim, prefer:
-
-1. reproducible test/benchmark artifact tied to a revision;
-2. current implementation and schema inspection;
-3. current architecture documentation;
-4. historical experiment records;
-5. design intent or conversation history.
-
-Intent motivates a test; it does not replace one.
-
-## Invariant
-
-> **Prometheist treats architectural claims as things to falsify under controlled, restart-heavy, provenance-aware tests—not as assumptions that become true because they were written down.**
+A partial pass is diagnostic evidence, not release acceptance.
