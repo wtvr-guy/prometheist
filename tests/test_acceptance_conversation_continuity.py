@@ -10,6 +10,11 @@ durable response authority, while the actual natural-language response remains
 visible in the native test transcript for human inspection.  This avoids
 optimizing Prometheist for canned machine-shaped prose merely because exact
 string equality is convenient for pytest.
+
+The same scenario ends with a negative control after relevant history is already
+active: a question about an unsupported Kestrel attribute must still abstain even
+though the final evidence packet is non-empty.  This guards the bounded negative
+sufficiency confirmation against turning irrelevant memory into false support.
 """
 from __future__ import annotations
 
@@ -22,6 +27,7 @@ from jit_agent.models import EventType
 from jit_agent.response_policy import ResponseSurfaceMode
 from tests._cli_helpers import ollama_available, print_transcript, run_once
 from tests._native_final_response import (
+    assert_final_responder_abstains_with_nonempty_evidence,
     assert_final_responder_has,
     event_for_text,
     events,
@@ -145,10 +151,29 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         expected_surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
     )
 
+    unsupported = "What office room number did I assign to Project Kestrel?"
+    unsupported_answer = run_once(unsupported, active_conversation)
+    _print_turn(5, unsupported, unsupported_answer)
+    unsupported_event = event_for_text(active_conversation, EventType.USER_PROMPT, unsupported)
+    unsupported_view = final_responder_view(active_conversation, unsupported)
+    assert_final_responder_abstains_with_nonempty_evidence(unsupported_view)
+
     active_events = events(active_conversation)
     prompts = [event for event in active_events if event.event_type is EventType.USER_PROMPT]
-    assert [event.payload["text"] for event in prompts] == [turn1, turn2, turn3, turn4]
-    for prompt_event in (turn1_event, turn2_event, turn3_event, turn4_event):
+    assert [event.payload["text"] for event in prompts] == [
+        turn1,
+        turn2,
+        turn3,
+        turn4,
+        unsupported,
+    ]
+    for prompt_event in (
+        turn1_event,
+        turn2_event,
+        turn3_event,
+        turn4_event,
+        unsupported_event,
+    ):
         assert any(
             event.event_type is EventType.MEMORY_REQUEST
             and event.correlation_id == prompt_event.correlation_id
@@ -157,5 +182,6 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
 
     print(
         "\nPASS: v0.7 fresh responders received the required recent and historical "
-        "evidence across all four conversational turns."
+        "evidence across four supported conversational turns and still abstained on "
+        "an unsupported Kestrel attribute despite non-empty evidence."
     )
