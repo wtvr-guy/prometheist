@@ -49,6 +49,34 @@ def test_record_and_read_every_event_type(conn):
     ]
 
 
+def test_workpiece_snapshot_keeps_full_payload_but_uses_bounded_semantic_text(conn):
+    conversation_id = event_store.start_conversation(conn)
+    correlation_id = uuid.uuid4()
+    nested_user_text = (
+        "For Project Kestrel, never use Docker; deploy PostgreSQL directly on Windows."
+    )
+    event = event_store.record_event(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        event_type=EventType.SYSTEM_EVENT,
+        source="terminalizer",
+        payload={
+            "kind": "INTERACTION_WORKPIECE_SNAPSHOT",
+            "version": "interaction-workpiece-v1",
+            "workpiece": {"nested_user_text": nested_user_text},
+        },
+    )
+
+    with conn.cursor() as cur:
+        cur.execute("SELECT payload, payload_text FROM events WHERE event_id = %s", (event.event_id,))
+        payload, payload_text = cur.fetchone()
+
+    assert payload["workpiece"]["nested_user_text"] == nested_user_text
+    assert payload_text == "interaction workpiece audit snapshot"
+    assert "Kestrel" not in payload_text
+
+
 def test_conversation_seq_is_monotonic_per_conversation(conn):
     conversation_id = event_store.start_conversation(conn)
     correlation_id = uuid.uuid4()
