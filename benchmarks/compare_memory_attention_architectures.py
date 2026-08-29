@@ -1,22 +1,13 @@
 """Adversarial comparison of frozen v0.7 and adaptive memory attention.
 
-The benchmark isolates the deliberate memory-analysis architecture. Every case
-uses the same canonical event ledger, current percept, leakage boundary, initial
-attention aperture, and evidence floor. The frozen side may use any *applicable*
-v0.7 research profile; the adaptive side receives only a closed uncertainty
-class, canonical focus anchors, and deterministic telemetry.
+The benchmark isolates deliberate memory analysis. Every case uses the same
+canonical event ledger, current percept, leakage boundary, evidence floor, and
+automatic attention aperture. The frozen side may use every applicable v0.7
+research profile; the adaptive side receives only a closed uncertainty class,
+canonical focus anchors, and deterministic telemetry.
 
-The corpus is intentionally hostile rather than representative. It probes:
-
-* whether the automatic aperture already makes deliberate retrieval unnecessary;
-* packet truncation despite a sufficiently wide aperture candidate window;
-* single- and multi-anchor association depth;
-* association fan-out/budget starvation;
-* anchor lock-in and deterministic reorientation;
-* direct-candidate ceilings shared by both architectures.
-
-This script is destructive by design and therefore refuses any database whose
-name does not contain ``test`` or ``benchmark``.
+This script is destructive by design and refuses any database whose name does
+not contain ``test`` or ``benchmark``.
 """
 from __future__ import annotations
 
@@ -69,7 +60,6 @@ class RetrievalObservation:
 @dataclass(frozen=True, slots=True)
 class Corpus:
     conversation_id: uuid.UUID
-    prompt_event_id: uuid.UUID
     correlation_id: uuid.UUID
     before_global_seq: int
     query_text: str
@@ -132,19 +122,13 @@ def _reset_database(conn: psycopg.Connection) -> None:
     conn.commit()
 
 
-def _record(
-    conn: psycopg.Connection,
-    conversation_id: uuid.UUID,
-    text: str,
-    *,
-    source: str = "benchmark-user",
-):
+def _record(conn: psycopg.Connection, conversation_id: uuid.UUID, text: str):
     return event_store.record_event(
         conn,
         conversation_id=conversation_id,
         correlation_id=uuid.uuid4(),
         event_type=EventType.USER_PROMPT,
-        source=source,
+        source="benchmark-user",
         payload={"text": text},
         payload_text=text,
     )
@@ -166,7 +150,6 @@ def _insert_association(
     target: str,
     provenance_event_ids: tuple[str, ...],
     required_cue_terms: tuple[str, ...] = (),
-    strength: float = 1.0,
 ) -> None:
     with conn.cursor() as cur:
         cur.execute(
@@ -175,7 +158,7 @@ def _insert_association(
                 association_id, projection_version, source_kind, source,
                 target_kind, target, relationship, strength,
                 provenance_event_ids, required_cue_terms
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (%s, %s, %s, %s, %s, %s, 'BENCHMARK_LINK', 1.0, %s, %s)
             ON CONFLICT (association_id) DO NOTHING
             """,
             (
@@ -185,8 +168,6 @@ def _insert_association(
                 source,
                 target_kind,
                 target,
-                "BENCHMARK_LINK",
-                strength,
                 Json(list(provenance_event_ids)),
                 Json(list(required_cue_terms)),
             ),
@@ -194,20 +175,38 @@ def _insert_association(
     conn.commit()
 
 
+def _kernel_traces(trace: dict[str, object]) -> list[dict[str, object]]:
+    """Collect kernel traces from aperture, joint, and per-anchor frozen paths."""
+
+    found: list[dict[str, object]] = []
+    direct = trace.get("kernel_trace")
+    if isinstance(direct, dict):
+        found.append(direct)
+    activation = trace.get("activation_kernel")
+    if isinstance(activation, dict):
+        nested = activation.get("kernel_trace")
+        if isinstance(nested, dict):
+            found.append(nested)
+    attempts = trace.get("focus_attempts")
+    if isinstance(attempts, list):
+        for attempt in attempts:
+            if not isinstance(attempt, dict):
+                continue
+            nested = attempt.get("kernel_trace")
+            if isinstance(nested, dict):
+                found.append(nested)
+    return found
+
+
 def _trace_edge_count(packet: MemoryPacket) -> int:
-    trace = packet.retrieval_trace
-    kernel_trace = trace.get("kernel_trace")
-    if kernel_trace is None and isinstance(trace.get("activation_kernel"), dict):
-        kernel_trace = trace["activation_kernel"].get("kernel_trace")
-    if not isinstance(kernel_trace, dict):
-        return 0
     edge_ids: set[str] = set()
-    for item in kernel_trace.get("items", []):
-        if not isinstance(item, dict):
-            continue
-        for hop in item.get("association_hops", []):
-            if isinstance(hop, dict) and hop.get("association_id"):
-                edge_ids.add(str(hop["association_id"]))
+    for kernel_trace in _kernel_traces(packet.retrieval_trace):
+        for item in kernel_trace.get("items", []):
+            if not isinstance(item, dict):
+                continue
+            for hop in item.get("association_hops", []):
+                if isinstance(hop, dict) and hop.get("association_id"):
+                    edge_ids.add(str(hop["association_id"]))
     return len(edge_ids)
 
 
@@ -219,45 +218,38 @@ def _observe(
 ) -> RetrievalObservation:
     returned = tuple(str(item.source_event_id) for item in packet.items)
     required = tuple(str(value) for value in required_event_ids)
-    success = set(required).issubset(returned)
     trace = packet.retrieval_trace
     adaptive = trace.get("adaptive_policy")
     if not isinstance(adaptive, dict):
         adaptive = {}
+
+    def _integer(primary: str, adaptive_key: str) -> int | None:
+        value = trace.get(primary)
+        if isinstance(value, int):
+            return value
+        value = adaptive.get(adaptive_key)
+        return int(value) if isinstance(value, int) else None
+
+    def _number(primary: str, adaptive_key: str) -> float | None:
+        value = trace.get(primary)
+        if isinstance(value, (int, float)):
+            return float(value)
+        value = adaptive.get(adaptive_key)
+        return float(value) if isinstance(value, (int, float)) else None
+
+    hops = _integer("association_hops", "max_hops")
+    if hops is None and trace.get("retrieval_role") == "ATTENTION_ACTIVATION":
+        hops = 0
     return RetrievalObservation(
         method=method,
-        success=success,
+        success=set(required).issubset(returned),
         required_event_ids=required,
         returned_event_ids=returned,
         elapsed_ms=round(elapsed_ms, 3),
-        candidate_limit=(
-            int(trace["candidate_limit"])
-            if isinstance(trace.get("candidate_limit"), int)
-            else int(adaptive["candidate_limit"])
-            if isinstance(adaptive.get("candidate_limit"), int)
-            else None
-        ),
-        association_limit=(
-            int(trace["association_limit"])
-            if isinstance(trace.get("association_limit"), int)
-            else int(adaptive["association_limit"])
-            if isinstance(adaptive.get("association_limit"), int)
-            else None
-        ),
-        association_hops=(
-            int(trace["association_hops"])
-            if isinstance(trace.get("association_hops"), int)
-            else int(adaptive["max_hops"])
-            if isinstance(adaptive.get("max_hops"), int)
-            else 0 if trace.get("retrieval_role") == "ATTENTION_ACTIVATION" else None
-        ),
-        association_decay=(
-            float(trace["association_decay"])
-            if isinstance(trace.get("association_decay"), (int, float))
-            else float(adaptive["decay"])
-            if isinstance(adaptive.get("decay"), (int, float))
-            else None
-        ),
+        candidate_limit=_integer("candidate_limit", "candidate_limit"),
+        association_limit=_integer("association_limit", "association_limit"),
+        association_hops=hops,
+        association_decay=_number("association_decay", "decay"),
         association_trace_edges=_trace_edge_count(packet),
         focus_mode=str(adaptive.get("focus_mode")) if adaptive.get("focus_mode") else None,
         scope=str(adaptive.get("scope")) if adaptive.get("scope") else None,
@@ -269,24 +261,43 @@ def _observe(
     )
 
 
+def _finalize_corpus(
+    conn: psycopg.Connection,
+    *,
+    conversation_id: uuid.UUID,
+    query_text: str,
+    anchors: tuple[uuid.UUID, ...],
+    required: tuple[uuid.UUID, ...],
+) -> Corpus:
+    prompt = _record(conn, conversation_id, query_text)
+    jit_memory._ensure_projection_fresh(conn, before_global_seq=prompt.global_seq)
+    return Corpus(
+        conversation_id=conversation_id,
+        correlation_id=prompt.correlation_id,
+        before_global_seq=prompt.global_seq,
+        query_text=query_text,
+        anchor_event_ids=anchors,
+        required_event_ids=required,
+    )
+
+
 def _run_aperture(
     conn: psycopg.Connection,
     corpus: Corpus,
     *,
     packet_limit: int = 6,
 ) -> RetrievalObservation:
-    need = jit_memory.build_memory_need(
-        corpus.query_text,
-        active_event_ids=list(corpus.anchor_event_ids),
-        limit=packet_limit,
-    )
     started = perf_counter()
     packet = jit_memory.request_attention_activation(
         conn,
         conversation_id=corpus.conversation_id,
         correlation_id=corpus.correlation_id,
         requesting_component="benchmark:aperture",
-        need=need,
+        need=jit_memory.build_memory_need(
+            corpus.query_text,
+            active_event_ids=list(corpus.anchor_event_ids),
+            limit=packet_limit,
+        ),
         before_global_seq=corpus.before_global_seq,
         memory_request_id=uuid.uuid4(),
     )
@@ -312,18 +323,19 @@ def _run_frozen(
         return None
     if profile is jit_memory.MemoryRecallProfile.DEEPER_RESEARCH and not anchors:
         return None
-    need = jit_memory.build_memory_need(
-        corpus.query_text,
-        focus_event_ids=anchors if profile is not jit_memory.MemoryRecallProfile.STANDARD else [],
-        limit=limit,
-    )
     started = perf_counter()
     packet = jit_memory.request_memory(
         conn,
         conversation_id=corpus.conversation_id,
         correlation_id=corpus.correlation_id,
         requesting_component=f"benchmark:frozen:{profile.value}",
-        need=need,
+        need=jit_memory.build_memory_need(
+            corpus.query_text,
+            focus_event_ids=(
+                anchors if profile is not jit_memory.MemoryRecallProfile.STANDARD else []
+            ),
+            limit=limit,
+        ),
         before_global_seq=corpus.before_global_seq,
         memory_request_id=uuid.uuid4(),
         recall_profile=profile,
@@ -345,18 +357,17 @@ def _run_adaptive(
     limit: int = 10,
     method_suffix: str = "",
 ) -> RetrievalObservation:
-    need = jit_memory.build_memory_need(
-        corpus.query_text,
-        focus_event_ids=list(corpus.anchor_event_ids),
-        limit=limit,
-    )
     started = perf_counter()
     packet = request_adaptive_memory(
         conn,
         conversation_id=corpus.conversation_id,
         correlation_id=corpus.correlation_id,
         requesting_component="benchmark:adaptive",
-        need=need,
+        need=jit_memory.build_memory_need(
+            corpus.query_text,
+            focus_event_ids=list(corpus.anchor_event_ids),
+            limit=limit,
+        ),
         uncertainty=uncertainty,
         telemetry=telemetry,
         before_global_seq=corpus.before_global_seq,
@@ -370,34 +381,13 @@ def _run_adaptive(
     )
 
 
-def _finalize_corpus(
-    conn: psycopg.Connection,
-    *,
-    conversation_id: uuid.UUID,
-    query_text: str,
-    anchors: tuple[uuid.UUID, ...],
-    required: tuple[uuid.UUID, ...],
-) -> Corpus:
-    prompt = _record(conn, conversation_id, query_text)
-    jit_memory._ensure_projection_fresh(conn, before_global_seq=prompt.global_seq)
-    return Corpus(
-        conversation_id=conversation_id,
-        prompt_event_id=prompt.event_id,
-        correlation_id=prompt.correlation_id,
-        before_global_seq=prompt.global_seq,
-        query_text=query_text,
-        anchor_event_ids=anchors,
-        required_event_ids=required,
-    )
-
-
 def _packet_truncation_case(conn: psycopg.Connection) -> dict[str, object]:
     _reset_database(conn)
     conversation_id = _new_conversation(conn)
     target = _record(conn, conversation_id, "violet ledger marker target-seven")
     for index in range(6):
         _record(conn, conversation_id, f"violet ledger marker distractor-{index}")
-    anchor = _record(conn, conversation_id, "active benchmark anchor for packet truncation")
+    anchor = _record(conn, conversation_id, "active benchmark packet anchor")
     corpus = _finalize_corpus(
         conn,
         conversation_id=conversation_id,
@@ -415,11 +405,9 @@ def _packet_truncation_case(conn: psycopg.Connection) -> dict[str, object]:
     )
     return {
         "scenario_id": "aperture_packet_truncation",
-        "purpose": "Target is candidate-visible but ranked just outside the six-item aperture packet.",
+        "purpose": "Required evidence is candidate-visible but just outside the surfaced aperture packet.",
         "aperture_already_sufficient": aperture.success,
-        "observations": [
-            asdict(item) for item in (aperture, deeper, adaptive) if item is not None
-        ],
+        "observations": [asdict(item) for item in (aperture, deeper, adaptive) if item],
     }
 
 
@@ -448,7 +436,7 @@ def _candidate_case(conn: psycopg.Connection, distractor_count: int) -> dict[str
         jit_memory.MemoryRecallProfile.FOCUSED_RECALL,
     ):
         item = _run_frozen(conn, corpus, profile)
-        if item is not None:
+        if item:
             observations.append(item)
     observations.append(
         _run_adaptive(
@@ -461,53 +449,11 @@ def _candidate_case(conn: psycopg.Connection, distractor_count: int) -> dict[str
     return {
         "scenario_id": "direct_candidate_ceiling",
         "stress_value": distractor_count,
-        "stress_unit": "newer_equal-term-distractors",
-        "purpose": "Old exact-phrase target competes with newer equal-term candidates; phrase bonus helps only if the candidate window admits it.",
+        "stress_unit": "newer-equal-term-distractors",
+        "purpose": "An old exact-phrase target competes with newer equal-term candidates until bounded candidate routing starves it.",
         "aperture_already_sufficient": observations[0].success,
         "observations": [asdict(item) for item in observations],
     }
-
-
-def _chain_case(
-    conn: psycopg.Connection,
-    *,
-    hops: int,
-    anchor_count: int,
-) -> dict[str, object]:
-    _reset_database(conn)
-    conversation_id = _new_conversation(conn)
-    anchors = tuple(
-        _record(conn, conversation_id, f"active opaque chain anchor-{index}")
-        for index in range(anchor_count)
-    )
-    target = _record(conn, conversation_id, "opaque terminal evidence DEPTH-TARGET")
-    corpus = _finalize_corpus(
-        conn,
-        conversation_id=conversation_id,
-        query_text="relationship among hidden chain evidence",
-        anchors=tuple(item.event_id for item in anchors),
-        required=(target.event_id,),
-    )
-
-    for anchor_index, anchor in enumerate(anchors):
-        source_id = anchor.event_id
-        for hop_index in range(hops):
-            is_last = hop_index + 1 == hops
-            if is_last:
-                target_id = target.event_id
-            else:
-                intermediate = _record(
-                    conn,
-                    conversation_id,
-                    f"opaque chain-{anchor_index}-node-{hop_index}",
-                )
-                # Intermediates were appended after the prompt, so they would
-                # cross the leakage boundary. This case therefore constructs all
-                # chain events before finalization below in _build_chain_case.
-                raise RuntimeError("unreachable chain builder state")
-            source_id = target_id
-
-    raise RuntimeError("_chain_case must be constructed through _build_chain_case")
 
 
 def _build_chain_case(
@@ -519,25 +465,21 @@ def _build_chain_case(
     _reset_database(conn)
     conversation_id = _new_conversation(conn)
     anchors = tuple(
-        _record(conn, conversation_id, f"active opaque chain anchor-{index}")
+        _record(conn, conversation_id, f"selected chain anchor-{index}")
         for index in range(anchor_count)
     )
     paths: list[list[uuid.UUID]] = []
     for anchor_index in range(anchor_count):
-        path: list[uuid.UUID] = [anchors[anchor_index].event_id]
+        path = [anchors[anchor_index].event_id]
         for hop_index in range(max(0, hops - 1)):
-            node = _record(
-                conn,
-                conversation_id,
-                f"opaque chain-{anchor_index}-node-{hop_index}",
-            )
+            node = _record(conn, conversation_id, f"opaque node {anchor_index} {hop_index}")
             path.append(node.event_id)
         paths.append(path)
-    target = _record(conn, conversation_id, "opaque terminal evidence DEPTH-TARGET")
+    target = _record(conn, conversation_id, "terminal datum DEPTH-TARGET")
     corpus = _finalize_corpus(
         conn,
         conversation_id=conversation_id,
-        query_text="relationship among hidden chain evidence",
+        query_text="trace cobalt linkage",
         anchors=tuple(item.event_id for item in anchors),
         required=(target.event_id,),
     )
@@ -546,32 +488,30 @@ def _build_chain_case(
         for edge_index in range(len(nodes) - 1):
             _insert_association(
                 conn,
-                association_id=(
-                    f"depth-{anchor_count}-{hops}-{anchor_index}-{edge_index:02d}"
-                ),
+                association_id=f"depth-{anchor_count}-{hops}-{anchor_index}-{edge_index:02d}",
                 source_kind="EVENT",
                 source=str(nodes[edge_index]),
                 target_kind="EVENT",
                 target=str(nodes[edge_index + 1]),
-                provenance_event_ids=(
-                    str(nodes[edge_index]),
-                    str(nodes[edge_index + 1]),
-                ),
+                provenance_event_ids=(str(nodes[edge_index]), str(nodes[edge_index + 1])),
             )
 
     aperture = _run_aperture(conn, corpus)
-    observations: list[RetrievalObservation] = [aperture]
+    observations = [aperture]
     deeper = _run_frozen(conn, corpus, jit_memory.MemoryRecallProfile.DEEPER_RESEARCH)
-    if deeper is not None:
+    if deeper:
         observations.append(deeper)
-    if anchor_count == 1:
-        focused = _run_frozen(conn, corpus, jit_memory.MemoryRecallProfile.FOCUSED_RECALL)
-        if focused is not None:
-            observations.append(focused)
-    else:
-        cross = _run_frozen(conn, corpus, jit_memory.MemoryRecallProfile.CROSS_REFERENCE)
-        if cross is not None:
-            observations.append(cross)
+    specialized = _run_frozen(
+        conn,
+        corpus,
+        (
+            jit_memory.MemoryRecallProfile.FOCUSED_RECALL
+            if anchor_count == 1
+            else jit_memory.MemoryRecallProfile.CROSS_REFERENCE
+        ),
+    )
+    if specialized:
+        observations.append(specialized)
     observations.append(
         _run_adaptive(
             conn,
@@ -581,13 +521,11 @@ def _build_chain_case(
         )
     )
     return {
-        "scenario_id": (
-            "single_anchor_depth" if anchor_count == 1 else "multi_anchor_depth"
-        ),
+        "scenario_id": "single_anchor_depth" if anchor_count == 1 else "multi_anchor_depth",
         "stress_value": hops,
         "stress_unit": "association-hops",
         "anchor_count": anchor_count,
-        "purpose": "Target is reachable only through an exact-length opaque association chain.",
+        "purpose": "Required evidence is reachable only through an exact-length opaque association chain.",
         "aperture_already_sufficient": aperture.success,
         "observations": [asdict(item) for item in observations],
     }
@@ -596,16 +534,16 @@ def _build_chain_case(
 def _fanout_case(conn: psycopg.Connection, distractor_edges: int) -> dict[str, object]:
     _reset_database(conn)
     conversation_id = _new_conversation(conn)
-    anchor = _record(conn, conversation_id, "active opaque fanout anchor")
+    anchor = _record(conn, conversation_id, "selected fanout anchor")
     distractors = [
-        _record(conn, conversation_id, f"opaque fanout distractor-{index}")
+        _record(conn, conversation_id, f"opaque branch {index}")
         for index in range(distractor_edges)
     ]
-    target = _record(conn, conversation_id, "opaque fanout required evidence FANOUT-TARGET")
+    target = _record(conn, conversation_id, "terminal payload FANOUT-TARGET")
     corpus = _finalize_corpus(
         conn,
         conversation_id=conversation_id,
-        query_text="hidden fanout relationship evidence",
+        query_text="trace hidden relation",
         anchors=(anchor.event_id,),
         required=(target.event_id,),
     )
@@ -630,13 +568,13 @@ def _fanout_case(conn: psycopg.Connection, distractor_edges: int) -> dict[str, o
     )
 
     aperture = _run_aperture(conn, corpus)
-    observations: list[RetrievalObservation] = [aperture]
+    observations = [aperture]
     for profile in (
         jit_memory.MemoryRecallProfile.DEEPER_RESEARCH,
         jit_memory.MemoryRecallProfile.FOCUSED_RECALL,
     ):
         item = _run_frozen(conn, corpus, profile)
-        if item is not None:
+        if item:
             observations.append(item)
     observations.append(
         _run_adaptive(
@@ -650,7 +588,7 @@ def _fanout_case(conn: psycopg.Connection, distractor_edges: int) -> dict[str, o
         "scenario_id": "association_fanout_ceiling",
         "stress_value": distractor_edges,
         "stress_unit": "earlier-sorted-outgoing-edges",
-        "purpose": "Required edge sorts after a high-fanout distractor frontier and disappears when the association budget is exhausted.",
+        "purpose": "The required edge sorts behind a hostile fanout frontier and disappears when the association budget is exhausted.",
         "aperture_already_sufficient": aperture.success,
         "observations": [asdict(item) for item in observations],
     }
@@ -659,16 +597,16 @@ def _fanout_case(conn: psycopg.Connection, distractor_edges: int) -> dict[str, o
 def _anchor_trap_case(conn: psycopg.Connection, distractor_edges: int) -> dict[str, object]:
     _reset_database(conn)
     conversation_id = _new_conversation(conn)
-    anchor = _record(conn, conversation_id, "active misleading opaque anchor")
+    anchor = _record(conn, conversation_id, "selected misleading anchor")
     distractors = [
-        _record(conn, conversation_id, f"misleading opaque branch-{index}")
+        _record(conn, conversation_id, f"misleading branch {index}")
         for index in range(distractor_edges)
     ]
-    target = _record(conn, conversation_id, "correct opaque evidence REORIENT-TARGET")
+    target = _record(conn, conversation_id, "correct opaque datum REORIENT-TARGET")
     corpus = _finalize_corpus(
         conn,
         conversation_id=conversation_id,
-        query_text="escape from misleading memory focus",
+        query_text="escape misleading focus",
         anchors=(anchor.event_id,),
         required=(target.event_id,),
     )
@@ -693,30 +631,29 @@ def _anchor_trap_case(conn: psycopg.Connection, distractor_edges: int) -> dict[s
     )
 
     aperture = _run_aperture(conn, corpus)
-    focused = _run_frozen(conn, corpus, jit_memory.MemoryRecallProfile.FOCUSED_RECALL)
-    adaptive_rounds = [
-        _run_adaptive(
-            conn,
-            corpus,
-            uncertainty=MemoryUncertainty.MISSING_RELATIONSHIP,
-            telemetry=RetrievalTelemetry(
-                candidate_scores=(0.90, 0.10),
-                anchored_rounds=round_index,
-                support_gain=(0.0 if round_index else None),
-            ),
-            method_suffix=f":round-{round_index + 1}",
-        )
-        for round_index in range(3)
-    ]
     observations = [aperture]
-    if focused is not None:
+    focused = _run_frozen(conn, corpus, jit_memory.MemoryRecallProfile.FOCUSED_RECALL)
+    if focused:
         observations.append(focused)
-    observations.extend(adaptive_rounds)
+    for round_index in range(3):
+        observations.append(
+            _run_adaptive(
+                conn,
+                corpus,
+                uncertainty=MemoryUncertainty.MISSING_RELATIONSHIP,
+                telemetry=RetrievalTelemetry(
+                    candidate_scores=(0.90, 0.10),
+                    anchored_rounds=round_index,
+                    support_gain=0.0 if round_index else None,
+                ),
+                method_suffix=f":round-{round_index + 1}",
+            )
+        )
     return {
         "scenario_id": "anchor_lock_in_and_reorientation",
         "stress_value": distractor_edges,
         "stress_unit": "misleading-anchor-edges",
-        "purpose": "Anchored graph work is budget-starved by a misleading focus; after repeated zero-gain passes adaptive attention must drop the anchor and recover a cue-term route.",
+        "purpose": "A misleading anchor exhausts graph budget; adaptive attention must eventually drop it and recover a cue-term route.",
         "aperture_already_sufficient": aperture.success,
         "observations": [asdict(item) for item in observations],
     }
@@ -728,13 +665,10 @@ def _limits(cases: list[dict[str, object]], method: str) -> dict[str, object]:
         if "stress_value" not in case:
             continue
         observation = next(
-            (
-                item for item in case["observations"]
-                if item["method"] == method
-            ),
+            (item for item in case["observations"] if item["method"] == method),
             None,
         )
-        if observation is not None:
+        if observation:
             points.append((int(case["stress_value"]), bool(observation["success"])))
     successes = [value for value, passed in points if passed]
     failures = [value for value, passed in points if not passed]
@@ -790,9 +724,9 @@ def run_comparison(*, stress: bool) -> dict[str, object]:
         cases: list[dict[str, object]] = [_packet_truncation_case(conn)]
 
         candidate_points = (
-            (140, 160, 240, 260, 340, 360, 490, 510, 590, 610, 740, 760)
+            (120, 140, 160, 240, 280, 320, 360, 440, 460, 520, 560, 620, 660, 700)
             if stress
-            else (160, 360, 610, 760)
+            else (140, 320, 560, 700)
         )
         for value in candidate_points:
             cases.append(_candidate_case(conn, value))
@@ -803,19 +737,17 @@ def run_comparison(*, stress: bool) -> dict[str, object]:
             cases.append(_build_chain_case(conn, hops=hops, anchor_count=2))
 
         fanout_points = (
-            (550, 650, 850, 950, 1150, 1250)
+            (250, 350, 550, 650, 700, 800, 850, 950, 1150, 1250)
             if stress
-            else (650, 950, 1250)
+            else (350, 650, 950, 1250)
         )
         for value in fanout_points:
             cases.append(_fanout_case(conn, value))
 
         cases.append(_anchor_trap_case(conn, 1200))
 
-        candidate_cases = [case for case in cases if case["scenario_id"] == "direct_candidate_ceiling"]
-        single_depth_cases = [case for case in cases if case["scenario_id"] == "single_anchor_depth"]
-        multi_depth_cases = [case for case in cases if case["scenario_id"] == "multi_anchor_depth"]
-        fanout_cases = [case for case in cases if case["scenario_id"] == "association_fanout_ceiling"]
+        def family(scenario_id: str) -> list[dict[str, object]]:
+            return [case for case in cases if case["scenario_id"] == scenario_id]
 
         return {
             "schema_version": 1,
@@ -825,13 +757,13 @@ def run_comparison(*, stress: bool) -> dict[str, object]:
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "comparison_rule": (
                 "Automatic aperture is common substrate. Head-to-head counts only cases where "
-                "that aperture did not already contain all required evidence. Frozen success "
+                "the aperture did not already contain all required evidence. Frozen success "
                 "means any applicable explicit v0.7 research profile succeeded."
             ),
             "head_to_head": _head_to_head(cases),
             "observed_limits": {
                 "candidate_distractors": {
-                    method: _limits(candidate_cases, method)
+                    method: _limits(family("direct_candidate_ceiling"), method)
                     for method in (
                         "attention_aperture",
                         "frozen:STANDARD",
@@ -841,7 +773,7 @@ def run_comparison(*, stress: bool) -> dict[str, object]:
                     )
                 },
                 "single_anchor_depth": {
-                    method: _limits(single_depth_cases, method)
+                    method: _limits(family("single_anchor_depth"), method)
                     for method in (
                         "frozen:DEEPER_RESEARCH",
                         "frozen:FOCUSED_RECALL",
@@ -849,7 +781,7 @@ def run_comparison(*, stress: bool) -> dict[str, object]:
                     )
                 },
                 "multi_anchor_depth": {
-                    method: _limits(multi_depth_cases, method)
+                    method: _limits(family("multi_anchor_depth"), method)
                     for method in (
                         "frozen:DEEPER_RESEARCH",
                         "frozen:CROSS_REFERENCE",
@@ -857,7 +789,7 @@ def run_comparison(*, stress: bool) -> dict[str, object]:
                     )
                 },
                 "association_fanout": {
-                    method: _limits(fanout_cases, method)
+                    method: _limits(family("association_fanout_ceiling"), method)
                     for method in (
                         "frozen:DEEPER_RESEARCH",
                         "frozen:FOCUSED_RECALL",
@@ -892,15 +824,19 @@ def main() -> None:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         output = RESULTS_DIR / f"MEM-ADAPT-001_{stamp}.json"
     output.write_text(json.dumps(result, indent=2, sort_keys=True), encoding="utf-8")
-
-    summary = {
-        "benchmark_id": result["benchmark_id"],
-        "mode": result["mode"],
-        "head_to_head": result["head_to_head"],
-        "observed_limits": result["observed_limits"],
-        "output": str(output),
-    }
-    print(json.dumps(summary, indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            {
+                "benchmark_id": result["benchmark_id"],
+                "mode": result["mode"],
+                "head_to_head": result["head_to_head"],
+                "observed_limits": result["observed_limits"],
+                "output": str(output),
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
 
 
 if __name__ == "__main__":
