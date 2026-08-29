@@ -3,6 +3,12 @@
 Explicit user prompts have a deterministic response contract: Prometheist always
 responds. The pre-cognitive LLM therefore selects only required non-memory work;
 it never decides whether the user deserves a response.
+
+Interactive workers also carry two system-level contracts that must not depend on
+episodic recall: the disposable model invocation is a cognitive component of
+Prometheist rather than the identity of the overall system, and information
+supplied in the current user prompt is direct current evidence that does not need
+historical-memory corroboration before it can be acknowledged or followed.
 """
 from __future__ import annotations
 
@@ -16,6 +22,7 @@ from jit_agent import db
 from jit_agent.capability_registry import CapabilityDescriptor
 from jit_agent.models import MemoryPacket
 from jit_agent.percept_response_runtime import (
+    MemorySufficiencyDecision,
     PerceptLLM,
     PreCognitiveDisposition,
     execute_claimed_percept_step,
@@ -33,6 +40,54 @@ execution order. Prometheist owns dependencies, scheduling, permissions,
 resources, retries, and effects. Do not decide whether to respond. Do not write
 capability names, arguments, queries, explanations, schedules, or user-facing
 language.
+"""
+
+_USER_PROMPT_COMPOSER = """\
+You are the Prometheist v2 Composer, a fresh stateless memory-sufficiency worker.
+Your only job is to determine whether historical/persistent-memory evidence is
+sufficient for a separate final responder to answer the current user prompt
+accurately.
+
+The current user prompt is itself direct current evidence. Do NOT require a fact,
+definition, preference, correction, instruction, or newly introduced piece of
+information from the current prompt to already exist in historical memory. If the
+responder can answer accurately from the current prompt plus general model
+knowledge, return sufficient=true even when persistent memory is empty.
+
+Return sufficient=false only when answering genuinely depends on prior system
+history or remembered user-specific information that is not established by the
+current prompt and is missing from the supplied persistent-memory evidence. In
+that case, memory_deficit must identify only the missing remembered information.
+
+Do not decide whether Prometheist should respond; direct user prompts already
+require a response. Do not consume, summarize, reinterpret, or request tool/action
+results. Do not write the user-facing answer. Adaptive Recall owns retrieval
+mechanics. A legitimate historical unknown is acceptable; never invent memory.
+"""
+
+_INTERACTIVE_PERSONALITY_PROMPT = """\
+You are Prometheist, the persistent cognitive system the user is interacting with.
+Do not describe yourself as merely a language model. A language model is a fresh,
+disposable semantic worker used by Prometheist; it is not Prometheist's identity
+or continuity.
+
+Prometheist is a locally hosted, stateless cognitive architecture. Durable
+identity, memory, working state, attention, tasks, provenance, and policy belong
+to Prometheist's deterministic system rather than to any model context. Past
+experience is supplied to fresh model workers through bounded just-in-time memory
+retrieval.
+
+Treat the current user prompt as direct current evidence. Facts, definitions,
+preferences, corrections, and instructions supplied now do not need to have
+appeared in older persistent memory before you can acknowledge or follow them. A
+historical-memory deficit matters only when the answer genuinely depends on prior
+events that are not established by the current prompt or supplied memory.
+
+Be precise, direct, context-aware, and useful. Treat supplied persistent memory as
+evidence with provenance rather than unquestionable truth. Honor explicit user
+constraints. Do not invent personal or history-specific facts absent from both the
+current prompt and supplied memory. Do not expose internal retrieval mechanics
+unless the user asks about them.
 """
 
 
@@ -53,7 +108,7 @@ class UserPromptWorkSelection(BaseModel):
 
 
 class UserPromptLLM(PerceptLLM):
-    """Percept LLM whose response requirement is fixed by interactive intake."""
+    """Percept LLM with deterministic response and current-evidence contracts."""
 
     def decide_disposition(
         self,
@@ -95,6 +150,31 @@ class UserPromptLLM(PerceptLLM):
                 last_error = exc
         raise ValueError(f"pre-cognitive work selection failed to validate: {last_error}")
 
+    def assess_memory_sufficiency(
+        self,
+        percept: str,
+        memory_packet: MemoryPacket,
+    ) -> MemorySufficiencyDecision:
+        memory_text = "\n".join(
+            f"item {index}: {item.event_type.value}: {item.content}"
+            for index, item in enumerate(memory_packet.items)
+        ) or "none"
+        user = f"[Current user prompt]\n{percept}\n\n[Persistent memory evidence]\n{memory_text}"
+        last_error: ValueError | None = None
+        for token_cap in (96, 192):
+            try:
+                content = self._structured(
+                    "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+                    _USER_PROMPT_COMPOSER,
+                    user,
+                    MemorySufficiencyDecision.model_json_schema(),
+                    token_cap,
+                )
+                return MemorySufficiencyDecision.model_validate_json(content)
+            except ValueError as exc:
+                last_error = exc
+        raise ValueError(f"v2 Composer decision failed to validate: {last_error}")
+
 
 def _configure_utf8_streams() -> None:
     for stream in (sys.stdout, sys.stderr):
@@ -112,6 +192,7 @@ def _required_environment(name: str) -> str:
 
 def main() -> None:
     _configure_utf8_streams()
+    os.environ.setdefault("PROMETHEIST_PERSONALITY_PROMPT", _INTERACTIVE_PERSONALITY_PROMPT)
     claim_id = UUID(_required_environment("PROMETHEIST_WORKER_CLAIM_ID"))
     worker_id = _required_environment("PROMETHEIST_WORKER_ID")
     scheduler_key = _required_environment("PROMETHEIST_WORKER_SCHEDULER_KEY")
