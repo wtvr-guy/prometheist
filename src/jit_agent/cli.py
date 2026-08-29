@@ -1,15 +1,8 @@
 """First-party Prometheist CLI.
 
-The interactive chat REPL is intentionally thin: it owns presentation only and
-passes each user percept through the current percept-to-response runtime. It does
-not retain or replay an LLM transcript. Each interaction uses guarded disposable
-worker processes, deterministic work control, Composer-driven Adaptive Recall,
-and the final response boundary documented in PERCEPT_TO_RESPONSE_PIPELINE.md.
-
-`--once` remains available for scripting. Each invocation is a fresh process with
-zero in-memory conversational state. `inspect --latest` exposes the append-only
-response evidence trace so the exact memory/work bundle used for a response can
-be audited after the fact.
+The chat REPL owns presentation only.  Artifact inspection and verification do not
+require PostgreSQL; recovery and event restoration use the independent JSON
+journal as durable checkpoints/reconstruction input.
 """
 from __future__ import annotations
 
@@ -18,9 +11,7 @@ import json
 import sys
 import uuid
 
-from psycopg.rows import dict_row
-
-from jit_agent import db
+from jit_agent import artifact_journal, artifact_recovery, db
 from jit_agent.admission_diagnostics import (
     RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX,
     build_resource_admission_diagnostics,
@@ -35,7 +26,6 @@ handle_interaction_in_worker_processes = handle_percept_in_worker_processes
 
 _INTERACTION_ADMISSION_FAILURE = "interaction was not safely admitted to one assignment"
 _EXIT_COMMANDS = {"exit", "quit", "/exit", "/quit"}
-_RESPONSE_TRACE_SOURCE = "percept_response_v2/response_input_trace"
 
 
 def _configure_utf8_streams() -> None:
@@ -92,56 +82,59 @@ def _handle_with_admission_diagnostics(
         raise
 
 
-def _latest_response_trace(conn, conversation_id: uuid.UUID | None) -> dict | None:
-    """Load the newest permanent FINAL_RESPONSE_INPUT_V1 audit event."""
-
-    with conn.cursor(row_factory=dict_row) as cur:
-        if conversation_id is None:
-            cur.execute(
-                """
-                SELECT event_id, conversation_id, correlation_id, global_seq,
-                       conversation_seq, created_at, payload
-                FROM events
-                WHERE event_type = 'SYSTEM_EVENT' AND source = %s
-                ORDER BY global_seq DESC
-                LIMIT 1
-                """,
-                (_RESPONSE_TRACE_SOURCE,),
-            )
-        else:
-            cur.execute(
-                """
-                SELECT event_id, conversation_id, correlation_id, global_seq,
-                       conversation_seq, created_at, payload
-                FROM events
-                WHERE event_type = 'SYSTEM_EVENT' AND source = %s
-                  AND conversation_id = %s
-                ORDER BY global_seq DESC
-                LIMIT 1
-                """,
-                (_RESPONSE_TRACE_SOURCE, conversation_id),
-            )
-        row = cur.fetchone()
-    if row is None:
-        return None
-    return {
-        "event_id": str(row["event_id"]),
-        "conversation_id": str(row["conversation_id"]),
-        "correlation_id": str(row["correlation_id"]),
-        "global_seq": int(row["global_seq"]),
-        "conversation_seq": int(row["conversation_seq"]),
-        "created_at": row["created_at"].isoformat(),
-        "payload": row["payload"],
-    }
+def _resolve_artifact_interaction_id(
+    interaction_id: uuid.UUID | None,
+    *,
+    latest: bool,
+    complete: bool | None = None,
+) -> uuid.UUID:
+    if interaction_id is not None:
+        return interaction_id
+    if not latest:
+        raise RuntimeError("specify --interaction-id or --latest")
+    resolved = artifact_journal.latest_interaction_id(complete=complete)
+    if resolved is None:
+        qualifier = " incomplete" if complete is False else ""
+        raise RuntimeError(f"no{qualifier} interaction artifacts found")
+    return resolved
 
 
-def _run_inspect(conversation_id: uuid.UUID | None) -> None:
+def _run_inspect(interaction_id: uuid.UUID | None, *, latest: bool) -> None:
+    resolved = _resolve_artifact_interaction_id(interaction_id, latest=latest)
+    print(
+        json.dumps(
+            artifact_journal.inspect_interaction(resolved),
+            indent=2,
+            sort_keys=True,
+            default=str,
+        )
+    )
+
+
+def _run_verify(interaction_id: uuid.UUID | None, *, latest: bool) -> None:
+    resolved = _resolve_artifact_interaction_id(interaction_id, latest=latest)
+    report = artifact_journal.verify_interaction_chain(resolved)
+    print(json.dumps(report, indent=2, sort_keys=True, default=str))
+    if not report["valid"]:
+        raise RuntimeError("artifact chain verification failed")
+
+
+def _run_recover(interaction_id: uuid.UUID | None, *, latest: bool) -> None:
+    resolved = _resolve_artifact_interaction_id(
+        interaction_id,
+        latest=latest,
+        complete=False if interaction_id is None else None,
+    )
     with db.get_connection() as conn:
-        trace = _latest_response_trace(conn, conversation_id)
-    if trace is None:
-        scope = f" for conversation {conversation_id}" if conversation_id else ""
-        raise RuntimeError(f"no persisted response trace found{scope}")
-    print(json.dumps(trace, indent=2, sort_keys=True, default=str))
+        response = artifact_recovery.resume_interaction_from_artifacts(conn, resolved)
+    if response is not None:
+        print(response)
+
+
+def _run_restore_events() -> None:
+    with db.get_connection() as conn:
+        result = artifact_recovery.restore_event_store_from_artifacts(conn)
+    print(json.dumps(result, indent=2, sort_keys=True))
 
 
 def _run_chat(conversation_id: uuid.UUID) -> None:
@@ -150,6 +143,12 @@ def _run_chat(conversation_id: uuid.UUID) -> None:
     print("Prometheist")
     print(f"conversation_id: {conversation_id}")
     print("Type /exit or /quit to stop.")
+    incomplete = artifact_journal.latest_interaction_id(complete=False)
+    if incomplete is not None:
+        print(
+            "Recoverable incomplete interaction detected: "
+            f"{incomplete} (use `prometheist recover --latest`)."
+        )
 
     with db.get_connection() as conn:
         while True:
@@ -179,9 +178,12 @@ def main() -> None:
     parser.add_argument(
         "command",
         nargs="?",
-        choices=("chat", "inspect"),
+        choices=("chat", "inspect", "verify", "recover", "restore-events"),
         default="chat",
-        help="Run chat (default) or inspect a persisted response trace.",
+        help=(
+            "Run chat (default), inspect/verify artifact chains, resume an incomplete "
+            "interaction, or restore canonical events from artifacts."
+        ),
     )
     parser.add_argument(
         "--once",
@@ -190,23 +192,41 @@ def main() -> None:
     parser.add_argument(
         "--latest",
         action="store_true",
-        help="With inspect, show the latest permanent response-input trace.",
+        help="Use the latest applicable artifact interaction.",
+    )
+    parser.add_argument(
+        "--interaction-id",
+        type=uuid.UUID,
+        help="Specific artifact interaction id for inspect/verify/recover.",
     )
     parser.add_argument(
         "--conversation-id",
         type=uuid.UUID,
-        help="Conversation id to use/resume, or to filter inspection.",
+        help="Conversation id to use/resume for chat/--once.",
     )
     args = parser.parse_args()
 
-    if args.command == "inspect":
+    if args.command in {"inspect", "verify", "recover", "restore-events"}:
         if args.once is not None:
-            parser.error("--once cannot be combined with inspect")
-        if not args.latest:
-            parser.error("inspect currently requires --latest")
-        _run_inspect(args.conversation_id)
+            parser.error("--once is only valid with chat")
+        if args.conversation_id is not None:
+            parser.error("--conversation-id is only valid with chat")
+        if args.command == "inspect":
+            _run_inspect(args.interaction_id, latest=args.latest)
+            return
+        if args.command == "verify":
+            _run_verify(args.interaction_id, latest=args.latest)
+            return
+        if args.command == "recover":
+            _run_recover(args.interaction_id, latest=args.latest)
+            return
+        if args.interaction_id is not None or args.latest:
+            parser.error("restore-events takes no interaction selector")
+        _run_restore_events()
         return
 
+    if args.interaction_id is not None or args.latest:
+        parser.error("--interaction-id/--latest are not valid with chat")
     conversation_id = args.conversation_id or uuid.uuid4()
     if args.once is not None:
         with db.get_connection() as conn:
