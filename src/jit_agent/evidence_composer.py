@@ -55,9 +55,10 @@ def _deduplicated_pool(
     candidates: Iterable[MemoryEvidence],
     retained: Iterable[MemoryEvidence],
 ) -> tuple[list[MemoryEvidence], set[uuid.UUID]]:
+    candidate_items = list(candidates)
     retained_items = list(retained)
     retained_ids = {item.source_event_id for item in retained_items}
-    ordered = [*retained_items, *candidates]
+    ordered = [*candidate_items, *retained_items]
     unique: list[MemoryEvidence] = []
     seen: set[uuid.UUID] = set()
     for item in ordered:
@@ -76,7 +77,7 @@ def compose_coverage_aware(
 ) -> CompositionResult:
     """Select a bounded evidence set by deterministic marginal coverage.
 
-    The first slot preserves the retrieval system's strongest available item.
+    The first slot preserves the retrieval system's strongest current candidate.
     Remaining slots greedily prefer evidence that adds provenance, retrieval-route,
     lexical, source, type, or conversation coverage. Previously surfaced evidence
     wins only after marginal coverage ties, so retention is sticky but not absolute.
@@ -144,7 +145,6 @@ def compose_coverage_aware(
         covered_types.add(item.event_type)
         covered_conversations.add(item.conversation_id)
 
-    # Preserve the retrieval system's strongest item before diversification.
     accept(pool[0])
     remaining = pool[1:]
     while remaining and len(selected) < limit:
