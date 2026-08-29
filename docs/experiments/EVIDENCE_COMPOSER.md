@@ -25,6 +25,8 @@ current percept
 
 The adaptive attention controller is frozen for this experiment. Both composer variants receive the same ordered candidate pool and the same final packet budget.
 
+Every composition-specific scenario must first verify that all required evidence is present in the shared candidate pool. If required evidence never reaches that pool, the case is an upstream retrieval/admission failure and cannot be counted as evidence for or against either composer.
+
 ## Baseline
 
 The baseline is the current effective behavior: take the first `N` evidence items in retrieval order.
@@ -66,7 +68,7 @@ The benchmark currently includes:
 
 1. **Equal-term old memory** — an old tied memory competes with many newer near-duplicates.
 2. **Correction pair under duplicate pressure** — both an older claim and its later correction must survive.
-3. **Distributed weak clues** — several weaker complementary memories compete against stronger repetitive distractors.
+3. **Distributed weak clues** — several older complementary memories and newer repetitive distractors all satisfy the same retrieval cue; top-k may prefer recency while the composer is tested only after every required clue is confirmed present in the shared pool.
 4. **Near-duplicate flood** — one information-dense older event competes against many repetitive updates.
 5. **Temporally distributed evidence** — early, middle, and late project-history facts must coexist in one bounded packet.
 6. **Retained evidence across an attention shift** — a later retrieval pass changes focus, but uniquely useful prior evidence should remain available.
@@ -107,6 +109,7 @@ Artifacts are written as `benchmarks/results/MEM-ADAPT-003_*.json`.
 
 Do not adopt the composer because it improves one synthetic old-memory case. The experiment must show:
 
+- every required event is present in the common candidate pool before a composition win/loss is counted;
 - no top-k-only regressions on the hostile corpus;
 - improved worst-case required-evidence completeness;
 - preserved abstention;
