@@ -110,6 +110,8 @@ The corpus combines both previous adversarial regimes:
 
 A separate `unobservable_corroboration_diagnostic` intentionally gives repeated rows no distinct provenance/source/conversation signal. That case is reported but excluded from the observable-evidence acceptance summary because no deterministic composer can infer hidden independence from identical observable inputs.
 
+The repository CI contract currently requires Composer v2 to pass every observable quick-mode case. Static checks, constraint governance/calibration, acceptance-gate collection, and the full PostgreSQL pytest suite are green with that contract in place. This is implementation validation, not evidence that stress-mode or real-world semantic composition is solved.
+
 ## Local run
 
 ```powershell
