@@ -76,6 +76,8 @@ The benchmark currently includes:
 
 Quick mode uses a 32-item candidate pool; stress mode uses 64. Both use the same six-item final packet for the two composer variants. These are benchmark mechanics only, not proposed production settings.
 
+The controlled PostgreSQL integration suite already verifies that, at a six-item packet budget, current top-k loses the equal-term old target, the distributed older clues, and uniquely useful retained evidence in their dedicated hostile fixtures while coverage-aware composition preserves them. This is a targeted regression result, not yet a general benchmark verdict.
+
 ## Running locally
 
 Use only a disposable test or benchmark database:
