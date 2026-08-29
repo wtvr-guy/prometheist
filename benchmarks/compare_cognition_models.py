@@ -173,6 +173,27 @@ def _safe_launch_preflight(model: str) -> dict[str, object]:
     }
 
 
+def _post_run_resource_observation(model: str) -> dict[str, object]:
+    """Record measured residency and host pressure after native inference."""
+
+    metrics = SystemHostResourceProbe().capture()
+    runtime = OllamaRuntimeProbe(model=model).capture()
+    return {
+        "model": model,
+        "probe_ok": runtime.probe_ok,
+        "resident": runtime.resident,
+        "residency_label": runtime.residency_label,
+        "reported_name": runtime.reported_name,
+        "reported_size_bytes": runtime.size_bytes,
+        "reported_size_vram_bytes": runtime.size_vram_bytes,
+        "reported_system_memory_mib": runtime.system_memory_mib,
+        "host_memory_total_mib": metrics.memory_total_mib,
+        "host_memory_available_mib": metrics.memory_available_mib,
+        "cpu_utilization_percent": metrics.cpu_utilization_percent,
+        "load_1m": metrics.load_1m,
+    }
+
+
 def _expected_atoms(expected_answer: str) -> tuple[str, ...]:
     return tuple(
         part.strip().strip("<>\"'")
@@ -315,6 +336,7 @@ def run_comparison(*, model: str, stress: bool) -> dict[str, object]:
         abstention = _abstention_case(conn)
         abstention_pool = _retrieve_shared_pool(conn, abstention, pool_limit=pool_limit)
         cases.append(_evaluate_case(client, abstention, abstention_pool))
+        post_run = _post_run_resource_observation(model)
 
         return {
             "schema_version": 1,
@@ -328,6 +350,7 @@ def run_comparison(*, model: str, stress: bool) -> dict[str, object]:
             "shared_pool_limit": pool_limit,
             "distractor_count": distractors,
             "resource_preflight": preflight,
+            "post_run_resource_observation": post_run,
             "stateless_llm_contract": (
                 "Every answer is one fresh OllamaClient.respond invocation. The benchmark runs "
                 "one model target per process and never carries model context between cases."
@@ -369,6 +392,9 @@ def main() -> None:
                 "mode": result["mode"],
                 "model": result["model"],
                 "resource_preflight": result["resource_preflight"],
+                "post_run_resource_observation": result[
+                    "post_run_resource_observation"
+                ],
                 "summary": result["summary"],
                 "output": str(output),
             },
