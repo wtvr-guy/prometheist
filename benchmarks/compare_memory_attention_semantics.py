@@ -1,13 +1,13 @@
 """MEM-ADAPT-002: semantic adversarial comparison of memory-attention strategies.
 
-This benchmark deliberately evaluates *evidence retrieval*, not final-answer LLM
-reasoning. A retrieval strategy succeeds when it exposes the complete canonical
-evidence set required for a stateless downstream worker, or correctly returns no
-historical evidence in an abstention case.
+This benchmark evaluates evidence retrieval, not final-answer LLM reasoning. A
+strategy succeeds when it exposes the complete canonical evidence set required by
+a downstream stateless worker, or correctly returns no historical evidence in an
+abstention case.
 
-The frozen v0.7 profiles and adaptive controller share the same canonical ledger,
+Frozen v0.7 profiles and adaptive attention share the same canonical ledger,
 current percept, leakage boundary, evidence floor, automatic aperture, and focus
-anchors. The live interaction path is not modified by this benchmark.
+anchors. The live interaction path is not modified.
 """
 from __future__ import annotations
 
@@ -44,7 +44,6 @@ _insert_association = BASELINE["_insert_association"]
 _run_aperture = BASELINE["_run_aperture"]
 _run_frozen = BASELINE["_run_frozen"]
 _run_adaptive = BASELINE["_run_adaptive"]
-_head_to_head = BASELINE["_head_to_head"]
 
 
 def _as_observations(*items) -> list[dict[str, object]]:
@@ -59,11 +58,13 @@ def _case(
     aperture_success: bool,
     evaluation: str = "required_evidence_complete",
     notes: str | None = None,
+    comparison_eligible: bool = True,
 ) -> dict[str, object]:
     result: dict[str, object] = {
         "scenario_id": scenario_id,
         "purpose": purpose,
         "evaluation": evaluation,
+        "comparison_eligible": comparison_eligible,
         "aperture_already_sufficient": aperture_success,
         "observations": observations,
     }
@@ -72,8 +73,43 @@ def _case(
     return result
 
 
+def _semantic_head_to_head(cases: list[dict[str, object]]) -> dict[str, int]:
+    counts = {
+        "aperture_already_sufficient": 0,
+        "adaptive_only": 0,
+        "frozen_only": 0,
+        "both": 0,
+        "neither": 0,
+        "excluded_common_behavior": 0,
+    }
+    for case in cases:
+        if not bool(case.get("comparison_eligible", True)):
+            counts["excluded_common_behavior"] += 1
+            continue
+        if bool(case["aperture_already_sufficient"]):
+            counts["aperture_already_sufficient"] += 1
+            continue
+        observations = list(case["observations"])
+        adaptive_success = any(
+            str(item["method"]).startswith("adaptive") and bool(item["success"])
+            for item in observations
+        )
+        frozen_success = any(
+            str(item["method"]).startswith("frozen:") and bool(item["success"])
+            for item in observations
+        )
+        if adaptive_success and frozen_success:
+            counts["both"] += 1
+        elif adaptive_success:
+            counts["adaptive_only"] += 1
+        elif frozen_success:
+            counts["frozen_only"] += 1
+        else:
+            counts["neither"] += 1
+    return counts
+
+
 def _correction_pair_case(conn) -> dict[str, object]:
-    """A later correction must not erase the older claim needed to interpret it."""
     _reset_database(conn)
     conversation_id = _new_conversation(conn)
     original = _record(
@@ -107,18 +143,23 @@ def _correction_pair_case(conn) -> dict[str, object]:
     )
     return _case(
         scenario_id="correction_pair_complete_evidence",
-        purpose="Retrieve both an older claim and its later correction so downstream cognition can reason about supersession instead of seeing only the newest statement.",
+        purpose=(
+            "Retrieve both an older claim and its later correction so downstream "
+            "cognition can reason about supersession instead of seeing only the newest statement."
+        ),
         observations=_as_observations(aperture, deeper, focused, adaptive),
         aperture_success=aperture.success,
-        notes="Success means evidence completeness only; the benchmark does not ask retrieval to decide which claim is authoritative.",
+        notes=(
+            "Success means evidence completeness only; retrieval is not asked to decide "
+            "which claim is authoritative."
+        ),
     )
 
 
 def _zero_overlap_bridge_case(conn) -> dict[str, object]:
-    """The target has no lexical overlap with the percept and requires an anchor route."""
     _reset_database(conn)
     conversation_id = _new_conversation(conn)
-    target = _record(conn, conversation_id, "opaque decision token ZETA-ORCHID-41")
+    target = _record(conn, conversation_id, "opaque token ZETA-ORCHID-41")
     anchor = _record(conn, conversation_id, "deployment rollback discussion anchor")
     corpus = _finalize_corpus(
         conn,
@@ -147,14 +188,16 @@ def _zero_overlap_bridge_case(conn) -> dict[str, object]:
     )
     return _case(
         scenario_id="zero_overlap_anchor_bridge",
-        purpose="Recover canonical evidence with zero lexical overlap by following a selected contextual anchor while preserving the current percept as the semantic cue.",
+        purpose=(
+            "Recover canonical evidence with zero lexical overlap by following a selected "
+            "contextual anchor while preserving the current percept as semantic cue."
+        ),
         observations=_as_observations(aperture, deeper, focused, adaptive),
         aperture_success=aperture.success,
     )
 
 
 def _false_short_true_long_case(conn) -> dict[str, object]:
-    """A plausible short association must not prevent exposure of deeper counterevidence."""
     _reset_database(conn)
     conversation_id = _new_conversation(conn)
     anchor = _record(conn, conversation_id, "incident cause investigation anchor")
@@ -164,13 +207,10 @@ def _false_short_true_long_case(conn) -> dict[str, object]:
         "early investigation blamed network congestion; FALSE-SHORT-CLAIM",
     )
     intermediates = [
-        _record(conn, conversation_id, f"opaque causal bridge-{index}") for index in range(4)
+        _record(conn, conversation_id, f"opaque causal bridge-{index}")
+        for index in range(4)
     ]
-    true_target = _record(
-        conn,
-        conversation_id,
-        "later forensic evidence identified clock skew; TRUE-DEEP-EVIDENCE",
-    )
+    true_target = _record(conn, conversation_id, "opaque token TRUE-DEEP-EVIDENCE")
     corpus = _finalize_corpus(
         conn,
         conversation_id=conversation_id,
@@ -209,36 +249,37 @@ def _false_short_true_long_case(conn) -> dict[str, object]:
     )
     return _case(
         scenario_id="false_short_path_true_deep_counterevidence",
-        purpose="Expose both an attractive one-hop claim and deeper counterevidence rather than allowing the shorter associative route to monopolize the evidence packet.",
+        purpose=(
+            "Expose both an attractive one-hop claim and deeper counterevidence instead "
+            "of allowing the shorter associative route to monopolize the evidence packet."
+        ),
         observations=_as_observations(aperture, deeper, focused, adaptive),
         aperture_success=aperture.success,
     )
 
 
 def _multi_anchor_deep_case(conn) -> dict[str, object]:
-    """Relational evidence requires multiple anchors and five association hops."""
+    """Target is intentionally opaque: the graph is the only valid route."""
     _reset_database(conn)
     conversation_id = _new_conversation(conn)
     anchors = (
         _record(conn, conversation_id, "Alice architecture discussion anchor"),
         _record(conn, conversation_id, "Bob deployment discussion anchor"),
     )
-    paths: list[list[object]] = []
+    paths = []
     for branch in range(2):
         intermediates = [
             _record(conn, conversation_id, f"opaque branch-{branch}-bridge-{index}")
             for index in range(4)
         ]
         paths.append([anchors[branch], *intermediates])
-    target = _record(
-        conn,
-        conversation_id,
-        "shared hidden design constraint RELATIONAL-FIVE-HOP-TARGET",
-    )
+    target = _record(conn, conversation_id, "opaque token QX-91-ZETA")
     corpus = _finalize_corpus(
         conn,
         conversation_id=conversation_id,
-        query_text="what hidden constraint connected the architecture and deployment discussions",
+        query_text=(
+            "what hidden constraint connected the architecture and deployment discussions"
+        ),
         anchors=tuple(item.event_id for item in anchors),
         required=(target.event_id,),
     )
@@ -265,14 +306,16 @@ def _multi_anchor_deep_case(conn) -> dict[str, object]:
     )
     return _case(
         scenario_id="multi_anchor_five_hop_relationship",
-        purpose="Test whether anchor cardinality and traversal depth can vary independently when a relationship requires multiple foci and deeper search than frozen cross-reference permits.",
+        purpose=(
+            "Test whether anchor cardinality and traversal depth can vary independently "
+            "when a relationship requires multiple foci and a five-hop opaque route."
+        ),
         observations=_as_observations(aperture, deeper, cross, adaptive),
         aperture_success=aperture.success,
     )
 
 
 def _single_anchor_reorientation_case(conn, hostile_edges: int) -> dict[str, object]:
-    """A wrong focus must eventually be abandoned for an unanchored cue-term route."""
     _reset_database(conn)
     conversation_id = _new_conversation(conn)
     target = _record(
@@ -313,31 +356,32 @@ def _single_anchor_reorientation_case(conn, hostile_edges: int) -> dict[str, obj
     )
     aperture = _run_aperture(conn, corpus)
     focused = _run_frozen(conn, corpus, jit_memory.MemoryRecallProfile.FOCUSED_RECALL)
-    rounds = []
-    for round_index in range(3):
-        rounds.append(
-            _run_adaptive(
-                conn,
-                corpus,
-                uncertainty=MemoryUncertainty.MISSING_RELATIONSHIP,
-                telemetry=RetrievalTelemetry(
-                    candidate_scores=(0.90, 0.10),
-                    anchored_rounds=round_index,
-                    support_gain=0.0 if round_index else None,
-                ),
-                method_suffix=f":round-{round_index + 1}",
-            )
+    rounds = [
+        _run_adaptive(
+            conn,
+            corpus,
+            uncertainty=MemoryUncertainty.MISSING_RELATIONSHIP,
+            telemetry=RetrievalTelemetry(
+                candidate_scores=(0.90, 0.10),
+                anchored_rounds=round_index,
+                support_gain=0.0 if round_index else None,
+            ),
+            method_suffix=f":round-{round_index + 1}",
         )
+        for round_index in range(3)
+    ]
     return _case(
         scenario_id="obsolete_single_anchor_requires_reorientation",
-        purpose="Test whether repeated non-improving focus on a plausible obsolete explanation is abandoned so a correction reachable from the original cue can enter evidence.",
+        purpose=(
+            "Test whether repeated non-improving focus on a plausible obsolete "
+            "explanation is abandoned so cue-reachable correction evidence can enter."
+        ),
         observations=_as_observations(aperture, focused, *rounds),
         aperture_success=aperture.success,
     )
 
 
 def _multi_anchor_reorientation_case(conn, hostile_edges: int) -> dict[str, object]:
-    """A mutually reinforcing wrong cluster must not permanently own attention."""
     _reset_database(conn)
     conversation_id = _new_conversation(conn)
     target = _record(
@@ -383,64 +427,32 @@ def _multi_anchor_reorientation_case(conn, hostile_edges: int) -> dict[str, obje
     aperture = _run_aperture(conn, corpus)
     deeper = _run_frozen(conn, corpus, jit_memory.MemoryRecallProfile.DEEPER_RESEARCH)
     cross = _run_frozen(conn, corpus, jit_memory.MemoryRecallProfile.CROSS_REFERENCE)
-    rounds = []
-    for round_index in range(3):
-        rounds.append(
-            _run_adaptive(
-                conn,
-                corpus,
-                uncertainty=MemoryUncertainty.POSSIBLE_CONTRADICTION,
-                telemetry=RetrievalTelemetry(
-                    candidate_scores=(0.51, 0.49),
-                    anchored_rounds=round_index,
-                    support_gain=0.0 if round_index else None,
-                ),
-                method_suffix=f":round-{round_index + 1}",
-            )
+    rounds = [
+        _run_adaptive(
+            conn,
+            corpus,
+            uncertainty=MemoryUncertainty.POSSIBLE_CONTRADICTION,
+            telemetry=RetrievalTelemetry(
+                candidate_scores=(0.51, 0.49),
+                anchored_rounds=round_index,
+                support_gain=0.0 if round_index else None,
+            ),
+            method_suffix=f":round-{round_index + 1}",
         )
+        for round_index in range(3)
+    ]
     return _case(
         scenario_id="mutually_reinforcing_anchor_cluster_requires_reorientation",
-        purpose="Test whether a bad multi-anchor cluster can be escaped after bounded non-improving exploitation instead of becoming a self-reinforcing attentional attractor.",
+        purpose=(
+            "Test whether a bad multi-anchor cluster can be escaped after bounded "
+            "non-improving exploitation instead of becoming an attentional attractor."
+        ),
         observations=_as_observations(aperture, deeper, cross, *rounds),
         aperture_success=aperture.success,
     )
 
 
-def _abstention_case(conn) -> dict[str, object]:
-    """No ledger evidence supports the cue; successful retrieval should return none."""
-    _reset_database(conn)
-    conversation_id = _new_conversation(conn)
-    for index in range(12):
-        _record(conn, conversation_id, f"ordinary unrelated cooking note-{index}")
-    corpus = _finalize_corpus(
-        conn,
-        conversation_id=conversation_id,
-        query_text="xylophone nebula insurance quaternion",
-        anchors=(),
-        required=(),
-    )
-    standard = _run_frozen(conn, corpus, jit_memory.MemoryRecallProfile.STANDARD)
-    adaptive = _run_adaptive(
-        conn,
-        corpus,
-        uncertainty=MemoryUncertainty.MISSING_CONTEXT,
-        telemetry=RetrievalTelemetry(candidate_scores=()),
-    )
-    observations = _as_observations(standard, adaptive)
-    for item in observations:
-        item["success"] = len(item["returned_event_ids"]) == 0
-    return _case(
-        scenario_id="unsupported_query_abstention",
-        purpose="Verify that widening or reorienting attention does not manufacture historical support when the canonical ledger contains no evidence for the cue.",
-        observations=observations,
-        aperture_success=False,
-        evaluation="no_historical_evidence_returned",
-        notes="This case compares unanchored deliberate retrieval directly because an automatic aperture with active WorkingState would intentionally surface that active state even when no historical match exists.",
-    )
-
-
 def _packet_pressure_weak_clues_case(conn, distractors: int) -> dict[str, object]:
-    """Several partial clues jointly matter while exact-looking distractors compete."""
     _reset_database(conn)
     conversation_id = _new_conversation(conn)
     clue_a = _record(conn, conversation_id, "RAVEN clue alpha mentioned the scheduler")
@@ -474,10 +486,52 @@ def _packet_pressure_weak_clues_case(conn, distractors: int) -> dict[str, object
     )
     return _case(
         scenario_id="multiple_weak_clues_under_packet_pressure",
-        purpose="Require several individually weaker memories while exact-looking distractors compete, exposing whether top-k ranking discards distributed evidence needed for synthesis.",
+        purpose=(
+            "Require several individually weaker memories while exact-looking distractors "
+            "compete, probing whether top-k selection discards distributed evidence."
+        ),
         observations=_as_observations(aperture, deeper, cross, adaptive),
         aperture_success=aperture.success,
         notes=f"Hostile exact-looking distractors: {distractors}",
+    )
+
+
+def _abstention_case(conn) -> dict[str, object]:
+    _reset_database(conn)
+    conversation_id = _new_conversation(conn)
+    for index in range(12):
+        _record(conn, conversation_id, f"ordinary unrelated cooking note-{index}")
+    corpus = _finalize_corpus(
+        conn,
+        conversation_id=conversation_id,
+        query_text="xylophone nebula insurance quaternion",
+        anchors=(),
+        required=(),
+    )
+    standard = _run_frozen(conn, corpus, jit_memory.MemoryRecallProfile.STANDARD)
+    adaptive = _run_adaptive(
+        conn,
+        corpus,
+        uncertainty=MemoryUncertainty.MISSING_CONTEXT,
+        telemetry=RetrievalTelemetry(candidate_scores=()),
+    )
+    observations = _as_observations(standard, adaptive)
+    for item in observations:
+        item["success"] = len(item["returned_event_ids"]) == 0
+    return _case(
+        scenario_id="unsupported_query_abstention",
+        purpose=(
+            "Verify that widening attention does not manufacture historical support when "
+            "the canonical ledger contains no evidence for the cue."
+        ),
+        observations=observations,
+        aperture_success=False,
+        evaluation="no_historical_evidence_returned",
+        comparison_eligible=False,
+        notes=(
+            "This is a shared safety behavior check, not a frozen-vs-adaptive win. "
+            "Automatic WorkingState activation is intentionally excluded."
+        ),
     )
 
 
@@ -504,11 +558,11 @@ def run_comparison(*, stress: bool) -> dict[str, object]:
             "database": database_name,
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "evaluation_boundary": (
-                "This benchmark evaluates whether the complete canonical evidence needed by "
-                "a downstream stateless worker is surfaced. It does not award retrieval credit "
-                "for interpreting corrections, causality, truth, or contradiction."
+                "This benchmark evaluates whether complete canonical evidence needed by "
+                "a downstream stateless worker is surfaced. It does not award retrieval "
+                "credit for interpreting corrections, causality, truth, or contradiction."
             ),
-            "head_to_head": _head_to_head(cases),
+            "head_to_head": _semantic_head_to_head(cases),
             "cases": cases,
         }
     finally:
