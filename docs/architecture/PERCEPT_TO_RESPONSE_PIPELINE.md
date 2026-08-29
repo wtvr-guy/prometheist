@@ -1,27 +1,31 @@
 # Percept-to-Response Pipeline
 
 **Status:** current target architecture decision, 2026-08-29.  
-**Scope:** the path from an admitted percept through pre-cognitive disposition, capability execution, memory sufficiency, and optional user-facing response.
+**Scope:** the path from an admitted input through pre-cognitive work selection, capability execution, memory sufficiency, and final response generation.
 
-This document records the current architectural decisions for Prometheist's percept-to-response path. It narrows responsibilities among the pre-cognitive LLM, deterministic execution machinery, Adaptive Recall, the v2 Composer, and the final response worker.
+This document records the current architectural decisions for Prometheist's percept-to-response path. It narrows responsibilities among deterministic intake policy, the pre-cognitive LLM, deterministic execution machinery, Adaptive Recall, the v2 Composer, and the final response worker.
 
 It should be read consistently with `CONSTITUTION.md`, `COGNITIVE_ARCHITECTURE.md`, `INTERACTION_CONTINUITY.md`, and the system determinism/execution-governance documents. Where older architecture text refers to separate focused-recall, cross-reference, or deeper-research memory capabilities, the target described here supersedes that decomposition in favor of Adaptive Recall.
 
 ## 1. Core principle
 
-A percept does not imply that Prometheist must speak.
+Prometheist distinguishes **explicit user prompts** from other percepts.
 
-The pre-cognitive system determines the disposition of the percept: what work, if any, the system must perform and whether a user-facing response is required. Downstream response workers are instantiated only after the response requirement has already been established.
+An explicit user prompt always requires a user-facing response. That requirement is established deterministically by the interaction boundary itself; no LLM decides whether the user deserves an answer.
+
+Other percept classes may legitimately require no response. Examples include sensor observations, background state changes, scheduled internal work, or other non-conversational inputs. Their response policy belongs to their deterministic intake contract, not to the final responder.
 
 The final responder never decides whether to respond.
 
-## 2. End-to-end shape
+## 2. Explicit user-prompt path
 
 ```text
-PERCEPT
+USER PROMPT
    |
    v
 Deterministic ingestion / persistence
+   |
+   +--> response_required = TRUE
    |
    v
 Default bounded memory activation / orientation
@@ -29,96 +33,92 @@ Default bounded memory activation / orientation
    v
 PRE-COGNITIVE LLM
    |
-   +--> determine required system work
+   +--> determine required non-memory system work
    +--> select bounded semantic capabilities/requirements
-   +--> determine whether user response is required
    |
    v
-Persisted disposition / work directives
+Persisted work directives
    |
    +------------------------------+
    |                              |
    v                              v
-Capability / tool work       RESPONSE REQUIRED?
-   |                           /          \
-   v                         NO            YES
-Authoritative results        |              |
-   |                         |              v
-   |                         |        V2 COMPOSER
-   |                         |        (memory only)
-   |                         |              |
-   |                         |       sufficient?
-   |                         |        /        \
-   |                         |      yes        no
-   |                         |       |          |
-   |                         |       |          v
-   |                         |       |    ADAPTIVE RECALL
-   |                         |       |          |
-   |                         |       |          +----> V2 COMPOSER
-   |                         |       |                (repeat boundedly)
-   |                         |       v
-   |                         |   MEMORY PACKAGE
-   |                         |       |
-   |                         |       |
-   +-------------------------|-------+
-                             |       |
-                             |       v
-                             |  FINAL RESPONDER
-                             |  + personality prompt
-                             |  + original percept
-                             |  + memory package
-                             |  + direct work/tool results
-                             |       |
-                             |       v
-                             |  persist / emit response
-                             |
-                             v
-                     persist / terminate
+Capability / tool work        V2 COMPOSER
+   |                           (memory only)
+   v                              |
+Authoritative results         sufficient?
+   |                           /        \
+   |                         yes        no
+   |                          |          |
+   |                          |          v
+   |                          |    ADAPTIVE RECALL
+   |                          |          |
+   |                          |          +----> V2 COMPOSER
+   |                          |                (repeat boundedly)
+   |                          v
+   |                     MEMORY PACKAGE
+   |                          |
+   +--------------------------+
+                              |
+                              v
+                        FINAL RESPONDER
+                        + personality prompt
+                        + original user prompt
+                        + memory package
+                        + direct work/tool results
+                              |
+                              v
+                        persist / emit response
 ```
 
 The diagram is conceptual. Independent work may be scheduled according to the Attention Fabric and resource-admission rules rather than being forced into unnecessary serial execution.
 
-## 3. Deterministic ingestion and default memory orientation
+## 3. Deterministic ingestion and response policy
 
-Every admitted percept is persisted and receives the bounded system-owned memory activation required by the Constitution before model routing. This is an attention aperture, not a complete answer and not a claim of evidentiary sufficiency.
+Every admitted input is persisted before downstream cognition.
+
+For an explicit user prompt, the intake boundary sets `response_required=true`. This is application-owned control state. The pre-cognitive LLM does not receive a semantic choice about whether to answer.
+
+For a non-user percept, response policy may differ according to the deterministic contract for that percept class. A background observation may require internal work and no conversational output; a scheduled task may require an acknowledgment only under specific policy; a sensor event may require no response at all.
+
+This distinction avoids conflating two different questions:
+
+1. **Does this input class require conversational output?** — deterministic intake policy.
+2. **What work must Prometheist perform before completing the input?** — pre-cognitive semantic work selection within bounded contracts.
+
+## 4. Default memory orientation
+
+Every admitted input receives the bounded system-owned memory activation required by the Constitution before model routing. This is an attention aperture, not a complete answer and not a claim of evidentiary sufficiency.
 
 The system remains the owner of ordering, identity, provenance, WorkingState, resource policy, and durable control state.
 
-## 4. The pre-cognitive LLM: percept disposition
+## 5. The pre-cognitive LLM: work selection
 
 There is one LLM-powered role in the pre-cognitive pipeline.
 
-Its question is not merely "Should I answer?" and not merely "What cognitive work is required?" Its broader responsibility is:
+For an explicit user prompt, its responsibility is:
 
-> **Given this percept and the bounded state made available to me, what must Prometheist do?**
+> **Given this user prompt, bounded orientation memory, and the available non-memory capability catalog, what work must Prometheist perform before responding?**
 
-The pre-cognitive LLM may determine, through bounded application-owned outputs:
+The model may determine, through bounded application-owned outputs:
 
-- that no further work is required;
+- that no external/non-memory work is required;
 - that one or more system capabilities or external actions are required;
-- that memory will be relevant to a later response;
-- that a user-facing response is required;
-- that work is required but no response is required;
-- that both work and a subsequent response are required.
+- which bounded capability indices express those requirements.
 
-The model does not itself own scheduling, capability identity, resource admission, permissions, durable identifiers, retry semantics, or side effects. It expresses semantic requirements within application-owned contracts; Prometheist deterministically translates committed directives into executable work.
+The model does **not** decide whether to respond to an explicit user prompt. It also does not own scheduling, capability identity, resource admission, permissions, durable identifiers, retry semantics, or side effects. It expresses semantic work requirements within application-owned contracts; Prometheist deterministically translates committed directives into executable work.
 
-### 4.1 Possible dispositions
-
-Conceptually, a percept can resolve to at least these forms:
+Conceptually, an explicit user prompt therefore has two possible work shapes:
 
 ```text
-NO WORK + NO RESPONSE     -> persist disposition and terminate
-WORK + NO RESPONSE        -> execute/persist work and terminate
 NO EXTERNAL WORK + RESPONSE -> memory sufficiency path -> responder
-WORK + RESPONSE           -> execute work; memory sufficiency path as needed; responder receives both
+WORK + RESPONSE             -> execute work; responder receives work results directly
 ```
 
-These are not required to be implemented as a single enum. They describe the semantic outcomes the protocol must support.
+Non-user percepts may support additional non-response outcomes, but those belong to their own intake policies rather than to the user-prompt LLM contract.
 
-## 5. Capability and tool execution
+## 6. Capability and tool execution
 
-When the pre-cognitive disposition requires work, Prometheist dispatches that work through its deterministic control plane and transient-worker protocol.
+When the pre-cognitive work selection requires work, Prometheist dispatches that work through its deterministic control plane and transient-worker protocol.
 
 Examples include scheduling a task, calling an external tool, performing filesystem/database work, invoking a bounded capability, or carrying out another authorized action.
 
@@ -128,7 +128,7 @@ Capability/tool workers return authoritative structured results whenever possibl
 
 A completed tool or capability result does **not** pass through the v2 Composer merely so the Composer can restate or reinterpret it.
 
-## 6. The v2 Composer: memory-context sufficiency specialist
+## 7. The v2 Composer: memory-context sufficiency specialist
 
 The v2 Composer has a deliberately narrow domain.
 
@@ -136,13 +136,13 @@ Its responsibility is to determine whether the memory context available for a re
 
 It is **not** a general evidence synthesizer, a second pre-cognitive executive, a tool-result interpreter, or the final response generator.
 
-The Composer receives the relevant response/memory target plus the current memory evidence. It determines whether the currently activated/retrieved persistent memory is sufficient.
+The Composer receives the current user prompt plus the current memory evidence. It determines whether the activated/retrieved persistent memory is sufficient for a separate responder to answer accurately.
 
-### 6.1 If memory is sufficient
+### 7.1 If memory is sufficient
 
 The Composer produces/approves a bounded response-ready **memory package** for the final responder.
 
-### 6.2 If memory is insufficient
+### 7.2 If memory is insufficient
 
 The Composer identifies the semantic memory deficit: what additional remembered information is needed to make the memory context sufficient.
 
@@ -168,13 +168,13 @@ V2 COMPOSER
 
 This loop is bounded by deterministic stopping/resource policies. Repeated Composer invocations are fresh/stateless LLM calls supplied only with the bounded state needed for that invocation.
 
-### 6.3 Exhaustion and legitimate unknowns
+### 7.3 Exhaustion and legitimate unknowns
 
 Adaptive Recall can exhaust its permitted search without establishing the requested memory fact. That is a valid result, not permission to hallucinate.
 
 Once deterministic stopping criteria establish that no further useful memory expansion is available within policy, the Composer can produce a memory package that explicitly represents the unresolved/unknown state and the relevant evidence that was found. The final responder can then accurately tell the user that Prometheist cannot establish the requested fact from available memory.
 
-## 7. Adaptive Recall
+## 8. Adaptive Recall
 
 Adaptive Recall is the target unified memory-expansion capability.
 
@@ -190,7 +190,7 @@ The division of responsibility is:
 
 Adaptive Recall does not decide what Prometheist should say and does not perform the final semantic sufficiency judgment.
 
-## 8. Two independent information channels into the final responder
+## 9. Two independent information channels into the final responder
 
 Memory evidence and action/tool results remain separate until the final response worker.
 
@@ -201,22 +201,22 @@ TOOL RESULTS ----------------------------------------+--> FINAL RESPONDER
                                                      |
 CAPABILITY / ACTION RESULTS -------------------------+
                                                      |
-ORIGINAL PERCEPT / RESPONSE DIRECTIVE ---------------+
+ORIGINAL USER PROMPT --------------------------------+
 ```
 
 This separation is intentional.
 
 The Composer is allowed to transform/select memory context because memory sufficiency is its job. It must not become a semantic laundering layer through which authoritative tool/action results are unnecessarily rewritten.
 
-The final responder should receive authoritative structured work results directly, together with their provenance/status where relevant.
+The final responder receives authoritative structured work results directly, together with their provenance/status where relevant.
 
-## 9. Final response worker
+## 10. Final response worker
 
-The final response worker is instantiated only when the pre-cognitive system has already committed that a user-facing response is required.
+For an explicit user prompt, the final response worker is mandatory once the required work and memory-sufficiency path have completed or exhausted according to policy.
 
 It receives, as applicable:
 
-1. the original/current percept and response directive;
+1. the original/current user prompt;
 2. the response-ready memory package from the v2 Composer;
 3. authoritative final tool/capability/action results directly from their execution paths;
 4. other bounded system-owned response metadata required by policy; and
@@ -228,21 +228,21 @@ The final responder's job is expression: generate the appropriate user-facing na
 
 It does not decide whether to respond. It does not own memory retrieval. It does not execute requested side effects. It does not become the owner of durable continuity.
 
-## 10. Non-response percepts
+## 11. Non-user percepts
 
-Not every percept reaches the Composer or final responder.
+A non-user percept need not generate conversational language.
 
-If the pre-cognitive disposition says no response is required, Prometheist performs any committed work, persists the resulting state/provenance, and terminates that response path without generating user-facing language.
+Examples include internal state maintenance, sensor observations, scheduled/background tasks, or authorized actions whose contract does not require an acknowledgment.
 
-Examples include percepts whose only required consequence is internal state maintenance or an authorized action for which policy does not require conversational acknowledgement.
+The key rule is that silence is determined by the **input class and deterministic policy**, not by asking a small LLM whether a direct user deserves an answer.
 
-Therefore `percept -> response` is not a mandatory pipeline. The more general architecture is `percept -> disposition -> required work`, where user-facing response generation is one possible branch.
+Future non-user percept pipelines may share portions of the same pre-cognitive, capability, memory, and Attention infrastructure while carrying a different deterministic response policy.
 
-## 11. LLM-worker accounting
+## 12. LLM-worker accounting
 
-Under this architecture there are three distinct LLM-powered worker **roles** on a user-response path:
+On the ordinary user-response path there are three distinct LLM-powered worker **roles**:
 
-1. **Pre-cognitive LLM** — semantic percept disposition and bounded work/response requirements.
+1. **Pre-cognitive LLM** — bounded semantic work selection only.
 2. **v2 Composer** — memory-context sufficiency and semantic memory-deficit identification.
 3. **Final response worker** — personality-conditioned user-facing expression.
 
@@ -250,16 +250,16 @@ There is only **one LLM-powered role in the pre-cognitive pipeline**.
 
 The number of LLM **invocations** is not necessarily three. The v2 Composer may be invoked more than once when Adaptive Recall requires iterative memory expansion. Each invocation remains stateless.
 
-A percept that requires no user response need not instantiate the Composer or final responder at all. Depending on its disposition, it may therefore require only the pre-cognitive LLM invocation plus deterministic/non-LLM work.
-
 Current resource policy remains independent of this logical count: multiple logical LLM roles do not imply simultaneous resident inference. Local execution remains subject to the one-LLM-at-a-time default and resource-admission policy unless empirical evidence and configured capacity justify otherwise.
 
-## 12. Architectural invariants captured here
+## 13. Architectural invariants captured here
 
 The following are deliberate boundaries:
 
-- response/no-response is decided before the final responder exists;
-- the pre-cognitive LLM determines the percept's semantic work requirements, not just conversational intent;
+- every explicit user prompt requires a response;
+- response requirement for an explicit user prompt is deterministic application-owned control state, not an LLM choice;
+- non-user percepts may have different deterministic response policies;
+- the pre-cognitive LLM determines semantic work requirements, not whether to answer the user;
 - system execution/control remains deterministic wherever deterministic control is possible;
 - Adaptive Recall is deterministic and supersedes separate focused-recall/cross-reference/deeper-research memory modes;
 - the v2 Composer is a memory-context sufficiency specialist, not a general-purpose executive;
@@ -268,11 +268,12 @@ The following are deliberate boundaries:
 - memory and external/tool evidence retain distinct provenance domains;
 - the final responder always receives the personality prompt;
 - the final responder never decides whether it should respond;
-- every LLM invocation remains fresh and stateless;
-- non-response percepts do not pay for unnecessary composition or response generation.
+- every LLM invocation remains fresh and stateless.
 
-## 13. Implementation consequence
+## 14. Implementation consequence
 
-Existing code and documentation should be audited against this target before implementation is considered complete. In particular, older references to `MEMORY_ANALYSIS`, focused recall, cross-reference, deeper research, or a second pre-cognitive synthesis LLM should not be treated as current target architecture where they conflict with this document.
+The interactive CLI and other direct conversational interfaces must use a user-prompt intake contract that fixes `response_required=true` before the pre-cognitive LLM runs. The pre-cognitive model schema for that path should expose only the bounded work-selection fields it is actually authorized to choose.
 
-The intended target is a narrow set of semantic LLM responsibilities surrounded by durable, deterministic system machinery: one pre-cognitive disposition worker; deterministic action/capability execution; a Composer-driven, Adaptive-Recall-backed memory-sufficiency loop only when a response requires memory; and a personality-conditioned final responder that receives memory context and authoritative work results through separate channels.
+Existing code and documentation should be audited against this target before implementation is considered complete. In particular, older references to `MEMORY_ANALYSIS`, focused recall, cross-reference, deeper research, a second pre-cognitive synthesis LLM, or model-selected silence for direct user prompts should not be treated as current target architecture where they conflict with this document.
+
+The intended target is a narrow set of semantic LLM responsibilities surrounded by durable, deterministic system machinery: deterministic user-response policy; one pre-cognitive work-selection worker; deterministic action/capability execution; a Composer-driven, Adaptive-Recall-backed memory-sufficiency loop; and a personality-conditioned final responder that receives memory context and authoritative work results through separate channels.
