@@ -1,7 +1,9 @@
 """Live percept-to-response runtime for the 2026-08-29 Prometheist architecture.
 
-The CLI enters here. The older recurrent router remains only as a compatibility
-surface for pre-pivot tests while migration finishes.
+This is the authoritative interactive path. Every LLM call is stateless. The
+pre-cognitive role commits work/response disposition, the v2 Composer only judges
+persistent-memory sufficiency, deterministic Adaptive Recall owns retrieval, and
+the final responder receives memory plus authoritative work results directly.
 """
 from __future__ import annotations
 
@@ -128,7 +130,7 @@ PERCEPT_CAPABILITIES = tuple(stage.capability for stage in PERCEPT_STAGES)
 
 
 class PreCognitiveDisposition(BaseModel):
-    """Closed pre-cognitive disposition; execution mechanics remain system-owned."""
+    """Closed semantic disposition; execution mechanics remain system-owned."""
 
     model_config = ConfigDict(extra="forbid")
     response_required: bool
@@ -330,6 +332,10 @@ def _external_capability_catalog(registry: CapabilityRegistry) -> tuple[Capabili
     )
 
 
+def _packet_event_ids(packet: MemoryPacket) -> tuple[UUID, ...]:
+    return tuple(item.source_event_id for item in packet.items)
+
+
 def _merge_memory_packets(
     interaction_id: UUID,
     base: MemoryPacket,
@@ -372,24 +378,37 @@ def _adaptive_profile(round_index: int) -> jit_memory.MemoryRecallProfile:
         return _ADAPTIVE_PROFILES[-1]
 
 
-def _focus_ids_for_profile(
-    profile: jit_memory.MemoryRecallProfile,
+def _effective_adaptive_profile(
+    requested: jit_memory.MemoryRecallProfile,
     packet: MemoryPacket,
-) -> list[UUID]:
+) -> tuple[jit_memory.MemoryRecallProfile, list[UUID]]:
+    """Choose the deepest profile whose focus preconditions are actually met."""
+
     ids = [item.source_event_id for item in packet.items]
-    if profile is jit_memory.MemoryRecallProfile.STANDARD:
-        return []
-    if profile is jit_memory.MemoryRecallProfile.DEEPER_RESEARCH:
-        return list(islice(ids, len(_ADAPTIVE_PROFILES)))
-    if profile is jit_memory.MemoryRecallProfile.CROSS_REFERENCE:
+    if requested is jit_memory.MemoryRecallProfile.STANDARD or not ids:
+        return jit_memory.MemoryRecallProfile.STANDARD, []
+    if requested is jit_memory.MemoryRecallProfile.DEEPER_RESEARCH:
+        return requested, list(islice(ids, len(_ADAPTIVE_PROFILES)))
+    if requested is jit_memory.MemoryRecallProfile.CROSS_REFERENCE:
         iterator = iter(ids)
         first = next(iterator, None)
         second = next(iterator, None)
         if first is not None and second is not None:
-            return [first, second]
-        return [first] if first is not None else []
-    first = next(iter(ids), None)
-    return [first] if first is not None else []
+            return requested, [first, second]
+        if first is not None:
+            return jit_memory.MemoryRecallProfile.FOCUSED_RECALL, [first]
+        return jit_memory.MemoryRecallProfile.STANDARD, []
+    return jit_memory.MemoryRecallProfile.FOCUSED_RECALL, [ids[0]]
+
+
+def _focus_ids_for_profile(
+    profile: jit_memory.MemoryRecallProfile,
+    packet: MemoryPacket,
+) -> list[UUID]:
+    """Compatibility helper used by contract tests and diagnostics."""
+
+    _effective_profile, focus_ids = _effective_adaptive_profile(profile, packet)
+    return focus_ids
 
 
 def _adaptive_recall(
@@ -402,23 +421,8 @@ def _adaptive_recall(
 ) -> MemoryPacket:
     """Deterministically expand memory from the Composer's semantic deficit."""
 
-    profile = _adaptive_profile(round_index)
-    focus_ids = _focus_ids_for_profile(profile, current_packet)
-    if profile is jit_memory.MemoryRecallProfile.CROSS_REFERENCE and len(focus_ids) != len(
-        set(focus_ids)
-    ):
-        focus_ids = list(dict.fromkeys(focus_ids))
-    if profile is jit_memory.MemoryRecallProfile.CROSS_REFERENCE and not all(focus_ids):
-        profile = jit_memory.MemoryRecallProfile.FOCUSED_RECALL
-        focus_ids = _focus_ids_for_profile(profile, current_packet)
-    if profile is jit_memory.MemoryRecallProfile.CROSS_REFERENCE:
-        iterator = iter(focus_ids)
-        first = next(iterator, None)
-        second = next(iterator, None)
-        if first is None or second is None:
-            profile = jit_memory.MemoryRecallProfile.FOCUSED_RECALL
-            focus_ids = _focus_ids_for_profile(profile, current_packet)
-
+    requested_profile = _adaptive_profile(round_index)
+    profile, focus_ids = _effective_adaptive_profile(requested_profile, current_packet)
     need = jit_memory.build_memory_need(
         deficit,
         focus_event_ids=focus_ids,
@@ -450,6 +454,8 @@ def _compose_memory_package(
     interaction: DurableInteraction,
     initial_packet: MemoryPacket,
 ) -> ResponseMemoryPackage:
+    """Bounded Composer/Adaptive-Recall loop with explicit no-progress exhaustion."""
+
     packet = initial_packet.model_copy(deep=True)
     decisions: list[MemorySufficiencyDecision] = []
     expansions: list[MemoryPacket] = []
@@ -463,14 +469,18 @@ def _compose_memory_package(
                 composer_rounds=len(decisions),
                 adaptive_recall_rounds=len(expansions),
             )
-        packet = _adaptive_recall(
+        expanded = _adaptive_recall(
             conn,
             interaction,
             packet,
             decision.memory_deficit or interaction.user_text,
             round_index=round_index,
         )
-        expansions.append(packet)
+        expansions.append(expanded)
+        no_progress = _packet_event_ids(expanded) == _packet_event_ids(packet)
+        packet = expanded
+        if no_progress:
+            break
 
     final_decision = llm.assess_memory_sufficiency(interaction.user_text, packet)
     decisions.append(final_decision)
@@ -639,6 +649,7 @@ def _execute_stage(
     registry: CapabilityRegistry,
 ) -> tuple[dict[str, Any], list[str]]:
     stage = PerceptStage(envelope.step.step_key)
+
     if stage is PerceptStage.RESOLVE_REFERENCES:
         return {
             "working_state_available": load_working_state(conn, interaction.conversation_id)
