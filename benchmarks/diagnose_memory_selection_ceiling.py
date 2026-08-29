@@ -29,7 +29,7 @@ os.environ["DATABASE_URL"] = os.environ.get(
 import psycopg
 
 from jit_agent import db, event_store, jit_memory, postgres_memory_kernel
-from jit_agent.memory_kernel import CueState, recall, score_event
+from jit_agent.memory_kernel import CueState, recall
 from jit_agent.models import EventType
 
 
@@ -200,9 +200,8 @@ def _observe_stage(
         None,
     )
     selected_ids = {uuid.UUID(item.event_id) for item in kernel_packet.items}
-    surfaced_rank_limit = packet_limit
     target_surfaces = (
-        target_admitted_rank is not None and target_admitted_rank <= surfaced_rank_limit
+        target_admitted_rank is not None and target_admitted_rank <= packet_limit
     )
     return StageObservation(
         distractor_count=distractor_count,
@@ -242,8 +241,35 @@ def run_diagnostic(*, stress: bool) -> dict[str, object]:
     try:
         database_name = _prepare_database(conn)
         distractor_points = (
-            (0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20, 40, 80, 100, 120,
-             140, 160, 240, 320, 440, 560, 620, 700, 760, 820)
+            (
+                0,
+                1,
+                2,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                20,
+                40,
+                80,
+                100,
+                120,
+                140,
+                160,
+                240,
+                320,
+                440,
+                560,
+                620,
+                700,
+                760,
+                820,
+            )
             if stress
             else (0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20, 40, 80, 120)
         )
@@ -280,7 +306,10 @@ def run_diagnostic(*, stress: bool) -> dict[str, object]:
                 route_failure = next(
                     (
                         item.distractor_count
-                        for item in sorted(relevant, key=lambda value: value.distractor_count)
+                        for item in sorted(
+                            relevant,
+                            key=lambda value: value.distractor_count,
+                        )
                         if item.target_raw_candidate_rank is None
                     ),
                     None,
@@ -308,8 +337,9 @@ def run_diagnostic(*, stress: bool) -> dict[str, object]:
             "database": database_name,
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "question": (
-                "When an old memory ties newer memories on semantic score, does it disappear "
-                "at candidate routing, kernel ranking, or bounded packet surfacing?"
+                "When an old memory ties newer memories on semantic score, does it "
+                "disappear at candidate routing, kernel ranking, or bounded packet "
+                "surfacing?"
             ),
             "tie_break_rule": "score desc, global_seq desc, event_id asc",
             "boundaries": boundaries,
@@ -330,8 +360,22 @@ def main() -> None:
         RESULTS_DIR.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         output = RESULTS_DIR / f"MEM-ADAPT-001-DIAGNOSTIC_{stamp}.json"
-    output.write_text(json.dumps(result, indent=2, sort_keys=True), encoding="utf-8")
-    print(json.dumps({"benchmark_id": result["benchmark_id"], "mode": result["mode"], "boundaries": result["boundaries"], "output": str(output)}, indent=2, sort_keys=True))
+    output.write_text(
+        json.dumps(result, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    print(
+        json.dumps(
+            {
+                "benchmark_id": result["benchmark_id"],
+                "mode": result["mode"],
+                "boundaries": result["boundaries"],
+                "output": str(output),
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
 
 
 if __name__ == "__main__":
