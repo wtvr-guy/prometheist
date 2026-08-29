@@ -1,7 +1,12 @@
-"""CLI entry point: interactive REPL, or --once for scripting/tests.
+"""First-party Prometheist CLI.
 
-Each invocation of `--once` is a fresh process with zero in-memory state,
-which is what makes the cross-process restart acceptance test meaningful.
+The interactive chat REPL is intentionally thin: it owns presentation only and
+passes each user percept through the authoritative durable interaction runtime.
+It does not retain or replay an LLM transcript. Each interaction continues to
+use guarded disposable worker processes and JIT memory.
+
+`--once` remains available for scripting and restart/acceptance tests. Each
+`--once` invocation is a fresh process with zero in-memory conversational state.
 """
 from __future__ import annotations
 
@@ -20,9 +25,8 @@ from jit_agent.interaction_runtime import handle_interaction_in_worker_processes
 from jit_agent.worker_runtime import WorkerLaunchDenied
 
 
-_INTERACTION_ADMISSION_FAILURE = (
-    "interaction was not safely admitted to one assignment"
-)
+_INTERACTION_ADMISSION_FAILURE = "interaction was not safely admitted to one assignment"
+_EXIT_COMMANDS = {"exit", "quit", "/exit", "/quit"}
 
 
 def _configure_utf8_streams() -> None:
@@ -73,17 +77,50 @@ def _handle_with_admission_diagnostics(
         except Exception as diagnostic_exc:  # never mask the original runtime failure
             diagnostics = {
                 "kind": "SCHEDULER_ADMISSION_DIAGNOSTIC_ERROR",
-                "diagnostic_error": (
-                    f"{type(diagnostic_exc).__name__}: {diagnostic_exc}"
-                ),
+                "diagnostic_error": f"{type(diagnostic_exc).__name__}: {diagnostic_exc}",
             }
         _emit_admission_diagnostics(diagnostics)
         raise
 
 
+def _run_chat(conversation_id: uuid.UUID) -> None:
+    """Run the lightweight terminal UI over the authoritative interaction path."""
+
+    print("Prometheist")
+    print(f"conversation_id: {conversation_id}")
+    print("Type /exit or /quit to stop.")
+
+    with db.get_connection() as conn:
+        while True:
+            try:
+                user_text = input("\nYou > ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print()
+                break
+
+            if user_text.lower() in _EXIT_COMMANDS:
+                break
+            if not user_text:
+                continue
+
+            response = _handle_with_admission_diagnostics(
+                conn,
+                user_text,
+                conversation_id,
+            )
+            print(f"\nPrometheist > {response}")
+
+
 def main() -> None:
     _configure_utf8_streams()
-    parser = argparse.ArgumentParser(prog="jit-agent")
+    parser = argparse.ArgumentParser(prog="prometheist")
+    parser.add_argument(
+        "command",
+        nargs="?",
+        choices=("chat",),
+        default="chat",
+        help="Run the lightweight interactive terminal chat (default).",
+    )
     parser.add_argument(
         "--once",
         help="Handle a single message non-interactively and print the response.",
@@ -91,14 +128,13 @@ def main() -> None:
     parser.add_argument(
         "--conversation-id",
         type=uuid.UUID,
-        help=(
-            "Conversation id to use/resume. Required with --once; optional otherwise."
-        ),
+        help="Conversation id to use/resume. Optional; a fresh provenance id is created by default.",
     )
     args = parser.parse_args()
 
+    conversation_id = args.conversation_id or uuid.uuid4()
+
     if args.once is not None:
-        conversation_id = args.conversation_id or uuid.uuid4()
         with db.get_connection() as conn:
             response = _handle_with_admission_diagnostics(
                 conn,
@@ -108,25 +144,7 @@ def main() -> None:
         print(response)
         return
 
-    conversation_id = args.conversation_id or uuid.uuid4()
-    print(f"conversation_id: {conversation_id}")
-    print("Type 'exit' or 'quit' to stop.")
-    with db.get_connection() as conn:
-        while True:
-            try:
-                user_text = input("> ").strip()
-            except EOFError:
-                break
-            if user_text.lower() in {"exit", "quit"}:
-                break
-            if not user_text:
-                continue
-            response = _handle_with_admission_diagnostics(
-                conn,
-                user_text,
-                conversation_id,
-            )
-            print(response)
+    _run_chat(conversation_id)
 
 
 if __name__ == "__main__":
