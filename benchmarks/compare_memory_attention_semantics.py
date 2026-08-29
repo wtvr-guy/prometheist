@@ -18,7 +18,6 @@ import json
 import os
 from pathlib import Path
 import runpy
-import uuid
 
 os.environ["DATABASE_URL"] = os.environ.get(
     "TEST_DATABASE_URL",
@@ -528,7 +527,18 @@ def main() -> None:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         output = RESULTS_DIR / f"MEM-ADAPT-002_{stamp}.json"
     output.write_text(json.dumps(result, indent=2, sort_keys=True), encoding="utf-8")
-    print(json.dumps({"benchmark_id": result["benchmark_id"], "mode": result["mode"], "head_to_head": result["head_to_head"], "output": str(output)}, indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            {
+                "benchmark_id": result["benchmark_id"],
+                "mode": result["mode"],
+                "head_to_head": result["head_to_head"],
+                "output": str(output),
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
 
 
 if __name__ == "__main__":
