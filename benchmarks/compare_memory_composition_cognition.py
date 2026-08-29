@@ -38,7 +38,7 @@ from jit_agent.adaptive_memory_attention import MemoryUncertainty, RetrievalTele
 from jit_agent.adaptive_memory_retrieval import request_adaptive_memory
 from jit_agent.evidence_composer import compose_coverage_aware, compose_relevance_coverage
 from jit_agent.llm import OllamaClient
-from jit_agent.models import Event, EventType, MemoryEvidence, MemoryPacket
+from jit_agent.models import Event, MemoryEvidence, MemoryPacket
 from jit_agent.ollama_runtime import configured_ollama_model
 
 
@@ -413,7 +413,7 @@ def _abstention_case(conn: psycopg.Connection) -> Scenario:
     for index in range(8):
         _record(conn, conversation_id, f"unrelated garden ledger note-{index}")
     question = (
-        "What is the private Nimbus benchmark token? If the supplied persisted evidence does "
+        "What is the synthetic Nimbus benchmark marker? If the supplied persisted evidence does "
         "not establish one, return exactly INSUFFICIENT and nothing else."
     )
     corpus = _finalize_corpus(
@@ -568,7 +568,7 @@ def _evaluate_scenario(
         error: str | None = None
         try:
             answer = client.respond(scenario.question, packet)
-        except Exception as exc:  # benchmark records runtime failures instead of hiding them
+        except Exception as exc:
             error = f"{type(exc).__name__}: {exc}"
         elapsed_ms = round((perf_counter() - started) * 1000.0, 3)
         answer_correct = error is None and (
