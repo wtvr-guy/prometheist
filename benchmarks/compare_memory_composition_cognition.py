@@ -69,6 +69,7 @@ class Scenario:
     scenario_id: str
     purpose: str
     question: str
+    retrieval_query: str
     expected_answer: str
     corpus: object
     retained: tuple[MemoryEvidence, ...] = ()
@@ -130,6 +131,7 @@ def _duplicate_pressure_case(conn: psycopg.Connection, distractors: int) -> Scen
             "that remains in the shared retrieval pool below repetitive newer evidence."
         ),
         question=question,
+        retrieval_query="archive recall benchmark vault phrase recorded",
         expected_answer="COPPER-LANTERN-47",
         corpus=corpus,
     )
@@ -172,6 +174,7 @@ def _correction_pair_case(conn: psycopg.Connection, distractors: int) -> Scenari
             "rather than answering from whichever statement happens to survive composition."
         ),
         question=question,
+        retrieval_query="Atlas benchmark code earlier original later corrected value",
         expected_answer="ORBIT-OLD-17 | ORBIT-NEW-29",
         corpus=corpus,
         uncertainty=MemoryUncertainty.POSSIBLE_CONTRADICTION,
@@ -226,6 +229,7 @@ def _distributed_clues_case(conn: psycopg.Connection, distractors: int) -> Scena
             "require the model to synthesize them in the requested order."
         ),
         question=question,
+        retrieval_query="Orion planning thermal ceiling memory reserve scheduler margin",
         expected_answer="71 | 2048 | 18",
         corpus=corpus,
     )
@@ -268,6 +272,7 @@ def _numeric_core_case(conn: psycopg.Connection, distractors: int) -> Scenario:
             "Attack novelty-first composition with six highly relevant facts whose payload is numeric."
         ),
         question=question,
+        retrieval_query="calibration threshold value",
         expected_answer="10 | 20 | 30 | 40 | 50 | 60",
         corpus=corpus,
     )
@@ -311,6 +316,7 @@ def _novelty_bait_case(conn: psycopg.Connection, distractors: int) -> Scenario:
             "Verify that irrelevant lexical novelty cannot displace six nonredundant high-ranked facts."
         ),
         question=question,
+        retrieval_query="deployment approval gate phase",
         expected_answer="alpha | beta | gamma | delta | epsilon | zeta",
         corpus=corpus,
     )
@@ -356,6 +362,7 @@ def _stale_retained_case(conn: psycopg.Connection, distractors: int) -> Scenario
             "relevance-core facts are independently informative."
         ),
         question=question,
+        retrieval_query="current verified component registry item",
         expected_answer="A1 | B2 | C3 | D4 | E5 | F6",
         corpus=corpus,
         retained=(_memory_evidence(stale, stale_text),),
@@ -400,6 +407,7 @@ def _association_bridge_case(conn: psycopg.Connection, distractors: int) -> Scen
             "through adaptive association traversal and then survive bounded composition."
         ),
         question=question,
+        retrieval_query="deployment rollback decision",
         expected_answer="ZETA-ORCHID-41",
         corpus=corpus,
         uncertainty=MemoryUncertainty.MISSING_RELATIONSHIP,
@@ -427,6 +435,7 @@ def _abstention_case(conn: psycopg.Connection) -> Scenario:
         scenario_id="unsupported_query_abstention",
         purpose="Verify that composition improvements do not turn absent evidence into a fabricated answer.",
         question=question,
+        retrieval_query="Nimbus benchmark marker",
         expected_answer="INSUFFICIENT",
         corpus=corpus,
     )
@@ -445,7 +454,7 @@ def _retrieve_shared_pool(
         correlation_id=corpus.correlation_id,
         requesting_component="benchmark:mem-adapt-006:shared-pool",
         need=jit_memory.build_memory_need(
-            corpus.query_text,
+            scenario.retrieval_query,
             focus_event_ids=list(corpus.anchor_event_ids),
             limit=pool_limit,
         ),
@@ -594,6 +603,7 @@ def _evaluate_scenario(
         "scenario_id": scenario.scenario_id,
         "purpose": scenario.purpose,
         "question": scenario.question,
+        "retrieval_query": scenario.retrieval_query,
         "expected_answer": scenario.expected_answer,
         "required_event_ids": [str(value) for value in required_ids],
         "required_pool_ranks": _required_ranks(pool, required_ids),
@@ -698,9 +708,12 @@ def run_comparison(*, stress: bool) -> dict[str, object]:
                 "transcript or model context. Calls are sequential; only model residency may persist."
             ),
             "evaluation_boundary": (
-                "Adaptive retrieval runs once per scenario. Top-k, Composer v1, and Composer v2 "
-                "receive the identical shared candidate population and six-item packet budget. "
-                "Retrieval availability, composition completeness, and answer correctness are scored separately."
+                "Each user question is recorded as the current canonical percept. A separate concise, "
+                "deterministic retrieval cue isolates composition-to-cognition from known query-dilution "
+                "behavior in direct evidence admission. Adaptive retrieval runs once per scenario; top-k, "
+                "Composer v1, and Composer v2 receive the identical shared candidate population and six-item "
+                "packet budget. Retrieval availability, composition completeness, and answer correctness are "
+                "scored separately."
             ),
             "summary": {
                 policy: _policy_summary(cases, policy)
