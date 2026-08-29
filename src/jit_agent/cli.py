@@ -7,7 +7,9 @@ worker processes, deterministic work control, Composer-driven Adaptive Recall,
 and the final response boundary documented in PERCEPT_TO_RESPONSE_PIPELINE.md.
 
 `--once` remains available for scripting. Each invocation is a fresh process with
-zero in-memory conversational state.
+zero in-memory conversational state. `inspect --latest` exposes the append-only
+response evidence trace so the exact memory/work bundle used for a response can
+be audited after the fact.
 """
 from __future__ import annotations
 
@@ -15,6 +17,8 @@ import argparse
 import json
 import sys
 import uuid
+
+from psycopg.rows import dict_row
 
 from jit_agent import db
 from jit_agent.admission_diagnostics import (
@@ -31,6 +35,7 @@ handle_interaction_in_worker_processes = handle_percept_in_worker_processes
 
 _INTERACTION_ADMISSION_FAILURE = "interaction was not safely admitted to one assignment"
 _EXIT_COMMANDS = {"exit", "quit", "/exit", "/quit"}
+_RESPONSE_TRACE_SOURCE = "percept_response_v2/response_input_trace"
 
 
 def _configure_utf8_streams() -> None:
@@ -87,6 +92,58 @@ def _handle_with_admission_diagnostics(
         raise
 
 
+def _latest_response_trace(conn, conversation_id: uuid.UUID | None) -> dict | None:
+    """Load the newest permanent FINAL_RESPONSE_INPUT_V1 audit event."""
+
+    with conn.cursor(row_factory=dict_row) as cur:
+        if conversation_id is None:
+            cur.execute(
+                """
+                SELECT event_id, conversation_id, correlation_id, global_seq,
+                       conversation_seq, created_at, payload
+                FROM events
+                WHERE event_type = 'SYSTEM_EVENT' AND source = %s
+                ORDER BY global_seq DESC
+                LIMIT 1
+                """,
+                (_RESPONSE_TRACE_SOURCE,),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT event_id, conversation_id, correlation_id, global_seq,
+                       conversation_seq, created_at, payload
+                FROM events
+                WHERE event_type = 'SYSTEM_EVENT' AND source = %s
+                  AND conversation_id = %s
+                ORDER BY global_seq DESC
+                LIMIT 1
+                """,
+                (_RESPONSE_TRACE_SOURCE, conversation_id),
+            )
+        row = cur.fetchone()
+    if row is None:
+        return None
+    return {
+        "event_id": str(row["event_id"]),
+        "conversation_id": str(row["conversation_id"]),
+        "correlation_id": str(row["correlation_id"]),
+        "global_seq": int(row["global_seq"]),
+        "conversation_seq": int(row["conversation_seq"]),
+        "created_at": row["created_at"].isoformat(),
+        "payload": row["payload"],
+    }
+
+
+def _run_inspect(conversation_id: uuid.UUID | None) -> None:
+    with db.get_connection() as conn:
+        trace = _latest_response_trace(conn, conversation_id)
+    if trace is None:
+        scope = f" for conversation {conversation_id}" if conversation_id else ""
+        raise RuntimeError(f"no persisted response trace found{scope}")
+    print(json.dumps(trace, indent=2, sort_keys=True, default=str))
+
+
 def _run_chat(conversation_id: uuid.UUID) -> None:
     """Run the lightweight terminal UI over the authoritative percept path."""
 
@@ -122,23 +179,35 @@ def main() -> None:
     parser.add_argument(
         "command",
         nargs="?",
-        choices=("chat",),
+        choices=("chat", "inspect"),
         default="chat",
-        help="Run the lightweight interactive terminal chat (default).",
+        help="Run chat (default) or inspect a persisted response trace.",
     )
     parser.add_argument(
         "--once",
-        help="Handle a single percept non-interactively and print a response only if required.",
+        help="Handle a single percept non-interactively and print the response.",
+    )
+    parser.add_argument(
+        "--latest",
+        action="store_true",
+        help="With inspect, show the latest permanent response-input trace.",
     )
     parser.add_argument(
         "--conversation-id",
         type=uuid.UUID,
-        help="Conversation id to use/resume. Optional; a fresh provenance id is created by default.",
+        help="Conversation id to use/resume, or to filter inspection.",
     )
     args = parser.parse_args()
 
-    conversation_id = args.conversation_id or uuid.uuid4()
+    if args.command == "inspect":
+        if args.once is not None:
+            parser.error("--once cannot be combined with inspect")
+        if not args.latest:
+            parser.error("inspect currently requires --latest")
+        _run_inspect(args.conversation_id)
+        return
 
+    conversation_id = args.conversation_id or uuid.uuid4()
     if args.once is not None:
         with db.get_connection() as conn:
             response = _handle_with_admission_diagnostics(
