@@ -5,6 +5,10 @@ Evidence Composer v2 from MEM-ADAPT-006, then varies only the disposable local
 response model. Each run tests exactly one model so Ollama never needs to keep two
 large model targets resident for the comparison.
 
+The benchmark uses an experiment-only cold-RAM estimate for the larger candidate.
+It does not alter the production native resource calibration before target-host
+measurements exist.
+
 The benchmark is destructive and refuses any database whose name does not contain
 ``test`` or ``benchmark``.
 """
@@ -28,11 +32,7 @@ os.environ["DATABASE_URL"] = os.environ.get(
 from jit_agent import db
 from jit_agent.attention_observation import SystemHostResourceProbe
 from jit_agent.llm import OllamaClient
-from jit_agent.native_policy import (
-    MINISTRAL_3_8B_INSTRUCT_MODEL,
-    QWEN3_4B_INSTRUCT_MODEL,
-    native_resource_safety_policy,
-)
+from jit_agent.native_policy import native_resource_safety_policy
 from jit_agent.ollama_runtime import OllamaRuntimeProbe
 
 
@@ -62,20 +62,54 @@ QUICK_DISTRACTORS = BASE["QUICK_DISTRACTORS"]
 STRESS_DISTRACTORS = BASE["STRESS_DISTRACTORS"]
 QUICK_POOL_LIMIT = BASE["QUICK_POOL_LIMIT"]
 STRESS_POOL_LIMIT = BASE["STRESS_POOL_LIMIT"]
-DEFAULT_MODEL = MINISTRAL_3_8B_INSTRUCT_MODEL
-CONTROL_MODEL = QWEN3_4B_INSTRUCT_MODEL
+CONTROL_MODEL = "qwen3:4b-instruct-2507-q4_K_M"
+DEFAULT_MODEL = "ministral-3:8b-instruct-2512-q4_K_M"
+_EXPERIMENTAL_COLD_MEMORY_MIB = {
+    CONTROL_MODEL.casefold(): 3_072,
+    DEFAULT_MODEL.casefold(): 7_168,
+}
+_UNKNOWN_EXPERIMENTAL_COLD_MEMORY_MIB = 8_192
+
+
+def _canonical_model_name(value: str) -> str:
+    normalized = value.strip().casefold()
+    if not normalized:
+        raise ValueError("model must not be empty")
+    if ":" not in normalized.rsplit("/", 1)[-1]:
+        normalized += ":latest"
+    return normalized
+
+
+def _experimental_resource_policy(model: str):
+    base = native_resource_safety_policy()
+    override = os.environ.get("MEM_ADAPT_007_COLD_MEMORY_MIB")
+    if override is not None:
+        try:
+            cold_memory_mib = int(override)
+        except ValueError as exc:
+            raise ValueError(
+                "MEM_ADAPT_007_COLD_MEMORY_MIB must be an integer MiB value"
+            ) from exc
+        if cold_memory_mib < 512:
+            raise ValueError("MEM_ADAPT_007_COLD_MEMORY_MIB must be at least 512 MiB")
+    else:
+        cold_memory_mib = _EXPERIMENTAL_COLD_MEMORY_MIB.get(
+            _canonical_model_name(model),
+            _UNKNOWN_EXPERIMENTAL_COLD_MEMORY_MIB,
+        )
+    return base.model_copy(
+        update={
+            "policy_version": f"{base.policy_version}:MEM-ADAPT-007",
+            "default_llm_process_memory_mib": cold_memory_mib,
+        },
+        deep=True,
+    )
 
 
 def _safe_launch_preflight(model: str) -> dict[str, object]:
-    """Fail closed unless current CPU/RAM pressure admits this model target.
+    """Fail closed unless current CPU/RAM pressure admits this model target."""
 
-    This mirrors the native host-safety arithmetic for a no-reservation benchmark
-    process. Warm verified model residency receives the same ordinary-worker RAM
-    credit used by the guarded interaction path; cold or unverified residency uses
-    the full model-specific native cold-load estimate.
-    """
-
-    policy = native_resource_safety_policy(model=model)
+    policy = _experimental_resource_policy(model)
     metrics = SystemHostResourceProbe().capture()
     runtime = OllamaRuntimeProbe(model=model).capture()
     required_memory_mib = runtime.incremental_process_memory_mib(policy)
@@ -121,10 +155,13 @@ def _safe_launch_preflight(model: str) -> dict[str, object]:
 
     return {
         "policy_version": policy.policy_version,
+        "calibration_status": "experimental-unverified",
         "model": model,
         "resident": runtime.resident,
         "residency_label": runtime.residency_label,
         "probe_ok": runtime.probe_ok,
+        "reported_size_bytes": runtime.size_bytes,
+        "reported_size_vram_bytes": runtime.size_vram_bytes,
         "cold_memory_budget_mib": policy.default_llm_process_memory_mib,
         "required_incremental_memory_mib": required_memory_mib,
         "host_memory_total_mib": metrics.memory_total_mib,
