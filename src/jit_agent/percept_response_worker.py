@@ -1,19 +1,9 @@
 """Fresh-process entry point for one v2 user-prompt response worker step.
 
-Explicit user prompts have a deterministic response contract: Prometheist always
-responds. The pre-cognitive LLM therefore selects only required non-memory work;
-it never decides whether the user deserves a response.
-
-Interactive workers also carry two system-level contracts that must not depend on
-episodic recall: the disposable model invocation is a cognitive component of
-Prometheist rather than the identity of the overall system, and information
-supplied in the current user prompt is direct current evidence that does not need
-historical-memory corroboration before it can be acknowledged or followed.
-
-After the RESPOND stage completes, the exact response-time evidence bundle is
-copied into the append-only event log. This keeps the final memory package,
-pre-cognitive disposition, work results, and response inspectable even if derived
-scheduler/worker state is later discarded.
+Explicit user prompts always receive a response.  Every stage result is atomically
+written to the independent artifact journal before its database worker claim is
+completed.  A replacement worker can therefore rehydrate a completed stage from
+JSON instead of repeating an LLM/tool call after interruption.
 """
 from __future__ import annotations
 
@@ -24,8 +14,8 @@ from uuid import UUID, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from jit_agent import db, event_store
-from jit_agent.capability_registry import CapabilityDescriptor
+from jit_agent import artifact_journal, db, event_store
+from jit_agent.capability_registry import DEFAULT_REGISTRY, CapabilityDescriptor
 from jit_agent.interaction_store import load_interaction_by_task
 from jit_agent.models import EventType, MemoryPacket
 from jit_agent.percept_response_runtime import (
@@ -33,11 +23,14 @@ from jit_agent.percept_response_runtime import (
     PerceptLLM,
     PerceptStage,
     PreCognitiveDisposition,
+    _execute_stage,
     _stage_result,
-    execute_claimed_percept_step,
 )
-from jit_agent.worker_store import load_worker_claim_envelope
-
+from jit_agent.worker_store import (
+    complete_worker_claim,
+    load_worker_claim_envelope,
+    release_worker_claim,
+)
 
 _RESPONSE_TRACE_SOURCE = "percept_response_v2/response_input_trace"
 
@@ -203,7 +196,7 @@ class UserPromptLLM(PerceptLLM):
 
 
 def _persist_response_trace(conn, interaction, *, scheduler_key: str) -> None:
-    """Copy the exact responder inputs into permanent append-only history."""
+    """Copy the exact responder inputs into permanent append-only event history."""
 
     precognitive = _stage_result(conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key)
     work = _stage_result(conn, interaction, PerceptStage.EXECUTE_WORK, scheduler_key)
@@ -230,6 +223,111 @@ def _persist_response_trace(conn, interaction, *, scheduler_key: str) -> None:
         payload_text=None,
         event_id=uuid5(interaction.interaction_id, "final-response-input-trace-v1"),
     )
+
+
+def _ensure_percept_artifact(interaction) -> None:
+    artifact_journal.write_percept_artifact(
+        interaction_id=interaction.interaction_id,
+        conversation_id=interaction.conversation_id,
+        correlation_id=interaction.correlation_id,
+        task_id=interaction.task_id,
+        user_text=interaction.user_text,
+        user_prompt_event_id=interaction.user_prompt_event_id,
+    )
+
+
+def _execute_claimed_user_prompt_step(
+    conn,
+    llm: PerceptLLM,
+    *,
+    claim_id: UUID,
+    worker_id: str,
+    scheduler_key: str,
+) -> PerceptStage:
+    """Execute or rehydrate one stage with artifact-before-terminal ordering."""
+
+    envelope = load_worker_claim_envelope(
+        conn,
+        claim_id,
+        worker_id=worker_id,
+        scheduler_key=scheduler_key,
+    )
+    interaction = load_interaction_by_task(
+        conn,
+        envelope.step.task_id,
+        scheduler_key=scheduler_key,
+    )
+    stage = PerceptStage(envelope.step.step_key)
+    _ensure_percept_artifact(interaction)
+    try:
+        recovered = artifact_journal.load_stage_result_artifact(
+            interaction.interaction_id,
+            stage.value,
+        )
+        if recovered is None:
+            output, output_refs = _execute_stage(
+                conn,
+                llm,
+                envelope,
+                interaction,
+                scheduler_key=scheduler_key,
+                registry=DEFAULT_REGISTRY,
+            )
+            artifact_journal.write_stage_result_artifact(
+                interaction_id=interaction.interaction_id,
+                conversation_id=interaction.conversation_id,
+                correlation_id=interaction.correlation_id,
+                task_id=interaction.task_id,
+                assignment_id=interaction.assignment_id,
+                stage=stage.value,
+                output=output,
+                output_refs=output_refs,
+            )
+        else:
+            output = dict(recovered["output"])
+            output_refs = list(recovered.get("output_refs", []))
+
+        complete_worker_claim(
+            conn,
+            claim_id=claim_id,
+            worker_id=worker_id,
+            output=output,
+            output_refs=output_refs,
+            scheduler_key=scheduler_key,
+        )
+        return stage
+    except Exception as exc:
+        artifact_journal.write_stage_error_artifact(
+            interaction_id=interaction.interaction_id,
+            conversation_id=interaction.conversation_id,
+            correlation_id=interaction.correlation_id,
+            task_id=interaction.task_id,
+            assignment_id=interaction.assignment_id,
+            stage=stage.value,
+            claim_id=claim_id,
+            error_type=type(exc).__name__,
+            message=str(exc),
+        )
+        event_store.record_event(
+            conn,
+            conversation_id=interaction.conversation_id,
+            correlation_id=interaction.correlation_id,
+            event_type=EventType.ERROR,
+            source="percept_response_v2",
+            payload={
+                "stage": stage.value,
+                "error_type": type(exc).__name__,
+                "message": str(exc),
+            },
+            event_id=uuid5(claim_id, "error-event"),
+        )
+        release_worker_claim(
+            conn,
+            claim_id=claim_id,
+            worker_id=worker_id,
+            scheduler_key=scheduler_key,
+        )
+        raise
 
 
 def _configure_utf8_streams() -> None:
@@ -264,7 +362,7 @@ def main() -> None:
             envelope.step.task_id,
             scheduler_key=scheduler_key,
         )
-        stage = execute_claimed_percept_step(
+        stage = _execute_claimed_user_prompt_step(
             conn,
             UserPromptLLM(),
             claim_id=claim_id,
@@ -273,6 +371,26 @@ def main() -> None:
         )
         if stage is PerceptStage.RESPOND:
             _persist_response_trace(conn, interaction, scheduler_key=scheduler_key)
+        if stage is PerceptStage.PERSIST_RESULT:
+            persisted = _stage_result(
+                conn,
+                interaction,
+                PerceptStage.PERSIST_RESULT,
+                scheduler_key,
+            )
+            artifact_journal.write_final_disposition_artifact(
+                interaction_id=interaction.interaction_id,
+                conversation_id=interaction.conversation_id,
+                correlation_id=interaction.correlation_id,
+                task_id=interaction.task_id,
+                assignment_id=interaction.assignment_id,
+                response_required=bool(persisted["response_required"]),
+                response_text=(
+                    str(persisted["response_text"])
+                    if persisted.get("response_text") is not None
+                    else None
+                ),
+            )
 
 
 if __name__ == "__main__":
