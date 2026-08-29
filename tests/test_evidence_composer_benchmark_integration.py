@@ -42,8 +42,11 @@ def test_coverage_composer_preserves_distributed_weak_clues():
     finally:
         conn.close()
 
-    assert case["current_top_k"]["success"] is False
-    assert case["coverage_aware"]["success"] is True
+    # This is a composition test, not an admission test: all required evidence
+    # must exist in the shared pool before either composer is evaluated.
+    assert all(rank is not None for rank in case["required_pool_ranks"].values()), case
+    assert case["current_top_k"]["success"] is False, case
+    assert case["coverage_aware"]["success"] is True, case
 
 
 def test_coverage_composer_retains_unique_prior_evidence_across_attention_shift():
