@@ -26,9 +26,11 @@ If required evidence never reaches the shared retrieval pool, the failure is ret
 
 ## Controlled architecture
 
-Each scenario creates one canonical PostgreSQL history and one current percept. Prometheist then runs exactly one adaptive memory-attention retrieval pass to produce a shared candidate population.
+Each scenario creates one canonical PostgreSQL history and one current percept. The actual user question is persisted as that canonical current percept.
 
-The same ordered pool is given to three composition policies:
+For this experiment only, adaptive retrieval receives a separate concise, deterministic retrieval cue derived from the scenario. This keeps the experiment focused on the composition-to-cognition boundary while the model still receives the full original user question.
+
+Prometheist runs exactly one adaptive memory-attention retrieval pass to produce a shared candidate population. The same ordered pool is given to three composition policies:
 
 1. retrieval-order top-k;
 2. frozen coverage-aware Composer v1;
@@ -39,6 +41,19 @@ Every policy receives the same final packet limit of six evidence items.
 Each resulting packet is passed to a separate `OllamaClient.respond()` call. These calls are sequential and stateless: no transcript, prior response, or LLM context is inherited from another policy or scenario. Ollama may keep model weights resident, but not conversational state.
 
 The benchmark rotates policy call order across scenarios so one policy is not systematically penalized by always receiving the first cold invocation.
+
+## Retrieval-query diagnostic discovered during construction
+
+The first PostgreSQL integration version used the full instruction-heavy user question as the retrieval query. The numeric-payload scenario then produced an empty shared candidate pool: the additional output-format language diluted direct lexical support enough for the existing evidence-admission rule to reject the otherwise relevant rows.
+
+That is a real upstream retrieval-query sensitivity. `MEM-ADAPT-006` does **not** claim to fix it.
+
+Instead, the benchmark records both:
+
+- `question`: the actual user percept and prompt sent to the response worker;
+- `retrieval_query`: the concise application-owned cue used to obtain the controlled shared candidate population.
+
+The query-dilution behavior should be attacked separately as a retrieval-policy problem. Keeping it outside the current comparison prevents an upstream failure from being misattributed to top-k, Composer v1, or Composer v2.
 
 ## Production response adapter
 
@@ -52,7 +67,7 @@ The benchmark deliberately uses `OllamaClient.respond()` rather than a benchmark
 - zero-temperature Qwen3 Instruct transport;
 - bounded generation and existing retry behavior.
 
-Composition metadata is not shown to the model. Qwen sees only the user question and the six-item evidence timeline.
+Composition metadata is not shown to the model. Qwen sees only the full user question and the six-item evidence timeline.
 
 ## Scenario families
 
@@ -74,7 +89,7 @@ The abstention case asks for a synthetic marker that does not exist in the ledge
 
 ## Output
 
-Each case records required canonical event IDs, required ranks in the shared pool, retained evidence IDs, the adaptive retrieval policy, policy call order, each six-item packet, evidence completeness, raw answer, answer correctness, LLM wall-clock latency, model/runtime errors, and the classified failure layer.
+Each case records the full user question, concise retrieval cue, required canonical event IDs, required ranks in the shared pool, retained evidence IDs, adaptive retrieval policy, policy call order, each six-item packet, evidence completeness, raw answer, answer correctness, LLM wall-clock latency, model/runtime errors, and the classified failure layer.
 
 Aggregate output reports per-policy counts and pairwise answer head-to-heads.
 
@@ -116,4 +131,4 @@ Do not infer that Composer v2 improves cognition merely because its evidence pac
 
 A strong result would combine higher v2 answer accuracy, no baseline-only answer regressions, correct abstention, stable quick/stress behavior, and explicit reasoning failures when v2 supplied complete evidence but the model still answered incorrectly.
 
-Passing `MEM-ADAPT-006` is still not sufficient to replace the production architecture. Before promotion, the experimental path should also survive generated holdout histories, repeated native runs, latency/resource analysis, and end-to-end interaction acceptance. Top-k and Composer v1 remain regression baselines until the replacement decision is complete.
+Passing `MEM-ADAPT-006` is still not sufficient to replace the production architecture. Before promotion, the experimental path should also survive generated holdout histories, repeated native runs, latency/resource analysis, and end-to-end interaction acceptance. That end-to-end gate must include the actual final-response personality prompt and preserve the system-owned respond/no-respond decision boundary. Top-k and Composer v1 remain regression baselines until the replacement decision is complete.
