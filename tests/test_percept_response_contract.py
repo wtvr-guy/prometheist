@@ -13,19 +13,24 @@ from jit_agent.percept_response_runtime import (
     _effective_adaptive_profile,
     _external_capability_catalog,
 )
+from jit_agent.percept_response_worker import UserPromptWorkSelection
 
 
-def test_user_prompt_disposition_requires_response() -> None:
-    decision = PreCognitiveDisposition(capability_indices=[])
+def test_user_prompt_work_selection_has_no_response_choice() -> None:
+    selection = UserPromptWorkSelection(capability_indices=[])
+    assert selection.capability_indices == []
+    assert "response_required" not in UserPromptWorkSelection.model_fields
+
+
+def test_persisted_user_prompt_disposition_records_required_response() -> None:
+    decision = PreCognitiveDisposition(response_required=True, capability_indices=[])
     assert decision.response_required is True
     assert decision.capability_indices == []
-    with pytest.raises(ValueError):
-        PreCognitiveDisposition(response_required=False, capability_indices=[])
 
 
 def test_pre_cognitive_disposition_rejects_duplicate_indices() -> None:
     with pytest.raises(ValueError):
-        PreCognitiveDisposition(capability_indices=[0, 0])
+        PreCognitiveDisposition(response_required=True, capability_indices=[0, 0])
 
 
 def test_composer_sufficient_contract_has_no_deficit() -> None:
