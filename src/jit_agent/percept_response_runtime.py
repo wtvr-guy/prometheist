@@ -1,19 +1,7 @@
-"""Current percept-to-response runtime for the 2026-08-29 architecture.
+"""Live percept-to-response runtime for the 2026-08-29 Prometheist architecture.
 
-This is the live interaction path used by the CLI.  It implements the architecture
-recorded in docs/architecture/PERCEPT_TO_RESPONSE_PIPELINE.md:
-
-* one pre-cognitive LLM decides work requirements and response requirement;
-* deterministic execution owns work ordering and effects;
-* the v2 Composer sees memory only and judges memory-context sufficiency;
-* Adaptive Recall deterministically expands persistent memory when requested;
-* authoritative work results bypass the Composer;
-* a separate final responder receives personality + percept + memory + work results;
-* every LLM request is stateless.
-
-The older recurrent capability router remains in interaction_runtime.py only as a
-compatibility/test surface while migration finishes.  New interactive use must
-enter through this module.
+The CLI enters here. The older recurrent router remains only as a compatibility
+surface for pre-pivot tests while migration finishes.
 """
 from __future__ import annotations
 
@@ -87,13 +75,11 @@ from jit_agent.worker_protocol import WorkerClaimEnvelope, WorkerEffectPolicy, d
 from jit_agent.worker_runtime import GuardedWorkerLauncher
 from jit_agent.worker_store import (
     complete_worker_claim,
-    guarded_claim_worker_step,
     load_worker_claim_envelope,
     load_worker_result,
     register_worker_step,
     release_worker_claim,
 )
-
 
 SOURCE = "percept_response_v2"
 MAX_ADAPTIVE_RECALL_ROUNDS = 3
@@ -103,8 +89,8 @@ _MEMORY_EXECUTORS = {"jit_memory", "deeper_research", "cross_reference", "focuse
 DEFAULT_PERSONALITY_PROMPT = """\
 You are Prometheist. Be precise, direct, context-aware, and useful. Treat supplied
 persistent memory as evidence with provenance rather than unquestionable truth.
-Honor explicit user constraints. Do not claim personal/history-specific facts
-that are not established by the supplied memory or current percept. Do not expose
+Honor explicit user constraints. Do not claim personal or history-specific facts
+that are not established by supplied memory or the current percept. Do not expose
 internal retrieval mechanics unless the user asks about them.
 """
 
@@ -134,13 +120,6 @@ PERCEPT_CAPABILITIES = tuple(stage.capability for stage in PERCEPT_STAGES)
 
 
 class PreCognitiveDisposition(BaseModel):
-    """Bounded semantic disposition of one percept.
-
-    The LLM may say whether a response is required and select application-owned
-    capability indices.  It cannot author capability names, schedules, effects,
-    resource policy, or durable identifiers.
-    """
-
     model_config = ConfigDict(extra="forbid")
     response_required: bool
     capability_indices: list[int] = Field(default_factory=list)
@@ -156,7 +135,7 @@ class PreCognitiveDisposition(BaseModel):
 
 
 class MemorySufficiencyDecision(BaseModel):
-    """The v2 Composer's entire semantic responsibility."""
+    """The v2 Composer's complete semantic output contract."""
 
     model_config = ConfigDict(extra="forbid")
     sufficient: bool
@@ -167,16 +146,14 @@ class MemorySufficiencyDecision(BaseModel):
         if self.sufficient:
             if self.memory_deficit is not None:
                 raise ValueError("sufficient memory must not include a deficit")
+        elif self.memory_deficit is None or not self.memory_deficit.strip():
+            raise ValueError("insufficient memory requires a semantic deficit")
         else:
-            if self.memory_deficit is None or not self.memory_deficit.strip():
-                raise ValueError("insufficient memory requires a semantic deficit")
             self.memory_deficit = self.memory_deficit.strip()
         return self
 
 
 class ResponseMemoryPackage(BaseModel):
-    """Bounded memory-only package approved or exhausted by the Composer path."""
-
     model_config = ConfigDict(extra="forbid")
     memory_packet: MemoryPacket
     sufficient: bool
@@ -187,36 +164,30 @@ class ResponseMemoryPackage(BaseModel):
 
 _PRECOGNITIVE_PROMPT = """\
 You are a fresh disposable Prometheist pre-cognitive worker. You have no inherited
-chat transcript or model state. Given the current percept, bounded orientation
-memory, and a numbered catalog of executable non-memory capabilities, determine
-what Prometheist must do.
+transcript or model state. Given the current percept, bounded orientation memory,
+and a numbered catalog of executable non-memory capabilities, determine what
+Prometheist must do.
 
-Return only:
-- response_required: whether a user-facing response is required after committed
-  work completes; and
-- capability_indices: the smallest set of supplied capability indices whose work
-  is required.
-
-A percept does not automatically require a response. Work may be required without
-conversation, a response may be required without external work, both may be
-required, or neither may be required. Capability indices are requirements, not an
-execution order. Prometheist owns dependencies, scheduling, permissions, resource
-admission, retries, and effects. Do not write capability names, arguments,
-queries, explanations, or schedules.
+Return only response_required and capability_indices. A percept does not
+necessarily require a response. Work may be required without conversation, a
+response may be required without work, both may be required, or neither may be
+required. Capability indices are requirements, never execution order. Prometheist
+owns dependencies, scheduling, permissions, resources, retries, and effects. Do
+not write capability names, arguments, queries, explanations, or schedules.
 """
 
 _COMPOSER_PROMPT = """\
 You are the Prometheist v2 Composer, a fresh stateless memory-sufficiency worker.
-Your only job is to judge whether the supplied persistent-memory evidence is
+Your only job is to determine whether supplied persistent-memory evidence is
 sufficient context for a separate final responder to answer the current percept
 accurately.
 
-Do not decide whether Prometheist should respond; that decision was already made.
-Do not interpret, summarize, or request tool/action results. Do not write the
-user-facing answer. If memory is insufficient, identify only the missing semantic
-memory information in memory_deficit. Adaptive Recall, not you, owns retrieval
-mechanics. If memory is sufficient, set sufficient=true and memory_deficit=null.
-A legitimate unknown is acceptable; never invent missing memory.
+Do not decide whether Prometheist should respond; that was already decided. Do
+not consume, summarize, reinterpret, or request tool/action results. Do not write
+the user-facing answer. If memory is insufficient, identify only the missing
+semantic remembered information in memory_deficit. Adaptive Recall owns retrieval
+mechanics. If memory is sufficient, return sufficient=true and memory_deficit=null.
+A legitimate unknown is acceptable; never invent memory.
 """
 
 _FINAL_RESPONSE_PROMPT = """\
@@ -224,14 +195,13 @@ You are a fresh disposable Prometheist final response worker. The pre-cognitive
 system has already committed that a user-facing response is required. Your job is
 expression, not control.
 
-Use the current percept, the supplied response-ready memory package, authoritative
+Use the current percept, supplied response-ready memory package, authoritative
 structured work/action results, general model knowledge when appropriate, and the
-personality instructions supplied below. Work/action results are authoritative
-inputs from their execution paths and have deliberately bypassed the memory
-Composer. Never decide whether to respond, retrieve memory, or execute side
-effects. Never invent personal or history-specific information absent from the
-current percept or supplied memory. If the memory package explicitly reports an
-unresolved deficit, state the resulting uncertainty when it matters.
+personality instructions below. Work/action results deliberately bypassed the
+memory Composer. Never decide whether to respond, retrieve memory, or execute
+side effects. Never invent personal or history-specific information absent from
+the current percept or supplied memory. If memory remains unresolved, state the
+resulting uncertainty when material.
 
 [Personality]
 {personality}
@@ -239,7 +209,7 @@ unresolved deficit, state the resulting uncertainty when it matters.
 
 
 class PerceptLLM(OllamaClient):
-    """Stateless semantic roles implemented as independent Ollama requests."""
+    """Independent stateless Ollama requests for the three semantic LLM roles."""
 
     def decide_disposition(
         self,
@@ -260,7 +230,7 @@ class PerceptLLM(OllamaClient):
             f"[Bounded orientation memory]\n{memory_text}\n\n"
             f"[Executable capability catalog]\n{catalog_text}"
         )
-        last_error: Exception | None = None
+        last_error: ValueError | None = None
         for token_cap in (48, 96):
             try:
                 content = self._structured(
@@ -274,10 +244,8 @@ class PerceptLLM(OllamaClient):
                 if any(index >= len(capability_catalog) for index in decision.capability_indices):
                     raise ValueError("pre-cognitive worker selected an unavailable capability")
                 return decision
-            except (ValueError, Exception) as exc:
+            except ValueError as exc:
                 last_error = exc
-                if not isinstance(exc, ValueError):
-                    raise
         raise ValueError(f"pre-cognitive disposition failed to validate: {last_error}")
 
     def assess_memory_sufficiency(
@@ -290,7 +258,7 @@ class PerceptLLM(OllamaClient):
             for index, item in enumerate(memory_packet.items)
         ) or "none"
         user = f"[Current percept]\n{percept}\n\n[Persistent memory evidence]\n{memory_text}"
-        last_error: Exception | None = None
+        last_error: ValueError | None = None
         for token_cap in (96, 192):
             try:
                 content = self._structured(
@@ -341,7 +309,7 @@ class PerceptLLM(OllamaClient):
 
 
 def _external_capability_catalog(registry: CapabilityRegistry) -> tuple[CapabilityDescriptor, ...]:
-    """Memory expansion is cognitive substrate, never a pre-cognitive selectable tool."""
+    """Memory expansion is cognitive substrate, never pre-cognitive selectable work."""
 
     return tuple(
         descriptor
@@ -393,7 +361,7 @@ def _adaptive_recall(
     *,
     round_index: int,
 ) -> MemoryPacket:
-    """Deterministically choose how to expand memory for a semantic deficit."""
+    """Deterministically select progressively deeper retrieval mechanics."""
 
     focus_ids = [item.source_event_id for item in current_packet.items]
     if round_index == 0:
@@ -402,13 +370,12 @@ def _adaptive_recall(
     elif round_index == 1:
         profile = jit_memory.MemoryRecallProfile.DEEPER_RESEARCH
         focus_ids = focus_ids[:4]
+    elif len(focus_ids) >= 2:
+        profile = jit_memory.MemoryRecallProfile.CROSS_REFERENCE
+        focus_ids = focus_ids[:2]
     else:
-        if len(focus_ids) >= 2:
-            profile = jit_memory.MemoryRecallProfile.CROSS_REFERENCE
-            focus_ids = focus_ids[:2]
-        else:
-            profile = jit_memory.MemoryRecallProfile.FOCUSED_RECALL
-            focus_ids = focus_ids[:1]
+        profile = jit_memory.MemoryRecallProfile.FOCUSED_RECALL
+        focus_ids = focus_ids[:1]
 
     need = jit_memory.build_memory_need(
         deficit,
@@ -421,9 +388,7 @@ def _adaptive_recall(
         conn,
         conversation_id=interaction.conversation_id,
         correlation_id=interaction.correlation_id,
-        requesting_component=(
-            f"task:{interaction.task_id}/adaptive-recall:{round_index}/v2-composer"
-        ),
+        requesting_component=f"task:{interaction.task_id}/adaptive-recall:{round_index}/v2-composer",
         need=need,
         before_global_seq=interaction.before_global_seq,
         memory_request_id=uuid5(interaction.interaction_id, f"adaptive-recall:{round_index}"),
@@ -447,7 +412,6 @@ def _compose_memory_package(
     last_decision: MemorySufficiencyDecision | None = None
     composer_rounds = 0
     adaptive_rounds = 0
-
     for round_index in range(MAX_ADAPTIVE_RECALL_ROUNDS + 1):
         composer_rounds += 1
         last_decision = llm.assess_memory_sufficiency(interaction.user_text, packet)
@@ -468,7 +432,6 @@ def _compose_memory_package(
             round_index=round_index,
         )
         adaptive_rounds += 1
-
     assert last_decision is not None
     return ResponseMemoryPackage(
         memory_packet=packet,
@@ -520,29 +483,30 @@ def begin_percept(
     )
     scheduler = load_scheduler(conn, scheduler_key=scheduler_key)
     task_id = deterministic_interaction_task_id(interaction_id)
-    task = AttentionTask(
-        task_id=task_id,
-        task_key=f"percept-v2:{interaction_id}",
-        created_seq=allocate_created_seq(conn),
-        metadata=SchedulingMetadata(
-            criticality=TaskCriticality.USER_BLOCKING,
-            service_class=ServiceClass.INTERACTIVE,
-            interruption_policy=InterruptionPolicy.CHECKPOINT_ONLY,
-            required_capabilities=list(PERCEPT_CAPABILITIES),
-            process_resource_estimate=ProcessResourceEstimate(
-                cpu_units=effective_policy.default_process_cpu_units,
-                memory_mib=interaction_memory_mib,
-                llm_slots=1,
-                source=ResourceEstimateSource.CONSERVATIVE_DEFAULT,
-                basis=(
-                    f"{effective_policy.policy_version}: bounded stateless percept pipeline; "
-                    f"Ollama admission state={residency_label}"
+    scheduler.submit(
+        AttentionTask(
+            task_id=task_id,
+            task_key=f"percept-v2:{interaction_id}",
+            created_seq=allocate_created_seq(conn),
+            metadata=SchedulingMetadata(
+                criticality=TaskCriticality.USER_BLOCKING,
+                service_class=ServiceClass.INTERACTIVE,
+                interruption_policy=InterruptionPolicy.CHECKPOINT_ONLY,
+                required_capabilities=list(PERCEPT_CAPABILITIES),
+                process_resource_estimate=ProcessResourceEstimate(
+                    cpu_units=effective_policy.default_process_cpu_units,
+                    memory_mib=interaction_memory_mib,
+                    llm_slots=1,
+                    source=ResourceEstimateSource.CONSERVATIVE_DEFAULT,
+                    basis=(
+                        f"{effective_policy.policy_version}: bounded stateless percept pipeline; "
+                        f"Ollama admission state={residency_label}"
+                    ),
                 ),
             ),
-        ),
-        resumable_state={"interaction_id": str(interaction_id)},
+            resumable_state={"interaction_id": str(interaction_id)},
+        )
     )
-    scheduler.submit(task)
     controller = LocalResourceAdmissionController(
         scheduler,
         probe=probe,
@@ -632,12 +596,10 @@ def _execute_stage(
     registry: CapabilityRegistry,
 ) -> tuple[dict[str, Any], list[str]]:
     stage = PerceptStage(envelope.step.step_key)
-
     if stage is PerceptStage.RESOLVE_REFERENCES:
         return {
-            "working_state_available": load_working_state(
-                conn, interaction.conversation_id
-            ) is not None
+            "working_state_available": load_working_state(conn, interaction.conversation_id)
+            is not None
         }, []
 
     if stage is PerceptStage.PRECOGNITIVE:
@@ -661,17 +623,13 @@ def _execute_stage(
         }, [f"memory-request:{aperture_packet.memory_request_id}"]
 
     if stage is PerceptStage.EXECUTE_WORK:
-        precognitive = _stage_result(
-            conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key
-        )
+        precognitive = _stage_result(conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key)
         plan = CapabilityExecutionPlan.model_validate(precognitive["execution_plan"])
         executions: list[CapabilityExecution] = []
         for position, item in enumerate(plan.items):
             registration = registry.get(item.capability_id)
             if registration.executor in _MEMORY_EXECUTORS:
                 raise RuntimeError("memory retrieval cannot execute as pre-cognitive work")
-            # Current default registry intentionally exposes no external work yet.
-            # This call remains the application-owned binding point as tools are installed.
             execution = execute_registered_capability(
                 conn,
                 llm,
@@ -699,9 +657,7 @@ def _execute_stage(
         }, []
 
     if stage is PerceptStage.COMPOSE_MEMORY:
-        precognitive = _stage_result(
-            conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key
-        )
+        precognitive = _stage_result(conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key)
         disposition = PreCognitiveDisposition.model_validate(precognitive["disposition"])
         if not disposition.response_required:
             return {"skipped": True, "reason": "response_not_required"}, []
@@ -712,19 +668,11 @@ def _execute_stage(
         ]
 
     if stage is PerceptStage.RESPOND:
-        precognitive = _stage_result(
-            conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key
-        )
+        precognitive = _stage_result(conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key)
         disposition = PreCognitiveDisposition.model_validate(precognitive["disposition"])
         if not disposition.response_required:
-            return {
-                "response_required": False,
-                "response_text": None,
-                "skipped": True,
-            }, []
-        compose = _stage_result(
-            conn, interaction, PerceptStage.COMPOSE_MEMORY, scheduler_key
-        )
+            return {"response_required": False, "response_text": None, "skipped": True}, []
+        compose = _stage_result(conn, interaction, PerceptStage.COMPOSE_MEMORY, scheduler_key)
         package = ResponseMemoryPackage.model_validate(compose["memory_package"])
         work = _stage_result(conn, interaction, PerceptStage.EXECUTE_WORK, scheduler_key)
         response_text = llm.generate_final_response(
@@ -732,11 +680,7 @@ def _execute_stage(
             package,
             tuple(work["work_results"]),
         )
-        return {
-            "response_required": True,
-            "response_text": response_text,
-            "skipped": False,
-        }, []
+        return {"response_required": True, "response_text": response_text, "skipped": False}, []
 
     response = _stage_result(conn, interaction, PerceptStage.RESPOND, scheduler_key)
     response_required = bool(response["response_required"])
@@ -792,9 +736,7 @@ def execute_claimed_percept_step(
         clock=clock,
         scheduler_key=scheduler_key,
     )
-    interaction = load_interaction_by_task(
-        conn, envelope.step.task_id, scheduler_key=scheduler_key
-    )
+    interaction = load_interaction_by_task(conn, envelope.step.task_id, scheduler_key=scheduler_key)
     stage = PerceptStage(envelope.step.step_key)
     try:
         output, output_refs = _execute_stage(
@@ -848,9 +790,7 @@ def finish_percept(
     clock: Callable[[], datetime] | None = None,
     scheduler_key: str = DEFAULT_SCHEDULER_KEY,
 ) -> str | None:
-    persisted = _stage_result(
-        conn, interaction, PerceptStage.PERSIST_RESULT, scheduler_key
-    )
+    persisted = _stage_result(conn, interaction, PerceptStage.PERSIST_RESULT, scheduler_key)
     response_text = persisted.get("response_text")
     scheduler = load_scheduler(conn, scheduler_key=scheduler_key)
     if scheduler.tasks[interaction.task_id].status.value != "COMPLETED":
@@ -869,7 +809,10 @@ def finish_percept(
             or native_resource_safety_policy()
         )
         controller = LocalResourceAdmissionController(
-            scheduler, probe=probe, policy=effective_policy, clock=clock
+            scheduler,
+            probe=probe,
+            policy=effective_policy,
+            clock=clock,
         )
         controller.plan_scheduling_epoch()
         save_scheduler(conn, scheduler, scheduler_key=scheduler_key)
@@ -888,15 +831,13 @@ def handle_percept_in_worker_processes(
     worker_lease_seconds: int = 600,
     worker_timeout_seconds: int = 660,
 ) -> str | None:
-    """Run each architectural role/stage in a separately guarded fresh process."""
+    """Run every architectural stage in a separately guarded fresh process."""
 
     effective_policy = policy or native_resource_safety_policy()
     physical_probe = probe or SystemHostResourceProbe()
     runtime_probe = ollama_runtime_probe or OllamaRuntimeProbe()
     admission_runtime_state = runtime_probe.capture()
-    scheduled_memory_mib = admission_runtime_state.incremental_process_memory_mib(
-        effective_policy
-    )
+    scheduled_memory_mib = admission_runtime_state.incremental_process_memory_mib(effective_policy)
     interaction = begin_percept(
         conn,
         user_text,
