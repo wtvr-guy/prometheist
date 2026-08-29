@@ -1,7 +1,7 @@
 """Deterministic adaptive control for deliberate JIT-memory attention.
 
-This module is intentionally parallel to the frozen v0.7 recall profiles.  It does
-not make the photography metaphor part of runtime semantics.  Instead it exposes
+This module is intentionally parallel to the frozen v0.7 recall profiles. It does
+not make the photography metaphor part of runtime semantics. Instead it exposes
 literal retrieval-control dimensions discovered while examining those profiles:
 
 * semantic uncertainty: the unresolved cognitive problem expressed by a model as
@@ -10,7 +10,7 @@ literal retrieval-control dimensions discovered while examining those profiles:
 * retrieval telemetry: application-owned measurements of the current packet;
 * retrieval policy: deterministic kernel mechanics derived from the above.
 
-Models may point attention and classify the unresolved uncertainty.  Prometheist
+Models may point attention and classify the unresolved uncertainty. Prometheist
 owns the optics: candidate breadth, associative effort, anchor use, and the
 anti-lock-in decision to reorient.
 """
@@ -62,12 +62,12 @@ class RetrievalTelemetry:
     """Bounded measurements from the current retrieval state.
 
     ``candidate_scores`` must be non-negative and should be supplied in the same
-    deterministic order as the visible MemoryPacket.  Scores are used only as
+    deterministic order as the visible MemoryPacket. Scores are used only as
     relative attention telemetry; they are not promoted to epistemic truth.
 
     ``anchored_rounds`` counts consecutive deliberate passes that exploited one
-    or more anchors.  ``support_gain`` is the application-owned change in the
-    chosen support metric since the previous deliberate pass.  A non-positive
+    or more anchors. ``support_gain`` is the application-owned change in the
+    chosen support metric since the previous deliberate pass. A non-positive
     gain after repeated anchored passes triggers bounded reorientation.
     """
 
@@ -97,20 +97,40 @@ class AdaptiveRecallPolicy:
     minimum_score: float = 0.15
 
 
-# These are experimental constraints, not constitutional constants.  They are
-# deliberately expressed independently so that broad+deep and narrow+shallow
-# combinations are representable; the frozen v0.7 profiles couple those axes.
-_SCOPE_CANDIDATE_LIMITS = {
-    ScopeProfile.CONTEXTUAL: 600,
-    ScopeProfile.BALANCED: 350,
-    ScopeProfile.NARROW: 175,
-}
+@dataclass(frozen=True, slots=True)
+class _ScopePolicy:
+    candidate_limit: int
 
-_ASSOCIATION_SETTINGS = {
-    AssociationEffort.SHALLOW: (300, 2, 0.85),
-    AssociationEffort.MODERATE: (750, 3, 0.88),
-    AssociationEffort.DEEP: (1200, 5, 0.92),
-}
+
+@dataclass(frozen=True, slots=True)
+class _AssociationPolicy:
+    association_limit: int
+    max_hops: int
+    decay: float
+
+
+# Experimental constraints are deliberately represented as named, typed policy
+# objects instead of numeric dict/tuple literals. Besides being clearer, this
+# keeps every behavioral number visible to the repository constraint auditor.
+_CONTEXTUAL_SCOPE = _ScopePolicy(candidate_limit=600)
+_BALANCED_SCOPE = _ScopePolicy(candidate_limit=350)
+_NARROW_SCOPE = _ScopePolicy(candidate_limit=175)
+
+_SHALLOW_ASSOCIATION = _AssociationPolicy(
+    association_limit=300,
+    max_hops=2,
+    decay=0.85,
+)
+_MODERATE_ASSOCIATION = _AssociationPolicy(
+    association_limit=750,
+    max_hops=3,
+    decay=0.88,
+)
+_DEEP_ASSOCIATION = _AssociationPolicy(
+    association_limit=1200,
+    max_hops=5,
+    decay=0.92,
+)
 
 _REORIENT_AFTER_ANCHORED_ROUNDS = 2
 _DOMINANT_SHARE = 0.60
@@ -118,12 +138,7 @@ _LOW_NORMALIZED_ENTROPY = 0.55
 
 
 def normalized_score_entropy(scores: Iterable[float]) -> float:
-    """Return normalized Shannon entropy in [0, 1] for non-negative scores.
-
-    Empty and single-positive-score distributions have zero ambiguity.  A fully
-    even positive distribution approaches one.  This measurement is deterministic
-    and intentionally says nothing about factual correctness.
-    """
+    """Return normalized Shannon entropy in [0, 1] for non-negative scores."""
 
     values = tuple(float(score) for score in scores)
     if any(score < 0 for score in values):
@@ -154,16 +169,12 @@ def _scope_for(
     anchor_count: int,
     telemetry: RetrievalTelemetry,
 ) -> ScopeProfile:
-    # Explicit contextual uncertainty should remain wide even when an anchor is
-    # available.  This is how the adaptive controller can express broad+deep.
     if uncertainty in {
         MemoryUncertainty.MISSING_CONTEXT,
         MemoryUncertainty.POSSIBLE_CONTRADICTION,
     }:
         return ScopeProfile.CONTEXTUAL
 
-    # Exact-detail work can remain local rather than inheriting the old rule that
-    # every deeper pass must also traverse a large direct-candidate population.
     if uncertainty is MemoryUncertainty.SPECIFIC_DETAIL_MISSING and anchor_count == 1:
         return ScopeProfile.NARROW
 
@@ -204,6 +215,22 @@ def _should_reorient(telemetry: RetrievalTelemetry, *, anchor_count: int) -> boo
     )
 
 
+def _scope_policy(scope: ScopeProfile) -> _ScopePolicy:
+    if scope is ScopeProfile.CONTEXTUAL:
+        return _CONTEXTUAL_SCOPE
+    if scope is ScopeProfile.BALANCED:
+        return _BALANCED_SCOPE
+    return _NARROW_SCOPE
+
+
+def _association_policy(effort: AssociationEffort) -> _AssociationPolicy:
+    if effort is AssociationEffort.SHALLOW:
+        return _SHALLOW_ASSOCIATION
+    if effort is AssociationEffort.MODERATE:
+        return _MODERATE_ASSOCIATION
+    return _DEEP_ASSOCIATION
+
+
 def derive_adaptive_recall_policy(
     *,
     uncertainty: MemoryUncertainty,
@@ -213,7 +240,7 @@ def derive_adaptive_recall_policy(
     """Derive deterministic retrieval mechanics from bounded semantic direction.
 
     The caller supplies only a closed uncertainty class, the number of canonical
-    focus anchors already selected, and deterministic retrieval telemetry.  No
+    focus anchors already selected, and deterministic retrieval telemetry. No
     model-authored numeric retrieval settings are accepted.
     """
 
@@ -238,14 +265,15 @@ def derive_adaptive_recall_policy(
             focus_mode = FocusMode.MULTI_ANCHOR
             use_focus_anchors = True
 
-    association_limit, max_hops, decay = _ASSOCIATION_SETTINGS[effort]
+    scope_policy = _scope_policy(scope)
+    association_policy = _association_policy(effort)
     return AdaptiveRecallPolicy(
         scope=scope,
         association_effort=effort,
         focus_mode=focus_mode,
-        candidate_limit=_SCOPE_CANDIDATE_LIMITS[scope],
-        association_limit=association_limit,
-        max_hops=max_hops,
-        decay=decay,
+        candidate_limit=scope_policy.candidate_limit,
+        association_limit=association_policy.association_limit,
+        max_hops=association_policy.max_hops,
+        decay=association_policy.decay,
         use_focus_anchors=use_focus_anchors,
     )
