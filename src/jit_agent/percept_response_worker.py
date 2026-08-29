@@ -12,6 +12,7 @@ historical-memory corroboration before it can be acknowledged or followed.
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 from uuid import UUID
@@ -107,6 +108,19 @@ class UserPromptWorkSelection(BaseModel):
         return values
 
 
+def _normalize_memory_sufficiency_content(content: str) -> str:
+    """Normalize semantically empty optional fields from constrained small models."""
+
+    payload = json.loads(content)
+    if not isinstance(payload, dict):
+        return content
+    deficit = payload.get("memory_deficit")
+    if isinstance(deficit, str):
+        normalized = deficit.strip()
+        payload["memory_deficit"] = normalized or None
+    return json.dumps(payload, separators=(",", ":"))
+
+
 class UserPromptLLM(PerceptLLM):
     """Percept LLM with deterministic response and current-evidence contracts."""
 
@@ -170,8 +184,9 @@ class UserPromptLLM(PerceptLLM):
                     MemorySufficiencyDecision.model_json_schema(),
                     token_cap,
                 )
-                return MemorySufficiencyDecision.model_validate_json(content)
-            except ValueError as exc:
+                normalized = _normalize_memory_sufficiency_content(content)
+                return MemorySufficiencyDecision.model_validate_json(normalized)
+            except (ValueError, json.JSONDecodeError) as exc:
                 last_error = exc
         raise ValueError(f"v2 Composer decision failed to validate: {last_error}")
 
