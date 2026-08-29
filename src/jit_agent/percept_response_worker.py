@@ -9,26 +9,37 @@ episodic recall: the disposable model invocation is a cognitive component of
 Prometheist rather than the identity of the overall system, and information
 supplied in the current user prompt is direct current evidence that does not need
 historical-memory corroboration before it can be acknowledged or followed.
+
+After the RESPOND stage completes, the exact response-time evidence bundle is
+copied into the append-only event log. This keeps the final memory package,
+pre-cognitive disposition, work results, and response inspectable even if derived
+scheduler/worker state is later discarded.
 """
 from __future__ import annotations
 
 import json
 import os
 import sys
-from uuid import UUID
+from uuid import UUID, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from jit_agent import db
+from jit_agent import db, event_store
 from jit_agent.capability_registry import CapabilityDescriptor
-from jit_agent.models import MemoryPacket
+from jit_agent.interaction_store import load_interaction_by_task
+from jit_agent.models import EventType, MemoryPacket
 from jit_agent.percept_response_runtime import (
     MemorySufficiencyDecision,
     PerceptLLM,
+    PerceptStage,
     PreCognitiveDisposition,
+    _stage_result,
     execute_claimed_percept_step,
 )
+from jit_agent.worker_store import load_worker_claim_envelope
 
+
+_RESPONSE_TRACE_SOURCE = "percept_response_v2/response_input_trace"
 
 _USER_PROMPT_WORK_SELECTION = """\
 You are a fresh disposable Prometheist pre-cognitive worker. You have no inherited
@@ -191,6 +202,36 @@ class UserPromptLLM(PerceptLLM):
         raise ValueError(f"v2 Composer decision failed to validate: {last_error}")
 
 
+def _persist_response_trace(conn, interaction, *, scheduler_key: str) -> None:
+    """Copy the exact responder inputs into permanent append-only history."""
+
+    precognitive = _stage_result(conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key)
+    work = _stage_result(conn, interaction, PerceptStage.EXECUTE_WORK, scheduler_key)
+    compose = _stage_result(conn, interaction, PerceptStage.COMPOSE_MEMORY, scheduler_key)
+    respond = _stage_result(conn, interaction, PerceptStage.RESPOND, scheduler_key)
+    payload = {
+        "trace_kind": "FINAL_RESPONSE_INPUT_V1",
+        "interaction_id": str(interaction.interaction_id),
+        "task_id": str(interaction.task_id),
+        "assignment_id": str(interaction.assignment_id),
+        "current_user_prompt": interaction.user_text,
+        "precognitive": precognitive,
+        "work": work,
+        "compose": compose,
+        "response": respond,
+    }
+    event_store.record_event(
+        conn,
+        conversation_id=interaction.conversation_id,
+        correlation_id=interaction.correlation_id,
+        event_type=EventType.SYSTEM_EVENT,
+        source=_RESPONSE_TRACE_SOURCE,
+        payload=payload,
+        payload_text=None,
+        event_id=uuid5(interaction.interaction_id, "final-response-input-trace-v1"),
+    )
+
+
 def _configure_utf8_streams() -> None:
     for stream in (sys.stdout, sys.stderr):
         reconfigure = getattr(stream, "reconfigure", None)
@@ -212,13 +253,26 @@ def main() -> None:
     worker_id = _required_environment("PROMETHEIST_WORKER_ID")
     scheduler_key = _required_environment("PROMETHEIST_WORKER_SCHEDULER_KEY")
     with db.get_connection() as conn:
-        execute_claimed_percept_step(
+        envelope = load_worker_claim_envelope(
+            conn,
+            claim_id,
+            worker_id=worker_id,
+            scheduler_key=scheduler_key,
+        )
+        interaction = load_interaction_by_task(
+            conn,
+            envelope.step.task_id,
+            scheduler_key=scheduler_key,
+        )
+        stage = execute_claimed_percept_step(
             conn,
             UserPromptLLM(),
             claim_id=claim_id,
             worker_id=worker_id,
             scheduler_key=scheduler_key,
         )
+        if stage is PerceptStage.RESPOND:
+            _persist_response_trace(conn, interaction, scheduler_key=scheduler_key)
 
 
 if __name__ == "__main__":
