@@ -220,7 +220,7 @@ def _weak_clues(conn, *, distractors: int, pool_limit: int, packet_limit: int):
     corpus = _finalize_corpus(
         conn,
         conversation_id=conversation_id,
-        query_text="project decision exact looking",
+        query_text="project decision",
         anchors=(),
         required=tuple(item.event_id for item in clues),
     )
@@ -233,7 +233,7 @@ def _weak_clues(conn, *, distractors: int, pool_limit: int, packet_limit: int):
     )
     return {
         "scenario_id": "distributed_weak_clues",
-        "purpose": "Several weaker but complementary memories must survive stronger repetitive distractors.",
+        "purpose": "Several complementary older memories must survive newer repetitive distractors after all pass the same retrieval cue.",
         "distractors": distractors,
         **_evaluate(
             packet,
