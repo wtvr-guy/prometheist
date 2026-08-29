@@ -1,12 +1,13 @@
 """First-party Prometheist CLI.
 
 The interactive chat REPL is intentionally thin: it owns presentation only and
-passes each user percept through the authoritative durable interaction runtime.
-It does not retain or replay an LLM transcript. Each interaction continues to
-use guarded disposable worker processes and JIT memory.
+passes each user percept through the current percept-to-response runtime. It does
+not retain or replay an LLM transcript. Each interaction uses guarded disposable
+worker processes, deterministic work control, Composer-driven Adaptive Recall,
+and the final response boundary documented in PERCEPT_TO_RESPONSE_PIPELINE.md.
 
-`--once` remains available for scripting and restart/acceptance tests. Each
-`--once` invocation is a fresh process with zero in-memory conversational state.
+`--once` remains available for scripting. Each invocation is a fresh process with
+zero in-memory conversational state.
 """
 from __future__ import annotations
 
@@ -21,7 +22,7 @@ from jit_agent.admission_diagnostics import (
     build_resource_admission_diagnostics,
 )
 from jit_agent.attention_store import load_scheduler
-from jit_agent.interaction_runtime import handle_interaction_in_worker_processes
+from jit_agent.percept_response_runtime import handle_percept_in_worker_processes
 from jit_agent.worker_runtime import WorkerLaunchDenied
 
 
@@ -50,11 +51,11 @@ def _handle_with_admission_diagnostics(
     conn,
     user_text: str,
     conversation_id: uuid.UUID,
-) -> str:
-    """Run one interaction and expose the authoritative denial envelope on failure."""
+) -> str | None:
+    """Run one percept and expose the authoritative denial envelope on failure."""
 
     try:
-        return handle_interaction_in_worker_processes(
+        return handle_percept_in_worker_processes(
             conn,
             user_text,
             conversation_id,
@@ -84,7 +85,7 @@ def _handle_with_admission_diagnostics(
 
 
 def _run_chat(conversation_id: uuid.UUID) -> None:
-    """Run the lightweight terminal UI over the authoritative interaction path."""
+    """Run the lightweight terminal UI over the authoritative percept path."""
 
     print("Prometheist")
     print(f"conversation_id: {conversation_id}")
@@ -108,7 +109,8 @@ def _run_chat(conversation_id: uuid.UUID) -> None:
                 user_text,
                 conversation_id,
             )
-            print(f"\nPrometheist > {response}")
+            if response is not None:
+                print(f"\nPrometheist > {response}")
 
 
 def main() -> None:
@@ -123,7 +125,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--once",
-        help="Handle a single message non-interactively and print the response.",
+        help="Handle a single percept non-interactively and print a response only if required.",
     )
     parser.add_argument(
         "--conversation-id",
@@ -141,7 +143,8 @@ def main() -> None:
                 args.once,
                 conversation_id,
             )
-        print(response)
+        if response is not None:
+            print(response)
         return
 
     _run_chat(conversation_id)
