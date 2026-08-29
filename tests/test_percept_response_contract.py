@@ -15,15 +15,17 @@ from jit_agent.percept_response_runtime import (
 )
 
 
-def test_pre_cognitive_disposition_allows_no_work_no_response() -> None:
-    decision = PreCognitiveDisposition(response_required=False, capability_indices=[])
-    assert decision.response_required is False
+def test_user_prompt_disposition_requires_response() -> None:
+    decision = PreCognitiveDisposition(capability_indices=[])
+    assert decision.response_required is True
     assert decision.capability_indices == []
+    with pytest.raises(ValueError):
+        PreCognitiveDisposition(response_required=False, capability_indices=[])
 
 
 def test_pre_cognitive_disposition_rejects_duplicate_indices() -> None:
     with pytest.raises(ValueError):
-        PreCognitiveDisposition(response_required=True, capability_indices=[0, 0])
+        PreCognitiveDisposition(capability_indices=[0, 0])
 
 
 def test_composer_sufficient_contract_has_no_deficit() -> None:
