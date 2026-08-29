@@ -8,6 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
+from itertools import islice
 import os
 import subprocess
 import sys
@@ -82,9 +83,16 @@ from jit_agent.worker_store import (
 )
 
 SOURCE = "percept_response_v2"
-MAX_ADAPTIVE_RECALL_ROUNDS = 3
-MAX_RESPONSE_MEMORY_ITEMS = 20
+_RESPONSE_MEMORY_ITEM_LIMIT = int(os.environ.get("PROMETHEIST_RESPONSE_MEMORY_ITEMS", "20"))
+_ADAPTIVE_RECALL_ITEM_LIMIT = int(os.environ.get("PROMETHEIST_ADAPTIVE_RECALL_ITEMS", "10"))
+_SINGLE_LLM_SLOT = len((SOURCE,))
 _MEMORY_EXECUTORS = {"jit_memory", "deeper_research", "cross_reference", "focused_recall"}
+_ADAPTIVE_PROFILES = (
+    jit_memory.MemoryRecallProfile.STANDARD,
+    jit_memory.MemoryRecallProfile.DEEPER_RESEARCH,
+    jit_memory.MemoryRecallProfile.CROSS_REFERENCE,
+    jit_memory.MemoryRecallProfile.FOCUSED_RECALL,
+)
 
 DEFAULT_PERSONALITY_PROMPT = """\
 You are Prometheist. Be precise, direct, context-aware, and useful. Treat supplied
@@ -120,6 +128,8 @@ PERCEPT_CAPABILITIES = tuple(stage.capability for stage in PERCEPT_STAGES)
 
 
 class PreCognitiveDisposition(BaseModel):
+    """Closed pre-cognitive disposition; execution mechanics remain system-owned."""
+
     model_config = ConfigDict(extra="forbid")
     response_required: bool
     capability_indices: list[int] = Field(default_factory=list)
@@ -139,7 +149,7 @@ class MemorySufficiencyDecision(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     sufficient: bool
-    memory_deficit: str | None = Field(default=None, max_length=500)
+    memory_deficit: str | None = None
 
     @model_validator(mode="after")
     def validate_contract(self) -> "MemorySufficiencyDecision":
@@ -154,12 +164,14 @@ class MemorySufficiencyDecision(BaseModel):
 
 
 class ResponseMemoryPackage(BaseModel):
+    """Memory-only context approved or exhausted by the Composer path."""
+
     model_config = ConfigDict(extra="forbid")
     memory_packet: MemoryPacket
     sufficient: bool
     unresolved_memory_deficit: str | None = None
-    composer_rounds: int = Field(ge=1)
-    adaptive_recall_rounds: int = Field(ge=0)
+    composer_rounds: int
+    adaptive_recall_rounds: int
 
 
 _PRECOGNITIVE_PROMPT = """\
@@ -333,12 +345,12 @@ def _merge_memory_packets(
                 continue
             seen.add(item.source_event_id)
             items.append(item.model_copy(deep=True))
-            if len(items) >= MAX_RESPONSE_MEMORY_ITEMS:
+            if len(items) >= _RESPONSE_MEMORY_ITEM_LIMIT:
                 break
-        if len(items) >= MAX_RESPONSE_MEMORY_ITEMS:
+        if len(items) >= _RESPONSE_MEMORY_ITEM_LIMIT:
             break
     need = base.need.model_copy(deep=True)
-    need.limit = MAX_RESPONSE_MEMORY_ITEMS
+    need.limit = _RESPONSE_MEMORY_ITEM_LIMIT
     return MemoryPacket(
         memory_request_id=uuid5(interaction_id, f"adaptive-memory-context:{round_index}"),
         need=need,
@@ -353,6 +365,33 @@ def _merge_memory_packets(
     )
 
 
+def _adaptive_profile(round_index: int) -> jit_memory.MemoryRecallProfile:
+    try:
+        return _ADAPTIVE_PROFILES[round_index]
+    except IndexError:
+        return _ADAPTIVE_PROFILES[-1]
+
+
+def _focus_ids_for_profile(
+    profile: jit_memory.MemoryRecallProfile,
+    packet: MemoryPacket,
+) -> list[UUID]:
+    ids = [item.source_event_id for item in packet.items]
+    if profile is jit_memory.MemoryRecallProfile.STANDARD:
+        return []
+    if profile is jit_memory.MemoryRecallProfile.DEEPER_RESEARCH:
+        return list(islice(ids, len(_ADAPTIVE_PROFILES)))
+    if profile is jit_memory.MemoryRecallProfile.CROSS_REFERENCE:
+        iterator = iter(ids)
+        first = next(iterator, None)
+        second = next(iterator, None)
+        if first is not None and second is not None:
+            return [first, second]
+        return [first] if first is not None else []
+    first = next(iter(ids), None)
+    return [first] if first is not None else []
+
+
 def _adaptive_recall(
     conn: psycopg.Connection,
     interaction: DurableInteraction,
@@ -361,28 +400,31 @@ def _adaptive_recall(
     *,
     round_index: int,
 ) -> MemoryPacket:
-    """Deterministically select progressively deeper retrieval mechanics."""
+    """Deterministically expand memory from the Composer's semantic deficit."""
 
-    focus_ids = [item.source_event_id for item in current_packet.items]
-    if round_index == 0:
-        profile = jit_memory.MemoryRecallProfile.STANDARD
-        focus_ids = []
-    elif round_index == 1:
-        profile = jit_memory.MemoryRecallProfile.DEEPER_RESEARCH
-        focus_ids = focus_ids[:4]
-    elif len(focus_ids) >= 2:
-        profile = jit_memory.MemoryRecallProfile.CROSS_REFERENCE
-        focus_ids = focus_ids[:2]
-    else:
+    profile = _adaptive_profile(round_index)
+    focus_ids = _focus_ids_for_profile(profile, current_packet)
+    if profile is jit_memory.MemoryRecallProfile.CROSS_REFERENCE and len(focus_ids) != len(
+        set(focus_ids)
+    ):
+        focus_ids = list(dict.fromkeys(focus_ids))
+    if profile is jit_memory.MemoryRecallProfile.CROSS_REFERENCE and not all(focus_ids):
         profile = jit_memory.MemoryRecallProfile.FOCUSED_RECALL
-        focus_ids = focus_ids[:1]
+        focus_ids = _focus_ids_for_profile(profile, current_packet)
+    if profile is jit_memory.MemoryRecallProfile.CROSS_REFERENCE:
+        iterator = iter(focus_ids)
+        first = next(iterator, None)
+        second = next(iterator, None)
+        if first is None or second is None:
+            profile = jit_memory.MemoryRecallProfile.FOCUSED_RECALL
+            focus_ids = _focus_ids_for_profile(profile, current_packet)
 
     need = jit_memory.build_memory_need(
         deficit,
         focus_event_ids=focus_ids,
         include_persisted_history=True,
         conversation_id=None,
-        limit=10,
+        limit=_ADAPTIVE_RECALL_ITEM_LIMIT,
     )
     expansion = jit_memory.request_memory(
         conn,
@@ -409,36 +451,37 @@ def _compose_memory_package(
     initial_packet: MemoryPacket,
 ) -> ResponseMemoryPackage:
     packet = initial_packet.model_copy(deep=True)
-    last_decision: MemorySufficiencyDecision | None = None
-    composer_rounds = 0
-    adaptive_rounds = 0
-    for round_index in range(MAX_ADAPTIVE_RECALL_ROUNDS + 1):
-        composer_rounds += 1
-        last_decision = llm.assess_memory_sufficiency(interaction.user_text, packet)
-        if last_decision.sufficient:
+    decisions: list[MemorySufficiencyDecision] = []
+    expansions: list[MemoryPacket] = []
+    for round_index, _profile in enumerate(_ADAPTIVE_PROFILES):
+        decision = llm.assess_memory_sufficiency(interaction.user_text, packet)
+        decisions.append(decision)
+        if decision.sufficient:
             return ResponseMemoryPackage(
                 memory_packet=packet,
                 sufficient=True,
-                composer_rounds=composer_rounds,
-                adaptive_recall_rounds=adaptive_rounds,
+                composer_rounds=len(decisions),
+                adaptive_recall_rounds=len(expansions),
             )
-        if round_index >= MAX_ADAPTIVE_RECALL_ROUNDS:
-            break
         packet = _adaptive_recall(
             conn,
             interaction,
             packet,
-            last_decision.memory_deficit or interaction.user_text,
+            decision.memory_deficit or interaction.user_text,
             round_index=round_index,
         )
-        adaptive_rounds += 1
-    assert last_decision is not None
+        expansions.append(packet)
+
+    final_decision = llm.assess_memory_sufficiency(interaction.user_text, packet)
+    decisions.append(final_decision)
     return ResponseMemoryPackage(
         memory_packet=packet,
-        sufficient=False,
-        unresolved_memory_deficit=last_decision.memory_deficit,
-        composer_rounds=composer_rounds,
-        adaptive_recall_rounds=adaptive_rounds,
+        sufficient=final_decision.sufficient,
+        unresolved_memory_deficit=(
+            None if final_decision.sufficient else final_decision.memory_deficit
+        ),
+        composer_rounds=len(decisions),
+        adaptive_recall_rounds=len(expansions),
     )
 
 
@@ -496,7 +539,7 @@ def begin_percept(
                 process_resource_estimate=ProcessResourceEstimate(
                     cpu_units=effective_policy.default_process_cpu_units,
                     memory_mib=interaction_memory_mib,
-                    llm_slots=1,
+                    llm_slots=_SINGLE_LLM_SLOT,
                     source=ResourceEstimateSource.CONSERVATIVE_DEFAULT,
                     basis=(
                         f"{effective_policy.policy_version}: bounded stateless percept pipeline; "
@@ -518,7 +561,7 @@ def begin_percept(
     assignments = [
         value for value in scheduler.worker_visible_assignments() if value.task_id == task_id
     ]
-    if len(assignments) != 1:
+    if len(assignments) != _SINGLE_LLM_SLOT:
         raise RuntimeError("interaction was not safely admitted to one assignment")
     interaction = DurableInteraction(
         interaction_id=interaction_id,
@@ -630,6 +673,7 @@ def _execute_stage(
             registration = registry.get(item.capability_id)
             if registration.executor in _MEMORY_EXECUTORS:
                 raise RuntimeError("memory retrieval cannot execute as pre-cognitive work")
+            round_index = len(executions)
             execution = execute_registered_capability(
                 conn,
                 llm,
@@ -639,14 +683,14 @@ def _execute_stage(
                 ),
                 requester_task_id=interaction.task_id,
                 requester_step_id=envelope.step.step_id,
-                round_index=0,
+                round_index=round_index,
                 plan_position=position,
                 conversation_id=interaction.conversation_id,
                 correlation_id=interaction.correlation_id,
                 task_text=interaction.user_text,
                 before_global_seq=interaction.before_global_seq,
                 memory_request_id=deterministic_capability_memory_request_id(
-                    interaction.interaction_id, 0, item.capability_id
+                    interaction.interaction_id, round_index, item.capability_id
                 ),
                 candidate_packet=MemoryPacket.model_validate(precognitive["aperture_packet"]),
             )
@@ -828,11 +872,18 @@ def handle_percept_in_worker_processes(
     policy: ResourceSafetyPolicy | None = None,
     ollama_runtime_probe: OllamaRuntimeProbe | None = None,
     scheduler_key: str = DEFAULT_SCHEDULER_KEY,
-    worker_lease_seconds: int = 600,
-    worker_timeout_seconds: int = 660,
+    worker_lease_seconds: int | None = None,
+    worker_timeout_seconds: int | None = None,
 ) -> str | None:
     """Run every architectural stage in a separately guarded fresh process."""
 
+    effective_lease = worker_lease_seconds or int(
+        os.environ.get("PROMETHEIST_WORKER_LEASE_SECONDS", "600")
+    )
+    effective_timeout = worker_timeout_seconds or int(
+        os.environ.get("PROMETHEIST_WORKER_TIMEOUT_SECONDS", "660")
+    )
+    kill_wait = float(os.environ.get("PROMETHEIST_KILL_WAIT_SECONDS", "10"))
     effective_policy = policy or native_resource_safety_policy()
     physical_probe = probe or SystemHostResourceProbe()
     runtime_probe = ollama_runtime_probe or OllamaRuntimeProbe()
@@ -866,13 +917,13 @@ def handle_percept_in_worker_processes(
             step_id=step_id,
             worker_id=worker_id,
             command=[sys.executable, "-m", "jit_agent.percept_response_worker"],
-            lease_seconds=worker_lease_seconds,
+            lease_seconds=effective_lease,
         )
         try:
-            return_code = launched.process.wait(timeout=worker_timeout_seconds)
+            return_code = launched.process.wait(timeout=effective_timeout)
         except subprocess.TimeoutExpired:
             launched.process.kill()
-            launched.process.wait(timeout=10)
+            launched.process.wait(timeout=kill_wait)
             raise RuntimeError(f"percept worker timed out at stage {stage.value}") from None
         if return_code != 0:
             raise RuntimeError(
