@@ -34,6 +34,16 @@
       "quality_order": ["worst_scenario_required_evidence_recall", "question_success_rate", "unknown_abstention_rate", "association_edges_loaded", "association_hops_executed", "latency"],
       "search": "Joint integer/continuous sweep because hop depth, decay, and graph breadth interact. Refine decay around non-dominated candidates and expand graph limits when boundary-selected."
     },
+    "MEM-ADAPT-001": {
+      "title": "Adaptive memory-attention control versus frozen recall profiles",
+      "environment": "dedicated_postgres_test_or_benchmark_database",
+      "parameters": ["scope_candidate_limits", "association_effort_limits", "association_effort_hops", "association_effort_decay", "dominant_score_share", "low_normalized_entropy", "reorient_after_anchored_rounds"],
+      "scenario_families": ["aperture_packet_truncation", "direct_candidate_ceiling", "single_anchor_depth", "multi_anchor_depth", "association_fanout_ceiling", "anchor_lock_in_and_reorientation", "shared_candidate_ceiling", "shared_depth_ceiling", "shared_association_budget_ceiling"],
+      "hard_invariants": ["automatic aperture remains common substrate", "canonical event provenance remains exact", "current percept remains the semantic cue", "models never author numeric retrieval settings", "evidence admission threshold is not weakened", "leakage boundary applies to direct, seeded, and associated events"],
+      "quality_order": ["worst_scenario_required_evidence_recall", "adaptive_only_successes", "frozen_only_successes", "shared_failures", "association_trace_edges", "latency"],
+      "search": "Run adversarial boundary sweeps against the frozen v0.7 profiles. Record largest tested success and smallest tested failure rather than inferring an exact boundary from sparse points. Expand any boundary where adaptive or frozen behavior changes, and retain shared-ceiling failures as explicit architectural limits.",
+      "holdout": "Add generated adversarial histories and native local-model routing only after deterministic retrieval behavior is characterized; do not tune the controller against the holdout set."
+    },
     "CAP-DISCOVERY-001": {
       "title": "Deterministic capability discovery scoring and result breadth",
       "environment": "deterministic_ci",
