@@ -21,7 +21,12 @@ from jit_agent.attention_store import DEFAULT_SCHEDULER_KEY
 from jit_agent.interaction_store import load_interaction
 from jit_agent.native_policy import native_resource_safety_policy
 from jit_agent.ollama_runtime import OllamaClaimHostResourceProbe, OllamaRuntimeProbe
-from jit_agent.percept_response_runtime import PERCEPT_STAGES, _stage_result, finish_percept
+from jit_agent.percept_response_runtime import (
+    PERCEPT_STAGES,
+    _stage_result,
+    begin_percept,
+    finish_percept,
+)
 from jit_agent.worker_protocol import deterministic_worker_step_id
 from jit_agent.worker_runtime import GuardedWorkerLauncher
 
@@ -179,6 +184,25 @@ def restore_event_store_from_artifacts(conn: psycopg.Connection) -> dict[str, in
     }
 
 
+def _percept_recovery_seed(interaction_id: UUID) -> tuple[UUID, UUID, str]:
+    chain = artifact_journal.interaction_artifacts(interaction_id)
+    percept = next(
+        (item for item in chain if item.get("artifact_type") == "PERCEPT"),
+        None,
+    )
+    if percept is None:
+        raise RuntimeError(f"interaction {interaction_id} has no percept artifact")
+    payload = percept.get("payload") or {}
+    user_text = payload.get("user_text")
+    if not isinstance(user_text, str) or not user_text.strip():
+        raise RuntimeError(f"interaction {interaction_id} percept has no user text")
+    return (
+        UUID(percept["conversation_id"]),
+        UUID(percept["correlation_id"]),
+        user_text,
+    )
+
+
 def resume_interaction_from_artifacts(
     conn: psycopg.Connection,
     interaction_id: UUID,
@@ -190,11 +214,13 @@ def resume_interaction_from_artifacts(
     worker_lease_seconds: int | None = None,
     worker_timeout_seconds: int | None = None,
 ) -> str | None:
-    """Resume the first incomplete stage of an existing durable interaction.
+    """Resume an incomplete interaction from the first missing stage.
 
-    Database worker results are preferred when present.  If a stage result exists
-    only in the filesystem journal, the replacement worker rehydrates it and
-    completes the corresponding durable claim without re-running cognition.
+    If the operational interaction row still exists, recovery continues it.  If
+    PostgreSQL execution state was lost after the canonical events were restored,
+    Prometheist recreates the same interaction identity from the percept artifact
+    and original correlation id.  Existing stage artifacts are then rehydrated in
+    order, so completed LLM/tool stages are not repeated.
     """
 
     verification = artifact_journal.verify_interaction_chain(interaction_id)
@@ -211,7 +237,6 @@ def resume_interaction_from_artifacts(
         )
         return final["payload"].get("response_text")
 
-    interaction = load_interaction(conn, interaction_id, scheduler_key=scheduler_key)
     effective_lease = worker_lease_seconds or int(
         os.environ.get("PROMETHEIST_WORKER_LEASE_SECONDS", "600")
     )
@@ -223,6 +248,24 @@ def resume_interaction_from_artifacts(
     physical_probe = probe or SystemHostResourceProbe()
     runtime_probe = ollama_runtime_probe or OllamaRuntimeProbe()
     runtime_state = runtime_probe.capture()
+
+    try:
+        interaction = load_interaction(conn, interaction_id, scheduler_key=scheduler_key)
+    except KeyError:
+        conversation_id, correlation_id, user_text = _percept_recovery_seed(interaction_id)
+        interaction = begin_percept(
+            conn,
+            user_text,
+            conversation_id,
+            correlation_id=correlation_id,
+            probe=physical_probe,
+            policy=effective_policy,
+            ollama_runtime_state=runtime_state,
+            scheduler_key=scheduler_key,
+        )
+        if interaction.interaction_id != interaction_id:
+            raise RuntimeError("recreated interaction identity does not match artifact journal")
+
     scheduled_memory_mib = runtime_state.incremental_process_memory_mib(effective_policy)
     claim_probe = OllamaClaimHostResourceProbe(
         base_probe=physical_probe,
