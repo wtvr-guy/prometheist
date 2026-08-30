@@ -1,7 +1,8 @@
 # Prometheist Constitution
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Adopted:** 2026-08-27  
+**Amended:** 2026-08-29  
 **Status:** supreme repository-wide engineering policy for Prometheist.
 
 Prometheist is developed under a small set of architectural and engineering rules that are intended to remain true across milestones, implementations, models, storage backends, devices, and worker processes. This Constitution collects those rules in one place so that future design reviews and codebase audits can test the implementation against an explicit standard.
@@ -252,6 +253,14 @@ Prometheist is intended to remain usable on modest local hardware. Stronger hard
 
 **Deep dives:** [`docs/architecture/SYSTEM_DETERMINISM.md`](docs/architecture/SYSTEM_DETERMINISM.md), [`docs/architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](docs/architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md), [`docs/architecture/INTERACTION_CONTINUITY.md`](docs/architecture/INTERACTION_CONTINUITY.md)
 
+### Article 30 — Meaningful state transitions require independent artifact durability
+
+**Rule.** Canonical events and meaningful cognitive or operational boundaries that matter for explanation, replay, recovery, or reconstruction must have an immutable, inspectable durable artifact outside the primary operational database. A disposable worker must durably publish its stage result before that stage is treated as terminal. Completed interactions must have a final-disposition manifest over their artifact chain; interrupted interactions retain their partial chain as recoverable state. PostgreSQL or any future primary database may be the indexed operational representation, but it must not be the only surviving copy from which Prometheist's canonical history and recoverable cognitive progress can be reconstructed.
+
+**Why it matters.** Stateless cognition is only genuinely restart-safe and user-auditable if the exact artifacts that crossed worker boundaries survive process failure and database loss. Independent artifacts also let Prometheist diagnose what a worker actually knew, resume without repeating completed cognition, and rebuild canonical history after storage corruption.
+
+**Deep dive:** [`docs/architecture/IMMUTABLE_ARTIFACT_JOURNAL.md`](docs/architecture/IMMUTABLE_ARTIFACT_JOURNAL.md)
+
 ## Constitutional audit standard
 
 A constitutional audit should evaluate every article against the entire current code path, schema, tests, configuration, and current architecture documentation. For each article, record:
@@ -277,6 +286,7 @@ A proposed change is constitutionally admissible only if all of the following ar
 6. the change has the required deterministic and/or native evidence;
 7. any new behavioral tunable is classified and governed;
 8. the change does not make a reference implementation into an unjustified constitutional dependency;
-9. insufficient authority or evidence still fails closed rather than being guessed past.
+9. insufficient authority or evidence still fails closed rather than being guessed past;
+10. meaningful state transitions remain independently durable and reconstructable outside the primary operational database.
 
 That standard is the default review lens for future Prometheist development.
