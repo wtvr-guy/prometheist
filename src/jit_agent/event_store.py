@@ -13,7 +13,7 @@ import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Json
 
-from jit_agent import artifact_journal
+from jit_agent import event_artifact_store
 from jit_agent.models import Event, EventType
 
 
@@ -36,7 +36,7 @@ def start_conversation(conn: psycopg.Connection, conversation_id: uuid.UUID | No
 def _journal_committed_event(event: Event, payload_text: str | None) -> None:
     """Ensure both the semantic record and DB-commit metadata exist on disk."""
 
-    artifact_journal.write_event_record_artifact(
+    event_artifact_store.write_event_record(
         event_id=event.event_id,
         conversation_id=event.conversation_id,
         correlation_id=event.correlation_id,
@@ -46,7 +46,7 @@ def _journal_committed_event(event: Event, payload_text: str | None) -> None:
         payload=event.payload,
         payload_text=payload_text,
     )
-    artifact_journal.write_event_commit_artifact(
+    event_artifact_store.write_event_commit(
         event_id=event.event_id,
         global_seq=event.global_seq,
         conversation_seq=event.conversation_seq,
@@ -114,7 +114,7 @@ def record_event(
             conversation_seq = int(row["next_event_seq"])
 
             # Independent semantic durability precedes DB commit.
-            artifact_journal.write_event_record_artifact(
+            event_artifact_store.write_event_record(
                 event_id=event_id,
                 conversation_id=conversation_id,
                 correlation_id=correlation_id,
@@ -161,7 +161,7 @@ def record_event(
     stored = _row_to_event(inserted)
     # If this write fails, the DB event is already safe and a deterministic retry
     # will repair the commit artifact.  We still surface the failure fail-closed.
-    artifact_journal.write_event_commit_artifact(
+    event_artifact_store.write_event_commit(
         event_id=stored.event_id,
         global_seq=stored.global_seq,
         conversation_seq=stored.conversation_seq,
