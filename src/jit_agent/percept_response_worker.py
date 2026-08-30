@@ -1,20 +1,26 @@
 """Fresh-process entry point for one v2 user-prompt response worker step.
 
-Explicit user prompts always receive a response.  Every stage result is atomically
+Explicit user prompts always receive a response. Every stage result is atomically
 written to the independent artifact journal before its database worker claim is
-completed.  A replacement worker can therefore rehydrate a completed stage from
+completed. A replacement worker can therefore rehydrate a completed stage from
 JSON instead of repeating an LLM/tool call after interruption.
+
+Every v2 LLM invocation also persists the exact stateless request contract and
+normalized constrained output so later inspection can establish precisely what a
+model worker was given rather than inferring it from downstream behavior.
 """
 from __future__ import annotations
 
+from itertools import count
 import json
 import os
 import sys
+from typing import Any
 from uuid import UUID, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from jit_agent import artifact_journal, db, event_store
+from jit_agent import artifact_journal, db, event_store, llm_artifact_store
 from jit_agent.capability_registry import DEFAULT_REGISTRY, CapabilityDescriptor
 from jit_agent.interaction_store import load_interaction_by_task
 from jit_agent.models import EventType, MemoryPacket
@@ -126,7 +132,99 @@ def _normalize_memory_sufficiency_content(content: str) -> str:
 
 
 class UserPromptLLM(PerceptLLM):
-    """Percept LLM with deterministic response and current-evidence contracts."""
+    """Percept LLM with deterministic response and full invocation provenance."""
+
+    def __init__(
+        self,
+        *,
+        interaction=None,
+        stage: PerceptStage | None = None,
+        claim_id: UUID | None = None,
+    ) -> None:
+        super().__init__()
+        self._artifact_interaction = interaction
+        self._artifact_stage = stage
+        self._artifact_claim_id = claim_id
+        self._artifact_invocations = count()
+
+    def _structured(
+        self,
+        kind: str,
+        system: str,
+        user: str,
+        schema: dict,
+        max_tokens: int,
+    ) -> str:
+        invocation_index = next(self._artifact_invocations)
+        try:
+            output = super()._structured(
+                kind,
+                system,
+                user,
+                schema,
+                max_tokens,
+            )
+        except Exception as exc:
+            self._journal_llm_invocation(
+                invocation_index=invocation_index,
+                kind=kind,
+                system=system,
+                user=user,
+                schema=schema,
+                max_tokens=max_tokens,
+                output=None,
+                error=exc,
+            )
+            raise
+        self._journal_llm_invocation(
+            invocation_index=invocation_index,
+            kind=kind,
+            system=system,
+            user=user,
+            schema=schema,
+            max_tokens=max_tokens,
+            output=output,
+            error=None,
+        )
+        return output
+
+    def _journal_llm_invocation(
+        self,
+        *,
+        invocation_index: int,
+        kind: str,
+        system: str,
+        user: str,
+        schema: dict[str, Any],
+        max_tokens: int,
+        output: str | None,
+        error: Exception | None,
+    ) -> None:
+        interaction = self._artifact_interaction
+        stage = self._artifact_stage
+        claim_id = self._artifact_claim_id
+        if interaction is None or stage is None or claim_id is None:
+            return
+        llm_artifact_store.write_llm_invocation(
+            interaction_id=interaction.interaction_id,
+            conversation_id=interaction.conversation_id,
+            correlation_id=interaction.correlation_id,
+            task_id=interaction.task_id,
+            assignment_id=interaction.assignment_id,
+            stage=stage.value,
+            claim_id=claim_id,
+            invocation_index=invocation_index,
+            kind=kind,
+            model=self.model,
+            base_url=self.base_url,
+            system_prompt=system,
+            user_prompt=user,
+            schema=schema,
+            max_tokens=max_tokens,
+            output=output,
+            error_type=type(error).__name__ if error is not None else None,
+            error_message=str(error) if error is not None else None,
+        )
 
     def decide_disposition(
         self,
@@ -362,9 +460,14 @@ def main() -> None:
             envelope.step.task_id,
             scheduler_key=scheduler_key,
         )
+        stage = PerceptStage(envelope.step.step_key)
         stage = _execute_claimed_user_prompt_step(
             conn,
-            UserPromptLLM(),
+            UserPromptLLM(
+                interaction=interaction,
+                stage=stage,
+                claim_id=claim_id,
+            ),
             claim_id=claim_id,
             worker_id=worker_id,
             scheduler_key=scheduler_key,
