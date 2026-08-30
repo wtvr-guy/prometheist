@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from jit_agent import artifact_journal, event_artifact_store
+from jit_agent import artifact_journal, event_artifact_store, llm_artifact_store
 
 
 def test_interaction_artifacts_are_hash_linked_idempotent_and_complete(tmp_path, monkeypatch) -> None:
@@ -69,6 +69,59 @@ def test_interaction_artifacts_are_hash_linked_idempotent_and_complete(tmp_path,
     assert verification["complete"] is True
     assert verification["artifact_count"] == 3
     assert percept["previous_artifact_id"] is None
+
+
+def test_llm_invocation_artifact_preserves_exact_stateless_contract(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("PROMETHEIST_ARTIFACT_ROOT", str(tmp_path / "artifacts"))
+    interaction_id = uuid4()
+    conversation_id = uuid4()
+    correlation_id = uuid4()
+    task_id = uuid4()
+    assignment_id = uuid4()
+    claim_id = uuid4()
+    schema = {
+        "type": "object",
+        "properties": {"answer": {"type": "string"}},
+        "required": ["answer"],
+    }
+
+    artifact = llm_artifact_store.write_llm_invocation(
+        interaction_id=interaction_id,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        task_id=task_id,
+        assignment_id=assignment_id,
+        stage="V2_RESPOND",
+        claim_id=claim_id,
+        invocation_index=0,
+        kind="FINAL_RESPONSE",
+        model="qwen3:4b",
+        base_url="http://localhost:11434",
+        system_prompt="exact system prompt",
+        user_prompt="exact response context",
+        schema=schema,
+        max_tokens=256,
+        output='{"answer":"hello"}',
+        error_type=None,
+        error_message=None,
+    )
+
+    assert artifact["artifact_type"] == "LLM_INVOCATION"
+    assert artifact["payload"] == {
+        "claim_id": str(claim_id),
+        "invocation_index": 0,
+        "kind": "FINAL_RESPONSE",
+        "model": "qwen3:4b",
+        "base_url": "http://localhost:11434",
+        "system_prompt": "exact system prompt",
+        "user_prompt": "exact response context",
+        "schema": schema,
+        "max_tokens": 256,
+        "output": '{"answer":"hello"}',
+        "error_type": None,
+        "error_message": None,
+    }
+    assert artifact_journal.verify_interaction_chain(interaction_id)["valid"] is True
 
 
 def test_event_artifacts_are_semantically_idempotent_and_verifiable(tmp_path, monkeypatch) -> None:
