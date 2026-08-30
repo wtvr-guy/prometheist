@@ -17,6 +17,7 @@ from jit_agent.admission_diagnostics import (
     build_resource_admission_diagnostics,
 )
 from jit_agent.attention_store import load_scheduler
+from jit_agent.chat_startup import reset_chat_execution_state
 from jit_agent.percept_response_runtime import handle_percept_in_worker_processes
 from jit_agent.worker_runtime import WorkerLaunchDenied
 
@@ -138,19 +139,28 @@ def _run_restore_events() -> None:
 
 
 def _run_chat(conversation_id: uuid.UUID) -> None:
-    """Run the lightweight terminal UI over the authoritative percept path."""
+    """Run the lightweight terminal UI over the authoritative percept path.
 
-    print("Prometheist")
-    print(f"conversation_id: {conversation_id}")
-    print("Type /exit or /quit to stop.")
-    incomplete = artifact_journal.latest_interaction_id(complete=False)
-    if incomplete is not None:
-        print(
-            "Recoverable incomplete interaction detected: "
-            f"{incomplete} (use `prometheist recover --latest`)."
-        )
+    Starting an interactive chat is a clean execution boundary.  Replaceable
+    scheduler/worker state from an earlier CLI process is cleared automatically
+    before the first prompt, so Ctrl+C or a killed process cannot strand the
+    single LLM reservation across sessions.  Canonical memory and JSON artifacts
+    are preserved.
+    """
 
     with db.get_connection() as conn:
+        reset_chat_execution_state(conn)
+
+        print("Prometheist")
+        print(f"conversation_id: {conversation_id}")
+        print("Type /exit or /quit to stop.")
+        incomplete = artifact_journal.latest_interaction_id(complete=False)
+        if incomplete is not None:
+            print(
+                "Recoverable incomplete interaction retained in artifacts: "
+                f"{incomplete} (optional: `prometheist recover --latest`)."
+            )
+
         while True:
             try:
                 user_text = input("\nYou > ").strip()
