@@ -5,9 +5,9 @@ long-lived development database cannot be selected through the normal `.env`.
 A database-name guard adds a second line of defense against destructive test
 setup, and every test begins from an empty derived/authoritative store.
 
-Set TEST_DATABASE_URL when the local PostgreSQL connection needs explicit
-credentials. Otherwise the default URL relies on normal libpq authentication.
-The selected database name must contain `test` or `benchmark`.
+Each test also receives its own independent artifact root. Subprocesses inherit
+that environment value, so restart/cross-process tests exercise real filesystem
+artifacts without leaking immutable records into later test cases.
 """
 from __future__ import annotations
 
@@ -73,6 +73,17 @@ def _prepare_test_database():
         conn.commit()
     finally:
         conn.close()
+    yield
+
+
+@pytest.fixture(autouse=True)
+def _isolated_artifact_root(tmp_path, monkeypatch):
+    """Give each test and its child processes an independent immutable journal."""
+
+    monkeypatch.setenv(
+        "PROMETHEIST_ARTIFACT_ROOT",
+        str(tmp_path / "prometheist-artifacts"),
+    )
     yield
 
 
