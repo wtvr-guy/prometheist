@@ -23,6 +23,7 @@ from jit_agent.native_policy import native_resource_safety_policy
 from jit_agent.ollama_runtime import OllamaClaimHostResourceProbe, OllamaRuntimeProbe
 from jit_agent.percept_response_runtime import (
     PERCEPT_STAGES,
+    PerceptStage,
     _stage_result,
     begin_percept,
     finish_percept,
@@ -36,7 +37,7 @@ def restore_event_store_from_artifacts(conn: psycopg.Connection) -> dict[str, in
 
     This operation is non-destructive: matching existing events are retained,
     missing events are inserted, and conflicting existing identities fail closed.
-    Committed artifacts retain their original global sequence.  A semantic event
+    Committed artifacts retain their original global sequence. A semantic event
     artifact that survived before its DB commit is assigned a new global sequence
     after all known committed events while preserving its conversation sequence.
     """
@@ -54,8 +55,8 @@ def restore_event_store_from_artifacts(conn: psycopg.Connection) -> dict[str, in
         default=0,
     )
     next_uncommitted_global = committed_max + 1
-    inserted = 0
-    existing_count = 0
+    inserted_event_ids: set[UUID] = set()
+    existing_event_ids: set[UUID] = set()
 
     try:
         with conn.cursor(row_factory=dict_row) as cur:
@@ -111,7 +112,7 @@ def restore_event_store_from_artifacts(conn: psycopg.Connection) -> dict[str, in
                     actual = {key: existing[key] for key in expected}
                     if actual != expected:
                         raise RuntimeError(f"event artifact conflicts with database row {event_id}")
-                    existing_count += 1
+                    existing_event_ids.add(event_id)
                     continue
 
                 cur.execute(
@@ -151,7 +152,7 @@ def restore_event_store_from_artifacts(conn: psycopg.Connection) -> dict[str, in
                         schema_version,
                     ),
                 )
-                inserted += 1
+                inserted_event_ids.add(event_id)
 
             cur.execute(
                 """
@@ -167,7 +168,7 @@ def restore_event_store_from_artifacts(conn: psycopg.Connection) -> dict[str, in
             )
             cur.execute("SELECT COALESCE(max(global_seq), 0) AS value FROM events")
             maximum = int(cur.fetchone()["value"])
-            if maximum > 0:
+            if maximum:
                 cur.execute(
                     "SELECT setval(pg_get_serial_sequence('events', 'global_seq'), %s, true)",
                     (maximum,),
@@ -179,8 +180,8 @@ def restore_event_store_from_artifacts(conn: psycopg.Connection) -> dict[str, in
 
     return {
         "artifact_events": len(artifact_pairs),
-        "inserted_events": inserted,
-        "existing_events": existing_count,
+        "inserted_events": len(inserted_event_ids),
+        "existing_events": len(existing_event_ids),
     }
 
 
@@ -203,6 +204,31 @@ def _percept_recovery_seed(interaction_id: UUID) -> tuple[UUID, UUID, str]:
     )
 
 
+def _ensure_final_disposition(interaction, *, scheduler_key: str, conn) -> None:
+    verification = artifact_journal.verify_interaction_chain(interaction.interaction_id)
+    if verification["complete"]:
+        return
+    persisted = _stage_result(
+        conn,
+        interaction,
+        PerceptStage.PERSIST_RESULT,
+        scheduler_key,
+    )
+    artifact_journal.write_final_disposition_artifact(
+        interaction_id=interaction.interaction_id,
+        conversation_id=interaction.conversation_id,
+        correlation_id=interaction.correlation_id,
+        task_id=interaction.task_id,
+        assignment_id=interaction.assignment_id,
+        response_required=bool(persisted["response_required"]),
+        response_text=(
+            str(persisted["response_text"])
+            if persisted.get("response_text") is not None
+            else None
+        ),
+    )
+
+
 def resume_interaction_from_artifacts(
     conn: psycopg.Connection,
     interaction_id: UUID,
@@ -216,10 +242,10 @@ def resume_interaction_from_artifacts(
 ) -> str | None:
     """Resume an incomplete interaction from the first missing stage.
 
-    If the operational interaction row still exists, recovery continues it.  If
-    PostgreSQL execution state was lost after the canonical events were restored,
+    If the operational interaction row still exists, recovery continues it. If
+    PostgreSQL execution state was lost after canonical events were restored,
     Prometheist recreates the same interaction identity from the percept artifact
-    and original correlation id.  Existing stage artifacts are then rehydrated in
+    and original correlation id. Existing stage artifacts are rehydrated in
     order, so completed LLM/tool stages are not repeated.
     """
 
@@ -305,10 +331,12 @@ def resume_interaction_from_artifacts(
                 f"recovery worker failed at stage {stage.value} with exit code {return_code}"
             )
 
-    return finish_percept(
+    response = finish_percept(
         conn,
         interaction,
         probe=physical_probe,
         policy=effective_policy,
         scheduler_key=scheduler_key,
     )
+    _ensure_final_disposition(interaction, scheduler_key=scheduler_key, conn=conn)
+    return response
