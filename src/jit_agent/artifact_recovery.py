@@ -5,14 +5,13 @@ from datetime import datetime, timezone
 import os
 import subprocess
 import sys
-from typing import Any
 from uuid import UUID
 
 import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Json
 
-from jit_agent import artifact_journal, db
+from jit_agent import artifact_journal, db, event_artifact_store
 from jit_agent.attention_observation import (
     HostResourceProbe,
     ResourceSafetyPolicy,
@@ -37,7 +36,7 @@ def restore_event_store_from_artifacts(conn: psycopg.Connection) -> dict[str, in
     after all known committed events while preserving its conversation sequence.
     """
 
-    artifact_pairs = artifact_journal.iter_event_artifacts()
+    artifact_pairs = event_artifact_store.iter_event_artifacts()
     if not artifact_pairs:
         return {"artifact_events": 0, "inserted_events": 0, "existing_events": 0}
 
@@ -205,7 +204,11 @@ def resume_interaction_from_artifacts(
         )
     if verification["complete"]:
         chain = artifact_journal.interaction_artifacts(interaction_id)
-        final = next(item for item in reversed(chain) if item["artifact_type"] == "FINAL_DISPOSITION")
+        final = next(
+            item
+            for item in reversed(chain)
+            if item["artifact_type"] == "FINAL_DISPOSITION"
+        )
         return final["payload"].get("response_text")
 
     interaction = load_interaction(conn, interaction_id, scheduler_key=scheduler_key)
