@@ -1,7 +1,7 @@
 # Immutable Artifact Journal
 
 **Status:** constitutional architecture deep dive  
-**Applies to:** canonical events, percept-to-response stage boundaries, inspection, interruption recovery, and database reconstruction
+**Applies to:** canonical events, percept-to-response stage boundaries, stateless LLM invocations, inspection, interruption recovery, and database reconstruction
 
 Prometheist maintains an independent immutable JSON artifact journal in addition to PostgreSQL. PostgreSQL remains the indexed operational store used for efficient retrieval, scheduling, and execution. It is not the only surviving representation of Prometheist's memory, cognition, or completed work.
 
@@ -59,7 +59,8 @@ artifacts/
     <interaction-id>/
       000001-percept.json
       000002-stage-result-V2_RESOLVE_REFERENCES.json
-      000003-stage-result-V2_PRECOGNITIVE.json
+      000003-llm-invocation-....json
+      000004-stage-result-V2_PRECOGNITIVE.json
       ...
       00000N-final-disposition.json
 ```
@@ -150,6 +151,7 @@ The interaction chain currently records:
 - the original percept;
 - each completed v2 architectural stage result;
 - stage errors;
+- each exact v2 stateless LLM invocation envelope;
 - the exact pre-cognitive aperture/disposition and execution plan as part of the pre-cognitive stage artifact;
 - exact work/tool results as part of the work stage artifact;
 - the exact Composer-approved memory package and Adaptive Recall outcome as part of the Compose stage artifact;
@@ -158,6 +160,28 @@ The interaction chain currently records:
 - a final-disposition manifest for completed interactions.
 
 Because the stage result is the same structured output used to complete the durable worker claim, the artifact is not a later summary of what the worker probably saw. It is the checkpointed boundary object itself.
+
+### 3.1 Exact stateless LLM invocation artifacts
+
+Every LLM call made by the live v2 user-prompt worker is independently journaled. The `LLM_INVOCATION` payload includes:
+
+- architectural stage;
+- worker claim ID and invocation index;
+- semantic call kind;
+- configured model;
+- backend base URL;
+- exact system prompt;
+- exact user/context prompt;
+- exact structured-output JSON schema;
+- generation token cap;
+- normalized constrained model output when the call succeeds;
+- exception type/message when the call fails.
+
+For the final responder this includes the resolved Prometheist personality/identity system prompt and the exact response-context payload. For the Composer it includes the exact memory evidence text presented for sufficiency judgment. For the pre-cognitive worker it includes the exact orientation-memory and capability-catalog text.
+
+This means debugging does not need to infer what a model saw from its answer. The actual stateless invocation contract is part of the hash-linked interaction history.
+
+Invocation artifacts are causal evidence, not recovery substitutes for a completed architectural stage. Stage recovery uses a completed `STAGE_RESULT` artifact because downstream validation/transformation may occur after an individual raw model call. Failed or superseded model attempts remain visible in history.
 
 ## 4. Artifact-before-terminal ordering
 
@@ -174,6 +198,8 @@ complete durable worker claim/result in PostgreSQL
         ↓
 allow downstream stage
 ```
+
+LLM invocation artifacts are written during stage computation, before the stage-result artifact.
 
 A stage is therefore recoverable if the process disappears after the artifact write but before the PostgreSQL worker result commits.
 
@@ -193,7 +219,7 @@ The final disposition is a compact manifest, not a duplicate transcript. It reco
 - the resulting response text when applicable;
 - references, types, hashes, sequence numbers, and stages for all prior interaction artifacts.
 
-The manifest makes the entire percept-to-outcome chain discoverable from one terminal artifact while preserving detailed data in the preceding immutable records.
+The manifest makes the entire percept-to-outcome chain discoverable from one terminal artifact while preserving detailed data in the preceding immutable records, including every v2 LLM invocation used to produce that outcome.
 
 An interrupted interaction has no final disposition. Its partial chain is intentional durable state, not garbage.
 
@@ -295,7 +321,7 @@ or:
 uv run prometheist verify --interaction-id <uuid>
 ```
 
-This allows response diagnosis even when PostgreSQL or scheduler state is offline.
+This allows response diagnosis even when PostgreSQL or scheduler state is offline. In particular, `inspect` exposes the exact memory packet and exact final-responder LLM invocation that produced a suspicious answer.
 
 ## 9. Storage policy
 
@@ -318,11 +344,12 @@ The current implementation establishes independent durability for:
 
 - canonical append-only events;
 - the live v2 user-prompt percept-to-response stage chain;
+- exact stateless LLM invocation envelopes for the v2 semantic roles;
 - stage result rehydration;
 - final disposition manifests;
 - event-store reconstruction;
 - interaction continuation after operational-state loss.
 
-Further hardening should extend the same boundary rule to additional long-running/non-conversational task families as they become live, add content-addressed storage for large external artifacts, add bulk backup/restore commands, and test deliberate power-loss/fsync fault cases on the native deployment environment.
+Further hardening should extend the same boundary rule to additional long-running/non-conversational task families as they become live, journal exact external-effect request envelopes alongside their results, add content-addressed storage for large external artifacts, add bulk backup/restore commands, and test deliberate power-loss/fsync fault cases on the native deployment environment.
 
 The principle is broader than the current implementation: **if a meaningful cognitive or operational boundary would matter for explanation, replay, recovery, or reconstruction, its exact durable artifact must not exist only inside a disposable process or a single database.**
