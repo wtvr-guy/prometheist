@@ -229,13 +229,13 @@ Prometheist is intended to remain usable on modest local hardware. Stronger hard
 
 **Deep dive:** [`docs/engineering/CONSTITUTIONAL_GOVERNANCE.md`](docs/engineering/CONSTITUTIONAL_GOVERNANCE.md)
 
-### Article 27 — Capability reasoning is recurrent, but every reassessment is fresh
+### Article 27 — Memory reassessment may recur, but every reassessment is fresh and narrow
 
-**Rule.** Completion of capability work does not inherit or extend the previous model context and does not automatically authorize a user-facing response. Prometheist persists the capability result, rebuilds a bounded system-owned context, and uses a new stateless model invocation to decide whether more work is required or the system is ready to respond. Final user-facing generation occurs only after explicit readiness under the current routing contract.
+**Rule.** When the v2 Composer determines that persistent-memory context is insufficient for a required response, Prometheist may perform bounded Adaptive Recall and invoke a fresh stateless Composer again. The Composer decides only memory-context sufficiency and the semantic memory deficit. It does not decide whether a direct user prompt deserves a response, reinterpret completed tool/action results, become a second executive, or generate the final response. Completed capability/action results persist independently and reach the final responder through their authoritative execution path.
 
-**Why it matters.** One-shot routing is not a valid substitute for reasoning depth, while carrying the same model context across capability rounds would violate statelessness and hide continuity inside the worker.
+**Why it matters.** Prometheist needs iterative memory depth without reintroducing hidden model continuity or a recurrent general-purpose router. Narrow fresh reassessment preserves statelessness while keeping control, tool evidence, and response policy in their proper system-owned domains.
 
-**Deep dive:** [`docs/architecture/INTERACTION_CONTINUITY.md`](docs/architecture/INTERACTION_CONTINUITY.md)
+**Deep dive:** [`docs/architecture/PERCEPT_TO_RESPONSE_PIPELINE.md`](docs/architecture/PERCEPT_TO_RESPONSE_PIPELINE.md)
 
 ### Article 28 — Durable queued work must have an explicit anti-starvation policy
 
