@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import traceback
 import uuid
 
 from jit_agent import artifact_journal, artifact_recovery, db
@@ -138,6 +139,20 @@ def _run_restore_events() -> None:
     print(json.dumps(result, indent=2, sort_keys=True))
 
 
+def _reset_failed_turn(conn, exc: BaseException) -> None:
+    """Release replaceable execution state after one failed interactive turn."""
+
+    try:
+        reset_chat_execution_state(conn)
+    except Exception as reset_exc:
+        print(
+            "PROMETHEIST_TURN_RECOVERY_FAILED="
+            f"{type(reset_exc).__name__}: {reset_exc}",
+            file=sys.stderr,
+        )
+        raise exc from reset_exc
+
+
 def _run_chat(conversation_id: uuid.UUID) -> None:
     """Run the lightweight terminal UI over the authoritative percept path.
 
@@ -146,6 +161,11 @@ def _run_chat(conversation_id: uuid.UUID) -> None:
     before the first prompt, so Ctrl+C or a killed process cannot strand the
     single LLM reservation across sessions.  Canonical memory and JSON artifacts
     are preserved.
+
+    A failed turn is also an execution boundary. The error remains durably
+    inspectable in artifacts/events, but replaceable scheduler state is reset so
+    one malformed model output or worker failure cannot terminate the REPL or
+    poison the next prompt.
     """
 
     with db.get_connection() as conn:
@@ -173,11 +193,29 @@ def _run_chat(conversation_id: uuid.UUID) -> None:
             if not user_text:
                 continue
 
-            response = _handle_with_admission_diagnostics(
-                conn,
-                user_text,
-                conversation_id,
-            )
+            try:
+                response = _handle_with_admission_diagnostics(
+                    conn,
+                    user_text,
+                    conversation_id,
+                )
+            except KeyboardInterrupt as exc:
+                _reset_failed_turn(conn, exc)
+                print("\nTurn interrupted; execution state reset.", file=sys.stderr)
+                continue
+            except Exception as exc:
+                traceback.print_exc()
+                _reset_failed_turn(conn, exc)
+                latest = artifact_journal.latest_interaction_id(complete=False)
+                suffix = f" interaction_id={latest}" if latest is not None else ""
+                print(
+                    "PROMETHEIST_TURN_FAILED="
+                    f"{type(exc).__name__}: {exc}{suffix}\n"
+                    "Execution state reset; chat remains available.",
+                    file=sys.stderr,
+                )
+                continue
+
             if response is not None:
                 print(f"\nPrometheist > {response}")
 
