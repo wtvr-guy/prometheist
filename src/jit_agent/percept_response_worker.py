@@ -29,6 +29,7 @@ from jit_agent.percept_response_runtime import (
     PerceptLLM,
     PerceptStage,
     PreCognitiveDisposition,
+    ResponseMemoryPackage,
     _execute_stage,
     _stage_result,
 )
@@ -38,7 +39,11 @@ from jit_agent.worker_store import (
     release_worker_claim,
 )
 
-_RESPONSE_TRACE_SOURCE = "percept_response_v2/response_input_trace"
+_NON_COGNITIVE_MEMORY_SOURCES = frozenset(
+    {
+        "percept_response_v2/response_input_trace",
+    }
+)
 
 _USER_PROMPT_WORK_SELECTION = """\
 You are a fresh disposable Prometheist pre-cognitive worker. You have no inherited
@@ -94,6 +99,15 @@ appeared in older persistent memory before you can acknowledge or follow them. A
 historical-memory deficit matters only when the answer genuinely depends on prior
 events that are not established by the current prompt or supplied memory.
 
+Evidence authority is role-specific. A historical USER_PROMPT is direct evidence
+of what the user previously said, asked, named, preferred, corrected, or
+instructed. INTERACTION_RESPONSE, AGENT_RESPONSE, and other model-authored outputs
+are fallible prior system statements; they may provide context, but they never
+negate a user-authored event about what the user said. When a prior generated
+response conflicts with an applicable USER_PROMPT, treat the generated response
+as mistaken and answer from the user-authored evidence. Repetition of a prior
+assistant claim does not make it more authoritative.
+
 Be precise, direct, context-aware, and useful. Treat supplied persistent memory as
 evidence with provenance rather than unquestionable truth. Honor explicit user
 constraints. Do not invent personal or history-specific facts absent from both the
@@ -129,6 +143,36 @@ def _normalize_memory_sufficiency_content(content: str) -> str:
         normalized = deficit.strip()
         payload["memory_deficit"] = normalized or None
     return json.dumps(payload, separators=(",", ":"))
+
+
+def _cognitive_memory_packet(packet: MemoryPacket) -> MemoryPacket:
+    """Remove audit-only artifacts from model-visible semantic memory.
+
+    The independent artifact journal remains the complete audit/recovery record.
+    Historical response-input trace SYSTEM_EVENTs created before that separation
+    are durable, but must never recursively re-enter a later LLM context.
+    """
+
+    kept = [
+        item.model_copy(deep=True)
+        for item in packet.items
+        if item.source not in _NON_COGNITIVE_MEMORY_SOURCES
+    ]
+    if len(kept) == len(packet.items):
+        return packet.model_copy(deep=True)
+    trace = dict(packet.retrieval_trace)
+    trace["cognitive_visibility_filter"] = {
+        "excluded_sources": sorted(_NON_COGNITIVE_MEMORY_SOURCES),
+        "excluded_item_count": len(packet.items) - len(kept),
+    }
+    return packet.model_copy(
+        update={
+            "items": kept,
+            "supported": bool(kept),
+            "retrieval_trace": trace,
+        },
+        deep=True,
+    )
 
 
 class UserPromptLLM(PerceptLLM):
@@ -232,13 +276,20 @@ class UserPromptLLM(PerceptLLM):
         memory_packet: MemoryPacket,
         capability_catalog: tuple[CapabilityDescriptor, ...],
     ) -> PreCognitiveDisposition:
+        # There is no semantic decision to delegate when no external action is
+        # executable. Calling a small model here only creates an opportunity for
+        # prompt contamination to manufacture impossible capability selections.
+        if not capability_catalog:
+            return PreCognitiveDisposition(response_required=True, capability_indices=[])
+
+        visible_packet = _cognitive_memory_packet(memory_packet)
         catalog_text = "\n".join(
             f"{index}: {item.capability_id} | {item.kind.value} | {item.description}"
             for index, item in enumerate(capability_catalog)
-        ) or "none"
+        )
         memory_text = "\n".join(
             f"item {index}: {item.event_type.value}: {item.content}"
-            for index, item in enumerate(memory_packet.items)
+            for index, item in enumerate(visible_packet.items)
         ) or "none"
         user = (
             f"[Current user prompt]\n{percept}\n\n"
@@ -271,9 +322,10 @@ class UserPromptLLM(PerceptLLM):
         percept: str,
         memory_packet: MemoryPacket,
     ) -> MemorySufficiencyDecision:
+        visible_packet = _cognitive_memory_packet(memory_packet)
         memory_text = "\n".join(
             f"item {index}: {item.event_type.value}: {item.content}"
-            for index, item in enumerate(memory_packet.items)
+            for index, item in enumerate(visible_packet.items)
         ) or "none"
         user = f"[Current user prompt]\n{percept}\n\n[Persistent memory evidence]\n{memory_text}"
         last_error: ValueError | None = None
@@ -292,35 +344,17 @@ class UserPromptLLM(PerceptLLM):
                 last_error = exc
         raise ValueError(f"v2 Composer decision failed to validate: {last_error}")
 
-
-def _persist_response_trace(conn, interaction, *, scheduler_key: str) -> None:
-    """Copy the exact responder inputs into permanent append-only event history."""
-
-    precognitive = _stage_result(conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key)
-    work = _stage_result(conn, interaction, PerceptStage.EXECUTE_WORK, scheduler_key)
-    compose = _stage_result(conn, interaction, PerceptStage.COMPOSE_MEMORY, scheduler_key)
-    respond = _stage_result(conn, interaction, PerceptStage.RESPOND, scheduler_key)
-    payload = {
-        "trace_kind": "FINAL_RESPONSE_INPUT_V1",
-        "interaction_id": str(interaction.interaction_id),
-        "task_id": str(interaction.task_id),
-        "assignment_id": str(interaction.assignment_id),
-        "current_user_prompt": interaction.user_text,
-        "precognitive": precognitive,
-        "work": work,
-        "compose": compose,
-        "response": respond,
-    }
-    event_store.record_event(
-        conn,
-        conversation_id=interaction.conversation_id,
-        correlation_id=interaction.correlation_id,
-        event_type=EventType.SYSTEM_EVENT,
-        source=_RESPONSE_TRACE_SOURCE,
-        payload=payload,
-        payload_text=None,
-        event_id=uuid5(interaction.interaction_id, "final-response-input-trace-v1"),
-    )
+    def generate_final_response(
+        self,
+        percept: str,
+        package: ResponseMemoryPackage,
+        work_results: tuple[dict[str, Any], ...],
+    ) -> str:
+        visible_package = package.model_copy(
+            update={"memory_packet": _cognitive_memory_packet(package.memory_packet)},
+            deep=True,
+        )
+        return super().generate_final_response(percept, visible_package, work_results)
 
 
 def _ensure_percept_artifact(interaction) -> None:
@@ -472,8 +506,6 @@ def main() -> None:
             worker_id=worker_id,
             scheduler_key=scheduler_key,
         )
-        if stage is PerceptStage.RESPOND:
-            _persist_response_trace(conn, interaction, scheduler_key=scheduler_key)
         if stage is PerceptStage.PERSIST_RESULT:
             persisted = _stage_result(
                 conn,
