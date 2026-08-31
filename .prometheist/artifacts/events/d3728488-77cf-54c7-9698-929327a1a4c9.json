@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "22c9d85b-ff4e-4717-850f-20ccf2b4b66a",
+  "conversation_seq": 7,
+  "correlation_id": "57f1521d-0be9-4352-9cc9-00fe9cbdf14b",
+  "event_id": "d3728488-77cf-54c7-9698-929327a1a4c9",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-08-31T03:20:39.682135+00:00",
+  "payload": {
+    "text": "Who are you? Who designed you?"
+  },
+  "payload_text": "Who are you? Who designed you?",
+  "record_hash": "391c7f3d5d7acd2b5da351159eb21d95ef98a88758a1af5e42646f19bf487528",
+  "source": "user"
+}

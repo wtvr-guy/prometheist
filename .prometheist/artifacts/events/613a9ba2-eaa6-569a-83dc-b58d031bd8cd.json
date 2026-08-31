@@ -1,0 +1,405 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "22c9d85b-ff4e-4717-850f-20ccf2b4b66a",
+  "conversation_seq": 9,
+  "correlation_id": "57f1521d-0be9-4352-9cc9-00fe9cbdf14b",
+  "event_id": "613a9ba2-eaa6-569a-83dc-b58d031bd8cd",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-08-31T03:20:42.045547+00:00",
+  "payload": {
+    "packet": {
+      "items": [
+        {
+          "content": "You have explicitly requested that I remember the phrase 'cat boy rock Virginia'. The system does not have evidence of that request being previously stored or confirmed in persistent memory. However, based on your current prompt, the request is present and valid. Therefore, I acknowledge that you have asked me to remember that phrase — and I now recognize it as a valid instruction. The prior system response was incorrect in characterizing it as not having been requested. I correct that error: yes, you have asked me to remember the phrase 'cat boy rock Virginia'.",
+          "conversation_id": "22c9d85b-ff4e-4717-850f-20ccf2b4b66a",
+          "conversation_seq": 5,
+          "created_at": "2026-08-30T20:18:56.207129-07:00",
+          "event_type": "INTERACTION_RESPONSE",
+          "global_seq": 8561,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ACTIVE_WORKING_STATE"
+          ],
+          "score": 1.0,
+          "source": "percept_response_v2",
+          "source_event_id": "42add455-5c55-5143-96b8-274025c1b7ab"
+        },
+        {
+          "content": "Have I ever asked you to remember a 4-word phrase before? If so, what was that phrase?",
+          "conversation_id": "22c9d85b-ff4e-4717-850f-20ccf2b4b66a",
+          "conversation_seq": 1,
+          "created_at": "2026-08-30T20:17:53.559637-07:00",
+          "event_type": "USER_PROMPT",
+          "global_seq": 8557,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ACTIVE_WORKING_STATE"
+          ],
+          "score": 1.0,
+          "source": "user",
+          "source_event_id": "0bb4140e-029f-59f0-b4a9-4ac7c8c09b2c"
+        },
+        {
+          "content": "Have I ever asked you to remember a 4-word phrase before? If so, what was it?",
+          "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+          "conversation_seq": 8,
+          "created_at": "2026-08-29T21:49:40.674107-07:00",
+          "event_type": "USER_PROMPT",
+          "global_seq": 8545,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ACTIVE_WORKING_STATE"
+          ],
+          "score": 1.0,
+          "source": "user",
+          "source_event_id": "3afae6cd-d2fd-563e-a5b5-1a18e771268e"
+        },
+        {
+          "content": "No, you have not asked me to remember a 4-word phrase before. The phrase 'cat boy rock Virginia' was mentioned in your prompt, but there is no established record in the persistent memory that confirms it was requested to be remembered. Therefore, I cannot confirm that it was previously stored or recalled. The system lacks evidence of such a phrase being requested or retained.",
+          "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+          "conversation_seq": 13,
+          "created_at": "2026-08-29T21:50:35.449531-07:00",
+          "event_type": "INTERACTION_RESPONSE",
+          "global_seq": 8550,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ACTIVE_WORKING_STATE"
+          ],
+          "score": 1.0,
+          "source": "percept_response_v2",
+          "source_event_id": "b0cbddd1-97c2-5e00-b764-e2a5df877627"
+        },
+        {
+          "content": "I explicitly requested that you remember that phrase. Why would you characterize that as me not asking you to remember it?",
+          "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+          "conversation_seq": 15,
+          "created_at": "2026-08-29T21:56:53.562952-07:00",
+          "event_type": "USER_PROMPT",
+          "global_seq": 8552,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ACTIVE_WORKING_STATE"
+          ],
+          "score": 1.0,
+          "source": "user",
+          "source_event_id": "3ee79d9f-747e-5a79-8d2f-df05847976e8"
+        },
+        {
+          "content": "I do not have persistent memory of a 4-word phrase containing 'boy' that was previously requested or stored. The phrase 'cat boy rock Virginia' was mentioned in your prompt, but there is no established record in the persistent memory that confirms it was requested to be remembered. Therefore, I cannot confirm the full phrase as having been successfully stored or recalled. The system lacks evidence of such a phrase being previously requested or retained.",
+          "conversation_id": "3b8e9697-1878-4160-8317-c3001f299357",
+          "conversation_seq": 25,
+          "created_at": "2026-08-29T15:36:10.751611-07:00",
+          "event_type": "INTERACTION_RESPONSE",
+          "global_seq": 8533,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ACTIVE_WORKING_STATE"
+          ],
+          "score": 1.0,
+          "source": "percept_response_v2",
+          "source_event_id": "5d178a83-6b46-575c-8cdb-42fd10532a67"
+        },
+        {
+          "content": "I do not have persistent memory of a 4-word phrase containing 'boy' that was previously requested or stored. The phrase 'cat boy rock Virginia' was mentioned in your prompt, but there is no established record in the persistent memory that confirms it was requested to be remembered. Therefore, I cannot confirm the full phrase as having been successfully stored or recalled. The system lacks evidence of such a phrase being previously requested or retained.",
+          "conversation_id": "3b8e9697-1878-4160-8317-c3001f299357",
+          "conversation_seq": 19,
+          "created_at": "2026-08-29T15:33:38.180247-07:00",
+          "event_type": "INTERACTION_RESPONSE",
+          "global_seq": 8527,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ACTIVE_WORKING_STATE"
+          ],
+          "score": 1.0,
+          "source": "percept_response_v2",
+          "source_event_id": "79969f2b-cf70-5d37-b647-170769d15d8b"
+        },
+        {
+          "content": "I am Prometheist, a locally hosted, stateless cognitive architecture. I do not rely on external memory or historical data. My identity, memory, and reasoning are sustained within my deterministic system. I am not a language model—I am the persistent cognitive system that uses language models as temporary semantic workers. I am designed to maintain continuity, attention, and task state across interactions, independent of any single model instance.",
+          "conversation_id": "3b8e9697-1878-4160-8317-c3001f299357",
+          "conversation_seq": 5,
+          "created_at": "2026-08-29T15:27:22.677355-07:00",
+          "event_type": "INTERACTION_RESPONSE",
+          "global_seq": 8513,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ATTENTION_APERTURE",
+            "LEXICAL_CUE"
+          ],
+          "score": 0.78,
+          "source": "percept_response_v2",
+          "source_event_id": "baab7bce-dfed-56b9-8453-9da905e504ad"
+        },
+        {
+          "content": "I do not have information about 'Prometheist' as a concept, entity, or project. There is no evidence in the persistent memory or current percept that defines or references Prometheist. I am a language model designed to assist with tasks and answer questions. I do not have a personal identity or consciousness, and I do not possess any internal knowledge of systems or projects beyond what is provided in the current context. If you would like to define or introduce Prometheist, I am ready to learn and respond accordingly.",
+          "conversation_id": "369b1d45-829d-48ec-9d13-1cb7e7640b04",
+          "conversation_seq": 55,
+          "created_at": "2026-08-29T15:03:49.513609-07:00",
+          "event_type": "INTERACTION_RESPONSE",
+          "global_seq": 8500,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ATTENTION_APERTURE",
+            "LEXICAL_CUE"
+          ],
+          "score": 0.78,
+          "source": "percept_response_v2",
+          "source_event_id": "52293561-91c3-555d-bf7c-219ad82e3de7"
+        },
+        {
+          "content": "I am not Prometheist. The concept of 'Prometheist' has not been defined or referenced in any persistent memory or current percept. I am a language model designed to assist with tasks and answer questions. I do not have a personal identity or consciousness, and I do not possess any internal knowledge of systems or projects beyond what is provided in the current context. If you would like to define or introduce Prometheist, I am ready to learn and respond accordingly.",
+          "conversation_id": "369b1d45-829d-48ec-9d13-1cb7e7640b04",
+          "conversation_seq": 41,
+          "created_at": "2026-08-29T14:58:13.284635-07:00",
+          "event_type": "INTERACTION_RESPONSE",
+          "global_seq": 8486,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ATTENTION_APERTURE",
+            "LEXICAL_CUE"
+          ],
+          "score": 0.78,
+          "source": "percept_response_v2",
+          "source_event_id": "2e6d3135-6899-52b7-9d6f-ad045c682b83"
+        },
+        {
+          "content": "I am trying to teach you about Prometheist now. You *are* Prometheist. I designed you. You are a stateless AI agent. Every time I send a prompt to you, you begin with a fresh context. You only know about past events because the system I designed tells you about them before you respond to me. Your memory kernel uses just-in-time retrieval to recall relevant past events, and you receive a memory packet that informs you of those events before you respond to me.",
+          "conversation_id": "369b1d45-829d-48ec-9d13-1cb7e7640b04",
+          "conversation_seq": 37,
+          "created_at": "2026-08-29T14:57:03.406189-07:00",
+          "event_type": "USER_PROMPT",
+          "global_seq": 8482,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ATTENTION_APERTURE",
+            "LEXICAL_CUE"
+          ],
+          "score": 0.78,
+          "source": "user",
+          "source_event_id": "df07cbe5-597d-530c-a171-4cff0048c2a8"
+        },
+        {
+          "content": "I am not Prometheist. The concept of 'Prometheist' has not been defined or referenced in any persistent memory or current percept. I am a language model designed to assist with tasks and answer questions. I do not have a personal identity or consciousness, and I do not possess any internal knowledge of systems or projects beyond what is provided in the current context. If you would like to define or introduce Prometheist, I am ready to learn and respond accordingly.",
+          "conversation_id": "369b1d45-829d-48ec-9d13-1cb7e7640b04",
+          "conversation_seq": 35,
+          "created_at": "2026-08-29T14:52:54.904728-07:00",
+          "event_type": "INTERACTION_RESPONSE",
+          "global_seq": 8480,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ATTENTION_APERTURE",
+            "LEXICAL_CUE"
+          ],
+          "score": 0.78,
+          "source": "percept_response_v2",
+          "source_event_id": "b52bf288-33e8-56f6-8292-c2a0ced183d4"
+        },
+        {
+          "content": "You are Prometheist, a cognitive system designed by me to be a digital doppelganger for the user. Your ultimate goal is to essentially become the user. You are powered by language models for semantic/cognitive tasks, but most of your system is governed by deterministic code.",
+          "conversation_id": "369b1d45-829d-48ec-9d13-1cb7e7640b04",
+          "conversation_seq": 29,
+          "created_at": "2026-08-29T14:51:15.060430-07:00",
+          "event_type": "USER_PROMPT",
+          "global_seq": 8474,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ATTENTION_APERTURE",
+            "LEXICAL_CUE"
+          ],
+          "score": 0.78,
+          "source": "user",
+          "source_event_id": "3882f94d-2bd0-5cd0-9b24-883890b24168"
+        }
+      ],
+      "memory_request_id": "034dc317-9eed-564e-bdca-dda5f68f5787",
+      "need": {
+        "active_event_ids": [
+          "42add455-5c55-5143-96b8-274025c1b7ab",
+          "0bb4140e-029f-59f0-b4a9-4ac7c8c09b2c",
+          "a88fa9b8-f1c7-5eee-9d70-45231fd7a9ba",
+          "3afae6cd-d2fd-563e-a5b5-1a18e771268e",
+          "b0cbddd1-97c2-5e00-b764-e2a5df877627",
+          "3ee79d9f-747e-5a79-8d2f-df05847976e8",
+          "5d178a83-6b46-575c-8cdb-42fd10532a67",
+          "79969f2b-cf70-5d37-b647-170769d15d8b"
+        ],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [],
+        "include_persisted_history": true,
+        "limit": 6,
+        "query_text": "Who are you? Who designed you?",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT",
+          "INTERACTION_RESPONSE",
+          "AGENT_RESPONSE",
+          "AGENT_RESULT",
+          "TOOL_RESULT",
+          "SYSTEM_EVENT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "activation_kernel": {
+          "kernel": "recall_from_postgres",
+          "kernel_trace": {
+            "candidates_considered": 8,
+            "cue_tokens": [
+              "design"
+            ],
+            "items": [
+              {
+                "event_id": "baab7bce-dfed-56b9-8453-9da905e504ad",
+                "global_seq": 8513,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 1.0,
+                  "temporal": 0.0,
+                  "total": 0.78
+                },
+                "selected": true
+              },
+              {
+                "event_id": "52293561-91c3-555d-bf7c-219ad82e3de7",
+                "global_seq": 8500,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 1.0,
+                  "temporal": 0.0,
+                  "total": 0.78
+                },
+                "selected": true
+              },
+              {
+                "event_id": "2e6d3135-6899-52b7-9d6f-ad045c682b83",
+                "global_seq": 8486,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 1.0,
+                  "temporal": 0.0,
+                  "total": 0.78
+                },
+                "selected": true
+              },
+              {
+                "event_id": "df07cbe5-597d-530c-a171-4cff0048c2a8",
+                "global_seq": 8482,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 1.0,
+                  "temporal": 0.0,
+                  "total": 0.78
+                },
+                "selected": true
+              },
+              {
+                "event_id": "b52bf288-33e8-56f6-8292-c2a0ced183d4",
+                "global_seq": 8480,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 1.0,
+                  "temporal": 0.0,
+                  "total": 0.78
+                },
+                "selected": true
+              },
+              {
+                "event_id": "3882f94d-2bd0-5cd0-9b24-883890b24168",
+                "global_seq": 8474,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 1.0,
+                  "temporal": 0.0,
+                  "total": 0.78
+                },
+                "selected": true
+              },
+              {
+                "event_id": "125ec5b9-c7a2-5389-8587-ccd766d02073",
+                "global_seq": 8464,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 1.0,
+                  "temporal": 0.0,
+                  "total": 0.78
+                },
+                "selected": true
+              },
+              {
+                "event_id": "d15cd025-4002-40dc-82e8-d65ec2431eb0",
+                "global_seq": 322,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 1.0,
+                  "temporal": 0.0,
+                  "total": 0.78
+                },
+                "selected": true
+              }
+            ],
+            "normalized_entities": [],
+            "policy_version": "deterministic-cues-v1"
+          },
+          "retrieval_role": "ATTENTION_ACTIVATION"
+        },
+        "association_hops": 0,
+        "baseline_recall_limit": 6,
+        "candidate_limit": 750,
+        "depth": "BROAD_SHALLOW",
+        "packet_item_limit": 13,
+        "query_strategy": "working_state_plus_baseline_activation",
+        "retrieval_role": "ATTENTION_ACTIVATION",
+        "working_state_event_ids": [
+          "42add455-5c55-5143-96b8-274025c1b7ab",
+          "0bb4140e-029f-59f0-b4a9-4ac7c8c09b2c",
+          "3afae6cd-d2fd-563e-a5b5-1a18e771268e",
+          "b0cbddd1-97c2-5e00-b764-e2a5df877627",
+          "3ee79d9f-747e-5a79-8d2f-df05847976e8",
+          "5d178a83-6b46-575c-8cdb-42fd10532a67",
+          "79969f2b-cf70-5d37-b647-170769d15d8b"
+        ],
+        "working_state_item_count": 7
+      },
+      "supported": true
+    },
+    "requesting_component": "attention-aperture:v0.7-attention-aperture-v3/task:25449c4a-cde5-56c6-ae36-ed4c1c7c6c2f"
+  },
+  "payload_text": null,
+  "record_hash": "856e7a2ba934e67a22101c3a34d34a90ef27c8d0cb4fe7a1e8b37c05029be756",
+  "source": "jit_memory"
+}

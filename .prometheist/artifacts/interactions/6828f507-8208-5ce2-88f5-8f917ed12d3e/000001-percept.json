@@ -1,0 +1,23 @@
+{
+  "artifact_hash": "f5d3fd1b1534f354bb45c142cededea9ce2095733adc7b263233a365b831b46c",
+  "artifact_id": "aa7e6b5f-a6e9-5d6a-a201-573697cab13f",
+  "artifact_key": "percept",
+  "artifact_schema_version": 1,
+  "artifact_type": "PERCEPT",
+  "assignment_id": null,
+  "conversation_id": "22c9d85b-ff4e-4717-850f-20ccf2b4b66a",
+  "correlation_id": "68d12794-7aea-4859-87fe-8db2746ee462",
+  "created_at": "2026-08-31T03:17:54.739024+00:00",
+  "interaction_id": "6828f507-8208-5ce2-88f5-8f917ed12d3e",
+  "journal_sequence": 1,
+  "payload": {
+    "user_prompt_event_id": "0bb4140e-029f-59f0-b4a9-4ac7c8c09b2c",
+    "user_text": "Have I ever asked you to remember a 4-word phrase before? If so, what was that phrase?"
+  },
+  "payload_hash": "447307d0744db6439e5b0b368f55b9a548f374cbd4e7bc5505dfcafcec2fe70e",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "fbde1b16-ab59-5041-9be5-7326c32dd884"
+}

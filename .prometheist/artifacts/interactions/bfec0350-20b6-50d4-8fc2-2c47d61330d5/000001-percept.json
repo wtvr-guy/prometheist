@@ -1,0 +1,23 @@
+{
+  "artifact_hash": "12b46e3826433780bdc16900cddb032818dc077daa25d0e226afd92081d139e3",
+  "artifact_id": "98cb0abd-7692-5a4a-9327-1d5b2144bfc5",
+  "artifact_key": "percept",
+  "artifact_schema_version": 1,
+  "artifact_type": "PERCEPT",
+  "assignment_id": null,
+  "conversation_id": "22c9d85b-ff4e-4717-850f-20ccf2b4b66a",
+  "correlation_id": "57f1521d-0be9-4352-9cc9-00fe9cbdf14b",
+  "created_at": "2026-08-31T03:20:40.701039+00:00",
+  "interaction_id": "bfec0350-20b6-50d4-8fc2-2c47d61330d5",
+  "journal_sequence": 1,
+  "payload": {
+    "user_prompt_event_id": "d3728488-77cf-54c7-9698-929327a1a4c9",
+    "user_text": "Who are you? Who designed you?"
+  },
+  "payload_hash": "1b4f046c6b204c210854728b08ffdf7eb86fffa1d7b501ba513730fd665d44aa",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "25449c4a-cde5-56c6-ae36-ed4c1c7c6c2f"
+}
