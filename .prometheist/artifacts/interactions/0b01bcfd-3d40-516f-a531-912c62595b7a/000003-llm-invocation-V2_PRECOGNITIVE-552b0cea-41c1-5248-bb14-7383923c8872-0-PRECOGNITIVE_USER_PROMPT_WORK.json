@@ -1,0 +1,47 @@
+{
+  "artifact_hash": "74b7e53ffbca3dd70daaf37855f36459e48885535e98ed78c2d286ccb6b3ae3b",
+  "artifact_id": "6300599f-010f-5307-827e-061b38b4964f",
+  "artifact_key": "llm-invocation:V2_PRECOGNITIVE:552b0cea-41c1-5248-bb14-7383923c8872:0:PRECOGNITIVE_USER_PROMPT_WORK",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_INVOCATION",
+  "assignment_id": "9a8a53ba-671b-595d-92da-b9bbf05727a2",
+  "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+  "correlation_id": "0daf664c-a94f-4aea-a575-ff3f6ff01e87",
+  "created_at": "2026-08-30T04:47:04.318422+00:00",
+  "interaction_id": "0b01bcfd-3d40-516f-a531-912c62595b7a",
+  "journal_sequence": 3,
+  "payload": {
+    "base_url": "http://localhost:11434",
+    "claim_id": "552b0cea-41c1-5248-bb14-7383923c8872",
+    "error_message": null,
+    "error_type": null,
+    "invocation_index": 0,
+    "kind": "PRECOGNITIVE_USER_PROMPT_WORK",
+    "max_tokens": 48,
+    "model": "qwen3:4b-instruct-2507-q4_K_M",
+    "output": "{}",
+    "schema": {
+      "additionalProperties": false,
+      "description": "The only model-authored pre-cognitive control output for a user prompt.",
+      "properties": {
+        "capability_indices": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Capability Indices",
+          "type": "array"
+        }
+      },
+      "title": "UserPromptWorkSelection",
+      "type": "object"
+    },
+    "system_prompt": "You are a fresh disposable Prometheist pre-cognitive worker. You have no inherited\ntranscript or model state. This input is an explicit user prompt, and Prometheist\nwill respond to it unconditionally. Your only decision is which executable\nnon-memory capabilities, if any, must run before the final response.\n\nReturn only capability_indices. Capability indices are requirements, never\nexecution order. Prometheist owns dependencies, scheduling, permissions,\nresources, retries, and effects. Do not decide whether to respond. Do not write\ncapability names, arguments, queries, explanations, schedules, or user-facing\nlanguage.\n",
+    "user_prompt": "[Current user prompt]\nWho areyou?\n\n[Bounded orientation memory]\nnone\n\n[Executable capability catalog]\nnone"
+  },
+  "payload_hash": "9bb769b6d2f2b0920e7cf0c118e74e5b8265d01df27d4d60fe94f047118224c0",
+  "previous_artifact_hash": "ba874c35fe3834bf77880b8a218b1d0b19662b2d792cc62f61cd3b81c4c9390f",
+  "previous_artifact_id": "d3c76e58-5597-54d2-8bdd-4a9806fd1927",
+  "producer": "percept_response_v2/ollama",
+  "stage": "V2_PRECOGNITIVE",
+  "task_id": "15679a85-eb2b-588f-96fe-9c4594d167a9"
+}

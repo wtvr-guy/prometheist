@@ -1,0 +1,23 @@
+{
+  "artifact_hash": "20cffec92a23580f244a0abeb55808c2a4be3d980e032b6fdc56973df22175cf",
+  "artifact_id": "b7bdd6d4-edc5-5687-abc7-068a666eeb86",
+  "artifact_key": "percept",
+  "artifact_schema_version": 1,
+  "artifact_type": "PERCEPT",
+  "assignment_id": null,
+  "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+  "correlation_id": "0daf664c-a94f-4aea-a575-ff3f6ff01e87",
+  "created_at": "2026-08-30T04:46:53.598562+00:00",
+  "interaction_id": "0b01bcfd-3d40-516f-a531-912c62595b7a",
+  "journal_sequence": 1,
+  "payload": {
+    "user_prompt_event_id": "58b6f265-fa62-5dad-bf39-4bdb5b6370b0",
+    "user_text": "Who areyou?"
+  },
+  "payload_hash": "156d9f9ec49429cb2c1c9f678eac7a7623ae730b38356a7d6f29b769c93b642c",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "15679a85-eb2b-588f-96fe-9c4594d167a9"
+}

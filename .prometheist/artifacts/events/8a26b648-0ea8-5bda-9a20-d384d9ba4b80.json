@@ -1,0 +1,37 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+  "conversation_seq": 2,
+  "correlation_id": "0daf664c-a94f-4aea-a575-ff3f6ff01e87",
+  "event_id": "8a26b648-0ea8-5bda-9a20-d384d9ba4b80",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-08-30T04:46:54.548900+00:00",
+  "payload": {
+    "memory_request_id": "5213b945-621e-5d96-9e2e-cd9eb77d2542",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 6,
+      "query_text": "Who areyou?",
+      "reference_time": null,
+      "source_types": [
+        "USER_PROMPT",
+        "INTERACTION_RESPONSE",
+        "AGENT_RESPONSE",
+        "AGENT_RESULT",
+        "TOOL_RESULT",
+        "SYSTEM_EVENT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "ATTENTION_ACTIVATION"
+  },
+  "payload_text": "Who areyou?",
+  "record_hash": "33734b54b535ab57dc8d472b5ead9d9033a06912cd615da38f3fae21f4f7acc5",
+  "source": "attention-aperture:v0.7-attention-aperture-v3/task:15679a85-eb2b-588f-96fe-9c4594d167a9"
+}

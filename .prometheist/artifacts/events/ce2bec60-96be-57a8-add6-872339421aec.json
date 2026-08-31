@@ -1,0 +1,40 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+  "conversation_seq": 9,
+  "correlation_id": "e7969074-95e7-4e9c-b977-c614f3f26c6e",
+  "event_id": "ce2bec60-96be-57a8-add6-872339421aec",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-08-30T04:49:42.645758+00:00",
+  "payload": {
+    "memory_request_id": "786b1dd1-399f-5e79-beab-fa24d5491bca",
+    "need": {
+      "active_event_ids": [
+        "44325065-c42f-5338-b39c-4fda2e33d9c5",
+        "58b6f265-fa62-5dad-bf39-4bdb5b6370b0"
+      ],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 6,
+      "query_text": "Have I ever asked you to remember a 4-word phrase before? If so, what was it?",
+      "reference_time": null,
+      "source_types": [
+        "USER_PROMPT",
+        "INTERACTION_RESPONSE",
+        "AGENT_RESPONSE",
+        "AGENT_RESULT",
+        "TOOL_RESULT",
+        "SYSTEM_EVENT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "ATTENTION_ACTIVATION"
+  },
+  "payload_text": "Have I ever asked you to remember a 4-word phrase before? If so, what was it?",
+  "record_hash": "7f8562b89be132fbd1d63e0ea3785edb768d8ce3d57399b2c38ab6d278774246",
+  "source": "attention-aperture:v0.7-attention-aperture-v3/task:cd5e5462-5097-5ec0-962d-121861ec93a4"
+}

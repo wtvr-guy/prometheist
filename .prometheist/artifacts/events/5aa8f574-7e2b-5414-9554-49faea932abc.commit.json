@@ -1,0 +1,11 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_DATABASE_COMMIT",
+  "commit_hash": "d25e4c322415b237f6f51fe2a2478f653288473140414542c6e948c6d3e7fdc7",
+  "conversation_seq": 5,
+  "created_at": "2026-08-29T21:47:35.433633-07:00",
+  "event_id": "5aa8f574-7e2b-5414-9554-49faea932abc",
+  "global_seq": 8542,
+  "record_hash": "cb2cdbb86ff9d9862f849313fc5e00ef347886dfe0b811cad69dff7522aaa854",
+  "schema_version": 1
+}

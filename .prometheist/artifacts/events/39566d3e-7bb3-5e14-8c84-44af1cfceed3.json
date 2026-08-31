@@ -1,0 +1,18 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+  "conversation_seq": 19,
+  "correlation_id": "450f2133-1050-4603-b17f-c6bfc99263ae",
+  "event_id": "39566d3e-7bb3-5e14-8c84-44af1cfceed3",
+  "event_type": "ERROR",
+  "journaled_at": "2026-08-30T04:58:06.575464+00:00",
+  "payload": {
+    "error_type": "ValueError",
+    "message": "pre-cognitive work selection failed to validate: 1 validation error for UserPromptWorkSelection\n  Invalid JSON: EOF while parsing a list at line 1 column 115 [type=json_invalid, input_value='{ \"capability_indices\": ... 20, 21, 22, 23, 24, 25', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.13/v/json_invalid",
+    "stage": "V2_PRECOGNITIVE"
+  },
+  "payload_text": null,
+  "record_hash": "4d1f7044d7f2a58b1f6393c948784e8d72d3de682fb29fce6cb5e65a831a77ce",
+  "source": "percept_response_v2"
+}

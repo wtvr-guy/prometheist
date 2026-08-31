@@ -1,0 +1,59 @@
+{
+  "artifact_hash": "d3a670edf1721a837172d609e071884518669a35504fee8e83687795ede57d27",
+  "artifact_id": "452a0d27-ab69-51a8-a901-9a0b9a9d5ccf",
+  "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:d02d9720-8b15-57d0-914c-58826babbb43:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_INVOCATION",
+  "assignment_id": "add812b1-e30d-5d90-a606-207b90c997d5",
+  "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+  "correlation_id": "e7969074-95e7-4e9c-b977-c614f3f26c6e",
+  "created_at": "2026-08-30T04:50:07.895370+00:00",
+  "interaction_id": "e295590c-f5d0-5584-bd41-a63ea5751d83",
+  "journal_sequence": 6,
+  "payload": {
+    "base_url": "http://localhost:11434",
+    "claim_id": "d02d9720-8b15-57d0-914c-58826babbb43",
+    "error_message": null,
+    "error_type": null,
+    "invocation_index": 0,
+    "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+    "max_tokens": 96,
+    "model": "qwen3:4b-instruct-2507-q4_K_M",
+    "output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": null\n}",
+    "schema": {
+      "additionalProperties": false,
+      "description": "The v2 Composer's complete semantic output contract.",
+      "properties": {
+        "memory_deficit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Memory Deficit"
+        },
+        "sufficient": {
+          "title": "Sufficient",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "sufficient"
+      ],
+      "title": "MemorySufficiencyDecision",
+      "type": "object"
+    },
+    "system_prompt": "You are the Prometheist v2 Composer, a fresh stateless memory-sufficiency worker.\nYour only job is to determine whether historical/persistent-memory evidence is\nsufficient for a separate final responder to answer the current user prompt\naccurately.\n\nThe current user prompt is itself direct current evidence. Do NOT require a fact,\ndefinition, preference, correction, instruction, or newly introduced piece of\ninformation from the current prompt to already exist in historical memory. If the\nresponder can answer accurately from the current prompt plus general model\nknowledge, return sufficient=true even when persistent memory is empty.\n\nReturn sufficient=false only when answering genuinely depends on prior system\nhistory or remembered user-specific information that is not established by the\ncurrent prompt and is missing from the supplied persistent-memory evidence. In\nthat case, memory_deficit must identify only the missing remembered information.\n\nDo not decide whether Prometheist should respond; direct user prompts already\nrequire a response. Do not consume, summarize, reinterpret, or request tool/action\nresults. Do not write the user-facing answer. Adaptive Recall owns retrieval\nmechanics. A legitimate historical unknown is acceptable; never invent memory.\n",
+    "user_prompt": "[Current user prompt]\nHave I ever asked you to remember a 4-word phrase before? If so, what was it?\n\n[Persistent memory evidence]\nitem 0: INTERACTION_RESPONSE: I am Prometheist, a locally hosted, stateless cognitive architecture. I do not have a personal identity or history. My purpose is to provide precise, direct, and context-aware responses based on the current input and available evidence. I do not rely on personal memory or prior experiences. If you have a question, I am here to assist.\nitem 1: USER_PROMPT: Who areyou?\nitem 2: INTERACTION_RESPONSE: I do not have persistent memory of a 4-word phrase containing 'boy' that was previously requested or stored. The phrase 'cat boy rock Virginia' was mentioned in your prompt, but there is no established record in the persistent memory that confirms it was requested to be remembered. Therefore, I cannot confirm the full phrase as having been successfully stored or recalled. The system lacks evidence of such a phrase being previously requested or retained.\nitem 3: INTERACTION_RESPONSE: I do not have persistent memory of a 4-word phrase containing 'boy' that was previously requested or stored. The phrase 'cat boy rock Virginia' was mentioned in your prompt, but there is no established record in the persistent memory that confirms it was requested to be remembered. Therefore, I cannot confirm the full phrase as having been successfully stored or recalled. The system lacks evidence of such a phrase being previously requested or retained.\nitem 4: USER_PROMPT: That was the phrase I was asking you about!\nitem 5: USER_PROMPT: I asked you to remeber a 4 word phrase that had the word \"boy\" in it not too long ago. What was the full phrase?\nitem 6: USER_PROMPT: Remember the phrase \"cat boy rock Virginia.\"\nitem 7: AGENT_RESPONSE: You asked me to remember 48a34cf5c5."
+  },
+  "payload_hash": "175f5fb671dae581db6845c9dbd57c59f1c78b6ddc684d735c629437e79b65bd",
+  "previous_artifact_hash": "6fa6c6884ae5ebefba1ab23374dd9625a45812677f3f7b25c1015d3c9931689f",
+  "previous_artifact_id": "fe9ef56a-48ee-51cb-9b45-6d89f181e8d0",
+  "producer": "percept_response_v2/ollama",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "cd5e5462-5097-5ec0-962d-121861ec93a4"
+}

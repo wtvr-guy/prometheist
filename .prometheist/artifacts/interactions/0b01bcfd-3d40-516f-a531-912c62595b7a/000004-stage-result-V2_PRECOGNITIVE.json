@@ -1,0 +1,87 @@
+{
+  "artifact_hash": "a810979c7f72a063bc81eb23e8e081d653a51e43191de60d80a9ce5e78c570b4",
+  "artifact_id": "9a84d367-a055-5159-b434-58076ddd670e",
+  "artifact_key": "stage-result:V2_PRECOGNITIVE",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "9a8a53ba-671b-595d-92da-b9bbf05727a2",
+  "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+  "correlation_id": "0daf664c-a94f-4aea-a575-ff3f6ff01e87",
+  "created_at": "2026-08-30T04:47:04.331854+00:00",
+  "interaction_id": "0b01bcfd-3d40-516f-a531-912c62595b7a",
+  "journal_sequence": 4,
+  "payload": {
+    "output": {
+      "aperture_packet": {
+        "items": [],
+        "memory_request_id": "5213b945-621e-5d96-9e2e-cd9eb77d2542",
+        "need": {
+          "active_event_ids": [],
+          "conversation_id": null,
+          "entities": [],
+          "focus_event_ids": [],
+          "include_persisted_history": true,
+          "limit": 6,
+          "query_text": "Who areyou?",
+          "reference_time": null,
+          "source_types": [
+            "USER_PROMPT",
+            "INTERACTION_RESPONSE",
+            "AGENT_RESPONSE",
+            "AGENT_RESULT",
+            "TOOL_RESULT",
+            "SYSTEM_EVENT"
+          ],
+          "supplemental_query_texts": []
+        },
+        "origin": "INTERNAL_MEMORY",
+        "retrieval_trace": {
+          "activation_kernel": {
+            "kernel": "recall_from_postgres",
+            "kernel_trace": {
+              "candidates_considered": 0,
+              "cue_tokens": [
+                "areyou"
+              ],
+              "items": [],
+              "normalized_entities": [],
+              "policy_version": "deterministic-cues-v1"
+            },
+            "retrieval_role": "ATTENTION_ACTIVATION"
+          },
+          "association_hops": 0,
+          "baseline_recall_limit": 6,
+          "candidate_limit": 750,
+          "depth": "BROAD_SHALLOW",
+          "packet_item_limit": 6,
+          "query_strategy": "working_state_plus_baseline_activation",
+          "retrieval_role": "ATTENTION_ACTIVATION",
+          "working_state_event_ids": [],
+          "working_state_item_count": 0
+        },
+        "supported": false
+      },
+      "attention_aperture_version": "v0.7-attention-aperture-v3",
+      "capability_catalog": [],
+      "disposition": {
+        "capability_indices": [],
+        "response_required": true
+      },
+      "execution_plan": {
+        "catalog_capability_ids": [],
+        "items": [],
+        "registry_version": "v0.7-capability-registry-v8",
+        "requested_catalog_indices": []
+      }
+    },
+    "output_refs": [
+      "memory-request:5213b945-621e-5d96-9e2e-cd9eb77d2542"
+    ]
+  },
+  "payload_hash": "4c2f963f5aba799ec544e7d5e5a0cd8c28d11c994fe525200e5349eb854e6f2f",
+  "previous_artifact_hash": "74b7e53ffbca3dd70daaf37855f36459e48885535e98ed78c2d286ccb6b3ae3b",
+  "previous_artifact_id": "6300599f-010f-5307-827e-061b38b4964f",
+  "producer": "percept_response_v2",
+  "stage": "V2_PRECOGNITIVE",
+  "task_id": "15679a85-eb2b-588f-96fe-9c4594d167a9"
+}

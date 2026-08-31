@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "c29e8047-b418-4511-bd7b-2a00823e31be",
+  "conversation_seq": 1,
+  "correlation_id": "f93fd7e7-7899-443f-98f8-e48a67eb6eb2",
+  "event_id": "cb49d2b7-66c0-5fe1-85be-d4752be3cdd6",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-08-30T04:38:11.088109+00:00",
+  "payload": {
+    "text": "Who are you?"
+  },
+  "payload_text": "Who are you?",
+  "record_hash": "3c32642f83fbda56ce2ba70f47f2c7900916859d33bfee5e206142f02ee604ae",
+  "source": "user"
+}

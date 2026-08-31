@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+  "conversation_seq": 15,
+  "correlation_id": "450f2133-1050-4603-b17f-c6bfc99263ae",
+  "event_id": "3ee79d9f-747e-5a79-8d2f-df05847976e8",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-08-30T04:56:53.559886+00:00",
+  "payload": {
+    "text": "I explicitly requested that you remember that phrase. Why would you characterize that as me not asking you to remember it?"
+  },
+  "payload_text": "I explicitly requested that you remember that phrase. Why would you characterize that as me not asking you to remember it?",
+  "record_hash": "3b77ad8f2ab9a1ff1b4d8007795666e041c192c2d022bf6c5ae427fe84805552",
+  "source": "user"
+}

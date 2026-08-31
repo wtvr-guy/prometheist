@@ -1,0 +1,59 @@
+{
+  "artifact_hash": "c0dcbc9181ff1988f8e793594e395794462202c868d2a19f3ea21dae56491bf8",
+  "artifact_id": "08ef5ba1-b01b-5451-8789-e7f6a26b77c0",
+  "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:c44982a7-68ac-51a8-b38f-df671edd442b:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_INVOCATION",
+  "assignment_id": "9a8a53ba-671b-595d-92da-b9bbf05727a2",
+  "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+  "correlation_id": "0daf664c-a94f-4aea-a575-ff3f6ff01e87",
+  "created_at": "2026-08-30T04:47:15.973121+00:00",
+  "interaction_id": "0b01bcfd-3d40-516f-a531-912c62595b7a",
+  "journal_sequence": 6,
+  "payload": {
+    "base_url": "http://localhost:11434",
+    "claim_id": "c44982a7-68ac-51a8-b38f-df671edd442b",
+    "error_message": null,
+    "error_type": null,
+    "invocation_index": 0,
+    "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+    "max_tokens": 96,
+    "model": "qwen3:4b-instruct-2507-q4_K_M",
+    "output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+    "schema": {
+      "additionalProperties": false,
+      "description": "The v2 Composer's complete semantic output contract.",
+      "properties": {
+        "memory_deficit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Memory Deficit"
+        },
+        "sufficient": {
+          "title": "Sufficient",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "sufficient"
+      ],
+      "title": "MemorySufficiencyDecision",
+      "type": "object"
+    },
+    "system_prompt": "You are the Prometheist v2 Composer, a fresh stateless memory-sufficiency worker.\nYour only job is to determine whether historical/persistent-memory evidence is\nsufficient for a separate final responder to answer the current user prompt\naccurately.\n\nThe current user prompt is itself direct current evidence. Do NOT require a fact,\ndefinition, preference, correction, instruction, or newly introduced piece of\ninformation from the current prompt to already exist in historical memory. If the\nresponder can answer accurately from the current prompt plus general model\nknowledge, return sufficient=true even when persistent memory is empty.\n\nReturn sufficient=false only when answering genuinely depends on prior system\nhistory or remembered user-specific information that is not established by the\ncurrent prompt and is missing from the supplied persistent-memory evidence. In\nthat case, memory_deficit must identify only the missing remembered information.\n\nDo not decide whether Prometheist should respond; direct user prompts already\nrequire a response. Do not consume, summarize, reinterpret, or request tool/action\nresults. Do not write the user-facing answer. Adaptive Recall owns retrieval\nmechanics. A legitimate historical unknown is acceptable; never invent memory.\n",
+    "user_prompt": "[Current user prompt]\nWho areyou?\n\n[Persistent memory evidence]\nnone"
+  },
+  "payload_hash": "63c92a3f35f7a7e55507c5149da65850bfae193bd5acfea4d6616390c8aa34dc",
+  "previous_artifact_hash": "3cda51ccab83ad0ca2c743ed4909a931b1c63f897e0804db9aa0b74e2235d59c",
+  "previous_artifact_id": "7bf1e8de-8b63-5ee5-b63c-ef1c57ce35ec",
+  "producer": "percept_response_v2/ollama",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "15679a85-eb2b-588f-96fe-9c4594d167a9"
+}

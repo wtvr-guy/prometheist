@@ -1,0 +1,65 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+  "conversation_seq": 3,
+  "correlation_id": "0daf664c-a94f-4aea-a575-ff3f6ff01e87",
+  "event_id": "a36236be-737c-54fd-83b6-0c7d65e9c5f0",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-08-30T04:46:54.905452+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "5213b945-621e-5d96-9e2e-cd9eb77d2542",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [],
+        "include_persisted_history": true,
+        "limit": 6,
+        "query_text": "Who areyou?",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT",
+          "INTERACTION_RESPONSE",
+          "AGENT_RESPONSE",
+          "AGENT_RESULT",
+          "TOOL_RESULT",
+          "SYSTEM_EVENT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "activation_kernel": {
+          "kernel": "recall_from_postgres",
+          "kernel_trace": {
+            "candidates_considered": 0,
+            "cue_tokens": [
+              "areyou"
+            ],
+            "items": [],
+            "normalized_entities": [],
+            "policy_version": "deterministic-cues-v1"
+          },
+          "retrieval_role": "ATTENTION_ACTIVATION"
+        },
+        "association_hops": 0,
+        "baseline_recall_limit": 6,
+        "candidate_limit": 750,
+        "depth": "BROAD_SHALLOW",
+        "packet_item_limit": 6,
+        "query_strategy": "working_state_plus_baseline_activation",
+        "retrieval_role": "ATTENTION_ACTIVATION",
+        "working_state_event_ids": [],
+        "working_state_item_count": 0
+      },
+      "supported": false
+    },
+    "requesting_component": "attention-aperture:v0.7-attention-aperture-v3/task:15679a85-eb2b-588f-96fe-9c4594d167a9"
+  },
+  "payload_text": null,
+  "record_hash": "8d5aeb87039beb6bf77979a4b522856fae2c1867f3b97381bf2fcb2fc878765e",
+  "source": "jit_memory"
+}

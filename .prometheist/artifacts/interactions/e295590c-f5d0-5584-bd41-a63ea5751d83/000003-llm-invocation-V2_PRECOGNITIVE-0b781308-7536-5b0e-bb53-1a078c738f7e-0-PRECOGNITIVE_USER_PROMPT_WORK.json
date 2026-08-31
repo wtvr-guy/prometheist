@@ -1,0 +1,47 @@
+{
+  "artifact_hash": "85f08325ab40bc221e2c59a034a4547c2c511cb1506516955df9e442e32bcaff",
+  "artifact_id": "ea4b46d7-783b-5bb8-8b37-2006214007ab",
+  "artifact_key": "llm-invocation:V2_PRECOGNITIVE:0b781308-7536-5b0e-bb53-1a078c738f7e:0:PRECOGNITIVE_USER_PROMPT_WORK",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_INVOCATION",
+  "assignment_id": "add812b1-e30d-5d90-a606-207b90c997d5",
+  "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+  "correlation_id": "e7969074-95e7-4e9c-b977-c614f3f26c6e",
+  "created_at": "2026-08-30T04:49:53.225442+00:00",
+  "interaction_id": "e295590c-f5d0-5584-bd41-a63ea5751d83",
+  "journal_sequence": 3,
+  "payload": {
+    "base_url": "http://localhost:11434",
+    "claim_id": "0b781308-7536-5b0e-bb53-1a078c738f7e",
+    "error_message": null,
+    "error_type": null,
+    "invocation_index": 0,
+    "kind": "PRECOGNITIVE_USER_PROMPT_WORK",
+    "max_tokens": 48,
+    "model": "qwen3:4b-instruct-2507-q4_K_M",
+    "output": "{}",
+    "schema": {
+      "additionalProperties": false,
+      "description": "The only model-authored pre-cognitive control output for a user prompt.",
+      "properties": {
+        "capability_indices": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Capability Indices",
+          "type": "array"
+        }
+      },
+      "title": "UserPromptWorkSelection",
+      "type": "object"
+    },
+    "system_prompt": "You are a fresh disposable Prometheist pre-cognitive worker. You have no inherited\ntranscript or model state. This input is an explicit user prompt, and Prometheist\nwill respond to it unconditionally. Your only decision is which executable\nnon-memory capabilities, if any, must run before the final response.\n\nReturn only capability_indices. Capability indices are requirements, never\nexecution order. Prometheist owns dependencies, scheduling, permissions,\nresources, retries, and effects. Do not decide whether to respond. Do not write\ncapability names, arguments, queries, explanations, schedules, or user-facing\nlanguage.\n",
+    "user_prompt": "[Current user prompt]\nHave I ever asked you to remember a 4-word phrase before? If so, what was it?\n\n[Bounded orientation memory]\nitem 0: INTERACTION_RESPONSE: I am Prometheist, a locally hosted, stateless cognitive architecture. I do not have a personal identity or history. My purpose is to provide precise, direct, and context-aware responses based on the current input and available evidence. I do not rely on personal memory or prior experiences. If you have a question, I am here to assist.\nitem 1: USER_PROMPT: Who areyou?\nitem 2: INTERACTION_RESPONSE: I do not have persistent memory of a 4-word phrase containing 'boy' that was previously requested or stored. The phrase 'cat boy rock Virginia' was mentioned in your prompt, but there is no established record in the persistent memory that confirms it was requested to be remembered. Therefore, I cannot confirm the full phrase as having been successfully stored or recalled. The system lacks evidence of such a phrase being previously requested or retained.\nitem 3: INTERACTION_RESPONSE: I do not have persistent memory of a 4-word phrase containing 'boy' that was previously requested or stored. The phrase 'cat boy rock Virginia' was mentioned in your prompt, but there is no established record in the persistent memory that confirms it was requested to be remembered. Therefore, I cannot confirm the full phrase as having been successfully stored or recalled. The system lacks evidence of such a phrase being previously requested or retained.\nitem 4: USER_PROMPT: That was the phrase I was asking you about!\nitem 5: USER_PROMPT: I asked you to remeber a 4 word phrase that had the word \"boy\" in it not too long ago. What was the full phrase?\nitem 6: USER_PROMPT: Remember the phrase \"cat boy rock Virginia.\"\nitem 7: AGENT_RESPONSE: You asked me to remember 48a34cf5c5.\n\n[Executable capability catalog]\nnone"
+  },
+  "payload_hash": "58d2549418d074d692ca4978dfc9dca3c7ac14a9dd7ec65f062cdf3ad21d21f0",
+  "previous_artifact_hash": "5026c4d84473877c7a9cbf4f0e0556fa8df787227b1c64eabcccb93f57a9e314",
+  "previous_artifact_id": "f4783f88-f2f3-5a1c-b918-72f257a6ef65",
+  "producer": "percept_response_v2/ollama",
+  "stage": "V2_PRECOGNITIVE",
+  "task_id": "cd5e5462-5097-5ec0-962d-121861ec93a4"
+}

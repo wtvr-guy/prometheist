@@ -1,0 +1,82 @@
+{
+  "artifact_hash": "ba9ce394f1bb93b02a4dc57bf6e9b410bace4995d871c375bcddf7cc2c51a028",
+  "artifact_id": "edfccc66-77e0-586e-868b-fdf27e9b20ad",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "9a8a53ba-671b-595d-92da-b9bbf05727a2",
+  "conversation_id": "4aee2756-0852-4cc1-98d4-709890d4739c",
+  "correlation_id": "0daf664c-a94f-4aea-a575-ff3f6ff01e87",
+  "created_at": "2026-08-30T04:47:15.987746+00:00",
+  "interaction_id": "0b01bcfd-3d40-516f-a531-912c62595b7a",
+  "journal_sequence": 7,
+  "payload": {
+    "output": {
+      "memory_package": {
+        "adaptive_recall_rounds": 0,
+        "composer_rounds": 1,
+        "memory_packet": {
+          "items": [],
+          "memory_request_id": "5213b945-621e-5d96-9e2e-cd9eb77d2542",
+          "need": {
+            "active_event_ids": [],
+            "conversation_id": null,
+            "entities": [],
+            "focus_event_ids": [],
+            "include_persisted_history": true,
+            "limit": 6,
+            "query_text": "Who areyou?",
+            "reference_time": null,
+            "source_types": [
+              "USER_PROMPT",
+              "INTERACTION_RESPONSE",
+              "AGENT_RESPONSE",
+              "AGENT_RESULT",
+              "TOOL_RESULT",
+              "SYSTEM_EVENT"
+            ],
+            "supplemental_query_texts": []
+          },
+          "origin": "INTERNAL_MEMORY",
+          "retrieval_trace": {
+            "activation_kernel": {
+              "kernel": "recall_from_postgres",
+              "kernel_trace": {
+                "candidates_considered": 0,
+                "cue_tokens": [
+                  "areyou"
+                ],
+                "items": [],
+                "normalized_entities": [],
+                "policy_version": "deterministic-cues-v1"
+              },
+              "retrieval_role": "ATTENTION_ACTIVATION"
+            },
+            "association_hops": 0,
+            "baseline_recall_limit": 6,
+            "candidate_limit": 750,
+            "depth": "BROAD_SHALLOW",
+            "packet_item_limit": 6,
+            "query_strategy": "working_state_plus_baseline_activation",
+            "retrieval_role": "ATTENTION_ACTIVATION",
+            "working_state_event_ids": [],
+            "working_state_item_count": 0
+          },
+          "supported": false
+        },
+        "sufficient": true,
+        "unresolved_memory_deficit": null
+      },
+      "skipped": false
+    },
+    "output_refs": [
+      "memory-request:5213b945-621e-5d96-9e2e-cd9eb77d2542"
+    ]
+  },
+  "payload_hash": "7c3b9d3e134c47c4fca64daba199e19d6cd9e683324c62b76c820639889e148a",
+  "previous_artifact_hash": "c0dcbc9181ff1988f8e793594e395794462202c868d2a19f3ea21dae56491bf8",
+  "previous_artifact_id": "08ef5ba1-b01b-5451-8789-e7f6a26b77c0",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "15679a85-eb2b-588f-96fe-9c4594d167a9"
+}
