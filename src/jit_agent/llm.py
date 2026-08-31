@@ -34,6 +34,11 @@ _VERBATIM_LITERAL_RE = re.compile(
     r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*(?![\w-])"
 )
 _MAX_VERBATIM_LITERALS = 16
+_CONTROL_TEMPERATURE = 0.0
+_DEFAULT_RESPONSE_TEMPERATURE = 0.65
+_MIN_RESPONSE_TEMPERATURE = 0.0
+_MAX_RESPONSE_TEMPERATURE = 2.0
+_RESPONSE_KINDS = frozenset({"RESPOND", "FINAL_RESPONSE_V2"})
 
 
 class OllamaStructuredOutputError(ValueError):
@@ -55,6 +60,33 @@ class _TextAnswer(BaseModel):
         if not normalized:
             raise ValueError("answer must not be blank")
         return normalized
+
+
+def configured_response_temperature() -> float:
+    """Return the user-facing response temperature without affecting control workers."""
+
+    raw = os.environ.get("PROMETHEIST_RESPONSE_TEMPERATURE", "").strip()
+    if not raw:
+        return _DEFAULT_RESPONSE_TEMPERATURE
+    try:
+        value = float(raw)
+    except ValueError:
+        logger.warning(
+            "Invalid PROMETHEIST_RESPONSE_TEMPERATURE=%r; using %.2f",
+            raw,
+            _DEFAULT_RESPONSE_TEMPERATURE,
+        )
+        return _DEFAULT_RESPONSE_TEMPERATURE
+    if not _MIN_RESPONSE_TEMPERATURE <= value <= _MAX_RESPONSE_TEMPERATURE:
+        logger.warning(
+            "PROMETHEIST_RESPONSE_TEMPERATURE=%r outside %.1f..%.1f; using %.2f",
+            raw,
+            _MIN_RESPONSE_TEMPERATURE,
+            _MAX_RESPONSE_TEMPERATURE,
+            _DEFAULT_RESPONSE_TEMPERATURE,
+        )
+        return _DEFAULT_RESPONSE_TEMPERATURE
+    return value
 
 
 def _strip_thinking(text: str) -> str:
@@ -481,6 +513,13 @@ class OllamaClient:
             trust_env=False,
         )
 
+    def temperature_for_kind(self, kind: str) -> float:
+        """Keep control workers deterministic while allowing expressive responses."""
+
+        if kind in _RESPONSE_KINDS:
+            return configured_response_temperature()
+        return _CONTROL_TEMPERATURE
+
     def _structured(
         self,
         kind: str,
@@ -490,6 +529,7 @@ class OllamaClient:
         max_tokens: int,
     ) -> str:
         t0 = time.monotonic()
+        temperature = self.temperature_for_kind(kind)
         if _is_qwen3_instruct(self.model):
             request_path = "/api/generate"
             request_json: dict[str, Any] = {
@@ -498,7 +538,7 @@ class OllamaClient:
                 "raw": True,
                 "format": schema,
                 "stream": False,
-                "options": {"num_predict": max_tokens, "temperature": 0},
+                "options": {"num_predict": max_tokens, "temperature": temperature},
             }
         else:
             request_path = "/api/chat"
@@ -514,7 +554,7 @@ class OllamaClient:
                 "format": schema,
                 "think": False,
                 "stream": False,
-                "options": {"num_predict": max_tokens, "temperature": 0},
+                "options": {"num_predict": max_tokens, "temperature": temperature},
             }
         response = self._client.post(request_path, json=request_json)
         response.raise_for_status()
@@ -544,6 +584,7 @@ class OllamaClient:
                 "eval_count": body.get("eval_count"),
                 "max_tokens": max_tokens,
                 "prompt_eval_count": body.get("prompt_eval_count"),
+                "temperature": temperature,
                 "thinking_length": (
                     len(raw_thinking) if isinstance(raw_thinking, str) else 0
                 ),
