@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from jit_agent.percept_response_worker import (
     _INTERACTIVE_PERSONALITY_PROMPT,
     _USER_PROMPT_COMPOSER,
@@ -35,7 +37,7 @@ def test_user_prompt_llm_always_installs_core_interactive_personality(
 
     UserPromptLLM()
 
-    resolved = __import__("os").environ["PROMETHEIST_PERSONALITY_PROMPT"]
+    resolved = os.environ["PROMETHEIST_PERSONALITY_PROMPT"]
     assert resolved == _INTERACTIVE_PERSONALITY_PROMPT.strip()
     assert "A historical USER_PROMPT is direct evidence" in resolved
 
@@ -46,7 +48,7 @@ def test_user_configured_personality_extends_core_accuracy_contract(monkeypatch)
 
     UserPromptLLM()
 
-    resolved = __import__("os").environ["PROMETHEIST_PERSONALITY_PROMPT"]
+    resolved = os.environ["PROMETHEIST_PERSONALITY_PROMPT"]
     assert resolved.startswith(_INTERACTIVE_PERSONALITY_PROMPT.strip())
     assert "[User-configured personality]" in resolved
     assert configured in resolved
