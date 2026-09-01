@@ -8,6 +8,7 @@ replaceable execution machinery before accepting a new prompt.
 from __future__ import annotations
 
 import psycopg
+from psycopg import sql
 
 from jit_agent.attention_store import DEFAULT_SCHEDULER_KEY
 
@@ -49,7 +50,9 @@ def reset_chat_execution_state(
         with conn.cursor() as cur:
             for table in _RESET_TABLES_IN_DELETE_ORDER:
                 cur.execute(
-                    f"DELETE FROM {table} WHERE scheduler_key = %s",  # noqa: S608
+                    sql.SQL("DELETE FROM {} WHERE scheduler_key = %s").format(
+                        sql.Identifier(table)
+                    ),
                     (scheduler_key,),
                 )
                 counts[table] = cur.rowcount
