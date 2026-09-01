@@ -284,6 +284,7 @@ class UserPromptLLM(PerceptLLM):
             user_prompt=user,
             schema=schema,
             max_tokens=max_tokens,
+            temperature=self.temperature_for_kind(kind),
             output=output,
             error_type=type(error).__name__ if error is not None else None,
             error_message=str(error) if error is not None else None,
