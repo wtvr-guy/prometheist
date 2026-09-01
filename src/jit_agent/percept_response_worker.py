@@ -116,6 +116,19 @@ unless the user asks about them.
 """
 
 
+def _resolved_interactive_personality_prompt() -> str:
+    """Layer optional expressive personality over mandatory evidence/identity rules."""
+
+    core = _INTERACTIVE_PERSONALITY_PROMPT.strip()
+    configured = os.environ.get("PROMETHEIST_PERSONALITY_PROMPT", "").strip()
+    if not configured or configured == core:
+        return core
+    prefix = core + "\n\n[User-configured personality]\n"
+    if configured.startswith(prefix):
+        return configured
+    return prefix + configured
+
+
 class UserPromptWorkSelection(BaseModel):
     """The only model-authored pre-cognitive control output for a user prompt."""
 
@@ -176,7 +189,7 @@ def _cognitive_memory_packet(packet: MemoryPacket) -> MemoryPacket:
 
 
 class UserPromptLLM(PerceptLLM):
-    """Percept LLM with deterministic response and full invocation provenance."""
+    """User-prompt LLM with deterministic control and personality-conditioned response."""
 
     def __init__(
         self,
@@ -185,6 +198,12 @@ class UserPromptLLM(PerceptLLM):
         stage: PerceptStage | None = None,
         claim_id: UUID | None = None,
     ) -> None:
+        # Each architectural stage runs in a fresh disposable process. Installing
+        # the resolved prompt here makes the final-responder contract intrinsic to
+        # this worker class instead of relying on the CLI entry point to do it.
+        os.environ["PROMETHEIST_PERSONALITY_PROMPT"] = (
+            _resolved_interactive_personality_prompt()
+        )
         super().__init__()
         self._artifact_interaction = interaction
         self._artifact_stage = stage
@@ -478,7 +497,6 @@ def _required_environment(name: str) -> str:
 
 def main() -> None:
     _configure_utf8_streams()
-    os.environ.setdefault("PROMETHEIST_PERSONALITY_PROMPT", _INTERACTIVE_PERSONALITY_PROMPT)
     claim_id = UUID(_required_environment("PROMETHEIST_WORKER_CLAIM_ID"))
     worker_id = _required_environment("PROMETHEIST_WORKER_ID")
     scheduler_key = _required_environment("PROMETHEIST_WORKER_SCHEDULER_KEY")
