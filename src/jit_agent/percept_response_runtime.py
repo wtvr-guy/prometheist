@@ -56,7 +56,7 @@ from jit_agent.interaction_policy import (
     deterministic_interaction_id,
     deterministic_interaction_task_id,
 )
-from jit_agent.interaction_store import load_interaction_by_task, save_interaction
+from jit_agent.interaction_store import save_interaction
 from jit_agent.interaction_working_state import activate_working_state, load_working_state
 from jit_agent.llm import (
     OllamaClient,
@@ -76,13 +76,7 @@ from jit_agent.ollama_runtime import (
 )
 from jit_agent.worker_protocol import WorkerClaimEnvelope, WorkerEffectPolicy, deterministic_worker_step_id
 from jit_agent.worker_runtime import GuardedWorkerLauncher
-from jit_agent.worker_store import (
-    complete_worker_claim,
-    load_worker_claim_envelope,
-    load_worker_result,
-    register_worker_step,
-    release_worker_claim,
-)
+from jit_agent.worker_store import load_worker_result, register_worker_step
 
 SOURCE = "percept_response_v2"
 _RESPONSE_MEMORY_ITEM_LIMIT = int(os.environ.get("PROMETHEIST_RESPONSE_MEMORY_ITEMS", "20"))
@@ -737,103 +731,44 @@ def _execute_stage(
         )
         return {"response_required": True, "response_text": response_text, "skipped": False}, []
 
-    response = _stage_result(conn, interaction, PerceptStage.RESPOND, scheduler_key)
-    response_required = bool(response["response_required"])
-    response_text = response.get("response_text")
-    output_refs: list[str] = []
-    response_event_id: UUID | None = None
-    if response_required:
-        if not isinstance(response_text, str) or not response_text.strip():
-            raise RuntimeError("response-required percept produced no final response text")
-        response_event = event_store.record_event(
+    if stage is PerceptStage.PERSIST_RESULT:
+        response = _stage_result(conn, interaction, PerceptStage.RESPOND, scheduler_key)
+        response_required = bool(response["response_required"])
+        response_text = response.get("response_text")
+        output_refs: list[str] = []
+        response_event_id: UUID | None = None
+        if response_required:
+            if not isinstance(response_text, str) or not response_text.strip():
+                raise RuntimeError("response-required percept produced no final response text")
+            response_event = event_store.record_event(
+                conn,
+                conversation_id=interaction.conversation_id,
+                correlation_id=interaction.correlation_id,
+                event_type=EventType.INTERACTION_RESPONSE,
+                source=SOURCE,
+                payload={"text": response_text},
+                payload_text=response_text,
+                event_id=deterministic_interaction_event_id(interaction.interaction_id, "response"),
+            )
+            response_event_id = response_event.event_id
+            output_refs.append(f"event:{response_event.event_id}")
+        activated = [interaction.user_prompt_event_id]
+        if response_event_id is not None:
+            activated.insert(0, response_event_id)
+        activate_working_state(
             conn,
+            interaction_id=interaction.interaction_id,
             conversation_id=interaction.conversation_id,
             correlation_id=interaction.correlation_id,
-            event_type=EventType.INTERACTION_RESPONSE,
-            source=SOURCE,
-            payload={"text": response_text},
-            payload_text=response_text,
-            event_id=deterministic_interaction_event_id(interaction.interaction_id, "response"),
+            activated_event_ids=activated,
         )
-        response_event_id = response_event.event_id
-        output_refs.append(f"event:{response_event.event_id}")
-    activated = [interaction.user_prompt_event_id]
-    if response_event_id is not None:
-        activated.insert(0, response_event_id)
-    activate_working_state(
-        conn,
-        interaction_id=interaction.interaction_id,
-        conversation_id=interaction.conversation_id,
-        correlation_id=interaction.correlation_id,
-        activated_event_ids=activated,
-    )
-    return {
-        "response_required": response_required,
-        "response_text": response_text,
-        "response_event_id": str(response_event_id) if response_event_id else None,
-    }, output_refs
+        return {
+            "response_required": response_required,
+            "response_text": response_text,
+            "response_event_id": str(response_event_id) if response_event_id else None,
+        }, output_refs
 
-
-def execute_claimed_percept_step(
-    conn: psycopg.Connection,
-    llm: PerceptLLM,
-    *,
-    claim_id: UUID,
-    worker_id: str,
-    clock: Callable[[], datetime] | None = None,
-    scheduler_key: str = DEFAULT_SCHEDULER_KEY,
-    registry: CapabilityRegistry = DEFAULT_REGISTRY,
-) -> PerceptStage:
-    envelope = load_worker_claim_envelope(
-        conn,
-        claim_id,
-        worker_id=worker_id,
-        clock=clock,
-        scheduler_key=scheduler_key,
-    )
-    interaction = load_interaction_by_task(conn, envelope.step.task_id, scheduler_key=scheduler_key)
-    stage = PerceptStage(envelope.step.step_key)
-    try:
-        output, output_refs = _execute_stage(
-            conn,
-            llm,
-            envelope,
-            interaction,
-            scheduler_key=scheduler_key,
-            registry=registry,
-        )
-        complete_worker_claim(
-            conn,
-            claim_id=claim_id,
-            worker_id=worker_id,
-            output=output,
-            output_refs=output_refs,
-            clock=clock,
-            scheduler_key=scheduler_key,
-        )
-        return stage
-    except Exception as exc:
-        event_store.record_event(
-            conn,
-            conversation_id=interaction.conversation_id,
-            correlation_id=interaction.correlation_id,
-            event_type=EventType.ERROR,
-            source=SOURCE,
-            payload={
-                "stage": stage.value,
-                "error_type": type(exc).__name__,
-                "message": str(exc),
-            },
-            event_id=uuid5(claim_id, "error-event"),
-        )
-        release_worker_claim(
-            conn,
-            claim_id=claim_id,
-            worker_id=worker_id,
-            clock=clock,
-            scheduler_key=scheduler_key,
-        )
-        raise
+    raise AssertionError(f"unhandled percept stage {stage.value}")
 
 
 def finish_percept(
