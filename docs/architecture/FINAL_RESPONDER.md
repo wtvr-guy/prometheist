@@ -1,0 +1,90 @@
+# Final Responder Contract
+
+**Status:** current architecture decision, 2026-08-31  
+**Applies to:** user-facing response generation after deterministic response policy, required work, and memory sufficiency have completed or exhausted
+
+The final responder is Prometheist's dedicated natural-language expression role. It is a fresh, disposable LLM invocation. It owns neither Prometheist's continuity nor any control-plane decision.
+
+This document refines the final-response section of `PERCEPT_TO_RESPONSE_PIPELINE.md` and must be read consistently with the Constitution, `SYSTEM_DETERMINISM.md`, and the evidence-authority rules of the percept-to-response pipeline.
+
+## 1. Expression is not control
+
+The final responder receives an already-committed requirement to respond. It may express the completed result, but it must not decide whether Prometheist should respond, retrieve additional memory, schedule work, execute side effects, change permissions, alter resource policy, or mutate durable authority.
+
+Deterministic system control therefore remains at temperature `0.0` wherever an LLM is used for a bounded semantic control decision. A non-zero final-response temperature does not relax Article 9 because user-facing phrasing is not durable control authority.
+
+## 2. Mandatory core personality and evidence contract
+
+Every user-facing final responder receives Prometheist's core interactive personality prompt. This is not an optional style preset. It establishes, among other things:
+
+- Prometheist is the persistent system; the LLM invocation is a disposable semantic worker;
+- the current user prompt is direct current evidence;
+- a historical `USER_PROMPT` is direct evidence of what the user previously said, asked, named, preferred, corrected, or instructed;
+- model-authored historical responses are fallible and cannot negate conflicting user-authored evidence;
+- supplied memory is provenance-bearing evidence rather than unquestionable truth;
+- personal or history-specific facts must not be invented;
+- unresolved memory deficits must remain unresolved rather than being filled by plausible fabrication.
+
+These accuracy and evidence-authority rules are mandatory even when a deployment supplies a custom personality.
+
+## 3. Configurable personality is additive
+
+`PROMETHEIST_PERSONALITY_PROMPT` is an optional expressive extension. When configured, it is appended beneath the mandatory core prompt as a user-configured personality layer; it does not replace the core prompt.
+
+This permits deployments to steer tone, voice, verbosity, humor, formality, or other expressive traits while preserving the same evidence and accuracy contract.
+
+The exact resolved system prompt is persisted in the independent LLM invocation artifact so later inspection can establish which personality instructions materially influenced a response.
+
+## 4. Response temperature
+
+Prometheist separates control temperature from response temperature:
+
+- control/decision kinds remain deterministic at `0.0`;
+- user-facing response kinds use the configured response temperature;
+- the current default response temperature is `0.65`;
+- `PROMETHEIST_RESPONSE_TEMPERATURE` may override the response value only within the validated implementation range.
+
+The current response temperature is an environment-calibrated LLM behavior parameter, not a constitutional invariant. It belongs under the `LLM-NATIVE-001` evidence obligation and may change when native evaluation shows a better accuracy/personality tradeoff.
+
+A higher response temperature is never permission to alter evidence, invent remembered facts, ignore authoritative tool results, or contradict the current user prompt. Personality and variation operate only inside the set of responses supported by the available evidence.
+
+## 5. Structured response envelope remains mandatory
+
+Expressive sampling does not remove the constrained response envelope. The final responder still produces the application-owned structured answer contract, with thinking disabled and bounded generation. Prometheist validates the result before exposing user-facing text.
+
+The intended separation is therefore:
+
+```text
+deterministic/system-owned response requirement
+        +
+validated memory and authoritative work results
+        +
+mandatory identity/evidence rules
+        +
+optional configured personality
+        +
+response-only sampling temperature
+        ↓
+validated user-facing language
+```
+
+## 6. Invocation provenance
+
+Every final-response LLM invocation artifact must preserve enough information to reconstruct the exact invocation contract, including:
+
+- architectural stage and semantic call kind;
+- model and backend;
+- exact system prompt, including resolved personality instructions;
+- exact response context supplied to the model;
+- structured-output schema;
+- generation token cap;
+- effective temperature;
+- normalized output or failure information.
+
+This makes personality and temperature observable causal inputs rather than hidden runtime state.
+
+## 7. Acceptance obligation
+
+Changes to the core personality prompt, response temperature, or response-generation policy require regression evidence that accuracy is preserved. Native local-model acceptance is required where model behavior matters; deterministic CI alone cannot establish that a more expressive response policy still recalls and reports exact historical evidence correctly.
+
+The target is not deterministic prose. The target is **accurate, evidence-grounded Prometheist behavior with a recognizable configurable personality, while deterministic authority remains outside the responder.**
