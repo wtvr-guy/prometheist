@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
 
 from jit_agent import artifact_journal, event_artifact_store, llm_artifact_store
@@ -121,6 +122,44 @@ def test_llm_invocation_artifact_preserves_exact_stateless_contract(tmp_path, mo
         "error_type": None,
         "error_message": None,
     }
+    assert artifact_journal.verify_interaction_chain(interaction_id)["valid"] is True
+
+
+def test_llm_invocation_filename_is_bounded_independently_of_semantic_key(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    nested_root = tmp_path / "deep-path-segment" / "another-segment" / "artifacts"
+    monkeypatch.setenv("PROMETHEIST_ARTIFACT_ROOT", str(nested_root))
+    interaction_id = uuid4()
+    claim_id = uuid4()
+
+    artifact = llm_artifact_store.write_llm_invocation(
+        interaction_id=interaction_id,
+        conversation_id=uuid4(),
+        correlation_id=uuid4(),
+        task_id=uuid4(),
+        assignment_id=uuid4(),
+        stage="V2_COMPOSE_MEMORY",
+        claim_id=claim_id,
+        invocation_index=0,
+        kind="V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        model="qwen3:4b",
+        base_url="http://localhost:11434",
+        system_prompt="system",
+        user_prompt="user",
+        schema={"type": "object"},
+        max_tokens=192,
+        output='{"sufficient":true}',
+        error_type=None,
+        error_message=None,
+    )
+
+    filename = Path(artifact["_path"]).name
+    assert len(filename) <= 44
+    assert str(claim_id) not in filename
+    assert "V2_MEMORY_SUFFICIENCY_USER_PROMPT" not in filename
+    assert artifact["artifact_key"].endswith("V2_MEMORY_SUFFICIENCY_USER_PROMPT")
     assert artifact_journal.verify_interaction_chain(interaction_id)["valid"] is True
 
 
