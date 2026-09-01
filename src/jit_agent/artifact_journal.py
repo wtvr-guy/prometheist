@@ -136,7 +136,9 @@ def write_interaction_artifact(
 
     ``artifact_key`` is the idempotency identity.  Repeating the same key with
     identical semantic content returns the existing artifact.  Conflicting retry
-    content fails closed.
+    content fails closed. Filesystem names deliberately use the deterministic
+    artifact UUID rather than the potentially long semantic key so path length is
+    bounded independently of stage/kind labels and claim identifiers.
     """
 
     existing = _find_artifact_by_key(interaction_id, artifact_key)
@@ -181,7 +183,7 @@ def write_interaction_artifact(
         "payload": payload,
     }
     envelope["artifact_hash"] = _sha256(envelope)
-    filename = f"{sequence:06d}-{_safe_key(artifact_key)}.json"
+    filename = f"{sequence:06d}-{artifact_id.hex}.json"
     target = _interaction_dir(interaction_id) / filename
     if target.exists():
         # A sequence collision can occur only if two writers raced.  Preserve
@@ -189,7 +191,7 @@ def write_interaction_artifact(
         while target.exists():
             sequence += 1
             envelope["journal_sequence"] = sequence
-            filename = f"{sequence:06d}-{_safe_key(artifact_key)}.json"
+            filename = f"{sequence:06d}-{artifact_id.hex}.json"
             target = _interaction_dir(interaction_id) / filename
         previous = interaction_artifacts(interaction_id)[-1]
         envelope["previous_artifact_id"] = previous.get("artifact_id")
