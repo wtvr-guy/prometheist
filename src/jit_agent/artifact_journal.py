@@ -15,13 +15,11 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import re
 from typing import Any, Iterable
 from uuid import UUID, uuid5
 
 ARTIFACT_SCHEMA_VERSION = 1
 _ARTIFACT_NAMESPACE = UUID("b983b0b7-a203-5c60-96f0-b17d2d94bf1a")
-_SAFE_KEY = re.compile(r"[^a-zA-Z0-9_.-]+")
 
 
 def artifact_root() -> Path:
@@ -43,11 +41,6 @@ def _canonical_bytes(value: Any) -> bytes:
 
 def _sha256(value: Any) -> str:
     return hashlib.sha256(_canonical_bytes(value)).hexdigest()
-
-
-def _safe_key(value: str) -> str:
-    normalized = _SAFE_KEY.sub("-", value.strip()).strip("-.")
-    return normalized or "artifact"
 
 
 def _fsync_parent(path: Path) -> None:
@@ -196,7 +189,9 @@ def write_interaction_artifact(
         previous = interaction_artifacts(interaction_id)[-1]
         envelope["previous_artifact_id"] = previous.get("artifact_id")
         envelope["previous_artifact_hash"] = previous.get("artifact_hash")
-        envelope["artifact_hash"] = _sha256({k: v for k, v in envelope.items() if k != "artifact_hash"})
+        envelope["artifact_hash"] = _sha256(
+            {key: value for key, value in envelope.items() if key != "artifact_hash"}
+        )
     _atomic_write_json(target, envelope)
     envelope["_path"] = str(target)
     return envelope
@@ -368,7 +363,9 @@ def verify_interaction_chain(interaction_id: UUID) -> dict[str, Any]:
         "artifact_count": len(artifacts),
         "valid": not errors,
         "errors": errors,
-        "complete": any(item.get("artifact_type") == "FINAL_DISPOSITION" for item in artifacts),
+        "complete": any(
+            item.get("artifact_type") == "FINAL_DISPOSITION" for item in artifacts
+        ),
         "last_artifact": artifacts[-1] if artifacts else None,
     }
 
@@ -396,7 +393,9 @@ def latest_interaction_id(*, complete: bool | None = None) -> UUID | None:
         artifacts = interaction_artifacts(interaction_id)
         if not artifacts:
             continue
-        is_complete = any(item.get("artifact_type") == "FINAL_DISPOSITION" for item in artifacts)
+        is_complete = any(
+            item.get("artifact_type") == "FINAL_DISPOSITION" for item in artifacts
+        )
         if complete is not None and is_complete is not complete:
             continue
         newest = max(Path(item["_path"]).stat().st_mtime for item in artifacts)
@@ -443,8 +442,8 @@ def write_event_record_artifact(
     path = _event_record_path(event_id)
     if path.exists():
         existing = _load_json(path)
-        comparable_existing = {k: v for k, v in existing.items() if k != "journaled_at"}
-        comparable_new = {k: v for k, v in record.items() if k != "journaled_at"}
+        comparable_existing = {key: value for key, value in existing.items() if key != "journaled_at"}
+        comparable_new = {key: value for key, value in record.items() if key != "journaled_at"}
         if comparable_existing != comparable_new:
             raise ValueError(f"conflicting event artifact retry: {event_id}")
         return existing
