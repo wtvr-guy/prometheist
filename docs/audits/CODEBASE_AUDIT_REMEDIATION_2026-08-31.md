@@ -4,7 +4,8 @@
 **Remediation base revision:** `9f37b259af57f700bc5f915ac20cf3e34221890d` (`main` when remediation began)  
 **Remediation branch:** `audit-hardening-2026-08-31`  
 **Pull request:** #23, `Harden audit findings: artifacts, responder personality, temperature governance`  
-**Status:** implementation complete; deterministic CI verification in progress at the time this record was created; native Windows/Ollama acceptance remains a separate required gate.
+**Verified code-bearing revision:** `aece471e64ad4493baa973544184e28e28f2a122`  
+**Status:** implementation complete and deterministic GitHub CI green; native Windows/PostgreSQL/Ollama acceptance remains the required merge gate.
 
 This document preserves the original audit as historical evidence while correcting its revision provenance, refining two interpretations, and recording the remediation applied to the live codebase. The original audit is not silently rewritten because doing so would erase the audit trail it was intended to create.
 
@@ -107,16 +108,20 @@ The independent artifact-journal documentation has been updated accordingly.
 
 ## 5. Verification state
 
-On the remediation branch, GitHub Actions has already independently confirmed the following gates after the code changes:
+GitHub Actions run `33467045742` completed successfully against code-bearing revision `aece471e64ad4493baa973544184e28e28f2a122`.
 
-- `ruff check .` — passed after removing one stale import exposed by the dead-code cleanup;
-- `scripts/audit_constraints.py --fail-unregistered` — passed;
+That run independently confirmed all deterministic/CI gates currently encoded by the repository:
+
+- `ruff check .` — passed;
+- `scripts/audit_constraints.py --fail-unregistered` — passed as part of the static-check step;
 - deterministic constraint calibration — passed;
-- collection of the local-model acceptance gates — passed.
+- collection of the local-model acceptance gates — passed;
+- complete Ubuntu/PostgreSQL `pytest -q` suite — passed;
+- workflow cleanup completed successfully.
 
-The complete Ubuntu/PostgreSQL `pytest -q` suite was still executing when this record was first written. Its final result must be recorded from the final branch SHA before the PR is considered deterministic-CI clean.
+The successful CI result establishes that the remediation no longer breaks the deterministic repository gates that the original audit found red. It does **not** establish native local-model behavior.
 
-GitHub CI does **not** substitute for native acceptance. The workflow collects the Ollama-marked restart/cross-process acceptance tests but does not execute them against the project's real Windows development host, native PostgreSQL service, and native Ollama runtime.
+GitHub CI does not substitute for native acceptance. The workflow collects the Ollama-marked restart/cross-process acceptance tests but does not execute them against the project's real Windows development host, native PostgreSQL service, and native Ollama runtime.
 
 Before merge/closure, the native machine should run at minimum:
 
@@ -126,17 +131,17 @@ uv run python scripts/audit_constraints.py --fail-unregistered
 uv run pytest -q
 ```
 
-and the real-Ollama acceptance subset should be allowed to execute rather than skipped. In particular, the cross-process restart/cross-conversation/continuity tests that previously failed through the Windows path bug are the critical native regression evidence.
+The real-Ollama acceptance subset must execute rather than skip. In particular, the cross-process restart/cross-conversation/continuity tests that previously failed through the Windows path bug are the critical native regression evidence.
 
 ## 6. Closure criteria
 
-This remediation is complete only when all of the following are true on one frozen final SHA:
+Deterministic remediation is complete. Full closure still requires native acceptance.
 
-1. deterministic CI is green;
-2. the constraint registry reports no uncovered/stale/mismatched policy numbers;
-3. the full deterministic test suite is green;
-4. native Windows/PostgreSQL/Ollama acceptance passes, including the previously path-failing cross-process memory cases;
-5. the exact final SHA and native results are appended to this record or another immutable dated closure record;
-6. PR #23 is merged only after those gates are satisfied or an explicit documented exception is made.
+The remaining merge/closure conditions are:
+
+1. run the full suite on the supported native Windows/PostgreSQL/Ollama development environment;
+2. confirm the Ollama-marked acceptance tests execute and pass, including the previously path-failing cross-process memory cases;
+3. record the native result and tested revision in this record or another immutable dated closure record;
+4. take PR #23 out of draft and merge only after those gates are satisfied or an explicit documented exception is made.
 
 The purpose of this remediation is not merely to make the eight reported failures disappear. It is to restore the stronger architectural contract they exposed: portable independent durability, explicit empirical governance, deterministic control, and an expressive final responder whose personality cannot override accuracy or evidence authority.
