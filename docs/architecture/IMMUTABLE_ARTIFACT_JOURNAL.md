@@ -57,15 +57,16 @@ artifacts/
 
   interactions/
     <interaction-id>/
-      000001-percept.json
-      000002-stage-result-V2_RESOLVE_REFERENCES.json
-      000003-llm-invocation-....json
-      000004-stage-result-V2_PRECOGNITIVE.json
+      000001-<artifact-id>.json
+      000002-<artifact-id>.json
+      000003-<artifact-id>.json
       ...
-      00000N-final-disposition.json
+      00000N-<artifact-id>.json
 ```
 
-The exact filenames are presentation details. Artifact IDs, hashes, types, interaction IDs, and sequence numbers are authoritative identifiers inside each document.
+The exact filenames are presentation details. Artifact IDs, semantic artifact keys, hashes, types, interaction IDs, and sequence numbers are authoritative identifiers inside each document.
+
+Interaction filenames deliberately use the bounded deterministic artifact UUID rather than concatenating the full semantic artifact key into the filesystem name. The full semantic key remains inside the JSON envelope and remains the idempotency identity. This keeps ordinary paths portable on Windows and other filesystems without discarding semantic identity or provenance.
 
 ## 2. Canonical event mirroring
 
@@ -174,6 +175,7 @@ Every LLM call made by the live v2 user-prompt worker is independently journaled
 - exact user/context prompt;
 - exact structured-output JSON schema;
 - generation token cap;
+- effective generation temperature;
 - normalized constrained model output when the call succeeds;
 - exception type/message when the call fails.
 
