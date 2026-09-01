@@ -3,6 +3,7 @@ from __future__ import annotations
 from jit_agent.percept_response_worker import (
     _INTERACTIVE_PERSONALITY_PROMPT,
     _USER_PROMPT_COMPOSER,
+    UserPromptLLM,
     UserPromptWorkSelection,
 )
 
@@ -25,3 +26,28 @@ def test_interactive_identity_belongs_to_prometheist_not_disposable_llm() -> Non
     assert "you are prometheist" in normalized
     assert "language model is a fresh, disposable semantic worker" in normalized
     assert "not prometheist's identity" in normalized
+
+
+def test_user_prompt_llm_always_installs_core_interactive_personality(
+    monkeypatch,
+) -> None:
+    monkeypatch.delenv("PROMETHEIST_PERSONALITY_PROMPT", raising=False)
+
+    UserPromptLLM()
+
+    resolved = __import__("os").environ["PROMETHEIST_PERSONALITY_PROMPT"]
+    assert resolved == _INTERACTIVE_PERSONALITY_PROMPT.strip()
+    assert "A historical USER_PROMPT is direct evidence" in resolved
+
+
+def test_user_configured_personality_extends_core_accuracy_contract(monkeypatch) -> None:
+    configured = "Use concise dry humor when appropriate, without sacrificing precision."
+    monkeypatch.setenv("PROMETHEIST_PERSONALITY_PROMPT", configured)
+
+    UserPromptLLM()
+
+    resolved = __import__("os").environ["PROMETHEIST_PERSONALITY_PROMPT"]
+    assert resolved.startswith(_INTERACTIVE_PERSONALITY_PROMPT.strip())
+    assert "[User-configured personality]" in resolved
+    assert configured in resolved
+    assert "A historical USER_PROMPT is direct evidence" in resolved
