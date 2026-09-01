@@ -66,7 +66,10 @@ def test_response_prompt_does_not_leak_acceptance_scenario_facts():
     assert "vx-" not in prompt
 
 
-def test_user_facing_answers_use_a_deterministic_structured_envelope():
+def test_user_facing_answers_use_expressive_temperature_with_structured_envelope(
+    monkeypatch,
+):
+    monkeypatch.delenv("PROMETHEIST_RESPONSE_TEMPERATURE", raising=False)
     client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
     fake_http = _FakeHTTPClient(['{"answer":"Final answer only."}'])
     client._client = fake_http
@@ -78,7 +81,27 @@ def test_user_facing_answers_use_a_deterministic_structured_envelope():
     assert payload["format"]["required"] == ["answer"]
     assert payload["think"] is False
     assert payload["stream"] is False
-    assert payload["options"] == {"num_predict": 256, "temperature": 0}
+    assert payload["options"] == {"num_predict": 256, "temperature": 0.65}
+
+
+def test_control_llm_kinds_remain_deterministic_when_response_temperature_is_high(
+    monkeypatch,
+):
+    monkeypatch.setenv("PROMETHEIST_RESPONSE_TEMPERATURE", "1.25")
+    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
+    fake_http = _FakeHTTPClient(['{"ok":true}'])
+    client._client = fake_http
+
+    client._structured(
+        "PRECOGNITIVE_DISPOSITION",
+        "system",
+        "user",
+        {"type": "object"},
+        32,
+    )
+
+    _, payload = fake_http.calls[0]
+    assert payload["options"] == {"num_predict": 32, "temperature": 0.0}
 
 
 def test_user_facing_answer_retries_invalid_structured_output():
