@@ -43,7 +43,6 @@ from jit_agent.attention_store import (
     save_scheduler,
 )
 from jit_agent.capability_registry import (
-    DEFAULT_REGISTRY,
     CapabilityDescriptor,
     CapabilityExecutionPlan,
     CapabilityRegistry,
