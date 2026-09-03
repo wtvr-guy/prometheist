@@ -9,11 +9,11 @@
 | PR #19/#22 selective salvage | revised after native evidence | PR #19's source-authority/evidence-isolation mechanism is now selectively ported into v2; PR #22 remains evidence-only |
 | Superseded runtime/policy/capabilities removed | complete remotely | static source scan, exact Git-tree publication, and hosted test collection |
 | Runtime artifacts untracked/ignored | complete remotely | `.gitignore` plus tracked deletions in PR #24 |
-| Current docs rebaselined | in progress | updated for the 2026-09-03 native failure and evidence-bound remediation; final SHA/run fields remain pending |
-| Ruff | passing on preceding candidate | hosted workflow [run #714](https://github.com/wtvr-guy/prometheist/actions/runs/33789308836) on `10c2c942395267f95888f8922dc75cd843c934b7`; rerun required for remediation |
-| Constraint registry audit | passing locally on remediation | 166 discovered / 166 registered / zero uncovered, stale, mismatched, or invalid |
-| Pytest collection | passing on preceding candidate | 280 tests collected before remediation; new candidate count pending hosted CI |
-| Full PostgreSQL pytest | passing on preceding candidate | run #714: 266 passed, 14 environment-marked tests skipped; rerun required |
+| Current docs rebaselined | complete on branch | updated for the 2026-09-03 native failure, remediation, and hosted result; final exact head remains recorded in the PR conversation |
+| Ruff | passing on remediation | hosted workflow [run #716](https://github.com/wtvr-guy/prometheist/actions/runs/33810208776) on `f1756cc9d694198dad4952a7f2529794d3a4fceb` |
+| Constraint registry audit | passing on remediation | 166 discovered / 166 registered / zero uncovered, stale, mismatched, or invalid |
+| Pytest collection | passing on remediation | 294 tests resolved by the complete hosted run; 12 required native scenarios also collected explicitly |
+| Full PostgreSQL pytest | passing on remediation | run #716: 280 passed, 14 environment-marked native tests skipped in 46.89s |
 | Native Windows/PostgreSQL/Ollama | **failed; remediation unvalidated** | 2026-09-03: 14 executed, 8 passed, 6 failed in 374.94s; old script did not print branch/SHA, so revision provenance is incomplete |
 | Final constitutional/codebase audit | pending | perform only after deterministic and native gates are green |
 | PR #19–#22 disposition | complete | each PR has a disposition note and was closed without merge on 2026-09-03 |

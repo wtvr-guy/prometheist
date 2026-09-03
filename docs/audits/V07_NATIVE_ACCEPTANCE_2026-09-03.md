@@ -1,7 +1,7 @@
 # v0.7 Native Acceptance — Failed Run and Remediation
 
 **Date reported:** 2026-09-03  
-**Status:** release-blocking failure; replacement candidate not yet native-validated  
+**Status:** remediation hosted-validated; replacement candidate not yet native-validated
 **Environment established by transcript:** Windows, Python 3.12.10, pytest 9.1.1,
 PostgreSQL-backed tests, and reachable Ollama. Exact PostgreSQL/Ollama versions and
 the resolved model identity were not printed.
@@ -73,11 +73,18 @@ merge of PR #19.
 
 ## Required next evidence
 
-The remediation is not accepted merely because deterministic tests and static
-inspection support it. Closure still requires:
+Hosted PostgreSQL [run #716](https://github.com/wtvr-guy/prometheist/actions/runs/33810208776)
+passed on remediation code commit
+`f1756cc9d694198dad4952a7f2529794d3a4fceb`: static checks, the constraint
+audit, deterministic calibration, 280 tests passed, and 14 native-only tests were
+skipped as intended. This satisfies the hosted portion but cannot establish
+configured-model behavior.
 
-- green hosted PostgreSQL CI on the published replacement SHA;
-- a clean Windows checkout of that same full SHA;
+The remediation is not accepted merely because hosted tests and static inspection
+support it. Closure still requires:
+
+- a clean Windows checkout of the exact final PR #24 head recorded in its
+  conversation;
 - `scripts/run_v07_acceptance.ps1 -ExpectedCommit <full-sha>` completing with all
   native tests executed and passing;
 - retained output showing the script's branch/SHA start line and matching PASS line;

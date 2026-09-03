@@ -26,10 +26,11 @@ tag will identify the later, fully accepted v0.7 baseline.
 
 Current closure work is tracked in draft [PR #24](https://github.com/wtvr-guy/prometheist/pull/24),
 layered on required audit [PR #23](https://github.com/wtvr-guy/prometheist/pull/23).
-Hosted PostgreSQL CI was green for the preceding candidate; the native gate failed.
-Run #714 is evidence for that preceding code candidate, not for changes made after
-the failed native run. The next candidate must pass hosted CI and native acceptance
-at the same exact SHA.
+Hosted PostgreSQL [run #716](https://github.com/wtvr-guy/prometheist/actions/runs/33810208776)
+is green on remediation code commit
+`f1756cc9d694198dad4952a7f2529794d3a4fceb`: 280 tests passed and the 14
+native-only tests were explicitly skipped. The Windows/PostgreSQL/Ollama gate must
+still execute and pass all 14 at the exact final PR #24 head before integration.
 
 ## Authoritative user-prompt pipeline
 

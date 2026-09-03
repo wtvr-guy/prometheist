@@ -4,8 +4,8 @@
 v2 percept-to-response pipeline
 
 **Status:** implementation consolidated; the 2026-09-03 native run failed 6 of 14
-model-backed tests. Evidence-bound remediation is implemented but remains blocked on
-hosted PostgreSQL CI and native acceptance for one exact replacement SHA.
+model-backed tests. Evidence-bound remediation has passed hosted PostgreSQL CI but
+remains blocked on native acceptance for one exact replacement SHA.
 
 **Rebaselined:** 2026-09-03
 
@@ -182,8 +182,9 @@ This section is deliberately incomplete until the hard gates pass.
 - preceding hosted CI run: **#714 passed; not evidence for the remediation**
 - failed native run: **2026-09-03; 8 passed / 6 failed / zero skipped among 14 selected**
 - failed native revision identity: **not established by the old script**
-- replacement closure candidate SHA: **pending publication**
-- replacement hosted CI run: **pending**
+- remediation code commit SHA: `f1756cc9d694198dad4952a7f2529794d3a4fceb`
+- remediation hosted CI run: **#716 passed; 280 passed / 14 native-only skipped**
+- exact native candidate SHA: **current PR #24 head, recorded in its conversation**
 - replacement native acceptance result: **pending**
 - final constitutional/codebase audit: **pending**
 - merge SHA: **pending**

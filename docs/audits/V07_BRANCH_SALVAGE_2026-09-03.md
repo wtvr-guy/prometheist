@@ -20,7 +20,7 @@ remain closed without merge.
 | #21 | pre-cognitive transient workers | general disposable-worker invariant is already represented in the current guarded stage protocol | intermediate workpiece/final-readiness architecture | closed without merge on 2026-09-03 |
 | #22 | Adaptive Memory Attention experiment | experiment records and existing `MEM-ADAPT-*` result artifacts; accepted conclusion that memory expansion is one mechanism rather than named capabilities | branch production implementation and obsolete profile/capability ontology | closed without merge on 2026-09-03; records preserved |
 | #23 | August 31 audit hardening | entire branch is the consolidation base: artifact-path fix, constraint gate, temperature/test alignment, dead-stage removal, and robustness fixes | none known; still subject to native acceptance and final audit | required merge only after all closure gates pass |
-| #24 | authoritative v2 consolidation | all accepted production changes, current-v2 tests, current documentation, and explicit evidence disposition | no native-acceptance claim | draft child PR onto #23; preceding hosted CI green, first native run failed, remediation pending revalidation |
+| #24 | authoritative v2 consolidation | all accepted production changes, current-v2 tests, current documentation, and explicit evidence disposition | no native-acceptance claim | draft child PR onto #23; remediation hosted CI green, native revalidation pending |
 
 ## Post-consolidation native correction
 
@@ -112,13 +112,14 @@ Deterministic coverage also includes `tests/test_epistemic_authority.py`,
 The native authority suites intentionally remain hard gates. Merely collecting or
 skipping them is not evidence of safe local-model behavior.
 
-Hosted workflow [run #714](https://github.com/wtvr-guy/prometheist/actions/runs/33789308836)
-passed on the preceding code candidate
-`10c2c942395267f95888f8922dc75cd843c934b7`: 266 tests passed and 14
-environment-marked tests skipped. The later native run executed those 14 tests and
-failed 6. Because the old script did not print the checked-out SHA or branch, that
-failure has incomplete revision provenance and cannot satisfy the exact-SHA gate in
-either direction. The remediation requires fresh hosted and native results.
+Hosted workflow [run #716](https://github.com/wtvr-guy/prometheist/actions/runs/33810208776)
+passed on remediation code commit
+`f1756cc9d694198dad4952a7f2529794d3a4fceb`: 280 tests passed and 14
+environment-marked native tests skipped. The earlier native run executed 14 tests
+and failed 6. Because the old script did not print the checked-out SHA or branch,
+that failure has incomplete revision provenance and cannot satisfy the exact-SHA
+gate in either direction. The remediation still requires fresh native evidence on
+the exact final PR head.
 
 ## Evidence retained
 
