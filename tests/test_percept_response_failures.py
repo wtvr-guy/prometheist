@@ -8,6 +8,7 @@ import pytest
 from jit_agent.interaction_contracts import DurableInteraction
 from jit_agent.models import EventType
 from jit_agent.percept_response_runtime import PerceptStage
+from jit_agent import percept_response_runtime as runtime
 from jit_agent import percept_response_worker as worker
 
 
@@ -47,7 +48,7 @@ def test_final_response_event_failure_records_error_and_releases_claim(monkeypat
         lambda **kwargs: kwargs,
     )
     monkeypatch.setattr(
-        worker,
+        runtime,
         "_stage_result",
         lambda *args, **kwargs: {
             "response_required": True,

@@ -573,7 +573,17 @@ def begin_percept(
                     ),
                 ),
             ),
-            resumable_state={"interaction_id": str(interaction_id)},
+            resumable_state={
+                "interaction_id": str(interaction_id),
+                "resource_admission": {
+                    "memory_mib": interaction_memory_mib,
+                    "ollama_runtime_state": (
+                        ollama_runtime_state.model_dump(mode="json")
+                        if ollama_runtime_state is not None
+                        else None
+                    ),
+                },
+            },
         )
     )
     controller = LocalResourceAdmissionController(
