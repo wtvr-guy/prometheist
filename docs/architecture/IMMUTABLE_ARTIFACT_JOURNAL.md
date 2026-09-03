@@ -179,6 +179,7 @@ Every LLM call made by the live v2 user-prompt worker is independently journaled
 - exact system prompt;
 - exact current user/context prompt;
 - exact quarantined evidence payload and transport layout when evidence is isolated;
+- canonical source-event references for memory evidence admitted to that invocation;
 - exact structured-output JSON schema;
 - generation token cap;
 - effective generation temperature;
@@ -188,8 +189,11 @@ Every LLM call made by the live v2 user-prompt worker is independently journaled
 For natural response this includes the resolved Prometheist personality/identity
 system prompt. For response policy it proves that only current authority was
 presented. For exact-source selection it preserves the admitted candidate payload.
-For the Composer and pre-cognitive worker it records memory separately from the later
-current prompt/catalog. The layout field states whether the backend used chat
+Canonical event references allow native acceptance to establish which stored facts
+reached response realization even when opaque literals are represented by
+model-facing placeholders and restored by application code. For the Composer and
+pre-cognitive worker it records memory separately from the later current
+prompt/catalog. The layout field states whether the backend used chat
 system/tool/user roles or raw Qwen system/evidence/current-user blocks.
 
 This means debugging does not need to infer what a model saw from its answer. The actual stateless invocation contract is part of the hash-linked interaction history.

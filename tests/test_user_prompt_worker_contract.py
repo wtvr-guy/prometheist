@@ -8,6 +8,7 @@ from jit_agent.percept_response_worker import (
     UserPromptLLM,
     UserPromptWorkSelection,
 )
+from jit_agent.percept_response_runtime import _RESPONSE_POLICY_PROMPT
 
 
 def test_user_prompt_work_schema_cannot_decide_response_requirement() -> None:
@@ -21,6 +22,13 @@ def test_composer_treats_current_prompt_as_direct_evidence() -> None:
     assert "current user prompt is itself direct current evidence" in normalized
     assert "do not require" in normalized
     assert "historical memory" in normalized
+
+
+def test_response_policy_defaults_ordinary_questions_to_natural_language() -> None:
+    normalized = " ".join(_RESPONSE_POLICY_PROMPT.split()).casefold()
+    assert "natural_language is the default for ordinary questions" in normalized
+    assert "only when the current user explicitly requires exact raw output" in normalized
+    assert "a request to answer naturally" in normalized
 
 
 def test_interactive_identity_belongs_to_prometheist_not_disposable_llm() -> None:

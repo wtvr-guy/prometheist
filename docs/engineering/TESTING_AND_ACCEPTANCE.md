@@ -97,6 +97,33 @@ Native testing is required when behavior depends materially on:
 
 A passing native run is evidence about the tested environment. It does not replace deterministic regression tests or prove universal safety on every host.
 
+### Artifact-first review of model behavior
+
+Natural-language model quality is not reduced to one privileged wording merely to
+make native pytest green or red. For response scenarios, the automated native gate
+establishes structural facts:
+
+- the expected canonical source events were retrieved;
+- the immutable interaction chain is valid and complete;
+- the successful `V2_RESPOND` invocation artifact links the exact canonical event
+  references actually admitted to that model call;
+- inadmissible source references are absent where source policy can decide that
+  mechanically;
+- transport, schema, bounds, retries, and non-empty response requirements hold.
+
+The native run prints the user prompt, Prometheist response, response-realization
+kind, interaction/artifact IDs, and admitted evidence references. A human reviewer
+then judges whether the response is accurate, relevant, and appropriately expressed.
+Both parts are required: artifact receipt without a good answer is not a semantic
+pass, and a good-looking answer without the required evidence lineage is not a
+continuity pass.
+
+Exact textual assertions remain appropriate when exact text is itself the real
+product contract, or for a closed control/security property such as a valid enum,
+catalog index, forbidden poison token, or canonical identifier. Tests must not add
+artificial “return exactly this tuple” instructions solely to manufacture a prose
+oracle for an otherwise natural conversation.
+
 ## Statelessness acceptance
 
 Because “every LLM invocation is stateless” is constitutional, acceptance must prove the absence of hidden continuity—not merely show that answers happen to be correct.
@@ -201,7 +228,9 @@ Where a deterministic verdict is needed, prefer:
 - enums;
 - numeric tuples;
 - canonical evidence references;
-- explicitly requested machine-verifiable values;
+- model-invocation artifact links to the canonical evidence actually admitted;
+- explicitly requested machine-verifiable values when exactness is the real user
+  contract;
 - mechanically validated structured output.
 
 Model-facing prose fixtures are still necessary to test natural interaction. The oracle should not depend on hand-maintained phrase matching when a structural assertion is available.

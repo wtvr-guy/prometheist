@@ -3,9 +3,11 @@
 **Milestone:** durable JIT Attention Fabric, minimal WorkingState, and authoritative
 v2 percept-to-response pipeline
 
-**Status:** implementation consolidated; the 2026-09-03 native run failed 6 of 14
-model-backed tests. Evidence-bound remediation has passed hosted PostgreSQL CI but
-remains blocked on native acceptance for one exact replacement SHA.
+**Status:** implementation consolidated; the first 2026-09-03 native run failed 6
+of 14 model-backed tests, and the exact-SHA remediation run passed 11 of 14. That
+follow-up exposed an obsolete exact-prose oracle in the native response tests. The
+artifact-first replacement remains blocked on native execution and human response
+review for one exact replacement SHA.
 
 **Rebaselined:** 2026-09-03
 
@@ -90,7 +92,7 @@ under the neutral internal stage names `BROAD`, `ASSOCIATIVE`, `RELATIONAL`, and
 - natural responses still receive the mandatory core plus optional additive
   personality prompt;
 - exact stateless invocation inputs, separate evidence/current channels, settings,
-  and results are durably inspectable.
+  results, and admitted canonical evidence references are durably inspectable.
 
 ## Selective hardening incorporated during closure
 
@@ -166,10 +168,15 @@ Required conditions:
 3. `REQUIRE_V07_LOCAL_ACCEPTANCE=1` and `REQUIRE_OLLAMA_ACCEPTANCE=1` make missing
    dependencies/skips fatal;
 4. all non-Ollama tests pass;
-5. every `ollama`-marked acceptance and red-team test actually runs and passes;
-6. restart, cross-process, cross-conversation, artifact-path, memory-authority, and
-   prompt-injection cases pass;
-7. the native constraint result records the same commit, model/runtime, and host
+5. every `ollama`-marked structural acceptance and red-team test actually runs and
+   passes without imposing artificial exact wording on natural responses;
+6. response invocation artifacts prove required canonical evidence was admitted and
+   prohibited source roles were excluded where mechanically decidable;
+7. a human reviewer judges every printed native response and records the qualitative
+   verdict for the exact tested SHA;
+8. restart, cross-process, cross-conversation, artifact-path, memory-authority, and
+   prompt-injection cases pass their structural and security invariants;
+9. the native constraint result records the same commit, model/runtime, and host
    context needed to interpret the result.
 
 No Linux CI simulation or collected-but-skipped test substitutes for this gate.
@@ -184,8 +191,13 @@ This section is deliberately incomplete until the hard gates pass.
 - failed native revision identity: **not established by the old script**
 - remediation code commit SHA: `f1756cc9d694198dad4952a7f2529794d3a4fceb`
 - remediation hosted CI run: **#716 passed; 280 passed / 14 native-only skipped**
+- exact-SHA follow-up: **`6e371a33350260b6e458ae4c16e4fd27ffac1dad`;
+  11 passed / 3 failed / zero skipped among 14 selected**
+- follow-up finding: **required evidence reached the four-turn response path, but
+  response tests still imposed the superseded exact-prose oracle**
 - exact native candidate SHA: **current PR #24 head, recorded in its conversation**
-- replacement native acceptance result: **pending**
+- artifact-first native structural result: **pending**
+- human response review: **pending**
 - final constitutional/codebase audit: **pending**
 - merge SHA: **pending**
 - new closure tag: **pending; existing `v0.7` remains immutable**

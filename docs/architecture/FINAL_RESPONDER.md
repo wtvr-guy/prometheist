@@ -131,12 +131,19 @@ reconstruct the exact invocation contract, including:
 - exact system prompt, including resolved personality instructions;
 - exact current user prompt;
 - exact quarantined evidence payload and transport layout for evidence-bound calls;
+- canonical event references for admitted memory evidence;
 - structured-output schema;
 - generation token cap;
 - effective temperature;
 - normalized output or failure information.
 
 This makes personality and temperature observable causal inputs rather than hidden runtime state.
+
+Native natural-response acceptance uses these references as its structural oracle:
+the automated test proves that the fresh responder received the required canonical
+evidence, while the printed prose is reviewed by a human for semantic accuracy and
+expression. Exact-string assertions are reserved for genuine exact-output or closed
+security/control contracts, not added artificially to ordinary conversation.
 
 ## 7. Acceptance obligation
 

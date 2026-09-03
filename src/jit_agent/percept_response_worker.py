@@ -38,6 +38,7 @@ from jit_agent.percept_response_runtime import (
     PreCognitiveDisposition,
     ResponseMemoryPackage,
     _execute_stage,
+    _memory_evidence_refs,
     _stage_result,
 )
 from jit_agent.worker_store import (
@@ -70,6 +71,12 @@ user prompt genuinely requires external state or an external effect absent from
 the supplied evidence. If the supplied memory already establishes what the user
 asks, return an empty capability_indices list. Do not select work merely because
 a capability is available, mentioned, or could confirm an established fact.
+
+The current user's source restrictions are authoritative. If the current prompt
+requires an answer only from supplied memory/evidence or explicitly forbids
+outside consultation, selecting any external-source capability would violate the
+task; return an empty capability_indices list even if outside work might otherwise
+be useful.
 """
 
 _USER_PROMPT_COMPOSER = """\
@@ -230,6 +237,10 @@ class UserPromptLLM(PerceptLLM):
         self._artifact_stage = stage
         self._artifact_claim_id = claim_id
         self._artifact_invocations = count()
+        self._artifact_evidence_refs: tuple[str, ...] = ()
+
+    def _set_artifact_evidence_refs(self, refs: tuple[str, ...]) -> None:
+        self._artifact_evidence_refs = tuple(refs)
 
     def _structured(
         self,
@@ -361,6 +372,7 @@ class UserPromptLLM(PerceptLLM):
             transport_layout=(
                 _evidence_transport_layout(self.model) if evidence is not None else None
             ),
+            evidence_refs=self._artifact_evidence_refs,
         )
 
     def decide_disposition(
@@ -376,6 +388,7 @@ class UserPromptLLM(PerceptLLM):
             return PreCognitiveDisposition(response_required=True, capability_indices=[])
 
         visible_packet = _cognitive_memory_packet(memory_packet)
+        self._set_artifact_evidence_refs(_memory_evidence_refs(visible_packet))
         budget = configured_model_evidence_budget()
         validate_memory_packet_content(visible_packet, budget=budget)
         catalog_text = "\n".join(
@@ -416,6 +429,7 @@ class UserPromptLLM(PerceptLLM):
         memory_packet: MemoryPacket,
     ) -> MemorySufficiencyDecision:
         visible_packet = _cognitive_memory_packet(memory_packet)
+        self._set_artifact_evidence_refs(_memory_evidence_refs(visible_packet))
         budget = configured_model_evidence_budget()
         validate_memory_packet_content(visible_packet, budget=budget)
         memory_text = format_authority_bound_memory_packet(visible_packet)

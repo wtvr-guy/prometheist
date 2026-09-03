@@ -66,8 +66,11 @@ The older recurrent general response router, separate named memory capabilities,
 parallel interaction runtime are rejected/superseded designs.
 
 The first consolidated native run on 2026-09-03 executed all 14 model-backed tests
-and failed 6. The resulting evidence-bound remediation is not accepted until hosted
-CI and the full native gate pass on the same replacement SHA.
+and failed 6. The exact-SHA remediation follow-up passed 11 of 14 and exposed that
+the remaining response fixtures still used artificial exact-prose assertions. The
+replacement gate is artifact-first: CI/native automation establishes delivery,
+authority, isolation, and structural safety; a human explicitly judges the printed
+natural responses on that same SHA.
 
 ### Closure gates
 
@@ -75,18 +78,20 @@ v0.7 closes only when all of the following apply to the same candidate SHA:
 
 1. deterministic CI passes `ruff`, the fail-fast constraint audit, calibration, and
    complete non-Ollama pytest with PostgreSQL;
-2. the complete native Windows/PostgreSQL/Ollama acceptance script passes with
-   environment-dependent tests actually executed rather than skipped;
-3. ported red-team cases pass, including memory authority/prompt injection,
+2. the complete native Windows/PostgreSQL/Ollama structural acceptance script passes
+   with environment-dependent tests actually executed rather than skipped and with
+   invocation artifacts proving required evidence admission;
+3. a human review accepts the printed native responses for accuracy and expression;
+4. ported red-team cases pass, including memory authority/prompt injection,
    assistant-only claims, oversized evidence, saturated WorkingState, deep temporal
    history, and projection freshness;
-4. superseded runtime/control code and tracked runtime artifacts are absent;
-5. selective PR/branch evidence disposition is recorded and obsolete open PRs are
+5. superseded runtime/control code and tracked runtime artifacts are absent;
+6. selective PR/branch evidence disposition is recorded and obsolete open PRs are
    closed without merging their superseded implementations;
-6. current README, architecture, milestone, testing, constraint, and roadmap text
+7. current README, architecture, milestone, testing, constraint, and roadmap text
    agree with the implemented v2 path;
-7. a final constitutional/codebase audit is recorded against the frozen SHA;
-8. that SHA is merged, then marked with a new closure tag. The existing `v0.7` tag
+8. a final constitutional/codebase audit is recorded against the frozen SHA;
+9. that SHA is merged, then marked with a new closure tag. The existing `v0.7` tag
    remains immutable.
 
 Only after those gates pass may the v0.8 hypothesis be marked frozen and its branch

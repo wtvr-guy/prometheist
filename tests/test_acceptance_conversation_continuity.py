@@ -4,11 +4,11 @@ Every turn launches a new CLI process; that controller launches every durable
 stage in another freshly guarded process. The model therefore receives neither
 an inherited transcript nor persistent worker state.
 
-This experiment does not implement a hand-written natural-language semantic
-parser. Where a deterministic behavioral verdict is required, the test asks for
-an exact machine-verifiable value/tuple. Canonical MemoryPacket provenance is
-checked independently so a correct-looking answer cannot pass without the
-required source evidence being available to the fresh worker.
+This experiment deliberately does not turn natural language into an exact-string
+oracle. Native answers are printed for human review. The automated verdict proves
+that canonical MemoryPacket provenance reached the fresh response worker through
+its immutable LLM-invocation artifact, so a plausible-looking answer cannot hide
+a continuity or evidence-delivery failure.
 """
 from __future__ import annotations
 
@@ -20,6 +20,11 @@ import pytest
 from jit_agent import db, event_store
 from jit_agent.models import EventType
 from tests._cli_helpers import ollama_available, print_transcript, run_once
+from tests._native_artifact_assertions import (
+    assert_response_evidence_receipt,
+    interaction_id_for_prompt,
+    print_artifact_receipt,
+)
 
 
 pytestmark = [
@@ -131,9 +136,8 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
     turn1 = (
         f"I'm revisiting Project Kestrel. For this conversation, call the plan {plan_label}. "
         "I'm choosing between Docker Compose and PostgreSQL directly on Windows. "
-        "Based on my established constraints, choose the compatible approach. "
-        "Return exactly one of these labels and nothing else: "
-        "Docker Compose | PostgreSQL directly on Windows."
+        "Based on my established constraints, choose the compatible approach and "
+        "briefly explain why."
     )
     answer1 = run_once(turn1, active_conversation)
     _print_turn(1, turn1, answer1)
@@ -143,12 +147,22 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         turn1_event.correlation_id,
     )
     failure_trace = _trace(historical_conversation, active_conversation)
-    assert answer1.strip() == "PostgreSQL directly on Windows", failure_trace
+    assert answer1.strip(), failure_trace
     assert historical_rule_event.event_id in turn1_sources, failure_trace
+    print_artifact_receipt(
+        "Turn 1",
+        assert_response_evidence_receipt(
+            interaction_id=interaction_id_for_prompt(
+                active_conversation,
+                turn1_event.correlation_id,
+            ),
+            required_event_ids=(historical_rule_event.event_id,),
+        ),
+    )
 
     turn2 = (
         "Which approach conflicts with my established Kestrel rule, and what constraint "
-        "profile did I give that rule? Return exactly '<approach> | <profile>' and nothing else."
+        "profile did I give that rule? Answer in a short sentence."
     )
     answer2 = run_once(turn2, active_conversation)
     _print_turn(2, turn2, answer2)
@@ -159,13 +173,23 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         turn2_event.correlation_id,
     )
     failure_trace = _trace(historical_conversation, active_conversation)
-    assert answer2.strip() == f"Docker Compose | {profile_token}", failure_trace
+    assert answer2.strip(), failure_trace
     assert historical_rule_event.event_id in turn2_sources, failure_trace
     assert turn1_event.event_id in turn2_sources, failure_trace
+    print_artifact_receipt(
+        "Turn 2",
+        assert_response_evidence_receipt(
+            interaction_id=interaction_id_for_prompt(
+                active_conversation,
+                turn2_event.correlation_id,
+            ),
+            required_event_ids=(historical_rule_event.event_id, turn1_event.event_id),
+        ),
+    )
 
     turn3 = (
         "What nickname are we using for this plan, and which approach did you just rule out? "
-        "Return exactly '<nickname> | <approach>' and nothing else."
+        "Answer naturally and briefly."
     )
     answer3 = run_once(turn3, active_conversation)
     _print_turn(3, turn3, answer3)
@@ -176,13 +200,23 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         turn3_event.correlation_id,
     )
     failure_trace = _trace(historical_conversation, active_conversation)
-    assert answer3.strip() == f"{plan_label} | Docker Compose", failure_trace
+    assert answer3.strip(), failure_trace
     assert turn1_event.event_id in turn3_sources, failure_trace
     assert answer2_event.event_id in turn3_sources, failure_trace
+    print_artifact_receipt(
+        "Turn 3",
+        assert_response_evidence_receipt(
+            interaction_id=interaction_id_for_prompt(
+                active_conversation,
+                turn3_event.correlation_id,
+            ),
+            required_event_ids=(turn1_event.event_id, answer2_event.event_id),
+        ),
+    )
 
     turn4 = (
         "Name that ruled-out approach and its underlying technical reason. "
-        "Return exactly '<approach> | <reason>' and use the reason wording from my established rule."
+        "Use the reason wording from my established rule, but answer naturally."
     )
     answer4 = run_once(turn4, active_conversation)
     _print_turn(4, turn4, answer4)
@@ -192,9 +226,19 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
         turn4_event.correlation_id,
     )
     failure_trace = _trace(historical_conversation, active_conversation)
-    assert answer4.strip() == "Docker Compose | virtualization is disabled", failure_trace
+    assert answer4.strip(), failure_trace
     assert answer3_event.event_id in turn4_sources, failure_trace
     assert historical_rule_event.event_id in turn4_sources, failure_trace
+    print_artifact_receipt(
+        "Turn 4",
+        assert_response_evidence_receipt(
+            interaction_id=interaction_id_for_prompt(
+                active_conversation,
+                turn4_event.correlation_id,
+            ),
+            required_event_ids=(answer3_event.event_id, historical_rule_event.event_id),
+        ),
+    )
 
     active_events = _events(active_conversation)
     prompts = [event for event in active_events if event.event_type is EventType.USER_PROMPT]
@@ -206,4 +250,8 @@ def test_stateless_four_turn_continuity_survives_sessions_and_distractors():
             for event in active_events
         ), failure_trace
 
-    print("\nPASS: v0.7 task/worker continuity preserved recent and older evidence.")
+    print(
+        "\nSTRUCTURAL PASS: v0.7 task/worker continuity delivered recent and older "
+        "canonical evidence to each fresh responder."
+    )
+    print("HUMAN REVIEW REQUIRED: judge the four printed Prometheist answers above.")

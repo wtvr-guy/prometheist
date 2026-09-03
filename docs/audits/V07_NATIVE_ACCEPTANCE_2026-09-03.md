@@ -1,7 +1,8 @@
-# v0.7 Native Acceptance — Failed Run and Remediation
+# v0.7 Native Acceptance — Failed Runs and Remediation
 
 **Date reported:** 2026-09-03  
-**Status:** remediation hosted-validated; replacement candidate not yet native-validated
+**Status:** exact-SHA follow-up recorded; artifact-first replacement candidate not
+yet native-validated or human-reviewed
 **Environment established by transcript:** Windows, Python 3.12.10, pytest 9.1.1,
 PostgreSQL-backed tests, and reachable Ollama. Exact PostgreSQL/Ollama versions and
 the resolved model identity were not printed.
@@ -13,10 +14,12 @@ The user supplied the complete console transcript from
 contains a local filesystem/user path and randomized fixture values. This record
 preserves the material result without publishing that incidental local data.
 
-The old script did not print or verify the Git branch, commit SHA, or clean-tree
-state. The run therefore proves behavior of the local checkout that executed it,
-but it cannot prove that checkout was any particular remote revision. This
-provenance gap is itself remediated in the replacement script.
+The first script did not print or verify the Git branch, commit SHA, or clean-tree
+state. That run therefore proves behavior of the local checkout that executed it,
+but it cannot prove that checkout was any particular remote revision. The follow-up
+script closed this provenance gap and established branch
+`closure/v0.7-v2-consolidation`, commit
+`6e371a33350260b6e458ae4c16e4fd27ffac1dad`, and `clean=true` before execution.
 
 ## Result
 
@@ -29,6 +32,55 @@ provenance gap is itself remediated in the replacement script.
 
 This is not a partial pass. v0.7 remains open because every native model-backed
 case is release-required.
+
+## Exact-SHA follow-up result
+
+| Gate | Result |
+| --- | --- |
+| Revision guard | branch `closure/v0.7-v2-consolidation`; commit `6e371a33350260b6e458ae4c16e4fd27ffac1dad`; clean tree |
+| Focused v2 worker/runtime group | 23 passed in 8.35s |
+| Complete deterministic non-Ollama suite | 280 passed, 14 deselected in 107.85s |
+| Native Ollama group | **11 passed, 3 failed; 14 selected, zero skipped in 504.40s** |
+| Overall closure gate | **failed** |
+
+The six failures from the first run were remediated: all five memory-authority/
+prompt-injection variants passed, the Harrier cross-conversation case passed, and
+the replacement script established exact revision identity. The three remaining
+failures were:
+
+1. turn two of the four-turn scenario returned the exact-output instruction itself;
+2. the direct relational response smoke rejected a generated multi-field value
+   because it was not one contiguous source substring;
+3. the hypothetical pre-cognitive `external.inspect` smoke selected index `0`
+   despite a current instruction to use supplied memory only.
+
+The trace proves that turn two's response package contained the historical Kestrel
+rule, current plan prompt, and preceding response. Its exact-string assertion did
+not prove an evidence-delivery failure; it mixed a qualitative response verdict
+with a synthetic exact-format contract that is not part of the intended natural
+conversation test. The direct relational smoke had the same oracle defect. The
+pre-cognitive result is a separate closed work-selection behavior and remains a
+native semantic check.
+
+## Acceptance-contract correction
+
+Native response acceptance is now artifact-first:
+
+1. prompts request ordinary natural answers rather than artificial exact tuples;
+2. every model-invocation artifact records the canonical event references admitted
+   to that invocation, in addition to the exact system/current/evidence payloads;
+3. tests assert that the successful `V2_RESPOND` realization received every required
+   source event and no mechanically inadmissible source event;
+4. prompts, answers, realization kinds, interaction/artifact IDs, and admitted event
+   references are printed during the `-s` native run;
+5. a human reviewer judges response accuracy and expression from that transcript;
+6. exact automated assertions remain only for real structural, control, and security
+   invariants, including forbidden poison output and valid catalog selection.
+
+A zero pytest exit therefore establishes structural delivery and safety, not a
+rubber-stamped semantic verdict. The acceptance script ends with
+`HUMAN REVIEW REQUIRED`, and v0.7 cannot close until that review is recorded for the
+same exact SHA.
 
 ## Failure classification
 
@@ -62,8 +114,8 @@ the independently justified boundary mechanism from PR #19:
    accepted only as exact current-prompt substrings;
 8. initial aperture evidence is retained before adaptive expansion items under the
    fixed response-memory bound;
-9. invocation artifacts record separate evidence/current payloads and the transport
-   layout;
+9. invocation artifacts record separate evidence/current payloads, the transport
+   layout, and canonical references for the evidence admitted to each call;
 10. the native script requires an expected full SHA, a clean named branch, and
     prints the branch/SHA at start and on PASS.
 
@@ -73,12 +125,12 @@ merge of PR #19.
 
 ## Required next evidence
 
-Hosted PostgreSQL [run #716](https://github.com/wtvr-guy/prometheist/actions/runs/33810208776)
-passed on remediation code commit
-`f1756cc9d694198dad4952a7f2529794d3a4fceb`: static checks, the constraint
+Hosted PostgreSQL [run #717](https://github.com/wtvr-guy/prometheist/actions/runs/33810504804)
+passed on exact follow-up commit
+`6e371a33350260b6e458ae4c16e4fd27ffac1dad`: static checks, the constraint
 audit, deterministic calibration, 280 tests passed, and 14 native-only tests were
-skipped as intended. This satisfies the hosted portion but cannot establish
-configured-model behavior.
+skipped as intended. This satisfies the hosted portion of that superseded candidate
+but cannot establish the artifact-first replacement or configured-model behavior.
 
 The remediation is not accepted merely because hosted tests and static inspection
 support it. Closure still requires:
@@ -86,8 +138,10 @@ support it. Closure still requires:
 - a clean Windows checkout of the exact final PR #24 head recorded in its
   conversation;
 - `scripts/run_v07_acceptance.ps1 -ExpectedCommit <full-sha>` completing with all
-  native tests executed and passing;
-- retained output showing the script's branch/SHA start line and matching PASS line;
+  native structural/security tests executed and passing;
+- retained output showing the branch/SHA start line, structural artifact receipts,
+  printed natural responses, and matching structural-pass line;
+- explicit human review accepting or rejecting the printed responses for that SHA;
 - final constitutional/codebase audit only after those gates are green.
 
 No merge, closure tag, or v0.8 branch is authorized before that evidence exists.

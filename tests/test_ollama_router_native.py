@@ -10,7 +10,7 @@ from jit_agent.capability_registry import CapabilityDescriptor, CapabilityKind
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 from jit_agent.percept_response_runtime import PreCognitiveDisposition
 from jit_agent.percept_response_worker import UserPromptLLM
-from tests._cli_helpers import ollama_available
+from tests._cli_helpers import ollama_available, print_transcript
 
 
 pytestmark = [
@@ -52,10 +52,19 @@ def test_real_ollama_precognitive_selector_returns_valid_work_requirement():
         ),
     )
 
+    prompt = (
+        "Using only the supplied established memory, answer which Kestrel constraint "
+        "applies. Do not inspect or consult any outside source."
+    )
     decision = UserPromptLLM().decide_disposition(
-        "Answer only from the supplied established memory.",
+        prompt,
         packet,
         catalog,
+    )
+    print_transcript(f"\nPre-cognitive work smoke — User:\n{prompt}")
+    print_transcript(
+        "\nPre-cognitive work smoke — capability_indices:\n"
+        f"{decision.capability_indices}"
     )
     assert isinstance(decision, PreCognitiveDisposition)
     assert decision.response_required is True

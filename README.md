@@ -15,9 +15,11 @@ continuity, policy, and durable authority belong to Prometheist itself.
 - **v0.5** is the accepted deterministic Memory Kernel baseline.
 - **v0.6** is the accepted historical stateless-worker/JIT-Memory baseline. Its
   Primary Agent/specialist hierarchy is no longer current architecture.
-- **v0.7** is an open closure candidate. A native Windows/PostgreSQL/Ollama run on
-  2026-09-03 executed all 14 model-backed tests and failed 6, so the release gate
-  remains closed while the evidence-bound remediation is revalidated.
+- **v0.7** is an open closure candidate. The exact-SHA remediation run on
+  2026-09-03 passed 11 of 14 native tests and showed that the remaining response
+  tests still used a superseded exact-prose oracle. The corrected gate now proves
+  evidence delivery from invocation artifacts and leaves natural response quality
+  to explicit human review.
 - **v0.8** will test durable Epistemic WorkingState before perception/salience. The
   hypothesis becomes frozen only after v0.7 closes.
 
@@ -26,11 +28,12 @@ tag will identify the later, fully accepted v0.7 baseline.
 
 Current closure work is tracked in draft [PR #24](https://github.com/wtvr-guy/prometheist/pull/24),
 layered on required audit [PR #23](https://github.com/wtvr-guy/prometheist/pull/23).
-Hosted PostgreSQL [run #716](https://github.com/wtvr-guy/prometheist/actions/runs/33810208776)
-is green on remediation code commit
-`f1756cc9d694198dad4952a7f2529794d3a4fceb`: 280 tests passed and the 14
-native-only tests were explicitly skipped. The Windows/PostgreSQL/Ollama gate must
-still execute and pass all 14 at the exact final PR #24 head before integration.
+Hosted PostgreSQL [run #717](https://github.com/wtvr-guy/prometheist/actions/runs/33810504804)
+is green on the preceding exact native candidate
+`6e371a33350260b6e458ae4c16e4fd27ffac1dad`: 280 tests passed and the 14
+native-only tests were explicitly skipped. A new hosted run plus artifact-first
+Windows/PostgreSQL/Ollama execution and human review are required on the exact final
+PR #24 head before integration.
 
 ## Authoritative user-prompt pipeline
 
@@ -156,9 +159,10 @@ or skipped native dependencies:
 ```
 
 Deterministic Linux CI is necessary but does not substitute for this native gate.
-The earlier 2026-09-03 failure transcript did not print its branch/SHA, which is why
-the script now emits both at start and on success. Do not declare v0.7 closed without
-that exact revision identity and retained native evidence.
+The script prints every native answer plus its structural artifact receipt, then
+ends with `HUMAN REVIEW REQUIRED`; a zero exit proves the structural gate, not the
+quality of the prose. Do not declare v0.7 closed without exact revision identity,
+retained native evidence, and a recorded human verdict on those responses.
 
 ## Documentation
 

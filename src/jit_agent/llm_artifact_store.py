@@ -1,6 +1,7 @@
 """Immutable interaction artifacts for exact stateless LLM invocation envelopes."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any
 from uuid import UUID
 
@@ -30,6 +31,7 @@ def write_llm_invocation(
     error_message: str | None,
     evidence_prompt: str | None = None,
     transport_layout: str | None = None,
+    evidence_refs: Iterable[str] = (),
 ) -> dict[str, Any]:
     """Persist the exact request contract and resulting normalized model output."""
 
@@ -48,6 +50,9 @@ def write_llm_invocation(
         "error_type": error_type,
         "error_message": error_message,
     }
+    resolved_evidence_refs = list(evidence_refs)
+    if resolved_evidence_refs:
+        payload["evidence_refs"] = resolved_evidence_refs
     if evidence_prompt is not None:
         payload["evidence_prompt"] = evidence_prompt
     if transport_layout is not None:

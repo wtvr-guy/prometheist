@@ -63,7 +63,14 @@ try {
     uv run --locked pytest -vv -s -m ollama
     $exitCode = $LASTEXITCODE
     if ($exitCode -ne 0) { throw "Ollama continuity acceptance failed" }
-    Write-Host "PASS: v0.7 acceptance branch=$branch commit=$actualCommit clean=true"
+    Write-Host (
+        "STRUCTURAL PASS: v0.7 native gate branch=$branch commit=$actualCommit " +
+        "clean=true"
+    )
+    Write-Host (
+        "HUMAN REVIEW REQUIRED: judge every printed native Prometheist response " +
+        "before accepting this SHA."
+    )
 }
 finally {
     [Environment]::SetEnvironmentVariable(

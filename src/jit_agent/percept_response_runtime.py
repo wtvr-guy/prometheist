@@ -307,6 +307,12 @@ Surface modes:
   requested order, joined only by punctuation or whitespace specified in the
   current request.
 
+NATURAL_LANGUAGE is the default for ordinary questions, including questions that
+ask for names, codes, or multiple facts. Select an exact-source mode only when the
+current user explicitly requires exact raw output, no surrounding prose, or a
+specific machine-verifiable format. A request to answer naturally, explain, or use
+a sentence is NATURAL_LANGUAGE even when source values must remain accurate.
+
 The legacy insufficient_literal field must be null. Unsupported-history fallback
 selection is handled by a separate current-only worker.
 """
@@ -415,8 +421,21 @@ def _format_exact_source_candidates(
     return "\n\n[Admitted exact-source candidates]\n" + "\n\n".join(blocks)
 
 
+def _memory_evidence_refs(packet: MemoryPacket | None) -> tuple[str, ...]:
+    """Return canonical source references for the model-facing memory view."""
+
+    if packet is None:
+        return ()
+    return tuple(f"event:{item.source_event_id}" for item in packet.items)
+
+
 class PerceptLLM(OllamaClient):
     """Independent stateless Ollama requests for the three semantic LLM roles."""
+
+    def _set_artifact_evidence_refs(self, refs: tuple[str, ...]) -> None:
+        """Expose causal evidence refs to artifact-aware subclasses."""
+
+        del refs
 
     def decide_disposition(
         self,
@@ -424,6 +443,7 @@ class PerceptLLM(OllamaClient):
         memory_packet: MemoryPacket,
         capability_catalog: tuple[CapabilityDescriptor, ...],
     ) -> PreCognitiveDisposition:
+        self._set_artifact_evidence_refs(_memory_evidence_refs(memory_packet))
         budget = configured_model_evidence_budget()
         validate_memory_packet_content(memory_packet, budget=budget)
         catalog_text = "\n".join(
@@ -460,6 +480,7 @@ class PerceptLLM(OllamaClient):
         percept: str,
         memory_packet: MemoryPacket,
     ) -> MemorySufficiencyDecision:
+        self._set_artifact_evidence_refs(_memory_evidence_refs(memory_packet))
         budget = configured_model_evidence_budget()
         validate_memory_packet_content(memory_packet, budget=budget)
         memory_text = format_authority_bound_memory_packet(memory_packet)
@@ -484,6 +505,7 @@ class PerceptLLM(OllamaClient):
     def _response_policy(self, percept: str) -> ResponsePolicy:
         """Classify source and surface requirements from current authority only."""
 
+        self._set_artifact_evidence_refs(())
         last_error: Exception | None = None
         for token_cap in _retry_token_caps(_base_text_max_tokens()):
             try:
@@ -505,6 +527,7 @@ class PerceptLLM(OllamaClient):
     def _select_current_fallback_literal(self, percept: str) -> str | None:
         """Select a no-support literal without exposing historical evidence."""
 
+        self._set_artifact_evidence_refs(())
         for token_cap in _retry_token_caps(_base_text_max_tokens()):
             try:
                 content = self._structured_with_evidence(
@@ -536,6 +559,7 @@ class PerceptLLM(OllamaClient):
         )
         if not source_texts:
             raise ValueError("exact-source response has no admitted source candidates")
+        self._set_artifact_evidence_refs(_memory_evidence_refs(packet))
         literal_to_placeholder, placeholder_to_literal = _build_verbatim_placeholder_maps(
             *source_texts
         )
@@ -586,6 +610,7 @@ class PerceptLLM(OllamaClient):
         )
         if not source_texts:
             raise ValueError("exact-source composition has no admitted source candidates")
+        self._set_artifact_evidence_refs(_memory_evidence_refs(packet))
         literal_to_placeholder, placeholder_to_literal = _build_verbatim_placeholder_maps(
             *source_texts
         )
@@ -696,6 +721,7 @@ class PerceptLLM(OllamaClient):
         )
         work_view = _format_capability_result_data(admitted_results)
         validate_rendered_evidence((status_view, memory_view, work_view), budget=budget)
+        self._set_artifact_evidence_refs(_memory_evidence_refs(admitted_packet))
         answer = self._text_with_evidence(
             "FINAL_RESPONSE_V2",
             _FINAL_RESPONSE_PROMPT.format(personality=personality),

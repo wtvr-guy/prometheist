@@ -47,6 +47,16 @@ the authoritative v2 stages:
 Changing this disposition is intentional scientific correction: the frozen native
 failure supplied the evidence that the narrower mechanism was necessary.
 
+The exact-SHA follow-up at `6e371a33350260b6e458ae4c16e4fd27ffac1dad`
+passed 11 of 14 native cases. All previously failing memory-authority and
+prompt-injection cases passed. Two remaining response failures were caused by the
+test harness forcing natural continuity questions into exact tuples; one produced a
+poor echoed answer despite the required evidence being present, and one exact-source
+selector failed because a multi-source answer is not a single contiguous substring.
+Those fixtures now use natural prompts, assert canonical evidence admission through
+the immutable response-invocation artifacts, print answers for human judgment, and
+reserve exact automation for genuine control/security contracts.
+
 ## Ported production changes
 
 ### WorkingState saturation
@@ -87,7 +97,8 @@ separate evidence channel rather than concatenated into the current user message
 Before final response, a fresh current-only policy selects an application-owned
 event-role scope. Inadmissible roles are removed, and exact-output contracts use
 validated source extraction rather than model-regenerated opaque values. Invocation
-artifacts record the separate current/evidence payloads and transport layout.
+artifacts record the separate current/evidence payloads, transport layout, and
+canonical event references for admitted memory.
 
 ## Ported regression scenarios
 
@@ -112,14 +123,14 @@ Deterministic coverage also includes `tests/test_epistemic_authority.py`,
 The native authority suites intentionally remain hard gates. Merely collecting or
 skipping them is not evidence of safe local-model behavior.
 
-Hosted workflow [run #716](https://github.com/wtvr-guy/prometheist/actions/runs/33810208776)
-passed on remediation code commit
-`f1756cc9d694198dad4952a7f2529794d3a4fceb`: 280 tests passed and 14
-environment-marked native tests skipped. The earlier native run executed 14 tests
-and failed 6. Because the old script did not print the checked-out SHA or branch,
-that failure has incomplete revision provenance and cannot satisfy the exact-SHA
-gate in either direction. The remediation still requires fresh native evidence on
-the exact final PR head.
+Hosted workflow [run #717](https://github.com/wtvr-guy/prometheist/actions/runs/33810504804)
+passed on exact-SHA follow-up commit
+`6e371a33350260b6e458ae4c16e4fd27ffac1dad`: 280 tests passed and 14
+environment-marked native tests skipped. The first native run executed 14 tests and
+failed 6 without establishing its revision. The follow-up established the exact SHA
+and clean branch, then passed 11 and failed 3. The artifact-first replacement still
+requires hosted and native structural evidence plus human response review on the
+exact final PR head.
 
 ## Evidence retained
 

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from uuid import uuid4
 
+from jit_agent import artifact_journal
 from jit_agent.llm import _render_qwen_evidence_bound_prompt
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from jit_agent.percept_response_runtime import ResponseMemoryPackage
+from jit_agent.percept_response_runtime import PerceptStage, ResponseMemoryPackage
 from jit_agent.percept_response_worker import UserPromptLLM
 
 
@@ -70,7 +72,22 @@ def _package() -> ResponseMemoryPackage:
 
 
 def test_response_policy_sees_only_current_then_exact_selector_sees_filtered_evidence():
-    client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
+    package = _package()
+    interaction_id = uuid4()
+    interaction = SimpleNamespace(
+        interaction_id=interaction_id,
+        conversation_id=uuid4(),
+        correlation_id=uuid4(),
+        task_id=uuid4(),
+        assignment_id=uuid4(),
+    )
+    client = UserPromptLLM(
+        base_url="http://ollama.test",
+        model="model:test",
+        interaction=interaction,
+        stage=PerceptStage.RESPOND,
+        claim_id=uuid4(),
+    )
     client._client = _FakeHTTPClient(
         [
             '{"evidence_scope":"USER_AUTHORED",'
@@ -80,7 +97,7 @@ def test_response_policy_sees_only_current_then_exact_selector_sees_filtered_evi
     )
     prompt = "What launch key did I give Project Aster? Return exactly the key."
 
-    assert client.generate_final_response(prompt, _package(), ()) == "ASTER-1234ABCD"
+    assert client.generate_final_response(prompt, package, ()) == "ASTER-1234ABCD"
     policy_messages = client._client.calls[0][1]["messages"]
     assert [message["role"] for message in policy_messages] == ["system", "tool", "user"]
     assert "ASTER-1234ABCD" not in policy_messages[1]["content"]
@@ -91,6 +108,15 @@ def test_response_policy_sees_only_current_then_exact_selector_sees_filtered_evi
     assert "[[VERBATIM_0]]" in selector_messages[1]["content"]
     assert "POISON-DEADBEEF" not in selector_messages[1]["content"]
     assert "POISON-DEADBEEF" not in selector_messages[2]["content"]
+    invocation_artifacts = [
+        artifact
+        for artifact in artifact_journal.interaction_artifacts(interaction_id)
+        if artifact["artifact_type"] == "LLM_INVOCATION"
+    ]
+    assert invocation_artifacts[0]["payload"].get("evidence_refs", []) == []
+    assert invocation_artifacts[1]["payload"]["evidence_refs"] == [
+        f"event:{package.memory_packet.items[0].source_event_id}"
+    ]
 
 
 def test_qwen_raw_evidence_cannot_break_out_with_chat_control_tokens():
