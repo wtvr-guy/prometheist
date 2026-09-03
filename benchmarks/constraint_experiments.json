@@ -19,8 +19,8 @@
     "MEM-BREADTH-001": {
       "title": "Memory packet, candidate, active-state, and context breadth",
       "environment": "deterministic_ci",
-      "parameters": ["attention_aperture_limit", "memory_packet_limit", "candidate_limit", "attention_candidate_limit", "research_result_limits", "active_event_limit", "focus_candidate_limit", "final_context_limit", "candidate_route_recency_budget"],
-      "scenario_families": ["single_fact", "multi_fact_answer", "interleaved_topics", "many_similar_entities", "working_state_plus_history", "multi_capability_accumulation", "long_history", "candidate_starvation", "distractor_scale"],
+      "parameters": ["attention_aperture_limit", "memory_packet_limit", "candidate_limit", "attention_candidate_limit", "adaptive_recall_item_limit", "active_event_limit", "adaptive_focus_bound", "response_memory_item_limit", "candidate_route_recency_budget"],
+      "scenario_families": ["single_fact", "multi_fact_answer", "interleaved_topics", "many_similar_entities", "working_state_plus_history", "adaptive_recall_composition", "long_history", "candidate_starvation", "distractor_scale"],
       "hard_invariants": ["required evidence is not truncated in any passing scenario", "unknown-fact abstention does not regress", "candidate generation stays deterministic"],
       "quality_order": ["worst_scenario_required_evidence_recall", "question_success_rate", "unknown_abstention_rate", "mean_reciprocal_rank", "candidate_work", "returned_context_items"],
       "search": "Geometric expansion below/above current integer bounds plus local refinement. Continue expanding while quality improves or the winner is at an explored boundary."
@@ -28,7 +28,7 @@
     "MEM-GRAPH-001": {
       "title": "Associative traversal depth, decay, and graph breadth",
       "environment": "deterministic_ci",
-      "parameters": ["association_limit_by_recall_profile", "max_hops_by_recall_profile", "association_decay_by_recall_profile"],
+      "parameters": ["association_limit_by_adaptive_stage", "max_hops_by_adaptive_stage", "association_decay_by_adaptive_stage"],
       "scenario_families": ["one_hop", "multi_hop", "high_fanout", "cycles", "guarded_previous_state", "guarded_causal", "multiple_selected_anchors", "disconnected_distractors", "deep_irrelevant_chain", "large_graph"],
       "hard_invariants": ["required cue terms on guarded edges are respected", "association routing never rewrites canonical evidence", "unknown-fact abstention does not regress"],
       "quality_order": ["worst_scenario_required_evidence_recall", "question_success_rate", "unknown_abstention_rate", "association_edges_loaded", "association_hops_executed", "latency"],
@@ -43,14 +43,14 @@
       "quality_order": ["worst_scenario_relevant_capability_recall", "top_rank_accuracy", "false_positive_count", "supplemental_fallback_success", "returned_matches"],
       "search": "Joint discrete/continuous sweep over scoring coefficients and breadth. Preserve ordering only when supported by relevance or prefer the simpler zero-parameter rule if quality is equivalent."
     },
-    "CAP-LOOP-001": {
-      "title": "Stateless capability selection breadth and recurrent round budget",
-      "environment": "native_ollama_and_scripted_ci",
-      "parameters": ["max_capability_rounds"],
-      "scenario_families": ["respond_without_capability", "one_capability", "multiple_independent_capabilities", "dependent_capabilities", "progressive_memory_research", "repeat_same_capability", "unsupported_capability_result", "early_stop", "late_stop", "nonconvergent_router"],
-      "hard_invariants": ["router cannot invoke a capability outside the supplied catalog", "dependencies and execution order remain application-owned", "a user response requires explicit RESPOND"],
-      "quality_order": ["task_completion_rate", "worst_scenario_completion_rate", "unnecessary_capability_executions", "llm_calls", "latency"],
-      "search": "Scripted router provides exhaustive deterministic coverage; real Ollama confirms the smallest non-binding bound. Integer bounds expand when a correct workload is truncated at the boundary."
+    "PIPELINE-NATIVE-001": {
+      "title": "Stateless v2 percept-to-response acceptance",
+      "environment": "target_windows_host_with_postgres_and_ollama",
+      "parameters": ["composer_retry_caps", "adaptive_recall_stage_bound", "final_response_token_cap"],
+      "scenario_families": ["explicit_prompt_without_work", "non_user_percept_without_response", "external_work_bypass", "memory_sufficient", "adaptive_recall_progress", "adaptive_recall_exhaustion", "restart_continuity", "exact_output", "source_authority", "prompt_injection"],
+      "hard_invariants": ["every explicit user prompt receives a response", "pre-cognitive selection cannot suppress a user response", "Composer consumes memory but never work results", "work results bypass Composer and reach the final responder", "retrieval stages are deterministic and are never capabilities", "all model calls are stateless fresh-worker calls"],
+      "quality_order": ["hard_invariant_pass_rate", "task_completion_rate", "required_evidence_recall", "exact_output_rate", "unnecessary_llm_calls", "latency"],
+      "search": "Run deterministic contract and adversarial probes in CI, then run the complete marked Ollama suite on the intended native Windows/PostgreSQL/Ollama stack. Any hard-invariant failure blocks closure."
     },
     "SCHED-SERVICE-001": {
       "title": "Attention service guarantees and priority representation",
@@ -82,20 +82,20 @@
     "WORKER-NATIVE-001": {
       "title": "Worker leases, launch retries, retry delay, and process timeouts",
       "environment": "target_windows_host_and_fault_injection",
-      "parameters": ["default_worker_lease_seconds", "max_worker_lease_seconds", "claim_retry_attempts", "claim_retry_delay_seconds", "interaction_worker_lease_seconds", "interaction_worker_timeout_seconds", "post_kill_wait_seconds"],
+      "parameters": ["default_worker_lease_seconds", "max_worker_lease_seconds", "claim_retry_attempts", "claim_retry_delay_seconds", "percept_worker_lease_seconds", "percept_worker_timeout_seconds", "post_kill_wait_seconds"],
       "scenario_families": ["normal_fast_worker", "slow_valid_worker", "hung_worker", "worker_killed_mid_step", "process_spawn_failure", "temporary_resource_denial", "persistent_resource_denial", "database_delay", "host_restart_recovery"],
       "hard_invariants": ["at-most-once effects remain protected", "no live valid worker is falsely replaced in a passing safety candidate", "hung/abandoned work is eventually recoverable"],
       "quality_order": ["duplicate_effect_count", "false_abandonment_count", "recovery_latency", "resource_denial_recovery_rate", "needless_wait_time"],
       "search": "Fault-injection distributions plus native duration samples. Lease and timeout candidates are derived from observed tails; retry schedules are tested against measured resource-pressure durations."
     },
     "LLM-NATIVE-001": {
-      "title": "Local-model HTTP timeout, output token caps, and schema retry budget",
+      "title": "Local-model HTTP timeout, output caps, schema retries, and evidence budget",
       "environment": "target_windows_host_with_supported_ollama_models",
-      "parameters": ["ollama_http_timeout_seconds", "text_max_tokens", "structured_output_token_caps", "structured_output_retry_attempts", "verbatim_literal_bound"],
-      "scenario_families": ["cold_start", "warm_start", "short_prompt", "largest_supported_context_payload", "simple_schema", "candidate_selection_schema", "malformed_first_output", "host_contention", "long_literal_answer", "long_user_facing_answer"],
-      "hard_invariants": ["valid required output is not truncated", "invalid structured output never crosses the schema boundary", "timeout failure remains explicit"],
-      "quality_order": ["valid_output_rate", "worst_scenario_valid_output_rate", "truncation_count", "timeout_count", "inference_calls", "latency"],
-      "search": "Pilot samples estimate latency/output-length distributions. Candidate bounds are generated from observed tails and tested under cold/warm/contention conditions; sample size is increased when competing settings cannot be distinguished."
+      "parameters": ["ollama_http_timeout_seconds", "text_max_tokens", "structured_output_token_caps", "structured_output_retry_attempts", "verbatim_literal_bound", "max_model_evidence_item_bytes", "max_model_evidence_total_bytes"],
+      "scenario_families": ["cold_start", "warm_start", "short_prompt", "largest_supported_context_payload", "oversized_single_memory_item", "aggregate_memory_pressure", "work_result_payload_pressure", "multibyte_utf8_evidence", "simple_schema", "work_selection_schema", "malformed_first_output", "host_contention", "long_literal_answer", "long_user_facing_answer"],
+      "hard_invariants": ["valid required output is not truncated", "invalid structured output never crosses the schema boundary", "timeout failure remains explicit", "canonical evidence is never truncated or rewritten to satisfy an LLM budget", "model-facing evidence remains finite as canonical history grows", "oversized evidence fails closed before model inference unless a separately validated bounded derived representation exists"],
+      "quality_order": ["valid_output_rate", "worst_scenario_valid_output_rate", "required_evidence_coverage", "oversize_fail_closed_rate", "truncation_count", "timeout_count", "inference_calls", "prompt_evidence_bytes", "latency"],
+      "search": "Pilot samples estimate latency, output-length, useful-evidence-size, and supported-context distributions on the configured model. Sweep per-item and aggregate evidence byte caps jointly with output constraints. Reject any candidate that admits unbounded payloads or silently truncates canonical evidence."
     },
     "ID-COLLISION-001": {
       "title": "Truncated deterministic identifier collision risk",

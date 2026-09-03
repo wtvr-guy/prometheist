@@ -45,7 +45,12 @@ and may be moved with:
 PROMETHEIST_ARTIFACT_ROOT=<path>
 ```
 
-During active development, `.prometheist/artifacts/**` is intentionally eligible for Git tracking in the private repository so remote debugging can inspect the exact causal artifacts produced on the native machine. Other `.prometheist/*` state remains ignored. This development policy must be revisited before public distribution because artifacts may contain user prompts, retrieved memories, system prompts, model outputs, tool results, and other private runtime evidence.
+`.prometheist/` is fully ignored by Git. Runtime artifacts may contain user prompts,
+retrieved memories, system prompts, model outputs, tool results, and other sensitive
+evidence, and ordinary development runs must not dirty the repository or publish that
+content accidentally. Evidence intended for review is deliberately selected,
+sanitized where appropriate, and copied to `docs/audits/evidence/` or
+`benchmarks/results/` with its provenance and tested revision recorded.
 
 The journal contains two classes of records:
 
@@ -334,8 +339,9 @@ Current policy:
 - artifacts are immutable;
 - ordinary retention/compaction does not delete them;
 - the artifact root is user-controlled;
-- during active private-repository development, `.prometheist/artifacts/**` is intentionally trackable so exact native-runtime evidence can be shared for diagnosis; unrelated `.prometheist` state remains ignored;
-- before public release or use with a repository that is not appropriately private, artifact tracking must be revisited because artifacts may contain sensitive runtime evidence;
+- `.prometheist/` is ignored in full and must not be used as a Git evidence directory;
+- deliberately shared audit/benchmark evidence is copied to an explicit reviewed
+  location with provenance and revision metadata; the runtime originals remain local;
 - future cold-storage compression may transform old `.json` records to a content-preserving representation such as `.json.zst`, provided hashes/identity remain verifiable and the transformation is reversible;
 - large binary objects should eventually use content-addressed blob storage, with JSON artifacts referring to their hashes rather than embedding arbitrary binary payloads.
 

@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 from datetime import datetime, timezone
 from uuid import uuid4
 
 import pytest
 
 from jit_agent import llm
-from jit_agent.capability_registry import CapabilityDescriptor, CapabilityKind
-from jit_agent.interaction_policy import InteractionAction
 from jit_agent.llm import _strip_thinking
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from jit_agent.percept_response_runtime import ResponseMemoryPackage, _FINAL_RESPONSE_PROMPT
+from jit_agent.percept_response_worker import UserPromptLLM
 
 
 class _FakeResponse:
@@ -29,96 +31,6 @@ class _FakeHTTPClient:
     def post(self, path, *, json):
         self.calls.append((path, json))
         return _FakeResponse(next(self._contents))
-
-
-def test_strip_thinking_preserves_plain_answer():
-    assert _strip_thinking("final answer") == "final answer"
-
-
-def test_strip_thinking_removes_complete_think_block():
-    assert _strip_thinking("<think>hidden reasoning</think>final answer") == "final answer"
-
-
-def test_strip_thinking_uses_content_after_unmatched_closing_tag():
-    assert _strip_thinking("hidden reasoning</think>final answer") == "final answer"
-
-
-def test_strip_thinking_rejects_truncated_response_with_no_post_tag_answer():
-    with pytest.raises(ValueError, match="no answer content"):
-        _strip_thinking("hidden reasoning</think>")
-
-
-def test_strip_thinking_rejects_think_only_response():
-    with pytest.raises(ValueError, match="no answer content"):
-        _strip_thinking("<think>hidden reasoning</think>")
-
-
-def test_strip_thinking_rejects_empty_response():
-    with pytest.raises(ValueError, match="no answer content"):
-        _strip_thinking("   ")
-
-
-def test_response_prompt_does_not_leak_acceptance_scenario_facts():
-    prompt = llm._RESPOND_SYSTEM_PROMPT.casefold()
-    assert "project kestrel" not in prompt
-    assert "virtualization is disabled" not in prompt
-    assert "blueharbor" not in prompt
-    assert "vx-" not in prompt
-
-
-def test_user_facing_answers_use_expressive_temperature_with_structured_envelope(
-    monkeypatch,
-):
-    monkeypatch.delenv("PROMETHEIST_RESPONSE_TEMPERATURE", raising=False)
-    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
-    fake_http = _FakeHTTPClient(['{"answer":"Final answer only."}'])
-    client._client = fake_http
-
-    assert client.respond("Question", None) == "Final answer only."
-
-    path, payload = fake_http.calls[0]
-    assert path == "/api/chat"
-    assert payload["format"]["required"] == ["answer"]
-    assert payload["think"] is False
-    assert payload["stream"] is False
-    assert payload["options"] == {"num_predict": 256, "temperature": 0.65}
-
-
-def test_control_llm_kinds_remain_deterministic_when_response_temperature_is_high(
-    monkeypatch,
-):
-    monkeypatch.setenv("PROMETHEIST_RESPONSE_TEMPERATURE", "1.25")
-    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
-    fake_http = _FakeHTTPClient(['{"ok":true}'])
-    client._client = fake_http
-
-    client._structured(
-        "PRECOGNITIVE_DISPOSITION",
-        "system",
-        "user",
-        {"type": "object"},
-        32,
-    )
-
-    _, payload = fake_http.calls[0]
-    assert payload["options"] == {"num_predict": 32, "temperature": 0.0}
-
-
-def test_user_facing_answer_retries_invalid_structured_output():
-    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
-    fake_http = _FakeHTTPClient(["not-json", '{"answer":"Recovered answer."}'])
-    client._client = fake_http
-
-    assert client.respond("Question", None) == "Recovered answer."
-    assert len(fake_http.calls) == 2
-
-
-def test_user_facing_answer_fails_closed_after_two_invalid_outputs():
-    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
-    client._client = _FakeHTTPClient(["not-json", '{"answer":"   "}'])
-
-    with pytest.raises(ValueError, match="model answer failed to validate"):
-        client.respond("Question", None)
 
 
 def _evidence(event_type: EventType, content: str, seq: int) -> MemoryEvidence:
@@ -146,96 +58,94 @@ def _packet(*contents: str) -> MemoryPacket:
     )
 
 
-def test_capability_selection_returns_only_explicit_action_and_bounded_indices():
-    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
-    fake_http = _FakeHTTPClient(
-        ['{"next_action":"USE_CAPABILITIES","capability_indices":[1,0]}']
+def _package(packet: MemoryPacket | None = None) -> ResponseMemoryPackage:
+    return ResponseMemoryPackage(
+        memory_packet=packet or _packet(),
+        sufficient=True,
+        composer_rounds=1,
+        adaptive_recall_rounds=0,
     )
+
+
+def test_strip_thinking_preserves_plain_answer():
+    assert _strip_thinking("final answer") == "final answer"
+
+
+def test_strip_thinking_removes_complete_think_block():
+    assert _strip_thinking("<think>hidden reasoning</think>final answer") == "final answer"
+
+
+def test_strip_thinking_uses_content_after_unmatched_closing_tag():
+    assert _strip_thinking("hidden reasoning</think>final answer") == "final answer"
+
+
+@pytest.mark.parametrize(
+    "content",
+    ["hidden reasoning</think>", "<think>hidden reasoning</think>", "   "],
+)
+def test_strip_thinking_rejects_outputs_without_answer_content(content):
+    with pytest.raises(ValueError, match="no answer content"):
+        _strip_thinking(content)
+
+
+def test_response_prompt_does_not_leak_acceptance_scenario_facts():
+    prompt = _FINAL_RESPONSE_PROMPT.casefold()
+    assert "project kestrel" not in prompt
+    assert "virtualization is disabled" not in prompt
+    assert "blueharbor" not in prompt
+    assert "vx-" not in prompt
+
+
+def test_user_facing_answers_use_expressive_temperature_with_structured_envelope(
+    monkeypatch,
+):
+    monkeypatch.delenv("PROMETHEIST_RESPONSE_TEMPERATURE", raising=False)
+    client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
+    fake_http = _FakeHTTPClient(['{"answer":"Final answer only."}'])
     client._client = fake_http
-    catalog = (
-        CapabilityDescriptor(
-            capability_id="alpha",
-            kind=CapabilityKind.TOOL,
-            description="First test capability.",
-        ),
-        CapabilityDescriptor(
-            capability_id="beta",
-            kind=CapabilityKind.WORKFLOW,
-            description="Second test capability.",
-        ),
-    )
-    structured_results = (
-        {
-            "round_index": 0,
-            "capability_id": "alpha",
-            "result_data": {"status": "complete", "count": 2},
-        },
-    )
 
-    decision = client.classify(
-        "Do the task",
-        _packet(),
-        catalog,
-        capability_results=structured_results,
-    )
+    assert client.generate_final_response("Question", _package(), ()) == "Final answer only."
+    path, payload = fake_http.calls[0]
+    assert path == "/api/chat"
+    assert payload["format"]["required"] == ["answer"]
+    assert payload["think"] is False
+    assert payload["stream"] is False
+    assert payload["options"] == {"num_predict": 256, "temperature": 0.65}
 
-    assert decision.next_action is InteractionAction.USE_CAPABILITIES
-    assert decision.capability_indices == [1, 0]
-    payload = fake_http.calls[0][1]
-    assert set(payload["format"]["properties"]) == {
-        "next_action",
-        "capability_indices",
+
+def test_control_llm_kinds_remain_deterministic_when_response_temperature_is_high(
+    monkeypatch,
+):
+    monkeypatch.setenv("PROMETHEIST_RESPONSE_TEMPERATURE", "1.25")
+    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
+    fake_http = _FakeHTTPClient(['{"ok":true}'])
+    client._client = fake_http
+    client._structured(
+        "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "system",
+        "user",
+        {"type": "object"},
+        32,
+    )
+    assert fake_http.calls[0][1]["options"] == {
+        "num_predict": 32,
+        "temperature": 0.0,
     }
-    model_input = payload["messages"][1]["content"]
-    assert "alpha" in model_input
-    assert "beta" in model_input
-    assert "[Structured capability results]" in model_input
-    assert '"status":"complete"' in model_input
-    assert '"count":2' in model_input
 
 
-def test_deeper_research_selects_packet_candidates_not_query_text():
+def test_user_facing_answer_retries_invalid_structured_output():
     client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
-    fake_http = _FakeHTTPClient(['{"candidate_indices":[1,0]}'])
+    fake_http = _FakeHTTPClient(["not-json", '{"answer":"Recovered answer."}'])
     client._client = fake_http
-    packet = _packet("candidate A", "candidate B")
-
-    selection = client.select_research_candidates("Investigate", packet)
-
-    assert selection.candidate_indices == [1, 0]
-    payload = fake_http.calls[0][1]
-    assert set(payload["format"]["properties"]) == {"candidate_indices"}
-    model_input = payload["messages"][1]["content"]
-    assert "candidate_index: 0" in model_input
-    assert "candidate_index: 1" in model_input
+    assert client._text("FINAL_RESPONSE_V2", "system", "Question") == "Recovered answer."
+    assert len(fake_http.calls) == 2
 
 
-def test_cross_reference_selects_two_or_more_packet_candidates_without_relation_text():
+def test_user_facing_answer_fails_closed_after_two_invalid_outputs():
     client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
-    fake_http = _FakeHTTPClient(['{"candidate_indices":[2,0]}'])
-    client._client = fake_http
-    packet = _packet("candidate A", "candidate B", "candidate C")
-
-    selection = client.select_cross_reference_candidates("Compare evidence", packet)
-
-    assert selection.candidate_indices == [2, 0]
-    payload = fake_http.calls[0][1]
-    assert set(payload["format"]["properties"]) == {"candidate_indices"}
-    assert "candidate_index: 0" in payload["messages"][1]["content"]
-    assert "candidate_index: 2" in payload["messages"][1]["content"]
-
-
-def test_focused_recall_selects_exactly_one_packet_candidate():
-    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
-    fake_http = _FakeHTTPClient(['{"candidate_index":1}'])
-    client._client = fake_http
-    packet = _packet("candidate A", "candidate B")
-
-    selection = client.select_focused_candidate("Resolve ambiguity", packet)
-
-    assert selection.candidate_index == 1
-    payload = fake_http.calls[0][1]
-    assert set(payload["format"]["properties"]) == {"candidate_index"}
+    client._client = _FakeHTTPClient(["not-json", '{"answer":"   "}'])
+    with pytest.raises(ValueError, match="model answer failed to validate"):
+        client._text("FINAL_RESPONSE_V2", "system", "Question")
 
 
 def test_verbatim_placeholders_prevent_model_from_respelling_opaque_literals():
@@ -252,12 +162,15 @@ def test_verbatim_placeholders_prevent_model_from_respelling_opaque_literals():
             )
         ],
     )
-    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
+    client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
     fake_http = _FakeHTTPClient(['{"answer":"The codename is [[VERBATIM_0]]."}'])
     client._client = fake_http
 
-    answer = client.respond("What codename did I give Project Oriole?", packet)
-
+    answer = client.generate_final_response(
+        "What codename did I give Project Oriole?",
+        _package(packet),
+        (),
+    )
     assert answer == f"The codename is {exact_code}."
     model_input = fake_http.calls[0][1]["messages"][1]["content"]
     assert exact_code not in model_input
@@ -269,7 +182,6 @@ def test_verbatim_placeholders_cover_hyphenated_labels_and_current_input():
     literal_to_placeholder, placeholder_to_literal = llm._build_verbatim_placeholder_maps(
         f"Call this plan {exact_label}."
     )
-
     assert literal_to_placeholder == {exact_label: "[[VERBATIM_0]]"}
     masked = llm._mask_verbatim_literals(
         f"Call this plan {exact_label}.",

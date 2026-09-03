@@ -5,12 +5,18 @@ import uuid
 import pytest
 
 from jit_agent import jit_memory
-from jit_agent.capability_registry import DEFAULT_REGISTRY
+from jit_agent.capability_registry import (
+    DEFAULT_REGISTRY,
+    CapabilityDescriptor,
+    CapabilityKind,
+    CapabilityRegistry,
+    RegisteredCapability,
+)
 from jit_agent.models import MemoryNeed, MemoryPacket
 from jit_agent.percept_response_runtime import (
     MemorySufficiencyDecision,
     PreCognitiveDisposition,
-    _effective_adaptive_profile,
+    _effective_adaptive_stage,
     _external_capability_catalog,
 )
 from jit_agent.percept_response_worker import UserPromptWorkSelection
@@ -49,16 +55,35 @@ def test_legacy_memory_research_modes_are_not_pre_cognitive_capabilities() -> No
     assert catalog == ()
 
 
-def test_adaptive_recall_falls_back_to_standard_when_no_focus_candidate_exists() -> None:
+def test_hidden_non_memory_service_is_not_exposed_as_pre_cognitive_work() -> None:
+    registry = CapabilityRegistry(
+        (
+            RegisteredCapability(
+                descriptor=CapabilityDescriptor(
+                    capability_id="internal_maintenance",
+                    kind=CapabilityKind.SERVICE,
+                    description="Internal maintenance only.",
+                ),
+                routing_terms=("maintenance",),
+                executor="maintenance",
+                selectable_as_external_work=False,
+            ),
+        )
+    )
+
+    assert _external_capability_catalog(registry) == ()
+
+
+def test_adaptive_recall_falls_back_to_broad_when_no_focus_candidate_exists() -> None:
     packet = MemoryPacket(
         memory_request_id=uuid.uuid4(),
         need=MemoryNeed(query_text="an unremembered fact"),
         supported=False,
         items=[],
     )
-    profile, focus_ids = _effective_adaptive_profile(
-        jit_memory.MemoryRecallProfile.DEEPER_RESEARCH,
+    stage, focus_ids = _effective_adaptive_stage(
+        jit_memory.AdaptiveRecallStage.ASSOCIATIVE,
         packet,
     )
-    assert profile is jit_memory.MemoryRecallProfile.STANDARD
+    assert stage is jit_memory.AdaptiveRecallStage.BROAD
     assert focus_ids == []

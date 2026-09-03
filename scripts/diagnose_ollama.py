@@ -11,23 +11,14 @@ import time
 
 import httpx
 from dotenv import load_dotenv
-from pydantic import BaseModel
-
-from jit_agent.interaction_policy import InteractionAction, InteractionDecision
+from jit_agent.llm import _TextAnswer
+from jit_agent.percept_response_runtime import MemorySufficiencyDecision
+from jit_agent.percept_response_worker import UserPromptWorkSelection
 
 load_dotenv()
 
 BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
 MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:4b")
-
-
-class ActionOnly(BaseModel):
-    action: InteractionAction
-
-
-class ActionWithQuery(BaseModel):
-    action: InteractionAction
-    capability_query: str | None = None
 
 
 def _call(label: str, payload: dict) -> None:
@@ -74,7 +65,7 @@ def main() -> None:
     )
 
     _call(
-        "C: minimal schema (action enum only)",
+        "C: v2 pre-cognitive work-selection schema",
         {
             "model": MODEL,
             "messages": [
@@ -83,14 +74,14 @@ def main() -> None:
                     "content": "The codename for Project Oriole is 12AB34CD.",
                 }
             ],
-            "format": ActionOnly.model_json_schema(),
+            "format": UserPromptWorkSelection.model_json_schema(),
             "think": False,
             "stream": False,
         },
     )
 
     _call(
-        "D: action + optional capability_query",
+        "D: v2 Composer memory-sufficiency schema",
         {
             "model": MODEL,
             "messages": [
@@ -99,14 +90,14 @@ def main() -> None:
                     "content": "What was the codename I gave you for Project Oriole?",
                 }
             ],
-            "format": ActionWithQuery.model_json_schema(),
+            "format": MemorySufficiencyDecision.model_json_schema(),
             "think": False,
             "stream": False,
         },
     )
 
     _call(
-        "E: full InteractionDecision schema (for comparison only)",
+        "E: v2 final-answer envelope",
         {
             "model": MODEL,
             "messages": [
@@ -115,7 +106,7 @@ def main() -> None:
                     "content": "What was the codename I gave you for Project Oriole?",
                 }
             ],
-            "format": InteractionDecision.model_json_schema(),
+            "format": _TextAnswer.model_json_schema(),
             "think": False,
             "stream": False,
         },

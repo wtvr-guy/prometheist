@@ -25,8 +25,11 @@ try {
         tests/test_v07_increment_h.py `
         tests/test_worker_protocol.py::test_forced_process_loss_recovers_same_step_from_postgres `
         tests/test_cli.py `
-        tests/test_interaction_runtime.py
-    if ($LASTEXITCODE -ne 0) { throw "worker/runtime acceptance failed" }
+        tests/test_percept_response_contract.py `
+        tests/test_user_prompt_worker_contract.py `
+        tests/test_percept_response_failures.py `
+        tests/test_artifact_journal.py
+    if ($LASTEXITCODE -ne 0) { throw "v2 worker/runtime acceptance failed" }
 
     # Run the complete deterministic regression suite before the expensive
     # native Ollama gate. This catches policy/contract regressions in seconds
@@ -34,10 +37,7 @@ try {
     uv run --locked pytest -q -m "not ollama"
     if ($LASTEXITCODE -ne 0) { throw "deterministic regression suite failed" }
 
-    uv run --locked pytest -vv -s -m ollama `
-        tests/test_acceptance_restart.py `
-        tests/test_cross_conversation_memory.py `
-        tests/test_acceptance_conversation_continuity.py
+    uv run --locked pytest -vv -s -m ollama
     $exitCode = $LASTEXITCODE
     if ($exitCode -ne 0) { throw "Ollama continuity acceptance failed" }
 }

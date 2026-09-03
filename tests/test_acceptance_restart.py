@@ -42,7 +42,7 @@ def test_cross_process_restart_recalls_randomized_fact(codename_sentence, questi
     assert random_fact in answer
 
 
-def test_cross_process_memory_analysis_recalls_without_hidden_transcript():
+def test_cross_process_adaptive_recall_recalls_without_hidden_transcript():
     fact_conversation = uuid.uuid4()
     task_conversation = uuid.uuid4()
     random_fact = uuid.uuid4().hex[:8].upper()
@@ -50,10 +50,10 @@ def test_cross_process_memory_analysis_recalls_without_hidden_transcript():
     # Process A persists the event and exits completely.
     run_once(f"The codename for Project Oriole is {random_fact}.", fact_conversation)
 
-    # Process B uses the neutral capability registry and a fresh memory-analysis
-    # worker before JIT Memory supplies bounded evidence.
+    # Process B uses the v2 Composer and deterministic Adaptive Recall before a
+    # separate final responder receives bounded evidence.
     answer = run_once(
-        "Use the memory specialist to tell me the codename for Project Oriole.",
+        "Tell me the codename for Project Oriole from persistent memory.",
         task_conversation,
     )
 

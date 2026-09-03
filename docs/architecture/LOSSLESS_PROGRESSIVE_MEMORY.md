@@ -1,6 +1,6 @@
 # Lossless Progressive Memory and Bounded Recall
 
-**Status:** authoritative architectural decision beginning 2026-08-26.
+**Status:** constitutional architecture deep dive, rebaselined 2026-09-03.
 
 **Constitutional status:** primary architecture authority for Articles 3, 4, 5, 17, and 18 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md). This document explains those constitutional rules in depth and is subordinate to the Constitution where wording conflicts.
 
@@ -144,6 +144,12 @@ No ordinary memory mechanism may solve scale by increasing one model invocation'
 
 Every LLM invocation must eventually have a policy-bounded maximum working context. This applies to the whole invocation, not only a `MemoryPacket`. A worker may not defeat stateless-model architecture by accumulating an ever-growing hidden research transcript and replaying it into later calls.
 
+Item-count bounds alone are insufficient. A single canonical event or structured work
+result may be arbitrarily large. Model-facing views therefore enforce explicit
+per-item and aggregate byte limits before transport, including rendered metadata
+overhead. An oversized view fails closed; canonical evidence is not truncated or
+rewritten to fit the model.
+
 A worker that needs additional history must externalize compact structured task state and request exact evidence as needed rather than drag an unbounded transcript forward.
 
 ## Bounded ordinary compute is also a goal
@@ -151,6 +157,11 @@ A worker that needs additional history must externalize compact structured task 
 Flattening context while exploding the number of model calls is not an acceptable ordinary-case solution.
 
 For routine recall, total LLM calls and active compute should remain small as the durable corpus grows. Most navigation should rely on conventional deterministic/indexed operations such as exact identifiers, SQL, full-text search, temporal filtering, sparse association traversal, entity intersections, and other cheap routing mechanisms.
+
+Derived-projection freshness is also ordinary compute. Steady-state freshness must
+advance from durable high-water marks over the new event tail rather than materialize
+the lifetime ledger for each percept. Incompatible or missing projection state may
+trigger a full deterministic rebuild; that recovery path must not become routine.
 
 Large forensic questions may legitimately create large durable workloads, but their work must be partitioned into bounded operations with exact provenance. They are exceptional analyses, not the normal recall path.
 
@@ -192,19 +203,31 @@ Corpus-size experiments must freeze the query families while increasing corpus s
 
 ### v0.7
 
-The Attention Fabric remains the immediate implementation priority. It provides the resource-governed execution substrate needed to keep future retrieval and reasoning bounded.
+The closure candidate implements the Attention Fabric, bounded aperture, Adaptive
+Recall, incremental projection freshness, and byte-bounded model evidence. Native
+acceptance on the frozen closure SHA remains required.
 
 ### v0.8
 
-Perception/salience must distinguish attention-worthiness from durable-memory admission. Salience may influence what receives further processing without itself rewriting memory.
+Epistemic WorkingState must remain a bounded derived projection over exact evidence.
+Hypotheses and unresolved questions may guide attention but must not become canonical
+truth or copied lifetime context.
 
 ### v0.9
 
-Retention must implement an explicit durable-admission boundary. Any earlier language such as `raw-to-derived aggregation` is valid only for pre-admission/ephemeral processing or for creation of disposable indexes alongside canonical source data. It must never mean replacing an admitted durable memory with a derived representation.
+Perception/salience may influence attention-worthiness without itself rewriting memory
+or implying durable admission.
 
 ### v0.10
 
-Memory generalization must explicitly test progressive associative recall, activation, exact evidence dereferencing, long-horizon coreference/relationship navigation, and context/compute scaling across larger corpora.
+Retention must implement the explicit durable-admission boundary. Pre-admission
+aggregation and disposable indexes must never replace admitted canonical evidence.
+
+### v0.11
+
+Memory generalization and episode routing must test progressive recall, activation,
+exact dereferencing, interference, long-horizon navigation, and context/compute
+scaling before any learned semantic route is accepted.
 
 ### v1.0
 

@@ -2,8 +2,8 @@
 
 This is a measurement harness, not an optimizer. It records host samples,
 Ollama latency/output behavior across candidate token caps, the duration of the
-frozen worker/runtime acceptance block, and a real-Ollama recurrent capability-
-loop continuity probe. A pilot run remains evidence to inform calibration; it
+frozen worker/runtime acceptance block, and the real-Ollama v2 response-pipeline
+continuity probe. A pilot run remains evidence to inform calibration; it
 does not automatically rewrite production policy.
 """
 from __future__ import annotations
@@ -70,15 +70,15 @@ def measure_resources(samples: int) -> dict[str, Any]:
     }
 
 
-def measure_pre_cap_resources() -> dict[str, Any]:
-    """Capture host pressure immediately before the real capability-loop probe."""
+def measure_pre_pipeline_resources() -> dict[str, Any]:
+    """Capture host pressure immediately before the real v2 pipeline probe."""
 
     result = measure_resources(1)
-    result["benchmark_id"] = "RES-PRE-CAP-001"
+    result["benchmark_id"] = "RES-PRE-PIPELINE-001"
     result["decision"] = (
         "This single immediate sample is ordered after Ollama calibration and directly before "
-        "CAP-LOOP-001. Compare it with RES-NATIVE-001 and OLLAMA-RUNTIME-001 to distinguish "
-        "physical free RAM from reusable resident-model memory."
+        "PIPELINE-NATIVE-001. Compare it with RES-NATIVE-001 and OLLAMA-RUNTIME-001 "
+        "to distinguish physical free RAM from reusable resident-model memory."
     )
     return result
 
@@ -154,7 +154,7 @@ def measure_ollama(token_caps: tuple[int, ...]) -> dict[str, Any]:
 
 
 def measure_ollama_runtime() -> dict[str, Any]:
-    """Record whether the configured model is resident immediately before CAP-LOOP."""
+    """Record whether the configured model is resident before the v2 pipeline probe."""
 
     policy = native_resource_safety_policy()
     state = OllamaRuntimeProbe().capture()
@@ -190,7 +190,9 @@ def measure_worker_runtime() -> dict[str, Any]:
         "tests/test_native_policy.py",
         "tests/test_ollama_runtime.py",
         "tests/test_interaction_resource_admission.py",
-        "tests/test_interaction_runtime.py",
+        "tests/test_percept_response_contract.py",
+        "tests/test_user_prompt_worker_contract.py",
+        "tests/test_percept_response_failures.py",
     ]
     started = time.monotonic()
     completed = subprocess.run(command, cwd=ROOT, check=False, capture_output=True, text=True)
@@ -224,8 +226,8 @@ def _extract_admission_diagnostics(text: str) -> dict[str, Any] | None:
     return None
 
 
-def measure_capability_loop() -> dict[str, Any]:
-    """Collect one real-model recurrent-loop trace without claiming an optimum."""
+def measure_response_pipeline() -> dict[str, Any]:
+    """Collect one real-model v2 pipeline trace without claiming an optimum."""
 
     command = [
         "uv",
@@ -248,25 +250,21 @@ def measure_capability_loop() -> dict[str, Any]:
     lowered = combined.casefold()
     executed = "1 passed" in lowered
     skipped = "1 skipped" in lowered
-    round_limit_failure = "capability round limit reached" in lowered
     admission_diagnostics = _extract_admission_diagnostics(combined)
     return {
-        "benchmark_id": "CAP-LOOP-001",
+        "benchmark_id": "PIPELINE-NATIVE-001",
         "result": "PILOT_NATIVE_MEASUREMENT" if executed else "NO_NATIVE_EVIDENCE",
         "elapsed_seconds": round(elapsed, 6),
         "returncode": completed.returncode,
         "acceptance_executed": executed,
         "acceptance_skipped": skipped,
-        "round_limit_failure_observed": round_limit_failure,
         "admission_diagnostics": admission_diagnostics,
         "stdout_tail": completed.stdout[-12000:],
         "stderr_tail": completed.stderr[-4000:],
         "decision": (
-            "A passing four-turn real-Ollama continuity run demonstrates that the production "
-            "round guard is non-binding for this frozen native workload. It does not establish "
-            "the empirical tail of capability-round demand; representative successful, "
-            "adversarial, and deliberately nonconvergent local-model tasks are still required "
-            "before changing or verifying MAX_CAPABILITY_ROUNDS."
+            "A passing four-turn real-Ollama continuity run exercises the v2 Composer, "
+            "deterministic Adaptive Recall, and final responder on the target host. It is one "
+            "acceptance workload, not a general performance optimum."
         ),
     }
 
@@ -289,9 +287,9 @@ def _requested_measurements_complete(results: dict[str, Any]) -> tuple[bool, lis
         if not bool(state.get("probe_ok")):
             failures.append("OLLAMA-RUNTIME-001 could not inspect running-model state")
 
-    cap_loop = results.get("CAP-LOOP-001")
-    if cap_loop is not None and not bool(cap_loop.get("acceptance_executed")):
-        failures.append("CAP-LOOP-001 real-Ollama acceptance did not execute and pass")
+    pipeline = results.get("PIPELINE-NATIVE-001")
+    if pipeline is not None and not bool(pipeline.get("acceptance_executed")):
+        failures.append("PIPELINE-NATIVE-001 real-Ollama acceptance did not execute and pass")
 
     return not failures, failures
 
@@ -307,7 +305,7 @@ def main() -> None:
     parser.add_argument("--skip-resources", action="store_true")
     parser.add_argument("--skip-ollama", action="store_true")
     parser.add_argument("--skip-worker", action="store_true")
-    parser.add_argument("--skip-capability-loop", action="store_true")
+    parser.add_argument("--skip-response-pipeline", action="store_true")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if args.resource_samples < 1:
@@ -323,11 +321,11 @@ def main() -> None:
         results["WORKER-NATIVE-001"] = measure_worker_runtime()
     if not args.skip_ollama:
         results["LLM-NATIVE-001"] = measure_ollama(token_caps)
-    if not args.skip_capability_loop:
+    if not args.skip_response_pipeline:
         results["OLLAMA-RUNTIME-001"] = measure_ollama_runtime()
         if not args.skip_resources:
-            results["RES-PRE-CAP-001"] = measure_pre_cap_resources()
-        results["CAP-LOOP-001"] = measure_capability_loop()
+            results["RES-PRE-PIPELINE-001"] = measure_pre_pipeline_resources()
+        results["PIPELINE-NATIVE-001"] = measure_response_pipeline()
 
     complete, failures = _requested_measurements_complete(results)
     payload = {

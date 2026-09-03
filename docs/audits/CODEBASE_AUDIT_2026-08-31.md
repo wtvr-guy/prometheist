@@ -1,5 +1,9 @@
 # Prometheist codebase audit — 2026-08-31
 
+> **Historical audit.** Findings and test counts apply only to the audited revision
+> below. PR #23 and the v0.7 consolidation candidate remediate and supersede parts of
+> this code state; a final closure audit is still required on one frozen SHA.
+
 **Audited revision:** `65f7c65` (HEAD, `main`/`origin/main`)
 **Date/environment:** 2026-08-31, Windows 11 development host, PostgreSQL 16 (native service), Ollama (native, `qwen3:4b-instruct-2507-q4_K_M`)
 **Scope:** full repository sweep for bugs, monkeypatches/workarounds, and inconsistencies (not a per-article constitutional walk). Complements, and does not replace, [`CONSTITUTIONAL_AUDIT_2026-08-27.md`](CONSTITUTIONAL_AUDIT_2026-08-27.md), which is the last article-by-article pass at tag `v0.7` (`ad77be3`). **50 commits landed between `ad77be3` and this revision** (a new "v2 percept-to-response pipeline" plus an independent artifact-journal/crash-recovery subsystem — `src/jit_agent/percept_response_runtime.py`, `percept_response_worker.py`, `artifact_journal.py`, `artifact_recovery.py`, `event_artifact_store.py`, `llm_artifact_store.py`, `chat_startup.py`, and a heavily rewritten `cli.py`), none of which existed at the time of the last audit. This audit focuses there, plus a full-repo grep sweep and fresh empirical tool/test runs.

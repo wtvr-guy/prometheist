@@ -19,7 +19,7 @@ Prometheist must not treat an arbitrary numeric bound as correct merely because 
 
 Any numeric value that changes runtime behavior must be one of the following:
 
-1. **Structural invariant** — follows from the representation or algorithm itself (for example, a sequence number is non-negative, a percentage is bounded by 0 and 100, or a cross-reference operation requires at least two references).
+1. **Structural invariant** — follows from the representation or algorithm itself (for example, a sequence number is non-negative, a percentage is bounded by 0 and 100, or a selected index must exist in its application-owned catalog).
 2. **External contract** — imposed by a protocol, dependency, operating system, model API, or other authority outside Prometheist.
 3. **Identifier collision bound** — chosen from an explicit collision-risk calculation rather than a performance benchmark.
 4. **Empirical tunable** — quality/cost trade-off whose value must be selected by a reproducible benchmark.
@@ -95,9 +95,14 @@ Must vary graph fan-out, graph depth, cycles, guarded relationships, disconnecte
 
 Must cover short and long conversations, interleaved topics, multiple simultaneously active facts, corrections, resumed tasks, accumulated capability results, and distraction pressure. Truncation must never silently remove required evidence in a passing scenario.
 
-### Capability selection/round bounds
+### v2 work selection and Adaptive Recall bounds
 
-Must include tasks needing zero, one, several independent, several dependent, repeated, and progressively narrowing capabilities. The benchmark measures completion correctness, unnecessary executions, number of stateless model calls, convergence, and failure to issue an explicit `RESPOND`.
+Must include prompts needing zero, one, several independent, and several dependent
+non-memory work items; memory-sufficient, progressively expanded, and exhausted-memory
+cases; and explicit-user versus non-user response policy. Measure completion
+correctness, unnecessary work/model calls, Composer convergence, retrieval work,
+direct work-result delivery, and failures to preserve the deterministic response
+requirement. Memory retrieval stages must never appear as selectable capabilities.
 
 ### Scheduler service guarantees
 
@@ -117,7 +122,12 @@ Must use the actual supported local model(s), prompt/schema sizes, cold/warm sta
 
 ## v0.7 evidence status
 
-The v0.7 audit is fail-fast in CI and currently discovers **171** production/operational numeric constraints. All 171 are explicitly registered with exact expected values; a new constraint, stale registration, changed value, invalid classification, missing benchmark, or missing required evidence makes the static gate fail.
+The v0.7 audit is fail-fast in CI and the 2026-09-03 closure candidate discovers
+**166** production/operational numeric constraints. All 166 are explicitly registered
+with exact expected values; a new constraint, stale registration, changed value,
+invalid classification, missing benchmark, or missing required evidence makes the
+static gate fail. This count is evidence for this candidate only and must be updated
+if the audited source changes.
 
 One previously audited constraint was eliminated rather than justified: derived association IDs no longer truncate SHA-256 to a 20-character prefix. Association projection version 3 uses the full digest, removing that collision-risk knob from the production design.
 
@@ -129,7 +139,9 @@ The current deterministic evidence is intentionally conservative:
 - `CAP-DISCOVERY-001`: **INSUFFICIENT_DISCRIMINATION**. All five materially different coefficient vectors tested preserve every current routing oracle.
 - `SCHED-SERVICE-001`: **INSUFFICIENT_DISCRIMINATION**. Quarter-, half-, current-, double-, and quadruple-scaled wait vectors preserve the only currently measurable service-order invariant; exact values cannot be identified without workload-arrival data and queue-delay objectives.
 - lexical/stemming heuristics remain **PROVISIONAL** because the current scoring benchmark does not independently vary them.
-- `CAP-LOOP-001`, `RES-NATIVE-001`, `WORKER-NATIVE-001`, and `LLM-NATIVE-001` remain **NATIVE_REQUIRED** where local-model or target-host behavior is part of the quantity being measured.
+- `PIPELINE-NATIVE-001`, `RES-NATIVE-001`, `WORKER-NATIVE-001`,
+  `OLLAMA-RUNTIME-001`, and `LLM-NATIVE-001` remain **NATIVE_REQUIRED** where
+  local-model or target-host behavior is part of the quantity being measured.
 
 The deterministic record is `benchmarks/results/DETERMINISTIC-CONSTRAINTS_2026-08-27_initial.json`. The scoring record is `benchmarks/results/MEM-SCORE-001_2026-08-27_initial.json`.
 
@@ -149,7 +161,9 @@ Examples:
 
 - “LLM context remains bounded” is constitutional; the exact token cap is classified here.
 - “resource safety preserves headroom” is constitutional; exact RAM/CPU reserves are safety/environment tunables.
-- “capability routing is recurrent and bounded” is constitutional; the exact round count is empirical.
+- “memory reassessment is fresh and bounded” is constitutional; the exact Adaptive
+  Recall stage/item and Composer-call bounds are empirical or structural as recorded
+  in the registry.
 - “service guarantees prevent starvation” is a constitutional execution requirement; exact wait-cycle thresholds are empirical.
 
 This separation prevents a provisional calibration from becoming permanent architecture by accident.

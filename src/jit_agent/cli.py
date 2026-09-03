@@ -22,10 +22,6 @@ from jit_agent.chat_startup import reset_chat_execution_state
 from jit_agent.percept_response_runtime import handle_percept_in_worker_processes
 from jit_agent.worker_runtime import WorkerLaunchDenied
 
-# Compatibility symbol retained so existing diagnostic tests and downstream callers
-# patch the authoritative v2 path rather than importing the superseded runtime.
-handle_interaction_in_worker_processes = handle_percept_in_worker_processes
-
 _INTERACTION_ADMISSION_FAILURE = "interaction was not safely admitted to one assignment"
 _EXIT_COMMANDS = {"exit", "quit", "/exit", "/quit"}
 
@@ -55,7 +51,7 @@ def _handle_with_admission_diagnostics(
     """Run one percept and expose the authoritative denial envelope on failure."""
 
     try:
-        return handle_interaction_in_worker_processes(
+        return handle_percept_in_worker_processes(
             conn,
             user_text,
             conversation_id,

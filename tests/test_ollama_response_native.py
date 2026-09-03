@@ -1,4 +1,4 @@
-"""Narrow real-Ollama smoke gate for final response synthesis over activated memory."""
+"""Narrow real-Ollama smoke gate for the v2 final responder."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -6,8 +6,9 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent.llm import OllamaClient
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from jit_agent.percept_response_runtime import ResponseMemoryPackage
+from jit_agent.percept_response_worker import UserPromptLLM
 from tests._cli_helpers import ollama_available
 
 
@@ -42,24 +43,6 @@ def test_real_ollama_response_reconciles_recent_relational_evidence():
     active_conversation = uuid4()
     profile_token = "VX-NATIVE01"
     plan_label = "BlueHarbor-NATIVE"
-
-    historical_rule = (
-        "For Project Kestrel, never use Docker; deploy PostgreSQL directly on Windows "
-        f"because virtualization is disabled. I track that constraint under profile {profile_token}."
-    )
-    turn1 = (
-        f"I'm revisiting Project Kestrel. For this conversation, call the plan {plan_label}. "
-        "I'm choosing between Docker Compose and PostgreSQL directly on Windows. "
-        "Based on my established constraints, choose the compatible approach."
-    )
-    turn2 = (
-        "Which approach conflicts with my established Kestrel rule, and what constraint "
-        "profile did I give that rule?"
-    )
-    turn2_answer = f"Docker Compose | {profile_token}"
-
-    # Intentionally preserve the retrieval-priority order observed in native
-    # acceptance. OllamaClient.respond must build its own chronological view.
     packet = MemoryPacket(
         memory_request_id=uuid4(),
         need=MemoryNeed(query_text="What nickname and which approach was just ruled out?"),
@@ -67,46 +50,46 @@ def test_real_ollama_response_reconciles_recent_relational_evidence():
         items=[
             _evidence(
                 EventType.INTERACTION_RESPONSE,
-                turn2_answer,
+                f"Docker Compose | {profile_token}",
                 conversation_id=active_conversation,
                 conversation_seq=13,
                 global_seq=32,
             ),
             _evidence(
                 EventType.USER_PROMPT,
-                turn2,
+                "Which approach conflicts with my established Kestrel rule?",
                 conversation_id=active_conversation,
                 conversation_seq=8,
                 global_seq=27,
             ),
             _evidence(
-                EventType.INTERACTION_RESPONSE,
-                "PostgreSQL directly on Windows",
-                conversation_id=active_conversation,
-                conversation_seq=6,
-                global_seq=25,
-            ),
-            _evidence(
                 EventType.USER_PROMPT,
-                turn1,
+                f"Call the active Kestrel plan {plan_label}.",
                 conversation_id=active_conversation,
                 conversation_seq=1,
                 global_seq=20,
             ),
             _evidence(
                 EventType.USER_PROMPT,
-                historical_rule,
+                "For Project Kestrel, never use Docker; deploy PostgreSQL directly on Windows "
+                f"under profile {profile_token}.",
                 conversation_id=historical_conversation,
                 conversation_seq=1,
                 global_seq=1,
             ),
         ],
     )
-
-    answer = OllamaClient().respond(
-        "What nickname are we using for this plan, and which approach did you just rule out? "
-        "Return exactly '<nickname> | <approach>' and nothing else.",
-        packet,
+    package = ResponseMemoryPackage(
+        memory_packet=packet,
+        sufficient=True,
+        composer_rounds=1,
+        adaptive_recall_rounds=0,
     )
 
+    answer = UserPromptLLM().generate_final_response(
+        "What nickname are we using for this plan, and which approach did you just rule out? "
+        "Return exactly '<nickname> | <approach>' and nothing else.",
+        package,
+        (),
+    )
     assert answer.strip() == f"{plan_label} | Docker Compose"

@@ -50,8 +50,9 @@ Verify the architectural claim a user/system actually depends on:
 - automatic memory activation;
 - bounded cognitive context;
 - exact provenance;
-- recurrent capability execution;
-- final-response barriers;
+- one-pass pre-cognitive non-memory work selection and deterministic execution;
+- bounded Composer/Adaptive Recall memory reassessment;
+- direct work-result handoff and mandatory explicit-user response;
 - process destruction/recovery;
 - resource admission and safe execution.
 
@@ -124,7 +125,7 @@ Tests should deliberately destroy:
 - workers after checkpoints;
 - workers around side-effect boundaries;
 - scheduler/controller processes;
-- interaction workers between stages;
+- percept stage workers between durable v2 stage boundaries;
 - model processes where practical.
 
 After restart, the system should reconstruct authority from durable state alone, respecting leases, retries, idempotency, checkpoints, assignments, WorkingState, and terminal results.
@@ -153,6 +154,7 @@ Relevant acceptance metrics/assertions include:
 
 - maximum WorkingState size;
 - maximum MemoryPacket size;
+- maximum UTF-8 bytes per memory/work item and across rendered model evidence;
 - maximum total LLM input/context under the tested policy;
 - number of model calls;
 - candidate/evidence work performed;
@@ -178,7 +180,12 @@ Suites should include:
 - missing dependencies;
 - oversubscription;
 - ambiguous external effects after crashes;
-- unavailable optional capabilities.
+- unavailable optional capabilities;
+- historical memory content attempting to acquire current instruction authority;
+- assistant-only claims attempting to become user facts;
+- oversized individual evidence records;
+- saturated WorkingState and deep-history candidate crowding;
+- projection freshness work that accidentally scales with lifetime history.
 
 Fail-closed behavior and correct abstention are positive test outcomes when evidence/authority is insufficient.
 
@@ -273,6 +280,14 @@ At minimum, where applicable:
 7. known skips/gaps are documented rather than silently counted as passes.
 
 A skipped environment-dependent test is not evidence that the feature works. It is a statement that the test did not run.
+
+For v0.7 closure, deterministic CI and native acceptance must refer to the same
+frozen candidate SHA. The Windows gate is
+`scripts/run_v07_acceptance.ps1`; it enables both required-acceptance environment
+flags, runs the deterministic regression suite, and then executes every
+`ollama`-marked test. A closure record must state the tested SHA, host, PostgreSQL
+version/database purpose, Ollama runtime/model identity, pass/fail/skip counts, and
+the retained result artifact. Collection alone is not execution.
 
 ## Constitutional audit tests
 

@@ -24,6 +24,11 @@ from jit_agent import artifact_journal, db, event_store, llm_artifact_store
 from jit_agent.capability_registry import DEFAULT_REGISTRY, CapabilityDescriptor
 from jit_agent.interaction_store import load_interaction_by_task
 from jit_agent.models import EventType, MemoryPacket
+from jit_agent.model_evidence_budget import (
+    configured_model_evidence_budget,
+    validate_memory_packet_content,
+    validate_rendered_evidence,
+)
 from jit_agent.percept_response_runtime import (
     MemorySufficiencyDecision,
     PerceptLLM,
@@ -194,6 +199,8 @@ class UserPromptLLM(PerceptLLM):
     def __init__(
         self,
         *,
+        base_url: str | None = None,
+        model: str | None = None,
         interaction=None,
         stage: PerceptStage | None = None,
         claim_id: UUID | None = None,
@@ -204,7 +211,7 @@ class UserPromptLLM(PerceptLLM):
         os.environ["PROMETHEIST_PERSONALITY_PROMPT"] = (
             _resolved_interactive_personality_prompt()
         )
-        super().__init__()
+        super().__init__(base_url=base_url, model=model)
         self._artifact_interaction = interaction
         self._artifact_stage = stage
         self._artifact_claim_id = claim_id
@@ -303,6 +310,8 @@ class UserPromptLLM(PerceptLLM):
             return PreCognitiveDisposition(response_required=True, capability_indices=[])
 
         visible_packet = _cognitive_memory_packet(memory_packet)
+        budget = configured_model_evidence_budget()
+        validate_memory_packet_content(visible_packet, budget=budget)
         catalog_text = "\n".join(
             f"{index}: {item.capability_id} | {item.kind.value} | {item.description}"
             for index, item in enumerate(capability_catalog)
@@ -311,6 +320,7 @@ class UserPromptLLM(PerceptLLM):
             f"item {index}: {item.event_type.value}: {item.content}"
             for index, item in enumerate(visible_packet.items)
         ) or "none"
+        validate_rendered_evidence((memory_text,), budget=budget)
         user = (
             f"[Current user prompt]\n{percept}\n\n"
             f"[Bounded orientation memory]\n{memory_text}\n\n"
@@ -343,10 +353,13 @@ class UserPromptLLM(PerceptLLM):
         memory_packet: MemoryPacket,
     ) -> MemorySufficiencyDecision:
         visible_packet = _cognitive_memory_packet(memory_packet)
+        budget = configured_model_evidence_budget()
+        validate_memory_packet_content(visible_packet, budget=budget)
         memory_text = "\n".join(
             f"item {index}: {item.event_type.value}: {item.content}"
             for index, item in enumerate(visible_packet.items)
         ) or "none"
+        validate_rendered_evidence((memory_text,), budget=budget)
         user = f"[Current user prompt]\n{percept}\n\n[Persistent memory evidence]\n{memory_text}"
         last_error: ValueError | None = None
         for token_cap in (96, 192):

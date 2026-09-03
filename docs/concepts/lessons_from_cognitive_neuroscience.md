@@ -1,5 +1,15 @@
 # Prometheist Architecture Through the Lens of Contemporary Cognitive and Computational Neuroscience
 
+> **Point-in-time research synthesis.** The body below evaluates the v0.6-era
+> repository available when the report was written and intentionally preserves those
+> observations. It is not a current implementation inventory. As of 2026-09-03,
+> v0.7 implements minimal canonical-reference WorkingState, the v2 response pipeline,
+> Adaptive Recall, and tail-only incremental association projection updates; permanent
+> Primary/specialist architecture is retired. The roadmap selected a bounded typed
+> Epistemic WorkingState as the provisional v0.8 experiment, while general recurrence,
+> episode segmentation, replay, plasticity, and learned semantic retrieval remain
+> separate later hypotheses. See [`../ROADMAP.md`](../ROADMAP.md).
+
 ## Executive summary
 
 The current Prometheist design available in the internal repository is not actually “unspecified” in practice: the available architecture documents describe an accepted **v0.6-era architecture**, with v0.7 durable execution identified as the next architectural milestone. Its defining invariant is that every LLM invocation is stateless; continuity is instead carried by an append-only authoritative event history, rebuildable derived-memory projections, and bounded just-in-time `MemoryPacket`s reconstructed for fresh agents. The current system includes a Primary Agent, a stateless memory specialist, shared `MemoryNeed`/`MemoryPacket` interfaces, deterministic lexical/entity/temporal routing, bounded spreading activation over provenance-bearing associations, support-aware evidence admission, explicit unknown-fact abstention, and persistent recording of agent and memory interactions. fileciteturn2file0 fileciteturn7file0

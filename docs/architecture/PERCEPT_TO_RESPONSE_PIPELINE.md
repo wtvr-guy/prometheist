@@ -1,11 +1,12 @@
 # Percept-to-Response Pipeline
 
-**Status:** current target architecture decision, 2026-08-29.  
+**Status:** authoritative implemented v2 path, adopted 2026-08-29 and rebaselined 2026-09-03.
+
 **Scope:** the path from an admitted input through pre-cognitive work selection, capability execution, memory sufficiency, and final response generation.
 
-This document records the current architectural decisions for Prometheist's percept-to-response path. It narrows responsibilities among deterministic intake policy, the pre-cognitive LLM, deterministic execution machinery, Adaptive Recall, the v2 Composer, and the final response worker.
+This document records the live Prometheist percept-to-response path. It narrows responsibilities among deterministic intake policy, the pre-cognitive LLM, deterministic execution machinery, Adaptive Recall, the v2 Composer, and the final response worker.
 
-It should be read consistently with `CONSTITUTION.md`, `COGNITIVE_ARCHITECTURE.md`, `INTERACTION_CONTINUITY.md`, and the system determinism/execution-governance documents. Where older architecture text refers to separate focused-recall, cross-reference, or deeper-research memory capabilities, the target described here supersedes that decomposition in favor of Adaptive Recall.
+It should be read consistently with `CONSTITUTION.md`, `COGNITIVE_ARCHITECTURE.md`, `INTERACTION_CONTINUITY.md`, and the system determinism/execution-governance documents. Older records that refer to separate focused-recall, cross-reference, or deeper-research memory capabilities, or to a recurrent general response router, are historical and superseded by this path.
 
 ## 1. Core principle
 
@@ -176,7 +177,7 @@ Once deterministic stopping criteria establish that no further useful memory exp
 
 ## 8. Adaptive Recall
 
-Adaptive Recall is the target unified memory-expansion capability.
+Adaptive Recall is the implemented unified memory-expansion mechanism.
 
 It replaces the architectural need for separate overlapping **focused recall**, **cross-reference**, and **deeper-research** memory capabilities.
 
@@ -274,6 +275,9 @@ The following are deliberate boundaries:
 
 The interactive CLI and other direct conversational interfaces must use a user-prompt intake contract that fixes `response_required=true` before the pre-cognitive LLM runs. The pre-cognitive model schema for that path should expose only the bounded work-selection fields it is actually authorized to choose.
 
-Existing code and documentation should be audited against this target before implementation is considered complete. In particular, older references to `MEMORY_ANALYSIS`, focused recall, cross-reference, deeper research, a second pre-cognitive synthesis LLM, or model-selected silence for direct user prompts should not be treated as current target architecture where they conflict with this document.
+The 2026-09-03 consolidation removed the parallel interaction runtime, old routing
+schema, named memory capabilities, and active-document conflicts. Dated records retain
+that terminology only when visibly marked historical. Any new live reference to those
+interfaces is an architectural regression.
 
-The intended target is a narrow set of semantic LLM responsibilities surrounded by durable, deterministic system machinery: deterministic user-response policy; one pre-cognitive work-selection worker; deterministic action/capability execution; a Composer-driven, Adaptive-Recall-backed memory-sufficiency loop; and a personality-conditioned final responder that receives memory context and authoritative work results through separate channels.
+The implemented design is a narrow set of semantic LLM responsibilities surrounded by durable, deterministic system machinery: deterministic user-response policy; one pre-cognitive work-selection worker; deterministic action/capability execution; a Composer-driven, Adaptive-Recall-backed memory-sufficiency loop; and a personality-conditioned final responder that receives memory context and authoritative work results through separate channels.

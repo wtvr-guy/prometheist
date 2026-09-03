@@ -6,9 +6,8 @@ from uuid import uuid4
 import pytest
 
 from jit_agent.capability_registry import CapabilityDescriptor, CapabilityKind
-from jit_agent.interaction_policy import InteractionAction
-from jit_agent.llm import OllamaClient
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from jit_agent.percept_response_worker import UserPromptLLM
 
 
 class _FakeResponse:
@@ -55,55 +54,60 @@ def _packet() -> MemoryPacket:
 def _catalog() -> tuple[CapabilityDescriptor, ...]:
     return (
         CapabilityDescriptor(
-            capability_id="memory.inspect",
+            capability_id="external.inspect",
             kind=CapabilityKind.WORKFLOW,
-            description="Inspect additional memory only if required.",
+            description="Inspect an external source when required.",
         ),
     )
 
 
-def _chat_respond_payload() -> dict:
+def _chat_payload() -> dict:
     return {
-        "message": {
-            "content": '{"next_action":"RESPOND","capability_indices":[]}',
-        },
+        "message": {"content": '{"capability_indices":[]}'},
         "done_reason": "stop",
         "eval_count": 12,
     }
 
 
-def _generate_respond_payload() -> dict:
+def _generate_payload() -> dict:
     return {
-        "response": '{"next_action":"RESPOND","capability_indices":[]}',
+        "response": '{"capability_indices":[]}',
         "done_reason": "stop",
         "eval_count": 12,
     }
 
 
 def test_qwen3_structured_call_appends_latest_no_think_soft_switch():
-    client = OllamaClient(base_url="http://ollama.test", model="qwen3:4b")
-    fake = _FakeHTTPClient([_chat_respond_payload()])
+    client = UserPromptLLM(base_url="http://ollama.test", model="qwen3:4b")
+    fake = _FakeHTTPClient([_chat_payload()])
     client._client = fake
 
-    decision = client.classify("Answer from established memory.", _packet(), _catalog())
-
-    assert decision.next_action is InteractionAction.RESPOND
+    decision = client.decide_disposition(
+        "Answer from established memory.",
+        _packet(),
+        _catalog(),
+    )
+    assert decision.response_required is True
+    assert decision.capability_indices == []
     assert fake.calls[0][0] == "/api/chat"
     assert fake.calls[0][1]["think"] is False
     assert fake.calls[0][1]["messages"][1]["content"].endswith("/no_think")
 
 
 def test_qwen3_instruct_call_uses_raw_structured_generate_transport():
-    client = OllamaClient(
+    client = UserPromptLLM(
         base_url="http://ollama.test",
         model="qwen3:4b-instruct-2507-q4_K_M",
     )
-    fake = _FakeHTTPClient([_generate_respond_payload()])
+    fake = _FakeHTTPClient([_generate_payload()])
     client._client = fake
 
-    decision = client.classify("Answer from established memory.", _packet(), _catalog())
-
-    assert decision.next_action is InteractionAction.RESPOND
+    decision = client.decide_disposition(
+        "Answer from established memory.",
+        _packet(),
+        _catalog(),
+    )
+    assert decision.response_required is True
     path, request = fake.calls[0]
     assert path == "/api/generate"
     assert request["raw"] is True
@@ -117,22 +121,20 @@ def test_qwen3_instruct_call_uses_raw_structured_generate_transport():
     assert "/no_think" not in request["prompt"]
 
 
-def test_router_receives_evidence_without_application_owned_memory_metadata():
+def test_precognitive_worker_receives_evidence_without_memory_transport_metadata():
     packet = _packet()
     item = packet.items[0]
-    client = OllamaClient(
+    client = UserPromptLLM(
         base_url="http://ollama.test",
         model="qwen3:4b-instruct-2507-q4_K_M",
     )
-    fake = _FakeHTTPClient([_generate_respond_payload()])
+    fake = _FakeHTTPClient([_generate_payload()])
     client._client = fake
+    client.decide_disposition("Answer from established memory.", packet, _catalog())
 
-    decision = client.classify("Answer from established memory.", packet, _catalog())
-
-    assert decision.next_action is InteractionAction.RESPOND
     prompt = fake.calls[0][1]["prompt"]
     assert item.content in prompt
-    assert f"event_type: {item.event_type.value}" in prompt
+    assert item.event_type.value in prompt
     assert str(packet.memory_request_id) not in prompt
     assert str(item.source_event_id) not in prompt
     assert str(item.conversation_id) not in prompt
@@ -140,11 +142,10 @@ def test_router_receives_evidence_without_application_owned_memory_metadata():
     assert "global_seq:" not in prompt
     assert "created_at:" not in prompt
     assert "retrieval_reasons:" not in prompt
-    assert "association_provenance_event_ids:" not in prompt
 
 
 def test_qwen3_empty_or_thinking_only_output_retries_with_larger_budget():
-    client = OllamaClient(base_url="http://ollama.test", model="qwen3:4b")
+    client = UserPromptLLM(base_url="http://ollama.test", model="qwen3:4b")
     fake = _FakeHTTPClient(
         [
             {
@@ -155,7 +156,7 @@ def test_qwen3_empty_or_thinking_only_output_retries_with_larger_budget():
             },
             {
                 "message": {
-                    "content": '{"next_action":"RESPOND","capability_indices":[]}',
+                    "content": '{"capability_indices":[]}',
                     "thinking": "",
                 },
                 "done_reason": "stop",
@@ -166,16 +167,19 @@ def test_qwen3_empty_or_thinking_only_output_retries_with_larger_budget():
     )
     client._client = fake
 
-    decision = client.classify("Answer from established memory.", _packet(), _catalog())
-
-    assert decision.next_action is InteractionAction.RESPOND
+    decision = client.decide_disposition(
+        "Answer from established memory.",
+        _packet(),
+        _catalog(),
+    )
+    assert decision.capability_indices == []
     assert [call[1]["options"]["num_predict"] for call in fake.calls] == [48, 96]
     assert all(call[1]["messages"][1]["content"].endswith("/no_think") for call in fake.calls)
 
 
 def test_qwen3_empty_output_failure_reports_metadata_without_reasoning_text():
     secret_reasoning = "THIS_REASONING_MUST_NOT_ESCAPE"
-    client = OllamaClient(base_url="http://ollama.test", model="qwen3:4b")
+    client = UserPromptLLM(base_url="http://ollama.test", model="qwen3:4b")
     client._client = _FakeHTTPClient(
         [
             {
@@ -185,7 +189,10 @@ def test_qwen3_empty_output_failure_reports_metadata_without_reasoning_text():
                 "eval_count": 48,
             },
             {
-                "message": {"content": "<think>still hidden</think>", "thinking": secret_reasoning},
+                "message": {
+                    "content": "<think>still hidden</think>",
+                    "thinking": secret_reasoning,
+                },
                 "done_reason": "length",
                 "prompt_eval_count": 900,
                 "eval_count": 96,
@@ -193,9 +200,12 @@ def test_qwen3_empty_output_failure_reports_metadata_without_reasoning_text():
         ]
     )
 
-    with pytest.raises(ValueError, match="interaction capability selection failed") as exc_info:
-        client.classify("Answer from established memory.", _packet(), _catalog())
-
+    with pytest.raises(ValueError, match="pre-cognitive work selection failed") as exc_info:
+        client.decide_disposition(
+            "Answer from established memory.",
+            _packet(),
+            _catalog(),
+        )
     message = str(exc_info.value)
     assert secret_reasoning not in message
     assert '"thinking_length"' in message

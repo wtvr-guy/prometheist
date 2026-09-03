@@ -4,6 +4,4 @@ __pycache__/
 .env
 .pytest_cache/
 benchmarks/generated/
-.prometheist/*
-!.prometheist/artifacts/
-!.prometheist/artifacts/**
+.prometheist/

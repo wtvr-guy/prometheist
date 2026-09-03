@@ -1,5 +1,9 @@
 # Prometheist constitutional audit — 2026-08-27
 
+> **Historical audit.** Findings apply only to the audited revision and Constitution
+> version below. Substantial v2 pipeline and closure-hardening changes landed later;
+> this file is evidence, not a current pass claim.
+
 **Audited revision:** `ad77be3` (tag `v0.7`)
 **Date/environment:** 2026-08-27, Windows 11 development host, PostgreSQL 16 (native service), Ollama (native, `qwen3:4b-instruct-2507-q4_K_M`)
 **Constitution version:** 1.0, adopted 2026-08-27

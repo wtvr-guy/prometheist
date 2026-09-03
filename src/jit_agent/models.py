@@ -13,7 +13,7 @@ from enum import Enum
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 
 class EventType(str, Enum):
@@ -60,7 +60,7 @@ class KnowledgeOrigin(str, Enum):
 
 
 class MemoryNeed(BaseModel):
-    """Stable MAS-facing description of an internal information need.
+    """Stable system-facing description of an internal information need.
 
     This contract intentionally contains no candidate-router, association,
     full-text, embedding, or other retrieval-implementation controls. Active
@@ -112,96 +112,6 @@ class MemoryNeed(BaseModel):
         return self
 
 
-class MemoryRetrievalScope(str, Enum):
-    """Historical compatibility scope retained for pre-candidate-selection tests."""
-
-    ACTIVE_ONLY = "ACTIVE_ONLY"
-    HISTORY_ONLY = "HISTORY_ONLY"
-    ACTIVE_AND_HISTORY = "ACTIVE_AND_HISTORY"
-
-
-def _validate_anchor_indices(values: list[int]) -> list[int]:
-    if any(index < 0 for index in values):
-        raise ValueError("anchor_indices must be non-negative")
-    if len(values) != len(set(values)):
-        raise ValueError("anchor_indices must not contain duplicates")
-    return values
-
-
-class HistoricalMemoryAnchorDecision(BaseModel):
-    """Historical constrained anchor-selection schema retained for compatibility."""
-
-    model_config = ConfigDict(extra="forbid")
-    anchor_indices: list[int] = Field(min_length=1)
-
-    @field_validator("anchor_indices")
-    @classmethod
-    def validate_anchor_indices(cls, values: list[int]) -> list[int]:
-        return _validate_anchor_indices(values)
-
-
-class MemoryNeedDecision(BaseModel):
-    """Historical scope+anchor model proposal retained for compatibility."""
-
-    model_config = ConfigDict(extra="forbid")
-    scope: MemoryRetrievalScope
-    anchor_indices: list[int] = Field(default_factory=list)
-
-    @field_validator("anchor_indices")
-    @classmethod
-    def validate_anchor_indices(cls, values: list[int]) -> list[int]:
-        return _validate_anchor_indices(values)
-
-    @model_validator(mode="after")
-    def validate_anchor_selection(self) -> "MemoryNeedDecision":
-        if self.scope is MemoryRetrievalScope.ACTIVE_ONLY and self.anchor_indices:
-            raise ValueError("ACTIVE_ONLY must not select historical anchors")
-        if self.scope is not MemoryRetrievalScope.ACTIVE_ONLY and not self.anchor_indices:
-            raise ValueError("historical retrieval requires at least one anchor index")
-        return self
-
-
-def _validate_candidate_indices(values: list[int]) -> list[int]:
-    if any(index < 0 for index in values):
-        raise ValueError("candidate_indices must be non-negative")
-    if len(values) != len(set(values)):
-        raise ValueError("candidate_indices must not contain duplicates")
-    return values
-
-
-class MemoryCandidateSelection(BaseModel):
-    """Select one-or-more candidates; the supplied MemoryPacket is the bound."""
-
-    model_config = ConfigDict(extra="forbid")
-    candidate_indices: list[int] = Field(min_length=1)
-
-    @field_validator("candidate_indices")
-    @classmethod
-    def validate_candidate_indices(cls, values: list[int]) -> list[int]:
-        return _validate_candidate_indices(values)
-
-
-class CrossReferenceCandidateSelection(BaseModel):
-    """Select two-or-more canonical candidates for one joint investigation."""
-
-    model_config = ConfigDict(extra="forbid")
-    # Two is structural: a cross-reference operation is undefined with fewer
-    # than two references. There is deliberately no arbitrary maximum here.
-    candidate_indices: list[int] = Field(min_length=2)
-
-    @field_validator("candidate_indices")
-    @classmethod
-    def validate_candidate_indices(cls, values: list[int]) -> list[int]:
-        return _validate_candidate_indices(values)
-
-
-class FocusedMemoryCandidateSelection(BaseModel):
-    """Select exactly one candidate; the supplied MemoryPacket is the bound."""
-
-    model_config = ConfigDict(extra="forbid")
-    candidate_index: int = Field(ge=0)
-
-
 class MemoryEvidence(BaseModel):
     """One canonical source event surfaced through the shared JIT Memory API."""
 
@@ -219,7 +129,7 @@ class MemoryEvidence(BaseModel):
 
 
 class MemoryPacket(BaseModel):
-    """Bounded internal evidence packet returned to any stateless agent."""
+    """Bounded internal evidence packet returned to stateless cognition."""
 
     memory_request_id: UUID
     origin: Literal[KnowledgeOrigin.INTERNAL_MEMORY] = KnowledgeOrigin.INTERNAL_MEMORY

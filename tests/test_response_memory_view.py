@@ -3,8 +3,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from jit_agent import llm
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from jit_agent.percept_response_runtime import ResponseMemoryPackage
+from jit_agent.percept_response_worker import UserPromptLLM
 
 
 class _FakeResponse:
@@ -48,7 +49,7 @@ def _evidence(
     )
 
 
-def test_response_worker_receives_compact_oldest_to_newest_evidence_timeline():
+def test_final_responder_receives_compact_oldest_to_newest_evidence_timeline():
     historical_conversation = uuid4()
     active_conversation = uuid4()
     historical = _evidence(
@@ -78,13 +79,17 @@ def test_response_worker_receives_compact_oldest_to_newest_evidence_timeline():
         supported=True,
         items=[turn2_response, historical, turn1],
     )
-
-    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
+    package = ResponseMemoryPackage(
+        memory_packet=packet,
+        sufficient=True,
+        composer_rounds=1,
+        adaptive_recall_rounds=0,
+    )
+    client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
     fake = _FakeHTTPClient('{"answer":"ok"}')
     client._client = fake
 
-    assert client.respond("Answer from the timeline.", packet) == "ok"
-
+    assert client.generate_final_response("Answer from the timeline.", package, ()) == "ok"
     path, payload = fake.calls[0]
     assert path == "/api/chat"
     model_input = payload["messages"][1]["content"]

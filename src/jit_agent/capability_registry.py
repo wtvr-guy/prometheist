@@ -1,13 +1,9 @@
-"""Deterministic, task-neutral discovery and planning of executable capabilities.
+"""Deterministic, task-neutral discovery and planning of executable work.
 
-The live interaction model receives a bounded application-owned catalog and
-returns only a closed action plus integer indices. Basic JIT-memory activation is
-cognitive substrate and is therefore not selectable after a percept.
-
-Catalog exposure may expand after capabilities execute. Registrations can name
-follow-up capabilities that become visible in later decision rounds while the
-original public catalog remains available. The model selects *which* capabilities
-are needed; Prometheist owns dependency closure and ordering through Attention.
+The pre-cognitive model receives one bounded application-owned catalog and returns
+only integer indices. Basic JIT-memory activation is cognitive substrate and is
+therefore never selectable work. Prometheist owns dependency closure, ordering,
+resource admission, and execution through Attention.
 """
 from __future__ import annotations
 
@@ -29,7 +25,7 @@ from jit_agent.attention_ordering import (
 from jit_agent.models import EventType
 
 
-CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v8"
+CAPABILITY_REGISTRY_VERSION = "v0.7-capability-registry-v9"
 SOURCE = "capability_registry"
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
@@ -158,31 +154,20 @@ class CapabilityExecutionPlan(BaseModel):
 
 @dataclass(frozen=True)
 class RegisteredCapability:
-    """Private application-owned registration and executable binding.
-
-    ``selectable_after_aperture`` controls membership in the initial catalog.
-    ``follow_up_capability_ids`` names capabilities that become visible after this
-    capability has completed with usable output. Initial capabilities remain
-    visible in every later round, so a capability may be selected again when
-    warranted.
-    """
+    """Private application-owned registration and executable binding."""
 
     descriptor: CapabilityDescriptor
     routing_terms: tuple[str, ...]
     executor: str
-    selectable_after_aperture: bool = True
+    selectable_as_external_work: bool = True
     execution_priority: int = 100
     depends_on_capability_ids: tuple[str, ...] = ()
-    follow_up_capability_ids: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         normalized_executor = self.executor.strip()
         normalized_terms = tuple(term.strip() for term in self.routing_terms)
         normalized_dependencies = tuple(
             dependency.strip() for dependency in self.depends_on_capability_ids
-        )
-        normalized_follow_ups = tuple(
-            capability_id.strip() for capability_id in self.follow_up_capability_ids
         )
         if not normalized_executor:
             raise ValueError("capability executor must not be empty")
@@ -192,23 +177,16 @@ class RegisteredCapability:
             raise ValueError("capability routing terms must not contain duplicates")
         if not 0 <= self.execution_priority <= MAX_ATTENTION_WORK_PRIORITY:
             raise ValueError("capability execution_priority is outside the supported range")
-        for label, values in (
-            ("dependencies", normalized_dependencies),
-            ("follow-up capabilities", normalized_follow_ups),
-        ):
-            if any(not value for value in values):
-                raise ValueError(f"capability {label} must not be empty")
-            if len(values) != len(set(values)):
-                raise ValueError(f"capability {label} must not contain duplicates")
+        if any(not value for value in normalized_dependencies):
+            raise ValueError("capability dependencies must not be empty")
+        if len(normalized_dependencies) != len(set(normalized_dependencies)):
+            raise ValueError("capability dependencies must not contain duplicates")
         capability_id = self.descriptor.capability_id
         if capability_id in normalized_dependencies:
             raise ValueError("capability must not depend on itself")
-        if capability_id in normalized_follow_ups:
-            raise ValueError("capability must not expose itself as a follow-up")
         object.__setattr__(self, "executor", normalized_executor)
         object.__setattr__(self, "routing_terms", normalized_terms)
         object.__setattr__(self, "depends_on_capability_ids", normalized_dependencies)
-        object.__setattr__(self, "follow_up_capability_ids", normalized_follow_ups)
 
 
 class CapabilityRegistry:
@@ -241,30 +219,18 @@ class CapabilityRegistry:
             for key in sorted(self._registrations)
         )
 
-    def capability_catalog(
-        self,
-        *,
-        executed_capability_ids: tuple[str, ...] = (),
-    ) -> tuple[CapabilityDescriptor, ...]:
-        """Return the deterministic catalog for one recurrent decision round."""
+    def capability_catalog(self) -> tuple[CapabilityDescriptor, ...]:
+        """Return the deterministic catalog for pre-cognitive work selection."""
 
         visible_ids = {
             capability_id
             for capability_id, registration in self._registrations.items()
-            if registration.selectable_after_aperture
+            if registration.selectable_as_external_work
         }
-        for capability_id in executed_capability_ids:
-            registration = self.get(capability_id)
-            for follow_up_id in registration.follow_up_capability_ids:
-                self.get(follow_up_id)
-                visible_ids.add(follow_up_id)
         return tuple(
             self.get(capability_id).descriptor.model_copy(deep=True)
             for capability_id in sorted(visible_ids)
         )
-
-    def post_aperture_catalog(self) -> tuple[CapabilityDescriptor, ...]:
-        return self.capability_catalog()
 
     def resolve_catalog_indices(
         self,
@@ -276,9 +242,6 @@ class CapabilityRegistry:
         if any(index < 0 or index >= len(catalog) for index in indices):
             raise ValueError("capability index is outside the supplied catalog")
         return tuple(self.get(catalog[index].capability_id) for index in indices)
-
-    def resolve_post_aperture_indices(self, indices: list[int]) -> tuple[RegisteredCapability, ...]:
-        return self.resolve_catalog_indices(self.post_aperture_catalog(), indices)
 
     def plan_execution(
         self,
@@ -321,9 +284,6 @@ class CapabilityRegistry:
                 for capability_id in ordered_ids
             ],
         )
-
-    def plan_post_aperture_execution(self, indices: list[int]) -> CapabilityExecutionPlan:
-        return self.plan_execution(self.post_aperture_catalog(), indices)
 
     def discover(self, need: CapabilityNeed) -> list[CapabilityMatch]:
         matches, _role, _text = self.discover_with_trace(need)
@@ -386,51 +346,7 @@ DEFAULT_REGISTRY = CapabilityRegistry(
             ),
             routing_terms=("internal memory",),
             executor="jit_memory",
-            selectable_after_aperture=False,
-        ),
-        RegisteredCapability(
-            descriptor=CapabilityDescriptor(
-                capability_id="cross_reference",
-                kind=CapabilityKind.WORKFLOW,
-                description=(
-                    "Investigate relationships among two or more currently available internal "
-                    "memory candidates, including shared, conflicting, causal, or bridging evidence."
-                ),
-            ),
-            routing_terms=("cross reference",),
-            executor="cross_reference",
-            selectable_after_aperture=True,
-            execution_priority=95,
-            follow_up_capability_ids=("focused_recall",),
-        ),
-        RegisteredCapability(
-            descriptor=CapabilityDescriptor(
-                capability_id="deeper_research",
-                kind=CapabilityKind.WORKFLOW,
-                description=(
-                    "Investigate the current question further using additional persisted "
-                    "internal evidence around one or more currently available memory candidates."
-                ),
-            ),
-            routing_terms=("deeper research",),
-            executor="deeper_research",
-            selectable_after_aperture=True,
-            execution_priority=100,
-            follow_up_capability_ids=("focused_recall",),
-        ),
-        RegisteredCapability(
-            descriptor=CapabilityDescriptor(
-                capability_id="focused_recall",
-                kind=CapabilityKind.WORKFLOW,
-                description=(
-                    "Investigate one selected internal memory candidate with the deepest bounded "
-                    "association search when a specific ambiguity remains unresolved."
-                ),
-            ),
-            routing_terms=("focused recall",),
-            executor="focused_recall",
-            selectable_after_aperture=False,
-            execution_priority=90,
+            selectable_as_external_work=False,
         ),
     )
 )
@@ -442,19 +358,6 @@ def deterministic_capability_request_id(requester_step_id: UUID) -> UUID:
 
 def deterministic_capability_event_id(request_id: UUID, role: str) -> UUID:
     return uuid5(request_id, f"event:{role}")
-
-
-def deterministic_selected_capability_step_id(
-    requester_step_id: UUID,
-    round_index: int,
-    capability_id: str,
-) -> UUID:
-    if round_index < 0:
-        raise ValueError("round_index must be >= 0")
-    normalized = capability_id.strip()
-    if not normalized:
-        raise ValueError("capability_id must not be empty")
-    return uuid5(requester_step_id, f"capability-round:{round_index}:{normalized}")
 
 
 def request_capability(

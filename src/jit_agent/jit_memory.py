@@ -2,14 +2,12 @@
 
 ``request_attention_activation`` is the shallow, high-recall activation boundary
 used automatically for every percept. ``request_memory`` is the conservative
-evidence boundary used by explicit research capabilities.
+evidence boundary used by deterministic Adaptive Recall.
 
-Focused research never asks a model to write a query. A model may select prior
-MemoryPacket candidates by bounded index; Prometheist resolves those indices to
-canonical event IDs and uses those events as first-class deterministic
-association seeds. The current percept remains the semantic cue throughout the
-research loop. As focus narrows, direct-candidate breadth decreases while the
-bounded association neighborhood becomes deeper/wider.
+Adaptive Recall never asks a model to write a query or canonical event ID. The
+v2 Composer supplies only a semantic memory deficit; application code selects
+bounded canonical focus events and advances through progressively stronger
+association stages. The current percept remains the semantic cue throughout.
 """
 from __future__ import annotations
 
@@ -21,8 +19,9 @@ import uuid
 import psycopg
 from psycopg.types.json import Json
 
-from jit_agent import event_store, postgres_memory_kernel
-from jit_agent.association_projection import ASSOCIATION_PROJECTION_VERSION, derive_associations
+from jit_agent import event_store, postgres_memory_kernel, projection_freshness
+from jit_agent.association_feature_projection import AssociationFeatureProjection
+from jit_agent.association_projection import ASSOCIATION_PROJECTION_VERSION
 from jit_agent.memory_kernel import CueState
 from jit_agent.memory_projection import LexicalProjection, build_projection
 from jit_agent.models import EventType, KnowledgeOrigin, MemoryEvidence, MemoryNeed, MemoryPacket
@@ -36,11 +35,13 @@ ASSOCIATION_DECAY = 0.85
 MINIMUM_SCORE = 0.15
 
 
-class MemoryRecallProfile(str, Enum):
-    STANDARD = "STANDARD"
-    DEEPER_RESEARCH = "DEEPER_RESEARCH"
-    CROSS_REFERENCE = "CROSS_REFERENCE"
-    FOCUSED_RECALL = "FOCUSED_RECALL"
+class AdaptiveRecallStage(str, Enum):
+    """Architecture-neutral internal retrieval stages, never capabilities."""
+
+    BROAD = "BROAD"
+    ASSOCIATIVE = "ASSOCIATIVE"
+    RELATIONAL = "RELATIONAL"
+    FOCUSED = "FOCUSED"
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,26 +52,26 @@ class _RecallPolicy:
     decay: float
 
 
-_RECALL_POLICIES = {
-    MemoryRecallProfile.STANDARD: _RecallPolicy(
+_ADAPTIVE_RECALL_POLICIES = {
+    AdaptiveRecallStage.BROAD: _RecallPolicy(
         candidate_limit=CANDIDATE_LIMIT,
         association_limit=ASSOCIATION_LIMIT,
         max_hops=MAX_HOPS,
         decay=ASSOCIATION_DECAY,
     ),
-    MemoryRecallProfile.DEEPER_RESEARCH: _RecallPolicy(
+    AdaptiveRecallStage.ASSOCIATIVE: _RecallPolicy(
         candidate_limit=350,
         association_limit=600,
         max_hops=3,
         decay=0.88,
     ),
-    MemoryRecallProfile.CROSS_REFERENCE: _RecallPolicy(
+    AdaptiveRecallStage.RELATIONAL: _RecallPolicy(
         candidate_limit=250,
         association_limit=900,
         max_hops=4,
         decay=0.90,
     ),
-    MemoryRecallProfile.FOCUSED_RECALL: _RecallPolicy(
+    AdaptiveRecallStage.FOCUSED: _RecallPolicy(
         candidate_limit=150,
         association_limit=1200,
         max_hops=5,
@@ -139,71 +140,102 @@ def _query_variants(need: MemoryNeed) -> tuple[tuple[str, str | None], ...]:
     return tuple(variants)
 
 
+def _insert_projection_entries(cur, entries) -> None:
+    if not entries:
+        return
+    cur.executemany(
+        """
+        INSERT INTO memory_projection_entries (
+            projection_name, projection_version, source_event_id,
+            source_global_seq, source_hash, data
+        ) VALUES (%s, %s, %s, %s, %s, %s)
+        ON CONFLICT (projection_name, projection_version, source_event_id) DO NOTHING
+        """,
+        [
+            (
+                entry.projection_name,
+                entry.projection_version,
+                uuid.UUID(entry.source_event_id),
+                entry.source_global_seq,
+                entry.source_hash,
+                Json(dict(entry.data)),
+            )
+            for entry in entries
+        ],
+    )
+
+
 def _ensure_projection_fresh(conn: psycopg.Connection, *, before_global_seq: int | None) -> None:
-    events = postgres_memory_kernel.load_events(conn, before_global_seq=before_global_seq)
-    if not events:
+    """Catch disposable projections up without rereading lifetime history."""
+
+    target_high_water = projection_freshness.canonical_high_water(
+        conn,
+        before_global_seq=before_global_seq,
+    )
+    if target_high_water == 0:
         return
-    projection = LexicalProjection()
-    with conn.cursor() as cur:
-        cur.execute(
-            "SELECT source_event_id FROM memory_projection_entries WHERE projection_name = %s AND projection_version = %s",
-            (projection.name, projection.version),
-        )
-        projected_ids = {str(row[0]) for row in cur.fetchall()}
-    missing_events = [event for event in events if event.event_id not in projected_ids]
-    if not missing_events:
+
+    lexical_high_water, feature_high_water = (
+        projection_freshness.committed_projection_high_waters(conn)
+    )
+    if lexical_high_water != feature_high_water:
+        postgres_memory_kernel.rebuild(conn)
         return
-    entries = build_projection(missing_events, projection)
-    associations = derive_associations(events)
-    with conn.cursor() as cur:
-        if entries:
-            cur.executemany(
-                """
-                INSERT INTO memory_projection_entries (
-                    projection_name, projection_version, source_event_id,
-                    source_global_seq, source_hash, data
-                ) VALUES (%s, %s, %s, %s, %s, %s)
-                ON CONFLICT (projection_name, projection_version, source_event_id) DO NOTHING
-                """,
-                [
-                    (
-                        entry.projection_name,
-                        entry.projection_version,
-                        uuid.UUID(entry.source_event_id),
-                        entry.source_global_seq,
-                        entry.source_hash,
-                        Json(dict(entry.data)),
-                    )
-                    for entry in entries
-                ],
-            )
+
+    committed_high_water = lexical_high_water
+    if committed_high_water >= target_high_water:
+        return
+
+    delta = projection_freshness.load_event_delta(
+        conn,
+        after_global_seq=committed_high_water,
+        before_global_seq=before_global_seq,
+    )
+    if not delta or delta[-1].global_seq != target_high_water:
+        raise RuntimeError("projection delta did not reach the canonical high-water mark")
+
+    lexical_projection = LexicalProjection()
+    feature_projection = AssociationFeatureProjection()
+    lexical_entries = build_projection(delta, lexical_projection)
+    feature_entries = build_projection(delta, feature_projection)
+
+    try:
+        with conn.cursor() as cur:
+            _insert_projection_entries(cur, lexical_entries)
+            _insert_projection_entries(cur, feature_entries)
+
+        associations = projection_freshness.derive_incremental_associations(conn, delta)
         if associations:
-            cur.executemany(
-                """
-                INSERT INTO memory_association_entries (
-                    association_id, projection_version, source_kind, source,
-                    target_kind, target, relationship, strength,
-                    provenance_event_ids, required_cue_terms
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (association_id) DO NOTHING
-                """,
-                [
-                    (
-                        association.association_id,
-                        ASSOCIATION_PROJECTION_VERSION,
-                        association.source_kind,
-                        association.source,
-                        association.target_kind,
-                        association.target,
-                        association.relationship,
-                        association.strength,
-                        Json(list(association.provenance_event_ids)),
-                        Json(list(association.required_cue_terms)),
-                    )
-                    for association in associations
-                ],
-            )
-    conn.commit()
+            with conn.cursor() as cur:
+                cur.executemany(
+                    """
+                    INSERT INTO memory_association_entries (
+                        association_id, projection_version, source_kind, source,
+                        target_kind, target, relationship, strength,
+                        provenance_event_ids, required_cue_terms
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (association_id) DO NOTHING
+                    """,
+                    [
+                        (
+                            association.association_id,
+                            ASSOCIATION_PROJECTION_VERSION,
+                            association.source_kind,
+                            association.source,
+                            association.target_kind,
+                            association.target,
+                            association.relationship,
+                            association.strength,
+                            Json(list(association.provenance_event_ids)),
+                            Json(list(association.required_cue_terms)),
+                        )
+                        for association in associations
+                    ],
+                )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
 
 
 def _packet_from_kernel(memory_request_id: uuid.UUID, need: MemoryNeed, kernel_packet) -> MemoryPacket:
@@ -365,10 +397,10 @@ def _recall_for_query(
     need: MemoryNeed,
     query_text: str | None,
     before_global_seq: int | None,
-    recall_profile: MemoryRecallProfile,
+    recall_stage: AdaptiveRecallStage,
     seed_event_ids: tuple[uuid.UUID, ...] = (),
 ):
-    policy = _RECALL_POLICIES[recall_profile]
+    policy = _ADAPTIVE_RECALL_POLICIES[recall_stage]
     recall_limit = min(20, need.limit + len(need.active_event_ids))
     cue = CueState(
         query_text=query_text,
@@ -643,33 +675,31 @@ def request_memory(
     need: MemoryNeed,
     before_global_seq: int | None,
     memory_request_id: uuid.UUID | None = None,
-    recall_profile: MemoryRecallProfile = MemoryRecallProfile.STANDARD,
+    recall_stage: AdaptiveRecallStage = AdaptiveRecallStage.BROAD,
 ) -> MemoryPacket:
-    """Persist and satisfy one conservative evidence request.
+    """Persist and satisfy one conservative Adaptive Recall request.
 
-    Research profiles require application-resolved ``focus_event_ids`` selected
-    from a prior MemoryPacket. ``DEEPER_RESEARCH`` expands each selected candidate
-    with a moderate graph budget. ``CROSS_REFERENCE`` investigates 2-4 selected
-    candidates jointly with a larger graph budget. ``FOCUSED_RECALL`` expands
-    exactly one candidate with the deepest bounded graph budget. The current
-    percept supplies semantic/relationship cues while selected canonical events
-    supply the focused association frontier. The evidence admission threshold
-    remains unchanged across all profiles.
+    ASSOCIATIVE expands one or more application-selected candidates with a
+    moderate graph budget. RELATIONAL investigates two to four candidates
+    jointly with a larger graph budget. FOCUSED expands exactly one candidate
+    with the deepest bounded graph budget. These are internal stages, not
+    user- or model-selectable capabilities. The evidence-admission threshold is
+    unchanged across stages.
     """
 
     memory_request_id = memory_request_id or uuid.uuid4()
     effective_need = need.model_copy(update={"source_types": list(_effective_source_types(need))})
-    if recall_profile is MemoryRecallProfile.DEEPER_RESEARCH and not effective_need.focus_event_ids:
-        raise ValueError("DEEPER_RESEARCH requires selected focus_event_ids")
-    if recall_profile is MemoryRecallProfile.CROSS_REFERENCE and not 2 <= len(effective_need.focus_event_ids) <= 4:
-        raise ValueError("CROSS_REFERENCE requires two to four focus_event_ids")
-    if recall_profile is MemoryRecallProfile.FOCUSED_RECALL and len(effective_need.focus_event_ids) != 1:
-        raise ValueError("FOCUSED_RECALL requires exactly one focus_event_id")
+    if recall_stage is AdaptiveRecallStage.ASSOCIATIVE and not effective_need.focus_event_ids:
+        raise ValueError("ASSOCIATIVE requires selected focus_event_ids")
+    if recall_stage is AdaptiveRecallStage.RELATIONAL and not 2 <= len(effective_need.focus_event_ids) <= 4:
+        raise ValueError("RELATIONAL requires two to four focus_event_ids")
+    if recall_stage is AdaptiveRecallStage.FOCUSED and len(effective_need.focus_event_ids) != 1:
+        raise ValueError("FOCUSED requires exactly one focus_event_id")
 
     retrieval_role = (
         "EVIDENCE"
-        if recall_profile is MemoryRecallProfile.STANDARD
-        else recall_profile.value
+        if recall_stage is AdaptiveRecallStage.BROAD
+        else recall_stage.value
     )
     _persist_request(
         conn,
@@ -713,7 +743,7 @@ def request_memory(
         return packet
 
     _ensure_projection_fresh(conn, before_global_seq=before_global_seq)
-    policy = _RECALL_POLICIES[recall_profile]
+    policy = _ADAPTIVE_RECALL_POLICIES[recall_stage]
 
     if effective_need.focus_event_ids:
         focus_sources = _focus_source_events(
@@ -725,13 +755,13 @@ def request_memory(
             item.source_event_id for item in active_evidence
         }
 
-        if recall_profile is MemoryRecallProfile.CROSS_REFERENCE:
+        if recall_stage is AdaptiveRecallStage.RELATIONAL:
             kernel_packet = _recall_for_query(
                 conn,
                 need=effective_need,
                 query_text=effective_need.query_text,
                 before_global_seq=before_global_seq,
-                recall_profile=recall_profile,
+                recall_stage=recall_stage,
                 seed_event_ids=tuple(effective_need.focus_event_ids),
             )
             translated = _packet_from_kernel(
@@ -756,7 +786,7 @@ def request_memory(
                     "kernel": "associative_recall_from_postgres",
                     "retrieval_role": retrieval_role,
                     "depth": "MULTI_CANDIDATE_JOINT",
-                    "recall_profile": recall_profile.value,
+                    "adaptive_recall_stage": recall_stage.value,
                     "candidate_limit": policy.candidate_limit,
                     "association_limit": policy.association_limit,
                     "association_hops": policy.max_hops,
@@ -784,7 +814,7 @@ def request_memory(
                 need=effective_need,
                 query_text=effective_need.query_text,
                 before_global_seq=before_global_seq,
-                recall_profile=recall_profile,
+                recall_stage=recall_stage,
                 seed_event_ids=(focus_event_id,),
             )
             translated = _packet_from_kernel(
@@ -821,10 +851,10 @@ def request_memory(
                 "retrieval_role": retrieval_role,
                 "depth": (
                     "CANDIDATE_FOCUSED"
-                    if recall_profile is MemoryRecallProfile.DEEPER_RESEARCH
+                    if recall_stage is AdaptiveRecallStage.ASSOCIATIVE
                     else "SINGLE_CANDIDATE_DEEPEST"
                 ),
-                "recall_profile": recall_profile.value,
+                "adaptive_recall_stage": recall_stage.value,
                 "candidate_limit": policy.candidate_limit,
                 "association_limit": policy.association_limit,
                 "association_hops": policy.max_hops,
@@ -854,7 +884,7 @@ def request_memory(
             need=effective_need,
             query_text=query_text,
             before_global_seq=before_global_seq,
-            recall_profile=recall_profile,
+            recall_stage=recall_stage,
         )
         attempts.append(
             {
@@ -891,7 +921,7 @@ def request_memory(
             "retrieval_trace": {
                 **kernel_result.retrieval_trace,
                 "retrieval_role": retrieval_role,
-                "recall_profile": recall_profile.value,
+                "adaptive_recall_stage": recall_stage.value,
                 "candidate_limit": policy.candidate_limit,
                 "association_limit": policy.association_limit,
                 "association_hops": policy.max_hops,

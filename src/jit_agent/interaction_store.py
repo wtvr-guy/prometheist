@@ -7,7 +7,7 @@ import psycopg
 from psycopg.rows import dict_row
 
 from jit_agent.attention_store import DEFAULT_SCHEDULER_KEY
-from jit_agent.interaction_policy import DurableInteraction
+from jit_agent.interaction_contracts import DurableInteraction
 
 
 def save_interaction(

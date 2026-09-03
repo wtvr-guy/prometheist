@@ -28,7 +28,7 @@ def test_cli_emits_structured_resource_diagnostics_for_admission_failure(
             }
         ],
     }
-    monkeypatch.setattr(cli, "handle_interaction_in_worker_processes", fail_interaction)
+    monkeypatch.setattr(cli, "handle_percept_in_worker_processes", fail_interaction)
     monkeypatch.setattr(cli, "load_scheduler", lambda conn: scheduler)
     monkeypatch.setattr(
         cli,
@@ -74,7 +74,7 @@ def test_cli_emits_worker_claim_observation_when_launch_gate_denies(
         raise FakeWorkerLaunchDenied()
 
     monkeypatch.setattr(cli, "WorkerLaunchDenied", FakeWorkerLaunchDenied)
-    monkeypatch.setattr(cli, "handle_interaction_in_worker_processes", fail_interaction)
+    monkeypatch.setattr(cli, "handle_percept_in_worker_processes", fail_interaction)
 
     with pytest.raises(FakeWorkerLaunchDenied):
         cli._handle_with_admission_diagnostics(

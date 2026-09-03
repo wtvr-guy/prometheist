@@ -1,5 +1,10 @@
 # Prometheist codebase audit remediation — 2026-08-31
 
+> **PR #23 base record.** This documents the audit-hardening branch before the final
+> consolidation pass. Its deterministic result remains evidence, but v0.7 closure
+> still requires hosted CI, native acceptance, and a final audit on the later frozen
+> candidate SHA.
+
 **Original audit:** [`CODEBASE_AUDIT_2026-08-31.md`](CODEBASE_AUDIT_2026-08-31.md)  
 **Remediation base revision:** `9f37b259af57f700bc5f915ac20cf3e34221890d` (`main` when remediation began)  
 **Remediation branch:** `audit-hardening-2026-08-31`  

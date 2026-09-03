@@ -48,7 +48,7 @@ from jit_agent.capability_registry import (
     CapabilityRegistry,
 )
 from jit_agent.capability_runtime import CapabilityExecution, execute_registered_capability
-from jit_agent.interaction_policy import (
+from jit_agent.interaction_contracts import (
     DurableInteraction,
     deterministic_capability_memory_request_id,
     deterministic_interaction_event_id,
@@ -67,6 +67,13 @@ from jit_agent.llm import (
     _verbatim_source_texts,
 )
 from jit_agent.models import EventType, MemoryPacket
+from jit_agent.model_evidence_budget import (
+    configured_model_evidence_budget,
+    memory_packet_content_bytes,
+    validate_capability_result_content,
+    validate_memory_packet_content,
+    validate_rendered_evidence,
+)
 from jit_agent.native_policy import native_resource_safety_policy
 from jit_agent.ollama_runtime import (
     OllamaClaimHostResourceProbe,
@@ -78,15 +85,24 @@ from jit_agent.worker_runtime import GuardedWorkerLauncher
 from jit_agent.worker_store import load_worker_result, register_worker_step
 
 SOURCE = "percept_response_v2"
-_RESPONSE_MEMORY_ITEM_LIMIT = int(os.environ.get("PROMETHEIST_RESPONSE_MEMORY_ITEMS", "20"))
-_ADAPTIVE_RECALL_ITEM_LIMIT = int(os.environ.get("PROMETHEIST_ADAPTIVE_RECALL_ITEMS", "10"))
-_SINGLE_LLM_SLOT = len((SOURCE,))
-_MEMORY_EXECUTORS = {"jit_memory", "deeper_research", "cross_reference", "focused_recall"}
-_ADAPTIVE_PROFILES = (
-    jit_memory.MemoryRecallProfile.STANDARD,
-    jit_memory.MemoryRecallProfile.DEEPER_RESEARCH,
-    jit_memory.MemoryRecallProfile.CROSS_REFERENCE,
-    jit_memory.MemoryRecallProfile.FOCUSED_RECALL,
+DEFAULT_RESPONSE_MEMORY_ITEM_LIMIT = 20
+DEFAULT_ADAPTIVE_RECALL_ITEM_LIMIT = 10
+DEFAULT_PERCEPT_WORKER_LEASE_SECONDS = 600
+DEFAULT_PERCEPT_WORKER_TIMEOUT_SECONDS = 660
+DEFAULT_POST_KILL_WAIT_SECONDS = 10.0
+_RESPONSE_MEMORY_ITEM_LIMIT = int(
+    os.environ.get("PROMETHEIST_RESPONSE_MEMORY_ITEMS", str(DEFAULT_RESPONSE_MEMORY_ITEM_LIMIT))
+)
+_ADAPTIVE_RECALL_ITEM_LIMIT = int(
+    os.environ.get("PROMETHEIST_ADAPTIVE_RECALL_ITEMS", str(DEFAULT_ADAPTIVE_RECALL_ITEM_LIMIT))
+)
+PERCEPT_LLM_SLOTS = 1
+_INTERNAL_MEMORY_EXECUTORS = {"jit_memory"}
+_ADAPTIVE_RECALL_STAGES = (
+    jit_memory.AdaptiveRecallStage.BROAD,
+    jit_memory.AdaptiveRecallStage.ASSOCIATIVE,
+    jit_memory.AdaptiveRecallStage.RELATIONAL,
+    jit_memory.AdaptiveRecallStage.FOCUSED,
 )
 
 DEFAULT_PERSONALITY_PROMPT = """\
@@ -224,6 +240,8 @@ class PerceptLLM(OllamaClient):
         memory_packet: MemoryPacket,
         capability_catalog: tuple[CapabilityDescriptor, ...],
     ) -> PreCognitiveDisposition:
+        budget = configured_model_evidence_budget()
+        validate_memory_packet_content(memory_packet, budget=budget)
         catalog_text = "\n".join(
             f"{index}: {item.capability_id} | {item.kind.value} | {item.description}"
             for index, item in enumerate(capability_catalog)
@@ -232,6 +250,7 @@ class PerceptLLM(OllamaClient):
             f"item {index}: {item.event_type.value}: {item.content}"
             for index, item in enumerate(memory_packet.items)
         ) or "none"
+        validate_rendered_evidence((memory_text,), budget=budget)
         user = (
             f"[Current percept]\n{percept}\n\n"
             f"[Bounded orientation memory]\n{memory_text}\n\n"
@@ -260,10 +279,13 @@ class PerceptLLM(OllamaClient):
         percept: str,
         memory_packet: MemoryPacket,
     ) -> MemorySufficiencyDecision:
+        budget = configured_model_evidence_budget()
+        validate_memory_packet_content(memory_packet, budget=budget)
         memory_text = "\n".join(
             f"item {index}: {item.event_type.value}: {item.content}"
             for index, item in enumerate(memory_packet.items)
         ) or "none"
+        validate_rendered_evidence((memory_text,), budget=budget)
         user = f"[Current percept]\n{percept}\n\n[Persistent memory evidence]\n{memory_text}"
         last_error: ValueError | None = None
         for token_cap in (96, 192):
@@ -290,6 +312,14 @@ class PerceptLLM(OllamaClient):
         if not personality:
             personality = DEFAULT_PERSONALITY_PROMPT.strip()
         packet = package.memory_packet
+        budget = configured_model_evidence_budget()
+        validate_memory_packet_content(packet, budget=budget)
+        prior_evidence_bytes = memory_packet_content_bytes(packet)
+        validate_capability_result_content(
+            work_results,
+            budget=budget,
+            prior_evidence_bytes=prior_evidence_bytes,
+        )
         literal_to_placeholder, placeholder_to_literal = _build_verbatim_placeholder_maps(
             *_verbatim_source_texts(percept, packet)
         )
@@ -300,17 +330,20 @@ class PerceptLLM(OllamaClient):
             else "memory_sufficient=false\n"
             f"unresolved_memory_deficit={package.unresolved_memory_deficit or 'unknown'}"
         )
+        memory_view = _format_response_memory_packet(
+            packet,
+            literal_to_placeholder=literal_to_placeholder,
+        )
+        work_view = _format_capability_result_data(work_results)
+        validate_rendered_evidence((memory_view, work_view), budget=budget)
         answer = self._text(
             "FINAL_RESPONSE_V2",
             _FINAL_RESPONSE_PROMPT.format(personality=personality),
             masked_percept
             + "\n\n[Memory package status]\n"
             + package_status
-            + _format_response_memory_packet(
-                packet,
-                literal_to_placeholder=literal_to_placeholder,
-            )
-            + _format_capability_result_data(work_results),
+            + memory_view
+            + work_view,
         )
         return _restore_verbatim_literals(answer, placeholder_to_literal)
 
@@ -320,8 +353,8 @@ def _external_capability_catalog(registry: CapabilityRegistry) -> tuple[Capabili
 
     return tuple(
         descriptor
-        for descriptor in registry.descriptors()
-        if registry.get(descriptor.capability_id).executor not in _MEMORY_EXECUTORS
+        for descriptor in registry.capability_catalog()
+        if registry.get(descriptor.capability_id).executor not in _INTERNAL_MEMORY_EXECUTORS
     )
 
 
@@ -364,44 +397,34 @@ def _merge_memory_packets(
     )
 
 
-def _adaptive_profile(round_index: int) -> jit_memory.MemoryRecallProfile:
+def _adaptive_stage(round_index: int) -> jit_memory.AdaptiveRecallStage:
     try:
-        return _ADAPTIVE_PROFILES[round_index]
+        return _ADAPTIVE_RECALL_STAGES[round_index]
     except IndexError:
-        return _ADAPTIVE_PROFILES[-1]
+        return _ADAPTIVE_RECALL_STAGES[-1]
 
 
-def _effective_adaptive_profile(
-    requested: jit_memory.MemoryRecallProfile,
+def _effective_adaptive_stage(
+    requested: jit_memory.AdaptiveRecallStage,
     packet: MemoryPacket,
-) -> tuple[jit_memory.MemoryRecallProfile, list[UUID]]:
-    """Choose the deepest profile whose focus preconditions are actually met."""
+) -> tuple[jit_memory.AdaptiveRecallStage, list[UUID]]:
+    """Choose the strongest stage whose focus preconditions are actually met."""
 
     ids = [item.source_event_id for item in packet.items]
-    if requested is jit_memory.MemoryRecallProfile.STANDARD or not ids:
-        return jit_memory.MemoryRecallProfile.STANDARD, []
-    if requested is jit_memory.MemoryRecallProfile.DEEPER_RESEARCH:
-        return requested, list(islice(ids, len(_ADAPTIVE_PROFILES)))
-    if requested is jit_memory.MemoryRecallProfile.CROSS_REFERENCE:
+    if requested is jit_memory.AdaptiveRecallStage.BROAD or not ids:
+        return jit_memory.AdaptiveRecallStage.BROAD, []
+    if requested is jit_memory.AdaptiveRecallStage.ASSOCIATIVE:
+        return requested, list(islice(ids, len(_ADAPTIVE_RECALL_STAGES)))
+    if requested is jit_memory.AdaptiveRecallStage.RELATIONAL:
         iterator = iter(ids)
         first = next(iterator, None)
         second = next(iterator, None)
         if first is not None and second is not None:
             return requested, [first, second]
         if first is not None:
-            return jit_memory.MemoryRecallProfile.FOCUSED_RECALL, [first]
-        return jit_memory.MemoryRecallProfile.STANDARD, []
-    return jit_memory.MemoryRecallProfile.FOCUSED_RECALL, [ids[0]]
-
-
-def _focus_ids_for_profile(
-    profile: jit_memory.MemoryRecallProfile,
-    packet: MemoryPacket,
-) -> list[UUID]:
-    """Compatibility helper used by contract tests and diagnostics."""
-
-    _effective_profile, focus_ids = _effective_adaptive_profile(profile, packet)
-    return focus_ids
+            return jit_memory.AdaptiveRecallStage.FOCUSED, [first]
+        return jit_memory.AdaptiveRecallStage.BROAD, []
+    return jit_memory.AdaptiveRecallStage.FOCUSED, [ids[0]]
 
 
 def _adaptive_recall(
@@ -414,8 +437,8 @@ def _adaptive_recall(
 ) -> MemoryPacket:
     """Deterministically expand memory from the Composer's semantic deficit."""
 
-    requested_profile = _adaptive_profile(round_index)
-    profile, focus_ids = _effective_adaptive_profile(requested_profile, current_packet)
+    requested_stage = _adaptive_stage(round_index)
+    stage, focus_ids = _effective_adaptive_stage(requested_stage, current_packet)
     need = jit_memory.build_memory_need(
         deficit,
         focus_event_ids=focus_ids,
@@ -431,7 +454,7 @@ def _adaptive_recall(
         need=need,
         before_global_seq=interaction.before_global_seq,
         memory_request_id=uuid5(interaction.interaction_id, f"adaptive-recall:{round_index}"),
-        recall_profile=profile,
+        recall_stage=stage,
     )
     return _merge_memory_packets(
         interaction.interaction_id,
@@ -452,7 +475,7 @@ def _compose_memory_package(
     packet = initial_packet.model_copy(deep=True)
     decisions: list[MemorySufficiencyDecision] = []
     expansions: list[MemoryPacket] = []
-    for round_index, _profile in enumerate(_ADAPTIVE_PROFILES):
+    for round_index, _stage in enumerate(_ADAPTIVE_RECALL_STAGES):
         decision = llm.assess_memory_sufficiency(interaction.user_text, packet)
         decisions.append(decision)
         if decision.sufficient:
@@ -542,7 +565,7 @@ def begin_percept(
                 process_resource_estimate=ProcessResourceEstimate(
                     cpu_units=effective_policy.default_process_cpu_units,
                     memory_mib=interaction_memory_mib,
-                    llm_slots=_SINGLE_LLM_SLOT,
+                    llm_slots=PERCEPT_LLM_SLOTS,
                     source=ResourceEstimateSource.CONSERVATIVE_DEFAULT,
                     basis=(
                         f"{effective_policy.policy_version}: bounded stateless percept pipeline; "
@@ -564,7 +587,7 @@ def begin_percept(
     assignments = [
         value for value in scheduler.worker_visible_assignments() if value.task_id == task_id
     ]
-    if len(assignments) != _SINGLE_LLM_SLOT:
+    if len(assignments) != PERCEPT_LLM_SLOTS:
         raise RuntimeError("interaction was not safely admitted to one assignment")
     interaction = DurableInteraction(
         interaction_id=interaction_id,
@@ -619,7 +642,6 @@ def _stage_result(
 
 def _structured_execution(execution: CapabilityExecution) -> dict[str, Any]:
     return {
-        "round_index": execution.round_index,
         "plan_position": execution.plan_position,
         "capability_id": execution.capability_id,
         "executor": execution.executor,
@@ -675,28 +697,24 @@ def _execute_stage(
         executions: list[CapabilityExecution] = []
         for position, item in enumerate(plan.items):
             registration = registry.get(item.capability_id)
-            if registration.executor in _MEMORY_EXECUTORS:
+            if registration.executor in _INTERNAL_MEMORY_EXECUTORS:
                 raise RuntimeError("memory retrieval cannot execute as pre-cognitive work")
-            round_index = len(executions)
             execution = execute_registered_capability(
                 conn,
-                llm,
                 registration=registration,
                 capability_execution_id=uuid5(
                     envelope.step.step_id, f"work:{position}:{item.capability_id}"
                 ),
                 requester_task_id=interaction.task_id,
                 requester_step_id=envelope.step.step_id,
-                round_index=round_index,
                 plan_position=position,
                 conversation_id=interaction.conversation_id,
                 correlation_id=interaction.correlation_id,
                 task_text=interaction.user_text,
                 before_global_seq=interaction.before_global_seq,
                 memory_request_id=deterministic_capability_memory_request_id(
-                    interaction.interaction_id, round_index, item.capability_id
+                    interaction.interaction_id, position, item.capability_id
                 ),
-                candidate_packet=MemoryPacket.model_validate(precognitive["aperture_packet"]),
             )
             executions.append(execution)
         return {
@@ -823,12 +841,23 @@ def handle_percept_in_worker_processes(
     """Run every architectural stage in a separately guarded fresh process."""
 
     effective_lease = worker_lease_seconds or int(
-        os.environ.get("PROMETHEIST_WORKER_LEASE_SECONDS", "600")
+        os.environ.get(
+            "PROMETHEIST_WORKER_LEASE_SECONDS",
+            str(DEFAULT_PERCEPT_WORKER_LEASE_SECONDS),
+        )
     )
     effective_timeout = worker_timeout_seconds or int(
-        os.environ.get("PROMETHEIST_WORKER_TIMEOUT_SECONDS", "660")
+        os.environ.get(
+            "PROMETHEIST_WORKER_TIMEOUT_SECONDS",
+            str(DEFAULT_PERCEPT_WORKER_TIMEOUT_SECONDS),
+        )
     )
-    kill_wait = float(os.environ.get("PROMETHEIST_KILL_WAIT_SECONDS", "10"))
+    kill_wait = float(
+        os.environ.get(
+            "PROMETHEIST_KILL_WAIT_SECONDS",
+            str(DEFAULT_POST_KILL_WAIT_SECONDS),
+        )
+    )
     effective_policy = policy or native_resource_safety_policy()
     physical_probe = probe or SystemHostResourceProbe()
     runtime_probe = ollama_runtime_probe or OllamaRuntimeProbe()

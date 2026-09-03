@@ -31,15 +31,10 @@
         "src/jit_agent/capability_registry.py::CapabilityRegistry._discover_query::comparison": 0,
         "src/jit_agent/capability_registry.py::CapabilityRegistry._discover_query::score": 0.0,
         "src/jit_agent/capability_registry.py::RegisteredCapability.__post_init__::comparison": 0,
-        "src/jit_agent/capability_registry.py::deterministic_selected_capability_step_id::comparison": 0,
-        "src/jit_agent/capability_runtime.py::execute_registered_capability::comparison": 2,
-        "src/jit_agent/interaction_policy.py::deterministic_capability_memory_request_id::comparison": 0,
-        "src/jit_agent/interaction_policy.py::deterministic_capability_round_event_id::comparison": 0,
-        "src/jit_agent/interaction_runtime.py::_execute_claimed_stage::_load_or_create_round.round_index": 0,
         "src/jit_agent/jit_memory.py::_active_working_state_evidence::MemoryEvidence.score": 1.0,
         "src/jit_agent/jit_memory.py::_packet_from_kernel::comparison": 0,
-        "src/jit_agent/llm.py::<module>::_CLASSIFY_SYSTEM_PROMPT.numeric_bound": 1,
-        "src/jit_agent/llm.py::OllamaClient.select_cross_reference_candidates::comparison": 2,
+        "src/jit_agent/jit_memory.py::request_memory::comparison": 2,
+        "src/jit_agent/jit_memory.py::request_memory::comparison#2": 4,
         "src/jit_agent/memory_integrity.py::verify_integrity_chain::IntegrityVerification.checked_events": 0,
         "src/jit_agent/memory_kernel.py::CueState.__post_init__::comparison": 1,
         "src/jit_agent/memory_kernel.py::CueState.__post_init__::comparison#2": 0.0,
@@ -47,7 +42,6 @@
         "src/jit_agent/memory_kernel.py::MemoryScoringPolicy.__post_init__::comparison": 0.0,
         "src/jit_agent/memory_kernel.py::MemoryScoringPolicy.__post_init__::comparison#2": 1.0,
         "src/jit_agent/memory_kernel.py::MemoryScoringPolicy.__post_init__::comparison#3": 0.0,
-        "src/jit_agent/models.py::CrossReferenceCandidateSelection::candidate_indices.min_length": 2,
         "src/jit_agent/postgres_association_projection.py::load_reachable_associations::comparison": 1,
         "src/jit_agent/postgres_association_projection.py::load_reachable_associations::comparison#2": 1,
         "src/jit_agent/postgres_memory_kernel.py::_candidate_event_ids::entity_budget": 0,
@@ -118,11 +112,7 @@
       "rationale": "The frozen breadth sweep proves the current packet limit is correct but quality-equivalent to limits 3 through 24; other production breadth layers remain unmeasured at discriminating scale.",
       "members": {
         "src/jit_agent/attention_aperture.py::<module>::DEFAULT_ATTENTION_APERTURE_LIMIT": 6,
-        "src/jit_agent/capability_runtime.py::<module>::_CROSS_REFERENCE_LIMIT": 10,
-        "src/jit_agent/capability_runtime.py::<module>::_DEEPER_RESEARCH_LIMIT": 10,
-        "src/jit_agent/capability_runtime.py::<module>::_FOCUSED_RECALL_LIMIT": 8,
-        "src/jit_agent/capability_runtime.py::<module>::_STANDARD_MEMORY_LIMIT": 5,
-        "src/jit_agent/interaction_runtime.py::<module>::_MAX_FINAL_MEMORY_ITEMS": 20,
+        "src/jit_agent/capability_runtime.py::<module>::_INTERNAL_MEMORY_LIMIT": 5,
         "src/jit_agent/interaction_working_state.py::<module>::MAX_ACTIVE_EVENT_IDS": 12,
         "src/jit_agent/interaction_working_state.py::InteractionWorkingState::conversation_ids.max_length": 16,
         "src/jit_agent/jit_memory.py::<module>::ATTENTION_ACTIVATION_CANDIDATE_LIMIT": 750,
@@ -136,7 +126,9 @@
         "src/jit_agent/models.py::MemoryNeed::limit.default": 5,
         "src/jit_agent/models.py::RetrievalRequest::limit.default": 5,
         "src/jit_agent/postgres_memory_kernel.py::associative_recall_from_postgres::candidate_limit": 500,
-        "src/jit_agent/postgres_memory_kernel.py::recall_from_postgres::candidate_limit": 500
+        "src/jit_agent/postgres_memory_kernel.py::recall_from_postgres::candidate_limit": 500,
+        "src/jit_agent/percept_response_runtime.py::<module>::DEFAULT_ADAPTIVE_RECALL_ITEM_LIMIT": 10,
+        "src/jit_agent/percept_response_runtime.py::<module>::DEFAULT_RESPONSE_MEMORY_ITEM_LIMIT": 20
       }
     },
     "memory_graph": {
@@ -184,17 +176,6 @@
         "src/jit_agent/capability_registry.py::CapabilityRegistry._discover_query::score.coefficient#5": 0.15
       }
     },
-    "cap_loop": {
-      "classification": "EMPIRICAL_TUNABLE",
-      "benchmark_id": "CAP-LOOP-001",
-      "status": "NATIVE_REQUIRED",
-      "rationale": "Capability-loop breadth and recurrent-round limits must be non-binding for correct workloads while preventing non-convergent local-model loops; scripted CI is necessary but native Ollama confirmation is part of the experiment.",
-      "members": {
-        "src/jit_agent/interaction_policy.py::<module>::MAX_CAPABILITY_ROUNDS": 4,
-        "src/jit_agent/jit_memory.py::request_memory::comparison": 2,
-        "src/jit_agent/jit_memory.py::request_memory::comparison#2": 4
-      }
-    },
     "scheduler_service": {
       "classification": "EMPIRICAL_TUNABLE",
       "benchmark_id": "SCHED-SERVICE-001",
@@ -209,9 +190,6 @@
         "src/jit_agent/attention.py::<module>::ServiceGuarantee.max_wait_cycles#5": 128,
         "src/jit_agent/attention_ordering.py::<module>::MAX_ATTENTION_WORK_PRIORITY": 10000,
         "src/jit_agent/attention_ordering.py::AttentionWorkItem::priority.default": 100,
-        "src/jit_agent/capability_registry.py::<module>::RegisteredCapability.execution_priority": 95,
-        "src/jit_agent/capability_registry.py::<module>::RegisteredCapability.execution_priority#2": 100,
-        "src/jit_agent/capability_registry.py::<module>::RegisteredCapability.execution_priority#3": 90,
         "src/jit_agent/capability_registry.py::RegisteredCapability::execution_priority": 100
       }
     },
@@ -234,7 +212,7 @@
         "src/jit_agent/attention_observation.py::SystemHostResourceProbe.__init__::sample_interval_seconds": 0.1,
         "src/jit_agent/attention_observation.py::SystemHostResourceProbe._darwin_memory_mib::run.timeout": 2,
         "src/jit_agent/attention_observation.py::SystemHostResourceProbe._darwin_memory_mib::run.timeout#2": 2,
-        "src/jit_agent/interaction_runtime.py::begin_interaction::ProcessResourceEstimate.llm_slots": 1,
+        "src/jit_agent/percept_response_runtime.py::<module>::PERCEPT_LLM_SLOTS": 1,
         "src/jit_agent/native_policy.py::native_resource_safety_policy::ResourceSafetyPolicy.cpu_system_headroom_percent": 10,
         "src/jit_agent/native_policy.py::native_resource_safety_policy::ResourceSafetyPolicy.memory_system_headroom_percent": 10,
         "src/jit_agent/native_policy.py::native_resource_safety_policy::ResourceSafetyPolicy.memory_system_headroom_min_mib": 1024,
@@ -251,9 +229,9 @@
       "status": "NATIVE_REQUIRED",
       "rationale": "Lease, timeout, retry, and post-kill wait values depend on measured worker/process tails and fault-recovery behavior on the target Windows host.",
       "members": {
-        "src/jit_agent/interaction_runtime.py::handle_interaction_in_worker_processes::wait.timeout": 10,
-        "src/jit_agent/interaction_runtime.py::handle_interaction_in_worker_processes::worker_lease_seconds": 600,
-        "src/jit_agent/interaction_runtime.py::handle_interaction_in_worker_processes::worker_timeout_seconds": 660,
+        "src/jit_agent/percept_response_runtime.py::<module>::DEFAULT_PERCEPT_WORKER_LEASE_SECONDS": 600,
+        "src/jit_agent/percept_response_runtime.py::<module>::DEFAULT_PERCEPT_WORKER_TIMEOUT_SECONDS": 660,
+        "src/jit_agent/percept_response_runtime.py::<module>::DEFAULT_POST_KILL_WAIT_SECONDS": 10.0,
         "src/jit_agent/worker_runtime.py::<module>::DEFAULT_CLAIM_RETRY_ATTEMPTS": 4,
         "src/jit_agent/worker_runtime.py::<module>::DEFAULT_CLAIM_RETRY_DELAY_SECONDS": 1.0,
         "src/jit_agent/worker_store.py::<module>::DEFAULT_WORKER_LEASE_SECONDS": 30,
@@ -273,7 +251,9 @@
         "src/jit_agent/llm.py::<module>::_MAX_VERBATIM_LITERALS": 16,
         "src/jit_agent/llm.py::<module>::compile.quantifier_lower": 6,
         "src/jit_agent/llm.py::OllamaClient.__init__::Client.timeout": 300.0,
-        "src/jit_agent/llm.py::OllamaClient._text::max_tokens": 256
+        "src/jit_agent/llm.py::OllamaClient._text::max_tokens": 256,
+        "src/jit_agent/model_evidence_budget.py::<module>::DEFAULT_MAX_EVIDENCE_ITEM_BYTES": 16384,
+        "src/jit_agent/model_evidence_budget.py::<module>::DEFAULT_MAX_EVIDENCE_TOTAL_BYTES": 65536
       }
     },
     "ollama_runtime": {

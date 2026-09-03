@@ -1,8 +1,13 @@
 # Increment G — Attention-Centric Interaction Execution
 
+> **Historical implementation record.** This file describes the first durable
+> interaction runtime. That runtime and its worker stages have been removed; the
+> authoritative implementation is now the v2 percept path documented in
+> [`../../architecture/PERCEPT_TO_RESPONSE_PIPELINE.md`](../../architecture/PERCEPT_TO_RESPONSE_PIPELINE.md).
+
 **Implementation date:** 2026-08-26
 
-**Status:** implemented and verified in PostgreSQL 16 CI; real local-model
+**Status at the recorded revision:** implemented and verified in PostgreSQL 16 CI; real local-model
 acceptance remains a separate evidence gate.
 
 ## Decision

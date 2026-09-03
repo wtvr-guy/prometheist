@@ -1,6 +1,11 @@
 # v0.7 Working-State, Default Memory, and Recurrent Capability Pivot — 2026-08-26/27
 
-## Status
+> **Historical design record.** The WorkingState and automatic-memory findings remain
+> accepted, but the recurrent general capability router and separate named memory
+> capabilities described below were superseded by the 2026-08-29 v2 pipeline. See
+> [`../../architecture/PERCEPT_TO_RESPONSE_PIPELINE.md`](../../architecture/PERCEPT_TO_RESPONSE_PIPELINE.md).
+
+## Status at the recorded revision
 
 Accepted design correction inside the v0.7 release candidate. This does not pull the full future epistemic/cognitive-state roadmap into v0.7. It adds only the minimal durable active-state, default-memory-exposure, constrained recurrent capability-selection, progressive memory-research, and deterministic capability-execution mechanisms required by the frozen native continuity experiment.
 
