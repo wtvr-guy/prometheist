@@ -1,9 +1,12 @@
 # Final Responder Contract
 
-**Status:** current architecture decision, 2026-08-31  
+**Status:** current architecture decision, revised 2026-09-03 after native failure
 **Applies to:** user-facing response generation after deterministic response policy, required work, and memory sufficiency have completed or exhausted
 
-The final responder is Prometheist's dedicated natural-language expression role. It is a fresh, disposable LLM invocation. It owns neither Prometheist's continuity nor any control-plane decision.
+The response stage separates current-only policy, application-owned evidence
+admission, exact-source output, and natural-language expression. The natural final
+responder is a fresh, disposable LLM invocation. It owns neither Prometheist's
+continuity nor any control-plane decision.
 
 This document refines the final-response section of `PERCEPT_TO_RESPONSE_PIPELINE.md` and must be read consistently with the Constitution, `SYSTEM_DETERMINISM.md`, and the evidence-authority rules of the percept-to-response pipeline.
 
@@ -26,6 +29,49 @@ Every user-facing final responder receives Prometheist's core interactive person
 - unresolved memory deficits must remain unresolved rather than being filled by plausible fabrication.
 
 These accuracy and evidence-authority rules are mandatory even when a deployment supplies a custom personality.
+
+### 2.1 Current-only policy and physical source admission
+
+Before historical text reaches response synthesis, a fresh policy worker receives
+only the current user prompt. It selects from closed application-owned enums:
+
+- historical evidence scope: user-authored, model output, external tool, system
+  record, derived internal, mixed conversation, or general/current;
+- response surface: natural language, exact source substring, or exact source
+  composition.
+
+The model does not filter memory. Application code maps the selected scope to event
+types and physically removes inadmissible items. A question about what the user
+previously said therefore cannot be answered from an assistant assertion merely
+because that assertion ranked highly in retrieval.
+
+Policy inference is deliberately current-only. Persisted prompt injection never sees
+or influences the call that decides which persisted source roles are admissible.
+
+### 2.2 Quarantined evidence transport
+
+Admitted memory and work results are sent before the current prompt in a separate
+quarantined evidence channel. For chat transport this is a tool-role message followed
+by the current user message. For raw Qwen Instruct transport it is a bounded
+tool-response block followed by a later user block; ChatML/tool control sequences in
+both evidence and current data are escaped.
+
+Historical instruction-shaped text remains data. It cannot synthesize a system role,
+replace the current task, alter the output schema, expand permissions, or modify the
+application-owned capability catalog.
+
+### 2.3 Exact output is source-extractive
+
+When the current request requires an exact stored value or exact multi-field format,
+Prometheist does not ask the expressive responder to respell it. A deterministic-
+temperature selector chooses an indexed exact substring from the already-admitted
+sources. Application code verifies the index and substring membership and returns
+the canonical source bytes. Multi-field output joins validated values only with a
+formatting-only separator copied from the current request.
+
+An explicit unsupported-history fallback is selected in a separate current-only
+call and accepted only if it is a verbatim substring of the current prompt. This
+prevents excluded history from manufacturing its own fallback or output contract.
 
 ## 3. Configurable personality is additive
 
@@ -50,14 +96,21 @@ A higher response temperature is never permission to alter evidence, invent reme
 
 ## 5. Structured response envelope remains mandatory
 
-Expressive sampling does not remove the constrained response envelope. The final responder still produces the application-owned structured answer contract, with thinking disabled and bounded generation. Prometheist validates the result before exposing user-facing text.
+Expressive sampling does not remove the constrained response envelope. Natural
+responses use the application-owned structured answer contract, with thinking
+disabled and bounded generation. Exact-source modes bypass free-form expression
+after validated selection and mechanical composition.
 
 The intended separation is therefore:
 
 ```text
 deterministic/system-owned response requirement
         +
-validated memory and authoritative work results
+current-only source/surface policy
+        +
+application-filtered quarantined evidence
+        +
+validated exact-source output OR evidence for natural expression
         +
 mandatory identity/evidence rules
         +
@@ -70,12 +123,14 @@ validated user-facing language
 
 ## 6. Invocation provenance
 
-Every final-response LLM invocation artifact must preserve enough information to reconstruct the exact invocation contract, including:
+Every response-stage LLM invocation artifact must preserve enough information to
+reconstruct the exact invocation contract, including:
 
 - architectural stage and semantic call kind;
 - model and backend;
 - exact system prompt, including resolved personality instructions;
-- exact response context supplied to the model;
+- exact current user prompt;
+- exact quarantined evidence payload and transport layout for evidence-bound calls;
 - structured-output schema;
 - generation token cap;
 - effective temperature;
@@ -85,6 +140,10 @@ This makes personality and temperature observable causal inputs rather than hidd
 
 ## 7. Acceptance obligation
 
-Changes to the core personality prompt, response temperature, or response-generation policy require regression evidence that accuracy is preserved. Native local-model acceptance is required where model behavior matters; deterministic CI alone cannot establish that a more expressive response policy still recalls and reports exact historical evidence correctly.
+Changes to the core personality prompt, response temperature, evidence-admission
+policy, transport layout, or response-generation policy require regression evidence
+that accuracy is preserved. Native local-model acceptance is required where model
+behavior matters; deterministic CI alone cannot establish that a policy classifier
+or source selector behaves correctly on the configured model.
 
 The target is not deterministic prose. The target is **accurate, evidence-grounded Prometheist behavior with a recognizable configurable personality, while deterministic authority remains outside the responder.**

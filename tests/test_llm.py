@@ -67,6 +67,14 @@ def _package(packet: MemoryPacket | None = None) -> ResponseMemoryPackage:
     )
 
 
+def _natural_policy(scope: str = "GENERAL_OR_CURRENT") -> str:
+    return (
+        '{"evidence_scope":"'
+        + scope
+        + '","surface_mode":"NATURAL_LANGUAGE","insufficient_literal":null}'
+    )
+
+
 def test_strip_thinking_preserves_plain_answer():
     assert _strip_thinking("final answer") == "final answer"
 
@@ -101,11 +109,14 @@ def test_user_facing_answers_use_expressive_temperature_with_structured_envelope
 ):
     monkeypatch.delenv("PROMETHEIST_RESPONSE_TEMPERATURE", raising=False)
     client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
-    fake_http = _FakeHTTPClient(['{"answer":"Final answer only."}'])
+    fake_http = _FakeHTTPClient(
+        [_natural_policy(), '{"answer":"Final answer only."}']
+    )
     client._client = fake_http
 
     assert client.generate_final_response("Question", _package(), ()) == "Final answer only."
-    path, payload = fake_http.calls[0]
+    assert fake_http.calls[0][1]["options"]["temperature"] == 0.0
+    path, payload = fake_http.calls[1]
     assert path == "/api/chat"
     assert payload["format"]["required"] == ["answer"]
     assert payload["think"] is False
@@ -163,7 +174,12 @@ def test_verbatim_placeholders_prevent_model_from_respelling_opaque_literals():
         ],
     )
     client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
-    fake_http = _FakeHTTPClient(['{"answer":"The codename is [[VERBATIM_0]]."}'])
+    fake_http = _FakeHTTPClient(
+        [
+            _natural_policy("USER_AUTHORED"),
+            '{"answer":"The codename is [[VERBATIM_0]]."}',
+        ]
+    )
     client._client = fake_http
 
     answer = client.generate_final_response(
@@ -172,9 +188,14 @@ def test_verbatim_placeholders_prevent_model_from_respelling_opaque_literals():
         (),
     )
     assert answer == f"The codename is {exact_code}."
-    model_input = fake_http.calls[0][1]["messages"][1]["content"]
-    assert exact_code not in model_input
-    assert "[[VERBATIM_0]]" in model_input
+    response_messages = fake_http.calls[1][1]["messages"]
+    assert [message["role"] for message in response_messages] == [
+        "system",
+        "tool",
+        "user",
+    ]
+    assert exact_code not in response_messages[1]["content"]
+    assert "[[VERBATIM_0]]" in response_messages[1]["content"]
 
 
 def test_verbatim_placeholders_cover_hyphenated_labels_and_current_input():
@@ -191,3 +212,18 @@ def test_verbatim_placeholders_cover_hyphenated_labels_and_current_input():
     assert llm._restore_verbatim_literals(masked, placeholder_to_literal) == (
         f"Call this plan {exact_label}."
     )
+
+
+def test_verbatim_restore_accepts_unambiguous_bare_application_token():
+    assert llm._restore_verbatim_literals(
+        "VERBATIM_0",
+        {"[[VERBATIM_0]]": "ASTER-1234ABCD"},
+    ) == "ASTER-1234ABCD"
+
+
+def test_verbatim_restore_does_not_confuse_double_digit_placeholder_indices():
+    mapping = {
+        "[[VERBATIM_1]]": "FIRST-1234",
+        "[[VERBATIM_10]]": "TENTH-5678",
+    }
+    assert llm._restore_verbatim_literals("VERBATIM_10", mapping) == "TENTH-5678"

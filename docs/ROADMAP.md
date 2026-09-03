@@ -56,12 +56,18 @@ Implemented mechanisms include:
 - the authoritative v2 user-prompt path: deterministic response requirement,
   pre-cognitive non-memory work selection, direct work-result handoff, memory-only
   Composer, deterministic Adaptive Recall, and a separate final responder;
+- current-only response source/surface policy, application-owned historical role
+  filtering, quarantined evidence transport, and validated exact-source output;
 - independent immutable artifact chains and event reconstruction;
 - incremental association-projection freshness;
 - explicit model-evidence byte limits and adversarial evidence-authority tests.
 
 The older recurrent general response router, separate named memory capabilities, and
 parallel interaction runtime are rejected/superseded designs.
+
+The first consolidated native run on 2026-09-03 executed all 14 model-backed tests
+and failed 6. The resulting evidence-bound remediation is not accepted until hosted
+CI and the full native gate pass on the same replacement SHA.
 
 ### Closure gates
 

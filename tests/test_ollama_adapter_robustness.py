@@ -91,7 +91,11 @@ def test_qwen3_structured_call_appends_latest_no_think_soft_switch():
     assert decision.capability_indices == []
     assert fake.calls[0][0] == "/api/chat"
     assert fake.calls[0][1]["think"] is False
-    assert fake.calls[0][1]["messages"][1]["content"].endswith("/no_think")
+    messages = fake.calls[0][1]["messages"]
+    assert [message["role"] for message in messages] == ["system", "tool", "user"]
+    assert messages[2]["content"].endswith("/no_think")
+    assert "Project Kestrel uses" in messages[1]["content"]
+    assert "Project Kestrel uses" not in messages[2]["content"]
 
 
 def test_qwen3_instruct_call_uses_raw_structured_generate_transport():
@@ -116,6 +120,10 @@ def test_qwen3_instruct_call_uses_raw_structured_generate_transport():
     assert request["format"]
     assert request["prompt"].startswith("<|im_start|>system\n")
     assert "<|im_end|>\n<|im_start|>user\n" in request["prompt"]
+    assert "<tool_response>" in request["prompt"]
+    assert request["prompt"].index("<tool_response>") < request["prompt"].index(
+        "Answer from established memory."
+    )
     assert "Answer from established memory." in request["prompt"]
     assert request["prompt"].endswith("<|im_end|>\n<|im_start|>assistant\n")
     assert "/no_think" not in request["prompt"]
@@ -174,7 +182,7 @@ def test_qwen3_empty_or_thinking_only_output_retries_with_larger_budget():
     )
     assert decision.capability_indices == []
     assert [call[1]["options"]["num_predict"] for call in fake.calls] == [48, 96]
-    assert all(call[1]["messages"][1]["content"].endswith("/no_think") for call in fake.calls)
+    assert all(call[1]["messages"][2]["content"].endswith("/no_think") for call in fake.calls)
 
 
 def test_qwen3_empty_output_failure_reports_metadata_without_reasoning_text():

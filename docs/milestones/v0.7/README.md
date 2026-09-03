@@ -3,8 +3,9 @@
 **Milestone:** durable JIT Attention Fabric, minimal WorkingState, and authoritative
 v2 percept-to-response pipeline
 
-**Status:** implementation consolidated; closure blocked on hosted PostgreSQL CI and
-native Windows/PostgreSQL/Ollama acceptance for the final candidate SHA
+**Status:** implementation consolidated; the 2026-09-03 native run failed 6 of 14
+model-backed tests. Evidence-bound remediation is implemented but remains blocked on
+hosted PostgreSQL CI and native acceptance for one exact replacement SHA.
 
 **Rebaselined:** 2026-09-03
 
@@ -27,7 +28,9 @@ explicit user prompt
   -> deterministic dependency/resource execution
   -> fresh v2 Composer judges memory sufficiency only
        -> Adaptive Recall + fresh Composer, boundedly, when deficient
-  -> final responder receives prompt + memory package + direct work results
+  -> current-only response policy selects admissible historical source roles
+  -> application filters memory; evidence is quarantined before current authority
+  -> exact-source extraction or personality-conditioned final response
   -> response event + final artifact disposition
 ```
 
@@ -66,6 +69,7 @@ under the neutral internal stage names `BROAD`, `ASSOCIATIVE`, `RELATIONAL`, and
 - current prompt/new recall precedence when WorkingState is saturated;
 - automatic bounded memory orientation before model work selection;
 - deterministic Adaptive Recall and Composer exhaustion/unknown behavior;
+- initial aperture evidence retained ahead of later Adaptive Recall expansions;
 - deep-history anchor reservation under recent same-topic crowding;
 - incremental association projection updates from durable high-water marks;
 - per-item and aggregate model-evidence byte validation without truncating canonical
@@ -76,16 +80,24 @@ under the neutral internal stage names `BROAD`, `ASSOCIATIVE`, `RELATIONAL`, and
 - explicit user prompts deterministically require response;
 - non-user percepts may have deterministic no-response intake policies;
 - work/tool results bypass memory composition and retain direct authority/provenance;
-- final responder receives the current prompt, response-ready memory, direct work
-  results, and the mandatory core plus optional additive personality prompt;
-- retrieved historical prompts, assistant responses, tool results, and system-shaped
-  text remain typed evidence and cannot acquire current instruction authority;
-- exact stateless invocation inputs/settings/results are durably inspectable.
+- a fresh policy worker sees only the current prompt and selects the narrow historical
+  source role and response surface contract;
+- application code physically removes inadmissible event roles before synthesis;
+- historical memory and work results travel in a quarantined evidence channel before
+  the later current user instruction, including escaped Qwen control sequences;
+- exact output uses model-selected, application-validated source substrings and
+  application-owned composition rather than free-form regeneration;
+- natural responses still receive the mandatory core plus optional additive
+  personality prompt;
+- exact stateless invocation inputs, separate evidence/current channels, settings,
+  and results are durably inspectable.
 
 ## Selective hardening incorporated during closure
 
 The closure candidate ports current-architecture invariants from the v0.7 red-team
-branch without reviving its obsolete runtime:
+branch without reviving its obsolete recurrent runtime. After the first consolidated
+native run demonstrated that prompt-only authority guidance was insufficient, the
+source-admissibility and evidence-isolation mechanism was also ported into v2:
 
 - memory prompt-injection and evidence-authority native scenarios;
 - assistant-only historical-claim isolation;
@@ -135,14 +147,17 @@ policy, worker behavior, and local-model behavior.
 
 ## Native closure gate
 
-From a clean checkout of the exact candidate SHA on the intended Windows host:
+From a clean named branch at the exact candidate SHA on the intended Windows host:
 
 ```powershell
-git status --short
-git rev-parse HEAD
-.\scripts\run_v07_acceptance.ps1
+git switch closure/v0.7-v2-consolidation
+git pull --ff-only
+.\scripts\run_v07_acceptance.ps1 -ExpectedCommit <candidate-sha>
 .\scripts\run_native_constraint_calibration.ps1
 ```
+
+The acceptance script itself verifies and prints the branch, full SHA, and clean-tree
+state. A mismatch fails before dependency setup or tests begin.
 
 Required conditions:
 
@@ -163,10 +178,13 @@ No Linux CI simulation or collected-but-skipped test substitutes for this gate.
 
 This section is deliberately incomplete until the hard gates pass.
 
-- closure candidate SHA: **pending publication**
-- hosted CI run: **pending**
-- native tested SHA: **pending**
-- native acceptance result: **pending**
+- preceding code candidate SHA: `10c2c942395267f95888f8922dc75cd843c934b7`
+- preceding hosted CI run: **#714 passed; not evidence for the remediation**
+- failed native run: **2026-09-03; 8 passed / 6 failed / zero skipped among 14 selected**
+- failed native revision identity: **not established by the old script**
+- replacement closure candidate SHA: **pending publication**
+- replacement hosted CI run: **pending**
+- replacement native acceptance result: **pending**
 - final constitutional/codebase audit: **pending**
 - merge SHA: **pending**
 - new closure tag: **pending; existing `v0.7` remains immutable**

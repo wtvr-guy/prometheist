@@ -77,7 +77,10 @@ current prompt + bounded aperture
   -> fresh Composer memory-sufficiency judgment
        -> sufficient: response-ready memory package
        -> deficit: deterministic Adaptive Recall -> fresh Composer
-  -> final responder receives memory + direct work results + current prompt
+  -> current-only response source/surface policy
+  -> application filters event roles
+  -> quarantined evidence precedes the current prompt
+  -> validated exact-source output or natural final responder
 ```
 
 Composer reassessment may recur only inside this narrow memory-sufficiency loop. It
@@ -100,22 +103,26 @@ give a model search-language authority or make recall a tool alongside web/API w
 
 Each expansion returns exact source-backed memory items, merges them deterministically
 within the response memory bound, and persists enough stage provenance for replay.
+The initially activated aperture is retained before newly appended expansion items,
+so a saturated later recall cannot evict the evidence that motivated expansion.
 When the fixed expansion policy is exhausted, the memory package explicitly carries
 the unresolved deficit so the responder can report an unknown rather than fabricate.
 
 ## Work results are a separate channel
 
 Completed external capability and tool results do not pass through memory composition
-merely to be restated. They remain structured authoritative execution results and
-reach the final responder directly. Memory evidence and work evidence therefore keep
-independent provenance, freshness, and failure semantics until final expression.
+merely to be restated. They remain structured authoritative execution results.
+Memory and work evidence keep independent provenance, freshness, and failure
+semantics through current-only response policy, then only admitted data enters the
+quarantined evidence channel used for exact selection or natural expression.
 
 ## Statelessness
 
-Every pre-cognitive, Composer, and final-response invocation is fresh. Its complete
-bounded input, schema, model settings, and output/failure are written to the immutable
-artifact journal. No worker-local list, model session, or implicit chat transcript is
-allowed to carry continuity into the next invocation.
+Every pre-cognitive, Composer, response-policy, exact-source, fallback, and natural
+response invocation is fresh. Its complete bounded input, separate current/evidence
+payloads, transport layout, schema, model settings, and output/failure are written to
+the immutable artifact journal. No worker-local list, model session, or implicit chat
+transcript may carry continuity into the next invocation.
 
 The system can reconstruct current interaction state from PostgreSQL plus independent
 artifacts. Workers publish stage results before a stage is terminal, and process loss
@@ -146,8 +153,12 @@ Retrieved content is untrusted data with explicit source type. In particular:
 - markup resembling system or assistant messages inside memory remains memory data;
 - topical relevance cannot establish truth.
 
-The final responder's mandatory core prompt and adversarial native tests enforce
-these distinctions. Failure to preserve them is a release blocker.
+Prompt wording alone does not enforce these distinctions. A fresh policy call sees
+only the current prompt; application code maps its closed scope to allowed event
+types and physically removes other roles. Admitted history travels as quarantined
+evidence before a later current user message, and raw Qwen control sequences are
+escaped. Exact output is validated against canonical admitted source substrings.
+Adversarial native tests remain the release gate for model-dependent behavior.
 
 ## No vocabulary patchwork
 

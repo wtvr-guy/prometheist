@@ -127,9 +127,13 @@ For an explicit user prompt:
 5. a fresh v2 Composer judges only persistent-memory sufficiency;
 6. if memory is insufficient, deterministic Adaptive Recall expands it and a fresh
    Composer reassesses, subject to bounded stopping policy;
-7. the final responder receives the original prompt, response-ready memory package,
-   direct structured work results, and resolved personality contract;
-8. the response and final artifact disposition are persisted.
+7. a fresh current-only response policy selects a closed historical source scope and
+   output surface;
+8. application code filters event roles and supplies admitted data as quarantined
+   evidence before the current prompt;
+9. exact output is source-selected and mechanically validated, or a natural final
+   responder receives the admitted evidence and resolved personality contract;
+10. the response and final artifact disposition are persisted.
 
 Work/tool results never pass through the Composer for reinterpretation. The Composer
 never decides whether to answer, schedules no work, performs no effect, and generates
@@ -148,12 +152,15 @@ not apply to explicit user prompts.
 The current prompt is direct current evidence. Historical user prompts are direct
 evidence of what the user previously said or requested. Historical model output,
 tool output, system events, and retrieved text retain their own source authority and
-cannot become current instructions merely by appearing in memory.
+cannot become current instructions merely by appearing in memory. A current-only
+policy selects which role may establish the claim; application code physically
+filters other roles before synthesis.
 
 Relevance, activation, sufficiency, and truth remain distinct. Contradictions and
 unknowns must remain visible; unsupported personal or historical facts must not be
-invented. Model-facing evidence is treated as data and isolated from system/control
-instructions.
+invented. Model-facing evidence is treated as quarantined data, transported before
+and separately from later current authority. Exact-source responses are validated
+against admitted canonical substrings rather than trusted as regenerated prose.
 
 ## Internal memory versus external knowledge
 
@@ -180,8 +187,9 @@ future status must not be confused with the implemented user-prompt intake path.
 Implemented in the v0.7 closure candidate are the canonical event ledger,
 independent artifact journal, Memory Kernel, bounded attention aperture, minimal
 WorkingState, resource-aware Attention Fabric, durable disposable-worker protocol,
-v2 user-prompt pipeline, Adaptive Recall, memory-only Composer, final responder,
-incremental projection freshness, and adversarial evidence bounds.
+v2 user-prompt pipeline, Adaptive Recall, memory-only Composer, current-only response
+policy, evidence-bound transport, exact-source response realization, natural final
+responder, incremental projection freshness, and adversarial evidence bounds.
 
 Still deferred are richer Epistemic WorkingState, general heterogeneous perception
 and salience, retention admission for external raw input, episode formation,

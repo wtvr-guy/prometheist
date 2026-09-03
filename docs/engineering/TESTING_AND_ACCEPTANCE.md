@@ -182,7 +182,9 @@ Suites should include:
 - ambiguous external effects after crashes;
 - unavailable optional capabilities;
 - historical memory content attempting to acquire current instruction authority;
+- forged raw-model control sequences attempting to break out of evidence transport;
 - assistant-only claims attempting to become user facts;
+- exact-source selectors returning altered or non-source values;
 - oversized individual evidence records;
 - saturated WorkingState and deep-history candidate crowding;
 - projection freshness work that accidentally scales with lifetime history.
@@ -285,9 +287,13 @@ For v0.7 closure, deterministic CI and native acceptance must refer to the same
 frozen candidate SHA. The Windows gate is
 `scripts/run_v07_acceptance.ps1`; it enables both required-acceptance environment
 flags, runs the deterministic regression suite, and then executes every
-`ollama`-marked test. A closure record must state the tested SHA, host, PostgreSQL
-version/database purpose, Ollama runtime/model identity, pass/fail/skip counts, and
-the retained result artifact. Collection alone is not execution.
+`ollama`-marked test. Invoke it as
+`scripts/run_v07_acceptance.ps1 -ExpectedCommit <full-sha>`. Before any tests, the
+script rejects a detached branch, dirty tree, or SHA mismatch; it prints the named
+branch and full SHA at start and again on PASS. A closure record must state the tested
+SHA, host, PostgreSQL version/database purpose, Ollama runtime/model identity,
+pass/fail/skip counts, and retained result artifact. Collection alone is not
+execution.
 
 ## Constitutional audit tests
 

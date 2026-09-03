@@ -1,3 +1,9 @@
+param(
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern("^[0-9a-fA-F]{40}$")]
+    [string]$ExpectedCommit
+)
+
 $ErrorActionPreference = "Stop"
 $previousRequireV07 = [Environment]::GetEnvironmentVariable(
     "REQUIRE_V07_LOCAL_ACCEPTANCE",
@@ -14,6 +20,23 @@ $locationPushed = $false
 try {
     Push-Location (Split-Path -Parent $PSScriptRoot)
     $locationPushed = $true
+
+    $actualCommit = (git rev-parse --verify HEAD).Trim().ToLowerInvariant()
+    if ($LASTEXITCODE -ne 0) { throw "git rev-parse failed" }
+    $branch = (git branch --show-current).Trim()
+    if ($LASTEXITCODE -ne 0) { throw "git branch inspection failed" }
+    if (-not $branch) { throw "acceptance requires a named branch, not detached HEAD" }
+    $dirty = @(git status --porcelain=v1 --untracked-files=normal)
+    if ($LASTEXITCODE -ne 0) { throw "git status failed" }
+    if ($dirty.Count -ne 0) {
+        throw "acceptance requires a clean working tree; git status reported changes"
+    }
+    $expected = $ExpectedCommit.ToLowerInvariant()
+    if ($actualCommit -ne $expected) {
+        throw "expected commit $expected but checked out $actualCommit on branch $branch"
+    }
+    Write-Host "v0.7 acceptance start: branch=$branch commit=$actualCommit clean=true"
+
     $env:REQUIRE_V07_LOCAL_ACCEPTANCE = "1"
     $env:REQUIRE_OLLAMA_ACCEPTANCE = "1"
     $env:PYTHONUTF8 = "1"
@@ -40,6 +63,7 @@ try {
     uv run --locked pytest -vv -s -m ollama
     $exitCode = $LASTEXITCODE
     if ($exitCode -ne 0) { throw "Ollama continuity acceptance failed" }
+    Write-Host "PASS: v0.7 acceptance branch=$branch commit=$actualCommit clean=true"
 }
 finally {
     [Environment]::SetEnvironmentVariable(

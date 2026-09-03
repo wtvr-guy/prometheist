@@ -166,6 +166,42 @@ def test_llm_invocation_filename_is_bounded_independently_of_semantic_key(
     assert artifact_journal.verify_interaction_chain(interaction_id)["valid"] is True
 
 
+def test_evidence_bound_llm_artifact_records_separate_transport_channels(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("PROMETHEIST_ARTIFACT_ROOT", str(tmp_path / "artifacts"))
+    artifact = llm_artifact_store.write_llm_invocation(
+        interaction_id=uuid4(),
+        conversation_id=uuid4(),
+        correlation_id=uuid4(),
+        task_id=uuid4(),
+        assignment_id=uuid4(),
+        stage="V2_RESPOND",
+        claim_id=uuid4(),
+        invocation_index=0,
+        kind="V2_EXACT_SOURCE_SELECTION",
+        model="qwen3:4b-instruct-2507-q4_K_M",
+        base_url="http://localhost:11434",
+        system_prompt="system policy",
+        user_prompt="current user authority",
+        evidence_prompt="quarantined historical evidence",
+        transport_layout="raw-generate:system,evidence,current-user,assistant",
+        schema={"type": "object"},
+        max_tokens=256,
+        temperature=0.0,
+        output='{"source_index":0,"verbatim_value":"value"}',
+        error_type=None,
+        error_message=None,
+    )
+
+    assert artifact["payload"]["user_prompt"] == "current user authority"
+    assert artifact["payload"]["evidence_prompt"] == "quarantined historical evidence"
+    assert artifact["payload"]["transport_layout"] == (
+        "raw-generate:system,evidence,current-user,assistant"
+    )
+
+
 def test_event_artifacts_are_semantically_idempotent_and_verifiable(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("PROMETHEIST_ARTIFACT_ROOT", str(tmp_path / "artifacts"))
     event_id = uuid4()

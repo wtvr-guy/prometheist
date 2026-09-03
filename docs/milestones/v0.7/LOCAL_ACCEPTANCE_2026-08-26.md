@@ -48,10 +48,12 @@ The repository now provides `scripts/run_v07_acceptance.ps1`. From PowerShell
 on the intended development machine, run:
 
 ```powershell
-.\scripts\run_v07_acceptance.ps1
+.\scripts\run_v07_acceptance.ps1 -ExpectedCommit <candidate-sha>
 ```
 
-The script fails closed unless it is running on Windows with reachable Ollama,
-then executes the worker/runtime acceptance group, the guarded cross-process
-Ollama continuity group, and the complete non-Ollama regression suite against
-the configured disposable PostgreSQL test database.
+The current script also requires a clean named branch whose full SHA matches the
+explicit candidate. It fails closed unless it is running on Windows with reachable
+Ollama, then executes the worker/runtime acceptance group, the guarded cross-process
+Ollama continuity group, and the complete non-Ollama regression suite against the
+configured disposable PostgreSQL test database. The later 2026-09-03 run is recorded
+separately in [`../../audits/V07_NATIVE_ACCEPTANCE_2026-09-03.md`](../../audits/V07_NATIVE_ACCEPTANCE_2026-09-03.md).

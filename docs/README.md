@@ -38,6 +38,7 @@ is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
 - [`milestones/v0.7/README.md`](milestones/v0.7/README.md) — consolidated v0.7 architecture and hard closure gate.
 - [`milestones/v0.7/CLOSURE_STATUS.md`](milestones/v0.7/CLOSURE_STATUS.md) — truthful gate-by-gate status; v0.7 remains open until native acceptance and final audit finish.
 - [`audits/V07_BRANCH_SALVAGE_2026-09-03.md`](audits/V07_BRANCH_SALVAGE_2026-09-03.md) — selective disposition of PRs #19–#24.
+- [`audits/V07_NATIVE_ACCEPTANCE_2026-09-03.md`](audits/V07_NATIVE_ACCEPTANCE_2026-09-03.md) — failed full native run, six release-blocking failures, evidence limits, and replacement mechanism.
 - [`audits/V07_REMOTE_BRANCH_INVENTORY_2026-09-03.md`](audits/V07_REMOTE_BRANCH_INVENTORY_2026-09-03.md) — remote-ref comparison, keep/delete classification, and deletion-tool blocker.
 - [`ROADMAP.md`](ROADMAP.md) — post-consolidation roadmap; Epistemic WorkingState is selected for v0.8 but cannot be frozen or branched until v0.7 closes.
 - [`milestones/v0.8/HYPOTHESIS.md`](milestones/v0.8/HYPOTHESIS.md) — proposed experiment, exclusions, scenarios, metrics, and empty freeze record.

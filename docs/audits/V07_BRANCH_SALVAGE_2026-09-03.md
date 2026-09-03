@@ -7,18 +7,45 @@
 
 No branch is merged wholesale merely to preserve its work. PR #23 is the required
 audit-hardening base. PRs #19 and #22 contributed selected tests and evidence; their
-obsolete runtime implementations were rejected. PRs #20 and #21 were
-superseded/deferred. PRs #19–#22 were closed without merge after the consolidated
-draft PR #24 passed hosted PostgreSQL CI.
+obsolete runtime implementations were rejected. After the 2026-09-03 native run
+falsified the initial belief that prompt-level authority guidance was sufficient,
+PR #19's current-only source policy and evidence-bound transport were selectively
+ported into the v2 runtime. PRs #20 and #21 remain superseded/deferred. PRs #19–#22
+remain closed without merge.
 
 | PR | Branch role | Salvaged into closure candidate | Rejected/deferred | Disposition |
 | --- | --- | --- | --- | --- |
-| #19 | v0.7 memory-continuity red team | adversarial scenarios; saturated WorkingState ordering; deep-history anchor routing and pure-kernel temporal diversity; incremental projection freshness; model-evidence byte bounds; response-persistence failure invariant | old interaction runtime, old response/capability loop, branch-specific source-filter/fallback architecture, old capability names | closed without merge on 2026-09-03; records preserved |
+| #19 | v0.7 memory-continuity red team | adversarial scenarios; saturated WorkingState ordering; deep-history anchor routing and pure-kernel temporal diversity; incremental projection freshness; model-evidence byte bounds; response-persistence failure invariant; current-only response policy, source-role filtering, evidence-channel isolation, Qwen control escaping, and validated exact-source output adapted to v2 after native failure | old interaction runtime, old recurrent response/capability loop, and old capability names | closed without merge on 2026-09-03; selected mechanism ported, records preserved |
 | #20 | constitutional remediation | audit findings remain historical input | conflicted implementation; connection-time schema-changing DDL; portability/export/erasure work not justified as a v0.7 blocker | closed without merge on 2026-09-03; re-propose one mechanism in its proper milestone |
 | #21 | pre-cognitive transient workers | general disposable-worker invariant is already represented in the current guarded stage protocol | intermediate workpiece/final-readiness architecture | closed without merge on 2026-09-03 |
 | #22 | Adaptive Memory Attention experiment | experiment records and existing `MEM-ADAPT-*` result artifacts; accepted conclusion that memory expansion is one mechanism rather than named capabilities | branch production implementation and obsolete profile/capability ontology | closed without merge on 2026-09-03; records preserved |
 | #23 | August 31 audit hardening | entire branch is the consolidation base: artifact-path fix, constraint gate, temperature/test alignment, dead-stage removal, and robustness fixes | none known; still subject to native acceptance and final audit | required merge only after all closure gates pass |
-| #24 | authoritative v2 consolidation | all accepted production changes, current-v2 tests, current documentation, and explicit evidence disposition | no native-acceptance claim | draft child PR onto #23; hosted CI green, native gate pending |
+| #24 | authoritative v2 consolidation | all accepted production changes, current-v2 tests, current documentation, and explicit evidence disposition | no native-acceptance claim | draft child PR onto #23; preceding hosted CI green, first native run failed, remediation pending revalidation |
+
+## Post-consolidation native correction
+
+The first full local gate executed all 14 selected Ollama tests: 8 passed and 6
+failed. The failures covered a mutated application placeholder, missed
+cross-conversation recall, unnecessary external-work selection, two historical
+authority cases, and one retrieved assistant prompt-injection case. This is negative
+evidence against relying on prompt wording alone to preserve authority boundaries on
+the configured local model.
+
+The initial table rejected PR #19's source-filter/fallback architecture as
+branch-specific. That disposition was too broad. The old runtime and capability loop
+remain rejected, but the independently useful boundary mechanism is now adapted to
+the authoritative v2 stages:
+
+- response source/surface policy is classified from the current percept only;
+- application code physically filters historical event roles;
+- memory is transported separately as quarantined evidence before current authority;
+- Qwen control sequences in evidence/current data are escaped;
+- exact answers are selected as source substrings, validated, and returned
+  mechanically;
+- initial aperture evidence is retained ahead of later adaptive expansions.
+
+Changing this disposition is intentional scientific correction: the frozen native
+failure supplied the evidence that the narrower mechanism was necessary.
 
 ## Ported production changes
 
@@ -53,6 +80,15 @@ Failure to persist the final response event records an interaction error and rel
 the worker claim; it never publishes a terminal success for a response that does not
 exist durably.
 
+### Response evidence boundary
+
+The v2 pre-cognitive worker and Composer now receive remembered content in a
+separate evidence channel rather than concatenated into the current user message.
+Before final response, a fresh current-only policy selects an application-owned
+event-role scope. Inadmissible roles are removed, and exact-output contracts use
+validated source extraction rather than model-regenerated opaque values. Invocation
+artifacts record the separate current/evidence payloads and transport layout.
+
 ## Ported regression scenarios
 
 Current-v2 tests include:
@@ -69,13 +105,20 @@ Current-v2 tests include:
 - `tests/test_redteam_memory_authority_native.py`;
 - `tests/test_redteam_memory_prompt_injection_native.py`.
 
+Deterministic coverage also includes `tests/test_epistemic_authority.py`,
+`tests/test_response_policy.py`, `tests/test_evidence_bound_transport_v2.py`, and
+`tests/test_response_memory_merge.py`.
+
 The native authority suites intentionally remain hard gates. Merely collecting or
 skipping them is not evidence of safe local-model behavior.
 
 Hosted workflow [run #714](https://github.com/wtvr-guy/prometheist/actions/runs/33789308836)
-passed on code candidate `10c2c942395267f95888f8922dc75cd843c934b7`:
-266 tests passed and 14 environment-marked tests skipped. The skipped native tests
-must run on the exact final PR #24 SHA before closure.
+passed on the preceding code candidate
+`10c2c942395267f95888f8922dc75cd843c934b7`: 266 tests passed and 14
+environment-marked tests skipped. The later native run executed those 14 tests and
+failed 6. Because the old script did not print the checked-out SHA or branch, that
+failure has incomplete revision provenance and cannot satisfy the exact-SHA gate in
+either direction. The remediation requires fresh hosted and native results.
 
 ## Evidence retained
 
@@ -92,7 +135,8 @@ tracked. Deliberately retained evidence must name its provenance and revision.
 
 ## Claim boundary
 
-This salvage does not claim that every PR #19 remediation mechanism was accepted, or
-that all native adversarial behavior is already green. It establishes that valuable
-attacks and measured experiment history survive while only code consistent with the
-authoritative v2 architecture enters the closure candidate.
+This salvage does not claim that every PR #19 remediation mechanism was accepted or
+that native adversarial behavior is green. It establishes that valuable attacks,
+measured failures, and the independently justified evidence-bound mechanism survive
+while only code adapted to the authoritative v2 architecture enters the closure
+candidate.

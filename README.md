@@ -15,9 +15,9 @@ continuity, policy, and durable authority belong to Prometheist itself.
 - **v0.5** is the accepted deterministic Memory Kernel baseline.
 - **v0.6** is the accepted historical stateless-worker/JIT-Memory baseline. Its
   Primary Agent/specialist hierarchy is no longer current architecture.
-- **v0.7** is a closure candidate. Its authoritative v2 runtime and deterministic
-  hardening are implemented; native Windows/PostgreSQL/Ollama acceptance on the
-  frozen candidate SHA is still a mandatory closure gate.
+- **v0.7** is an open closure candidate. A native Windows/PostgreSQL/Ollama run on
+  2026-09-03 executed all 14 model-backed tests and failed 6, so the release gate
+  remains closed while the evidence-bound remediation is revalidated.
 - **v0.8** will test durable Epistemic WorkingState before perception/salience. The
   hypothesis becomes frozen only after v0.7 closes.
 
@@ -26,7 +26,10 @@ tag will identify the later, fully accepted v0.7 baseline.
 
 Current closure work is tracked in draft [PR #24](https://github.com/wtvr-guy/prometheist/pull/24),
 layered on required audit [PR #23](https://github.com/wtvr-guy/prometheist/pull/23).
-Hosted PostgreSQL CI is green; the native gate remains pending.
+Hosted PostgreSQL CI was green for the preceding candidate; the native gate failed.
+Run #714 is evidence for that preceding code candidate, not for changes made after
+the failed native run. The next candidate must pass hosted CI and native acceptance
+at the same exact SHA.
 
 ## Authoritative user-prompt pipeline
 
@@ -44,8 +47,11 @@ user prompt (response required)
   -> fresh v2 Composer: memory sufficient?
        -> no: Adaptive Recall -> fresh Composer (bounded)
        -> yes/exhausted: response-ready memory package
-  -> fresh final responder
-       receives original prompt + memory package + direct work results + personality
+  -> fresh current-only response-policy worker
+  -> application filters historical event roles for the requested claim
+  -> quarantined evidence channel precedes the current user instruction
+  -> exact-source selector + mechanical return when exact output is required;
+     otherwise fresh personality-conditioned final responder
   -> persist response and final artifact disposition
 ```
 
@@ -72,8 +78,9 @@ retrieval stages internally; those stages are not exposed capabilities.
 - one-pass pre-cognitive external-work selection with application-owned capability
   IDs and dependency ordering;
 - bounded Adaptive Recall and a memory-only Composer;
-- final-response evidence authority, additive personality, and exact invocation
-  provenance;
+- current-only response policy, application-enforced historical source filtering,
+  quarantined evidence transport, exact-source output, additive personality, and
+  exact invocation provenance;
 - per-item and aggregate byte limits before evidence reaches a model;
 - deterministic, restart, scale, failure-injection, and adversarial regression tests.
 
@@ -139,15 +146,18 @@ uv run pytest -q
 ```
 
 The v0.7 closure gate must run on the intended native Windows host with PostgreSQL
-and the configured Ollama model available. The script makes skips fatal:
+and the configured Ollama model available. Pass the published 40-character
+candidate SHA; the script rejects a different SHA, a detached branch, a dirty tree,
+or skipped native dependencies:
 
 ```powershell
-.\scripts\run_v07_acceptance.ps1
+.\scripts\run_v07_acceptance.ps1 -ExpectedCommit <candidate-sha>
 ```
 
 Deterministic Linux CI is necessary but does not substitute for this native gate.
-Record the exact tested commit SHA and generated native evidence before declaring
-v0.7 closed.
+The earlier 2026-09-03 failure transcript did not print its branch/SHA, which is why
+the script now emits both at start and on success. Do not declare v0.7 closed without
+that exact revision identity and retained native evidence.
 
 ## Documentation
 

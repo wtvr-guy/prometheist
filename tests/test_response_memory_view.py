@@ -20,13 +20,13 @@ class _FakeResponse:
 
 
 class _FakeHTTPClient:
-    def __init__(self, content: str) -> None:
-        self._content = content
+    def __init__(self, contents: list[str]) -> None:
+        self._contents = iter(contents)
         self.calls: list[tuple[str, dict]] = []
 
     def post(self, path: str, *, json: dict) -> _FakeResponse:
         self.calls.append((path, json))
-        return _FakeResponse(self._content)
+        return _FakeResponse(next(self._contents))
 
 
 def _evidence(
@@ -86,12 +86,23 @@ def test_final_responder_receives_compact_oldest_to_newest_evidence_timeline():
         adaptive_recall_rounds=0,
     )
     client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
-    fake = _FakeHTTPClient('{"answer":"ok"}')
+    fake = _FakeHTTPClient(
+        [
+            '{"evidence_scope":"MIXED_CONVERSATION",'
+            '"surface_mode":"NATURAL_LANGUAGE","insufficient_literal":null}',
+            '{"answer":"ok"}',
+        ]
+    )
     client._client = fake
 
     assert client.generate_final_response("Answer from the timeline.", package, ()) == "ok"
-    path, payload = fake.calls[0]
+    path, payload = fake.calls[1]
     assert path == "/api/chat"
+    assert [message["role"] for message in payload["messages"]] == [
+        "system",
+        "tool",
+        "user",
+    ]
     model_input = payload["messages"][1]["content"]
     assert "[Evidence timeline: oldest to newest]" in model_input
     assert model_input.index("Historical rule") < model_input.index("Call the active plan")
@@ -106,3 +117,4 @@ def test_final_responder_receives_compact_oldest_to_newest_evidence_timeline():
     assert "conversation_seq:" not in model_input
     assert "created_at:" not in model_input
     assert "retrieval_reasons:" not in model_input
+    assert payload["messages"][2]["content"] == "Answer from the timeline."

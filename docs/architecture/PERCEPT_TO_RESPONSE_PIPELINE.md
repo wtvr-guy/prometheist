@@ -1,10 +1,15 @@
 # Percept-to-Response Pipeline
 
-**Status:** authoritative implemented v2 path, adopted 2026-08-29 and rebaselined 2026-09-03.
+**Status:** authoritative implemented v2 path, adopted 2026-08-29 and revised
+2026-09-03 after native acceptance falsified prompt-only evidence authority.
 
 **Scope:** the path from an admitted input through pre-cognitive work selection, capability execution, memory sufficiency, and final response generation.
 
-This document records the live Prometheist percept-to-response path. It narrows responsibilities among deterministic intake policy, the pre-cognitive LLM, deterministic execution machinery, Adaptive Recall, the v2 Composer, and the final response worker.
+This document records the live Prometheist percept-to-response path. It narrows
+responsibilities among deterministic intake policy, the pre-cognitive LLM,
+deterministic execution machinery, Adaptive Recall, the v2 Composer, current-only
+response policy, application-owned evidence admission, exact-source selection, and
+the final natural-language response worker.
 
 It should be read consistently with `CONSTITUTION.md`, `COGNITIVE_ARCHITECTURE.md`, `INTERACTION_CONTINUITY.md`, and the system determinism/execution-governance documents. Older records that refer to separate focused-recall, cross-reference, or deeper-research memory capabilities, or to a recurrent general response router, are historical and superseded by this path.
 
@@ -61,11 +66,21 @@ Authoritative results         sufficient?
    +--------------------------+
                               |
                               v
-                        FINAL RESPONDER
+                        CURRENT-ONLY RESPONSE POLICY
+                              |
+                              v
+                        APPLICATION SOURCE FILTER
+                              |
+                              v
+                        QUARANTINED EVIDENCE
+                        before current instruction
+                              |
+                         exact? +------ yes --> validated source output
+                              |
+                              no
+                              v
+                        FINAL NATURAL RESPONDER
                         + personality prompt
-                        + original user prompt
-                        + memory package
-                        + direct work/tool results
                               |
                               v
                         persist / emit response
@@ -99,6 +114,11 @@ There is one LLM-powered role in the pre-cognitive pipeline.
 For an explicit user prompt, its responsibility is:
 
 > **Given this user prompt, bounded orientation memory, and the available non-memory capability catalog, what work must Prometheist perform before responding?**
+
+Orientation memory is transported as quarantined evidence before a later current
+message containing the user prompt and application-owned capability catalog. Text
+inside memory cannot add a capability, request its own execution, or change the
+current task.
 
 The model may determine, through bounded application-owned outputs:
 
@@ -137,7 +157,11 @@ Its responsibility is to determine whether the memory context available for a re
 
 It is **not** a general evidence synthesizer, a second pre-cognitive executive, a tool-result interpreter, or the final response generator.
 
-The Composer receives the current user prompt plus the current memory evidence. It determines whether the activated/retrieved persistent memory is sufficient for a separate responder to answer accurately.
+The Composer receives the current user prompt plus the current memory evidence. The
+memory is a separate quarantined evidence message followed by the current prompt; it
+is not concatenated into the prompt's instruction channel. The Composer determines
+whether activated/retrieved persistent memory is sufficient for a separate responder
+to answer accurately.
 
 ### 7.1 If memory is sufficient
 
@@ -191,43 +215,60 @@ The division of responsibility is:
 
 Adaptive Recall does not decide what Prometheist should say and does not perform the final semantic sufficiency judgment.
 
-## 9. Two independent information channels into the final responder
+## 9. Evidence domains and current authority remain separate
 
-Memory evidence and action/tool results remain separate until the final response worker.
+Memory evidence and action/tool results remain distinct through response policy and
+admission. Admitted data then travels in a quarantined channel that precedes the
+later current user message.
 
 ```text
-PERSISTENT MEMORY -> V2 Composer -> memory package ----+
-                                                     |
-TOOL RESULTS ----------------------------------------+--> FINAL RESPONDER
-                                                     |
-CAPABILITY / ACTION RESULTS -------------------------+
-                                                     |
-ORIGINAL USER PROMPT --------------------------------+
+CURRENT USER PROMPT --> current-only source/surface policy
+                                  |
+PERSISTENT MEMORY --> role filter +-------------------+
+                                                       |
+TOOL / ACTION RESULTS --------------------------------+--> quarantined evidence
+                                                       |
+CURRENT USER PROMPT ----------------------------------+--> later current authority
 ```
 
 This separation is intentional.
 
-The Composer is allowed to transform/select memory context because memory sufficiency is its job. It must not become a semantic laundering layer through which authoritative tool/action results are unnecessarily rewritten.
+The Composer is allowed to request/select memory context because memory sufficiency
+is its job. It must not become a semantic laundering layer through which
+authoritative tool/action results are unnecessarily rewritten.
 
-The final responder receives authoritative structured work results directly, together with their provenance/status where relevant.
+The current-only policy selects a closed historical event-role scope. Application
+code—not the model—physically filters the packet. For chat backends, admitted data
+uses a tool-role message; for raw Qwen transport, it uses an escaped tool-response
+block. In both cases the current user message comes afterward.
 
-## 10. Final response worker
+## 10. Response policy, exact source output, and natural expression
 
-For an explicit user prompt, the final response worker is mandatory once the required work and memory-sufficiency path have completed or exhausted according to policy.
+For an explicit user prompt, the response stage is mandatory once required work and
+the memory-sufficiency path have completed or exhausted.
 
-It receives, as applicable:
+First, a fresh worker sees only the current prompt and selects:
 
-1. the original/current user prompt;
-2. the response-ready memory package from the v2 Composer;
-3. authoritative final tool/capability/action results directly from their execution paths;
-4. other bounded system-owned response metadata required by policy; and
-5. the Prometheist personality prompt.
+1. which historical source role may establish the requested claim; and
+2. whether output is natural language, one exact source substring, or a composition
+   of exact source substrings.
 
-The personality prompt is always supplied to the final response worker.
+When required historical support is absent, a separate current-only selector may
+identify an explicit fallback literal. Application code accepts it only when it is a
+verbatim current-prompt substring.
 
-The final responder's job is expression: generate the appropriate user-facing natural-language response from the completed inputs.
+For exact output, a deterministic-temperature model selects indexed source
+substrings from admitted evidence. Application code validates every index and
+substring and returns the canonical source bytes, joining multiple fields only with
+formatting punctuation/whitespace copied from the current request. This path avoids
+free-form respelling of opaque values.
 
-It does not decide whether to respond. It does not own memory retrieval. It does not execute requested side effects. It does not become the owner of durable continuity.
+For natural output, the final responder receives the current prompt, admitted
+quarantined memory, admitted direct work results, bounded package status, and the
+Prometheist personality prompt. Its job is expression.
+
+Neither response-policy nor expression workers decide whether to respond, own memory
+retrieval, execute side effects, or acquire durable continuity.
 
 ## 11. Non-user percepts
 
@@ -241,15 +282,20 @@ Future non-user percept pipelines may share portions of the same pre-cognitive, 
 
 ## 12. LLM-worker accounting
 
-On the ordinary user-response path there are three distinct LLM-powered worker **roles**:
+The user-response path has four semantic LLM worker **roles**:
 
 1. **Pre-cognitive LLM** — bounded semantic work selection only.
 2. **v2 Composer** — memory-context sufficiency and semantic memory-deficit identification.
-3. **Final response worker** — personality-conditioned user-facing expression.
+3. **Current-only response policy** — historical source scope and output surface.
+4. **Response realization** — exact-source selection or personality-conditioned
+   natural-language expression; a current-only fallback selector runs only for an
+   explicit unsupported-history fallback.
 
 There is only **one LLM-powered role in the pre-cognitive pipeline**.
 
-The number of LLM **invocations** is not necessarily three. The v2 Composer may be invoked more than once when Adaptive Recall requires iterative memory expansion. Each invocation remains stateless.
+The number of LLM **invocations** is not fixed. The v2 Composer may recur during
+Adaptive Recall, constrained outputs may retry, and exact/fallback selection is
+conditional. Every invocation remains bounded and stateless.
 
 Current resource policy remains independent of this logical count: multiple logical LLM roles do not imply simultaneous resident inference. Local execution remains subject to the one-LLM-at-a-time default and resource-admission policy unless empirical evidence and configured capacity justify otherwise.
 
@@ -267,7 +313,11 @@ The following are deliberate boundaries:
 - the Composer may identify missing memory semantics but does not own low-level retrieval policy;
 - authoritative tool/action results bypass the Composer and reach the final responder directly;
 - memory and external/tool evidence retain distinct provenance domains;
-- the final responder always receives the personality prompt;
+- response policy is inferred without historical evidence;
+- application code filters historical roles before synthesis;
+- evidence precedes and remains separate from current instruction authority;
+- exact outputs are mechanically validated against admitted source bytes;
+- every natural final responder receives the personality prompt;
 - the final responder never decides whether it should respond;
 - every LLM invocation remains fresh and stateless.
 
@@ -280,4 +330,9 @@ schema, named memory capabilities, and active-document conflicts. Dated records 
 that terminology only when visibly marked historical. Any new live reference to those
 interfaces is an architectural regression.
 
-The implemented design is a narrow set of semantic LLM responsibilities surrounded by durable, deterministic system machinery: deterministic user-response policy; one pre-cognitive work-selection worker; deterministic action/capability execution; a Composer-driven, Adaptive-Recall-backed memory-sufficiency loop; and a personality-conditioned final responder that receives memory context and authoritative work results through separate channels.
+The implemented design is a narrow set of semantic LLM responsibilities surrounded
+by durable, deterministic system machinery: deterministic user-response requirement;
+one pre-cognitive work selector; deterministic action/capability execution; a
+Composer-driven, Adaptive-Recall-backed memory-sufficiency loop; current-only
+source/surface policy; application-owned evidence filtering; and validated exact
+source output or personality-conditioned natural expression.
