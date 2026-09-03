@@ -24,6 +24,10 @@ continuity, policy, and durable authority belong to Prometheist itself.
 The existing `v0.7` Git tag is historical and must not be moved. A distinct closure
 tag will identify the later, fully accepted v0.7 baseline.
 
+Current closure work is tracked in draft [PR #24](https://github.com/wtvr-guy/prometheist/pull/24),
+layered on required audit [PR #23](https://github.com/wtvr-guy/prometheist/pull/23).
+Hosted PostgreSQL CI is green; the native gate remains pending.
+
 ## Authoritative user-prompt pipeline
 
 Explicit user prompts deterministically require a response. The pre-cognitive LLM
