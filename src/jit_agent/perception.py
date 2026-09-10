@@ -232,6 +232,8 @@ def _observation_text(value: Any, modality: PerceptModality) -> str:
         if value is None or isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError("metric percepts require a scalar numeric observation")
         return _stable_json(value)
+    if isinstance(value, str):
+        raise ValueError("structured percepts require a non-text structured payload")
     return _stable_json(value)
 
 

@@ -29,7 +29,15 @@ def save_interaction(
                     percept_payload, salience_assessment_payload
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (scheduler_key, interaction_id) DO NOTHING
+                ON CONFLICT (scheduler_key, interaction_id) DO UPDATE SET
+                    percept_payload = COALESCE(
+                        attention_interactions.percept_payload,
+                        EXCLUDED.percept_payload
+                    ),
+                    salience_assessment_payload = COALESCE(
+                        attention_interactions.salience_assessment_payload,
+                        EXCLUDED.salience_assessment_payload
+                    )
                 """,
                 (
                     scheduler_key,

@@ -7,7 +7,8 @@ import pytest
 
 from jit_agent import db
 from jit_agent.attention_store import load_scheduler
-from jit_agent.interaction_store import load_interaction
+from jit_agent.interaction_policy import DurableInteraction
+from jit_agent.interaction_store import load_interaction, save_interaction
 from jit_agent.perception import (
     AdvisorySemanticClassification,
     PerceptKind,
@@ -162,6 +163,16 @@ def test_scheduled_event_is_a_first_class_non_user_percept() -> None:
     assert assessment.disposition is SalienceDisposition.IGNORE
 
 
+def test_scheduled_percept_rejects_raw_text_payload() -> None:
+    with pytest.raises(ValueError):
+        normalize_scheduled_percept(
+            source_id="scheduler:daily-summary",
+            observation="plain text is not a structured scheduled payload",
+            observed_at=NOW,
+            correlation_id=uuid.uuid4(),
+        )
+
+
 def test_anomaly_alert_is_a_first_class_non_user_percept() -> None:
     percept = normalize_anomaly_percept(
         source_id="integrity:watchdog",
@@ -283,5 +294,126 @@ def test_begin_percept_persists_normalized_percept_and_salience() -> None:
         task = scheduler.tasks[interaction.task_id]
         assert task.resumable_state["percept_id"] == str(stored.percept.percept_id)
         assert task.resumable_state["salience_disposition"] == "ORIENT"
+    finally:
+        connection.close()
+
+
+def test_save_interaction_backfills_missing_percept_payloads() -> None:
+    connection = db.get_connection()
+    try:
+        interaction = DurableInteraction(
+            interaction_id=uuid.uuid4(),
+            conversation_id=uuid.uuid4(),
+            correlation_id=uuid.uuid4(),
+            user_prompt_event_id=uuid.uuid4(),
+            before_global_seq=1,
+            task_id=uuid.uuid4(),
+            assignment_id=uuid.uuid4(),
+            user_text="user text",
+            percept=normalize_user_interaction_percept(
+                user_text="user text",
+                observed_at=NOW,
+                correlation_id=uuid.uuid4(),
+                source_event_id=uuid.uuid4(),
+                conversation_id=uuid.uuid4(),
+            ),
+            salience_assessment=None,
+        )
+        # This contract test only exercises the storage retry/backfill logic on an
+        # already-present row shape; use the live path for end-to-end relational setup.
+        with connection.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO conversations (conversation_id) VALUES (%s)
+                ON CONFLICT (conversation_id) DO NOTHING
+                """,
+                (interaction.conversation_id,),
+            )
+            cur.execute(
+                """
+                INSERT INTO attention_tasks (
+                    task_id, task_key, created_seq, criticality, service_class,
+                    interruption_policy, status
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    interaction.task_id,
+                    "test:interaction",
+                    999_001,
+                    "USER_BLOCKING",
+                    "INTERACTIVE",
+                    "CHECKPOINT_ONLY",
+                    "QUEUED",
+                ),
+            )
+            cur.execute(
+                """
+                INSERT INTO attention_scheduler_state (scheduler_key)
+                VALUES ('default')
+                ON CONFLICT (scheduler_key) DO NOTHING
+                """
+            )
+            cur.execute(
+                """
+                INSERT INTO attention_scheduling_epochs (
+                    scheduler_key, epoch_id, epoch_sequence, scheduler_cycle,
+                    admission_policy_version, assignment_policy_version, status
+                ) VALUES ('default', %s, 1, 0, 'test', 'test', 'COMMITTED')
+                ON CONFLICT (scheduler_key, epoch_id) DO NOTHING
+                """,
+                (uuid.uuid4(),),
+            )
+            cur.execute(
+                """
+                INSERT INTO attention_assignments (
+                    scheduler_key, assignment_id, task_id, task_revision,
+                    created_epoch_sequence, status
+                ) VALUES ('default', %s, %s, 0, 1, 'READY')
+                """,
+                (interaction.assignment_id, interaction.task_id),
+            )
+            cur.execute(
+                """
+                INSERT INTO events (
+                    event_id, conversation_id, correlation_id, conversation_seq,
+                    event_type, source, payload, payload_text
+                ) VALUES (%s, %s, %s, 1, 'USER_PROMPT', 'user', '{}'::jsonb, 'user text')
+                """,
+                (
+                    interaction.user_prompt_event_id,
+                    interaction.conversation_id,
+                    interaction.correlation_id,
+                ),
+            )
+            cur.execute(
+                """
+                INSERT INTO attention_interactions (
+                    scheduler_key, interaction_id, protocol_version,
+                    conversation_id, correlation_id, user_prompt_event_id,
+                    before_global_seq, task_id, assignment_id, user_text,
+                    percept_payload, salience_assessment_payload
+                ) VALUES (
+                    'default', %s, %s, %s, %s, %s, %s, %s, %s, %s, NULL, NULL
+                )
+                """,
+                (
+                    interaction.interaction_id,
+                    interaction.protocol_version,
+                    interaction.conversation_id,
+                    interaction.correlation_id,
+                    interaction.user_prompt_event_id,
+                    interaction.before_global_seq,
+                    interaction.task_id,
+                    interaction.assignment_id,
+                    interaction.user_text,
+                ),
+            )
+        connection.commit()
+
+        stored = save_interaction(connection, interaction)
+        assert stored.percept is not None
+        reloaded = load_interaction(connection, interaction.interaction_id)
+        assert reloaded.percept is not None
+        assert reloaded.percept.percept_id == interaction.percept.percept_id
     finally:
         connection.close()
