@@ -313,21 +313,23 @@ def normalize_percept(
     response_required: bool = False,
 ) -> Percept:
     raw_text, modality = _observation_text(observation)
-    effective_source = source
-    if source.modality is not modality:
-        effective_source = source.model_copy(update={"modality": modality})
     if not raw_text.strip():
         raise ValueError("percept observation must not be empty")
+    if source.modality is not modality:
+        raise ValueError(
+            "source modality does not match observation payload; "
+            f"expected {source.modality.value}, observed {modality.value}"
+        )
     normalized_text = raw_text.strip()
     return Percept(
         percept_id=deterministic_percept_id(
             source_event_id,
             correlation_id,
-            effective_source,
+            source,
             observed_at=observed_at,
             normalized_text=normalized_text,
         ),
-        source=effective_source,
+        source=source,
         observed_at=observed_at,
         source_event_id=source_event_id,
         conversation_id=conversation_id,
@@ -335,7 +337,7 @@ def normalize_percept(
         raw_value_sha256=_sha256_text(raw_text),
         normalized_text=normalized_text,
         input_buffer=_build_buffer(normalized_text),
-        features=_feature_flags(normalized_text, effective_source.modality),
+        features=_feature_flags(normalized_text, source.modality),
         response_required=response_required,
     )
 
@@ -364,8 +366,12 @@ def normalize_user_interaction_percept(
     )
 
 
+def _term_matched(text: str, term: str) -> bool:
+    return re.search(rf"\b{re.escape(term)}\b", text) is not None
+
+
 def _score_matches(text: str, terms: tuple[str, ...], *, cap: int = 3) -> tuple[int, tuple[str, ...]]:
-    matched = tuple(sorted(term for term in terms if term in text))
+    matched = tuple(sorted(term for term in terms if _term_matched(text, term)))
     return min(cap, len(matched)), matched
 
 

@@ -3,6 +3,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
+import pytest
+
 from jit_agent import db
 from jit_agent.attention_store import load_scheduler
 from jit_agent.interaction_store import load_interaction
@@ -41,7 +43,7 @@ def test_normalize_percept_supports_structured_observations_deterministically() 
     source = PerceptSource(
         source_id="sensor:health",
         kind=PerceptKind.SYSTEM_OBSERVATION,
-        modality=PerceptModality.TEXT,
+        modality=PerceptModality.STRUCTURED,
         interface="monitor",
     )
 
@@ -63,6 +65,21 @@ def test_normalize_percept_supports_structured_observations_deterministically() 
         correlation_id=correlation_id,
     )
     assert repeated == percept
+
+
+def test_normalize_percept_rejects_modality_mismatch() -> None:
+    with pytest.raises(ValueError):
+        normalize_percept(
+            source=PerceptSource(
+                source_id="sensor:health",
+                kind=PerceptKind.SYSTEM_OBSERVATION,
+                modality=PerceptModality.TEXT,
+                interface="monitor",
+            ),
+            observation={"status": "failed"},
+            observed_at=NOW,
+            correlation_id=uuid.uuid4(),
+        )
 
 
 def test_user_percept_builds_bounded_input_buffer() -> None:
@@ -108,6 +125,21 @@ def test_advisory_semantic_classification_has_no_policy_authority() -> None:
     assert assessment.advisory_only is True
     assert assessment.advisory_classification is not None
     assert assessment.advisory_classification.authoritative is False
+
+
+def test_salience_uses_whole_term_matching() -> None:
+    percept = normalize_user_interaction_percept(
+        user_text="Explain how this address changed.",
+        observed_at=NOW,
+        correlation_id=uuid.uuid4(),
+        source_event_id=uuid.uuid4(),
+        conversation_id=uuid.uuid4(),
+    )
+
+    assessment = evaluate_salience(percept)
+
+    assert "plan" not in assessment.trigger_terms
+    assert "add" not in assessment.trigger_terms
 
 
 def test_system_integrity_observation_can_trigger_reflex() -> None:
