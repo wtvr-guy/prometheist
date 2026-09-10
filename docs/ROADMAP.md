@@ -112,9 +112,15 @@ v0.7 acceptance must keep the four-turn Kestrel experiment fixed and demonstrate
 
 ## v0.8 — Deterministic perception and salience (subject to post-v0.7 rebaseline)
 
+**Status:** baseline implementation landed on 2026-09-10.
+
 Primary question: can Prometheist continuously receive heterogeneous external observations, cheaply identify what matters, and produce appropriate reflex, orienting, deliberate, or ignore dispositions without requiring an LLM to inspect every input?
 
 Deliverables include normalized `Percept` contracts (including user interaction), pluggable sources/sensors, bounded input buffers, deterministic anomaly detection where feasible, structured threat/opportunity/goal/novelty/uncertainty/system-integrity salience, situation assembly, deterministic task formation, `REFLEX`/`ORIENT`/`DELIBERATE`/`IGNORE`, bounded pre-authorized reflexes, and optional model-assisted semantic classification without policy authority.
+
+The current baseline freezes exactly one new mechanism: deterministic percept normalization plus immutable salience assessment on the live user-percept path, with generic contracts that also accept heterogeneous structured observations. The implementation persists raw user evidence losslessly in canonical events, stores normalized percept/salience data as replaceable derived state, uses bounded intake buffers, records deterministic signal scores and dispositions, and permits advisory-only semantic labels that carry no policy authority.
+
+This baseline does **not** silently introduce a richer epistemic `WorkingState`, free-form recurrent inference, policy-authoritative model salience, or lossful replacement of canonical evidence. Broader multi-source situation assembly and richer non-user reflex/task libraries remain future increments built on the same contract boundary.
 
 The post-v0.7 rebaseline must explicitly compare this milestone against a possible richer epistemic WorkingState / recurrent-inference milestone motivated by `docs/concepts/lessons_from_cognitive_neuroscience.md` and the measured continuity failures. Do not silently combine both mechanisms; whichever comes next must be a frozen one-mechanism experiment.
 

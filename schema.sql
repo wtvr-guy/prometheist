@@ -707,11 +707,19 @@ CREATE TABLE IF NOT EXISTS attention_interactions (
     task_id UUID NOT NULL UNIQUE REFERENCES attention_tasks(task_id),
     assignment_id UUID NOT NULL,
     user_text TEXT NOT NULL,
+    percept_payload JSONB,
+    salience_assessment_payload JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (scheduler_key, interaction_id),
     FOREIGN KEY (scheduler_key, assignment_id)
         REFERENCES attention_assignments(scheduler_key, assignment_id)
 );
+
+ALTER TABLE attention_interactions
+    ADD COLUMN IF NOT EXISTS percept_payload JSONB;
+
+ALTER TABLE attention_interactions
+    ADD COLUMN IF NOT EXISTS salience_assessment_payload JSONB;
 
 CREATE INDEX IF NOT EXISTS idx_attention_interactions_task
     ON attention_interactions (scheduler_key, task_id);

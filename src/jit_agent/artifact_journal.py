@@ -19,6 +19,8 @@ import re
 from typing import Any, Iterable
 from uuid import UUID, uuid5
 
+from jit_agent.perception import Percept, SalienceAssessment
+
 ARTIFACT_SCHEMA_VERSION = 1
 _ARTIFACT_NAMESPACE = UUID("b983b0b7-a203-5c60-96f0-b17d2d94bf1a")
 _SAFE_KEY = re.compile(r"[^a-zA-Z0-9_.-]+")
@@ -208,7 +210,17 @@ def write_percept_artifact(
     task_id: UUID,
     user_text: str,
     user_prompt_event_id: UUID,
+    percept: Percept | None = None,
+    salience_assessment: SalienceAssessment | None = None,
 ) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "user_text": user_text,
+        "user_prompt_event_id": str(user_prompt_event_id),
+    }
+    if percept is not None:
+        payload["normalized_percept"] = percept.model_dump(mode="json")
+    if salience_assessment is not None:
+        payload["salience_assessment"] = salience_assessment.model_dump(mode="json")
     return write_interaction_artifact(
         artifact_key="percept",
         artifact_type="PERCEPT",
@@ -219,10 +231,7 @@ def write_percept_artifact(
         assignment_id=None,
         stage=None,
         producer="percept_response_v2",
-        payload={
-            "user_text": user_text,
-            "user_prompt_event_id": str(user_prompt_event_id),
-        },
+        payload=payload,
     )
 
 

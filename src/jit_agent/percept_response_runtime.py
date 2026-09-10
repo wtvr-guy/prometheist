@@ -74,6 +74,12 @@ from jit_agent.ollama_runtime import (
     OllamaRuntimeProbe,
     OllamaRuntimeState,
 )
+from jit_agent.perception import (
+    SalienceAssessment,
+    format_salience_context,
+    normalize_user_interaction_percept,
+    evaluate_salience,
+)
 from jit_agent.worker_protocol import WorkerClaimEnvelope, WorkerEffectPolicy, deterministic_worker_step_id
 from jit_agent.worker_runtime import GuardedWorkerLauncher
 from jit_agent.worker_store import (
@@ -230,6 +236,7 @@ class PerceptLLM(OllamaClient):
         percept: str,
         memory_packet: MemoryPacket,
         capability_catalog: tuple[CapabilityDescriptor, ...],
+        salience_assessment: SalienceAssessment | None = None,
     ) -> PreCognitiveDisposition:
         catalog_text = "\n".join(
             f"{index}: {item.capability_id} | {item.kind.value} | {item.description}"
@@ -239,8 +246,14 @@ class PerceptLLM(OllamaClient):
             f"item {index}: {item.event_type.value}: {item.content}"
             for index, item in enumerate(memory_packet.items)
         ) or "none"
+        salience_text = (
+            format_salience_context(salience_assessment)
+            if salience_assessment is not None
+            else "none"
+        )
         user = (
             f"[Current percept]\n{percept}\n\n"
+            f"[Deterministic salience]\n{salience_text}\n\n"
             f"[Bounded orientation memory]\n{memory_text}\n\n"
             f"[Executable capability catalog]\n{catalog_text}"
         )
@@ -534,6 +547,14 @@ def begin_percept(
         payload_text=normalized,
         event_id=deterministic_interaction_event_id(interaction_id, "user-prompt"),
     )
+    percept = normalize_user_interaction_percept(
+        user_text=normalized,
+        observed_at=prompt.created_at,
+        correlation_id=correlation,
+        source_event_id=prompt.event_id,
+        conversation_id=conversation_id,
+    )
+    salience_assessment = evaluate_salience(percept)
     scheduler = load_scheduler(conn, scheduler_key=scheduler_key)
     task_id = deterministic_interaction_task_id(interaction_id)
     scheduler.submit(
@@ -557,7 +578,11 @@ def begin_percept(
                     ),
                 ),
             ),
-            resumable_state={"interaction_id": str(interaction_id)},
+            resumable_state={
+                "interaction_id": str(interaction_id),
+                "percept_id": str(percept.percept_id),
+                "salience_disposition": salience_assessment.disposition.value,
+            },
         )
     )
     controller = LocalResourceAdmissionController(
@@ -582,6 +607,8 @@ def begin_percept(
         task_id=task_id,
         assignment_id=assignments[0].assignment_id,
         user_text=normalized,
+        percept=percept,
+        salience_assessment=salience_assessment,
     )
     save_interaction(conn, interaction, scheduler_key=scheduler_key)
     _ensure_steps(conn, interaction, scheduler_key=scheduler_key)
@@ -653,7 +680,17 @@ def _execute_stage(
     if stage is PerceptStage.RESOLVE_REFERENCES:
         return {
             "working_state_available": load_working_state(conn, interaction.conversation_id)
-            is not None
+            is not None,
+            "percept": (
+                interaction.percept.model_dump(mode="json")
+                if interaction.percept is not None
+                else None
+            ),
+            "salience_assessment": (
+                interaction.salience_assessment.model_dump(mode="json")
+                if interaction.salience_assessment is not None
+                else None
+            ),
         }, []
 
     if stage is PerceptStage.PRECOGNITIVE:
@@ -666,10 +703,25 @@ def _execute_stage(
             before_global_seq=interaction.before_global_seq,
         )
         catalog = _external_capability_catalog(registry)
-        disposition = llm.decide_disposition(interaction.user_text, aperture_packet, catalog)
+        disposition = llm.decide_disposition(
+            interaction.user_text,
+            aperture_packet,
+            catalog,
+            interaction.salience_assessment,
+        )
         plan = registry.plan_execution(catalog, disposition.capability_indices)
         return {
             "attention_aperture_version": ATTENTION_APERTURE_VERSION,
+            "percept": (
+                interaction.percept.model_dump(mode="json")
+                if interaction.percept is not None
+                else None
+            ),
+            "salience_assessment": (
+                interaction.salience_assessment.model_dump(mode="json")
+                if interaction.salience_assessment is not None
+                else None
+            ),
             "aperture_packet": aperture_packet.model_dump(mode="json"),
             "disposition": disposition.model_dump(mode="json"),
             "capability_catalog": [item.model_dump(mode="json") for item in catalog],

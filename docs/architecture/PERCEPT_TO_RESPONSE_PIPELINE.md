@@ -25,6 +25,9 @@ USER PROMPT
    v
 Deterministic ingestion / persistence
    |
+   +--> immutable normalized Percept
+   +--> bounded intake buffer + structural features
+   +--> deterministic SalienceAssessment
    +--> response_required = TRUE
    |
    v
@@ -78,6 +81,8 @@ Every admitted input is persisted before downstream cognition.
 
 For an explicit user prompt, the intake boundary sets `response_required=true`. This is application-owned control state. The pre-cognitive LLM does not receive a semantic choice about whether to answer.
 
+The live v0.8 baseline also derives an immutable normalized `Percept` plus an immutable `SalienceAssessment` before model routing. This step remains deterministic and bounded: raw canonical evidence stays lossless in the event ledger, while normalized buffers/features/salience are persisted as replaceable derived state and mirrored into the artifact journal for restart/replay.
+
 For a non-user percept, response policy may differ according to the deterministic contract for that percept class. A background observation may require internal work and no conversational output; a scheduled task may require an acknowledgment only under specific policy; a sensor event may require no response at all.
 
 This distinction avoids conflating two different questions:
@@ -90,6 +95,8 @@ This distinction avoids conflating two different questions:
 Every admitted input receives the bounded system-owned memory activation required by the Constitution before model routing. This is an attention aperture, not a complete answer and not a claim of evidentiary sufficiency.
 
 The system remains the owner of ordering, identity, provenance, WorkingState, resource policy, and durable control state.
+
+Deterministic salience and model reasoning are intentionally separate. The salience layer may provide bounded advisory context to later model workers, but models do not gain policy authority over response requirements, reflex authorization, task identity, scheduling, or memory ordering by virtue of seeing the salience result.
 
 ## 5. The pre-cognitive LLM: work selection
 

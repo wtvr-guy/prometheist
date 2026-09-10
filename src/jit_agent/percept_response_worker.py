@@ -24,6 +24,7 @@ from jit_agent import artifact_journal, db, event_store, llm_artifact_store
 from jit_agent.capability_registry import DEFAULT_REGISTRY, CapabilityDescriptor
 from jit_agent.interaction_store import load_interaction_by_task
 from jit_agent.models import EventType, MemoryPacket
+from jit_agent.perception import SalienceAssessment, format_salience_context
 from jit_agent.percept_response_runtime import (
     MemorySufficiencyDecision,
     PerceptLLM,
@@ -275,6 +276,7 @@ class UserPromptLLM(PerceptLLM):
         percept: str,
         memory_packet: MemoryPacket,
         capability_catalog: tuple[CapabilityDescriptor, ...],
+        salience_assessment: SalienceAssessment | None = None,
     ) -> PreCognitiveDisposition:
         # There is no semantic decision to delegate when no external action is
         # executable. Calling a small model here only creates an opportunity for
@@ -291,8 +293,14 @@ class UserPromptLLM(PerceptLLM):
             f"item {index}: {item.event_type.value}: {item.content}"
             for index, item in enumerate(visible_packet.items)
         ) or "none"
+        salience_text = (
+            format_salience_context(salience_assessment)
+            if salience_assessment is not None
+            else "none"
+        )
         user = (
             f"[Current user prompt]\n{percept}\n\n"
+            f"[Deterministic salience]\n{salience_text}\n\n"
             f"[Bounded orientation memory]\n{memory_text}\n\n"
             f"[Executable capability catalog]\n{catalog_text}"
         )
@@ -354,7 +362,16 @@ class UserPromptLLM(PerceptLLM):
             update={"memory_packet": _cognitive_memory_packet(package.memory_packet)},
             deep=True,
         )
-        return super().generate_final_response(percept, visible_package, work_results)
+        prior_personality = os.environ.get("PROMETHEIST_PERSONALITY_PROMPT")
+        if prior_personality is None or not prior_personality.strip():
+            os.environ["PROMETHEIST_PERSONALITY_PROMPT"] = _INTERACTIVE_PERSONALITY_PROMPT
+        try:
+            return super().generate_final_response(percept, visible_package, work_results)
+        finally:
+            if prior_personality is None:
+                os.environ.pop("PROMETHEIST_PERSONALITY_PROMPT", None)
+            else:
+                os.environ["PROMETHEIST_PERSONALITY_PROMPT"] = prior_personality
 
 
 def _ensure_percept_artifact(interaction) -> None:
@@ -365,6 +382,8 @@ def _ensure_percept_artifact(interaction) -> None:
         task_id=interaction.task_id,
         user_text=interaction.user_text,
         user_prompt_event_id=interaction.user_prompt_event_id,
+        percept=interaction.percept,
+        salience_assessment=interaction.salience_assessment,
     )
 
 

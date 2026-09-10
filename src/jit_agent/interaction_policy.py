@@ -7,6 +7,8 @@ from uuid import UUID, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from jit_agent.perception import Percept, SalienceAssessment
+
 
 INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v9"
 CONTINUITY_POLICY_VERSION = "ATTENTION_APERTURE_V1"
@@ -154,6 +156,8 @@ class DurableInteraction(BaseModel):
     task_id: UUID
     assignment_id: UUID
     user_text: str = Field(min_length=1)
+    percept: Percept | None = None
+    salience_assessment: SalienceAssessment | None = None
 
 
 def requires_persisted_context(user_text: str) -> bool:

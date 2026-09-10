@@ -5,9 +5,11 @@ from uuid import UUID
 
 import psycopg
 from psycopg.rows import dict_row
+from psycopg.types.json import Json
 
 from jit_agent.attention_store import DEFAULT_SCHEDULER_KEY
 from jit_agent.interaction_policy import DurableInteraction
+from jit_agent.perception import Percept, SalienceAssessment
 
 
 def save_interaction(
@@ -23,9 +25,10 @@ def save_interaction(
                 INSERT INTO attention_interactions (
                     scheduler_key, interaction_id, protocol_version,
                     conversation_id, correlation_id, user_prompt_event_id,
-                    before_global_seq, task_id, assignment_id, user_text
+                    before_global_seq, task_id, assignment_id, user_text,
+                    percept_payload, salience_assessment_payload
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (scheduler_key, interaction_id) DO NOTHING
                 """,
                 (
@@ -39,6 +42,16 @@ def save_interaction(
                     interaction.task_id,
                     interaction.assignment_id,
                     interaction.user_text,
+                    (
+                        Json(interaction.percept.model_dump(mode="json"))
+                        if interaction.percept is not None
+                        else None
+                    ),
+                    (
+                        Json(interaction.salience_assessment.model_dump(mode="json"))
+                        if interaction.salience_assessment is not None
+                        else None
+                    ),
                 ),
             )
             cur.execute(
@@ -109,4 +122,14 @@ def _row_to_interaction(row: dict) -> DurableInteraction:
         task_id=row["task_id"],
         assignment_id=row["assignment_id"],
         user_text=row["user_text"],
+        percept=(
+            Percept.model_validate(row["percept_payload"])
+            if row.get("percept_payload") is not None
+            else None
+        ),
+        salience_assessment=(
+            SalienceAssessment.model_validate(row["salience_assessment_payload"])
+            if row.get("salience_assessment_payload") is not None
+            else None
+        ),
     )

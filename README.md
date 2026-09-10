@@ -67,6 +67,12 @@ Transient host-pressure claim denials are also treated as **delay/re-observe con
 
 The release candidate also ports deterministic capability discovery into task/worker-neutral terminology, connects real JIT Memory execution, migrates the CLI to guarded child processes, removes the compatibility Primary Agent/specialist path, and adds forced-destruction/recovery tests covering concurrent assignments, checkpoint preemption, abandoned claims, readmission, and duplicate-effect prevention.
 
+### v0.8 — baseline deterministic perception and salience
+
+The current branch now adds a bounded v0.8 perception/salience layer without silently expanding Prometheist into a richer epistemic WorkingState or recurrent-inference experiment. User interaction is normalized into an immutable `Percept` contract with deterministic provenance, a bounded intake buffer, extracted structural features, and an immutable `SalienceAssessment` containing deterministic anomaly/threat/opportunity/goal/novelty/uncertainty/system-integrity signals plus a closed `REFLEX` / `ORIENT` / `DELIBERATE` / `IGNORE` disposition.
+
+That assessment is persisted as replaceable derived state alongside the durable interaction/task boundary and copied into the artifact journal so restarts can recover the same bounded intake view without treating the derivation as canonical evidence. Any model-assisted semantic classification remains explicitly advisory-only and non-authoritative; deterministic policy still owns response requirements, task identity, scheduling, memory access ordering, and execution.
+
 ## Target architecture
 
 ```text
@@ -175,21 +181,21 @@ WorkingState and memory activation do not replace or summarize source evidence. 
 
 Implemented/verified foundations include PostgreSQL authoritative history, deterministic ordering, the Memory Kernel, provenance-bearing `MemoryPacket`s, conservative evidence recall, high-recall default memory activation, deterministic attention/task state, resource admission, durable epoch-wide assignments, contention preemption, task-neutral capability discovery/execution, durable disposable-worker claims/checkpoints/results, guarded interaction workers, bounded active WorkingState, explicit recurrent routing actions, index-only multi-capability selection, deterministic dependency-aware capability ordering, progressive candidate-index memory research, cross-reference and focused recall, a final-response readiness barrier, bounded transient resource re-observation, and restart/replay tests.
 
-The legacy Primary Agent and memory-specialist ownership architecture has been removed. Historical event types remain supported so existing ledgers stay readable. Perception/salience, deterministic external-data retention, harder memory generalization, richer epistemic working state, broader typed external-capability result composition, and the fully integrated cognitive loop remain roadmap work.
+The legacy Primary Agent and memory-specialist ownership architecture has been removed. Historical event types remain supported so existing ledgers stay readable. Deterministic perception/salience contracts now exist on the live user-percept path; broader multi-source situation assembly, deterministic external-data retention, harder memory generalization, richer epistemic working state, broader typed external-capability result composition, and the fully integrated cognitive loop remain roadmap work.
 
 ## Roadmap
 
 The currently published forward path remains:
 
 - **v0.7** — durable resource-aware JIT Attention Fabric + minimal active WorkingState + automatic bounded memory activation + recurrent deterministic capability execution;
-- **v0.8** — deterministic perception and salience, subject to a post-v0.7 rebaseline against the WorkingState/neuroscience evidence;
+- **v0.8** — deterministic perception and salience baseline, including immutable percept/salience contracts and live user-percept integration, while remaining explicitly separate from any richer epistemic WorkingState experiment;
 - **v0.9** — deterministic retention and memory admission;
 - **v0.10** — memory generalization and natural topic-resumption failure discovery;
 - **v0.11** — integrated persistent cognitive loop with session-independent interaction continuity;
 - **v0.12** — operational hardening and portability;
 - **v1.0** — first complete attention-centric Prometheist cognitive architecture.
 
-The roadmap explicitly requires rebaselining after v0.7 before choosing whether richer epistemic WorkingState should precede perception/salience. Do not silently combine those mechanisms.
+The roadmap explicitly requires rebaselining after v0.7 before choosing whether richer epistemic WorkingState should precede perception/salience. The current branch freezes the one-mechanism perception/salience path and does not silently combine it with a richer recurrent WorkingState design.
 
 ## Quick start
 
@@ -221,6 +227,7 @@ Current architecture and active milestone:
 - [`docs/architecture/INTERACTION_CONTINUITY.md`](docs/architecture/INTERACTION_CONTINUITY.md)
 - [`docs/architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](docs/architecture/ARCHITECTURAL_PIVOT_2026-08-24.md)
 - [`docs/ROADMAP.md`](docs/ROADMAP.md)
+- [`docs/milestones/v0.8/README.md`](docs/milestones/v0.8/README.md)
 - [`docs/milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md`](docs/milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md)
 - [`docs/milestones/v0.7/README.md`](docs/milestones/v0.7/README.md)
 

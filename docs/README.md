@@ -33,7 +33,7 @@ These documents define the forward architecture beginning with v0.7:
 - [`architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md) — timeless normative authority for Attention Fabric, resource safety, preemption, assignment, and worker-execution rules previously spread across v0.7 milestone records.
 - [`architecture/LOCAL_FIRST_PORTABILITY.md`](architecture/LOCAL_FIRST_PORTABILITY.md) — long-lived local-first, user-sovereignty, component-replaceability, and portability requirements.
 - [`architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](architecture/ARCHITECTURAL_PIVOT_2026-08-24.md) — decision record explaining the move away from a privileged Primary Agent, permanent agent hierarchy, rigid conversation-scoped cognition, and unconditional persistence of raw external input.
-- [`ROADMAP.md`](ROADMAP.md) — milestone path from the accepted v0.5/v0.6 baselines through the first complete attention-centric v1.0 architecture. v0.7 now includes minimal active WorkingState and the default attention aperture; the post-v0.7 roadmap must be rebaselined before choosing whether richer epistemic WorkingState or perception/salience comes next.
+- [`ROADMAP.md`](ROADMAP.md) — milestone path from the accepted v0.5/v0.6 baselines through the first complete attention-centric v1.0 architecture. v0.8 now has a bounded deterministic perception/salience baseline on the live user-percept path without silently expanding WorkingState or recurrent inference.
 
 There is intentionally no current `PRIMARY_AGENT_SPEC_SHEET` under `docs/architecture/`. Permanent agents are no longer first-class architectural primitives. Historical Primary-Agent material lives under `docs/history/`.
 
@@ -76,6 +76,7 @@ Historical documents describe what was built or believed at a particular milesto
 
 ## Active milestone
 
+- [`milestones/v0.8/README.md`](milestones/v0.8/README.md) — deterministic v0.8 perception/salience baseline: immutable percept/salience contracts, bounded intake buffers, advisory-only semantic labels, live user-percept integration, and validation scope.
 - [`milestones/v0.7/README.md`](milestones/v0.7/README.md) — v0.7 scope, implementation record, release-candidate evidence, task-neutral capability execution, forced-restart acceptance, and native-machine gate.
 - [`milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md`](milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md) — dated experimental record of why phrase/entity/recency continuity heuristics and “ask before remembering” were rejected, and why bounded WorkingState + the automatic attention aperture replaced them.
 - [`milestones/v0.7/JIT_ATTENTION_DESIGN.md`](milestones/v0.7/JIT_ATTENTION_DESIGN.md) — v0.7 implementation/design record for deterministic scheduling, quantitative admission/reservations, epochs, preemption, and worker behavior. Its timeless normative rules are now governed by `architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`.
