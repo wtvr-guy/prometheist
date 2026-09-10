@@ -283,8 +283,22 @@ def _feature_flags(text: str, modality: PerceptModality) -> PerceptFeatures:
     )
 
 
-def deterministic_percept_id(source_event_id: UUID | None, correlation_id: UUID, source: PerceptSource) -> UUID:
-    seed = str(source_event_id) if source_event_id is not None else f"{correlation_id}:{source.source_id}"
+def deterministic_percept_id(
+    source_event_id: UUID | None,
+    correlation_id: UUID,
+    source: PerceptSource,
+    *,
+    observed_at: datetime,
+    normalized_text: str,
+) -> UUID:
+    seed = (
+        str(source_event_id)
+        if source_event_id is not None
+        else (
+            f"{correlation_id}:{source.source_id}:{observed_at.isoformat()}:"
+            f"{_sha256_text(normalized_text)}"
+        )
+    )
     return uuid5(_PERCEPT_NAMESPACE, seed)
 
 
@@ -306,7 +320,13 @@ def normalize_percept(
         raise ValueError("percept observation must not be empty")
     normalized_text = raw_text.strip()
     return Percept(
-        percept_id=deterministic_percept_id(source_event_id, correlation_id, effective_source),
+        percept_id=deterministic_percept_id(
+            source_event_id,
+            correlation_id,
+            effective_source,
+            observed_at=observed_at,
+            normalized_text=normalized_text,
+        ),
         source=effective_source,
         observed_at=observed_at,
         source_event_id=source_event_id,

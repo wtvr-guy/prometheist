@@ -362,16 +362,15 @@ class UserPromptLLM(PerceptLLM):
             update={"memory_packet": _cognitive_memory_packet(package.memory_packet)},
             deep=True,
         )
-        prior_personality = os.environ.get("PROMETHEIST_PERSONALITY_PROMPT")
-        if prior_personality is None or not prior_personality.strip():
-            os.environ["PROMETHEIST_PERSONALITY_PROMPT"] = _INTERACTIVE_PERSONALITY_PROMPT
-        try:
-            return super().generate_final_response(percept, visible_package, work_results)
-        finally:
-            if prior_personality is None:
-                os.environ.pop("PROMETHEIST_PERSONALITY_PROMPT", None)
-            else:
-                os.environ["PROMETHEIST_PERSONALITY_PROMPT"] = prior_personality
+        personality_prompt = os.environ.get("PROMETHEIST_PERSONALITY_PROMPT", "").strip()
+        if not personality_prompt:
+            personality_prompt = _INTERACTIVE_PERSONALITY_PROMPT
+        return super().generate_final_response(
+            percept,
+            visible_package,
+            work_results,
+            personality_prompt=personality_prompt,
+        )
 
 
 def _ensure_percept_artifact(interaction) -> None:

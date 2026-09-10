@@ -305,8 +305,12 @@ class PerceptLLM(OllamaClient):
         percept: str,
         package: ResponseMemoryPackage,
         work_results: tuple[dict[str, Any], ...],
+        *,
+        personality_prompt: str | None = None,
     ) -> str:
-        personality = os.environ.get("PROMETHEIST_PERSONALITY_PROMPT", "").strip()
+        personality = personality_prompt
+        if personality is None or not personality.strip():
+            personality = os.environ.get("PROMETHEIST_PERSONALITY_PROMPT", "").strip()
         if not personality:
             personality = DEFAULT_PERSONALITY_PROMPT.strip()
         packet = package.memory_packet
