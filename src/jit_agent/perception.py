@@ -221,13 +221,16 @@ def _stable_json(value: Any) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str)
 
 
-def _observation_text(value: Any) -> tuple[str, PerceptModality]:
-    if isinstance(value, str):
-        normalized = value.replace("\r\n", "\n").replace("\r", "\n").strip()
-        return normalized, PerceptModality.TEXT
-    if isinstance(value, (int, float, bool)) or value is None:
-        return str(value), PerceptModality.METRIC
-    return _stable_json(value), PerceptModality.STRUCTURED
+def _observation_text(value: Any, modality: PerceptModality) -> str:
+    if modality is PerceptModality.TEXT:
+        if not isinstance(value, str):
+            raise ValueError("text percepts require a string observation")
+        return value.replace("\r\n", "\n").replace("\r", "\n").strip()
+    if modality is PerceptModality.METRIC:
+        if not isinstance(value, (int, float, bool)) and value is not None:
+            raise ValueError("metric percepts require a scalar numeric/boolean observation")
+        return str(value)
+    return _stable_json(value)
 
 
 def _sha256_text(value: str) -> str:
@@ -312,14 +315,9 @@ def normalize_percept(
     conversation_id: UUID | None = None,
     response_required: bool = False,
 ) -> Percept:
-    raw_text, modality = _observation_text(observation)
+    raw_text = _observation_text(observation, source.modality)
     if not raw_text.strip():
         raise ValueError("percept observation must not be empty")
-    if source.modality is not modality:
-        raise ValueError(
-            "source modality does not match observation payload; "
-            f"expected {source.modality.value}, observed {modality.value}"
-        )
     normalized_text = raw_text.strip()
     return Percept(
         percept_id=deterministic_percept_id(

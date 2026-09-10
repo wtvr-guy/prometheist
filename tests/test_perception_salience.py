@@ -82,6 +82,23 @@ def test_normalize_percept_rejects_modality_mismatch() -> None:
         )
 
 
+def test_structured_scalar_boolean_payload_is_allowed() -> None:
+    percept = normalize_percept(
+        source=PerceptSource(
+            source_id="sensor:flag",
+            kind=PerceptKind.EXTERNAL_OBSERVATION,
+            modality=PerceptModality.STRUCTURED,
+            interface="webhook",
+        ),
+        observation=True,
+        observed_at=NOW,
+        correlation_id=uuid.uuid4(),
+    )
+
+    assert percept.normalized_text == "true"
+    assert percept.features.contains_structured_payload is True
+
+
 def test_user_percept_builds_bounded_input_buffer() -> None:
     conversation_id = uuid.uuid4()
     correlation_id = uuid.uuid4()
