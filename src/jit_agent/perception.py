@@ -390,8 +390,7 @@ def evaluate_salience(
     novelty_score = min(
         3,
         novelty_score
-        + int(percept.features.contains_url)
-        + int(percept.features.contains_structured_payload),
+        + int(percept.features.contains_url),
     )
     anomaly_score = min(
         3,

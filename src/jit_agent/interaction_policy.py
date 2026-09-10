@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from jit_agent.perception import Percept, SalienceAssessment
 
 
-INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v9"
+INTERACTION_PROTOCOL_VERSION = "v0.8-interaction-v10"
 CONTINUITY_POLICY_VERSION = "ATTENTION_APERTURE_V1"
 INTERACTION_CAPABILITIES = (
     "interaction.resolve_references",
