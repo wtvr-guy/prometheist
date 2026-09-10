@@ -220,7 +220,17 @@ class SalienceAssessment(BaseModel):
 
 
 def _stable_json(value: Any) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str)
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def _is_json_compatible(value: Any) -> bool:
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return True
+    if isinstance(value, (list, tuple)):
+        return all(_is_json_compatible(item) for item in value)
+    if isinstance(value, dict):
+        return all(isinstance(key, str) and _is_json_compatible(item) for key, item in value.items())
+    return False
 
 
 def _observation_text(value: Any, modality: PerceptModality) -> str:
@@ -234,6 +244,8 @@ def _observation_text(value: Any, modality: PerceptModality) -> str:
         return _stable_json(value)
     if isinstance(value, str):
         raise ValueError("structured percepts require a non-text structured payload")
+    if not _is_json_compatible(value):
+        raise ValueError("structured percepts require a JSON-compatible payload")
     return _stable_json(value)
 
 

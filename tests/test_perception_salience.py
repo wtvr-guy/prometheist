@@ -221,6 +221,16 @@ def test_scheduled_percept_rejects_raw_text_payload() -> None:
         )
 
 
+def test_structured_percept_rejects_non_json_payload() -> None:
+    with pytest.raises(ValueError):
+        normalize_scheduled_percept(
+            source_id="scheduler:daily-summary",
+            observation={"when": NOW},
+            observed_at=NOW,
+            correlation_id=uuid.uuid4(),
+        )
+
+
 def test_anomaly_alert_is_a_first_class_non_user_percept() -> None:
     percept = normalize_anomaly_percept(
         source_id="integrity:watchdog",
