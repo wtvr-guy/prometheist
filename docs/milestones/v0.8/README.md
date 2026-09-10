@@ -16,7 +16,7 @@ v0.8 remains a **one-mechanism** experiment. It does **not** silently combine pe
 
 The baseline implemented here is:
 
-1. immutable normalized `Percept` contracts for user interaction and heterogeneous structured observations;
+1. immutable normalized `Percept` contracts for user interaction, scheduled events, anomaly alerts, and heterogeneous structured observations;
 2. deterministic bounded intake buffers and structural feature extraction;
 3. immutable `SalienceAssessment` records with closed `REFLEX` / `ORIENT` / `DELIBERATE` / `IGNORE` dispositions;
 4. deterministic anomaly/threat/opportunity/goal/novelty/uncertainty/system-integrity signals;
@@ -26,6 +26,8 @@ The baseline implemented here is:
 ## Current implementation notes
 
 The raw user prompt still enters canonical history exactly as a `USER_PROMPT` event. v0.8 then derives a normalized `Percept` and `SalienceAssessment` from that canonical input and persists those structures with the durable interaction record and the immutable artifact journal.
+
+User prompts are therefore only **one** percept class, not the architectural center of Prometheist. The v0.8 contract space also treats scheduled internal triggers, anomaly detections, and other non-conversational observations as first-class percepts with their own deterministic response policies and salience outcomes, even though the current live worker pipeline is only fully wired for the explicit user-response path.
 
 This keeps the evidence boundary explicit:
 

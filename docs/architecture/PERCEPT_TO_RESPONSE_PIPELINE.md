@@ -11,6 +11,8 @@ It should be read consistently with `CONSTITUTION.md`, `COGNITIVE_ARCHITECTURE.m
 
 Prometheist distinguishes **explicit user prompts** from other percepts.
 
+An explicit user prompt is only one percept class. Prometheist is not architecturally defined as a chatbot whose only true inputs are user messages. Scheduled/internal triggers, anomaly detections, sensor observations, background state changes, and other non-conversational inputs are also percepts and should enter the same broad perception/salience architecture under their own deterministic intake contracts.
+
 An explicit user prompt always requires a user-facing response. That requirement is established deterministically by the interaction boundary itself; no LLM decides whether the user deserves an answer.
 
 Other percept classes may legitimately require no response. Examples include sensor observations, background state changes, scheduled internal work, or other non-conversational inputs. Their response policy belongs to their deterministic intake contract, not to the final responder.
@@ -244,6 +246,8 @@ Examples include internal state maintenance, sensor observations, scheduled/back
 The key rule is that silence is determined by the **input class and deterministic policy**, not by asking a small LLM whether a direct user deserves an answer.
 
 Future non-user percept pipelines may share portions of the same pre-cognitive, capability, memory, and Attention infrastructure while carrying a different deterministic response policy.
+
+The current user-prompt path should therefore be read as a specific fully wired percept subtype, not as the definition of perception itself.
 
 ## 12. LLM-worker accounting
 

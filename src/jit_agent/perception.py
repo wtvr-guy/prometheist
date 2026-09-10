@@ -73,6 +73,8 @@ _NOVELTY_TERMS = (
 
 class PerceptKind(str, Enum):
     USER_INTERACTION = "USER_INTERACTION"
+    SCHEDULED_EVENT = "SCHEDULED_EVENT"
+    ANOMALY_ALERT = "ANOMALY_ALERT"
     EXTERNAL_OBSERVATION = "EXTERNAL_OBSERVATION"
     SYSTEM_OBSERVATION = "SYSTEM_OBSERVATION"
 
@@ -361,6 +363,52 @@ def normalize_user_interaction_percept(
         conversation_id=conversation_id,
         correlation_id=correlation_id,
         response_required=True,
+    )
+
+
+def normalize_scheduled_percept(
+    *,
+    source_id: str,
+    observation: Any,
+    observed_at: datetime,
+    correlation_id: UUID,
+    source_event_id: UUID | None = None,
+) -> Percept:
+    return normalize_percept(
+        source=PerceptSource(
+            source_id=source_id,
+            kind=PerceptKind.SCHEDULED_EVENT,
+            modality=PerceptModality.STRUCTURED,
+            interface="scheduler",
+        ),
+        observation=observation,
+        observed_at=observed_at,
+        source_event_id=source_event_id,
+        correlation_id=correlation_id,
+        response_required=False,
+    )
+
+
+def normalize_anomaly_percept(
+    *,
+    source_id: str,
+    observation: Any,
+    observed_at: datetime,
+    correlation_id: UUID,
+    source_event_id: UUID | None = None,
+) -> Percept:
+    return normalize_percept(
+        source=PerceptSource(
+            source_id=source_id,
+            kind=PerceptKind.ANOMALY_ALERT,
+            modality=PerceptModality.STRUCTURED,
+            interface="anomaly-detector",
+        ),
+        observation=observation,
+        observed_at=observed_at,
+        source_event_id=source_event_id,
+        correlation_id=correlation_id,
+        response_required=False,
     )
 
 

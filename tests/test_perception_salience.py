@@ -15,7 +15,9 @@ from jit_agent.perception import (
     PerceptSource,
     SalienceDisposition,
     evaluate_salience,
+    normalize_anomaly_percept,
     normalize_percept,
+    normalize_scheduled_percept,
     normalize_user_interaction_percept,
 )
 from jit_agent.percept_response_runtime import begin_percept
@@ -113,6 +115,39 @@ def test_metric_scalar_uses_stable_json_normalization() -> None:
     )
 
     assert percept.normalized_text == "1.5"
+
+
+def test_scheduled_event_is_a_first_class_non_user_percept() -> None:
+    percept = normalize_scheduled_percept(
+        source_id="scheduler:daily-summary",
+        observation={"kind": "scheduled-review", "window": "daily"},
+        observed_at=NOW,
+        correlation_id=uuid.uuid4(),
+    )
+
+    assessment = evaluate_salience(percept)
+
+    assert percept.source.kind is PerceptKind.SCHEDULED_EVENT
+    assert percept.response_required is False
+    assert assessment.disposition is SalienceDisposition.IGNORE
+
+
+def test_anomaly_alert_is_a_first_class_non_user_percept() -> None:
+    percept = normalize_anomaly_percept(
+        source_id="integrity:watchdog",
+        observation={"status": "error", "detail": "crash", "severity": "urgent"},
+        observed_at=NOW,
+        correlation_id=uuid.uuid4(),
+    )
+
+    assessment = evaluate_salience(percept)
+
+    assert percept.source.kind is PerceptKind.ANOMALY_ALERT
+    assert percept.response_required is False
+    assert assessment.disposition in {
+        SalienceDisposition.ORIENT,
+        SalienceDisposition.REFLEX,
+    }
 
 
 def test_user_percept_builds_bounded_input_buffer() -> None:
