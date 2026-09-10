@@ -99,6 +99,22 @@ def test_structured_scalar_boolean_payload_is_allowed() -> None:
     assert percept.features.contains_structured_payload is True
 
 
+def test_metric_scalar_uses_stable_json_normalization() -> None:
+    percept = normalize_percept(
+        source=PerceptSource(
+            source_id="sensor:temperature",
+            kind=PerceptKind.EXTERNAL_OBSERVATION,
+            modality=PerceptModality.METRIC,
+            interface="telemetry",
+        ),
+        observation=1.5,
+        observed_at=NOW,
+        correlation_id=uuid.uuid4(),
+    )
+
+    assert percept.normalized_text == "1.5"
+
+
 def test_user_percept_builds_bounded_input_buffer() -> None:
     conversation_id = uuid.uuid4()
     correlation_id = uuid.uuid4()

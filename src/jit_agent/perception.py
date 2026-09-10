@@ -229,7 +229,7 @@ def _observation_text(value: Any, modality: PerceptModality) -> str:
     if modality is PerceptModality.METRIC:
         if not isinstance(value, (int, float, bool)) and value is not None:
             raise ValueError("metric percepts require a scalar numeric/boolean observation")
-        return str(value)
+        return _stable_json(value)
     return _stable_json(value)
 
 
@@ -274,7 +274,7 @@ def _feature_flags(text: str, modality: PerceptModality) -> PerceptFeatures:
     stripped = text.strip()
     return PerceptFeatures(
         normalized_characters=len(text),
-        token_count=len(re.findall(r"\S+", text)),
+        token_count=sum(1 for _ in re.finditer(r"\S+", text)),
         line_count=(text.count("\n") + 1) if text else 0,
         contains_question="?" in text,
         contains_url=("://" in text) or ("www." in text.casefold()),
@@ -431,15 +431,19 @@ def evaluate_salience(
         if disposition is SalienceDisposition.REFLEX
         else ()
     )
+    matched_terms = (
+        *threat_terms,
+        *opportunity_terms,
+        *goal_terms,
+        *uncertainty_terms,
+        *integrity_terms,
+        *novelty_terms,
+    )
     return SalienceAssessment(
         percept_id=percept.percept_id,
         disposition=disposition,
         signals=signals,
-        trigger_terms=tuple(
-            dict.fromkeys(
-                (*threat_terms, *opportunity_terms, *goal_terms, *uncertainty_terms, *integrity_terms, *novelty_terms)
-            )
-        ),
+        trigger_terms=tuple(dict.fromkeys(matched_terms)),
         preauthorized_reflexes=preauthorized_reflexes,
         advisory_classification=advisory_classification,
     )
