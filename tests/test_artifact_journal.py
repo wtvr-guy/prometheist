@@ -69,6 +69,8 @@ def test_interaction_artifacts_are_hash_linked_idempotent_and_complete(tmp_path,
     assert verification["complete"] is True
     assert verification["artifact_count"] == 3
     assert percept["previous_artifact_id"] is None
+    assert percept["payload"]["percept_kind"] == "USER_PROMPT"
+    assert percept["payload"]["response_required"] is True
 
 
 def test_llm_invocation_artifact_preserves_exact_stateless_contract(tmp_path, monkeypatch) -> None:

@@ -19,12 +19,25 @@ from jit_agent.admission_diagnostics import (
 )
 from jit_agent.attention_store import load_scheduler
 from jit_agent.chat_startup import reset_chat_execution_state
-from jit_agent.percept_response_runtime import handle_percept_in_worker_processes
+from jit_agent.interaction_policy import UserPromptPercept
+from jit_agent.percept_response_runtime import handle_user_prompt_percept_in_worker_processes
 from jit_agent.worker_runtime import WorkerLaunchDenied
 
 # Compatibility symbol retained so existing diagnostic tests and downstream callers
-# patch the authoritative v2 path rather than importing the superseded runtime.
-handle_interaction_in_worker_processes = handle_percept_in_worker_processes
+# patch the authoritative explicit user-prompt percept path rather than importing
+# the superseded runtime.
+def handle_interaction_in_worker_processes(
+    conn,
+    user_text: str,
+    conversation_id: uuid.UUID,
+) -> str | None:
+    return handle_user_prompt_percept_in_worker_processes(
+        conn,
+        UserPromptPercept(
+            conversation_id=conversation_id,
+            payload_text=user_text,
+        ),
+    )
 
 _INTERACTION_ADMISSION_FAILURE = "interaction was not safely admitted to one assignment"
 _EXIT_COMMANDS = {"exit", "quit", "/exit", "/quit"}

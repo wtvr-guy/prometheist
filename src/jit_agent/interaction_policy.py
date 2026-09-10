@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Any
+from typing import Literal
 from uuid import UUID, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -28,6 +29,36 @@ class InteractionAction(str, Enum):
 
     RESPOND = "RESPOND"
     USE_CAPABILITIES = "USE_CAPABILITIES"
+
+
+class PerceptKind(str, Enum):
+    """Closed intake classes for deterministic percept handling."""
+
+    USER_PROMPT = "USER_PROMPT"
+    SENSOR_OBSERVATION = "SENSOR_OBSERVATION"
+    BACKGROUND_STATE_CHANGE = "BACKGROUND_STATE_CHANGE"
+    SCHEDULED_EVENT = "SCHEDULED_EVENT"
+
+
+class Percept(BaseModel):
+    """Broader intake contract shared by user and non-user percepts."""
+
+    model_config = ConfigDict(extra="forbid")
+    kind: PerceptKind
+    payload_text: str = Field(min_length=1)
+    response_required: bool
+
+
+class UserPromptPercept(Percept):
+    """Concrete live percept contract for explicit user prompts."""
+
+    kind: Literal[PerceptKind.USER_PROMPT] = PerceptKind.USER_PROMPT
+    response_required: Literal[True] = True
+    conversation_id: UUID
+
+    @property
+    def user_text(self) -> str:
+        return self.payload_text
 
 
 class InteractionDecision(BaseModel):
@@ -154,6 +185,12 @@ class DurableInteraction(BaseModel):
     task_id: UUID
     assignment_id: UUID
     user_text: str = Field(min_length=1)
+
+    def as_user_prompt_percept(self) -> UserPromptPercept:
+        return UserPromptPercept(
+            conversation_id=self.conversation_id,
+            payload_text=self.user_text,
+        )
 
 
 def requires_persisted_context(user_text: str) -> bool:

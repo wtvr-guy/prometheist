@@ -143,6 +143,8 @@ Other percepts may come from sensors, background maintenance, internal system st
 
 A percept therefore does **not** automatically imply a user-facing response. Whether a response is required is part of the deterministic intake policy for that percept class.
 
+The current live worker/runtime implementation is intentionally narrower: its authoritative entrypoints are `UserPromptPercept`-specific, and compatibility wrappers remain only so the existing user-prompt path stays restart-safe while non-user percept paths are added separately.
+
 ## Persistence model
 
 Prometheist distinguishes:

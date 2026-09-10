@@ -1,9 +1,12 @@
 """Live percept-to-response runtime for the 2026-08-29 Prometheist architecture.
 
-This is the authoritative interactive path. Every LLM call is stateless. The
-pre-cognitive role commits work/response disposition, the v2 Composer only judges
-persistent-memory sufficiency, deterministic Adaptive Recall owns retrieval, and
-the final responder receives memory plus authoritative work results directly.
+The broader Percept contract can represent both user and non-user percepts with
+different deterministic response policies. The currently wired worker path in
+this module is the explicit user-prompt percept path. Every LLM call is
+stateless. The pre-cognitive role commits work/response disposition, the v2
+Composer only judges persistent-memory sufficiency, deterministic Adaptive
+Recall owns retrieval, and the final responder receives memory plus
+authoritative work results directly.
 """
 from __future__ import annotations
 
@@ -51,6 +54,8 @@ from jit_agent.capability_registry import (
 from jit_agent.capability_runtime import CapabilityExecution, execute_registered_capability
 from jit_agent.interaction_policy import (
     DurableInteraction,
+    PerceptKind,
+    UserPromptPercept,
     deterministic_capability_memory_request_id,
     deterministic_interaction_event_id,
     deterministic_interaction_id,
@@ -105,7 +110,7 @@ internal retrieval mechanics unless the user asks about them.
 """
 
 
-class PerceptStage(str, Enum):
+class UserPromptPerceptStage(str, Enum):
     RESOLVE_REFERENCES = "V2_RESOLVE_REFERENCES"
     PRECOGNITIVE = "V2_PRECOGNITIVE"
     EXECUTE_WORK = "V2_EXECUTE_WORK"
@@ -116,17 +121,20 @@ class PerceptStage(str, Enum):
     @property
     def capability(self) -> str:
         return {
-            PerceptStage.RESOLVE_REFERENCES: "interaction.resolve_references",
-            PerceptStage.PRECOGNITIVE: "interaction.precognitive_disposition",
-            PerceptStage.EXECUTE_WORK: "capability.execute",
-            PerceptStage.COMPOSE_MEMORY: "interaction.compose_memory",
-            PerceptStage.RESPOND: "interaction.respond",
-            PerceptStage.PERSIST_RESULT: "interaction.persist_result",
+            UserPromptPerceptStage.RESOLVE_REFERENCES: "interaction.resolve_references",
+            UserPromptPerceptStage.PRECOGNITIVE: "interaction.precognitive_disposition",
+            UserPromptPerceptStage.EXECUTE_WORK: "capability.execute",
+            UserPromptPerceptStage.COMPOSE_MEMORY: "interaction.compose_memory",
+            UserPromptPerceptStage.RESPOND: "interaction.respond",
+            UserPromptPerceptStage.PERSIST_RESULT: "interaction.persist_result",
         }[self]
 
 
-PERCEPT_STAGES = tuple(PerceptStage)
-PERCEPT_CAPABILITIES = tuple(stage.capability for stage in PERCEPT_STAGES)
+PerceptStage = UserPromptPerceptStage
+USER_PROMPT_PERCEPT_STAGES = tuple(UserPromptPerceptStage)
+PERCEPT_STAGES = USER_PROMPT_PERCEPT_STAGES
+USER_PROMPT_PERCEPT_CAPABILITIES = tuple(stage.capability for stage in USER_PROMPT_PERCEPT_STAGES)
+PERCEPT_CAPABILITIES = USER_PROMPT_PERCEPT_CAPABILITIES
 
 
 class PreCognitiveDisposition(BaseModel):
@@ -223,7 +231,12 @@ resulting uncertainty when material.
 
 
 class PerceptLLM(OllamaClient):
-    """Independent stateless Ollama requests for the three semantic LLM roles."""
+    """Independent stateless Ollama requests for response-eligible percept roles.
+
+    The live worker path subclasses this base for explicit user prompts. Other
+    percept classes may reuse the broader contract while supplying different
+    deterministic intake and response policies.
+    """
 
     def decide_disposition(
         self,
@@ -495,10 +508,9 @@ def _compose_memory_package(
     )
 
 
-def begin_percept(
+def begin_user_prompt_percept(
     conn: psycopg.Connection,
-    user_text: str,
-    conversation_id: UUID,
+    percept: UserPromptPercept,
     *,
     correlation_id: UUID | None = None,
     probe: HostResourceProbe | None = None,
@@ -507,7 +519,13 @@ def begin_percept(
     clock: Callable[[], datetime] | None = None,
     scheduler_key: str = DEFAULT_SCHEDULER_KEY,
 ) -> DurableInteraction:
-    normalized = user_text.strip()
+    """Persist and schedule the explicit user-prompt percept path.
+
+    Non-user percepts need their own intake functions so response policy is not
+    conflated with the user-prompt contract.
+    """
+
+    normalized = percept.user_text.strip()
     if not normalized:
         raise ValueError("user_text must not be empty")
     effective_policy = policy or native_resource_safety_policy()
@@ -521,12 +539,12 @@ def begin_percept(
         if ollama_runtime_state is not None
         else "unobserved-cold-fallback"
     )
-    event_store.start_conversation(conn, conversation_id)
+    event_store.start_conversation(conn, percept.conversation_id)
     correlation = correlation_id or uuid4()
-    interaction_id = deterministic_interaction_id(conversation_id, correlation)
+    interaction_id = deterministic_interaction_id(percept.conversation_id, correlation)
     prompt = event_store.record_event(
         conn,
-        conversation_id=conversation_id,
+        conversation_id=percept.conversation_id,
         correlation_id=correlation,
         event_type=EventType.USER_PROMPT,
         source="user",
@@ -575,7 +593,7 @@ def begin_percept(
         raise RuntimeError("interaction was not safely admitted to one assignment")
     interaction = DurableInteraction(
         interaction_id=interaction_id,
-        conversation_id=conversation_id,
+        conversation_id=percept.conversation_id,
         correlation_id=correlation,
         user_prompt_event_id=prompt.event_id,
         before_global_seq=prompt.global_seq,
@@ -584,20 +602,49 @@ def begin_percept(
         user_text=normalized,
     )
     save_interaction(conn, interaction, scheduler_key=scheduler_key)
-    _ensure_steps(conn, interaction, scheduler_key=scheduler_key)
+    _ensure_user_prompt_steps(conn, interaction, scheduler_key=scheduler_key)
     return interaction
 
 
-def _ensure_steps(
+def begin_percept(
+    conn: psycopg.Connection,
+    user_text: str,
+    conversation_id: UUID,
+    *,
+    correlation_id: UUID | None = None,
+    probe: HostResourceProbe | None = None,
+    policy: ResourceSafetyPolicy | None = None,
+    ollama_runtime_state: OllamaRuntimeState | None = None,
+    clock: Callable[[], datetime] | None = None,
+    scheduler_key: str = DEFAULT_SCHEDULER_KEY,
+) -> DurableInteraction:
+    """Compatibility wrapper for the live explicit user-prompt percept path."""
+
+    return begin_user_prompt_percept(
+        conn,
+        UserPromptPercept(
+            conversation_id=conversation_id,
+            payload_text=user_text,
+        ),
+        correlation_id=correlation_id,
+        probe=probe,
+        policy=policy,
+        ollama_runtime_state=ollama_runtime_state,
+        clock=clock,
+        scheduler_key=scheduler_key,
+    )
+
+
+def _ensure_user_prompt_steps(
     conn: psycopg.Connection,
     interaction: DurableInteraction,
     *,
     scheduler_key: str,
 ) -> None:
-    for stage in PERCEPT_STAGES:
+    for stage in USER_PROMPT_PERCEPT_STAGES:
         effect_policy = (
             WorkerEffectPolicy.IDEMPOTENT_WITH_KEY
-            if stage in {PerceptStage.EXECUTE_WORK, PerceptStage.PERSIST_RESULT}
+            if stage in {UserPromptPerceptStage.EXECUTE_WORK, UserPromptPerceptStage.PERSIST_RESULT}
             else WorkerEffectPolicy.NO_EXTERNAL_EFFECT
         )
         register_worker_step(
@@ -611,10 +658,13 @@ def _ensure_steps(
         )
 
 
+_ensure_steps = _ensure_user_prompt_steps
+
+
 def _stage_result(
     conn: psycopg.Connection,
     interaction: DurableInteraction,
-    stage: PerceptStage,
+    stage: UserPromptPerceptStage,
     scheduler_key: str,
 ) -> dict[str, Any]:
     step_id = deterministic_worker_step_id(interaction.assignment_id, stage.value)
@@ -639,7 +689,7 @@ def _structured_execution(execution: CapabilityExecution) -> dict[str, Any]:
     }
 
 
-def _execute_stage(
+def _execute_user_prompt_stage(
     conn: psycopg.Connection,
     llm: PerceptLLM,
     envelope: WorkerClaimEnvelope,
@@ -648,15 +698,15 @@ def _execute_stage(
     scheduler_key: str,
     registry: CapabilityRegistry,
 ) -> tuple[dict[str, Any], list[str]]:
-    stage = PerceptStage(envelope.step.step_key)
+    stage = UserPromptPerceptStage(envelope.step.step_key)
 
-    if stage is PerceptStage.RESOLVE_REFERENCES:
+    if stage is UserPromptPerceptStage.RESOLVE_REFERENCES:
         return {
             "working_state_available": load_working_state(conn, interaction.conversation_id)
             is not None
         }, []
 
-    if stage is PerceptStage.PRECOGNITIVE:
+    if stage is UserPromptPerceptStage.PRECOGNITIVE:
         aperture_packet = open_attention_aperture(
             conn,
             conversation_id=interaction.conversation_id,
@@ -676,8 +726,13 @@ def _execute_stage(
             "execution_plan": plan.model_dump(mode="json"),
         }, [f"memory-request:{aperture_packet.memory_request_id}"]
 
-    if stage is PerceptStage.EXECUTE_WORK:
-        precognitive = _stage_result(conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key)
+    if stage is UserPromptPerceptStage.EXECUTE_WORK:
+        precognitive = _stage_result(
+            conn,
+            interaction,
+            UserPromptPerceptStage.PRECOGNITIVE,
+            scheduler_key,
+        )
         plan = CapabilityExecutionPlan.model_validate(precognitive["execution_plan"])
         executions: list[CapabilityExecution] = []
         for position, item in enumerate(plan.items):
@@ -711,8 +766,13 @@ def _execute_stage(
             "work_results": [_structured_execution(item) for item in executions],
         }, []
 
-    if stage is PerceptStage.COMPOSE_MEMORY:
-        precognitive = _stage_result(conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key)
+    if stage is UserPromptPerceptStage.COMPOSE_MEMORY:
+        precognitive = _stage_result(
+            conn,
+            interaction,
+            UserPromptPerceptStage.PRECOGNITIVE,
+            scheduler_key,
+        )
         disposition = PreCognitiveDisposition.model_validate(precognitive["disposition"])
         if not disposition.response_required:
             return {"skipped": True, "reason": "response_not_required"}, []
@@ -722,14 +782,29 @@ def _execute_stage(
             f"memory-request:{package.memory_packet.memory_request_id}"
         ]
 
-    if stage is PerceptStage.RESPOND:
-        precognitive = _stage_result(conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key)
+    if stage is UserPromptPerceptStage.RESPOND:
+        precognitive = _stage_result(
+            conn,
+            interaction,
+            UserPromptPerceptStage.PRECOGNITIVE,
+            scheduler_key,
+        )
         disposition = PreCognitiveDisposition.model_validate(precognitive["disposition"])
         if not disposition.response_required:
             return {"response_required": False, "response_text": None, "skipped": True}, []
-        compose = _stage_result(conn, interaction, PerceptStage.COMPOSE_MEMORY, scheduler_key)
+        compose = _stage_result(
+            conn,
+            interaction,
+            UserPromptPerceptStage.COMPOSE_MEMORY,
+            scheduler_key,
+        )
         package = ResponseMemoryPackage.model_validate(compose["memory_package"])
-        work = _stage_result(conn, interaction, PerceptStage.EXECUTE_WORK, scheduler_key)
+        work = _stage_result(
+            conn,
+            interaction,
+            UserPromptPerceptStage.EXECUTE_WORK,
+            scheduler_key,
+        )
         response_text = llm.generate_final_response(
             interaction.user_text,
             package,
@@ -737,7 +812,7 @@ def _execute_stage(
         )
         return {"response_required": True, "response_text": response_text, "skipped": False}, []
 
-    response = _stage_result(conn, interaction, PerceptStage.RESPOND, scheduler_key)
+    response = _stage_result(conn, interaction, UserPromptPerceptStage.RESPOND, scheduler_key)
     response_required = bool(response["response_required"])
     response_text = response.get("response_text")
     output_refs: list[str] = []
@@ -774,7 +849,10 @@ def _execute_stage(
     }, output_refs
 
 
-def execute_claimed_percept_step(
+_execute_stage = _execute_user_prompt_stage
+
+
+def execute_claimed_user_prompt_percept_step(
     conn: psycopg.Connection,
     llm: PerceptLLM,
     *,
@@ -783,7 +861,7 @@ def execute_claimed_percept_step(
     clock: Callable[[], datetime] | None = None,
     scheduler_key: str = DEFAULT_SCHEDULER_KEY,
     registry: CapabilityRegistry = DEFAULT_REGISTRY,
-) -> PerceptStage:
+) -> UserPromptPerceptStage:
     envelope = load_worker_claim_envelope(
         conn,
         claim_id,
@@ -792,9 +870,9 @@ def execute_claimed_percept_step(
         scheduler_key=scheduler_key,
     )
     interaction = load_interaction_by_task(conn, envelope.step.task_id, scheduler_key=scheduler_key)
-    stage = PerceptStage(envelope.step.step_key)
+    stage = UserPromptPerceptStage(envelope.step.step_key)
     try:
-        output, output_refs = _execute_stage(
+        output, output_refs = _execute_user_prompt_stage(
             conn,
             llm,
             envelope,
@@ -836,7 +914,30 @@ def execute_claimed_percept_step(
         raise
 
 
-def finish_percept(
+def execute_claimed_percept_step(
+    conn: psycopg.Connection,
+    llm: PerceptLLM,
+    *,
+    claim_id: UUID,
+    worker_id: str,
+    clock: Callable[[], datetime] | None = None,
+    scheduler_key: str = DEFAULT_SCHEDULER_KEY,
+    registry: CapabilityRegistry = DEFAULT_REGISTRY,
+) -> UserPromptPerceptStage:
+    """Compatibility wrapper for the live explicit user-prompt percept path."""
+
+    return execute_claimed_user_prompt_percept_step(
+        conn,
+        llm,
+        claim_id=claim_id,
+        worker_id=worker_id,
+        clock=clock,
+        scheduler_key=scheduler_key,
+        registry=registry,
+    )
+
+
+def finish_user_prompt_percept(
     conn: psycopg.Connection,
     interaction: DurableInteraction,
     *,
@@ -845,7 +946,12 @@ def finish_percept(
     clock: Callable[[], datetime] | None = None,
     scheduler_key: str = DEFAULT_SCHEDULER_KEY,
 ) -> str | None:
-    persisted = _stage_result(conn, interaction, PerceptStage.PERSIST_RESULT, scheduler_key)
+    persisted = _stage_result(
+        conn,
+        interaction,
+        UserPromptPerceptStage.PERSIST_RESULT,
+        scheduler_key,
+    )
     response_text = persisted.get("response_text")
     scheduler = load_scheduler(conn, scheduler_key=scheduler_key)
     if scheduler.tasks[interaction.task_id].status.value != "COMPLETED":
@@ -874,10 +980,30 @@ def finish_percept(
     return str(response_text) if response_text is not None else None
 
 
-def handle_percept_in_worker_processes(
+def finish_percept(
     conn: psycopg.Connection,
-    user_text: str,
-    conversation_id: UUID,
+    interaction: DurableInteraction,
+    *,
+    probe: HostResourceProbe | None = None,
+    policy: ResourceSafetyPolicy | None = None,
+    clock: Callable[[], datetime] | None = None,
+    scheduler_key: str = DEFAULT_SCHEDULER_KEY,
+) -> str | None:
+    """Compatibility wrapper for the live explicit user-prompt percept path."""
+
+    return finish_user_prompt_percept(
+        conn,
+        interaction,
+        probe=probe,
+        policy=policy,
+        clock=clock,
+        scheduler_key=scheduler_key,
+    )
+
+
+def handle_user_prompt_percept_in_worker_processes(
+    conn: psycopg.Connection,
+    percept: UserPromptPercept,
     *,
     probe: HostResourceProbe | None = None,
     policy: ResourceSafetyPolicy | None = None,
@@ -886,7 +1012,7 @@ def handle_percept_in_worker_processes(
     worker_lease_seconds: int | None = None,
     worker_timeout_seconds: int | None = None,
 ) -> str | None:
-    """Run every architectural stage in a separately guarded fresh process."""
+    """Run the explicit user-prompt percept path in guarded fresh processes."""
 
     effective_lease = worker_lease_seconds or int(
         os.environ.get("PROMETHEIST_WORKER_LEASE_SECONDS", "600")
@@ -900,10 +1026,11 @@ def handle_percept_in_worker_processes(
     runtime_probe = ollama_runtime_probe or OllamaRuntimeProbe()
     admission_runtime_state = runtime_probe.capture()
     scheduled_memory_mib = admission_runtime_state.incremental_process_memory_mib(effective_policy)
-    interaction = begin_percept(
+    if percept.kind is not PerceptKind.USER_PROMPT or percept.response_required is not True:
+        raise ValueError("live worker path only accepts explicit user-prompt percepts")
+    interaction = begin_user_prompt_percept(
         conn,
-        user_text,
-        conversation_id,
+        percept,
         probe=physical_probe,
         policy=effective_policy,
         ollama_runtime_state=admission_runtime_state,
@@ -921,7 +1048,7 @@ def handle_percept_in_worker_processes(
         policy=effective_policy,
         scheduler_key=scheduler_key,
     )
-    for stage in PERCEPT_STAGES:
+    for stage in USER_PROMPT_PERCEPT_STAGES:
         step_id = deterministic_worker_step_id(interaction.assignment_id, stage.value)
         worker_id = f"percept-v2-{interaction.interaction_id}-{stage.value.casefold()}"
         launched = launcher.launch(
@@ -940,10 +1067,39 @@ def handle_percept_in_worker_processes(
             raise RuntimeError(
                 f"percept worker failed at stage {stage.value} with exit code {return_code}"
             )
-    return finish_percept(
+    return finish_user_prompt_percept(
         conn,
         interaction,
         probe=physical_probe,
         policy=effective_policy,
         scheduler_key=scheduler_key,
+    )
+
+
+def handle_percept_in_worker_processes(
+    conn: psycopg.Connection,
+    user_text: str,
+    conversation_id: UUID,
+    *,
+    probe: HostResourceProbe | None = None,
+    policy: ResourceSafetyPolicy | None = None,
+    ollama_runtime_probe: OllamaRuntimeProbe | None = None,
+    scheduler_key: str = DEFAULT_SCHEDULER_KEY,
+    worker_lease_seconds: int | None = None,
+    worker_timeout_seconds: int | None = None,
+) -> str | None:
+    """Compatibility wrapper for the live explicit user-prompt percept path."""
+
+    return handle_user_prompt_percept_in_worker_processes(
+        conn,
+        UserPromptPercept(
+            conversation_id=conversation_id,
+            payload_text=user_text,
+        ),
+        probe=probe,
+        policy=policy,
+        ollama_runtime_probe=ollama_runtime_probe,
+        scheduler_key=scheduler_key,
+        worker_lease_seconds=worker_lease_seconds,
+        worker_timeout_seconds=worker_timeout_seconds,
     )

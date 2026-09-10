@@ -49,6 +49,8 @@ Experimental corrections from native v0.7 acceptance now apply across the curren
 4. **Percepts are broader than user prompts.** User prompts are one percept class; sensor observations, background state changes, and other non-conversational inputs may also be percepts.
 5. **Not all percepts require a user-facing response.** Whether a response is required belongs to the deterministic intake policy for that percept class, not to the final responder.
 
+The current live runtime wires only the explicit user-prompt percept path; other percept classes should get their own intake/runtime entrypoints rather than silently reusing `response_required=true`.
+
 Aperture activation is intentionally higher-recall than conservative evidence admission. An activated event is potentially relevant enough to expose; it is not automatically sufficient evidence for a claim.
 
 ## Concept and research inputs

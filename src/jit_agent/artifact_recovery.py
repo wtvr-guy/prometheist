@@ -19,14 +19,15 @@ from jit_agent.attention_observation import (
 )
 from jit_agent.attention_store import DEFAULT_SCHEDULER_KEY
 from jit_agent.interaction_store import load_interaction
+from jit_agent.interaction_policy import PerceptKind, UserPromptPercept
 from jit_agent.native_policy import native_resource_safety_policy
 from jit_agent.ollama_runtime import OllamaClaimHostResourceProbe, OllamaRuntimeProbe
 from jit_agent.percept_response_runtime import (
-    PERCEPT_STAGES,
-    PerceptStage,
+    USER_PROMPT_PERCEPT_STAGES,
+    UserPromptPerceptStage,
     _stage_result,
-    begin_percept,
-    finish_percept,
+    begin_user_prompt_percept,
+    finish_user_prompt_percept,
 )
 from jit_agent.worker_protocol import deterministic_worker_step_id
 from jit_agent.worker_runtime import GuardedWorkerLauncher
@@ -194,6 +195,13 @@ def _percept_recovery_seed(interaction_id: UUID) -> tuple[UUID, UUID, str]:
     if percept is None:
         raise RuntimeError(f"interaction {interaction_id} has no percept artifact")
     payload = percept.get("payload") or {}
+    percept_kind = payload.get("percept_kind", PerceptKind.USER_PROMPT.value)
+    if percept_kind != PerceptKind.USER_PROMPT.value:
+        raise RuntimeError(
+            f"interaction {interaction_id} percept kind {percept_kind!r} cannot use user-prompt recovery"
+        )
+    if payload.get("response_required", True) is not True:
+        raise RuntimeError(f"interaction {interaction_id} user prompt percept must require response")
     user_text = payload.get("user_text")
     if not isinstance(user_text, str) or not user_text.strip():
         raise RuntimeError(f"interaction {interaction_id} percept has no user text")
@@ -211,7 +219,7 @@ def _ensure_final_disposition(interaction, *, scheduler_key: str, conn) -> None:
     persisted = _stage_result(
         conn,
         interaction,
-        PerceptStage.PERSIST_RESULT,
+        UserPromptPerceptStage.PERSIST_RESULT,
         scheduler_key,
     )
     artifact_journal.write_final_disposition_artifact(
@@ -279,10 +287,12 @@ def resume_interaction_from_artifacts(
         interaction = load_interaction(conn, interaction_id, scheduler_key=scheduler_key)
     except KeyError:
         conversation_id, correlation_id, user_text = _percept_recovery_seed(interaction_id)
-        interaction = begin_percept(
+        interaction = begin_user_prompt_percept(
             conn,
-            user_text,
-            conversation_id,
+            UserPromptPercept(
+                conversation_id=conversation_id,
+                payload_text=user_text,
+            ),
             correlation_id=correlation_id,
             probe=physical_probe,
             policy=effective_policy,
@@ -306,7 +316,7 @@ def resume_interaction_from_artifacts(
         scheduler_key=scheduler_key,
     )
 
-    for stage in PERCEPT_STAGES:
+    for stage in USER_PROMPT_PERCEPT_STAGES:
         try:
             _stage_result(conn, interaction, stage, scheduler_key)
             continue
@@ -331,7 +341,7 @@ def resume_interaction_from_artifacts(
                 f"recovery worker failed at stage {stage.value} with exit code {return_code}"
             )
 
-    response = finish_percept(
+    response = finish_user_prompt_percept(
         conn,
         interaction,
         probe=physical_probe,

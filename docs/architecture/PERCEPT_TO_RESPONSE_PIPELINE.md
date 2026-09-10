@@ -138,7 +138,16 @@ The following are deliberate boundaries:
 
 v0.8 adds deterministic perception and salience, with normalized percept contracts and salience dispositions such as `IGNORE`, `DELIBERATE`, `ORIENT`, and `REFLEX`. The percept classes defined here are the response-policy side of that work: a percept may be user-facing, internal, or non-conversational, and only some percept classes require a response.
 
-## 10. Implementation consequences
+## 10. Current implementation status
+
+The currently wired worker path is intentionally the **explicit user-prompt percept** path.
+
+- `UserPromptPercept` is the live intake contract for the current worker/runtime entrypoints.
+- `handle_user_prompt_percept_in_worker_processes(...)` and `begin_user_prompt_percept(...)` are the authoritative user-prompt-specific entrypoints.
+- Compatibility wrappers such as `handle_percept_in_worker_processes(...)` remain only so existing callers and restart artifacts stay readable while the broader percept architecture evolves.
+- Non-user percepts still need their own intake contracts and worker/runtime entrypoints so they do not inherit `response_required=true` from the user-prompt path by accident.
+
+## 11. Implementation consequences
 
 User-facing conversational interfaces should route explicit user prompts through the deterministic response-required path.
 

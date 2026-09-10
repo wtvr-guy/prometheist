@@ -1,9 +1,11 @@
-"""Fresh-process entry point for one v2 user-prompt response worker step.
+"""Fresh-process entry point for one v2 explicit user-prompt percept worker step.
 
-Explicit user prompts always receive a response. Every stage result is atomically
-written to the independent artifact journal before its database worker claim is
-completed. A replacement worker can therefore rehydrate a completed stage from
-JSON instead of repeating an LLM/tool call after interruption.
+This is the user-prompt-specific subpath of the broader percept architecture.
+Explicit user prompts always receive a response. Every stage result is
+atomically written to the independent artifact journal before its database
+worker claim is completed. A replacement worker can therefore rehydrate a
+completed stage from JSON instead of repeating an LLM/tool call after
+interruption.
 
 Every v2 LLM invocation also persists the exact stateless request contract and
 normalized constrained output so later inspection can establish precisely what a
@@ -27,10 +29,10 @@ from jit_agent.models import EventType, MemoryPacket
 from jit_agent.percept_response_runtime import (
     MemorySufficiencyDecision,
     PerceptLLM,
-    PerceptStage,
+    UserPromptPerceptStage,
     PreCognitiveDisposition,
     ResponseMemoryPackage,
-    _execute_stage,
+    _execute_user_prompt_stage,
     _stage_result,
 )
 from jit_agent.worker_store import (
@@ -176,13 +178,13 @@ def _cognitive_memory_packet(packet: MemoryPacket) -> MemoryPacket:
 
 
 class UserPromptLLM(PerceptLLM):
-    """Percept LLM with deterministic response and full invocation provenance."""
+    """User-prompt-specific percept LLM with deterministic response provenance."""
 
     def __init__(
         self,
         *,
         interaction=None,
-        stage: PerceptStage | None = None,
+        stage: UserPromptPerceptStage | None = None,
         claim_id: UUID | None = None,
     ) -> None:
         super().__init__()
@@ -357,7 +359,7 @@ class UserPromptLLM(PerceptLLM):
         return super().generate_final_response(percept, visible_package, work_results)
 
 
-def _ensure_percept_artifact(interaction) -> None:
+def _ensure_user_prompt_percept_artifact(interaction) -> None:
     artifact_journal.write_percept_artifact(
         interaction_id=interaction.interaction_id,
         conversation_id=interaction.conversation_id,
@@ -368,14 +370,14 @@ def _ensure_percept_artifact(interaction) -> None:
     )
 
 
-def _execute_claimed_user_prompt_step(
+def _execute_claimed_user_prompt_percept_step(
     conn,
     llm: PerceptLLM,
     *,
     claim_id: UUID,
     worker_id: str,
     scheduler_key: str,
-) -> PerceptStage:
+) -> UserPromptPerceptStage:
     """Execute or rehydrate one stage with artifact-before-terminal ordering."""
 
     envelope = load_worker_claim_envelope(
@@ -389,15 +391,15 @@ def _execute_claimed_user_prompt_step(
         envelope.step.task_id,
         scheduler_key=scheduler_key,
     )
-    stage = PerceptStage(envelope.step.step_key)
-    _ensure_percept_artifact(interaction)
+    stage = UserPromptPerceptStage(envelope.step.step_key)
+    _ensure_user_prompt_percept_artifact(interaction)
     try:
         recovered = artifact_journal.load_stage_result_artifact(
             interaction.interaction_id,
             stage.value,
         )
         if recovered is None:
-            output, output_refs = _execute_stage(
+            output, output_refs = _execute_user_prompt_stage(
                 conn,
                 llm,
                 envelope,
@@ -494,8 +496,8 @@ def main() -> None:
             envelope.step.task_id,
             scheduler_key=scheduler_key,
         )
-        stage = PerceptStage(envelope.step.step_key)
-        stage = _execute_claimed_user_prompt_step(
+        stage = UserPromptPerceptStage(envelope.step.step_key)
+        stage = _execute_claimed_user_prompt_percept_step(
             conn,
             UserPromptLLM(
                 interaction=interaction,
@@ -506,11 +508,11 @@ def main() -> None:
             worker_id=worker_id,
             scheduler_key=scheduler_key,
         )
-        if stage is PerceptStage.PERSIST_RESULT:
+        if stage is UserPromptPerceptStage.PERSIST_RESULT:
             persisted = _stage_result(
                 conn,
                 interaction,
-                PerceptStage.PERSIST_RESULT,
+                UserPromptPerceptStage.PERSIST_RESULT,
                 scheduler_key,
             )
             artifact_journal.write_final_disposition_artifact(

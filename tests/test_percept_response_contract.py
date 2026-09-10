@@ -4,14 +4,19 @@ import uuid
 
 import pytest
 
-from jit_agent import jit_memory
+from jit_agent import jit_memory, percept_response_runtime
 from jit_agent.capability_registry import DEFAULT_REGISTRY
+from jit_agent.interaction_policy import Percept, PerceptKind, UserPromptPercept
 from jit_agent.models import MemoryNeed, MemoryPacket
 from jit_agent.percept_response_runtime import (
     MemorySufficiencyDecision,
     PreCognitiveDisposition,
+    begin_percept,
+    begin_user_prompt_percept,
     _effective_adaptive_profile,
     _external_capability_catalog,
+    handle_percept_in_worker_processes,
+    handle_user_prompt_percept_in_worker_processes,
 )
 from jit_agent.percept_response_worker import UserPromptWorkSelection
 
@@ -26,6 +31,79 @@ def test_persisted_user_prompt_disposition_records_required_response() -> None:
     decision = PreCognitiveDisposition(response_required=True, capability_indices=[])
     assert decision.response_required is True
     assert decision.capability_indices == []
+
+
+def test_percept_contract_includes_non_user_classes_without_required_response() -> None:
+    observation = Percept(
+        kind=PerceptKind.SENSOR_OBSERVATION,
+        payload_text="temperature rose by 5C",
+        response_required=False,
+    )
+    assert observation.kind is PerceptKind.SENSOR_OBSERVATION
+    assert observation.response_required is False
+
+
+def test_user_prompt_percept_contract_is_explicitly_scoped_to_user_prompts() -> None:
+    percept = UserPromptPercept(
+        conversation_id=uuid.uuid4(),
+        payload_text="hello",
+    )
+    assert percept.kind is PerceptKind.USER_PROMPT
+    assert percept.response_required is True
+    assert percept.user_text == "hello"
+
+
+def test_user_prompt_entrypoints_remain_compatibility_wrapped() -> None:
+    assert begin_percept is not begin_user_prompt_percept
+    assert handle_percept_in_worker_processes is not handle_user_prompt_percept_in_worker_processes
+
+
+def test_begin_percept_wraps_raw_input_as_user_prompt_percept(monkeypatch) -> None:
+    conversation_id = uuid.uuid4()
+    captured: dict[str, UserPromptPercept] = {}
+
+    def fake_begin(conn, percept, **kwargs):
+        del conn, kwargs
+        captured["percept"] = percept
+        return "wrapped"
+
+    monkeypatch.setattr(percept_response_runtime, "begin_user_prompt_percept", fake_begin)
+
+    result = percept_response_runtime.begin_percept(object(), "hello", conversation_id)
+
+    assert result == "wrapped"
+    assert captured["percept"] == UserPromptPercept(
+        conversation_id=conversation_id,
+        payload_text="hello",
+    )
+
+
+def test_handle_percept_wraps_raw_input_as_user_prompt_percept(monkeypatch) -> None:
+    conversation_id = uuid.uuid4()
+    captured: dict[str, UserPromptPercept] = {}
+
+    def fake_handle(conn, percept, **kwargs):
+        del conn, kwargs
+        captured["percept"] = percept
+        return "handled"
+
+    monkeypatch.setattr(
+        percept_response_runtime,
+        "handle_user_prompt_percept_in_worker_processes",
+        fake_handle,
+    )
+
+    result = percept_response_runtime.handle_percept_in_worker_processes(
+        object(),
+        "hello",
+        conversation_id,
+    )
+
+    assert result == "handled"
+    assert captured["percept"] == UserPromptPercept(
+        conversation_id=conversation_id,
+        payload_text="hello",
+    )
 
 
 def test_pre_cognitive_disposition_rejects_duplicate_indices() -> None:

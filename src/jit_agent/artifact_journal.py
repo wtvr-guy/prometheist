@@ -19,6 +19,8 @@ import re
 from typing import Any, Iterable
 from uuid import UUID, uuid5
 
+from jit_agent.interaction_policy import PerceptKind
+
 ARTIFACT_SCHEMA_VERSION = 1
 _ARTIFACT_NAMESPACE = UUID("b983b0b7-a203-5c60-96f0-b17d2d94bf1a")
 _SAFE_KEY = re.compile(r"[^a-zA-Z0-9_.-]+")
@@ -220,6 +222,8 @@ def write_percept_artifact(
         stage=None,
         producer="percept_response_v2",
         payload={
+            "percept_kind": PerceptKind.USER_PROMPT.value,
+            "response_required": True,
             "user_text": user_text,
             "user_prompt_event_id": str(user_prompt_event_id),
         },
