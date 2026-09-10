@@ -283,7 +283,7 @@ def _feature_flags(text: str, modality: PerceptModality) -> PerceptFeatures:
         contains_question="?" in text,
         contains_url=("://" in text) or ("www." in text.casefold()),
         contains_code_block="```" in text,
-        contains_structured_payload=modality is not PerceptModality.TEXT
+        contains_structured_payload=modality is PerceptModality.STRUCTURED
         or stripped.startswith("{")
         or stripped.startswith("["),
         uppercase_ratio=_uppercase_ratio(text),
@@ -302,7 +302,8 @@ def deterministic_percept_id(
         str(source_event_id)
         if source_event_id is not None
         else (
-            f"{correlation_id}:{source.source_id}:{observed_at.isoformat()}:"
+            f"{correlation_id}:{source.source_id}:{source.kind.value}:{source.modality.value}:"
+            f"{source.interface or '-'}:{observed_at.isoformat()}:"
             f"{_sha256_text(normalized_text)}"
         )
     )

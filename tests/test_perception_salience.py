@@ -21,7 +21,10 @@ from jit_agent.perception import (
     normalize_scheduled_percept,
     normalize_user_interaction_percept,
 )
-from jit_agent.percept_response_runtime import begin_percept
+from jit_agent.percept_response_runtime import begin_percept, execute_claimed_percept_step
+from jit_agent.percept_response_worker import UserPromptLLM
+from jit_agent.worker_protocol import deterministic_worker_step_id
+from jit_agent.worker_store import guarded_claim_worker_step, load_worker_result
 
 
 NOW = datetime(2026, 9, 10, 17, 0, tzinfo=timezone.utc)
@@ -70,6 +73,35 @@ def test_normalize_percept_supports_structured_observations_deterministically() 
     assert repeated == percept
 
 
+def test_percept_id_distinguishes_percept_class_contracts() -> None:
+    correlation_id = uuid.uuid4()
+    observed_at = NOW
+    scheduled = normalize_percept(
+        source=PerceptSource(
+            source_id="shared-source",
+            kind=PerceptKind.SCHEDULED_EVENT,
+            modality=PerceptModality.STRUCTURED,
+            interface="scheduler",
+        ),
+        observation={"value": 1},
+        observed_at=observed_at,
+        correlation_id=correlation_id,
+    )
+    anomaly = normalize_percept(
+        source=PerceptSource(
+            source_id="shared-source",
+            kind=PerceptKind.ANOMALY_ALERT,
+            modality=PerceptModality.STRUCTURED,
+            interface="anomaly-detector",
+        ),
+        observation={"value": 1},
+        observed_at=observed_at,
+        correlation_id=correlation_id,
+    )
+
+    assert scheduled.percept_id != anomaly.percept_id
+
+
 def test_normalize_percept_rejects_modality_mismatch() -> None:
     with pytest.raises(ValueError):
         normalize_percept(
@@ -100,6 +132,22 @@ def test_structured_scalar_boolean_payload_is_allowed() -> None:
 
     assert percept.normalized_text == "true"
     assert percept.features.contains_structured_payload is True
+
+
+def test_metric_scalar_is_not_marked_as_structured_payload() -> None:
+    percept = normalize_percept(
+        source=PerceptSource(
+            source_id="sensor:temperature",
+            kind=PerceptKind.EXTERNAL_OBSERVATION,
+            modality=PerceptModality.METRIC,
+            interface="telemetry",
+        ),
+        observation=1.5,
+        observed_at=NOW,
+        correlation_id=uuid.uuid4(),
+    )
+
+    assert percept.features.contains_structured_payload is False
 
 
 def test_metric_scalar_uses_stable_json_normalization() -> None:
@@ -294,6 +342,40 @@ def test_begin_percept_persists_normalized_percept_and_salience() -> None:
         task = scheduler.tasks[interaction.task_id]
         assert task.resumable_state["percept_id"] == str(stored.percept.percept_id)
         assert task.resumable_state["salience_disposition"] == "ORIENT"
+    finally:
+        connection.close()
+
+
+def test_precognitive_stage_receives_percept_and_salience_state() -> None:
+    connection = db.get_connection()
+    try:
+        interaction = begin_percept(
+            connection,
+            "Please investigate this error failure crash immediately.",
+            uuid.uuid4(),
+            probe=FixedProbe(),
+            clock=lambda: NOW,
+        )
+        step_id = deterministic_worker_step_id(interaction.assignment_id, "V2_RESOLVE_REFERENCES")
+        attempt = guarded_claim_worker_step(
+            connection,
+            step_id=step_id,
+            worker_id="test-resolve-worker",
+            probe=FixedProbe(),
+            clock=lambda: NOW,
+        )
+        assert attempt.envelope is not None
+        execute_claimed_percept_step(
+            connection,
+            UserPromptLLM(),
+            claim_id=attempt.envelope.claim.claim_id,
+            worker_id="test-resolve-worker",
+            clock=lambda: NOW,
+        )
+        result = load_worker_result(connection, step_id)
+        assert result is not None
+        assert result.output["percept"]["source"]["kind"] == "USER_INTERACTION"
+        assert result.output["salience_assessment"]["disposition"] == "ORIENT"
     finally:
         connection.close()
 
