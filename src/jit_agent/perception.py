@@ -229,8 +229,10 @@ def _observation_text(value: Any, modality: PerceptModality) -> str:
             raise ValueError("text percepts require a string observation")
         return value.replace("\r\n", "\n").replace("\r", "\n").strip()
     if modality is PerceptModality.METRIC:
-        if not isinstance(value, (int, float, bool)) and value is not None:
-            raise ValueError("metric percepts require a scalar numeric/boolean observation")
+        if isinstance(value, bool) or (
+            not isinstance(value, (int, float)) and value is not None
+        ):
+            raise ValueError("metric percepts require a scalar numeric observation")
         return _stable_json(value)
     return _stable_json(value)
 

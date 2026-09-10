@@ -117,6 +117,21 @@ def test_metric_scalar_uses_stable_json_normalization() -> None:
     assert percept.normalized_text == "1.5"
 
 
+def test_metric_percept_rejects_boolean_payload() -> None:
+    with pytest.raises(ValueError):
+        normalize_percept(
+            source=PerceptSource(
+                source_id="sensor:temperature",
+                kind=PerceptKind.EXTERNAL_OBSERVATION,
+                modality=PerceptModality.METRIC,
+                interface="telemetry",
+            ),
+            observation=True,
+            observed_at=NOW,
+            correlation_id=uuid.uuid4(),
+        )
+
+
 def test_scheduled_event_is_a_first_class_non_user_percept() -> None:
     percept = normalize_scheduled_percept(
         source_id="scheduler:daily-summary",
