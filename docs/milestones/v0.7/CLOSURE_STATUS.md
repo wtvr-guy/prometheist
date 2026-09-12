@@ -1,7 +1,12 @@
 # v0.7 Closure Status
 
-**Status:** not closed  
-**Integration note added:** 2026-09-12 (the gate evidence below is historical)
+**Status:** closed 2026-09-12
+**Closure baseline:** `39a3223c38f1b1f8fae7f9e667c6cd7460774ffe` (`v0.7-closure`)
+**Successor:** v0.8 is the active development milestone.
+
+The maintainer closed v0.7 after local acceptance. The table below preserves the
+previous gate evidence and branch disposition as historical context; it is not an
+active v0.8 acceptance checklist.
 
 | Gate | Status | Evidence |
 | --- | --- | --- |

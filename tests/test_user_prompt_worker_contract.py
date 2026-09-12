@@ -60,7 +60,10 @@ def test_response_policy_defaults_ordinary_questions_to_natural_language() -> No
                 EventType.AGENT_RESULT,
             },
         ),
-        (HistoricalEvidenceScope.EXTERNAL_TOOL, {EventType.TOOL_RESULT}),
+        (
+            HistoricalEvidenceScope.EXTERNAL_TOOL,
+            {EventType.TOOL_RESULT, EventType.PERCEPT_OBSERVATION},
+        ),
         (
             HistoricalEvidenceScope.SYSTEM_RECORD,
             {
@@ -72,6 +75,7 @@ def test_response_policy_defaults_ordinary_questions_to_natural_language() -> No
         (
             HistoricalEvidenceScope.DERIVED_INTERNAL,
             {
+                EventType.DERIVED_REPRESENTATION,
                 EventType.AGENT_DECISION,
                 EventType.RETRIEVAL_REQUEST,
                 EventType.RETRIEVAL_RESULT,

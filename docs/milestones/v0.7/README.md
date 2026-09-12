@@ -1,13 +1,12 @@
-# v0.7 — Closure Candidate
+# v0.7 — Closed Baseline
 
 **Milestone:** durable JIT Attention Fabric, minimal WorkingState, and authoritative
 v2 percept-to-response pipeline
 
-**Status:** implementation consolidated; the first 2026-09-03 native run failed 6
-of 14 model-backed tests, and the exact-SHA remediation run passed 11 of 14. That
-follow-up exposed an obsolete exact-prose oracle in the native response tests. The
-artifact-first replacement remains blocked on native execution and human response
-review for one exact replacement SHA.
+**Status:** closed 2026-09-12. The preserved baseline is
+`39a3223c38f1b1f8fae7f9e667c6cd7460774ffe` (`v0.7-closure`). v0.8 contains this
+complete baseline and is now the active milestone. The dated native-run discussion
+below is retained as historical evidence, not active release work.
 
 **Rebaselined:** 2026-09-03
 

@@ -2,9 +2,10 @@
 
 **Integration update:** 2026-09-12
 
-**Current transition:** integrate the v0.7 closure implementation into the existing
-`copilot/implement-v08-milestone` perception/salience branch under the user's explicit
-2026-09-12 instruction. Native closure and hypothesis acceptance remain separate gates.
+**Current milestone:** v0.8 — predictive situations and non-user cognition.
+
+**v0.7 baseline:** closed at `39a3223c38f1b1f8fae7f9e667c6cd7460774ffe`
+(`v0.7-closure`). The historical `v0.7` tag remains immutable.
 
 Milestone labels describe architectural experiments, not package-release versions.
 Every milestone starts from one frozen question and preserves previously accepted
@@ -40,8 +41,7 @@ correction, temporal, ambiguity, and provenance behavior remains regression evid
 
 ## v0.7 — durable attention, minimal WorkingState, and v2 response path
 
-**Status:** closure candidate; not closed until every gate below passes on one frozen
-SHA.
+**Status:** closed baseline; superseded as the active development milestone by v0.8.
 
 Primary question: can Prometheist deterministically allocate durable work across
 bounded resources, survive destruction of every worker, preserve bounded active
@@ -75,37 +75,14 @@ replacement gate is artifact-first: CI/native automation establishes delivery,
 authority, isolation, and structural safety; a human explicitly judges the printed
 natural responses on that same SHA.
 
-### Closure gates
-
-v0.7 closes only when all of the following apply to the same candidate SHA:
-
-1. deterministic CI passes `ruff`, the fail-fast constraint audit, calibration, and
-   complete non-Ollama pytest with PostgreSQL;
-2. the complete native Windows/PostgreSQL/Ollama structural acceptance script passes
-   with environment-dependent tests actually executed rather than skipped and with
-   invocation artifacts proving required evidence admission;
-3. a human review accepts the printed native responses for accuracy and expression;
-4. ported red-team cases pass, including memory authority/prompt injection,
-   assistant-only claims, oversized evidence, saturated WorkingState, deep temporal
-   history, and projection freshness;
-5. superseded runtime/control code and tracked runtime artifacts are absent;
-6. selective PR/branch evidence disposition is recorded and obsolete open PRs are
-   closed without merging their superseded implementations;
-7. current README, architecture, milestone, testing, constraint, and roadmap text
-   agree with the implemented v2 path;
-8. a final constitutional/codebase audit is recorded against the frozen SHA;
-9. that SHA is merged, then marked with a new closure tag. The existing `v0.7` tag
-   remains immutable.
-
-The user's 2026-09-12 instruction authorizes development-branch integration before
-formal closure. That does not satisfy or waive any native acceptance, human review,
-audit, release, or experimental freeze requirement.
+The closure SHA is the preserved v0.7 baseline for all v0.8 regression work. Its
+dated gate evidence remains in [`milestones/v0.7/CLOSURE_STATUS.md`](milestones/v0.7/CLOSURE_STATUS.md);
+new v0.8 work must not rewrite that historical record.
 
 ## v0.8 — predictive situations on the consolidated v2 runtime
 
-**Status:** the supplied “Map Precognitive Pipeline Workers” implementation scope
-is integrated with the v0.7 closure candidate. Native acceptance and experimental
-benefit remain separately gated.
+**Status:** active development milestone on the closed v0.7 baseline. Native
+acceptance and experimental benefit remain separately gated.
 
 The implementation includes typed perception/media adapters, expectations,
 prediction errors, overlapping situations, contextual salience, non-user triage,

@@ -15,23 +15,17 @@ continuity, policy, and durable authority belong to Prometheist itself.
 - **v0.5** is the accepted deterministic Memory Kernel baseline.
 - **v0.6** is the accepted historical stateless-worker/JIT-Memory baseline. Its
   Primary Agent/specialist hierarchy is no longer current architecture.
-- **v0.7** is an open closure candidate. The exact-SHA remediation run on
-  2026-09-03 passed 11 of 14 native tests and showed that the remaining response
-  tests still used a superseded exact-prose oracle. The corrected gate now proves
-  evidence delivery from invocation artifacts and leaves natural response quality
-  to explicit human review.
-- **v0.8** is the active predictive-situation development branch,
-  `copilot/implement-v08-milestone`. It incorporates the v0.7 closure implementation,
-  including guarded specialist roles, evidence scoping, and artifact-first acceptance.
-  Integration does not declare v0.7 closed or the salience heuristics calibrated.
+- **v0.7** is closed. Its final consolidated implementation is preserved at
+  `39a3223c38f1b1f8fae7f9e667c6cd7460774ffe` and tagged
+  `v0.7-closure`; the historical `v0.7` tag remains immutable.
+- **v0.8** is the active development milestone. It contains the complete v0.7
+  baseline plus predictive situations, typed perception, and advisory salience.
+  Calibration and native acceptance for the new v0.8 mechanisms remain separately
+  tracked experiment gates.
 
-The existing `v0.7` Git tag is historical and must not be moved. A distinct closure
-tag will identify the later, fully accepted v0.7 baseline.
-
-The integration is reviewed in draft [PR #25](https://github.com/wtvr-guy/prometheist/pull/25).
-The [integration record](docs/audits/V08_CLOSURE_INTEGRATION_2026-09-12.md)
-records both parent revisions, conflict resolutions, validation, research context,
-and the remaining specification gap. Historical closure work remains recorded in
+The [v0.8 integration record](docs/audits/V08_CLOSURE_INTEGRATION_2026-09-12.md)
+preserves the parent revisions, conflict resolutions, validation, research context,
+and remaining specification gaps. Historical v0.7 closure work remains in
 [PR #24](https://github.com/wtvr-guy/prometheist/pull/24) and
 [PR #23](https://github.com/wtvr-guy/prometheist/pull/23).
 
@@ -119,7 +113,6 @@ Requirements: Python 3.12+, `uv`, PostgreSQL, and Ollama for model-backed paths.
 ```powershell
 git clone https://github.com/wtvr-guy/prometheist.git
 cd prometheist
-git switch copilot/implement-v08-milestone
 uv sync --frozen
 $env:DATABASE_URL = "postgresql://USER:PASSWORD@localhost:5432/jit_agent"
 psql $env:DATABASE_URL -f schema.sql

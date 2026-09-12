@@ -1,16 +1,16 @@
 # v0.8 — Predictive situations and non-user cognition
 
-**Status:** implementation integrated with the v0.7 closure candidate; calibration
+**Status:** active development milestone on the closed v0.7 baseline; calibration
 and native acceptance remain separately gated.
 
 The scope follows the supplied final response from “Map Precognitive Pipeline
-Workers.” The active branch is `copilot/implement-v08-milestone`.
+Workers.” Active development is on `main`.
 
 Implemented mechanisms include typed multimodal percepts, expectations and
 prediction errors, overlapping situation snapshots, contextual salience, source
 policies, narrow non-user triage, deterministic reflexes, situation attention,
 guarded task workers, observed action feedback, and scheduled consolidation.
-The user path retains all seven v0.7 closure specialist/deterministic stages,
+The user path retains all seven v0.7 baseline specialist/deterministic stages,
 mandatory user responses, source-scoped memory, exact/natural realization, and
 artifact-backed recovery.
 

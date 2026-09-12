@@ -383,7 +383,7 @@ def test_reference_stage_journals_percept_and_salience_before_completion() -> No
         result = load_worker_result(connection, step_id)
         assert result is not None
         assert result.output["percept"]["source"]["kind"] == "USER_INTERACTION"
-        assert result.output["salience_assessment"]["disposition"] == "ORIENT"
+        assert result.output["salience_assessment"]["disposition"] == "DELIBERATE"
         recovered = artifact_journal.load_stage_result_artifact(
             interaction.interaction_id, PerceptStage.RESOLVE_REFERENCES.value
         )
