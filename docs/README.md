@@ -19,6 +19,7 @@ is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
 - [`architecture/COGNITIVE_ARCHITECTURE.md`](architecture/COGNITIVE_ARCHITECTURE.md) — complete system boundary, durable authority, stateless cognition, WorkingState, attention/execution, and implemented/deferred mechanisms.
 - [`architecture/INTERACTION_CONTINUITY.md`](architecture/INTERACTION_CONTINUITY.md) — cross-process/session continuity, attention aperture, Adaptive Recall, evidence authority, and failure/acceptance rules.
 - [`architecture/FINAL_RESPONDER.md`](architecture/FINAL_RESPONDER.md) — mandatory identity/evidence contract, additive personality, response-only sampling, and invocation provenance.
+- [`architecture/SPECIALIST_WORKER_MODULARITY.md`](architecture/SPECIALIST_WORKER_MODULARITY.md) — one semantic responsibility per LLM worker, split criteria, runtime guards, and non-user percept triage boundary.
 - [`architecture/LOSSLESS_PROGRESSIVE_MEMORY.md`](architecture/LOSSLESS_PROGRESSIVE_MEMORY.md) — exact canonical evidence, replaceable derived structures, bounded recall, and memory-scaling constraints.
 - [`architecture/IMMUTABLE_ARTIFACT_JOURNAL.md`](architecture/IMMUTABLE_ARTIFACT_JOURNAL.md) — independent append-only artifacts, interruption recovery, verification, and database reconstruction.
 - [`architecture/SYSTEM_DETERMINISM.md`](architecture/SYSTEM_DETERMINISM.md) — replayable control authority and prohibition on race-based durable decisions.

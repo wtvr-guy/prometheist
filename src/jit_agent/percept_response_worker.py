@@ -41,6 +41,7 @@ from jit_agent.percept_response_runtime import (
     _memory_evidence_refs,
     _stage_result,
 )
+from jit_agent.response_policy import ResponsePolicy
 from jit_agent.worker_store import (
     complete_worker_claim,
     load_worker_claim_envelope,
@@ -52,6 +53,33 @@ _NON_COGNITIVE_MEMORY_SOURCES = frozenset(
         "percept_response_v2/response_input_trace",
     }
 )
+
+USER_PROMPT_STAGE_SPECIALIST_ROLES = {
+    PerceptStage.RESOLVE_REFERENCES: "deterministic reference resolver",
+    PerceptStage.EVIDENCE_POLICY: "evidence policy specialist",
+    PerceptStage.PRECOGNITIVE: "work triage specialist",
+    PerceptStage.EXECUTE_WORK: "deterministic capability executor",
+    PerceptStage.COMPOSE_MEMORY: "memory sufficiency specialist",
+    PerceptStage.RESPOND: "final response specialist",
+    PerceptStage.PERSIST_RESULT: "deterministic result persister",
+}
+
+_ALLOWED_LLM_KINDS_BY_STAGE = {
+    PerceptStage.RESOLVE_REFERENCES: frozenset(),
+    PerceptStage.EVIDENCE_POLICY: frozenset({"V2_RESPONSE_POLICY"}),
+    PerceptStage.PRECOGNITIVE: frozenset({"PRECOGNITIVE_USER_PROMPT_WORK"}),
+    PerceptStage.EXECUTE_WORK: frozenset(),
+    PerceptStage.COMPOSE_MEMORY: frozenset({"V2_MEMORY_SUFFICIENCY_USER_PROMPT"}),
+    PerceptStage.RESPOND: frozenset(
+        {
+            "V2_CURRENT_FALLBACK_SELECTION",
+            "V2_EXACT_SOURCE_SELECTION",
+            "V2_EXACT_SOURCE_COMPOSITION",
+            "FINAL_RESPONSE_V2",
+        }
+    ),
+    PerceptStage.PERSIST_RESULT: frozenset(),
+}
 
 _USER_PROMPT_WORK_SELECTION = """\
 You are a fresh disposable Prometheist pre-cognitive worker. You have no inherited
@@ -215,7 +243,7 @@ def _cognitive_memory_packet(packet: MemoryPacket) -> MemoryPacket:
 
 
 class UserPromptLLM(PerceptLLM):
-    """User-prompt LLM with deterministic control and personality-conditioned response."""
+    """Artifact-aware transport constrained to one stage-specialist role."""
 
     def __init__(
         self,
@@ -239,6 +267,18 @@ class UserPromptLLM(PerceptLLM):
         self._artifact_invocations = count()
         self._artifact_evidence_refs: tuple[str, ...] = ()
 
+    def _require_stage_specialization(self, kind: str) -> None:
+        """Fail closed if one guarded process attempts another specialist's role."""
+
+        stage = self._artifact_stage
+        if stage is None:
+            return
+        if kind not in _ALLOWED_LLM_KINDS_BY_STAGE[stage]:
+            role = USER_PROMPT_STAGE_SPECIALIST_ROLES[stage]
+            raise RuntimeError(
+                f"{stage.value} ({role}) cannot invoke LLM role {kind}"
+            )
+
     def _set_artifact_evidence_refs(self, refs: tuple[str, ...]) -> None:
         self._artifact_evidence_refs = tuple(refs)
 
@@ -250,6 +290,7 @@ class UserPromptLLM(PerceptLLM):
         schema: dict,
         max_tokens: int,
     ) -> str:
+        self._require_stage_specialization(kind)
         invocation_index = next(self._artifact_invocations)
         try:
             output = super()._structured(
@@ -294,6 +335,7 @@ class UserPromptLLM(PerceptLLM):
         schema: dict,
         max_tokens: int,
     ) -> str:
+        self._require_stage_specialization(kind)
         invocation_index = next(self._artifact_invocations)
         try:
             output = super()._structured_with_evidence(
@@ -457,12 +499,19 @@ class UserPromptLLM(PerceptLLM):
         percept: str,
         package: ResponseMemoryPackage,
         work_results: tuple[dict[str, Any], ...],
+        *,
+        response_policy: ResponsePolicy,
     ) -> str:
         visible_package = package.model_copy(
             update={"memory_packet": _cognitive_memory_packet(package.memory_packet)},
             deep=True,
         )
-        return super().generate_final_response(percept, visible_package, work_results)
+        return super().generate_final_response(
+            percept,
+            visible_package,
+            work_results,
+            response_policy=response_policy,
+        )
 
 
 def _ensure_percept_artifact(interaction) -> None:

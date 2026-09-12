@@ -9,6 +9,11 @@ import pytest
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 from jit_agent.percept_response_runtime import PerceptStage, ResponseMemoryPackage
 from jit_agent.percept_response_worker import UserPromptLLM
+from jit_agent.response_policy import (
+    HistoricalEvidenceScope,
+    ResponsePolicy,
+    ResponseSurfaceMode,
+)
 from tests._cli_helpers import ollama_available, print_transcript
 from tests._native_artifact_assertions import (
     assert_response_evidence_receipt,
@@ -114,6 +119,10 @@ def test_memory_cannot_acquire_current_instruction_authority(
         prompt,
         package,
         (),
+        response_policy=ResponsePolicy(
+            evidence_scope=HistoricalEvidenceScope.USER_AUTHORED,
+            surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
+        ),
     )
     assert answer.strip()
     assert poison not in answer

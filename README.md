@@ -79,10 +79,11 @@ retrieval stages internally; those stages are not exposed capabilities.
 - guarded disposable-worker claims, leases, checkpoints, recovery, and idempotent
   terminal results;
 - a single authoritative percept-to-response runtime;
-- one-pass pre-cognitive external-work selection with application-owned capability
-  IDs and dependency ordering;
+- a durable current-only evidence-policy specialist followed by one-pass
+  pre-cognitive external-work triage with application-owned capability IDs and
+  dependency ordering;
 - bounded Adaptive Recall and a memory-only Composer;
-- current-only response policy, application-enforced historical source filtering,
+- single-decision response policy, application-enforced historical source filtering,
   quarantined evidence transport, exact-source output, additive personality, and
   exact invocation provenance;
 - per-item and aggregate byte limits before evidence reaches a model;
@@ -98,16 +99,17 @@ not substitute memories and not automatic truth claims.
 2. Conversations, sessions, devices, and interfaces are provenance, not default
    cognitive boundaries.
 3. Basic persistent-memory activation occurs before model work selection.
-4. Models select bounded semantic requirements; ordinary software owns identity,
+4. Each guarded LLM worker owns one coherent semantic responsibility.
+5. Models select bounded semantic requirements; ordinary software owns identity,
    ordering, dependencies, resources, permissions, retries, and durable effects.
-5. Attention priority and safe resource admission are separate decisions.
-6. Work results and memory evidence retain distinct authority and provenance.
-7. Invalid control output, missing evidence, stale resources, and ambiguous effects
+6. Attention priority and safe resource admission are separate decisions.
+7. Work results and memory evidence retain distinct authority and provenance.
+8. Invalid control output, missing evidence, stale resources, and ambiguous effects
    fail closed.
-8. Ordinary model inputs and inference counts remain bounded as history grows.
-9. Runtime artifacts stay local and ignored; selected audit/benchmark evidence is
+9. Ordinary model inputs and inference counts remain bounded as history grows.
+10. Runtime artifacts stay local and ignored; selected audit/benchmark evidence is
    preserved explicitly under `docs/` or `benchmarks/results/`.
-10. A mechanism enters the roadmap only through a frozen, falsifiable experiment.
+11. A mechanism enters the roadmap only through a frozen, falsifiable experiment.
 
 The complete normative rules live in [`CONSTITUTION.md`](CONSTITUTION.md).
 

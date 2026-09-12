@@ -9,6 +9,11 @@ from jit_agent.model_evidence_budget import ModelEvidenceBudgetExceeded
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 from jit_agent.percept_response_runtime import ResponseMemoryPackage
 from jit_agent.percept_response_worker import UserPromptLLM
+from jit_agent.response_policy import (
+    HistoricalEvidenceScope,
+    ResponsePolicy,
+    ResponseSurfaceMode,
+)
 
 
 class _NoModelCallAllowed:
@@ -51,4 +56,8 @@ def test_single_oversized_memory_event_cannot_expand_v2_model_context(monkeypatc
             "What does the stored evidence say?",
             package,
             (),
+            response_policy=ResponsePolicy(
+                evidence_scope=HistoricalEvidenceScope.USER_AUTHORED,
+                surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
+            ),
         )

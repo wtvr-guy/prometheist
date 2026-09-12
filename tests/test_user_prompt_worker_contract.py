@@ -60,6 +60,30 @@ def test_response_policy_defaults_ordinary_questions_to_natural_language() -> No
                 EventType.AGENT_RESULT,
             },
         ),
+        (HistoricalEvidenceScope.EXTERNAL_TOOL, {EventType.TOOL_RESULT}),
+        (
+            HistoricalEvidenceScope.SYSTEM_RECORD,
+            {
+                EventType.SYSTEM_EVENT,
+                EventType.ERROR,
+                EventType.INTERACTION_WORKING_STATE,
+            },
+        ),
+        (
+            HistoricalEvidenceScope.DERIVED_INTERNAL,
+            {
+                EventType.AGENT_DECISION,
+                EventType.RETRIEVAL_REQUEST,
+                EventType.RETRIEVAL_RESULT,
+                EventType.MEMORY_REQUEST,
+                EventType.MEMORY_PACKET,
+                EventType.AGENT_DELEGATION,
+                EventType.TOOL_REQUEST,
+                EventType.CAPABILITY_REQUEST,
+                EventType.CAPABILITY_PACKET,
+                EventType.CAPABILITY_RESULT,
+            },
+        ),
         (
             HistoricalEvidenceScope.GENERAL_OR_CURRENT,
             {

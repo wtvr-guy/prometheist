@@ -92,6 +92,7 @@ from jit_agent.ollama_runtime import (
     OllamaRuntimeState,
 )
 from jit_agent.response_policy import (
+    RESPONSE_POLICY_VERSION,
     CurrentFallbackSelection,
     ExactSourceComposition,
     ExactSourceSelection,
@@ -142,6 +143,7 @@ internal retrieval mechanics unless the user asks about them.
 
 class PerceptStage(str, Enum):
     RESOLVE_REFERENCES = "V2_RESOLVE_REFERENCES"
+    EVIDENCE_POLICY = "V2_EVIDENCE_POLICY"
     PRECOGNITIVE = "V2_PRECOGNITIVE"
     EXECUTE_WORK = "V2_EXECUTE_WORK"
     COMPOSE_MEMORY = "V2_COMPOSE_MEMORY"
@@ -152,6 +154,7 @@ class PerceptStage(str, Enum):
     def capability(self) -> str:
         return {
             PerceptStage.RESOLVE_REFERENCES: "interaction.resolve_references",
+            PerceptStage.EVIDENCE_POLICY: "interaction.plan_evidence",
             PerceptStage.PRECOGNITIVE: "interaction.precognitive_disposition",
             PerceptStage.EXECUTE_WORK: "capability.execute",
             PerceptStage.COMPOSE_MEMORY: "interaction.compose_memory",
@@ -435,7 +438,7 @@ def _memory_evidence_refs(packet: MemoryPacket | None) -> tuple[str, ...]:
 
 
 class PerceptLLM(OllamaClient):
-    """Independent stateless Ollama requests for the three semantic LLM roles."""
+    """Shared transport helpers for independent stateless specialist roles."""
 
     def _set_artifact_evidence_refs(self, refs: tuple[str, ...]) -> None:
         """Expose causal evidence refs to artifact-aware subclasses."""
@@ -668,6 +671,8 @@ class PerceptLLM(OllamaClient):
         percept: str,
         package: ResponseMemoryPackage,
         work_results: tuple[dict[str, Any], ...],
+        *,
+        response_policy: ResponsePolicy,
     ) -> str:
         personality = os.environ.get("PROMETHEIST_PERSONALITY_PROMPT", "").strip()
         if not personality:
@@ -682,7 +687,7 @@ class PerceptLLM(OllamaClient):
             prior_evidence_bytes=prior_evidence_bytes,
         )
 
-        policy = self._response_policy(percept)
+        policy = response_policy.model_copy(deep=True)
         admitted_packet = filter_memory_packet_for_scope(packet, policy.evidence_scope)
         admitted_results = _admitted_capability_results(policy.evidence_scope, work_results)
         has_admitted_history = bool(admitted_packet and admitted_packet.items)
@@ -1065,6 +1070,20 @@ def _structured_execution(execution: CapabilityExecution) -> dict[str, Any]:
     }
 
 
+def _validated_response_policy(stage_output: dict[str, Any]) -> ResponsePolicy:
+    """Rehydrate one committed policy only when its version and allowlist agree."""
+
+    if stage_output.get("response_policy_version") != RESPONSE_POLICY_VERSION:
+        raise RuntimeError("persisted response policy version is unsupported")
+    policy = ResponsePolicy.model_validate(stage_output.get("response_policy"))
+    expected_source_types = [
+        event_type.value for event_type in source_types_for_scope(policy.evidence_scope)
+    ]
+    if stage_output.get("response_source_types") != expected_source_types:
+        raise RuntimeError("persisted response policy/source allowlist mismatch")
+    return policy
+
+
 def _execute_stage(
     conn: psycopg.Connection,
     llm: PerceptLLM,
@@ -1082,8 +1101,23 @@ def _execute_stage(
             is not None
         }, []
 
-    if stage is PerceptStage.PRECOGNITIVE:
+    if stage is PerceptStage.EVIDENCE_POLICY:
         response_policy = llm._response_policy(interaction.user_text)
+        source_types = source_types_for_scope(response_policy.evidence_scope)
+        return {
+            "response_policy_version": RESPONSE_POLICY_VERSION,
+            "response_policy": response_policy.model_dump(mode="json"),
+            "response_source_types": [event_type.value for event_type in source_types],
+        }, []
+
+    if stage is PerceptStage.PRECOGNITIVE:
+        evidence_policy = _stage_result(
+            conn,
+            interaction,
+            PerceptStage.EVIDENCE_POLICY,
+            scheduler_key,
+        )
+        response_policy = _validated_response_policy(evidence_policy)
         source_types = source_types_for_scope(response_policy.evidence_scope)
         aperture_packet = open_attention_aperture(
             conn,
@@ -1099,8 +1133,6 @@ def _execute_stage(
         plan = registry.plan_execution(catalog, disposition.capability_indices)
         return {
             "attention_aperture_version": ATTENTION_APERTURE_VERSION,
-            "response_evidence_scope": response_policy.evidence_scope.value,
-            "response_source_types": [event_type.value for event_type in source_types],
             "aperture_packet": aperture_packet.model_dump(mode="json"),
             "disposition": disposition.model_dump(mode="json"),
             "capability_catalog": [item.model_dump(mode="json") for item in catalog],
@@ -1140,22 +1172,23 @@ def _execute_stage(
 
     if stage is PerceptStage.COMPOSE_MEMORY:
         precognitive = _stage_result(conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key)
+        evidence_policy = _stage_result(
+            conn,
+            interaction,
+            PerceptStage.EVIDENCE_POLICY,
+            scheduler_key,
+        )
         disposition = PreCognitiveDisposition.model_validate(precognitive["disposition"])
         if not disposition.response_required:
             return {"skipped": True, "reason": "response_not_required"}, []
         initial_packet = MemoryPacket.model_validate(precognitive["aperture_packet"])
-        response_scope = HistoricalEvidenceScope(
-            precognitive.get(
-                "response_evidence_scope",
-                HistoricalEvidenceScope.USER_AUTHORED.value,
-            )
-        )
+        response_policy = _validated_response_policy(evidence_policy)
         package = _compose_memory_package(
             conn,
             llm,
             interaction,
             initial_packet,
-            source_types_for_scope(response_scope),
+            source_types_for_scope(response_policy.evidence_scope),
         )
         return {"skipped": False, "memory_package": package.model_dump(mode="json")}, [
             f"memory-request:{package.memory_packet.memory_request_id}"
@@ -1163,6 +1196,12 @@ def _execute_stage(
 
     if stage is PerceptStage.RESPOND:
         precognitive = _stage_result(conn, interaction, PerceptStage.PRECOGNITIVE, scheduler_key)
+        evidence_policy = _stage_result(
+            conn,
+            interaction,
+            PerceptStage.EVIDENCE_POLICY,
+            scheduler_key,
+        )
         disposition = PreCognitiveDisposition.model_validate(precognitive["disposition"])
         if not disposition.response_required:
             return {"response_required": False, "response_text": None, "skipped": True}, []
@@ -1173,6 +1212,7 @@ def _execute_stage(
             interaction.user_text,
             package,
             tuple(work["work_results"]),
+            response_policy=_validated_response_policy(evidence_policy),
         )
         return {"response_required": True, "response_text": response_text, "skipped": False}, []
 

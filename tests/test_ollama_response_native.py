@@ -10,6 +10,11 @@ import pytest
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 from jit_agent.percept_response_runtime import PerceptStage, ResponseMemoryPackage
 from jit_agent.percept_response_worker import UserPromptLLM
+from jit_agent.response_policy import (
+    HistoricalEvidenceScope,
+    ResponsePolicy,
+    ResponseSurfaceMode,
+)
 from tests._cli_helpers import ollama_available, print_transcript
 from tests._native_artifact_assertions import (
     assert_response_evidence_receipt,
@@ -110,6 +115,10 @@ def test_real_ollama_response_reconciles_recent_relational_evidence():
         prompt,
         package,
         (),
+        response_policy=ResponsePolicy(
+            evidence_scope=HistoricalEvidenceScope.MIXED_CONVERSATION,
+            surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
+        ),
     )
     assert answer.strip()
     print_transcript(f"\nRelational response smoke — User:\n{prompt}")

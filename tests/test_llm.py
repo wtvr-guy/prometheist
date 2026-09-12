@@ -10,6 +10,11 @@ from jit_agent.llm import _strip_thinking
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 from jit_agent.percept_response_runtime import ResponseMemoryPackage, _FINAL_RESPONSE_PROMPT
 from jit_agent.percept_response_worker import UserPromptLLM
+from jit_agent.response_policy import (
+    HistoricalEvidenceScope,
+    ResponsePolicy,
+    ResponseSurfaceMode,
+)
 
 
 class _FakeResponse:
@@ -67,11 +72,12 @@ def _package(packet: MemoryPacket | None = None) -> ResponseMemoryPackage:
     )
 
 
-def _natural_policy(scope: str = "GENERAL_OR_CURRENT") -> str:
-    return (
-        '{"evidence_scope":"'
-        + scope
-        + '","surface_mode":"NATURAL_LANGUAGE","insufficient_literal":null}'
+def _natural_policy(
+    scope: HistoricalEvidenceScope = HistoricalEvidenceScope.GENERAL_OR_CURRENT,
+) -> ResponsePolicy:
+    return ResponsePolicy(
+        evidence_scope=scope,
+        surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
     )
 
 
@@ -109,14 +115,13 @@ def test_user_facing_answers_use_expressive_temperature_with_structured_envelope
 ):
     monkeypatch.delenv("PROMETHEIST_RESPONSE_TEMPERATURE", raising=False)
     client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
-    fake_http = _FakeHTTPClient(
-        [_natural_policy(), '{"answer":"Final answer only."}']
-    )
+    fake_http = _FakeHTTPClient(['{"answer":"Final answer only."}'])
     client._client = fake_http
 
-    assert client.generate_final_response("Question", _package(), ()) == "Final answer only."
-    assert fake_http.calls[0][1]["options"]["temperature"] == 0.0
-    path, payload = fake_http.calls[1]
+    assert client.generate_final_response(
+        "Question", _package(), (), response_policy=_natural_policy()
+    ) == "Final answer only."
+    path, payload = fake_http.calls[0]
     assert path == "/api/chat"
     assert payload["format"]["required"] == ["answer"]
     assert payload["think"] is False
@@ -176,7 +181,6 @@ def test_verbatim_placeholders_prevent_model_from_respelling_opaque_literals():
     client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
     fake_http = _FakeHTTPClient(
         [
-            _natural_policy("USER_AUTHORED"),
             '{"answer":"The codename is [[VERBATIM_0]]."}',
         ]
     )
@@ -186,9 +190,10 @@ def test_verbatim_placeholders_prevent_model_from_respelling_opaque_literals():
         "What codename did I give Project Oriole?",
         _package(packet),
         (),
+        response_policy=_natural_policy(HistoricalEvidenceScope.USER_AUTHORED),
     )
     assert answer == f"The codename is {exact_code}."
-    response_messages = fake_http.calls[1][1]["messages"]
+    response_messages = fake_http.calls[0][1]["messages"]
     assert [message["role"] for message in response_messages] == [
         "system",
         "tool",

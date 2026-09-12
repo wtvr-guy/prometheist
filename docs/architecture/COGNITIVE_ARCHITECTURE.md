@@ -119,17 +119,17 @@ live interaction architecture.
 For an explicit user prompt:
 
 1. deterministic intake sets `response_required=true` and persists the prompt;
-2. a bounded attention aperture exposes WorkingState and potentially relevant
-   canonical history;
-3. a fresh pre-cognitive LLM selects zero or more **non-memory** work requirements;
-4. Prometheist expands dependencies and runs authorized work through the durable
+2. a fresh evidence-policy specialist selects and persists the closed historical
+   source scope and output surface from the current prompt only;
+3. a bounded attention aperture exposes WorkingState and potentially relevant
+   canonical history within that committed scope;
+4. a fresh work-triage specialist selects zero or more **non-memory** work requirements;
+5. Prometheist expands dependencies and runs authorized work through the durable
    execution plane;
-5. a fresh v2 Composer judges only persistent-memory sufficiency;
-6. if memory is insufficient, deterministic Adaptive Recall expands it and a fresh
+6. a fresh v2 Composer judges only persistent-memory sufficiency;
+7. if memory is insufficient, deterministic Adaptive Recall expands it and a fresh
    Composer reassesses, subject to bounded stopping policy;
-7. a fresh current-only response policy selects a closed historical source scope and
-   output surface;
-8. application code filters event roles and supplies admitted data as quarantined
+8. application code filters event roles under the exact persisted policy and supplies admitted data as quarantined
    evidence before the current prompt;
 9. exact output is source-selected and mechanically validated, or a natural final
    responder receives the admitted evidence and resolved personality contract;

@@ -97,14 +97,6 @@ def test_final_responder_gets_user_evidence_authority_and_no_trace(monkeypatch) 
         return "The prior response was mistaken."
 
     monkeypatch.setattr(llm, "_text_with_evidence", capture_text)
-    monkeypatch.setattr(
-        llm,
-        "_response_policy",
-        lambda _percept: ResponsePolicy(
-            evidence_scope=HistoricalEvidenceScope.MIXED_CONVERSATION,
-            surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
-        ),
-    )
     direct_user_evidence = _evidence(
         event_type=EventType.USER_PROMPT,
         source="user",
@@ -134,6 +126,10 @@ def test_final_responder_gets_user_evidence_authority_and_no_trace(monkeypatch) 
         "Why did you say I never asked you to remember it?",
         package,
         (),
+        response_policy=ResponsePolicy(
+            evidence_scope=HistoricalEvidenceScope.MIXED_CONVERSATION,
+            surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
+        ),
     )
 
     assert answer == "The prior response was mistaken."

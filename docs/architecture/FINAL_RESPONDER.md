@@ -1,12 +1,12 @@
 # Final Responder Contract
 
-**Status:** current architecture decision, revised 2026-09-03 after native failure
+**Status:** current architecture decision, revised 2026-09-12 after specialist split
 **Applies to:** user-facing response generation after deterministic response policy, required work, and memory sufficiency have completed or exhausted
 
-The response stage separates current-only policy, application-owned evidence
-admission, exact-source output, and natural-language expression. The natural final
-responder is a fresh, disposable LLM invocation. It owns neither Prometheist's
-continuity nor any control-plane decision.
+The pipeline separates current-only policy, application-owned evidence admission,
+exact-source output, and natural-language expression into narrow specialist
+contracts. The natural final responder is a fresh, disposable LLM invocation. It
+owns neither Prometheist's continuity nor any control-plane decision.
 
 This document refines the final-response section of `PERCEPT_TO_RESPONSE_PIPELINE.md` and must be read consistently with the Constitution, `SYSTEM_DETERMINISM.md`, and the evidence-authority rules of the percept-to-response pipeline.
 
@@ -32,16 +32,17 @@ These accuracy and evidence-authority rules are mandatory even when a deployment
 
 ### 2.1 Current-only policy and physical source admission
 
-Before historical text reaches response synthesis, a fresh policy worker receives
-only the current user prompt. It selects from closed application-owned enums:
+Before historical retrieval, a fresh evidence-policy specialist receives only the
+current user prompt. It selects from closed application-owned enums:
 
 - historical evidence scope: user-authored, model output, external tool, system
   record, derived internal, mixed conversation, or general/current;
 - response surface: natural language, exact source substring, or exact source
   composition.
 
-The model does not filter memory. Application code maps the selected scope to event
-types and physically restricts retrieval and removes inadmissible items. A question
+The model does not filter memory. Application code persists the exact typed policy,
+maps the selected scope to event types, and physically restricts retrieval and
+removes inadmissible items. A question
 about what the user previously said therefore cannot be answered from an assistant
 assertion—and assistant assertions are excluded from retrieval by default rather than
 competing for evidence budget.
@@ -50,6 +51,8 @@ Policy inference is deliberately current-only. Persisted prompt injection never 
 or influences the call that decides which persisted source roles are admissible.
 Explicit references to prior assistant actions (e.g. "what you just ruled out" or
 "what did you tell me") deterministically select `MIXED_CONVERSATION` scope.
+Retrieval, composition, and response realization inherit this committed policy; the
+final responder never classifies it again.
 
 ### 2.2 Quarantined evidence transport
 

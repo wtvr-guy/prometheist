@@ -158,7 +158,8 @@ The interaction chain currently records:
 - each completed v2 architectural stage result;
 - stage errors;
 - each exact v2 stateless LLM invocation envelope;
-- the exact pre-cognitive aperture/disposition and execution plan as part of the pre-cognitive stage artifact;
+- the exact current-only evidence policy and closed source allowlist as its own stage artifact;
+- the exact pre-cognitive aperture/disposition and execution plan as part of the work-triage stage artifact;
 - exact work/tool results as part of the work stage artifact;
 - the exact Composer-approved memory package and Adaptive Recall outcome as part of the Compose stage artifact;
 - the exact final responder output;

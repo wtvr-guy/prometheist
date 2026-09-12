@@ -10,6 +10,7 @@ from jit_agent.response_policy import (
     ExactSourceComposition,
     ExactSourceSelection,
     HistoricalEvidenceScope,
+    allowed_event_types,
     explicit_prior_assistant_reference,
     filter_memory_packet_for_scope,
     source_types_for_scope,
@@ -104,6 +105,24 @@ def test_default_retrieval_scope_excludes_model_outputs():
     assert EventType.INTERACTION_RESPONSE not in source_types_for_scope(
         HistoricalEvidenceScope.GENERAL_OR_CURRENT
     )
+    assert allowed_event_types(HistoricalEvidenceScope.GENERAL_OR_CURRENT) == {
+        EventType.USER_PROMPT,
+        EventType.TOOL_RESULT,
+        EventType.SYSTEM_EVENT,
+    }
+
+
+def test_general_scope_final_filter_is_fail_closed():
+    user = _evidence(EventType.USER_PROMPT, "Current historical fact.", 1)
+    assistant = _evidence(EventType.INTERACTION_RESPONSE, "Unrequested model claim.", 2)
+
+    filtered = filter_memory_packet_for_scope(
+        _packet(user, assistant),
+        HistoricalEvidenceScope.GENERAL_OR_CURRENT,
+    )
+
+    assert filtered is not None
+    assert [item.source_event_id for item in filtered.items] == [user.source_event_id]
 
 
 def test_mixed_conversation_scope_allows_user_and_model_outputs():

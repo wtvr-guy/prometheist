@@ -6,6 +6,11 @@ from uuid import uuid4
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 from jit_agent.percept_response_runtime import ResponseMemoryPackage
 from jit_agent.percept_response_worker import UserPromptLLM
+from jit_agent.response_policy import (
+    HistoricalEvidenceScope,
+    ResponsePolicy,
+    ResponseSurfaceMode,
+)
 
 
 class _FakeResponse:
@@ -86,17 +91,17 @@ def test_final_responder_receives_compact_oldest_to_newest_evidence_timeline():
         adaptive_recall_rounds=0,
     )
     client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
-    fake = _FakeHTTPClient(
-        [
-            '{"evidence_scope":"MIXED_CONVERSATION",'
-            '"surface_mode":"NATURAL_LANGUAGE","insufficient_literal":null}',
-            '{"answer":"ok"}',
-        ]
-    )
+    fake = _FakeHTTPClient(['{"answer":"ok"}'])
     client._client = fake
 
-    assert client.generate_final_response("Answer from the timeline.", package, ()) == "ok"
-    path, payload = fake.calls[1]
+    policy = ResponsePolicy(
+        evidence_scope=HistoricalEvidenceScope.MIXED_CONVERSATION,
+        surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
+    )
+    assert client.generate_final_response(
+        "Answer from the timeline.", package, (), response_policy=policy
+    ) == "ok"
+    path, payload = fake.calls[0]
     assert path == "/api/chat"
     assert [message["role"] for message in payload["messages"]] == [
         "system",

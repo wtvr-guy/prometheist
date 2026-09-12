@@ -9,10 +9,10 @@ from __future__ import annotations
 
 from uuid import UUID, uuid5
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
-INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v9"
+INTERACTION_PROTOCOL_VERSION = "v0.7-interaction-v10"
 
 
 class DurableInteraction(BaseModel):
@@ -27,6 +27,15 @@ class DurableInteraction(BaseModel):
     task_id: UUID
     assignment_id: UUID
     user_text: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_protocol_version(self) -> "DurableInteraction":
+        if self.protocol_version != INTERACTION_PROTOCOL_VERSION:
+            raise ValueError(
+                "interaction protocol version is unsupported: "
+                f"expected {INTERACTION_PROTOCOL_VERSION}, got {self.protocol_version}"
+            )
+        return self
 
 
 def deterministic_interaction_id(conversation_id: UUID, correlation_id: UUID) -> UUID:

@@ -72,12 +72,14 @@ path is:
 
 ```text
 current prompt + bounded aperture
-  -> fresh pre-cognitive non-memory work selection
+  -> fresh current-only evidence-policy specialist
+  -> durable source/surface policy
+  -> bounded aperture filtered by that policy
+  -> fresh pre-cognitive non-memory work-triage specialist
   -> deterministic external work execution
   -> fresh Composer memory-sufficiency judgment
        -> sufficient: response-ready memory package
        -> deficit: deterministic Adaptive Recall -> fresh Composer
-  -> current-only response source/surface policy
   -> application filters event roles
   -> quarantined evidence precedes the current prompt
   -> validated exact-source output or natural final responder
@@ -118,11 +120,15 @@ quarantined evidence channel used for exact selection or natural expression.
 
 ## Statelessness
 
-Every pre-cognitive, Composer, response-policy, exact-source, fallback, and natural
+Every work-triage, Composer, evidence-policy, exact-source, fallback, and natural
 response invocation is fresh. Its complete bounded input, separate current/evidence
 payloads, transport layout, schema, model settings, and output/failure are written to
 the immutable artifact journal. No worker-local list, model session, or implicit chat
 transcript may carry continuity into the next invocation.
+
+Evidence policy is classified once in its own stage and stored as a typed durable
+artifact. The aperture, Adaptive Recall, Composer path, and final responder consume
+that exact decision; none may independently reinterpret the requested source scope.
 
 The system can reconstruct current interaction state from PostgreSQL plus independent
 artifacts. Workers publish stage results before a stage is terminal, and process loss

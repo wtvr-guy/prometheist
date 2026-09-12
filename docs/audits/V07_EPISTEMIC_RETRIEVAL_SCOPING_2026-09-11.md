@@ -5,6 +5,14 @@
 **Status:** implementation and validation complete  
 **Scope:** memory aperture retrieval, response policy scoping, assistant-output exclusion by default, and multi-turn continuity evidence.
 
+> **2026-09-12 hardening addendum:** This report preserves the implementation and
+> evidence observed on 2026-09-11. Subsequent closure hardening moved response
+> policy into its own `V2_EVIDENCE_POLICY` specialist stage, persisted the complete
+> typed policy and closed source allowlist, made `GENERAL_OR_CURRENT` explicitly
+> fail closed, and required every downstream stage to inherit the same policy
+> without reclassification. See `SPECIALIST_WORKER_MODULARITY.md` and the current
+> percept-to-response architecture.
+
 ---
 
 ## 1. Executive Summary

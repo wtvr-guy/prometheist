@@ -1,12 +1,14 @@
 # Percept-to-Response Pipeline
 
 **Status:** authoritative implemented v2 path, adopted 2026-08-29 and revised
-2026-09-03 after native acceptance falsified prompt-only evidence authority.
+2026-09-12 to separate and durably bind evidence policy from work triage and
+response realization.
 
 **Scope:** the path from an admitted input through pre-cognitive work selection, capability execution, memory sufficiency, and final response generation.
 
 This document records the live Prometheist percept-to-response path. It narrows
-responsibilities among deterministic intake policy, the pre-cognitive LLM,
+responsibilities among deterministic intake policy, the evidence-policy specialist,
+the pre-cognitive work-triage LLM,
 deterministic execution machinery, Adaptive Recall, the v2 Composer, current-only
 response policy, application-owned evidence admission, exact-source selection, and
 the final natural-language response worker.
@@ -34,10 +36,15 @@ Deterministic ingestion / persistence
    +--> response_required = TRUE
    |
    v
+EVIDENCE POLICY SPECIALIST
+   |
+   +--> persisted source/surface policy
+   |
+   v
 Default bounded memory activation / orientation
    |
    v
-PRE-COGNITIVE LLM
+WORK TRIAGE SPECIALIST
    |
    +--> determine required non-memory system work
    +--> select bounded semantic capabilities/requirements
@@ -66,9 +73,6 @@ Authoritative results         sufficient?
    +--------------------------+
                               |
                               v
-                        CURRENT-ONLY RESPONSE POLICY
-                              |
-                              v
                         APPLICATION SOURCE FILTER
                               |
                               v
@@ -88,7 +92,7 @@ Authoritative results         sufficient?
 
 The diagram is conceptual. Independent work may be scheduled according to the Attention Fabric and resource-admission rules rather than being forced into unnecessary serial execution.
 
-## 3. Deterministic ingestion and response policy
+## 3. Deterministic ingestion and specialist evidence policy
 
 Every admitted input is persisted before downstream cognition.
 
@@ -101,11 +105,21 @@ This distinction avoids conflating two different questions:
 1. **Does this input class require conversational output?** — deterministic intake policy.
 2. **What work must Prometheist perform before completing the input?** — pre-cognitive semantic work selection within bounded contracts.
 
+Before historical retrieval, a separate evidence-policy specialist sees only the
+current prompt and chooses a closed historical source scope plus response surface.
+That exact typed decision is persisted as its own stage result. Every later stage
+inherits it; no downstream worker reclassifies the policy.
+
 ## 4. Default memory orientation and retrieval scoping
 
-Every admitted input receives the bounded system-owned memory activation required by the Constitution before model routing. This is an attention aperture, not a complete answer and not a claim of evidentiary sufficiency.
+Every admitted input receives the bounded system-owned memory activation required by
+the Constitution before a model selects further capability work. The current-only
+evidence-policy specialist runs first only to choose the closed provenance allowlist;
+it does not decide capability work. The activation is an attention aperture, not a
+complete answer and not a claim of evidentiary sufficiency.
 
-The attention aperture and subsequent Adaptive Recall are scoped to the event roles
+The attention aperture and subsequent Adaptive Recall are scoped by the persisted
+evidence-policy artifact to the event roles
 relevant to the current request:
 
 - **Default exclusion of model outputs:** Prior assistant/model responses
@@ -119,9 +133,9 @@ relevant to the current request:
 
 The system remains the owner of ordering, identity, provenance, WorkingState, resource policy, and durable control state.
 
-## 5. The pre-cognitive LLM: work selection
+## 5. The pre-cognitive work-triage specialist
 
-There is one LLM-powered role in the pre-cognitive pipeline.
+This worker has one LLM-powered responsibility: work selection.
 
 For an explicit user prompt, its responsibility is:
 
@@ -234,7 +248,7 @@ admission. Admitted data then travels in a quarantined channel that precedes the
 later current user message.
 
 ```text
-CURRENT USER PROMPT --> current-only source/surface policy
+CURRENT USER PROMPT --> evidence-policy specialist --> durable source/surface policy
                                   |
 PERSISTENT MEMORY --> role filter +-------------------+
                                                        |
@@ -259,7 +273,8 @@ block. In both cases the current user message comes afterward.
 For an explicit user prompt, the response stage is mandatory once required work and
 the memory-sufficiency path have completed or exhausted.
 
-First, a fresh worker sees only the current prompt and selects:
+Earlier in the interaction, a fresh evidence-policy worker sees only the current
+prompt and selects:
 
 1. which historical source role may establish the requested claim; and
 2. whether output is natural language, one exact source substring, or a composition
@@ -268,6 +283,9 @@ First, a fresh worker sees only the current prompt and selects:
 When required historical support is absent, a separate current-only selector may
 identify an explicit fallback literal. Application code accepts it only when it is a
 verbatim current-prompt substring.
+
+The selected policy is durably committed once. Retrieval, the Composer, and response
+realization inherit it without another classification call.
 
 For exact output, a deterministic-temperature model selects indexed source
 substrings from admitted evidence. Application code validates every index and
@@ -294,16 +312,20 @@ Future non-user percept pipelines may share portions of the same pre-cognitive, 
 
 ## 12. LLM-worker accounting
 
-The user-response path has four semantic LLM worker **roles**:
+The user-response path has four semantic LLM worker **roles**, each isolated behind
+its own guarded stage contract:
 
-1. **Pre-cognitive LLM** — bounded semantic work selection only.
-2. **v2 Composer** — memory-context sufficiency and semantic memory-deficit identification.
-3. **Current-only response policy** — historical source scope and output surface.
+1. **Evidence-policy specialist** — historical source scope and output surface from current authority only.
+2. **Work-triage specialist** — bounded semantic non-memory work selection only.
+3. **v2 Composer** — memory-context sufficiency and semantic memory-deficit identification.
 4. **Response realization** — exact-source selection or personality-conditioned
    natural-language expression; a current-only fallback selector runs only for an
    explicit unsupported-history fallback.
 
-There is only **one LLM-powered role in the pre-cognitive pipeline**.
+One guarded process may invoke only the LLM call kinds assigned to its stage. The
+Composer may reassess the same sufficiency question after deterministic recall, and
+realization modes are mutually exclusive ways to produce the same response-stage
+outcome; neither exception combines independent semantic roles.
 
 The number of LLM **invocations** is not fixed. The v2 Composer may recur during
 Adaptive Recall, constrained outputs may retry, and exact/fallback selection is
@@ -326,6 +348,8 @@ The following are deliberate boundaries:
 - authoritative tool/action results bypass the Composer and reach the final responder directly;
 - memory and external/tool evidence retain distinct provenance domains;
 - response policy is inferred without historical evidence;
+- the exact response policy is persisted once and inherited without reclassification;
+- every guarded LLM worker owns one coherent semantic responsibility;
 - application code filters historical roles before synthesis;
 - evidence precedes and remains separate from current instruction authority;
 - exact outputs are mechanically validated against admitted source bytes;

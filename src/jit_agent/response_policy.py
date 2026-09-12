@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 from jit_agent.models import EventType, MemoryPacket
 
 
-RESPONSE_POLICY_VERSION = "response-source-authority-v5"
+RESPONSE_POLICY_VERSION = "response-source-authority-v6"
 
 _EXPLICIT_PRIOR_ASSISTANT_REFERENCE = re.compile(
     r"\b(?:you|assistant|prometheist)\s+"
@@ -137,10 +137,17 @@ _DERIVED_INTERNAL_TYPES = frozenset(
         EventType.CAPABILITY_RESULT,
     }
 )
+_GENERAL_OR_CURRENT_TYPES = frozenset(
+    {
+        EventType.USER_PROMPT,
+        EventType.TOOL_RESULT,
+        EventType.SYSTEM_EVENT,
+    }
+)
 
 
-def allowed_event_types(scope: HistoricalEvidenceScope) -> frozenset[EventType] | None:
-    """Map semantic scope to application-owned event admissibility."""
+def allowed_event_types(scope: HistoricalEvidenceScope) -> frozenset[EventType]:
+    """Map every semantic scope to a closed application-owned allowlist."""
 
     if scope is HistoricalEvidenceScope.USER_AUTHORED:
         return frozenset({EventType.USER_PROMPT})
@@ -155,21 +162,14 @@ def allowed_event_types(scope: HistoricalEvidenceScope) -> frozenset[EventType] 
     if scope is HistoricalEvidenceScope.MIXED_CONVERSATION:
         return frozenset({EventType.USER_PROMPT}) | _MODEL_OUTPUT_TYPES
     if scope is HistoricalEvidenceScope.GENERAL_OR_CURRENT:
-        return None
+        return _GENERAL_OR_CURRENT_TYPES
     raise ValueError(f"unsupported historical evidence scope: {scope.value}")
 
 
 def source_types_for_scope(scope: HistoricalEvidenceScope) -> list[EventType]:
     """Return the event roles eligible for bounded retrieval under one scope."""
 
-    allowed = allowed_event_types(scope)
-    if allowed is None:
-        return [
-            EventType.USER_PROMPT,
-            EventType.TOOL_RESULT,
-            EventType.SYSTEM_EVENT,
-        ]
-    return sorted(allowed, key=lambda event_type: event_type.value)
+    return sorted(allowed_event_types(scope), key=lambda event_type: event_type.value)
 
 
 def explicit_prior_assistant_reference(prompt: str) -> bool:
@@ -187,8 +187,6 @@ def filter_memory_packet_for_scope(
     if packet is None:
         return None
     allowed = allowed_event_types(scope)
-    if allowed is None:
-        return packet.model_copy(deep=True)
     items = [item.model_copy(deep=True) for item in packet.items if item.event_type in allowed]
     return packet.model_copy(update={"items": items, "supported": bool(items)}, deep=True)
 

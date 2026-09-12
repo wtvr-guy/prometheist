@@ -25,12 +25,12 @@ v0.7 has one live interaction path:
 ```text
 explicit user prompt
   -> deterministic response requirement + persistence
-  -> bounded WorkingState and attention aperture
-  -> fresh pre-cognitive selection of non-memory work only
+  -> fresh current-only evidence-policy specialist persists source/surface policy
+  -> bounded WorkingState and attention aperture under that exact policy
+  -> fresh pre-cognitive work-triage specialist selects non-memory work only
   -> deterministic dependency/resource execution
   -> fresh v2 Composer judges memory sufficiency only
        -> Adaptive Recall + fresh Composer, boundedly, when deficient
-  -> current-only response policy selects admissible historical source roles
   -> application filters memory; evidence is quarantined before current authority
   -> exact-source extraction or personality-conditioned final response
   -> response event + final artifact disposition
@@ -70,6 +70,7 @@ under the neutral internal stage names `BROAD`, `ASSOCIATIVE`, `RELATIONAL`, and
 - bounded canonical-reference `InteractionWorkingState`;
 - current prompt/new recall precedence when WorkingState is saturated;
 - automatic bounded memory orientation before model work selection;
+- immutable evidence-policy artifact inherited without downstream reclassification;
 - deterministic Adaptive Recall and Composer exhaustion/unknown behavior;
 - initial aperture evidence retained ahead of later Adaptive Recall expansions;
 - deep-history anchor reservation under recent same-topic crowding;

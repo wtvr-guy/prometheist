@@ -54,10 +54,11 @@ Implemented mechanisms include:
   results, recovery, and effect idempotency;
 - bounded canonical-reference WorkingState and a default memory attention aperture;
 - the authoritative v2 user-prompt path: deterministic response requirement,
-  pre-cognitive non-memory work selection, direct work-result handoff, memory-only
-  Composer, deterministic Adaptive Recall, and a separate final responder;
-- current-only response source/surface policy, application-owned historical role
-  filtering, quarantined evidence transport, and validated exact-source output;
+  a durable current-only evidence-policy specialist, pre-cognitive non-memory work
+  triage, direct work-result handoff, memory-only Composer, deterministic Adaptive
+  Recall, and a separate final responder;
+- application-owned historical role filtering under the one committed policy,
+  quarantined evidence transport, and validated exact-source output;
 - independent immutable artifact chains and event reconstruction;
 - incremental association-projection freshness;
 - explicit model-evidence byte limits and adversarial evidence-authority tests.

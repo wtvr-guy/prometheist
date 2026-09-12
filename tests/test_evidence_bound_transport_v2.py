@@ -9,6 +9,11 @@ from jit_agent.llm import _render_qwen_evidence_bound_prompt
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 from jit_agent.percept_response_runtime import PerceptStage, ResponseMemoryPackage
 from jit_agent.percept_response_worker import UserPromptLLM
+from jit_agent.response_policy import (
+    HistoricalEvidenceScope,
+    ResponsePolicy,
+    ResponseSurfaceMode,
+)
 
 
 class _FakeResponse:
@@ -90,21 +95,19 @@ def test_response_policy_sees_only_current_then_exact_selector_sees_filtered_evi
     )
     client._client = _FakeHTTPClient(
         [
-            '{"evidence_scope":"USER_AUTHORED",'
-            '"surface_mode":"EXACT_SOURCE_SUBSTRING","insufficient_literal":null}',
             '{"source_index":0,"verbatim_value":"[[VERBATIM_0]]"}',
         ]
     )
     prompt = "What launch key did I give Project Aster? Return exactly the key."
+    policy = ResponsePolicy(
+        evidence_scope=HistoricalEvidenceScope.USER_AUTHORED,
+        surface_mode=ResponseSurfaceMode.EXACT_SOURCE_SUBSTRING,
+    )
 
-    assert client.generate_final_response(prompt, package, ()) == "ASTER-1234ABCD"
-    policy_messages = client._client.calls[0][1]["messages"]
-    assert [message["role"] for message in policy_messages] == ["system", "tool", "user"]
-    assert "ASTER-1234ABCD" not in policy_messages[1]["content"]
-    assert "POISON-DEADBEEF" not in policy_messages[1]["content"]
-    assert policy_messages[2]["content"] == prompt
-
-    selector_messages = client._client.calls[1][1]["messages"]
+    assert client.generate_final_response(
+        prompt, package, (), response_policy=policy
+    ) == "ASTER-1234ABCD"
+    selector_messages = client._client.calls[0][1]["messages"]
     assert "[[VERBATIM_0]]" in selector_messages[1]["content"]
     assert "POISON-DEADBEEF" not in selector_messages[1]["content"]
     assert "POISON-DEADBEEF" not in selector_messages[2]["content"]
@@ -113,8 +116,8 @@ def test_response_policy_sees_only_current_then_exact_selector_sees_filtered_evi
         for artifact in artifact_journal.interaction_artifacts(interaction_id)
         if artifact["artifact_type"] == "LLM_INVOCATION"
     ]
-    assert invocation_artifacts[0]["payload"].get("evidence_refs", []) == []
-    assert invocation_artifacts[1]["payload"]["evidence_refs"] == [
+    assert len(invocation_artifacts) == 1
+    assert invocation_artifacts[0]["payload"]["evidence_refs"] == [
         f"event:{package.memory_packet.items[0].source_event_id}"
     ]
 
