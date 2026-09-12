@@ -310,8 +310,10 @@ def resume_interaction_from_artifacts(
         try:
             _stage_result(conn, interaction, stage, scheduler_key)
             continue
-        except RuntimeError:
-            pass
+        except RuntimeError as exc:
+            expected = f"percept stage {stage.value} is incomplete"
+            if str(exc) != expected:
+                raise
         step_id = deterministic_worker_step_id(interaction.assignment_id, stage.value)
         worker_id = f"percept-v2-recover-{interaction.interaction_id}-{stage.value.casefold()}"
         launched = launcher.launch(

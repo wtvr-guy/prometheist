@@ -15,7 +15,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import re
 from typing import Any, Iterable
 from uuid import UUID, uuid5
 
@@ -23,7 +22,6 @@ from jit_agent.perception import Percept, SalienceAssessment
 
 ARTIFACT_SCHEMA_VERSION = 1
 _ARTIFACT_NAMESPACE = UUID("b983b0b7-a203-5c60-96f0-b17d2d94bf1a")
-_SAFE_KEY = re.compile(r"[^a-zA-Z0-9_.-]+")
 
 
 def artifact_root() -> Path:
@@ -45,11 +43,6 @@ def _canonical_bytes(value: Any) -> bytes:
 
 def _sha256(value: Any) -> str:
     return hashlib.sha256(_canonical_bytes(value)).hexdigest()
-
-
-def _safe_key(value: str) -> str:
-    normalized = _SAFE_KEY.sub("-", value.strip()).strip("-.")
-    return normalized or "artifact"
 
 
 def _fsync_parent(path: Path) -> None:
@@ -138,7 +131,9 @@ def write_interaction_artifact(
 
     ``artifact_key`` is the idempotency identity.  Repeating the same key with
     identical semantic content returns the existing artifact.  Conflicting retry
-    content fails closed.
+    content fails closed. Filesystem names deliberately use the deterministic
+    artifact UUID rather than the potentially long semantic key so path length is
+    bounded independently of stage/kind labels and claim identifiers.
     """
 
     existing = _find_artifact_by_key(interaction_id, artifact_key)
@@ -183,7 +178,7 @@ def write_interaction_artifact(
         "payload": payload,
     }
     envelope["artifact_hash"] = _sha256(envelope)
-    filename = f"{sequence:06d}-{_safe_key(artifact_key)}.json"
+    filename = f"{sequence:06d}-{artifact_id.hex}.json"
     target = _interaction_dir(interaction_id) / filename
     if target.exists():
         # A sequence collision can occur only if two writers raced.  Preserve
@@ -191,12 +186,14 @@ def write_interaction_artifact(
         while target.exists():
             sequence += 1
             envelope["journal_sequence"] = sequence
-            filename = f"{sequence:06d}-{_safe_key(artifact_key)}.json"
+            filename = f"{sequence:06d}-{artifact_id.hex}.json"
             target = _interaction_dir(interaction_id) / filename
         previous = interaction_artifacts(interaction_id)[-1]
         envelope["previous_artifact_id"] = previous.get("artifact_id")
         envelope["previous_artifact_hash"] = previous.get("artifact_hash")
-        envelope["artifact_hash"] = _sha256({k: v for k, v in envelope.items() if k != "artifact_hash"})
+        envelope["artifact_hash"] = _sha256(
+            {key: value for key, value in envelope.items() if key != "artifact_hash"}
+        )
     _atomic_write_json(target, envelope)
     envelope["_path"] = str(target)
     return envelope
@@ -375,7 +372,9 @@ def verify_interaction_chain(interaction_id: UUID) -> dict[str, Any]:
         "artifact_count": len(artifacts),
         "valid": not errors,
         "errors": errors,
-        "complete": any(item.get("artifact_type") == "FINAL_DISPOSITION" for item in artifacts),
+        "complete": any(
+            item.get("artifact_type") == "FINAL_DISPOSITION" for item in artifacts
+        ),
         "last_artifact": artifacts[-1] if artifacts else None,
     }
 
@@ -403,7 +402,9 @@ def latest_interaction_id(*, complete: bool | None = None) -> UUID | None:
         artifacts = interaction_artifacts(interaction_id)
         if not artifacts:
             continue
-        is_complete = any(item.get("artifact_type") == "FINAL_DISPOSITION" for item in artifacts)
+        is_complete = any(
+            item.get("artifact_type") == "FINAL_DISPOSITION" for item in artifacts
+        )
         if complete is not None and is_complete is not complete:
             continue
         newest = max(Path(item["_path"]).stat().st_mtime for item in artifacts)
@@ -450,8 +451,8 @@ def write_event_record_artifact(
     path = _event_record_path(event_id)
     if path.exists():
         existing = _load_json(path)
-        comparable_existing = {k: v for k, v in existing.items() if k != "journaled_at"}
-        comparable_new = {k: v for k, v in record.items() if k != "journaled_at"}
+        comparable_existing = {key: value for key, value in existing.items() if key != "journaled_at"}
+        comparable_new = {key: value for key, value in record.items() if key != "journaled_at"}
         if comparable_existing != comparable_new:
             raise ValueError(f"conflicting event artifact retry: {event_id}")
         return existing

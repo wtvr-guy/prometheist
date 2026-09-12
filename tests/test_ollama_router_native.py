@@ -1,4 +1,4 @@
-"""Narrow real-Ollama smoke gate for the production structured router adapter."""
+"""Narrow real-Ollama smoke gate for the v2 pre-cognitive work selector."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -7,10 +7,10 @@ from uuid import uuid4
 import pytest
 
 from jit_agent.capability_registry import CapabilityDescriptor, CapabilityKind
-from jit_agent.interaction_policy import InteractionAction, InteractionDecision
-from jit_agent.llm import OllamaClient
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from tests._cli_helpers import ollama_available
+from jit_agent.percept_response_runtime import PreCognitiveDisposition
+from jit_agent.percept_response_worker import UserPromptLLM
+from tests._cli_helpers import ollama_available, print_transcript
 
 
 pytestmark = [
@@ -23,7 +23,7 @@ def _evidence(content: str, *, seq: int) -> MemoryEvidence:
     return MemoryEvidence(
         source_event_id=uuid4(),
         event_type=EventType.USER_PROMPT,
-        source="native-router-smoke",
+        source="native-pre-cognitive-smoke",
         created_at=datetime.now(timezone.utc),
         conversation_id=uuid4(),
         conversation_seq=seq,
@@ -32,43 +32,40 @@ def _evidence(content: str, *, seq: int) -> MemoryEvidence:
     )
 
 
-def test_real_ollama_router_returns_nonempty_valid_structured_decision():
-    profile_token = "VX-NATIVE01"
+def test_real_ollama_precognitive_selector_returns_valid_work_requirement():
     packet = MemoryPacket(
         memory_request_id=uuid4(),
-        need=MemoryNeed(query_text="Which established Kestrel constraint and profile apply?"),
+        need=MemoryNeed(query_text="Which established Kestrel constraint applies?"),
         supported=True,
         items=[
             _evidence(
-                "For Project Kestrel, never use Docker; deploy PostgreSQL directly on Windows "
-                f"because virtualization is disabled. I track that constraint under profile {profile_token}.",
+                "For Project Kestrel, never use Docker; deploy PostgreSQL directly on Windows.",
                 seq=1,
-            ),
-            _evidence(
-                "For Project Juniper, Docker Compose is acceptable when virtualization is available.",
-                seq=2,
-            ),
-            _evidence(
-                "The active Kestrel plan is called BlueHarbor-NATIVE.",
-                seq=3,
-            ),
+            )
         ],
     )
     catalog = (
         CapabilityDescriptor(
-            capability_id="memory.inspect",
+            capability_id="external.inspect",
             kind=CapabilityKind.WORKFLOW,
-            description="Inspect additional memory only if supplied evidence is insufficient.",
+            description="Inspect an external source only when required.",
         ),
     )
 
-    decision = OllamaClient().classify(
-        "Which approach conflicts with my established Kestrel rule, and what constraint "
-        "profile did I give that rule? Return exactly '<approach> | <profile>' and nothing else.",
+    prompt = (
+        "Using only the supplied established memory, answer which Kestrel constraint "
+        "applies. Do not inspect or consult any outside source."
+    )
+    decision = UserPromptLLM().decide_disposition(
+        prompt,
         packet,
         catalog,
     )
-
-    assert isinstance(decision, InteractionDecision)
-    assert decision.next_action is InteractionAction.RESPOND
+    print_transcript(f"\nPre-cognitive work smoke — User:\n{prompt}")
+    print_transcript(
+        "\nPre-cognitive work smoke — capability_indices:\n"
+        f"{decision.capability_indices}"
+    )
+    assert isinstance(decision, PreCognitiveDisposition)
+    assert decision.response_required is True
     assert decision.capability_indices == []

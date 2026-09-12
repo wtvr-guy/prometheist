@@ -7,7 +7,7 @@ import pytest
 from jit_agent import db
 from jit_agent.attention_observation import HostResourceMetrics
 from jit_agent.attention_store import load_scheduler
-from jit_agent.interaction_runtime import begin_interaction
+from jit_agent.percept_response_runtime import begin_percept
 from jit_agent.native_policy import native_resource_safety_policy
 from jit_agent.ollama_runtime import OllamaRuntimeState
 
@@ -38,7 +38,7 @@ def _runtime_state(*, resident: bool) -> OllamaRuntimeState:
 def test_resident_model_reduces_interaction_admission_to_incremental_worker_ram():
     conn = db.get_connection()
     try:
-        interaction = begin_interaction(
+        interaction = begin_percept(
             conn,
             "warm admission",
             uuid.uuid4(),
@@ -69,7 +69,7 @@ def test_same_host_still_denies_full_cold_model_load():
             RuntimeError,
             match="interaction was not safely admitted to one assignment",
         ):
-            begin_interaction(
+            begin_percept(
                 conn,
                 "cold admission",
                 uuid.uuid4(),

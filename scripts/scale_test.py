@@ -21,7 +21,7 @@ import time
 import uuid
 
 from jit_agent import db, event_store
-from jit_agent.interaction_runtime import handle_interaction_in_worker_processes
+from jit_agent.percept_response_runtime import handle_percept_in_worker_processes
 from jit_agent.models import EventType
 
 _SUBJECTS = ["my neighbor", "the team", "our cat", "the intern", "my sister", "the vendor"]
@@ -91,7 +91,7 @@ def main() -> None:
         print(f"seeded {args.count} noise events + 1 target fact in conversation {conversation_id}")
 
         t0 = time.monotonic()
-        answer = handle_interaction_in_worker_processes(conn, question, conversation_id)
+        answer = handle_percept_in_worker_processes(conn, question, conversation_id)
         elapsed = time.monotonic() - t0
 
         events = event_store.get_events_by_conversation(conn, conversation_id)
@@ -108,7 +108,7 @@ def main() -> None:
         print(f"interaction latency: {elapsed:.2f}s")
         print(f"target fact: {fact}")
         print(f"final answer: {answer!r}")
-        print(f"answer contains target fact: {fact in answer}")
+        print(f"answer contains target fact: {answer is not None and fact in answer}")
 
 
 if __name__ == "__main__":

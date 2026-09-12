@@ -177,6 +177,9 @@ class GuardedWorkerLauncher:
             if not retryable or retry_index + 1 >= self.claim_retry_attempts:
                 if last_observation is None:
                     raise WorkerProtocolError("guarded claim returned no decision")
+                from jit_agent.reflexes import record_admission_denial
+                with self.connection_factory() as denial_conn:
+                    record_admission_denial(denial_conn, last_observation)
                 raise WorkerLaunchDenied(last_observation)
             self.sleep(self.claim_retry_delay_seconds)
 

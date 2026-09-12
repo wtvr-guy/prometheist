@@ -25,7 +25,7 @@ import uuid
 from dataclasses import dataclass, field
 
 from jit_agent import db, event_store
-from jit_agent.interaction_runtime import handle_interaction_in_worker_processes
+from jit_agent.percept_response_runtime import handle_percept_in_worker_processes
 from jit_agent.models import EventType
 
 _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
@@ -151,7 +151,9 @@ def _measure_interaction(
     conn, conversation_id, question: str, target_text: str, expected: str, distractors: list[str]
 ) -> dict:
     t0 = time.monotonic()
-    answer = handle_interaction_in_worker_processes(conn, question, conversation_id)
+    answer = handle_percept_in_worker_processes(conn, question, conversation_id)
+    if answer is None:
+        raise RuntimeError("explicit benchmark prompt produced no response")
     elapsed = time.monotonic() - t0
 
     events = event_store.get_events_by_conversation(conn, conversation_id)

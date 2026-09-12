@@ -5,9 +5,9 @@ from datetime import datetime, timezone
 
 import pytest
 
-from jit_agent import db
+from jit_agent import artifact_journal, db
 from jit_agent.attention_store import load_scheduler
-from jit_agent.interaction_policy import DurableInteraction
+from jit_agent.interaction_contracts import DurableInteraction
 from jit_agent.interaction_store import load_interaction, save_interaction
 from jit_agent.perception import (
     AdvisorySemanticClassification,
@@ -21,8 +21,8 @@ from jit_agent.perception import (
     normalize_scheduled_percept,
     normalize_user_interaction_percept,
 )
-from jit_agent.percept_response_runtime import begin_percept, execute_claimed_percept_step
-from jit_agent.percept_response_worker import UserPromptLLM
+from jit_agent.percept_response_runtime import PerceptStage, begin_percept
+from jit_agent.percept_response_worker import UserPromptLLM, _execute_claimed_user_prompt_step
 from jit_agent.worker_protocol import deterministic_worker_step_id
 from jit_agent.worker_store import guarded_claim_worker_step, load_worker_result
 
@@ -243,10 +243,7 @@ def test_anomaly_alert_is_a_first_class_non_user_percept() -> None:
 
     assert percept.source.kind is PerceptKind.ANOMALY_ALERT
     assert percept.response_required is False
-    assert assessment.disposition in {
-        SalienceDisposition.ORIENT,
-        SalienceDisposition.REFLEX,
-    }
+    assert assessment.disposition is SalienceDisposition.IGNORE
 
 
 def test_user_percept_builds_bounded_input_buffer() -> None:
@@ -294,7 +291,7 @@ def test_advisory_semantic_classification_has_no_policy_authority() -> None:
     assert assessment.advisory_classification.authoritative is False
 
 
-def test_salience_uses_whole_term_matching() -> None:
+def test_salience_does_not_use_lexical_substrings() -> None:
     percept = normalize_user_interaction_percept(
         user_text="Explain how this address changed.",
         observed_at=NOW,
@@ -309,7 +306,7 @@ def test_salience_uses_whole_term_matching() -> None:
     assert "add" not in assessment.trigger_terms
 
 
-def test_system_integrity_observation_can_trigger_reflex() -> None:
+def test_unstructured_integrity_words_cannot_authorize_reflex() -> None:
     percept = normalize_percept(
         source=PerceptSource(
             source_id="sensor:integrity",
@@ -324,8 +321,8 @@ def test_system_integrity_observation_can_trigger_reflex() -> None:
 
     assessment = evaluate_salience(percept)
 
-    assert assessment.disposition is SalienceDisposition.REFLEX
-    assert assessment.preauthorized_reflexes == ("RAISE_INTEGRITY_ALERT",)
+    assert assessment.disposition is SalienceDisposition.IGNORE
+    assert assessment.preauthorized_reflexes == ()
 
 
 def test_begin_percept_persists_normalized_percept_and_salience() -> None:
@@ -346,25 +343,26 @@ def test_begin_percept_persists_normalized_percept_and_salience() -> None:
         assert stored.percept.source_event_id == stored.user_prompt_event_id
         assert stored.salience_assessment is not None
         assert stored.salience_assessment.percept_id == stored.percept.percept_id
-        assert stored.salience_assessment.disposition is SalienceDisposition.ORIENT
+        assert stored.salience_assessment.disposition is SalienceDisposition.DELIBERATE
 
         scheduler = load_scheduler(connection)
         task = scheduler.tasks[interaction.task_id]
         assert task.resumable_state["percept_id"] == str(stored.percept.percept_id)
-        assert task.resumable_state["salience_disposition"] == "ORIENT"
+        assert task.resumable_state["salience_disposition"] == "DELIBERATE"
     finally:
         connection.close()
 
 
-def test_precognitive_stage_receives_percept_and_salience_state() -> None:
+def test_reference_stage_journals_percept_and_salience_before_completion() -> None:
     connection = db.get_connection()
+    now = datetime.now(timezone.utc)
     try:
         interaction = begin_percept(
             connection,
             "Please investigate this error failure crash immediately.",
             uuid.uuid4(),
             probe=FixedProbe(),
-            clock=lambda: NOW,
+            clock=lambda: now,
         )
         step_id = deterministic_worker_step_id(interaction.assignment_id, "V2_RESOLVE_REFERENCES")
         attempt = guarded_claim_worker_step(
@@ -372,20 +370,25 @@ def test_precognitive_stage_receives_percept_and_salience_state() -> None:
             step_id=step_id,
             worker_id="test-resolve-worker",
             probe=FixedProbe(),
-            clock=lambda: NOW,
+            clock=lambda: now,
         )
         assert attempt.envelope is not None
-        execute_claimed_percept_step(
+        _execute_claimed_user_prompt_step(
             connection,
-            UserPromptLLM(),
+            UserPromptLLM(stage=PerceptStage.RESOLVE_REFERENCES),
             claim_id=attempt.envelope.claim.claim_id,
             worker_id="test-resolve-worker",
-            clock=lambda: NOW,
+            scheduler_key="default",
         )
         result = load_worker_result(connection, step_id)
         assert result is not None
         assert result.output["percept"]["source"]["kind"] == "USER_INTERACTION"
         assert result.output["salience_assessment"]["disposition"] == "ORIENT"
+        recovered = artifact_journal.load_stage_result_artifact(
+            interaction.interaction_id, PerceptStage.RESOLVE_REFERENCES.value
+        )
+        assert recovered is not None
+        assert recovered["output"] == result.output
     finally:
         connection.close()
 

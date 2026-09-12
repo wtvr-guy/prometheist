@@ -261,6 +261,24 @@ Prometheist is intended to remain usable on modest local hardware. Stronger hard
 
 **Deep dive:** [`docs/architecture/IMMUTABLE_ARTIFACT_JOURNAL.md`](docs/architecture/IMMUTABLE_ARTIFACT_JOURNAL.md)
 
+### Article 31 — LLM workers are narrow semantic specialists
+
+**Rule.** One guarded LLM worker process may own only one coherent semantic
+responsibility. Independent decisions such as percept triage, evidence policy,
+work selection, memory sufficiency, and response realization require separate
+specialist stages with typed inputs and outputs. Retries or bounded reassessment may
+repeat the same role, but a worker must not accumulate unrelated duties, hidden
+intermediate cognition, or cross-role context merely to reduce process count.
+Specialist boundaries must be explicit, independently auditable, and guarded so a
+stage cannot invoke another specialist's model contract.
+
+**Why it matters.** Narrow workers reduce model-context and transient-resource
+pressure, make failures attributable to one decision, allow components and models
+to be replaced independently, and prevent a convenient worker from quietly becoming
+a general-purpose persistent agent.
+
+**Deep dive:** [`docs/architecture/SPECIALIST_WORKER_MODULARITY.md`](docs/architecture/SPECIALIST_WORKER_MODULARITY.md)
+
 ## Constitutional audit standard
 
 A constitutional audit should evaluate every article against the entire current code path, schema, tests, configuration, and current architecture documentation. For each article, record:
@@ -288,5 +306,6 @@ A proposed change is constitutionally admissible only if all of the following ar
 8. the change does not make a reference implementation into an unjustified constitutional dependency;
 9. insufficient authority or evidence still fails closed rather than being guessed past;
 10. meaningful state transitions remain independently durable and reconstructable outside the primary operational database.
+11. every LLM worker retains one explicit, guarded semantic responsibility.
 
 That standard is the default review lens for future Prometheist development.

@@ -18,7 +18,7 @@ def test_extract_admission_diagnostics_returns_structured_payload():
     }
 
 
-def test_pre_cap_resource_probe_is_a_single_relabelled_sample(monkeypatch):
+def test_pre_pipeline_resource_probe_is_a_single_relabelled_sample(monkeypatch):
     calls = []
 
     def fake_measure_resources(samples: int):
@@ -31,9 +31,9 @@ def test_pre_cap_resource_probe_is_a_single_relabelled_sample(monkeypatch):
 
     monkeypatch.setattr(calibration, "measure_resources", fake_measure_resources)
 
-    result = calibration.measure_pre_cap_resources()
+    result = calibration.measure_pre_pipeline_resources()
 
     assert calls == [1]
-    assert result["benchmark_id"] == "RES-PRE-CAP-001"
+    assert result["benchmark_id"] == "RES-PRE-PIPELINE-001"
     assert result["sample_count"] == 1
     assert "directly before" in result["decision"]

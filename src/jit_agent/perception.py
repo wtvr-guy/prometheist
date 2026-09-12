@@ -5,70 +5,20 @@ from datetime import datetime
 from enum import Enum
 import hashlib
 import json
+import math
 import re
 from typing import Any, Literal
 from uuid import UUID, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-PERCEPTION_POLICY_VERSION = "v0.8-perception-v1"
-SALIENCE_POLICY_VERSION = "v0.8-salience-v1"
+from jit_agent.percept_context import PerceptContext, aware
+
+PERCEPTION_POLICY_VERSION = "v0.8-perception-v2"
+SALIENCE_POLICY_VERSION = "v0.8-salience-v2"
 _INPUT_BUFFER_SEGMENT_CHARS = 160
 _INPUT_BUFFER_MAX_SEGMENTS = 4
 _PERCEPT_NAMESPACE = UUID("d0b7d62c-47d4-5a0f-99d2-0cc58d7357d3")
-_THREAT_TERMS = (
-    "danger",
-    "emergency",
-    "immediately",
-    "urgent",
-    "attack",
-    "breach",
-    "unsafe",
-)
-_OPPORTUNITY_TERMS = (
-    "improve",
-    "opportunity",
-    "optimize",
-    "implement",
-    "add",
-    "plan",
-    "upgrade",
-)
-_GOAL_TERMS = (
-    "need",
-    "please",
-    "should",
-    "want",
-    "goal",
-    "must",
-)
-_UNCERTAINTY_TERMS = (
-    "maybe",
-    "perhaps",
-    "not sure",
-    "unclear",
-    "unknown",
-    "guess",
-    "uncertain",
-)
-_INTEGRITY_TERMS = (
-    "error",
-    "failed",
-    "failure",
-    "exception",
-    "traceback",
-    "crash",
-    "corrupt",
-    "broken",
-    "timeout",
-)
-_NOVELTY_TERMS = (
-    "new",
-    "different",
-    "changed",
-    "novel",
-    "unexpected",
-)
 
 
 class PerceptKind(str, Enum):
@@ -77,12 +27,19 @@ class PerceptKind(str, Enum):
     ANOMALY_ALERT = "ANOMALY_ALERT"
     EXTERNAL_OBSERVATION = "EXTERNAL_OBSERVATION"
     SYSTEM_OBSERVATION = "SYSTEM_OBSERVATION"
+    ACTION_OUTCOME = "ACTION_OUTCOME"
 
 
 class PerceptModality(str, Enum):
     TEXT = "TEXT"
     STRUCTURED = "STRUCTURED"
     METRIC = "METRIC"
+    IMAGE = "IMAGE"
+    AUDIO = "AUDIO"
+    VIDEO = "VIDEO"
+    FILE = "FILE"
+    DOCUMENT = "DOCUMENT"
+    EVENT_STREAM = "EVENT_STREAM"
 
 
 class SalienceDisposition(str, Enum):
@@ -166,6 +123,9 @@ class Percept(BaseModel):
     input_buffer: PerceptBuffer
     features: PerceptFeatures
     response_required: bool = False
+    context: PerceptContext = Field(default_factory=PerceptContext)
+
+    _aware = field_validator("observed_at")(aware)
 
     @field_validator("normalized_text")
     @classmethod
@@ -203,6 +163,8 @@ class SalienceSignals(BaseModel):
     novelty_score: int = Field(ge=0, le=3)
     uncertainty_score: int = Field(ge=0, le=3)
     system_integrity_score: int = Field(ge=0, le=3)
+    prediction_error_score: int = Field(default=0, ge=0, le=3)
+    task_relevance_score: int = Field(default=0, ge=0, le=3)
 
 
 class SalienceAssessment(BaseModel):
@@ -220,11 +182,13 @@ class SalienceAssessment(BaseModel):
 
 
 def _stable_json(value: Any) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
 
 
 def _is_json_compatible(value: Any) -> bool:
-    if value is None or isinstance(value, (str, int, float, bool)):
+    if isinstance(value, float):
+        return math.isfinite(value)
+    if value is None or isinstance(value, (str, int, bool)):
         return True
     if isinstance(value, (list, tuple)):
         return all(_is_json_compatible(item) for item in value)
@@ -234,10 +198,23 @@ def _is_json_compatible(value: Any) -> bool:
 
 
 def _observation_text(value: Any, modality: PerceptModality) -> str:
+    if modality in {PerceptModality.IMAGE, PerceptModality.AUDIO, PerceptModality.VIDEO,
+                     PerceptModality.FILE, PerceptModality.DOCUMENT}:
+        from jit_agent.percept_adapters import MediaReference, verify_media
+        reference = MediaReference.model_validate(value)
+        verify_media(reference)
+        return _stable_json(reference.model_dump(mode="json"))
+    if modality is PerceptModality.EVENT_STREAM:
+        from jit_agent.percept_adapters import MAX_EVENT_STREAM_RECORDS
+        if not isinstance(value, list) or not 1 <= len(value) <= MAX_EVENT_STREAM_RECORDS:
+            raise ValueError("event streams require a bounded nonempty list of records")
+        if not all(isinstance(item, dict) and _is_json_compatible(item) for item in value):
+            raise ValueError("event stream records must be JSON objects")
+        return _stable_json(value)
     if modality is PerceptModality.TEXT:
         if not isinstance(value, str):
             raise ValueError("text percepts require a string observation")
-        return value.replace("\r\n", "\n").replace("\r", "\n").strip()
+        return value
     if modality is PerceptModality.METRIC:
         if value is None or isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError("metric percepts require a scalar numeric observation")
@@ -254,24 +231,20 @@ def _sha256_text(value: str) -> str:
 
 
 def _build_buffer(text: str) -> PerceptBuffer:
-    segments = [
-        text[index : index + _INPUT_BUFFER_SEGMENT_CHARS]
-        for index in range(0, len(text), _INPUT_BUFFER_SEGMENT_CHARS)
-    ] or [text]
-    total_segments = len(segments)
+    total_segments = max(1, math.ceil(len(text) / _INPUT_BUFFER_SEGMENT_CHARS))
     if total_segments <= _INPUT_BUFFER_MAX_SEGMENTS:
-        retained = segments
         retained_indices = tuple(range(total_segments))
     else:
         head_count = _INPUT_BUFFER_MAX_SEGMENTS // 2
         tail_count = _INPUT_BUFFER_MAX_SEGMENTS - head_count
-        retained = segments[:head_count] + segments[-tail_count:]
         retained_indices = tuple(range(head_count)) + tuple(
             range(total_segments - tail_count, total_segments)
         )
     return PerceptBuffer(
         retained_segment_indices=retained_indices,
-        segments=tuple(retained),
+        segments=tuple(text[index * _INPUT_BUFFER_SEGMENT_CHARS :
+                            (index + 1) * _INPUT_BUFFER_SEGMENT_CHARS]
+                       for index in retained_indices),
         total_segments=total_segments,
         total_characters=len(text),
         truncated=total_segments > _INPUT_BUFFER_MAX_SEGMENTS,
@@ -279,11 +252,10 @@ def _build_buffer(text: str) -> PerceptBuffer:
 
 
 def _uppercase_ratio(text: str) -> float:
-    letters = [char for char in text if char.isalpha()]
-    if not letters:
+    letter_count = sum(char.isalpha() for char in text)
+    if not letter_count:
         return 0.0
-    uppercase = sum(1 for char in letters if char.isupper())
-    return uppercase / len(letters)
+    return sum(char.isupper() for char in text) / letter_count
 
 
 def _feature_flags(text: str, modality: PerceptModality) -> PerceptFeatures:
@@ -331,11 +303,12 @@ def normalize_percept(
     source_event_id: UUID | None = None,
     conversation_id: UUID | None = None,
     response_required: bool = False,
+    context: PerceptContext | None = None,
 ) -> Percept:
     raw_text = _observation_text(observation, source.modality)
     if not raw_text.strip():
         raise ValueError("percept observation must not be empty")
-    normalized_text = raw_text.strip()
+    normalized_text = raw_text.replace("\r\n", "\n").replace("\r", "\n").strip()
     return Percept(
         percept_id=deterministic_percept_id(
             source_event_id,
@@ -353,7 +326,8 @@ def normalize_percept(
         normalized_text=normalized_text,
         input_buffer=_build_buffer(normalized_text),
         features=_feature_flags(normalized_text, source.modality),
-        response_required=response_required,
+        response_required=response_required or source.kind is PerceptKind.USER_INTERACTION,
+        context=context or PerceptContext(),
     )
 
 
@@ -427,87 +401,43 @@ def normalize_anomaly_percept(
     )
 
 
-def _term_matched(text: str, term: str) -> bool:
-    return re.search(rf"\b{re.escape(term)}\b", text) is not None
-
-
-def _score_matches(text: str, terms: tuple[str, ...], *, cap: int = 3) -> tuple[int, tuple[str, ...]]:
-    matched = tuple(sorted(term for term in terms if _term_matched(text, term)))
-    return min(cap, len(matched)), matched
-
-
 def evaluate_salience(
     percept: Percept,
     *,
     advisory_classification: AdvisorySemanticClassification | None = None,
+    prediction_error: float = 0.0,
+    novelty: bool = False,
 ) -> SalienceAssessment:
-    lowered = percept.normalized_text.casefold()
-    threat_score, threat_terms = _score_matches(lowered, _THREAT_TERMS)
-    opportunity_score, opportunity_terms = _score_matches(lowered, _OPPORTUNITY_TERMS)
-    goal_score, goal_terms = _score_matches(lowered, _GOAL_TERMS)
-    uncertainty_score, uncertainty_terms = _score_matches(lowered, _UNCERTAINTY_TERMS)
-    integrity_score, integrity_terms = _score_matches(lowered, _INTEGRITY_TERMS)
-    novelty_score, novelty_terms = _score_matches(lowered, _NOVELTY_TERMS)
-    novelty_score = min(
-        3,
-        novelty_score
-        + int(percept.features.contains_url),
-    )
-    anomaly_score = min(
-        3,
-        int(percept.input_buffer.truncated)
-        + int("!!!" in percept.normalized_text or "???" in percept.normalized_text)
-        + int(percept.features.uppercase_ratio >= 0.35),
-    )
-    if percept.response_required:
-        goal_score = max(goal_score, 2)
-        novelty_score = max(novelty_score, 1)
+    """Rank explicit observations, goals, and prediction error; never lexical cues.
+
+    Prediction error is already normalized to a declared expectation scale.
+    Scores are advisory ordinal bins; no score authorizes a reflex or model call.
+    """
+    if not math.isfinite(prediction_error) or prediction_error < 0:
+        raise ValueError("prediction_error must be finite and non-negative")
+    context = percept.context
+    error_score = (3 if prediction_error >= 1.0 else 2 if prediction_error >= 0.25
+                   else 1 if prediction_error > 0.0 else 0)
     signals = SalienceSignals(
-        anomaly_score=anomaly_score,
-        threat_score=threat_score,
-        opportunity_score=opportunity_score,
-        goal_relevance_score=goal_score,
-        novelty_score=novelty_score,
-        uncertainty_score=min(3, uncertainty_score + int(percept.features.contains_question)),
-        system_integrity_score=integrity_score,
+        anomaly_score=error_score,
+        prediction_error_score=error_score,
+        threat_score=context.threat,
+        opportunity_score=context.opportunity,
+        goal_relevance_score=3 if context.active_goal_refs else 2 if percept.response_required else 0,
+        novelty_score=int(novelty),
+        uncertainty_score=context.uncertainty,
+        system_integrity_score=context.integrity,
+        task_relevance_score=3 if context.task_refs else 0,
     )
-    if signals.system_integrity_score >= 3 and not percept.response_required:
-        disposition = SalienceDisposition.REFLEX
-    elif (
-        signals.system_integrity_score >= 2
-        or signals.threat_score >= 2
-        or signals.anomaly_score >= 2
-        or signals.uncertainty_score >= 2
-    ):
+    if max(error_score, context.threat, context.integrity, context.uncertainty) >= 2:
         disposition = SalienceDisposition.ORIENT
-    elif (
-        percept.response_required
-        or signals.goal_relevance_score >= 1
-        or signals.opportunity_score >= 1
-        or signals.novelty_score >= 1
-    ):
+    elif percept.response_required or any((context.active_goal_refs, context.task_refs,
+                                          context.opportunity, novelty, error_score)):
         disposition = SalienceDisposition.DELIBERATE
     else:
         disposition = SalienceDisposition.IGNORE
-    preauthorized_reflexes = (
-        ("RAISE_INTEGRITY_ALERT",)
-        if disposition is SalienceDisposition.REFLEX
-        else ()
-    )
-    matched_terms = (
-        *threat_terms,
-        *opportunity_terms,
-        *goal_terms,
-        *uncertainty_terms,
-        *integrity_terms,
-        *novelty_terms,
-    )
     return SalienceAssessment(
-        percept_id=percept.percept_id,
-        disposition=disposition,
-        signals=signals,
-        trigger_terms=tuple(dict.fromkeys(matched_terms)),
-        preauthorized_reflexes=preauthorized_reflexes,
+        percept_id=percept.percept_id, disposition=disposition, signals=signals,
         advisory_classification=advisory_classification,
     )
 

@@ -31,8 +31,24 @@ def test_recall_is_deterministic_and_bounded():
     assert first == second
     assert len(first.items) == 2
     assert [item.event_id for item in first.items] == ["c", "a"]
-    assert first.trace.policy_version == "deterministic-cues-v1"
+    assert first.trace.policy_version == "deterministic-cues-v2"
     assert all(item.reasons for item in first.trace.items)
+
+
+def test_equal_relevance_preserves_both_chronology_endpoints():
+    events = [
+        ev("oldest", 1, "Project Falcon launch code alpha"),
+        ev("middle-a", 2, "Project Falcon launch code bravo"),
+        ev("middle-b", 3, "Project Falcon launch code charlie"),
+        ev("newest", 4, "Project Falcon launch code delta"),
+    ]
+
+    packet = recall(
+        events,
+        CueState(query_text="Project Falcon launch code", limit=2),
+    )
+
+    assert [item.event_id for item in packet.items] == ["newest", "oldest"]
 
 
 def test_unknown_query_returns_no_evidence_instead_of_nearest_noise():

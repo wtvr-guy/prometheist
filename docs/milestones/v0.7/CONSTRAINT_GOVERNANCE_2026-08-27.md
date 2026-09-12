@@ -1,5 +1,11 @@
 # v0.7 Empirical Constraint Governance — 2026-08-27
 
+> **Historical calibration record.** Counts and `CAP-LOOP-001` apply to the recorded
+> pre-v2 implementation. The live registry and v2 native pipeline obligation are
+> documented in
+> [`../../engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md`](../../engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md);
+> the obsolete calibration script has been removed while its result remains evidence.
+
 ## Purpose
 
 Prometheist must not silently accumulate behavioral "magic numbers." Numeric policy choices are now treated as claims that require one of four things: a structural proof, an external-contract rationale, empirical calibration, or an explicit statement that current evidence is insufficient to identify a unique value.

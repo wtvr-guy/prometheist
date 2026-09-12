@@ -50,8 +50,9 @@ Verify the architectural claim a user/system actually depends on:
 - automatic memory activation;
 - bounded cognitive context;
 - exact provenance;
-- recurrent capability execution;
-- final-response barriers;
+- one-pass pre-cognitive non-memory work selection and deterministic execution;
+- bounded Composer/Adaptive Recall memory reassessment;
+- direct work-result handoff and mandatory explicit-user response;
 - process destruction/recovery;
 - resource admission and safe execution.
 
@@ -96,6 +97,33 @@ Native testing is required when behavior depends materially on:
 
 A passing native run is evidence about the tested environment. It does not replace deterministic regression tests or prove universal safety on every host.
 
+### Artifact-first review of model behavior
+
+Natural-language model quality is not reduced to one privileged wording merely to
+make native pytest green or red. For response scenarios, the automated native gate
+establishes structural facts:
+
+- the expected canonical source events were retrieved;
+- the immutable interaction chain is valid and complete;
+- the successful `V2_RESPOND` invocation artifact links the exact canonical event
+  references actually admitted to that model call;
+- inadmissible source references are absent where source policy can decide that
+  mechanically;
+- transport, schema, bounds, retries, and non-empty response requirements hold.
+
+The native run prints the user prompt, Prometheist response, response-realization
+kind, interaction/artifact IDs, and admitted evidence references. A human reviewer
+then judges whether the response is accurate, relevant, and appropriately expressed.
+Both parts are required: artifact receipt without a good answer is not a semantic
+pass, and a good-looking answer without the required evidence lineage is not a
+continuity pass.
+
+Exact textual assertions remain appropriate when exact text is itself the real
+product contract, or for a closed control/security property such as a valid enum,
+catalog index, forbidden poison token, or canonical identifier. Tests must not add
+artificial “return exactly this tuple” instructions solely to manufacture a prose
+oracle for an otherwise natural conversation.
+
 ## Statelessness acceptance
 
 Because “every LLM invocation is stateless” is constitutional, acceptance must prove the absence of hidden continuity—not merely show that answers happen to be correct.
@@ -124,7 +152,7 @@ Tests should deliberately destroy:
 - workers after checkpoints;
 - workers around side-effect boundaries;
 - scheduler/controller processes;
-- interaction workers between stages;
+- percept stage workers between durable v2 stage boundaries;
 - model processes where practical.
 
 After restart, the system should reconstruct authority from durable state alone, respecting leases, retries, idempotency, checkpoints, assignments, WorkingState, and terminal results.
@@ -153,6 +181,7 @@ Relevant acceptance metrics/assertions include:
 
 - maximum WorkingState size;
 - maximum MemoryPacket size;
+- maximum UTF-8 bytes per memory/work item and across rendered model evidence;
 - maximum total LLM input/context under the tested policy;
 - number of model calls;
 - candidate/evidence work performed;
@@ -178,7 +207,14 @@ Suites should include:
 - missing dependencies;
 - oversubscription;
 - ambiguous external effects after crashes;
-- unavailable optional capabilities.
+- unavailable optional capabilities;
+- historical memory content attempting to acquire current instruction authority;
+- forged raw-model control sequences attempting to break out of evidence transport;
+- assistant-only claims attempting to become user facts;
+- exact-source selectors returning altered or non-source values;
+- oversized individual evidence records;
+- saturated WorkingState and deep-history candidate crowding;
+- projection freshness work that accidentally scales with lifetime history.
 
 Fail-closed behavior and correct abstention are positive test outcomes when evidence/authority is insufficient.
 
@@ -192,7 +228,9 @@ Where a deterministic verdict is needed, prefer:
 - enums;
 - numeric tuples;
 - canonical evidence references;
-- explicitly requested machine-verifiable values;
+- model-invocation artifact links to the canonical evidence actually admitted;
+- explicitly requested machine-verifiable values when exactness is the real user
+  contract;
 - mechanically validated structured output.
 
 Model-facing prose fixtures are still necessary to test natural interaction. The oracle should not depend on hand-maintained phrase matching when a structural assertion is available.
@@ -274,6 +312,18 @@ At minimum, where applicable:
 
 A skipped environment-dependent test is not evidence that the feature works. It is a statement that the test did not run.
 
+For v0.7 closure, deterministic CI and native acceptance must refer to the same
+frozen candidate SHA. The Windows gate is
+`scripts/run_v07_acceptance.ps1`; it enables both required-acceptance environment
+flags, runs the deterministic regression suite, and then executes every
+`ollama`-marked test. Invoke it as
+`scripts/run_v07_acceptance.ps1 -ExpectedCommit <full-sha>`. Before any tests, the
+script rejects a detached branch, dirty tree, or SHA mismatch; it prints the named
+branch and full SHA at start and again on PASS. A closure record must state the tested
+SHA, host, PostgreSQL version/database purpose, Ollama runtime/model identity,
+pass/fail/skip counts, and retained result artifact. Collection alone is not
+execution.
+
 ## Constitutional audit tests
 
 Future constitutional audits should prefer executable checks when an article can be mechanized.
@@ -308,3 +358,14 @@ Intent motivates a test; it does not replace one.
 ## Invariant
 
 > **Prometheist treats architectural claims as things to falsify under controlled, restart-heavy, provenance-aware tests—not as assumptions that become true because they were written down.**
+
+## v0.8 situation integration
+
+`uv run pytest -q tests/unit` runs pure predictive policy checks with no database
+or model. `tests/test_situation_runtime.py` exercises PostgreSQL persistence,
+head rebuilding, replay, coalesced situation tasks, real fresh worker processes,
+LLM=null completion, resource denial, scheduled consolidation, and finite action
+feedback. The existing closure regressions remain mandatory. Run
+`uv run python scripts/audit_constraints.py --fail-unregistered` for the numeric
+governance gate. Native Windows/Ollama acceptance remains distinct from CI; the
+situation integration does not waive the v0.7 closure's outstanding native checks.

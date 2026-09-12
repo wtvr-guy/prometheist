@@ -1,5 +1,12 @@
 # Prometheist and Prior Work: A Rigorous Architecture Mapping
 
+> **Point-in-time research synthesis.** Internal implementation descriptions below
+> refer to the v0.7 state available when this comparison was written. The current
+> v2 response path and post-v0.7 roadmap are governed by
+> [`../architecture/PERCEPT_TO_RESPONSE_PIPELINE.md`](../architecture/PERCEPT_TO_RESPONSE_PIPELINE.md)
+> and [`../ROADMAP.md`](../ROADMAP.md). The comparative lessons remain research input,
+> not current implementation authority.
+
 ## Executive summary
 
 Prometheist is **not unprecedented at the level of individual mechanisms**. Nearly every major functional idea in the current roadmap has a substantial antecedent: persistent external memory in MemGPT/Letta; central resource scheduling in AIOS; attention allocation and shared cognitive substrates in OpenCog/Hyperon; recurrent perception–decision–action loops in Soar, ACT-R, and LIDA; autobiographical observation/reflection/planning in Generative Agents; lifelong skill accumulation in Voyager; durable checkpointed execution in LangGraph; memory as an operating-system resource in MemOS; and continuous multimodal perception plus entity-centric long-term memory in M3-Agent and ABot-AgentOS. citeturn20view6turn21view0turn16view0turn17view0turn17view4turn18search1turn19academia11turn15view4turn20view0turn15view5turn15view6turn15view7

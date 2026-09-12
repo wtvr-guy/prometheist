@@ -97,6 +97,7 @@ def _reset_test_database(_prepare_test_database):
             cur.execute(
                 """
                 TRUNCATE TABLE
+                    cognitive_heads,
                     attention_interactions,
                     attention_worker_results,
                     attention_worker_checkpoints,

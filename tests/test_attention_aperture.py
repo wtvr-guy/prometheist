@@ -9,7 +9,7 @@ from jit_agent.attention_aperture import (
     MAX_ATTENTION_APERTURE_ITEMS,
     open_attention_aperture,
 )
-from jit_agent.interaction_policy import (
+from jit_agent.interaction_contracts import (
     deterministic_interaction_event_id,
     deterministic_interaction_id,
 )

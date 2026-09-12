@@ -45,7 +45,12 @@ and may be moved with:
 PROMETHEIST_ARTIFACT_ROOT=<path>
 ```
 
-During active development, `.prometheist/artifacts/**` is intentionally eligible for Git tracking in the private repository so remote debugging can inspect the exact causal artifacts produced on the native machine. Other `.prometheist/*` state remains ignored. This development policy must be revisited before public distribution because artifacts may contain user prompts, retrieved memories, system prompts, model outputs, tool results, and other private runtime evidence.
+`.prometheist/` is fully ignored by Git. Runtime artifacts may contain user prompts,
+retrieved memories, system prompts, model outputs, tool results, and other sensitive
+evidence, and ordinary development runs must not dirty the repository or publish that
+content accidentally. Evidence intended for review is deliberately selected,
+sanitized where appropriate, and copied to `docs/audits/evidence/` or
+`benchmarks/results/` with its provenance and tested revision recorded.
 
 The journal contains two classes of records:
 
@@ -57,15 +62,16 @@ artifacts/
 
   interactions/
     <interaction-id>/
-      000001-percept.json
-      000002-stage-result-V2_RESOLVE_REFERENCES.json
-      000003-llm-invocation-....json
-      000004-stage-result-V2_PRECOGNITIVE.json
+      000001-<artifact-id>.json
+      000002-<artifact-id>.json
+      000003-<artifact-id>.json
       ...
-      00000N-final-disposition.json
+      00000N-<artifact-id>.json
 ```
 
-The exact filenames are presentation details. Artifact IDs, hashes, types, interaction IDs, and sequence numbers are authoritative identifiers inside each document.
+The exact filenames are presentation details. Artifact IDs, semantic artifact keys, hashes, types, interaction IDs, and sequence numbers are authoritative identifiers inside each document.
+
+Interaction filenames deliberately use the bounded deterministic artifact UUID rather than concatenating the full semantic artifact key into the filesystem name. The full semantic key remains inside the JSON envelope and remains the idempotency identity. This keeps ordinary paths portable on Windows and other filesystems without discarding semantic identity or provenance.
 
 ## 2. Canonical event mirroring
 
@@ -152,7 +158,8 @@ The interaction chain currently records:
 - each completed v2 architectural stage result;
 - stage errors;
 - each exact v2 stateless LLM invocation envelope;
-- the exact pre-cognitive aperture/disposition and execution plan as part of the pre-cognitive stage artifact;
+- the exact current-only evidence policy and closed source allowlist as its own stage artifact;
+- the exact pre-cognitive aperture/disposition and execution plan as part of the work-triage stage artifact;
 - exact work/tool results as part of the work stage artifact;
 - the exact Composer-approved memory package and Adaptive Recall outcome as part of the Compose stage artifact;
 - the exact final responder output;
@@ -171,13 +178,24 @@ Every LLM call made by the live v2 user-prompt worker is independently journaled
 - configured model;
 - backend base URL;
 - exact system prompt;
-- exact user/context prompt;
+- exact current user/context prompt;
+- exact quarantined evidence payload and transport layout when evidence is isolated;
+- canonical source-event references for memory evidence admitted to that invocation;
 - exact structured-output JSON schema;
 - generation token cap;
+- effective generation temperature;
 - normalized constrained model output when the call succeeds;
 - exception type/message when the call fails.
 
-For the final responder this includes the resolved Prometheist personality/identity system prompt and the exact response-context payload. For the Composer it includes the exact memory evidence text presented for sufficiency judgment. For the pre-cognitive worker it includes the exact orientation-memory and capability-catalog text.
+For natural response this includes the resolved Prometheist personality/identity
+system prompt. For response policy it proves that only current authority was
+presented. For exact-source selection it preserves the admitted candidate payload.
+Canonical event references allow native acceptance to establish which stored facts
+reached response realization even when opaque literals are represented by
+model-facing placeholders and restored by application code. For the Composer and
+pre-cognitive worker it records memory separately from the later current
+prompt/catalog. The layout field states whether the backend used chat
+system/tool/user roles or raw Qwen system/evidence/current-user blocks.
 
 This means debugging does not need to infer what a model saw from its answer. The actual stateless invocation contract is part of the hash-linked interaction history.
 
@@ -332,8 +350,9 @@ Current policy:
 - artifacts are immutable;
 - ordinary retention/compaction does not delete them;
 - the artifact root is user-controlled;
-- during active private-repository development, `.prometheist/artifacts/**` is intentionally trackable so exact native-runtime evidence can be shared for diagnosis; unrelated `.prometheist` state remains ignored;
-- before public release or use with a repository that is not appropriately private, artifact tracking must be revisited because artifacts may contain sensitive runtime evidence;
+- `.prometheist/` is ignored in full and must not be used as a Git evidence directory;
+- deliberately shared audit/benchmark evidence is copied to an explicit reviewed
+  location with provenance and revision metadata; the runtime originals remain local;
 - future cold-storage compression may transform old `.json` records to a content-preserving representation such as `.json.zst`, provided hashes/identity remain verifiable and the transformation is reversible;
 - large binary objects should eventually use content-addressed blob storage, with JSON artifacts referring to their hashes rather than embedding arbitrary binary payloads.
 

@@ -204,6 +204,7 @@ Where practical, constitutional rules should gain executable guards.
 Candidate static/dynamic checks include:
 
 - enumerate all model invocation sites and verify fresh bounded input construction;
+- map every model invocation kind to one guarded specialist stage and reject cross-role calls;
 - detect forbidden transcript carry-forward fields;
 - identify model-authored unconstrained control strings;
 - inspect canonical-memory mutation/deletion paths;

@@ -9,6 +9,11 @@ from jit_agent.percept_response_worker import (
     UserPromptLLM,
     _cognitive_memory_packet,
 )
+from jit_agent.response_policy import (
+    HistoricalEvidenceScope,
+    ResponsePolicy,
+    ResponseSurfaceMode,
+)
 
 
 def _packet(*items: MemoryEvidence) -> MemoryPacket:
@@ -84,13 +89,14 @@ def test_final_responder_gets_user_evidence_authority_and_no_trace(monkeypatch) 
     llm = UserPromptLLM()
     captured: dict[str, str] = {}
 
-    def capture_text(kind, system, user, max_tokens=256):
+    def capture_text(kind, system, current_user, evidence, max_tokens=None):
         del kind, max_tokens
         captured["system"] = system
-        captured["user"] = user
+        captured["current_user"] = current_user
+        captured["evidence"] = evidence
         return "The prior response was mistaken."
 
-    monkeypatch.setattr(llm, "_text", capture_text)
+    monkeypatch.setattr(llm, "_text_with_evidence", capture_text)
     direct_user_evidence = _evidence(
         event_type=EventType.USER_PROMPT,
         source="user",
@@ -120,11 +126,19 @@ def test_final_responder_gets_user_evidence_authority_and_no_trace(monkeypatch) 
         "Why did you say I never asked you to remember it?",
         package,
         (),
+        response_policy=ResponsePolicy(
+            evidence_scope=HistoricalEvidenceScope.MIXED_CONVERSATION,
+            surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
+        ),
     )
 
     assert answer == "The prior response was mistaken."
-    assert "nested response trace" not in captured["user"]
-    assert 'Remember the phrase "cat boy rock Virginia."' in captured["user"]
-    assert "You never asked me to remember that phrase." in captured["user"]
+    assert "nested response trace" not in captured["evidence"]
+    assert 'Remember the phrase "cat boy rock Virginia."' in captured["evidence"]
+    assert "You never asked me to remember that phrase." in captured["evidence"]
+    assert "cat boy rock Virginia" not in captured["current_user"]
+    assert "QUARANTINED_EVIDENCE" in captured["evidence"]
+    assert "authority_class: DIRECT_USER_TESTIMONY" in captured["evidence"]
+    assert "authority_class: MODEL_OUTPUT_ONLY" in captured["evidence"]
     assert "A historical USER_PROMPT is direct evidence" in captured["system"]
     assert "they never\nnegate a user-authored event" in captured["system"]

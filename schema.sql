@@ -721,3 +721,30 @@ ALTER TABLE attention_interactions
 
 CREATE INDEX IF NOT EXISTS idx_attention_interactions_task
     ON attention_interactions (scheduler_key, task_id);
+
+-- v0.8 cognitive heads are a disposable index over immutable canonical events.
+CREATE TABLE IF NOT EXISTS cognitive_heads (
+    record_kind TEXT NOT NULL,
+    record_key TEXT NOT NULL,
+    event_id UUID NOT NULL REFERENCES events(event_id),
+    global_seq BIGINT NOT NULL,
+    payload JSONB NOT NULL,
+    PRIMARY KEY (record_kind, record_key)
+);
+CREATE INDEX IF NOT EXISTS idx_cognitive_heads_sequence ON cognitive_heads(record_kind, global_seq);
+CREATE OR REPLACE FUNCTION project_cognitive_event() RETURNS trigger AS $$
+BEGIN
+    IF NEW.source = 'cognitive_runtime' AND NEW.payload->>'kind' = 'COGNITIVE_RECORD' THEN
+        INSERT INTO cognitive_heads(record_kind, record_key, event_id, global_seq, payload)
+        VALUES (NEW.payload->>'record_kind', NEW.payload->>'record_key', NEW.event_id,
+                NEW.global_seq, NEW.payload->'data')
+        ON CONFLICT (record_kind, record_key) DO UPDATE
+        SET event_id = EXCLUDED.event_id, global_seq = EXCLUDED.global_seq, payload = EXCLUDED.payload
+        WHERE cognitive_heads.global_seq < EXCLUDED.global_seq;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS cognitive_event_head ON events;
+CREATE TRIGGER cognitive_event_head AFTER INSERT ON events
+FOR EACH ROW EXECUTE FUNCTION project_cognitive_event();

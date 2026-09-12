@@ -7,13 +7,15 @@ production code between candidates.
 """
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from itertools import groupby
 import re
 import unicodedata
 from typing import Any, Iterable, Mapping, Sequence
 
-POLICY_VERSION = "deterministic-cues-v1"
+POLICY_VERSION = "deterministic-cues-v2"
 
 # Named policy values are intentionally visible to the constraint auditor. They
 # remain the current baseline until MEM-SCORE-001 selects evidence-backed values.
@@ -293,6 +295,44 @@ def _reasons(score: ScoreComponents) -> tuple[str, ...]:
     return tuple(reasons)
 
 
+def _rank_with_temporal_diversity(
+    candidates: list[RecallCandidate],
+) -> list[RecallCandidate]:
+    """Preserve chronology when relevance evidence cannot distinguish candidates.
+
+    Equal total relevance scores carry no evidence that one chronology endpoint
+    is semantically preferable to the other. Newest-only tie breaking therefore
+    creates an arbitrary information-loss boundary for deep same-topic history.
+    For each exact score tie this policy keeps the longstanding newest-first
+    preference for the first item, then alternates oldest/newest endpoints.
+
+    This is intentionally query-language agnostic. Words such as "originally"
+    are not recognized here; the kernel simply avoids destroying temporal
+    alternatives before a stateless consumer can interpret the question.
+    """
+
+    by_score = sorted(
+        candidates,
+        key=lambda candidate: (-candidate.score.total, candidate.event.event_id),
+    )
+    ranked: list[RecallCandidate] = []
+    for _, tied_iter in groupby(by_score, key=lambda candidate: candidate.score.total):
+        tied = deque(
+            sorted(
+                tied_iter,
+                key=lambda candidate: (
+                    candidate.event.global_seq,
+                    candidate.event.event_id,
+                ),
+            )
+        )
+        take_newest = True
+        while tied:
+            ranked.append(tied.pop() if take_newest else tied.popleft())
+            take_newest = not take_newest
+    return ranked
+
+
 def recall(
     events: Iterable[MemoryEvent],
     cue: CueState,
@@ -313,13 +353,7 @@ def recall(
         candidates.append(RecallCandidate(event=event, score=score, reasons=_reasons(score)))
 
     if has_activation_cues:
-        candidates.sort(
-            key=lambda candidate: (
-                -candidate.score.total,
-                -candidate.event.global_seq,
-                candidate.event.event_id,
-            )
-        )
+        candidates = _rank_with_temporal_diversity(candidates)
     else:
         candidates.sort(key=lambda candidate: (-candidate.event.global_seq, candidate.event.event_id))
 

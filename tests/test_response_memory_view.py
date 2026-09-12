@@ -3,8 +3,14 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from jit_agent import llm
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from jit_agent.percept_response_runtime import ResponseMemoryPackage
+from jit_agent.percept_response_worker import UserPromptLLM
+from jit_agent.response_policy import (
+    HistoricalEvidenceScope,
+    ResponsePolicy,
+    ResponseSurfaceMode,
+)
 
 
 class _FakeResponse:
@@ -19,13 +25,13 @@ class _FakeResponse:
 
 
 class _FakeHTTPClient:
-    def __init__(self, content: str) -> None:
-        self._content = content
+    def __init__(self, contents: list[str]) -> None:
+        self._contents = iter(contents)
         self.calls: list[tuple[str, dict]] = []
 
     def post(self, path: str, *, json: dict) -> _FakeResponse:
         self.calls.append((path, json))
-        return _FakeResponse(self._content)
+        return _FakeResponse(next(self._contents))
 
 
 def _evidence(
@@ -48,7 +54,7 @@ def _evidence(
     )
 
 
-def test_response_worker_receives_compact_oldest_to_newest_evidence_timeline():
+def test_final_responder_receives_compact_oldest_to_newest_evidence_timeline():
     historical_conversation = uuid4()
     active_conversation = uuid4()
     historical = _evidence(
@@ -78,15 +84,30 @@ def test_response_worker_receives_compact_oldest_to_newest_evidence_timeline():
         supported=True,
         items=[turn2_response, historical, turn1],
     )
-
-    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
-    fake = _FakeHTTPClient('{"answer":"ok"}')
+    package = ResponseMemoryPackage(
+        memory_packet=packet,
+        sufficient=True,
+        composer_rounds=1,
+        adaptive_recall_rounds=0,
+    )
+    client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
+    fake = _FakeHTTPClient(['{"answer":"ok"}'])
     client._client = fake
 
-    assert client.respond("Answer from the timeline.", packet) == "ok"
-
+    policy = ResponsePolicy(
+        evidence_scope=HistoricalEvidenceScope.MIXED_CONVERSATION,
+        surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
+    )
+    assert client.generate_final_response(
+        "Answer from the timeline.", package, (), response_policy=policy
+    ) == "ok"
     path, payload = fake.calls[0]
     assert path == "/api/chat"
+    assert [message["role"] for message in payload["messages"]] == [
+        "system",
+        "tool",
+        "user",
+    ]
     model_input = payload["messages"][1]["content"]
     assert "[Evidence timeline: oldest to newest]" in model_input
     assert model_input.index("Historical rule") < model_input.index("Call the active plan")
@@ -101,3 +122,4 @@ def test_response_worker_receives_compact_oldest_to_newest_evidence_timeline():
     assert "conversation_seq:" not in model_input
     assert "created_at:" not in model_input
     assert "retrieval_reasons:" not in model_input
+    assert payload["messages"][2]["content"] == "Answer from the timeline."

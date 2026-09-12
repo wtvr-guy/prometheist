@@ -1,6 +1,7 @@
 """Immutable interaction artifacts for exact stateless LLM invocation envelopes."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any
 from uuid import UUID
 
@@ -24,11 +25,38 @@ def write_llm_invocation(
     user_prompt: str,
     schema: dict[str, Any],
     max_tokens: int,
+    temperature: float,
     output: str | None,
     error_type: str | None,
     error_message: str | None,
+    evidence_prompt: str | None = None,
+    transport_layout: str | None = None,
+    evidence_refs: Iterable[str] = (),
 ) -> dict[str, Any]:
     """Persist the exact request contract and resulting normalized model output."""
+
+    payload: dict[str, Any] = {
+        "claim_id": str(claim_id),
+        "invocation_index": invocation_index,
+        "kind": kind,
+        "model": model,
+        "base_url": base_url,
+        "system_prompt": system_prompt,
+        "user_prompt": user_prompt,
+        "schema": schema,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "output": output,
+        "error_type": error_type,
+        "error_message": error_message,
+    }
+    resolved_evidence_refs = list(evidence_refs)
+    if resolved_evidence_refs:
+        payload["evidence_refs"] = resolved_evidence_refs
+    if evidence_prompt is not None:
+        payload["evidence_prompt"] = evidence_prompt
+    if transport_layout is not None:
+        payload["transport_layout"] = transport_layout
 
     return artifact_journal.write_interaction_artifact(
         artifact_key=(
@@ -42,18 +70,5 @@ def write_llm_invocation(
         assignment_id=assignment_id,
         stage=stage,
         producer="percept_response_v2/ollama",
-        payload={
-            "claim_id": str(claim_id),
-            "invocation_index": invocation_index,
-            "kind": kind,
-            "model": model,
-            "base_url": base_url,
-            "system_prompt": system_prompt,
-            "user_prompt": user_prompt,
-            "schema": schema,
-            "max_tokens": max_tokens,
-            "output": output,
-            "error_type": error_type,
-            "error_message": error_message,
-        },
+        payload=payload,
     )

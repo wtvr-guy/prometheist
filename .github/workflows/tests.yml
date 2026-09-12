@@ -56,9 +56,7 @@ jobs:
           uv run python scripts/audit_constraints.py --fail-unregistered
 
       - name: Run deterministic constraint calibration
-        run: |
-          uv run python benchmarks/run_deterministic_constraints.py
-          uv run python benchmarks/calibrate_capability_loop.py
+        run: uv run python benchmarks/run_deterministic_constraints.py
 
       - name: Collect local-model acceptance gates
         run: >-
@@ -66,6 +64,8 @@ jobs:
           tests/test_acceptance_restart.py
           tests/test_cross_conversation_memory.py
           tests/test_acceptance_conversation_continuity.py
+          tests/test_redteam_epistemic_memory_native.py
+          tests/test_redteam_memory_authority_native.py
 
       - name: Run test suite
         run: uv run pytest -q

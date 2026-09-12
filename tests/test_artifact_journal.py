@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
 
 from jit_agent import artifact_journal, event_artifact_store, llm_artifact_store
+from tests._native_artifact_assertions import assert_response_evidence_receipt
 
 
 def test_interaction_artifacts_are_hash_linked_idempotent_and_complete(tmp_path, monkeypatch) -> None:
@@ -101,6 +103,7 @@ def test_llm_invocation_artifact_preserves_exact_stateless_contract(tmp_path, mo
         user_prompt="exact response context",
         schema=schema,
         max_tokens=256,
+        temperature=0.65,
         output='{"answer":"hello"}',
         error_type=None,
         error_message=None,
@@ -117,11 +120,136 @@ def test_llm_invocation_artifact_preserves_exact_stateless_contract(tmp_path, mo
         "user_prompt": "exact response context",
         "schema": schema,
         "max_tokens": 256,
+        "temperature": 0.65,
         "output": '{"answer":"hello"}',
         "error_type": None,
         "error_message": None,
     }
     assert artifact_journal.verify_interaction_chain(interaction_id)["valid"] is True
+
+
+def test_llm_invocation_filename_is_bounded_independently_of_semantic_key(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    nested_root = tmp_path / "deep-path-segment" / "another-segment" / "artifacts"
+    monkeypatch.setenv("PROMETHEIST_ARTIFACT_ROOT", str(nested_root))
+    interaction_id = uuid4()
+    claim_id = uuid4()
+
+    artifact = llm_artifact_store.write_llm_invocation(
+        interaction_id=interaction_id,
+        conversation_id=uuid4(),
+        correlation_id=uuid4(),
+        task_id=uuid4(),
+        assignment_id=uuid4(),
+        stage="V2_COMPOSE_MEMORY",
+        claim_id=claim_id,
+        invocation_index=0,
+        kind="V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        model="qwen3:4b",
+        base_url="http://localhost:11434",
+        system_prompt="system",
+        user_prompt="user",
+        schema={"type": "object"},
+        max_tokens=192,
+        temperature=0.0,
+        output='{"sufficient":true}',
+        error_type=None,
+        error_message=None,
+    )
+
+    filename = Path(artifact["_path"]).name
+    assert len(filename) <= 44
+    assert str(claim_id) not in filename
+    assert "V2_MEMORY_SUFFICIENCY_USER_PROMPT" not in filename
+    assert artifact["artifact_key"].endswith("V2_MEMORY_SUFFICIENCY_USER_PROMPT")
+    assert artifact_journal.verify_interaction_chain(interaction_id)["valid"] is True
+
+
+def test_evidence_bound_llm_artifact_records_separate_transport_channels(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("PROMETHEIST_ARTIFACT_ROOT", str(tmp_path / "artifacts"))
+    artifact = llm_artifact_store.write_llm_invocation(
+        interaction_id=uuid4(),
+        conversation_id=uuid4(),
+        correlation_id=uuid4(),
+        task_id=uuid4(),
+        assignment_id=uuid4(),
+        stage="V2_RESPOND",
+        claim_id=uuid4(),
+        invocation_index=0,
+        kind="V2_EXACT_SOURCE_SELECTION",
+        model="qwen3:4b-instruct-2507-q4_K_M",
+        base_url="http://localhost:11434",
+        system_prompt="system policy",
+        user_prompt="current user authority",
+        evidence_prompt="quarantined historical evidence",
+        transport_layout="raw-generate:system,evidence,current-user,assistant",
+        schema={"type": "object"},
+        max_tokens=256,
+        temperature=0.0,
+        output='{"source_index":0,"verbatim_value":"value"}',
+        error_type=None,
+        error_message=None,
+        evidence_refs=("event:source-1", "event:source-2"),
+    )
+
+    assert artifact["payload"]["user_prompt"] == "current user authority"
+    assert artifact["payload"]["evidence_prompt"] == "quarantined historical evidence"
+    assert artifact["payload"]["transport_layout"] == (
+        "raw-generate:system,evidence,current-user,assistant"
+    )
+    assert artifact["payload"]["evidence_refs"] == [
+        "event:source-1",
+        "event:source-2",
+    ]
+
+
+def test_native_artifact_oracle_verifies_response_evidence_receipt(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("PROMETHEIST_ARTIFACT_ROOT", str(tmp_path / "artifacts"))
+    interaction_id = uuid4()
+    required_event_id = uuid4()
+    forbidden_event_id = uuid4()
+    llm_artifact_store.write_llm_invocation(
+        interaction_id=interaction_id,
+        conversation_id=uuid4(),
+        correlation_id=uuid4(),
+        task_id=uuid4(),
+        assignment_id=uuid4(),
+        stage="V2_RESPOND",
+        claim_id=uuid4(),
+        invocation_index=0,
+        kind="FINAL_RESPONSE_V2",
+        model="qwen3:4b",
+        base_url="http://localhost:11434",
+        system_prompt="system",
+        user_prompt="current prompt",
+        evidence_prompt="quarantined evidence",
+        transport_layout="chat:system,tool-evidence,current-user",
+        schema={"type": "object"},
+        max_tokens=256,
+        temperature=0.65,
+        output='{"answer":"review me"}',
+        error_type=None,
+        error_message=None,
+        evidence_refs=(f"event:{required_event_id}",),
+    )
+
+    receipt = assert_response_evidence_receipt(
+        interaction_id=interaction_id,
+        required_event_ids=(required_event_id,),
+        forbidden_event_ids=(forbidden_event_id,),
+        require_complete=False,
+    )
+
+    assert receipt["response_kind"] == "FINAL_RESPONSE_V2"
+    assert receipt["evidence_refs"] == [f"event:{required_event_id}"]
 
 
 def test_event_artifacts_are_semantically_idempotent_and_verifiable(tmp_path, monkeypatch) -> None:

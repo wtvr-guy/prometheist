@@ -1,109 +1,71 @@
 # Prometheist Documentation
 
-This directory contains the current constitutional authorities, architecture, engineering governance, research/concept inputs, historical design records, audits, experiments, and roadmap for Prometheist.
+## Authority order
 
-## Constitutional governance
+1. [`../CONSTITUTION.md`](../CONSTITUTION.md)
+2. constitutional deep dives under [`architecture/`](architecture/) and
+   [`engineering/`](engineering/)
+3. current architecture documents
+4. active milestone records and [`ROADMAP.md`](ROADMAP.md)
+5. dated audits, experiments, and historical milestone records
 
-[`../CONSTITUTION.md`](../CONSTITUTION.md) is the highest-level normative engineering document in the repository. It collects the system-wide rules that future Prometheist implementations and audits are expected to preserve.
-
-Every constitutional article points to one or more deep-dive authorities:
-
-- [`architecture/COGNITIVE_ARCHITECTURE.md`](architecture/COGNITIVE_ARCHITECTURE.md) — system-owned continuity, disposable/stateless cognition, capability authority, model-output minimization, epistemic boundaries, causal provenance, and internal-memory/external-knowledge separation.
-- [`architecture/LOSSLESS_PROGRESSIVE_MEMORY.md`](architecture/LOSSLESS_PROGRESSIVE_MEMORY.md) — lossless canonical durable memory, replaceable derived structures, bounded progressive recall, evidence authority, and memory-scaling invariants.
-- [`architecture/INTERACTION_CONTINUITY.md`](architecture/INTERACTION_CONTINUITY.md) — bounded WorkingState, automatic per-percept memory activation, session-independent continuity, recurrent fresh-model routing, and rejection of phrase-specific continuity policy.
-- [`architecture/SYSTEM_DETERMINISM.md`](architecture/SYSTEM_DETERMINISM.md) — deterministic control-plane authority, replay, authoritative inputs, total ordering, and prohibition on race-based durable authority.
-- [`architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md) — attention/resource-admission separation, safe concurrency, headroom, preemption, guarded launch, disposable-worker recovery, and side-effect/idempotency governance.
-- [`architecture/LOCAL_FIRST_PORTABILITY.md`](architecture/LOCAL_FIRST_PORTABILITY.md) — local-first/user-controlled operation, model/backend replaceability, `LLM = null` administrative substrate, modest-hardware expectations, migration, and user sovereignty.
-- [`engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md`](engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md) — one-mechanism experimental discipline, negative-result retention, behavioral-number classification, benchmark/calibration rules, and evidence-backed tunables.
-- [`engineering/TESTING_AND_ACCEPTANCE.md`](engineering/TESTING_AND_ACCEPTANCE.md) — deterministic CI versus native acceptance, statelessness/restart/provenance/boundedness evidence, failure testing, and release gates.
-- [`engineering/CONSTITUTIONAL_GOVERNANCE.md`](engineering/CONSTITUTIONAL_GOVERNANCE.md) — document precedence, amendment procedure, `PASS`/`FAIL`/`GAP` audit semantics, per-article codebase audit procedure, and constitutional PR review.
-
-Constitutional deep dives are subordinate to the Constitution and may specialize it without weakening it. Current architecture and milestone documents are subordinate to those authorities. Historical documents preserve measured evidence and design history but cannot silently override current constitutional rules.
-
-Adoption of the Constitution does **not** assert that the current branch already passes every article. Forward-looking portability, export/restore, explicit erasure, or other not-yet-built constitutional mechanisms may correctly appear as `GAP`s in an audit.
+Historical text preserves evidence but cannot silently override a current authority.
+Adoption of a constitutional rule also does not imply that every implementation gap
+is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
 
 ## Current architecture
 
-These documents define the forward architecture beginning with v0.7:
+- [`architecture/PERCEPT_TO_RESPONSE_PIPELINE.md`](architecture/PERCEPT_TO_RESPONSE_PIPELINE.md) — authoritative implemented v2 interaction path: deterministic user response requirement, pre-cognitive non-memory work selection, memory-only Composer, Adaptive Recall, direct work-result handoff, and final responder.
+- [`architecture/COGNITIVE_ARCHITECTURE.md`](architecture/COGNITIVE_ARCHITECTURE.md) — complete system boundary, durable authority, stateless cognition, WorkingState, attention/execution, and implemented/deferred mechanisms.
+- [`architecture/INTERACTION_CONTINUITY.md`](architecture/INTERACTION_CONTINUITY.md) — cross-process/session continuity, attention aperture, Adaptive Recall, evidence authority, and failure/acceptance rules.
+- [`architecture/FINAL_RESPONDER.md`](architecture/FINAL_RESPONDER.md) — mandatory identity/evidence contract, additive personality, response-only sampling, and invocation provenance.
+- [`architecture/SPECIALIST_WORKER_MODULARITY.md`](architecture/SPECIALIST_WORKER_MODULARITY.md) — one semantic responsibility per LLM worker, split criteria, runtime guards, and non-user percept triage boundary.
+- [`architecture/LOSSLESS_PROGRESSIVE_MEMORY.md`](architecture/LOSSLESS_PROGRESSIVE_MEMORY.md) — exact canonical evidence, replaceable derived structures, bounded recall, and memory-scaling constraints.
+- [`architecture/IMMUTABLE_ARTIFACT_JOURNAL.md`](architecture/IMMUTABLE_ARTIFACT_JOURNAL.md) — independent append-only artifacts, interruption recovery, verification, and database reconstruction.
+- [`architecture/SYSTEM_DETERMINISM.md`](architecture/SYSTEM_DETERMINISM.md) — replayable control authority and prohibition on race-based durable decisions.
+- [`architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md) — attention/resource separation, headroom, preemption, guarded launch, recovery, and effects.
+- [`architecture/LOCAL_FIRST_PORTABILITY.md`](architecture/LOCAL_FIRST_PORTABILITY.md) — local ownership, replaceability, administrative operation, portability, and user sovereignty.
 
-- [`architecture/COGNITIVE_ARCHITECTURE.md`](architecture/COGNITIVE_ARCHITECTURE.md) — authoritative target architecture: persistent cognitive system, resource-aware Attention Fabric, bounded WorkingState, automatic per-percept memory attention aperture, perception/salience, retention, optional capabilities, disposable workers, session-independent continuity, and system-owned state.
-- [`architecture/LOSSLESS_PROGRESSIVE_MEMORY.md`](architecture/LOSSLESS_PROGRESSIVE_MEMORY.md) — authoritative lossless-memory and scaling constraints: durable source memories are never replaced by summaries/aggregations, derived structures remain routing aids, recall is progressive and source-backed, model context is bounded, and ordinary recall must avoid inference growth proportional to corpus size.
-- [`architecture/INTERACTION_CONTINUITY.md`](architecture/INTERACTION_CONTINUITY.md) — current continuity model: bounded durable WorkingState owns present activation; every percept receives a small system-owned JIT Memory attention aperture before model routing; deeper memory analysis is reserved for focused work; conversations/sessions/devices remain provenance rather than cognitive boundaries.
-- [`architecture/SYSTEM_DETERMINISM.md`](architecture/SYSTEM_DETERMINISM.md) — current deterministic application-envelope and replay contract.
-- [`architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md) — timeless normative authority for Attention Fabric, resource safety, preemption, assignment, and worker-execution rules previously spread across v0.7 milestone records.
-- [`architecture/LOCAL_FIRST_PORTABILITY.md`](architecture/LOCAL_FIRST_PORTABILITY.md) — long-lived local-first, user-sovereignty, component-replaceability, and portability requirements.
-- [`architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](architecture/ARCHITECTURAL_PIVOT_2026-08-24.md) — decision record explaining the move away from a privileged Primary Agent, permanent agent hierarchy, rigid conversation-scoped cognition, and unconditional persistence of raw external input.
-- [`ROADMAP.md`](ROADMAP.md) — milestone path from the accepted v0.5/v0.6 baselines through the first complete attention-centric v1.0 architecture. v0.8 now has a bounded deterministic perception/salience baseline on the live user-percept path without silently expanding WorkingState or recurrent inference.
+[`architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](architecture/ARCHITECTURAL_PIVOT_2026-08-24.md) is the dated decision record that retired permanent agents and conversation-scoped cognition. It remains explanatory history, not a newer authority than the v2 pipeline.
 
-There is intentionally no current `PRIMARY_AGENT_SPEC_SHEET` under `docs/architecture/`. Permanent agents are no longer first-class architectural primitives. Historical Primary-Agent material lives under `docs/history/`.
+## Engineering governance
 
-## Current protocol rules
+- [`engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md`](engineering/EMPIRICAL_CONSTRAINT_GOVERNANCE.md) — one-mechanism experiments, numeric-constraint classification, benchmark rules, and native calibration.
+- [`engineering/TESTING_AND_ACCEPTANCE.md`](engineering/TESTING_AND_ACCEPTANCE.md) — deterministic versus native gates, provenance, statelessness, failure injection, and release evidence.
+- [`engineering/CONSTITUTIONAL_GOVERNANCE.md`](engineering/CONSTITUTIONAL_GOVERNANCE.md) — amendments, document precedence, and per-article audit procedure.
 
-Experimental corrections from native v0.7 acceptance now apply across the current architecture:
+## Active transition
 
-1. **Basic internal-memory access is substrate, not a live model-selected capability.** A fresh stateless model cannot reliably decide whether unseen memory matters before potentially relevant memory has been exposed. Every percept therefore receives a bounded attention-aperture activation packet first; the model may request deeper memory work only when further focus is needed.
-2. **Model-generated natural language is a representation of last resort.** Prefer enums, booleans, application-owned IDs, bounded integers, and mechanically verified selections for machine control/state. Free-form model language is appropriate where language is genuinely the product. Tests must not substitute hand-maintained keyword/phrase parsers for semantic verification.
-3. **Control-plane authority is deterministic wherever it can be.** Models may make bounded semantic selections, but application-owned identity, dependencies, ordering, resource policy, retention/deletion authority, permissions, validation, and replay state remain mechanically governed.
+- [`milestones/v0.7/README.md`](milestones/v0.7/README.md) — consolidated v0.7 architecture and hard closure gate.
+- [`milestones/v0.7/CLOSURE_STATUS.md`](milestones/v0.7/CLOSURE_STATUS.md) — truthful gate-by-gate status; v0.7 remains open until native acceptance and final audit finish.
+- [`audits/V07_BRANCH_SALVAGE_2026-09-03.md`](audits/V07_BRANCH_SALVAGE_2026-09-03.md) — selective disposition of PRs #19–#24.
+- [`audits/V07_NATIVE_ACCEPTANCE_2026-09-03.md`](audits/V07_NATIVE_ACCEPTANCE_2026-09-03.md) — failed full native run, six release-blocking failures, evidence limits, and replacement mechanism.
+- [`audits/V07_REMOTE_BRANCH_INVENTORY_2026-09-03.md`](audits/V07_REMOTE_BRANCH_INVENTORY_2026-09-03.md) — remote-ref comparison, keep/delete classification, and deletion-tool blocker.
+- [`ROADMAP.md`](ROADMAP.md) — active v0.8 perception/salience integration, with richer Epistemic WorkingState deferred to a separate experiment.
+- [`milestones/v0.8/README.md`](milestones/v0.8/README.md) — implemented percept contracts, specialist integration, and remaining boundaries.
+- [`milestones/v0.8/HYPOTHESIS.md`](milestones/v0.8/HYPOTHESIS.md) — perception experiment and honest freeze status.
+- [`audits/V08_CLOSURE_INTEGRATION_2026-09-12.md`](audits/V08_CLOSURE_INTEGRATION_2026-09-12.md) — change-by-change rationale, branch ancestry, research, tests, and remaining specification gap.
+- [`experiments/history/EPISTEMIC_WORKING_STATE_PROPOSAL_2026-09-03.md`](experiments/history/EPISTEMIC_WORKING_STATE_PROPOSAL_2026-09-03.md) — preserved earlier, unfrozen proposal; no longer the active v0.8 scope.
 
-Aperture activation is intentionally higher-recall than conservative evidence admission. An activated event is potentially relevant enough to expose; it is not automatically sufficient evidence or a truth claim.
+## Research and experiment evidence
 
-## Concept and research inputs
+- [`concepts/lessons_from_cognitive_neuroscience.md`](concepts/lessons_from_cognitive_neuroscience.md) — mechanism-level research input; it motivates hypotheses but does not override experiments.
+- [`concepts/lessons_from_similar_projects.md`](concepts/lessons_from_similar_projects.md) — comparison with related cognitive and agent systems.
+- [`experiments/README.md`](experiments/README.md) — current disposition of preserved PR #22 Adaptive Memory Attention/Composer records.
+- [`audits/history/pr19/`](audits/history/pr19/) — preserved PR #19 red-team chronology with historical-status banners.
 
-The [`concepts/`](concepts/) directory contains research and long-horizon design material. These files inform architecture but do not override the Constitution, constitutional deep dives, current architecture documents, or accepted experiment results by themselves.
+Raw accepted benchmark/calibration results live under `../benchmarks/results/`.
+Ordinary `.prometheist/artifacts` runtime output stays local and ignored; reviewable
+evidence must be deliberately preserved with provenance and a tested revision.
 
-- [`concepts/lessons_from_cognitive_neuroscience.md`](concepts/lessons_from_cognitive_neuroscience.md) — mechanism-level comparison with contemporary cognitive/computational neuroscience. Particularly relevant to durable working state, recurrent inference, episode formation, replay/consolidation, plasticity, prediction error, and the distinction between engineered provenance and biological memory.
-- [`concepts/lessons_from_similar_projects.md`](concepts/lessons_from_similar_projects.md) — architecture mapping against Letta/MemGPT, AIOS, Soar, ACT-R, LIDA, OpenCog/Hyperon, LangGraph, Generative Agents, Voyager, M3-Agent, ABot-AgentOS, and related work. Use it to borrow tested mechanisms while preserving Prometheist's system-owned authority/failure model.
-- [`concepts/a_future_history_of_mankind.txt`](concepts/a_future_history_of_mankind.txt) — long-horizon conceptual/vision context. It is not an implementation specification.
+## Historical architecture
 
-The v0.7 WorkingState/aperture corrections illustrate the intended research discipline: concept reports suggested related mechanisms, but changes entered the release candidate only after frozen native acceptance exposed the corresponding gaps.
+- [`history/PRIMARY_AGENT_SPEC_SHEET_V06.md`](history/PRIMARY_AGENT_SPEC_SHEET_V06.md)
+- [`milestones/v0.6/README.md`](milestones/v0.6/README.md)
+- [`milestones/v0.5/README.md`](milestones/v0.5/README.md)
 
-## Architecture baselines
+Several dated v0.7 increment records describe intermediate implementations. Their
+headers identify them as historical/superseded where necessary. The live path never
+depends on their old router, memory-capability, or agent terminology.
 
-Long-lived mechanisms that remain applicable:
-
-- [`architecture/MEMORY_KERNEL.md`](architecture/MEMORY_KERNEL.md) — deterministic Memory Kernel baseline and invariants.
-- [`architecture/ASSOCIATIVE_MEMORY.md`](architecture/ASSOCIATIVE_MEMORY.md) — bounded associative-recall design and provenance model. Associations are routing hints, never substitutes for source evidence.
-
-These memory documents predate the attention-centric pivot. Where terminology conflicts, the Constitution and constitutional deep dives control, followed by the other current architecture documents and roadmap.
-
-## Historical architecture and divergent v0.6 work
-
-- [`history/PRIMARY_AGENT_SPEC_SHEET_V06.md`](history/PRIMARY_AGENT_SPEC_SHEET_V06.md) — archived summary of the superseded v0.6 Primary-Agent design.
-- [`milestones/v0.6/README.md`](milestones/v0.6/README.md) — accepted v0.6 experimental result. Its stateless-worker/JIT-Memory findings and useful conversational behavior remain regression baselines; its Primary/specialist hierarchy is historical.
-- [`milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md`](milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md) — comparison of the divergent `v0.6-capability-registry` branch against active v0.7 architecture.
-
-Historical documents describe what was built or believed at a particular milestone. They do not override current constitutional or architecture documents.
-
-## Active milestone
-
-- [`milestones/v0.8/README.md`](milestones/v0.8/README.md) — deterministic v0.8 perception/salience baseline: immutable percept/salience contracts, bounded intake buffers, advisory-only semantic labels, live user-percept integration, and validation scope.
-- [`milestones/v0.7/README.md`](milestones/v0.7/README.md) — v0.7 scope, implementation record, release-candidate evidence, task-neutral capability execution, forced-restart acceptance, and native-machine gate.
-- [`milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md`](milestones/v0.7/WORKING_STATE_PIVOT_2026-08-26.md) — dated experimental record of why phrase/entity/recency continuity heuristics and “ask before remembering” were rejected, and why bounded WorkingState + the automatic attention aperture replaced them.
-- [`milestones/v0.7/JIT_ATTENTION_DESIGN.md`](milestones/v0.7/JIT_ATTENTION_DESIGN.md) — v0.7 implementation/design record for deterministic scheduling, quantitative admission/reservations, epochs, preemption, and worker behavior. Its timeless normative rules are now governed by `architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`.
-- [`milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md`](milestones/v0.7/RESOURCE_ADMISSION_CLARIFICATION_2026-08-24.md) — accepted v0.7 decision record supporting constitutional attention/resource separation and safe-concurrency rules.
-- [`milestones/v0.7/ATTENTION_FOCUS_CONCENTRATION_2026-08-26.md`](milestones/v0.7/ATTENTION_FOCUS_CONCENTRATION_2026-08-26.md) — safe concurrency versus focused resource concentration.
-- [`milestones/v0.7/INCREMENT_F_WORKER_PROTOCOL_2026-08-26.md`](milestones/v0.7/INCREMENT_F_WORKER_PROTOCOL_2026-08-26.md) — implementation evidence for the constitutional guarded disposable-worker contract.
-- [`milestones/v0.7/INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md`](milestones/v0.7/INCREMENT_G_INTERACTION_EXECUTION_2026-08-26.md) — original Increment G durable interaction implementation record. Its phrase-based reference policy is superseded by the later WorkingState/aperture corrections above.
-- [`milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md`](milestones/v0.7/V06_INTEGRATION_INVENTORY_2026-08-25.md) — migration policy for the divergent v0.6 continuity/capability work.
-
-## Accepted milestones
-
-- [`milestones/v0.4/MEMORY_KERNEL_V0.4.md`](milestones/v0.4/MEMORY_KERNEL_V0.4.md) — deterministic derived associations.
-- [`milestones/v0.5/README.md`](milestones/v0.5/README.md) — final v0.5 status, accepted measurements, causal fixes, and closure state.
-- [`milestones/v0.5/MEMORY_KERNEL_V0.5.md`](milestones/v0.5/MEMORY_KERNEL_V0.5.md) — original v0.5 design/experiment specification retained as research context.
-- [`milestones/v0.5/SCALE_BENCHMARK.md`](milestones/v0.5/SCALE_BENCHMARK.md) — reproducible v0.5 scale-benchmark workflow.
-- [`milestones/v0.6/README.md`](milestones/v0.6/README.md) — accepted shared-JIT-memory and stateless-worker integration result.
-
-The v0.5 and v0.6 documents are intentionally preserved as historical evidence. Architectural changes alter their forward interpretation, not their measured results.
-
-## Experiment records and audits
-
-Dated experiment records preserve the sequence of hypotheses, failures, fixes, and measurements rather than collapsing them into retrospective claims.
-
-Audit records under [`audits/`](audits/) similarly describe the repository at the time of each audit and may refer to superseded architecture.
-
-Future repository-wide architecture audits should use `CONSTITUTION.md` plus [`engineering/CONSTITUTIONAL_GOVERNANCE.md`](engineering/CONSTITUTIONAL_GOVERNANCE.md) as the governing checklist and procedure.
-
-## Benchmark fixtures
-
-Machine-readable benchmark fixtures remain in repository-level [`benchmarks/`](../benchmarks/) because they are runtime test inputs rather than narrative documentation.
+- [Situation cognition and operator guide](architecture/SITUATION_COGNITION.md)
