@@ -1,12 +1,19 @@
 # v0.7 Remote Branch Inventory
 
-**Date:** 2026-09-03  
+**Date:** 2026-09-03
 **Repository:** `wtvr-guy/prometheist`  
 **Comparison base:** `main` at `9f37b259af57f700bc5f915ac20cf3e34221890d`
 
 ## Outcome
 
-The remote contains 28 branches. Three remain active and must be retained:
+**Closure update (2026-09-12):** the listed obsolete branches, the later v0.8
+integration branch, and the superseded PR #26/#27 branches were deleted after the
+integrated v0.8 baseline was published to `main`. `main` is now the sole remote
+branch. The immutable `v0.7-closure` tag preserves the final v0.7 baseline, and
+the historical `v0.7` tag was not moved.
+
+At the time of this inventory, the remote contained 28 branches. Three remained
+active and had to be retained until integration:
 
 - `main`;
 - `audit-hardening-2026-08-31`, the required PR #23 integration branch;
@@ -68,15 +75,12 @@ history, the authoritative v2 branch, or retained benchmark/document evidence.
 | `v0.6-semantic-instruction-benchmark-temp` | 47 | 406 | temporary experiment ref |
 | `v0.6-semantic-instruction-benchmark-temp2` | 47 | 406 | duplicate temporary experiment ref |
 
-## Deletion blocker
+## Resolved deletion blocker
 
-The authenticated GitHub connector available for this consolidation supports branch
-search, creation, and ref updates, but exposes no branch/ref deletion operation. The
-25 refs above therefore could not be deleted from this environment. They remain the
-only unexecuted branch-hygiene action; this limitation is not presented as completed
-cleanup.
+The available connector initially exposed no branch/ref deletion operation, so this
+inventory truthfully recorded cleanup as incomplete. After the closure baseline and
+v0.8 integration were safely published to `main`, authenticated Git access deleted
+the exact listed references. The closure and active-development branch cleanup is
+complete.
 
-Once an authenticated Git client with delete permission is available, re-list the
-remote refs, verify that PRs #23/#24 and `main` are unchanged, then delete exactly the
-25 named refs above. Do not delete either active PR branch and do not move or replace
-the `v0.7` tag.
+Do not move or replace either `v0.7` or `v0.7-closure`.
