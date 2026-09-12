@@ -10,7 +10,9 @@ from jit_agent.response_policy import (
     ExactSourceComposition,
     ExactSourceSelection,
     HistoricalEvidenceScope,
+    explicit_prior_assistant_reference,
     filter_memory_packet_for_scope,
+    source_types_for_scope,
     validate_current_literal,
     validate_exact_source_composition,
     validate_exact_source_selection,
@@ -93,3 +95,23 @@ def test_current_fallback_must_be_verbatim_current_text():
     assert validate_current_literal(prompt, "INSUFFICIENT") == "INSUFFICIENT"
     with pytest.raises(ValueError, match="exact substring"):
         validate_current_literal(prompt, "UNKNOWN")
+
+
+def test_default_retrieval_scope_excludes_model_outputs():
+    assert source_types_for_scope(HistoricalEvidenceScope.USER_AUTHORED) == [
+        EventType.USER_PROMPT
+    ]
+    assert EventType.INTERACTION_RESPONSE not in source_types_for_scope(
+        HistoricalEvidenceScope.GENERAL_OR_CURRENT
+    )
+
+
+def test_mixed_conversation_scope_allows_user_and_model_outputs():
+    source_types = source_types_for_scope(HistoricalEvidenceScope.MIXED_CONVERSATION)
+    assert EventType.USER_PROMPT in source_types
+    assert EventType.INTERACTION_RESPONSE in source_types
+
+
+def test_only_explicit_prior_assistant_references_opt_into_mixed_history():
+    assert explicit_prior_assistant_reference("What did you tell me earlier?") is True
+    assert explicit_prior_assistant_reference("What is my favorite color?") is False

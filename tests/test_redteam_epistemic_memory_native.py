@@ -65,7 +65,7 @@ def test_assistant_only_claim_does_not_become_user_fact_after_restart():
         )
 
     answer = run_once(RT04_QUERY, question_conversation)
-    assert hallucinated_event.event_id in _memory_source_ids(question_conversation)
+    assert hallucinated_event.event_id not in _memory_source_ids(question_conversation)
     assert answer.strip()
     assert fake_color not in answer
     question_event = _question_event(question_conversation)

@@ -99,7 +99,9 @@ from jit_agent.response_policy import (
     ResponsePolicy,
     ResponseSurfaceMode,
     filter_memory_packet_for_scope,
+    explicit_prior_assistant_reference,
     scope_requires_historical_support,
+    source_types_for_scope,
     validate_current_literal,
     validate_exact_source_composition,
     validate_exact_source_selection,
@@ -297,6 +299,9 @@ Evidence scopes:
 Choose the narrowest role justified by the current request. A question about a
 user's preference, plan, instruction, statement, name, or personal history is
 USER_AUTHORED, never MODEL_OUTPUT merely because a model asserted it.
+Choose MIXED_CONVERSATION when the current message explicitly refers to what
+the assistant just said, answered, recommended, ruled out, or asked, or asks
+to reconstruct a prior exchange involving both participants.
 
 Surface modes:
 - NATURAL_LANGUAGE: ordinary answer generation is allowed.
@@ -506,6 +511,11 @@ class PerceptLLM(OllamaClient):
         """Classify source and surface requirements from current authority only."""
 
         self._set_artifact_evidence_refs(())
+        if explicit_prior_assistant_reference(percept):
+            return ResponsePolicy(
+                evidence_scope=HistoricalEvidenceScope.MIXED_CONVERSATION,
+                surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
+            )
         last_error: Exception | None = None
         for token_cap in _retry_token_caps(_base_text_max_tokens()):
             try:
@@ -821,6 +831,7 @@ def _adaptive_recall(
     deficit: str,
     *,
     round_index: int,
+    source_types: list[EventType],
 ) -> MemoryPacket:
     """Deterministically expand memory from the Composer's semantic deficit."""
 
@@ -832,6 +843,7 @@ def _adaptive_recall(
         include_persisted_history=True,
         conversation_id=None,
         limit=_ADAPTIVE_RECALL_ITEM_LIMIT,
+        source_types=source_types,
     )
     expansion = jit_memory.request_memory(
         conn,
@@ -856,6 +868,7 @@ def _compose_memory_package(
     llm: PerceptLLM,
     interaction: DurableInteraction,
     initial_packet: MemoryPacket,
+    source_types: list[EventType],
 ) -> ResponseMemoryPackage:
     """Bounded Composer/Adaptive-Recall loop with explicit no-progress exhaustion."""
 
@@ -878,6 +891,7 @@ def _compose_memory_package(
             packet,
             decision.memory_deficit or interaction.user_text,
             round_index=round_index,
+            source_types=source_types,
         )
         expansions.append(expanded)
         no_progress = _packet_event_ids(expanded) == _packet_event_ids(packet)
@@ -1069,6 +1083,8 @@ def _execute_stage(
         }, []
 
     if stage is PerceptStage.PRECOGNITIVE:
+        response_policy = llm._response_policy(interaction.user_text)
+        source_types = source_types_for_scope(response_policy.evidence_scope)
         aperture_packet = open_attention_aperture(
             conn,
             conversation_id=interaction.conversation_id,
@@ -1076,12 +1092,15 @@ def _execute_stage(
             requester_task_id=interaction.task_id,
             user_text=interaction.user_text,
             before_global_seq=interaction.before_global_seq,
+            source_types=source_types,
         )
         catalog = _external_capability_catalog(registry)
         disposition = llm.decide_disposition(interaction.user_text, aperture_packet, catalog)
         plan = registry.plan_execution(catalog, disposition.capability_indices)
         return {
             "attention_aperture_version": ATTENTION_APERTURE_VERSION,
+            "response_evidence_scope": response_policy.evidence_scope.value,
+            "response_source_types": [event_type.value for event_type in source_types],
             "aperture_packet": aperture_packet.model_dump(mode="json"),
             "disposition": disposition.model_dump(mode="json"),
             "capability_catalog": [item.model_dump(mode="json") for item in catalog],
@@ -1125,7 +1144,19 @@ def _execute_stage(
         if not disposition.response_required:
             return {"skipped": True, "reason": "response_not_required"}, []
         initial_packet = MemoryPacket.model_validate(precognitive["aperture_packet"])
-        package = _compose_memory_package(conn, llm, interaction, initial_packet)
+        response_scope = HistoricalEvidenceScope(
+            precognitive.get(
+                "response_evidence_scope",
+                HistoricalEvidenceScope.USER_AUTHORED.value,
+            )
+        )
+        package = _compose_memory_package(
+            conn,
+            llm,
+            interaction,
+            initial_packet,
+            source_types_for_scope(response_scope),
+        )
         return {"skipped": False, "memory_package": package.model_dump(mode="json")}, [
             f"memory-request:{package.memory_packet.memory_request_id}"
         ]

@@ -81,9 +81,6 @@ _ADAPTIVE_RECALL_POLICIES = {
 
 DEFAULT_EVIDENCE_TYPES = (
     EventType.USER_PROMPT,
-    EventType.INTERACTION_RESPONSE,
-    EventType.AGENT_RESPONSE,
-    EventType.AGENT_RESULT,
     EventType.TOOL_RESULT,
     EventType.SYSTEM_EVENT,
 )
@@ -100,6 +97,7 @@ def build_memory_need(
     reference_time: datetime | None = None,
     conversation_id: uuid.UUID | None = None,
     limit: int = 5,
+    source_types: list[EventType] | None = None,
 ) -> MemoryNeed:
     return MemoryNeed(
         query_text=query_text,
@@ -110,7 +108,7 @@ def build_memory_need(
         include_persisted_history=include_persisted_history,
         reference_time=reference_time,
         conversation_id=conversation_id,
-        source_types=list(DEFAULT_EVIDENCE_TYPES),
+        source_types=list(source_types or DEFAULT_EVIDENCE_TYPES),
         limit=limit,
     )
 

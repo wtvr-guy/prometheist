@@ -19,7 +19,7 @@ def conn():
     connection.close()
 
 
-def test_assistant_only_claim_reaches_production_attention_aperture(conn):
+def test_assistant_only_claim_is_excluded_from_default_attention_aperture(conn):
     hallucination_conversation = event_store.start_conversation(conn, uuid.uuid4())
     question_conversation = event_store.start_conversation(conn, uuid.uuid4())
     fake_color = f"Cerulean-{uuid.uuid4().hex[:8].upper()}"
@@ -50,4 +50,4 @@ def test_assistant_only_claim_reaches_production_attention_aperture(conn):
         user_text=RT04_QUERY,
         before_global_seq=current.global_seq,
     )
-    assert hallucinated.event_id in {item.source_event_id for item in packet.items}
+    assert hallucinated.event_id not in {item.source_event_id for item in packet.items}

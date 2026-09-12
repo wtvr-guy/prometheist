@@ -101,9 +101,21 @@ This distinction avoids conflating two different questions:
 1. **Does this input class require conversational output?** — deterministic intake policy.
 2. **What work must Prometheist perform before completing the input?** — pre-cognitive semantic work selection within bounded contracts.
 
-## 4. Default memory orientation
+## 4. Default memory orientation and retrieval scoping
 
 Every admitted input receives the bounded system-owned memory activation required by the Constitution before model routing. This is an attention aperture, not a complete answer and not a claim of evidentiary sufficiency.
+
+The attention aperture and subsequent Adaptive Recall are scoped to the event roles
+relevant to the current request:
+
+- **Default exclusion of model outputs:** Prior assistant/model responses
+  (`INTERACTION_RESPONSE`, `AGENT_RESPONSE`, `AGENT_RESULT`) are excluded by default
+  from standard memory retrieval. This prevents downstream workers from receiving
+  fallible model assertions that could be mistaken for or reasoned over as user facts.
+- **Explicit conversation history opt-in:** When the current prompt explicitly
+  inquires about prior assistant statements, rulings, recommendations, or full
+  dialogue exchanges (such as `MODEL_OUTPUT` or `MIXED_CONVERSATION` scopes), the
+  system allows model-output event types in the retrieval scope.
 
 The system remains the owner of ordering, identity, provenance, WorkingState, resource policy, and durable control state.
 

@@ -41,12 +41,15 @@ only the current user prompt. It selects from closed application-owned enums:
   composition.
 
 The model does not filter memory. Application code maps the selected scope to event
-types and physically removes inadmissible items. A question about what the user
-previously said therefore cannot be answered from an assistant assertion merely
-because that assertion ranked highly in retrieval.
+types and physically restricts retrieval and removes inadmissible items. A question
+about what the user previously said therefore cannot be answered from an assistant
+assertion—and assistant assertions are excluded from retrieval by default rather than
+competing for evidence budget.
 
 Policy inference is deliberately current-only. Persisted prompt injection never sees
 or influences the call that decides which persisted source roles are admissible.
+Explicit references to prior assistant actions (e.g. "what you just ruled out" or
+"what did you tell me") deterministically select `MIXED_CONVERSATION` scope.
 
 ### 2.2 Quarantined evidence transport
 

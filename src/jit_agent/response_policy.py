@@ -7,6 +7,7 @@ which historical source roles become admissible for final answer synthesis.
 from __future__ import annotations
 
 from enum import Enum
+import re
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
@@ -14,6 +15,15 @@ from jit_agent.models import EventType, MemoryPacket
 
 
 RESPONSE_POLICY_VERSION = "response-source-authority-v5"
+
+_EXPLICIT_PRIOR_ASSISTANT_REFERENCE = re.compile(
+    r"\b(?:you|assistant|prometheist)\s+"
+    r"(?:just\s+)?(?:said|answered|recommended|ruled\s+out|asked|mentioned)\b"
+    r"|\bwhat\s+did\s+(?:you|the\s+assistant|prometheist)\b"
+    r"|\bprevious\s+(?:answer|response|recommendation)\b"
+    r"|\bthat\s+(?:was\s+)?ruled[- ]out\b",
+    re.IGNORECASE,
+)
 
 
 class HistoricalEvidenceScope(str, Enum):
@@ -147,6 +157,25 @@ def allowed_event_types(scope: HistoricalEvidenceScope) -> frozenset[EventType] 
     if scope is HistoricalEvidenceScope.GENERAL_OR_CURRENT:
         return None
     raise ValueError(f"unsupported historical evidence scope: {scope.value}")
+
+
+def source_types_for_scope(scope: HistoricalEvidenceScope) -> list[EventType]:
+    """Return the event roles eligible for bounded retrieval under one scope."""
+
+    allowed = allowed_event_types(scope)
+    if allowed is None:
+        return [
+            EventType.USER_PROMPT,
+            EventType.TOOL_RESULT,
+            EventType.SYSTEM_EVENT,
+        ]
+    return sorted(allowed, key=lambda event_type: event_type.value)
+
+
+def explicit_prior_assistant_reference(prompt: str) -> bool:
+    """Recognize only unambiguous references to prior assistant output."""
+
+    return bool(_EXPLICIT_PRIOR_ASSISTANT_REFERENCE.search(prompt))
 
 
 def filter_memory_packet_for_scope(

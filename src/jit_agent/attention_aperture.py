@@ -30,7 +30,7 @@ from jit_agent.interaction_working_state import (
     activate_working_state,
     load_working_state,
 )
-from jit_agent.models import MemoryPacket
+from jit_agent.models import EventType, MemoryPacket
 
 
 ATTENTION_APERTURE_VERSION = "v0.7-attention-aperture-v4"
@@ -79,6 +79,7 @@ def open_attention_aperture(
     requester_task_id: UUID,
     user_text: str,
     before_global_seq: int,
+    source_types: list[EventType] | None = None,
 ) -> MemoryPacket:
     """Return the bounded default activation packet for one current percept.
 
@@ -99,6 +100,7 @@ def open_attention_aperture(
         include_persisted_history=True,
         conversation_id=None,
         limit=DEFAULT_ATTENTION_APERTURE_LIMIT,
+        source_types=source_types,
     )
     packet = jit_memory.request_attention_activation(
         conn,
