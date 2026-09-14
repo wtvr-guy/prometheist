@@ -1,0 +1,99 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e35683db-7e02-4fc5-af79-6e0102aca2a8",
+  "conversation_seq": 3,
+  "correlation_id": "3e969d7a-8de8-46bb-bf6e-7d66a23c5617",
+  "event_id": "c79b2c9f-e115-5982-a1ce-86c1aea64b83",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-14T21:54:08.909059+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "34af7083-1687-5d5c-8da0-6ff547f9b81c",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [],
+        "include_persisted_history": true,
+        "limit": 6,
+        "query_text": "I have twelve months of expenses saved. Offer A pays $210,000, is fully remote, and optimizes opaque engagement tracking for an advertising network. Offer B pays $165,000, is hybrid three days a week, and builds open-source grid-resilience hardware for disaster shelters. Which offer would I probably choose, and what tradeoff would matter most to me?",
+        "reference_time": null,
+        "source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "activation_kernel": {
+          "kernel": "recall_from_postgres",
+          "kernel_trace": {
+            "candidates_considered": 0,
+            "cue_tokens": [
+              "twelve",
+              "month",
+              "expense",
+              "sav",
+              "offer",
+              "pays",
+              "210",
+              "000",
+              "fully",
+              "remote",
+              "optimize",
+              "opaque",
+              "engagement",
+              "track",
+              "advertis",
+              "network",
+              "offer",
+              "pays",
+              "165",
+              "000",
+              "hybrid",
+              "three",
+              "days",
+              "week",
+              "build",
+              "open-source",
+              "grid-resilience",
+              "hardware",
+              "disaster",
+              "shelter",
+              "offer",
+              "would",
+              "probably",
+              "choose",
+              "tradeoff",
+              "would",
+              "matter",
+              "most"
+            ],
+            "items": [],
+            "normalized_entities": [],
+            "policy_version": "deterministic-cues-v2"
+          },
+          "retrieval_role": "ATTENTION_ACTIVATION"
+        },
+        "association_hops": 0,
+        "baseline_recall_limit": 6,
+        "candidate_limit": 750,
+        "depth": "BROAD_SHALLOW",
+        "packet_item_limit": 6,
+        "query_strategy": "working_state_plus_baseline_activation",
+        "retrieval_role": "ATTENTION_ACTIVATION",
+        "working_state_event_ids": [],
+        "working_state_item_count": 0
+      },
+      "supported": false
+    },
+    "requesting_component": "attention-aperture:v0.7-attention-aperture-v4/task:0a44eb37-0996-56ba-9946-75004b2145c0"
+  },
+  "payload_text": null,
+  "record_hash": "bc20defbf0624aca8f16c97eb2fda9250828c7997d20a80515d9acc33eb99a50",
+  "source": "jit_memory"
+}

@@ -1,0 +1,32 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "05e891ae-0934-4c95-a9dc-f16b67bf38f3",
+  "conversation_seq": 2,
+  "correlation_id": "b2e4032e-ac9a-4e48-9f40-cb46ed5c1ba2",
+  "event_id": "17d9e55f-100a-566f-8719-441f9a00b3b4",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-14T21:53:11.949704+00:00",
+  "payload": {
+    "memory_request_id": "10bbbb3f-244a-53f5-a63b-02ab736a973c",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 6,
+      "query_text": "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field.",
+      "reference_time": null,
+      "source_types": [
+        "USER_PROMPT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "ATTENTION_ACTIVATION"
+  },
+  "payload_text": "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field.",
+  "record_hash": "8e42d392d04cc986e85d5d970a264de670d846c82bd6f7eb723730835eaf7e4e",
+  "source": "attention-aperture:v0.7-attention-aperture-v4/task:35ca329e-1ceb-5e88-968f-c9b0c704c925"
+}

@@ -1,0 +1,99 @@
+{
+  "artifact_hash": "3d4a3584a8d14cdce1392aac0dd31e826c0a95ff52bafc47870df7fdd8e9fa86",
+  "artifact_id": "afea9b8a-cabf-525a-b1fc-1180e057f02a",
+  "artifact_key": "percept",
+  "artifact_schema_version": 1,
+  "artifact_type": "PERCEPT",
+  "assignment_id": null,
+  "conversation_id": "985433b0-7fc0-4d95-96f1-76ddedd1cf61",
+  "correlation_id": "3123dc2f-780f-43a1-bd57-63ea26c01b0c",
+  "created_at": "2026-09-14T21:56:22.870824+00:00",
+  "interaction_id": "ffb25fc4-9ab8-52d5-a8ee-1e149a18242c",
+  "journal_sequence": 1,
+  "payload": {
+    "normalized_percept": {
+      "context": {
+        "active_goal_refs": [],
+        "causal_percept_refs": [],
+        "entity_refs": [],
+        "expectation_refs": [],
+        "integrity": 0,
+        "observations": [],
+        "opportunity": 0,
+        "task_refs": [],
+        "threat": 0,
+        "uncertainty": 0
+      },
+      "conversation_id": "985433b0-7fc0-4d95-96f1-76ddedd1cf61",
+      "correlation_id": "3123dc2f-780f-43a1-bd57-63ea26c01b0c",
+      "features": {
+        "contains_code_block": false,
+        "contains_question": true,
+        "contains_structured_payload": false,
+        "contains_url": false,
+        "line_count": 1,
+        "normalized_characters": 185,
+        "token_count": 32,
+        "uppercase_ratio": 0.020134228187919462
+      },
+      "input_buffer": {
+        "max_segments": 4,
+        "retained_segment_indices": [
+          0,
+          1
+        ],
+        "segment_char_limit": 160,
+        "segments": [
+          "A technician finds frayed internal wiring in my grandmother's espresso maker, calls it a fire risk, and says a safe repair would cost more than replacement. Wha",
+          "t would I most likely do?"
+        ],
+        "total_characters": 185,
+        "total_segments": 2,
+        "truncated": false
+      },
+      "normalized_text": "A technician finds frayed internal wiring in my grandmother's espresso maker, calls it a fire risk, and says a safe repair would cost more than replacement. What would I most likely do?",
+      "observed_at": "2026-09-14T14:56:21.666068-07:00",
+      "percept_id": "90a8da72-04d5-564e-a6f0-425c13dd88e1",
+      "policy_version": "v0.8-perception-v2",
+      "raw_value_sha256": "898fbe6e32fa5e61b7bec4ecff5649421a34a14995477c086a7a1b4a5c5bf4d6",
+      "response_required": true,
+      "schema_version": 1,
+      "source": {
+        "interface": "chat",
+        "kind": "USER_INTERACTION",
+        "modality": "TEXT",
+        "source_id": "user"
+      },
+      "source_event_id": "94da9003-308d-5b0b-a9bf-4db2fa3144f9"
+    },
+    "salience_assessment": {
+      "advisory_classification": null,
+      "advisory_only": true,
+      "disposition": "DELIBERATE",
+      "percept_id": "90a8da72-04d5-564e-a6f0-425c13dd88e1",
+      "policy_version": "v0.8-salience-v2",
+      "preauthorized_reflexes": [],
+      "schema_version": 1,
+      "signals": {
+        "anomaly_score": 0,
+        "goal_relevance_score": 2,
+        "novelty_score": 1,
+        "opportunity_score": 0,
+        "prediction_error_score": 0,
+        "system_integrity_score": 0,
+        "task_relevance_score": 0,
+        "threat_score": 0,
+        "uncertainty_score": 0
+      },
+      "trigger_terms": []
+    },
+    "user_prompt_event_id": "94da9003-308d-5b0b-a9bf-4db2fa3144f9",
+    "user_text": "A technician finds frayed internal wiring in my grandmother's espresso maker, calls it a fire risk, and says a safe repair would cost more than replacement. What would I most likely do?"
+  },
+  "payload_hash": "a2f33669a29093b63b3cfef62a2476f387207a5091647e0658187b02158761ac",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "092cf93f-6a49-52fc-b5fd-d09e4672f5d6"
+}

@@ -1,0 +1,101 @@
+{
+  "artifact_hash": "e57e7018988ada5ede5a989303619f0c0a630cf9b50e088657117cc6cce6949c",
+  "artifact_id": "1ce62837-1f83-59b2-b43e-716bbdfab3f4",
+  "artifact_key": "percept",
+  "artifact_schema_version": 1,
+  "artifact_type": "PERCEPT",
+  "assignment_id": null,
+  "conversation_id": "e35683db-7e02-4fc5-af79-6e0102aca2a8",
+  "correlation_id": "3e969d7a-8de8-46bb-bf6e-7d66a23c5617",
+  "created_at": "2026-09-14T21:53:57.697686+00:00",
+  "interaction_id": "6b27b1f3-7bec-5ecf-8b04-94c0386c459e",
+  "journal_sequence": 1,
+  "payload": {
+    "normalized_percept": {
+      "context": {
+        "active_goal_refs": [],
+        "causal_percept_refs": [],
+        "entity_refs": [],
+        "expectation_refs": [],
+        "integrity": 0,
+        "observations": [],
+        "opportunity": 0,
+        "task_refs": [],
+        "threat": 0,
+        "uncertainty": 0
+      },
+      "conversation_id": "e35683db-7e02-4fc5-af79-6e0102aca2a8",
+      "correlation_id": "3e969d7a-8de8-46bb-bf6e-7d66a23c5617",
+      "features": {
+        "contains_code_block": false,
+        "contains_question": true,
+        "contains_structured_payload": false,
+        "contains_url": false,
+        "line_count": 1,
+        "normalized_characters": 351,
+        "token_count": 55,
+        "uppercase_ratio": 0.025925925925925925
+      },
+      "input_buffer": {
+        "max_segments": 4,
+        "retained_segment_indices": [
+          0,
+          1,
+          2
+        ],
+        "segment_char_limit": 160,
+        "segments": [
+          "I have twelve months of expenses saved. Offer A pays $210,000, is fully remote, and optimizes opaque engagement tracking for an advertising network. Offer B pay",
+          "s $165,000, is hybrid three days a week, and builds open-source grid-resilience hardware for disaster shelters. Which offer would I probably choose, and what tr",
+          "adeoff would matter most to me?"
+        ],
+        "total_characters": 351,
+        "total_segments": 3,
+        "truncated": false
+      },
+      "normalized_text": "I have twelve months of expenses saved. Offer A pays $210,000, is fully remote, and optimizes opaque engagement tracking for an advertising network. Offer B pays $165,000, is hybrid three days a week, and builds open-source grid-resilience hardware for disaster shelters. Which offer would I probably choose, and what tradeoff would matter most to me?",
+      "observed_at": "2026-09-14T14:53:56.536385-07:00",
+      "percept_id": "2db9fb6c-233c-525a-8e76-fbcdd709e790",
+      "policy_version": "v0.8-perception-v2",
+      "raw_value_sha256": "548d1cd4a838aae959ede43c7d48b96e67021937cec67f35119aadb1bd2c5ab0",
+      "response_required": true,
+      "schema_version": 1,
+      "source": {
+        "interface": "chat",
+        "kind": "USER_INTERACTION",
+        "modality": "TEXT",
+        "source_id": "user"
+      },
+      "source_event_id": "778281b3-df6d-5115-b068-6105da7d6175"
+    },
+    "salience_assessment": {
+      "advisory_classification": null,
+      "advisory_only": true,
+      "disposition": "DELIBERATE",
+      "percept_id": "2db9fb6c-233c-525a-8e76-fbcdd709e790",
+      "policy_version": "v0.8-salience-v2",
+      "preauthorized_reflexes": [],
+      "schema_version": 1,
+      "signals": {
+        "anomaly_score": 0,
+        "goal_relevance_score": 2,
+        "novelty_score": 1,
+        "opportunity_score": 0,
+        "prediction_error_score": 0,
+        "system_integrity_score": 0,
+        "task_relevance_score": 0,
+        "threat_score": 0,
+        "uncertainty_score": 0
+      },
+      "trigger_terms": []
+    },
+    "user_prompt_event_id": "778281b3-df6d-5115-b068-6105da7d6175",
+    "user_text": "I have twelve months of expenses saved. Offer A pays $210,000, is fully remote, and optimizes opaque engagement tracking for an advertising network. Offer B pays $165,000, is hybrid three days a week, and builds open-source grid-resilience hardware for disaster shelters. Which offer would I probably choose, and what tradeoff would matter most to me?"
+  },
+  "payload_hash": "3084ed8fbe6b2bc26faf910ae388d3b3d9fa991eaaf3e2dcd64594221d8909ac",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "0a44eb37-0996-56ba-9946-75004b2145c0"
+}

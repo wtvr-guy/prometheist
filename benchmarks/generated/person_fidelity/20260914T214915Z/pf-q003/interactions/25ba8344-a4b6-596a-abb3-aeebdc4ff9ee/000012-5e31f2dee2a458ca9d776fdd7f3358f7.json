@@ -1,0 +1,115 @@
+{
+  "artifact_hash": "39f4fbd0de95082aadeed022cb2d1112fb02db7b2b6f4d55f78eb28ec9a4c74c",
+  "artifact_id": "5e31f2de-e2a4-58ca-9d77-6fdd7f3358f7",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "ca3f478e-f651-5e12-84e5-210b9a64d444",
+  "conversation_id": "0ad7e7c2-e1fc-4b83-a83b-07e450a5446e",
+  "correlation_id": "f1d36ce6-e764-4b33-8779-fcfd5126911d",
+  "created_at": "2026-09-14T21:52:06.846646+00:00",
+  "interaction_id": "25ba8344-a4b6-596a-abb3-aeebdc4ff9ee",
+  "journal_sequence": 12,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "83bbe918530055c845ffecdadf2a7d9037da7d4427df4f6f6ffa40fe039500b4",
+        "artifact_id": "381984e9-ee81-55ea-b071-db86cb2cccf6",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "14a3185507e703976c1015ab836bb5a0b64acf1a30a1317b248203527ea7f19c",
+        "artifact_id": "95aff237-48d1-5c4b-9f1a-2543803659bd",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "dcc8082ab3166224f640347f5b7f353c9e87a554abe8e2009b7753c33caeeebf",
+        "artifact_id": "0e4a8450-cc99-5b47-bffa-e498f4fdbbf4",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:c4cdec4d-b560-5f4f-923d-1912a960cfdc:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "0adc3ce5b67f3dc04106257b5ff439aea0226b7f3b6a1979db0b3d5c4f622812",
+        "artifact_id": "8935d4ac-8cae-580f-a754-01717e1e4bab",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "24d8c7a8612e1625ca1a9cc0d47254544a69d88a4c0bddc02d90fa25ac86e3ba",
+        "artifact_id": "2b519f2b-b1f8-53af-b9f7-f16a4b44dff0",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "398fcacd3b988889a43178fd41791deb63891cd7b1302446039bb4b6d5ba8c11",
+        "artifact_id": "8ab3de58-9112-57d2-8038-24c77b20524e",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "49a6909513dea70926cc09548037cfe57340551ae4b61533b4466a33172d8cd7",
+        "artifact_id": "7c3c7c4d-3c07-58cd-bd0b-7dcf3bee17c6",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:8ff4a655-11f1-56a1-9bb2-506fd4cc1b09:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 7,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "8890c162eb6307993217df61250a5eacd2439d91f96f57e5f9abc6c8de6b020c",
+        "artifact_id": "27c4db9c-47e4-5113-91ec-f6e844ddb75e",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "2d06f13011689c406c2b5387d006cca81aa13d51c950e7696cee2d9cce56089f",
+        "artifact_id": "1e0e4ee4-7f3c-5f8e-9b82-55f92dc2f5ad",
+        "artifact_key": "llm-invocation:V2_RESPOND:9d73a8e0-9b77-52bc-8ecb-bbcbd6c3d156:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 9,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "21d6d6fd50b5cd38a9cb7ee894bcd2385da6e35d56c29a8e1abacdb833ddf9f3",
+        "artifact_id": "f078adc6-4554-5276-820f-6fefda3238c9",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "17807b1c4d41dd482f9a0eab10ffd437216f76b4da9ea3a40f8e7c5ab09642e0",
+        "artifact_id": "d64e3f58-35ff-5e12-b0bc-a926052f8c69",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 11,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "I used to believe that fully remote work was non-negotiable, because I prized uninterrupted focus and the freedom to arrange my day without an office watching the clock. I now prefer a hybrid model—three days in person per week—because it provides enough solitude for deep work and enough human contact to maintain my energy and judgment. What changed my mind was realizing that isolation has a real cost for me, even though I still value freedom.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "fb626a132520bcfe9cd4fbffb89ae109b98b0d4f8bc2e260a2656ac5768191bb",
+  "previous_artifact_hash": "17807b1c4d41dd482f9a0eab10ffd437216f76b4da9ea3a40f8e7c5ab09642e0",
+  "previous_artifact_id": "d64e3f58-35ff-5e12-b0bc-a926052f8c69",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "bf1ee091-c1c3-506f-84c4-7693393c7f8d"
+}

@@ -1,0 +1,27 @@
+{
+  "artifact_hash": "6cf5c09fc67dc65e88faeef5f0c57e4c57016c9142bd51002e1f9093884eb336",
+  "artifact_id": "e640a633-6b06-5fd9-8133-591abf395c32",
+  "artifact_key": "stage-result:V2_RESPOND",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "fb875915-222d-50ba-ade6-a848acefabc3",
+  "conversation_id": "a4966e51-e55d-41c5-9d89-8e85229b29d3",
+  "correlation_id": "5a0b36f4-64ad-4d45-a679-75ff056d1c79",
+  "created_at": "2026-09-14T21:52:56.174165+00:00",
+  "interaction_id": "70bddd4c-5216-5b98-a0ee-1d40d35336f2",
+  "journal_sequence": 10,
+  "payload": {
+    "output": {
+      "response_required": true,
+      "response_text": "You describe yourself as spontaneous, and that is accurate in the sense that you embrace spontaneity in situations that are low-stakes or flexible—like a free Saturday. However, your actual decision-making reveals a more nuanced pattern: you are not entirely spontaneous in all contexts. When it comes to expensive or hard-to-reverse commitments, you adopt a structured, deliberate process—using checklists, comparing options, and sleeping on decisions. This shows that your spontaneity is not a blanket trait, but rather a response to the nature of the situation. So, yes, you are spontaneous, but only in certain circumstances. You balance intuition with careful evaluation, which reflects a thoughtful, adaptive decision style rather than pure spontaneity.",
+      "skipped": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "708753e1edebb0811abe207e0ffa6ea10f5ae8ba933a4c1c14f574d3c1f8358c",
+  "previous_artifact_hash": "f227bc8a01d7f3469a4bf11682495cd32545c226bf60d945b022a0a628e43c91",
+  "previous_artifact_id": "49ae9895-40de-5ec6-950a-a0d9c074fae2",
+  "producer": "percept_response_v2",
+  "stage": "V2_RESPOND",
+  "task_id": "5f292fb6-7f5d-50b1-b0b1-2d3936cced72"
+}

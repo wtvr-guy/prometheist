@@ -1,0 +1,115 @@
+{
+  "artifact_hash": "e684bc198dea7604bd25a78182ad6c323ded9450e35b5b9d94d8e186ab53a13e",
+  "artifact_id": "105691a0-42ef-55c9-b549-060d8f5abc81",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "4fa2a05a-d361-5e77-a264-b8485e1b881c",
+  "conversation_id": "e35683db-7e02-4fc5-af79-6e0102aca2a8",
+  "correlation_id": "3e969d7a-8de8-46bb-bf6e-7d66a23c5617",
+  "created_at": "2026-09-14T21:54:53.019027+00:00",
+  "interaction_id": "6b27b1f3-7bec-5ecf-8b04-94c0386c459e",
+  "journal_sequence": 12,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "e57e7018988ada5ede5a989303619f0c0a630cf9b50e088657117cc6cce6949c",
+        "artifact_id": "1ce62837-1f83-59b2-b43e-716bbdfab3f4",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "aa16fc48ff4121d1236eab0eabf0313517f5114f457c493c17336c68f92edbc1",
+        "artifact_id": "f97c551c-6ac7-585a-a5cb-f668333a3a0e",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "77b67a8f65c4e20cdcc6983177de93eaf4f6255d67ec980f6e02615cd5b6b157",
+        "artifact_id": "563603bd-7ef2-53ff-be82-07adb05d6754",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:c6b666e6-a87e-5b3f-8a80-cc20e8d85658:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "2f296de7ea3183d4570aad21b215d1b04083b440eb06af0ef65663e8f06f2a7b",
+        "artifact_id": "8f02398f-97c6-5bfc-a772-e0b08c0d9f9d",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "089e7070aed03f1117c0bf205648113001bcb11b6426538da141cf620c98b4de",
+        "artifact_id": "fa892ca9-57cf-5ef6-8b6e-7204391a77e8",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "67248966fd498e4229f119f022f8d7518dc33bbe0b41ac6a3f36c7ee634c97ef",
+        "artifact_id": "b6177088-5b4b-5a27-b6e8-4ab39cdb5d99",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "5ee6c03acea8258ee4b1ac8f897b2b3d32d0373c4039ae39c265c4e46c7c3f95",
+        "artifact_id": "e3f65775-37d6-5def-a1e5-04c88eeb254f",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:21581e90-009e-5563-9ea7-a194fd92cf17:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 7,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "954b9e67a00983fcb66d1d44bb2f3f0b9c3b9002dd2e3b3840f658594fcb48db",
+        "artifact_id": "4930bf0d-82d4-5429-8a2e-62ef65b4d2ef",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "46f7df22f31d633025f95596c882922038f975efb00996562a34a9891686823f",
+        "artifact_id": "7c4e3a0e-fb1c-5954-9923-045c57fc1ea6",
+        "artifact_key": "llm-invocation:V2_RESPOND:36b09471-b332-5fd4-b2a0-5ff164339846:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 9,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "d5402df73df00a2009df4821a0e7b1d0f00a8e8cd8c06715890a7a0c666d0794",
+        "artifact_id": "4d805e04-de46-5726-a613-66ebc03ebea4",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "8cf867d5ae84991416de42e79f08a6efa690ac0e0ef54be0676976fea563034d",
+        "artifact_id": "81eff8cd-6c90-52db-b61d-d0902f106ecb",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 11,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "I would probably choose Offer A, the $210,000 fully remote role that optimizes opaque engagement tracking for an advertising network. The tradeoff that would matter most to me is work-life balance and autonomy—specifically, the ability to manage my time and schedule without the constraints of a hybrid schedule. While Offer B has a meaningful social and environmental mission (building open-source grid-resilience hardware for disaster shelters), the higher salary of Offer A provides greater financial security and flexibility. Since I have twelve months of expenses saved, financial stability is already achieved, so the primary tradeoff becomes personal values versus financial return. If I value autonomy, flexibility, and professional independence, Offer A aligns better. If I prioritize purpose, community impact, and contributing to tangible social good, then Offer B would be more meaningful. Ultimately, the decision hinges on whether I prioritize personal freedom and career growth over mission-driven work with a hybrid schedule and physical presence in a shared environment. The most significant tradeoff is therefore between autonomy and purpose, with autonomy being more valuable in this context given the financial buffer already in place.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "207475e88f846c38623629ce8578ada23e0b86e579a3ff09395ba8d5b90e7102",
+  "previous_artifact_hash": "8cf867d5ae84991416de42e79f08a6efa690ac0e0ef54be0676976fea563034d",
+  "previous_artifact_id": "81eff8cd-6c90-52db-b61d-d0902f106ecb",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "0a44eb37-0996-56ba-9946-75004b2145c0"
+}

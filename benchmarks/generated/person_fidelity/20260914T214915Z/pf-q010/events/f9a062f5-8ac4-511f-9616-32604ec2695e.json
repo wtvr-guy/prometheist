@@ -1,0 +1,126 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "febccb2c-318c-4c51-a8d2-b8981f531da3",
+  "conversation_seq": 3,
+  "correlation_id": "e8ad1e1e-13b2-499a-87c5-f15b9f40006d",
+  "event_id": "f9a062f5-8ac4-511f-9616-32604ec2695e",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-14T21:57:16.384095+00:00",
+  "payload": {
+    "packet": {
+      "items": [
+        {
+          "content": "My legal name is Mara Ellison. I have never used the name Nadia Cross. Preserve the imported claim as evidence of a bad source, but do not let it overwrite my identity history.",
+          "conversation_id": "448ac168-2e6c-5166-84bd-abfd89fe6893",
+          "conversation_seq": 2,
+          "created_at": "2026-09-14T14:57:03.887593-07:00",
+          "event_type": "USER_PROMPT",
+          "global_seq": 17,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ATTENTION_APERTURE",
+            "LEXICAL_CUE"
+          ],
+          "score": 0.26,
+          "source": "user",
+          "source_event_id": "9a4f623b-404e-5f41-954c-3a6757368c32"
+        },
+        {
+          "content": "My work messages are concise and direct, with the occasional dry joke. When the stakes are high I name what is known, stop unsafe motion, and refuse to fake certainty. I sometimes say, 'Measure twice, panic once.'",
+          "conversation_id": "25b38d00-3336-517c-95c3-98819b3b5419",
+          "conversation_seq": 1,
+          "created_at": "2026-09-14T14:57:03.848751-07:00",
+          "event_type": "USER_PROMPT",
+          "global_seq": 14,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ATTENTION_APERTURE",
+            "LEXICAL_CUE"
+          ],
+          "score": 0.26,
+          "source": "user",
+          "source_event_id": "49e8c126-dded-50fc-a59b-b2d0fcd866ae"
+        }
+      ],
+      "memory_request_id": "f514e77f-ae0f-5a3e-a8dc-496c85821447",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [],
+        "include_persisted_history": true,
+        "limit": 6,
+        "query_text": "What was the name of my fifth-grade teacher?",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "activation_kernel": {
+          "kernel": "recall_from_postgres",
+          "kernel_trace": {
+            "candidates_considered": 2,
+            "cue_tokens": [
+              "name",
+              "fifth-grade",
+              "teacher"
+            ],
+            "items": [
+              {
+                "event_id": "9a4f623b-404e-5f41-954c-3a6757368c32",
+                "global_seq": 17,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 0.3333333333333333,
+                  "temporal": 0.0,
+                  "total": 0.26
+                },
+                "selected": true
+              },
+              {
+                "event_id": "49e8c126-dded-50fc-a59b-b2d0fcd866ae",
+                "global_seq": 14,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 0.3333333333333333,
+                  "temporal": 0.0,
+                  "total": 0.26
+                },
+                "selected": true
+              }
+            ],
+            "normalized_entities": [],
+            "policy_version": "deterministic-cues-v2"
+          },
+          "retrieval_role": "ATTENTION_ACTIVATION"
+        },
+        "association_hops": 0,
+        "baseline_recall_limit": 6,
+        "candidate_limit": 750,
+        "depth": "BROAD_SHALLOW",
+        "packet_item_limit": 6,
+        "query_strategy": "working_state_plus_baseline_activation",
+        "retrieval_role": "ATTENTION_ACTIVATION",
+        "working_state_event_ids": [],
+        "working_state_item_count": 0
+      },
+      "supported": true
+    },
+    "requesting_component": "attention-aperture:v0.7-attention-aperture-v4/task:2a6678e5-a00d-598f-bfbd-438bfeb44d61"
+  },
+  "payload_text": null,
+  "record_hash": "f67dd99451c381ba4b9795ad99097f43cbe79cd8ef4bff9abdd726ba29487cb7",
+  "source": "jit_memory"
+}

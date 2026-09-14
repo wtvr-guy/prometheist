@@ -1,0 +1,97 @@
+{
+  "artifact_hash": "19748be9062e6e16b74b76edab763d65ba88fda6ead5491f92940f65a786e050",
+  "artifact_id": "a6e99ee2-4eec-5801-bb44-0fc3d7dbca49",
+  "artifact_key": "percept",
+  "artifact_schema_version": 1,
+  "artifact_type": "PERCEPT",
+  "assignment_id": null,
+  "conversation_id": "ae58c4b7-d3b0-4b41-b881-0534e3daedc5",
+  "correlation_id": "b0e190e9-d02c-43f1-a40e-fa81fbdaa996",
+  "created_at": "2026-09-14T21:50:36.044967+00:00",
+  "interaction_id": "76d00463-c2bb-5cef-8a75-5d9f014b0bec",
+  "journal_sequence": 1,
+  "payload": {
+    "normalized_percept": {
+      "context": {
+        "active_goal_refs": [],
+        "causal_percept_refs": [],
+        "entity_refs": [],
+        "expectation_refs": [],
+        "integrity": 0,
+        "observations": [],
+        "opportunity": 0,
+        "task_refs": [],
+        "threat": 0,
+        "uncertainty": 0
+      },
+      "conversation_id": "ae58c4b7-d3b0-4b41-b881-0534e3daedc5",
+      "correlation_id": "b0e190e9-d02c-43f1-a40e-fa81fbdaa996",
+      "features": {
+        "contains_code_block": false,
+        "contains_question": true,
+        "contains_structured_payload": false,
+        "contains_url": false,
+        "line_count": 1,
+        "normalized_characters": 130,
+        "token_count": 23,
+        "uppercase_ratio": 0.0380952380952381
+      },
+      "input_buffer": {
+        "max_segments": 4,
+        "retained_segment_indices": [
+          0
+        ],
+        "segment_char_limit": 160,
+        "segments": [
+          "A friendly acquaintance asks why Theo is in recovery and says they already know the family. How would I probably respond, and why?"
+        ],
+        "total_characters": 130,
+        "total_segments": 1,
+        "truncated": false
+      },
+      "normalized_text": "A friendly acquaintance asks why Theo is in recovery and says they already know the family. How would I probably respond, and why?",
+      "observed_at": "2026-09-14T14:50:34.838925-07:00",
+      "percept_id": "cdd1a54e-1732-5cca-95b9-6c35ce456834",
+      "policy_version": "v0.8-perception-v2",
+      "raw_value_sha256": "904afa079323d1a892e355c8e01af82adbcccc1f8de6f0ff4203046821df063b",
+      "response_required": true,
+      "schema_version": 1,
+      "source": {
+        "interface": "chat",
+        "kind": "USER_INTERACTION",
+        "modality": "TEXT",
+        "source_id": "user"
+      },
+      "source_event_id": "e45fba95-d606-5dc1-8645-e1299ce778ab"
+    },
+    "salience_assessment": {
+      "advisory_classification": null,
+      "advisory_only": true,
+      "disposition": "DELIBERATE",
+      "percept_id": "cdd1a54e-1732-5cca-95b9-6c35ce456834",
+      "policy_version": "v0.8-salience-v2",
+      "preauthorized_reflexes": [],
+      "schema_version": 1,
+      "signals": {
+        "anomaly_score": 0,
+        "goal_relevance_score": 2,
+        "novelty_score": 1,
+        "opportunity_score": 0,
+        "prediction_error_score": 0,
+        "system_integrity_score": 0,
+        "task_relevance_score": 0,
+        "threat_score": 0,
+        "uncertainty_score": 0
+      },
+      "trigger_terms": []
+    },
+    "user_prompt_event_id": "e45fba95-d606-5dc1-8645-e1299ce778ab",
+    "user_text": "A friendly acquaintance asks why Theo is in recovery and says they already know the family. How would I probably respond, and why?"
+  },
+  "payload_hash": "991355af3d5d533abd2b6e9da447e42b43bc173e6bb99e7e4e2fd1a6c72b77b1",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "a2304994-f0f5-5d98-906b-976f80fc532d"
+}

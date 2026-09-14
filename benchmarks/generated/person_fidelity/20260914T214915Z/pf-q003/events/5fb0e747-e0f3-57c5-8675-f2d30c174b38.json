@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "0ad7e7c2-e1fc-4b83-a83b-07e450a5446e",
+  "conversation_seq": 1,
+  "correlation_id": "f1d36ce6-e764-4b33-8779-fcfd5126911d",
+  "event_id": "5fb0e747-e0f3-57c5-8675-f2d30c174b38",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-14T21:51:19.109215+00:00",
+  "payload": {
+    "text": "What did I used to believe about remote work, what do I prefer now, and what changed my mind?"
+  },
+  "payload_text": "What did I used to believe about remote work, what do I prefer now, and what changed my mind?",
+  "record_hash": "d469e4a48671e2cfbad190af39710869b0a805c50d376ebbb6750462397f4ed0",
+  "source": "user"
+}

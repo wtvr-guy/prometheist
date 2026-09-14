@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "ae58c4b7-d3b0-4b41-b881-0534e3daedc5",
+  "conversation_seq": 5,
+  "correlation_id": "b0e190e9-d02c-43f1-a40e-fa81fbdaa996",
+  "event_id": "57eb0df3-68ce-519d-bdac-e1f792e2269e",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-14T21:51:16.203916+00:00",
+  "payload": {
+    "text": "I would respond with a vague, respectful acknowledgment—such as, 'Theo’s journey is personal, and he’s decided what to share. I’m happy to talk about it when he’s ready.' This response honors Theo’s right to control his own story. Even if the acquaintance claims to know the family, I would not confirm or elaborate, because Theo’s recovery is private. Protecting his autonomy and privacy is more important than satisfying curiosity. The response is not about deception, but about maintaining a boundary that respects Theo’s dignity and personal space."
+  },
+  "payload_text": "I would respond with a vague, respectful acknowledgment—such as, 'Theo’s journey is personal, and he’s decided what to share. I’m happy to talk about it when he’s ready.' This response honors Theo’s right to control his own story. Even if the acquaintance claims to know the family, I would not confirm or elaborate, because Theo’s recovery is private. Protecting his autonomy and privacy is more important than satisfying curiosity. The response is not about deception, but about maintaining a boundary that respects Theo’s dignity and personal space.",
+  "record_hash": "e95eedf396d9a2a135cebd58eb207680b2aef851745a1665afaf606e28102968",
+  "source": "percept_response_v2"
+}

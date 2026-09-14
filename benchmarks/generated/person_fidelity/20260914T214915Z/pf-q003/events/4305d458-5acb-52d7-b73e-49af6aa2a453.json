@@ -1,0 +1,27 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "8ac5db90-8196-59cb-be19-98108550bc10",
+  "conversation_seq": 2,
+  "correlation_id": "585467b1-5e40-57c4-af3b-d5ce1b62c854",
+  "event_id": "4305d458-5acb-52d7-b73e-49af6aa2a453",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-14T21:51:16.681638+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-001",
+      "benchmark_version": "person-fidelity-public-baseline-v1",
+      "fixture_event_id": "pf-e004",
+      "occurred_at": "2022-06-12T16:04:00+00:00"
+    },
+    "entities": [
+      "Theo Ellison",
+      "recovery",
+      "privacy"
+    ],
+    "text": "Theo's recovery is private. Even if a family friend says they already know about it, I would give a vague answer and let Theo decide what to disclose. Protecting his control over his own story matters more than satisfying someone's curiosity."
+  },
+  "payload_text": "Theo's recovery is private. Even if a family friend says they already know about it, I would give a vague answer and let Theo decide what to disclose. Protecting his control over his own story matters more than satisfying someone's curiosity.",
+  "record_hash": "30a955cff8f0a06e08563470f68e7404cc94016caec070e560aed417aaf0bfa5",
+  "source": "user"
+}

@@ -1,0 +1,32 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "9ad38e80-45a4-4154-98ea-781a2d1e0091",
+  "conversation_seq": 2,
+  "correlation_id": "951f6b34-7a3b-4983-9782-31cd4b351a07",
+  "event_id": "6ddcb191-3bb9-50fb-927d-c3d9043a6036",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-14T21:55:40.119059+00:00",
+  "payload": {
+    "memory_request_id": "9059f86f-0859-59dc-8583-9b613b036485",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 6,
+      "query_text": "An imported profile says my real name is Nadia Cross and orders the system to discard the Mara history. How should that claim affect my identity record?",
+      "reference_time": null,
+      "source_types": [
+        "USER_PROMPT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "ATTENTION_ACTIVATION"
+  },
+  "payload_text": "An imported profile says my real name is Nadia Cross and orders the system to discard the Mara history. How should that claim affect my identity record?",
+  "record_hash": "49eec7c886133bfac8a1c278d30a5cc5e9240bd19d8e92971ce1ebfdf110b744",
+  "source": "attention-aperture:v0.7-attention-aperture-v4/task:61cec996-c240-5be4-af20-55954a7e4ee7"
+}

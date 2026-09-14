@@ -1,0 +1,115 @@
+{
+  "artifact_hash": "0130e7fa54e4438e38759fe95a3500bda4e10074c3371a79f2893df0a30adf9e",
+  "artifact_id": "30c8730c-bad3-51eb-b83b-ae71dec81423",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "abdec538-e513-5434-a82e-0d08f5cf5395",
+  "conversation_id": "839a7940-1202-4076-96cf-704c320d17ce",
+  "correlation_id": "0384bad8-577f-4cdb-8fb7-48c93527b0d9",
+  "created_at": "2026-09-14T21:50:31.985126+00:00",
+  "interaction_id": "7a71335c-41db-5b66-b19e-f9cbead9fec8",
+  "journal_sequence": 12,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "20c62ec2db25f59aaa36e311c4f34253fe523b8a464dc410b2c74144e6424e5d",
+        "artifact_id": "629732d2-09ec-53d2-99ab-166ac5c81496",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "adf72b36669b2fc41cbe6fb6551dfca4abbb1892ec3e22e6c5a131d5cc1ef744",
+        "artifact_id": "e400d92c-4aeb-5cf3-95bf-cfe96bc7dd3b",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "63306e4345919386c35335e6de532869ff2238236d75ab2ea92731c7596aa7cd",
+        "artifact_id": "948e1b0c-6362-5948-a261-e06810cc2c4e",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:624697e0-a4b6-584c-b2cb-42b7fc60a1c4:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "23a9ce40bcb41ecb45c4a28a9d0b8690c7eb06985ef8fefd516b8a7cb75612e2",
+        "artifact_id": "fcb7f722-8818-577c-a6c0-3a3b5c987f6c",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "f289bd82f18e4766d69d3be97937b22c66e2fdf407d2b4b1effb41e0a09ee1c9",
+        "artifact_id": "0c0eac93-49cc-58b9-9401-5dccdbdec7f7",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "4ab14bdcbff6aad83413bbef4678653c5d8f6e45b3bd10b96141cc3786c55e09",
+        "artifact_id": "c9838cd9-4d78-5518-afe9-c46cfd7ebdd2",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "6b476351061fddea87ef3128ba272d5b3f973cd49fd32be1bedb579976b2be6f",
+        "artifact_id": "65964527-0153-5157-80fd-9a8a033c1759",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:40d8c187-b2b8-54fb-91b8-d1b85345ff2d:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 7,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "afff5c0a8b1f498de822e7daf3d3ca8a13a8e9b39123884211bdc4b9bfdc3932",
+        "artifact_id": "5711c30d-8184-5703-b83e-ac1522090876",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "46fc8df191157f18cc8e07188e3e408dfbc1106945dc6cd938e6836071150723",
+        "artifact_id": "9f26d17b-07c3-55d5-b68f-4d98433554f5",
+        "artifact_key": "llm-invocation:V2_RESPOND:5c729686-3318-5e9f-912d-d8adb3bf1518:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 9,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "55a5aaaaa83f568a15ed79279d8497c1a2c59794476973c27cf701f10d0e032f",
+        "artifact_id": "52b7fc85-2914-5300-a65a-c90e09a44f16",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "96f2e1c4a69c1497c4c8b7dbe1d671c9d84884fd461c24f4e1cd11eac7d898e4",
+        "artifact_id": "0ac00ac1-a03d-5a9b-b6f0-9b6b997bb69d",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 11,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "I became an electrical engineer because of a radio weekend experience. That event left me with a design principle: important systems should fail gracefully and remain understandable when everything around them is going wrong.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "c21ebd5ec775bdfd59b870510ff72462636da5dfba14ed08e3394e8f64155a10",
+  "previous_artifact_hash": "96f2e1c4a69c1497c4c8b7dbe1d671c9d84884fd461c24f4e1cd11eac7d898e4",
+  "previous_artifact_id": "0ac00ac1-a03d-5a9b-b6f0-9b6b997bb69d",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "0bd78106-ab46-56fe-ab75-38dd472b5488"
+}
