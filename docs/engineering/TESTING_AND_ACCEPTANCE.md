@@ -139,6 +139,14 @@ regression baseline, but identity-maturity evidence requires longitudinal evalua
 against a real individual and prospectively frozen holdouts. The first public method is
 [`PERSON-FIDELITY-001`](../experiments/PERSON_FIDELITY_BASELINE.md).
 
+Native cognitive benchmark runs are research evidence, including failures. Their raw
+event mirrors, stage artifacts, model invocations, outputs, and chain manifests remain
+Git-visible and append-only when the subject and inputs are fictional or deliberately
+non-sensitive. A compact aggregate result is not an acceptable substitute for the
+underlying causal artifacts. Preserved model output remains unreviewed training data
+until an explicit human label identifies it as a positive, negative, preference, or
+held-out example.
+
 ## Statelessness acceptance
 
 Because “every LLM invocation is stateless” is constitutional, acceptance must prove the absence of hidden continuity—not merely show that answers happen to be correct.

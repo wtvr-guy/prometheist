@@ -1,5 +1,6 @@
 param(
     [string]$DatabaseUrl = $env:PROMETHEIST_PERSON_FIDELITY_DATABASE_URL,
+    [string]$VerifyResult,
     [switch]$ValidateOnly
 )
 
@@ -13,6 +14,12 @@ try {
 
     uv sync --frozen
     if ($LASTEXITCODE -ne 0) { throw "uv sync failed" }
+
+    if ($VerifyResult) {
+        uv run --locked python benchmarks/run_person_fidelity_baseline.py --verify-result $VerifyResult
+        if ($LASTEXITCODE -ne 0) { throw "person-fidelity artifact verification failed" }
+        return
+    }
 
     uv run --locked python benchmarks/run_person_fidelity_baseline.py --validate-only
     if ($LASTEXITCODE -ne 0) { throw "person-fidelity fixture validation failed" }
@@ -30,6 +37,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "person-fidelity baseline failed" }
 
     Write-Host "Person-fidelity evidence written to $output"
+    Write-Host "Raw event and interaction artifacts are retained under benchmarks/generated/person_fidelity/ and are visible to Git."
     Write-Host "The structural result is not a semantic verdict. Human review remains required."
 }
 finally {

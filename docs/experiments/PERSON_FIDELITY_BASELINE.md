@@ -67,6 +67,13 @@ Every probe receives its own artifact root and an independently reset database i
 The runner rebuilds exactly the same life record before each probe. Prior benchmark
 prompts and responses therefore cannot become evidence for later probes.
 
+The complete raw journal is retained under
+`benchmarks/generated/person_fidelity/<UTC-run-id>/`. Each probe directory contains
+all canonical event record/commit artifacts and the complete hash-linked interaction
+chain, including every stage result and every successful, failed, or superseded LLM
+invocation. These directories are intentionally visible to Git and are permanent
+experimental evidence.
+
 The runner uses the production percept-to-response entry point. Each cognitive stage is
 still executed by a fresh guarded worker, and the response must be reconstructed from
 durable state rather than a benchmark-owned transcript.
@@ -137,11 +144,33 @@ $env:PROMETHEIST_PERSON_FIDELITY_DATABASE_URL = `
 .\scripts\run_person_fidelity_baseline.ps1
 ```
 
-The result is written under `benchmarks/results/PERSON-FIDELITY-001_*.json`. It records
-the revision, fixture digest, platform, configured model, response text, exact admitted
-fixture IDs, structural verdict, and a pending human-review record containing the
-separate oracle. A result is incomplete until every response has been reviewed.
-Existing result paths are never overwritten.
+The compact result is written under
+`benchmarks/results/PERSON-FIDELITY-001_*.json`. It records the revision, fixture
+digest, platform, configured model, response text, exact admitted fixture IDs,
+structural verdict, and a pending human-review record containing the separate oracle.
+It also contains per-probe content-addressed receipts for every stage and LLM
+invocation and a SHA-256 reference to the run's `run_manifest.json`.
+
+The manifest inventories every raw artifact byte, type, interaction, stage, and
+terminal chain receipt without replacing the original files. Existing result,
+manifest, and raw-artifact paths are never overwritten. A failed response remains
+evidence and must not be deleted. A result is incomplete until every response has been
+reviewed.
+
+All fixture subjects are fictional. The retained raw outputs may later support LoRA,
+preference, or evaluator-data research, but each manifest begins with
+`training_status=UNREVIEWED_RAW_EVIDENCE`. Only an explicitly reviewed data-preparation
+process may promote an output to a positive, negative, comparison, or held-out
+example; benchmark oracles must never leak into model inputs.
+
+Verify a schema-v2 result, its manifest receipt, every raw file hash, every canonical
+event record/commit pair, and every interaction hash chain without PostgreSQL or
+Ollama:
+
+```powershell
+.\scripts\run_person_fidelity_baseline.ps1 `
+  -VerifyResult benchmarks/results/PERSON-FIDELITY-001_<timestamp>.json
+```
 
 ## Decision rule for the first person-model experiment
 
