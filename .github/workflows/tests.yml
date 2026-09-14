@@ -54,6 +54,7 @@ jobs:
         run: |
           uv run ruff check .
           uv run python scripts/audit_constraints.py --fail-unregistered
+          uv run python benchmarks/run_person_fidelity_baseline.py --validate-only
 
       - name: Run deterministic constraint calibration
         run: uv run python benchmarks/run_deterministic_constraints.py

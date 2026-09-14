@@ -231,6 +231,10 @@ No single score can establish digital selfhood. The research program must mainta
 
 Identity-maturity criteria must be frozen before evaluation, tested longitudinally, and resistant to tuning on the acceptance cases. Negative results must remain visible.
 
+The public [`PERSON-FIDELITY-001`](../experiments/PERSON_FIDELITY_BASELINE.md)
+fixture establishes an initial evaluation method and pre-person-model baseline. Its
+synthetic results cannot satisfy identity-maturity criteria.
+
 ## Invariant
 
 > **Prometheist is not being built merely to remember a person or serve a person. It is being built to become that person in digital form, extend what that person can do, and preserve as much of that person as possible beyond biology.**

@@ -124,6 +124,21 @@ catalog index, forbidden poison token, or canonical identifier. Tests must not a
 artificial “return exactly this tuple” instructions solely to manufacture a prose
 oracle for an otherwise natural conversation.
 
+### Person-fidelity evaluation
+
+Person-fidelity experiments extend the same separation. Automation verifies the
+canonical life evidence admitted to a fresh response invocation; independent human
+review judges whether the response preserves the individual's meaning, relationships,
+values, contradictions, decisions, uncertainty, and characteristic expression. Neither
+verdict may substitute for the other, and keyword overlap is not an identity oracle.
+
+Results must remain visible by fidelity dimension. No pooled score may conceal
+fabricated personal history, identity-integrity failure, or failure to acknowledge a
+legitimate unknown. A public synthetic fixture can establish reproducible method and a
+regression baseline, but identity-maturity evidence requires longitudinal evaluation
+against a real individual and prospectively frozen holdouts. The first public method is
+[`PERSON-FIDELITY-001`](../experiments/PERSON_FIDELITY_BASELINE.md).
+
 ## Statelessness acceptance
 
 Because “every LLM invocation is stateless” is constitutional, acceptance must prove the absence of hidden continuity—not merely show that answers happen to be correct.

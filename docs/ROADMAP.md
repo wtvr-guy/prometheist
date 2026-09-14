@@ -110,6 +110,28 @@ See the [milestone](milestones/v0.8/README.md),
 Budgets and ordinal bins remain provisional; integration is not evidence of
 improved cognition or native performance.
 
+## Cross-milestone measurement — public person-fidelity baseline
+
+**Status:** `PERSON-FIDELITY-001` fixture and runner frozen; native baseline and human
+review pending.
+
+Before introducing a person-model mechanism, Prometheist must record what the
+unmodified persistent/stateless architecture can already do with longitudinal life
+evidence. The first public baseline uses a fictional person and independently probes
+autobiographical meaning, relationships, belief change, self-report/behavior
+contradiction, contextual preference, novel decisions, characteristic expression,
+identity integrity, and legitimate unknowns.
+
+Automation verifies exact evidence delivery and immutable artifact provenance. Human
+review separately judges whether each natural response preserves the person's meaning,
+judgment, and voice. A plausible answer without the required evidence lineage fails
+structurally; a valid evidence receipt with an unfaithful answer fails semantically.
+
+This measurement track does not change the v0.8 closure gates, promote the v0.9
+candidate, or pull a person model into the pre-v1.0 foundation. It creates the baseline
+needed to make Horizon A and Horizon B falsifiable rather than rhetorical. See the
+[`PERSON-FIDELITY-001` specification](experiments/PERSON_FIDELITY_BASELINE.md).
+
 ## v0.9 — candidate Epistemic WorkingState experiment
 
 The earlier v0.8 proposal is preserved as
@@ -127,8 +149,8 @@ that intervention.
 ## v0.10 — deterministic retention and memory admission
 
 Primary question: can Prometheist avoid permanently storing useless external data
-while preserving evidence required for cognition, continuity, explanation, and identity
-continuity and developmental stewardship?
+while preserving evidence required for cognition, explanation, identity continuity,
+and developmental stewardship?
 
 The experiment will distinguish ephemeral raw observations, retained observational
 memory, and canonical internal history; define versioned retention classes and
