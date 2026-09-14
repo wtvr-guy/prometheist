@@ -1,6 +1,7 @@
 # Immutable Artifact Journal
 
 **Status:** constitutional architecture deep dive  
+**Constitutional authority:** implements Article 36 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).  
 **Applies to:** canonical events, percept-to-response stage boundaries, stateless LLM invocations, inspection, interruption recovery, and database reconstruction
 
 Prometheist maintains an independent immutable JSON artifact journal in addition to PostgreSQL. PostgreSQL remains the indexed operational store used for efficient retrieval, scheduling, and execution. It is not the only surviving representation of Prometheist's memory, cognition, or completed work.
@@ -12,7 +13,7 @@ The artifact journal exists for four reasons:
 3. **Disaster recovery.** Canonical event history must remain reconstructable when PostgreSQL is corrupted, lost, or deliberately recreated.
 4. **Independent auditability.** Prometheist's causal history must remain inspectable even when the primary database or scheduler tables are unavailable.
 
-This design extends the system-continuity, append-only evidence, disposable-worker recovery, causal-provenance, local-first, and user-sovereignty rules in the Constitution.
+This design extends the system-continuity, append-only evidence, disposable-worker recovery, causal-provenance, local-first, and identity-stewardship rules in the Constitution.
 
 ## 1. Persistence domains
 
@@ -356,7 +357,7 @@ Current policy:
 - future cold-storage compression may transform old `.json` records to a content-preserving representation such as `.json.zst`, provided hashes/identity remain verifiable and the transformation is reversible;
 - large binary objects should eventually use content-addressed blob storage, with JSON artifacts referring to their hashes rather than embedding arbitrary binary payloads.
 
-Explicit user-directed erasure remains a separate user-sovereignty operation and must not be confused with automatic compaction.
+Explicit identity-governed erasure remains a separate stewardship/sovereignty operation and must not be confused with automatic compaction.
 
 ## 10. Current scope and future hardening
 

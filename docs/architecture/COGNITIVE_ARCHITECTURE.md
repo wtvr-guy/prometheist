@@ -1,15 +1,14 @@
 # Prometheist Cognitive Architecture
 
-**Status:** constitutional architecture deep dive, rebaselined 2026-09-03
+**Status:** constitutional architecture deep dive, mission-aligned 2026-09-14
 
 **Authority:** subordinate to [`../../CONSTITUTION.md`](../../CONSTITUTION.md)
 
 ## Purpose
 
-Prometheist is a persistent cognitive system whose durable continuity remains intact
-when every model invocation and worker process disappears. LLMs provide bounded
-semantic computation; they are not durable agents and do not own identity, memory,
-attention, policy, or execution authority.
+Prometheist's engineering architecture exists to support the digital-self mission in Articles 1–6 of the Constitution. It is a persistent cognitive system whose durable continuity remains intact when every model invocation and worker process disappears. LLMs provide bounded semantic computation; they are not the person, are not durable agents, and do not own identity, memory, attention, policy, or execution authority.
+
+A mature person-model and identity sovereignty require separate longitudinal evidence and cannot be created by assigning a first-person system prompt to a model. The current architecture must preserve the evidence and continuity from which those later mechanisms can be evaluated without confusing aspiration with established identity.
 
 The architecture separates five kinds of responsibility:
 

@@ -2,7 +2,7 @@
 
 **Status:** constitutional architecture deep dive, rebaselined 2026-09-03
 
-**Authority:** primary deep dive for Constitution Articles 5–8, 20, 27, and 29
+**Authority:** primary deep dive for Constitution Articles 11–14, 26, 33, and 35
 
 ## Rule
 

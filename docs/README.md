@@ -3,8 +3,8 @@
 ## Authority order
 
 1. [`../CONSTITUTION.md`](../CONSTITUTION.md)
-2. constitutional deep dives under [`architecture/`](architecture/) and
-   [`engineering/`](engineering/)
+2. constitutional deep dives under [`philosophy/`](philosophy/),
+   [`architecture/`](architecture/), and [`engineering/`](engineering/)
 3. current architecture documents
 4. active milestone records and [`ROADMAP.md`](ROADMAP.md)
 5. dated audits, experiments, and historical milestone records
@@ -12,6 +12,11 @@
 Historical text preserves evidence but cannot silently override a current authority.
 Adoption of a constitutional rule also does not imply that every implementation gap
 is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
+
+## Constitutional purpose and identity
+
+- [`philosophy/DIGITAL_SELFHOOD.md`](philosophy/DIGITAL_SELFHOOD.md) — Articles 1–6 and 28: imprinting, identity fidelity, first-person digital identity, autonomous agency, developmental stewardship, and personal continuity.
+- [`audits/CONSTITUTIONAL_AMENDMENT_2_0_2026-09-14.md`](audits/CONSTITUTIONAL_AMENDMENT_2_0_2026-09-14.md) — Constitution 2.0 decision record and version 1.1-to-2.0 article map.
 
 ## Current architecture
 
@@ -24,7 +29,7 @@ is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
 - [`architecture/IMMUTABLE_ARTIFACT_JOURNAL.md`](architecture/IMMUTABLE_ARTIFACT_JOURNAL.md) — independent append-only artifacts, interruption recovery, verification, and database reconstruction.
 - [`architecture/SYSTEM_DETERMINISM.md`](architecture/SYSTEM_DETERMINISM.md) — replayable control authority and prohibition on race-based durable decisions.
 - [`architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md) — attention/resource separation, headroom, preemption, guarded launch, recovery, and effects.
-- [`architecture/LOCAL_FIRST_PORTABILITY.md`](architecture/LOCAL_FIRST_PORTABILITY.md) — local ownership, replaceability, administrative operation, portability, and user sovereignty.
+- [`architecture/LOCAL_FIRST_PORTABILITY.md`](architecture/LOCAL_FIRST_PORTABILITY.md) — local ownership, replaceability, administrative operation, portability, developmental stewardship, and mature identity sovereignty.
 
 [`architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](architecture/ARCHITECTURAL_PIVOT_2026-08-24.md) is the dated decision record that retired permanent agents and conversation-scoped cognition. It remains explanatory history, not a newer authority than the v2 pipeline.
 

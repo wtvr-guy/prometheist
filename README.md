@@ -451,7 +451,8 @@ to:
 The README defines the destination. The repository's governing and engineering
 documents define the rules, experiments, and mechanisms used to pursue it:
 
-- [`CONSTITUTION.md`](CONSTITUTION.md) — supreme project-wide engineering policy;
+- [`CONSTITUTION.md`](CONSTITUTION.md) — supreme project-wide purpose, identity, and engineering policy;
+- [`docs/philosophy/DIGITAL_SELFHOOD.md`](docs/philosophy/DIGITAL_SELFHOOD.md) — digital identity, autonomy, imprinting, and personal continuity;
 - [`docs/README.md`](docs/README.md) — documentation map and authority order;
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — milestone and experimental direction;
 - [`docs/architecture/COGNITIVE_ARCHITECTURE.md`](docs/architecture/COGNITIVE_ARCHITECTURE.md) — system architecture;

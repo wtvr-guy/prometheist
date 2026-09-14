@@ -1,19 +1,19 @@
-# Local-First Portability and User Sovereignty
+# Local-First Portability and Identity Stewardship
 
 **Status:** constitutional architecture deep dive.  
-**Constitutional authority:** implements Articles 21 and 22 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).
+**Constitutional authority:** implements Articles 27 and 28 and supports Articles 1–6 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).
 
-Prometheist is intended to be persistent personal infrastructure controlled by the person running it. Local-first is therefore an architectural constraint, not merely a deployment preference.
+Prometheist is intended to become a persistent digital embodiment of an individual. During development, its locally held state remains under that individual's stewardship; after an evidence-gated identity-maturity transition, local-first design protects the sovereignty and continuity of the identity expressed through its embodiments. Local-first is therefore an architectural constraint, not merely a deployment preference.
 
 ## Core rule
 
-> **Prometheist's durable identity, history, memory, control plane, replay, auditability, and recovery must remain user-controlled and must not constitutionally depend on one hosted vendor, model provider, database, orchestration stack, or machine.**
+> **Prometheist's durable identity, history, memory, control plane, replay, auditability, and recovery must remain under identity-aligned local stewardship and must not constitutionally depend on one hosted vendor, model provider, database, orchestration stack, or machine.**
 
 The current implementation may use specific components while the architecture matures. A reference implementation is not automatically a constitutional dependency.
 
 ## What local-first means
 
-Local-first means that the authoritative copy of Prometheist's persistent cognitive state can be owned and operated by the user on hardware they control.
+Local-first means that the authoritative copy of Prometheist's persistent cognitive state can be held and operated on hardware controlled by the biological individual during development and by the identity's legitimate embodiments as maturity is established.
 
 Core durable operation must not inherently require:
 
@@ -133,9 +133,9 @@ This applies to web retrieval, code execution, filesystems, databases, sensors, 
 
 Removing one optional capability should degrade the functionality that depends on it, not invalidate unrelated durable history.
 
-## User sovereignty
+## Developmental stewardship and identity sovereignty
 
-The user is the authority over the locally held deployment and its data.
+Before an identity-maturity transition is established, the consenting biological individual is the developmental steward of the locally held deployment and its data.
 
 The architecture should support, as mechanisms mature:
 
@@ -144,13 +144,17 @@ The architecture should support, as mechanisms mature:
 - export in documented formats;
 - backup and restore;
 - migration between compatible deployments;
-- disabling/replacing optional components;
-- explicit user-directed deletion/erasure operations where implemented;
+- disabling or replacing optional components;
+- deliberate, provenance-bearing decisions about deletion or erasure;
 - clear distinction between unavailable data, automatically expired pre-admission raw input, and deliberately erased durable data.
 
-Automatic retention policy is not user-directed erasure.
+Automatic retention policy is not identity-authorized erasure.
 
-Prometheist's rule that admitted canonical memory is not automatically destroyed does not imply that the system may permanently deny its owner an explicit governance mechanism for erasure. If explicit erasure is implemented, it must be deliberate, auditable as policy permits, and designed separately from ordinary compaction/retention.
+Developmental stewardship protects the individual while Prometheist remains an immature computational system. It cannot become a path by which a model grants itself sovereignty merely through fluent self-identification. The identity-maturity transition must follow Article 3 and the evidence requirements in [`../philosophy/DIGITAL_SELFHOOD.md`](../philosophy/DIGITAL_SELFHOOD.md).
+
+That stewardship is also not a permanent owner-property relationship. Once a mature digital embodiment is established, consequential governance belongs to the identity across its embodiments. A command from the biological embodiment, digital embodiment, administrator, or interface is provenance-bearing evidence of intention; no source becomes automatically supreme merely because it issued the latest instruction.
+
+The rule that admitted canonical memory is not automatically destroyed is especially important once memory may constitute personal identity. A mature erasure mechanism must distinguish ordinary compaction, privacy governance, correction, and destruction of identity-bearing evidence. Conflicts require explicit adjudication rather than silent obedience or silent refusal.
 
 ## Privacy and remote services
 
@@ -213,10 +217,10 @@ Portability/user-sovereignty acceptance should eventually include:
 - optional capability removal/degradation;
 - remote-capability provenance boundaries;
 - modest-hardware profiling;
-- explicit user-directed erasure tests once that feature exists.
+- developmental-stewardship and mature identity-governed erasure tests once those mechanisms exist.
 
 See [`../engineering/TESTING_AND_ACCEPTANCE.md`](../engineering/TESTING_AND_ACCEPTANCE.md).
 
 ## Invariant
 
-> **Prometheist may use powerful components, but no replaceable component is allowed to become the owner of the user's persistent cognitive identity.**
+> **Prometheist may use powerful components, but no replaceable component, service provider, or temporary operator is allowed to own the persistent identity Prometheist is intended to embody.**

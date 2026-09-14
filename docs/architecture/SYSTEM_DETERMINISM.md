@@ -1,7 +1,7 @@
 # System Determinism
 
 **Status:** constitutional architecture deep dive.  
-**Constitutional authority:** implements Articles 9, 10, and 29 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).
+**Constitutional authority:** implements Articles 15, 16, and 35 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).
 
 Prometheist uses probabilistic models as disposable semantic compute inside a deterministic application envelope. The system does not require every physical execution detail to be deterministic; it requires every durable control-plane decision that can be made deterministically to be owned, recorded, and replayable by ordinary software.
 

@@ -1,7 +1,7 @@
 # Testing and Acceptance
 
 **Status:** constitutional engineering deep dive.  
-**Constitutional authority:** implements Article 25 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).
+**Constitutional authority:** implements Article 31 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).
 
 Prometheist's architecture is defined by behavioral invariants, not by documentation alone. A rule is not treated as verified merely because the implementation looks plausible or a narrow unit test passes.
 

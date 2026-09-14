@@ -14,7 +14,7 @@ This document refines the final-response section of `PERCEPT_TO_RESPONSE_PIPELIN
 
 The final responder receives an already-committed requirement to respond. It may express the completed result, but it must not decide whether Prometheist should respond, retrieve additional memory, schedule work, execute side effects, change permissions, alter resource policy, or mutate durable authority.
 
-Deterministic system control therefore remains at temperature `0.0` wherever an LLM is used for a bounded semantic control decision. A non-zero final-response temperature does not relax Article 9 because user-facing phrasing is not durable control authority.
+Deterministic system control therefore remains at temperature `0.0` wherever an LLM is used for a bounded semantic control decision. A non-zero final-response temperature does not relax Article 15 because user-facing phrasing is not durable control authority.
 
 ## 2. Mandatory core personality and evidence contract
 

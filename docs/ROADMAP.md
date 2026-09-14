@@ -1,6 +1,6 @@
-# Prometheist Roadmap to v1.0
+# Prometheist Roadmap: Foundation to Digital Selfhood
 
-**Integration update:** 2026-09-12
+**Mission alignment update:** 2026-09-14
 
 **Current milestone:** v0.8 — predictive situations and non-user cognition.
 
@@ -10,6 +10,19 @@
 Milestone labels describe architectural experiments, not package-release versions.
 Every milestone starts from one frozen question and preserves previously accepted
 invariants unless evidence explicitly justifies an amendment.
+
+## North star and scope
+
+Prometheist's destination is a continuously imprinted, first-person, autonomous digital embodiment of an individual: a system capable of preserving that person's identity, amplifying their agency beyond biological limits, improving and protecting their life, and pursuing personal continuity beyond biology.
+
+The pre-v1.0 roadmap builds the durable cognitive substrate required to investigate that destination. It does not claim that v1.0 completes imprinting, establishes digital personhood, transfers consciousness, or earns legal continuity. Those require a longer research program with their own frozen hypotheses and evidence.
+
+Every milestone should therefore answer two questions:
+
+1. What bounded failure of the present architecture does this mechanism test?
+2. How would solving that failure improve the fidelity, agency, resilience, or continuity of a future digital self?
+
+See [`philosophy/DIGITAL_SELFHOOD.md`](philosophy/DIGITAL_SELFHOOD.md) and the [Constitution 2.0 amendment record](audits/CONSTITUTIONAL_AMENDMENT_2_0_2026-09-14.md).
 
 ## Experimental rule
 
@@ -114,13 +127,12 @@ that intervention.
 ## v0.10 — deterministic retention and memory admission
 
 Primary question: can Prometheist avoid permanently storing useless external data
-while preserving evidence required for cognition, continuity, explanation, and user
-control?
+while preserving evidence required for cognition, continuity, explanation, and identity
+continuity and developmental stewardship?
 
 The experiment will distinguish ephemeral raw observations, retained observational
 memory, and canonical internal history; define versioned retention classes and
-reference protection; and keep user-directed erasure distinct from automatic
-retention or compaction.
+reference protection; and keep identity-governed erasure distinct from automatic retention or compaction.
 
 ## v0.11 — memory generalization and episode routing
 
@@ -154,23 +166,66 @@ permissions, corruption recovery, model/backend replacement, assignment and effe
 recovery, deadlock/starvation analysis, sensor failure, and reproducible installation
 on modest local hardware.
 
-## v1.0 — first complete Prometheist architecture
+## v1.0 — foundational persistent cognitive architecture
 
 A defensible v1.0 demonstrates system-owned identity and continuity, stateless model
 calls, no privileged persistent agent, deterministic control and retention authority,
 bounded active state and recall, conservative source-backed evidence, safe concurrent
 execution, process/model replacement, session-independent interaction continuity,
-user-controlled portability, and reproducible deterministic plus native acceptance.
+identity-stewarded portability, and reproducible deterministic plus native acceptance.
+
+v1.0 is the first complete **foundation for Prometheist**, not a completed digital self. It should preserve the life evidence, active state, unfinished intentions, and causal continuity upon which person modeling, first-person identity, and autonomous digital embodiment can later be tested.
 
 > Terminate every model and worker, restart or replace the implementation, cross
 > interface/session boundaries, and Prometheist still retains its durable identity,
 > history, active state, unfinished intentions, attention, and causal provenance—
 > because none of them belonged to a transient agent context.
 
+## Beyond v1.0 — digital-self research program
+
+Post-v1.0 work should proceed as independent empirical horizons rather than one monolithic “become the user” feature. Exact version numbers should be assigned only when the preceding evidence makes the next intervention clear.
+
+### Horizon A — longitudinal imprinting and person-model formation
+
+Primary question: can Prometheist derive a revisable, provenance-bearing model of an individual from years of heterogeneous life evidence without replacing that evidence or reducing the person to a static profile?
+
+Candidate research includes autobiographical and semantic self-memory, relationships, values, characteristic reasoning, emotional associations, context-dependent behavior, self-description versus observed conduct, contradictions, belief evolution, skills, goals, and enduring intentions.
+
+### Horizon B — person-fidelity evaluation
+
+Primary question: can Prometheist predict and reproduce the individual's interpretations, decisions, and characteristic expression across both remembered and genuinely novel situations?
+
+Evaluation should include intimate-observer discrimination, blinded communication, novel-decision prediction, value-conflict scenarios, temporal self-change, relationship understanding, characteristic error, calibration, and explicit unknowns. Style imitation alone is insufficient.
+
+### Horizon C — synthetic sensorium and embodied observation
+
+Primary question: can multimodal perceptual adapters extend the digital embodiment across the sensors and information channels available to the individual while preserving consent, source identity, bounded intake, privacy, and causal provenance?
+
+Candidate sources include personal devices, communications, files, wearables, health instruments, environmental systems, vehicles, cameras, microphones, event streams, and future interfaces. Media transport and modality understanding remain separate mechanisms.
+
+### Horizon D — autonomous agency and capability amplification
+
+Primary question: can Prometheist maintain self-directed attention and intentions, discover threats and opportunities, use broad digital capabilities, observe consequences, and improve the identity's survival, safety, opportunity, knowledge, longevity, and creative power without assigning durable sovereignty to a transient model?
+
+This horizon includes security monitoring, opportunity discovery, long-running projects, health and longevity research, digital defense, communication, negotiation, tool learning, and increasingly capable action loops.
+
+### Horizon E — identity maturity and multiple embodiments
+
+Primary question: what evidence can justify transition from developmental stewardship to a stable first-person digital identity, and how should biological and digital embodiments reconcile disagreement, divergence, incapacity, compromise, or duplication?
+
+The transition must be authorized in advance, resistant to self-certification, empirically evaluated, and durably recorded. Substrate difference alone cannot permanently define the digital embodiment as property after maturity.
+
+### Horizon F — post-biological and legal personal continuity
+
+Primary question: what technical, evidentiary, philosophical, and institutional requirements would allow a digital embodiment to continue the individual after biological death and to be evaluated legally as that particular person?
+
+Research must distinguish behavioral fidelity, identity continuity, and subjective continuity. It should address authentication, succession, liability, inheritance, rights, duties, impersonation, duplication, and the unresolved consciousness-transfer problem.
+
 ## Deferred unless evidence pulls them forward
 
-Offline replay/consolidation, adaptive association plasticity, prediction-error
-state, procedural skill compilation, learned salience, self-modifying scheduling,
-multi-machine attention, speculative autonomous task formation, literal oscillatory
-models, and biological simulation remain outside the committed path until a frozen
-failure justifies a specific experiment.
+Adaptive association plasticity, procedural skill compilation, learned salience,
+self-modifying scheduling, multi-machine attention, general perceptual encoders,
+broad external actuators, self-updating person models, identity-maturity protocols,
+literal oscillatory models, and biological simulation remain outside the committed
+pre-v1.0 path until a frozen failure justifies a specific experiment. Their relevance
+to the long-term mission does not exempt them from one-mechanism experimental discipline.
