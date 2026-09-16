@@ -306,8 +306,15 @@ def write_final_disposition_artifact(
     assignment_id: UUID,
     response_required: bool,
     response_text: str | None,
+    last_completed_stage: str = "V2_PERSIST_RESULT",
 ) -> dict[str, Any]:
     chain = interaction_artifacts(interaction_id)
+    # A completion retry must describe the same prefix as the original manifest,
+    # never include itself or later diagnostic artifacts in its own evidence.
+    for index, item in enumerate(chain):
+        if item.get("artifact_key") == "final-disposition":
+            chain = chain[:index]
+            break
     references = [
         {
             "artifact_id": item["artifact_id"],
@@ -331,7 +338,7 @@ def write_final_disposition_artifact(
         producer="percept_response_v2",
         payload={
             "status": "COMPLETED",
-            "last_completed_stage": "V2_PERSIST_RESULT",
+            "last_completed_stage": last_completed_stage,
             "response_required": response_required,
             "response_text": response_text,
             "artifact_chain": references,

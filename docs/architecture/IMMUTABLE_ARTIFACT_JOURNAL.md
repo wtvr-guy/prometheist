@@ -129,7 +129,8 @@ Deterministic retries repair missing commit artifacts and fail closed if an exis
 
 ## 3. Interaction artifact chain
 
-Every user-prompt interaction receives its own append-only artifact chain.
+Every user-prompt interaction and non-user situation task receives its own
+append-only artifact chain.
 
 Each artifact envelope contains at least:
 
@@ -173,6 +174,17 @@ The interaction chain currently records:
 - a final-disposition manifest for completed interactions.
 
 Because the stage result is the same structured output used to complete the durable worker claim, the artifact is not a later summary of what the worker probably saw. It is the checkpointed boundary object itself.
+
+The six-stage situation pipeline writes the same final-disposition artifact,
+with `SITUATION_PERSIST` as its terminal stage. Its supervisor verifies all stage
+results and their independent copies before publishing the manifest and marking
+the task completed. Silent completion also requires this manifest.
+
+Final-disposition retries use the original chain prefix preceding the manifest.
+They never include the manifest itself or later diagnostics in its evidence list.
+An identical retry returns the existing artifact; a different disposition remains
+an immutable-content conflict. Existing v2 user-prompt manifests retain their
+`V2_PERSIST_RESULT` terminal-stage label.
 
 ### 3.1 Exact stateless LLM invocation artifacts
 

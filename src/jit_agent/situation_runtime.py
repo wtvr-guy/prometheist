@@ -15,7 +15,7 @@ from uuid import UUID, uuid5
 import psycopg
 from pydantic import Field
 
-from jit_agent import db, event_store
+from jit_agent import artifact_journal, db, event_store
 from jit_agent.attention import AttentionTask, SchedulingMetadata, TaskCriticality, ServiceClass, InterruptionPolicy
 from jit_agent.attention_observation import LocalResourceAdmissionController
 from jit_agent.attention_resources import ProcessResourceEstimate, ResourceEstimateSource
@@ -173,7 +173,11 @@ def run_situation_task(conn: psycopg.Connection, task_id: UUID, *, probe=None, p
         raise ValueError("unsupported situation worker protocol")
     scheduler = load_scheduler(conn, scheduler_key=scheduler_key)
     if scheduler.tasks[task_id].status.value == "COMPLETED":
-        return get_record(conn, "situation_completion", str(task_id))
+        # A crash can leave a completed scheduler task before its progress cursor
+        # commits. Repair only bookkeeping; never repeat completed cognition.
+        completion = _finalize_situation_artifacts(conn, task, scheduler_key=scheduler_key)
+        _record_situation_progress(conn, task, scheduler_key=scheduler_key)
+        return completion
     assignments = [value for value in scheduler.worker_visible_assignments() if value.task_id == task_id]
     if not assignments:
         return None  # Queued durably under resource pressure.
@@ -184,6 +188,7 @@ def run_situation_task(conn: psycopg.Connection, task_id: UUID, *, probe=None, p
     for stage in SituationStage:
         step_id = deterministic_worker_step_id(assignment_id, stage.value)
         if load_worker_result(conn, step_id, scheduler_key=scheduler_key):
+            _require_situation_result(conn, task, stage, scheduler_key=scheduler_key)
             continue
         register_worker_step(conn, assignment_id=assignment_id, step_key=stage.value, capability=stage.capability,
                              input_refs=[f"situation:{task.situation.snapshot_id}", f"event:{task.user_prompt_event_id}"],
@@ -199,20 +204,69 @@ def run_situation_task(conn: psycopg.Connection, task_id: UUID, *, probe=None, p
             raise RuntimeError(f"situation worker timed out at {stage.value}") from None
         if code:
             raise RuntimeError(f"situation worker failed at {stage.value}: exit {code}")
+        # Process exit is not durable completion authority. Check each handoff
+        # before launching another stage or releasing the task's resources.
+        _require_situation_result(conn, task, stage, scheduler_key=scheduler_key)
+    completion = _finalize_situation_artifacts(conn, task, scheduler_key=scheduler_key)
     scheduler = load_scheduler(conn, scheduler_key=scheduler_key)
     scheduler.complete_task(task_id, {"situation_snapshot_id": str(task.situation.snapshot_id)})
     LocalResourceAdmissionController(scheduler, probe=probe, policy=policy or native_resource_safety_policy()).plan_scheduling_epoch()
     save_scheduler(conn, scheduler, scheduler_key=scheduler_key)
+    _record_situation_progress(conn, task, scheduler_key=scheduler_key)
+    return completion
+
+
+def _require_situation_result(conn, task: SituationTask, stage: SituationStage, *, scheduler_key: str) -> dict:
+    if task.assignment_id is None:
+        raise RuntimeError("situation task has no durable assignment")
+    result = load_worker_result(
+        conn, deterministic_worker_step_id(task.assignment_id, stage.value), scheduler_key=scheduler_key,
+    )
+    if result is None:
+        raise RuntimeError(f"missing durable situation result: {stage.value}")
+    artifact = artifact_journal.load_stage_result_artifact(task.task_id, stage.value)
+    if artifact != {"output": result.output, "output_refs": result.output_refs}:
+        raise RuntimeError(f"missing or conflicting situation stage artifact: {stage.value}")
+    return result.output
+
+
+def _finalize_situation_artifacts(conn, task: SituationTask, *, scheduler_key: str) -> dict:
+    """Publish the verified completion manifest before scheduler completion."""
+    if task.assignment_id is None:
+        raise RuntimeError("situation task has no durable assignment")
+    results = {
+        stage: _require_situation_result(conn, task, stage, scheduler_key=scheduler_key)
+        for stage in SituationStage
+    }
+    persisted = results[SituationStage.PERSIST]
+    completion = get_record(conn, "situation_completion", str(task.task_id))
+    if completion != persisted:
+        raise RuntimeError("missing or conflicting durable situation completion")
+    verification = artifact_journal.verify_interaction_chain(task.task_id)
+    if not verification["valid"]:
+        raise RuntimeError("invalid situation artifact chain")
+    artifact_journal.write_final_disposition_artifact(
+        interaction_id=task.task_id, conversation_id=task.conversation_id, correlation_id=task.correlation_id,
+        task_id=task.task_id, assignment_id=task.assignment_id,
+        response_required=persisted["response_required"], response_text=persisted["response_text"],
+        last_completed_stage=SituationStage.PERSIST.value,
+    )
+    return persisted
+
+
+def _record_situation_progress(conn, task: SituationTask, *, scheduler_key: str) -> None:
     put_record(conn, "situation_progress", f"{scheduler_key}:{task.situation.situation_id}",
-               {"snapshot_id": str(task.situation.snapshot_id)}, revision=str(task_id))
-    return get_record(conn, "situation_completion", str(task_id))
+               {"snapshot_id": str(task.situation.snapshot_id)}, revision=str(task.task_id))
 
 
 def drain_situations(conn: psycopg.Connection, *, probe=None, policy=None,
                      scheduler_key: str = DEFAULT_SCHEDULER_KEY) -> list[dict]:
-    submit_situation_page(conn, probe=probe, policy=policy, scheduler_key=scheduler_key)
+    submitted = submit_situation_page(conn, probe=probe, policy=policy, scheduler_key=scheduler_key)
     scheduler = load_scheduler(conn, scheduler_key=scheduler_key)
     task_ids = [value.task_id for value in scheduler.worker_visible_assignments()
                 if "situation_task_id" in scheduler.tasks[value.task_id].resumable_state]
+    # Completed tasks no longer have worker assignments, but a candidate whose
+    # progress write was interrupted still needs its bounded finalization retry.
+    task_ids.extend(task_id for task_id in submitted if scheduler.tasks[task_id].status.value == "COMPLETED")
     return [result for task_id in task_ids if (result := run_situation_task(
         conn, task_id, probe=probe, policy=policy, scheduler_key=scheduler_key)) is not None]
