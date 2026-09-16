@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
+from typing import TypeGuard
 from uuid import UUID, uuid5
 
 from pydantic import Field, field_validator, model_validator
@@ -59,6 +60,12 @@ class PredictionError(FrozenRecord):
     semantic_delta: SemanticDelta
 
 
+def _is_numeric(value: object) -> TypeGuard[int | float]:
+    """Narrow to a real number; ``bool`` is excluded although it subclasses ``int``."""
+
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
 def compare_expectation(
     expectation: Expectation, observation: Observation, *, percept_id: UUID, observed_at: datetime,
 ) -> PredictionError:
@@ -74,8 +81,7 @@ def compare_expectation(
         observation.subject, observation.property, observation.unit,
     ):
         value = observation.value
-        numeric = isinstance(value, (int, float)) and not isinstance(value, bool)
-        if expectation.expected_range is not None and numeric:
+        if expectation.expected_range is not None and _is_numeric(value):
             low, high = expectation.expected_range
             distance = value - high if value > high else value - low if value < low else 0.0
             magnitude = abs(distance) / expectation.normalization_scale
@@ -83,8 +89,7 @@ def compare_expectation(
             delta = SemanticDelta.OUTSIDE_RANGE if distance else SemanticDelta.MATCH
         elif expectation.expected_range is None:
             expected = expectation.expected_value
-            expected_numeric = isinstance(expected, (int, float)) and not isinstance(expected, bool)
-            if numeric and expected_numeric:
+            if _is_numeric(value) and _is_numeric(expected):
                 distance = value - expected
                 magnitude = abs(distance) / expectation.normalization_scale
                 direction = "above" if distance > 0 else "below" if distance < 0 else "equal"

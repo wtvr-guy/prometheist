@@ -1,6 +1,11 @@
 # PERSON-FIDELITY-001 — Public Person-Fidelity Baseline
 
-**Status:** frozen public fixture; native baseline result pending.
+**Status:** frozen public fixture. A first native structural baseline was captured on
+2026-09-14 at revision `bf80979`
+([recorded result](../../benchmarks/results/PERSON-FIDELITY-001_2026-09-14_144915.json)):
+1 of 10 probes passed the structural evidence contract and all human verdicts remain
+`PENDING`. That run is schema v1 and has no `run_manifest.json`, so the offline
+verification below does not apply to it; a schema-v2 re-run is required.
 
 **Fixture:** [`../../benchmarks/person_fidelity_public_v1.json`](../../benchmarks/person_fidelity_public_v1.json)
 

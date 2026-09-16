@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from typing import Any, LiteralString, cast
 
 import psycopg
 from psycopg.rows import dict_row
@@ -106,7 +107,7 @@ def _load_events_by_ids(
         return [_row_to_memory_event(row) for row in cur.fetchall()]
 
 
-def rebuild(conn: psycopg.Connection) -> dict[str, object]:
+def rebuild(conn: psycopg.Connection) -> dict[str, Any]:
     """Rebuild every disposable Memory Kernel structure from authoritative events."""
     events = load_events(conn)
     integrity = build_integrity_chain(events)
@@ -473,13 +474,18 @@ def _candidate_event_ids(
                 recency_budget + len(seen),
             )
             params.append(recency_fetch_limit)
+            # ``where_sql`` is composed only of module-local literals; every caller
+            # value stays a bound parameter.
             cur.execute(
-                f"""
+                cast(
+                    LiteralString,
+                    f"""
                 SELECT event_id FROM events
                 {where_sql}
                 ORDER BY global_seq DESC, event_id ASC
                 LIMIT %s
                 """,
+                ),
                 params,
             )
             append_rows(cur.fetchall(), recency_budget)

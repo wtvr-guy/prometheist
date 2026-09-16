@@ -5,6 +5,7 @@ import argparse
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+from typing import Any
 from uuid import UUID
 
 from jit_agent import db
@@ -29,6 +30,14 @@ def tick(conn) -> dict:
     return {"completed": drain_situations(conn), "schedule_cursor": after}
 
 
+def _require_payload(data: Any, command: str) -> dict[str, Any]:
+    """Report a missing or malformed payload explicitly rather than failing on None."""
+
+    if not isinstance(data, dict):
+        raise SystemExit(f"{command} requires a JSON object payload")
+    return data
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -42,18 +51,19 @@ def main() -> None:
     with db.get_connection() as conn:
         data = json.loads(args.json_file.read_text(encoding="utf-8")) if hasattr(args, "json_file") else None
         if args.command == "install-source":
-            install_source_policy(conn, SourcePolicy.model_validate(data))
+            install_source_policy(conn, SourcePolicy.model_validate(_require_payload(data, args.command)))
         elif args.command == "expectation":
-            register_expectation(conn, Expectation.model_validate(data))
+            register_expectation(conn, Expectation.model_validate(_require_payload(data, args.command)))
         elif args.command == "schedule-consolidation":
-            schedule_consolidation(conn, ConsolidationSchedule.model_validate(data))
+            schedule_consolidation(conn, ConsolidationSchedule.model_validate(_require_payload(data, args.command)))
         elif args.command == "ingest":
-            kwargs = {"conversation_id": UUID(data["conversation_id"])} if data.get("conversation_id") else {}
+            payload = _require_payload(data, args.command)
+            kwargs = {"conversation_id": UUID(payload["conversation_id"])} if payload.get("conversation_id") else {}
             percept = ingest_percept(
-                conn, source=PerceptSource.model_validate(data["source"]), observation=data["observation"],
-                observed_at=datetime.fromisoformat(data["observed_at"]), delivery_id=data["delivery_id"],
-                context=PerceptContext.model_validate(data.get("context", {})),
-                correlation_id=UUID(data["correlation_id"]) if data.get("correlation_id") else None, **kwargs,
+                conn, source=PerceptSource.model_validate(payload["source"]), observation=payload["observation"],
+                observed_at=datetime.fromisoformat(payload["observed_at"]), delivery_id=payload["delivery_id"],
+                context=PerceptContext.model_validate(payload.get("context", {})),
+                correlation_id=UUID(payload["correlation_id"]) if payload.get("correlation_id") else None, **kwargs,
             )
             print(percept.model_dump_json(indent=2))
         elif args.command == "tick":

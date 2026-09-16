@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import re
 import uuid
+from typing import LiteralString, cast
 
 import psycopg
 from psycopg.rows import dict_row
@@ -100,7 +101,9 @@ def search(
     params = rank_params + where_params + [request.limit]
 
     with conn.cursor(row_factory=dict_row) as cur:
-        cur.execute(sql, params)
+        # Every interpolated fragment above is a module-local literal; all caller
+        # values remain bound parameters.
+        cur.execute(cast(LiteralString, sql), params)
         rows = cur.fetchall()
 
     items = [

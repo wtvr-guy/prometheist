@@ -1,5 +1,13 @@
 # Prometheist Memory Kernel v0.3 — Associative Recall Experiment
 
+> **Historical milestone record.** This freezes the v0.3 associative-recall experiment
+> and its deliberately curated fixture. Its "what comes next" section has since been
+> acted on: deterministic derived association extraction exists in
+> [`association_projection.py`](../../src/jit_agent/association_projection.py) and is
+> measured by `derived_associative_benchmark.py`, and v0.5 accepted the
+> specificity-aware candidate router on held-out scale corpora. Retained as milestone
+> evidence, not as current architecture.
+
 This branch tests one narrow hypothesis:
 
 > Can a small deterministic association graph recover evidence that v0.2 lexical/entity/temporal cues miss, without weakening boundedness, provenance, determinism, or abstention?

@@ -199,6 +199,7 @@ class ResourceObservationSnapshot(BaseModel):
 class HostResourceProbe(Protocol):
     def capture(self) -> HostResourceMetrics:
         """Capture one current host-pressure sample."""
+        ...
 
 
 class SystemHostResourceProbe:
@@ -232,9 +233,12 @@ class SystemHostResourceProbe:
                 f"Unsupported host platform for resource discovery: {system!r}"
             )
 
+        # getloadavg is absent on Windows, so probe for it rather than relying on
+        # an AttributeError from a platform-specific attribute.
+        getloadavg = getattr(os, "getloadavg", None)
         try:
-            load_1m = round(float(os.getloadavg()[0]), 2)
-        except (AttributeError, OSError):
+            load_1m = round(float(getloadavg()[0]), 2) if getloadavg is not None else None
+        except OSError:
             load_1m = None
         return HostResourceMetrics(
             platform=system,
@@ -330,9 +334,12 @@ class SystemHostResourceProbe:
 
     @staticmethod
     def _darwin_cpu_pressure_percent(logical_cpu_count: int) -> int:
+        getloadavg = getattr(os, "getloadavg", None)
+        if getloadavg is None:
+            raise ResourceObservationError("Unable to read macOS CPU load")
         try:
-            load = float(os.getloadavg()[0])
-        except (AttributeError, OSError) as exc:
+            load = float(getloadavg()[0])
+        except OSError as exc:
             raise ResourceObservationError("Unable to read macOS CPU load") from exc
         return min(100, max(0, round(load * 100 / logical_cpu_count)))
 

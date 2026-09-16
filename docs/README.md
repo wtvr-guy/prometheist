@@ -61,14 +61,20 @@ is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
 - [`audits/history/pr19/`](audits/history/pr19/) — preserved PR #19 red-team chronology with historical-status banners.
 
 Raw accepted benchmark/calibration results live under `../benchmarks/results/`.
-Ordinary `.prometheist/artifacts` runtime output stays local and ignored; reviewable
-evidence must be deliberately preserved with provenance and a tested revision.
+Since the [artifact visibility decision](audits/ARTIFACT_VISIBILITY_AND_RETENTION_2026-09-14.md),
+`.prometheist/artifacts` and `benchmarks/generated/` are deliberately Git-visible in this
+development repository, so checked-in journals must contain only synthetic or deliberately
+non-sensitive evidence. A deployment holding real personal history must point
+`PROMETHEIST_ARTIFACT_ROOT` outside the checkout. Preserved evidence still requires
+provenance and a tested revision.
 
 ## Historical architecture
 
 - [`history/PRIMARY_AGENT_SPEC_SHEET_V06.md`](history/PRIMARY_AGENT_SPEC_SHEET_V06.md)
 - [`milestones/v0.6/README.md`](milestones/v0.6/README.md)
 - [`milestones/v0.5/README.md`](milestones/v0.5/README.md)
+- [`architecture/MEMORY_KERNEL.md`](architecture/MEMORY_KERNEL.md) — v0.2 deterministic memory-kernel milestone record.
+- [`architecture/ASSOCIATIVE_MEMORY.md`](architecture/ASSOCIATIVE_MEMORY.md) — v0.3 associative-recall experiment record.
 
 Several dated v0.7 increment records describe intermediate implementations. Their
 headers identify them as historical/superseded where necessary. The live path never

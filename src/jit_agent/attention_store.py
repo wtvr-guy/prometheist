@@ -26,6 +26,7 @@ from jit_agent.attention_resources import (
     ResourceReservation,
 )
 from jit_agent.attention_observation import ResourceObservationSnapshot
+from jit_agent.db import require_row
 from jit_agent.attention_assignments import (
     AssignmentStatus,
     DurableAssignment,
@@ -47,7 +48,7 @@ def allocate_created_seq(conn: psycopg.Connection) -> int:
 
     with conn.cursor() as cur:
         cur.execute("SELECT nextval('attention_task_created_seq')")
-        return int(cur.fetchone()[0])
+        return int(require_row(cur.fetchone(), context="attention_task_created_seq")[0])
 
 
 def save_scheduler(
@@ -508,7 +509,7 @@ def load_transition_count(
                 """,
                 (scheduler_key, task_id),
             )
-        return int(cur.fetchone()[0])
+        return int(require_row(cur.fetchone(), context="task transition count")[0])
 
 
 def load_preemption_event_count(
@@ -529,7 +530,7 @@ def load_preemption_event_count(
                 """,
                 (preemption_id,),
             )
-        return int(cur.fetchone()[0])
+        return int(require_row(cur.fetchone(), context="preemption event count")[0])
 
 
 def _lock_scheduler_generation(

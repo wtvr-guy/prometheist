@@ -112,8 +112,11 @@ transport. Hidden transcripts and worker-local continuity are prohibited.
 ## Authoritative v2 user-prompt path
 
 The v2 path in
-[`PERCEPT_TO_RESPONSE_PIPELINE.md`](PERCEPT_TO_RESPONSE_PIPELINE.md) is the only
-live interaction architecture.
+[`PERCEPT_TO_RESPONSE_PIPELINE.md`](PERCEPT_TO_RESPONSE_PIPELINE.md) is the only live
+architecture for explicit user prompts. Non-user percepts run the separate six-stage
+situation pipeline in [`SITUATION_COGNITION.md`](SITUATION_COGNITION.md), which reuses
+the same durable attention, worker, memory, and artifact machinery and does not relax
+the evidence, authority, or determinism rules below.
 
 For an explicit user prompt:
 

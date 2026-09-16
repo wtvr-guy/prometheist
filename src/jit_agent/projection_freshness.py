@@ -18,6 +18,7 @@ from psycopg.types.json import Json
 from jit_agent.association_feature_projection import AssociationFeatureProjection
 from jit_agent.association_projection import derive_associations
 from jit_agent.associative_memory import Association
+from jit_agent.db import require_row
 from jit_agent.memory_kernel import MemoryEvent
 from jit_agent.memory_projection import LexicalProjection
 
@@ -54,7 +55,7 @@ def canonical_high_water(
             f"SELECT COALESCE(MAX(global_seq), 0) FROM events {cutoff_sql}",
             params,
         )
-        return int(cur.fetchone()[0])
+        return int(require_row(cur.fetchone(), context="canonical high-water mark")[0])
 
 
 def projection_high_water(
@@ -72,7 +73,7 @@ def projection_high_water(
             """,
             (projection_name, projection_version),
         )
-        return int(cur.fetchone()[0])
+        return int(require_row(cur.fetchone(), context="projection high-water mark")[0])
 
 
 def committed_projection_high_waters(conn: psycopg.Connection) -> tuple[int, int]:

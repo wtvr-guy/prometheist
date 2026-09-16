@@ -7,6 +7,7 @@ architecture from becoming a compatibility dependency.
 """
 from __future__ import annotations
 
+from typing import Protocol
 from uuid import UUID, uuid5
 
 from pydantic import BaseModel, Field, model_validator
@@ -15,6 +16,33 @@ from jit_agent.perception import Percept, SalienceAssessment
 
 
 INTERACTION_PROTOCOL_VERSION = "v0.8-interaction-v11"
+
+
+class MemoryContext(Protocol):
+    """Durable fields any percept envelope must expose to bounded memory expansion.
+
+    ``DurableInteraction`` and the v0.8 situation envelope are separate durable
+    records that legitimately share this contract, so memory composition depends on
+    these fields rather than on one concrete envelope class.
+    """
+
+    @property
+    def interaction_id(self) -> UUID: ...
+
+    @property
+    def conversation_id(self) -> UUID: ...
+
+    @property
+    def correlation_id(self) -> UUID: ...
+
+    @property
+    def task_id(self) -> UUID: ...
+
+    @property
+    def before_global_seq(self) -> int: ...
+
+    @property
+    def user_text(self) -> str: ...
 
 
 class DurableInteraction(BaseModel):

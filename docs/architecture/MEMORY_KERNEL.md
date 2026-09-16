@@ -1,5 +1,15 @@
 # Prometheist Memory Kernel v0.2
 
+> **Historical milestone record.** This freezes the v0.2 memory kernel as accepted at
+> that milestone. Later milestones supersede parts of it: deterministic derived
+> associations now exist in
+> [`association_projection.py`](../../src/jit_agent/association_projection.py), and v0.5
+> added specificity-aware PostgreSQL candidate routing plus support-aware evidence
+> admission. Current memory authority is
+> [`LOSSLESS_PROGRESSIVE_MEMORY.md`](LOSSLESS_PROGRESSIVE_MEMORY.md) and
+> [`COGNITIVE_ARCHITECTURE.md`](COGNITIVE_ARCHITECTURE.md). Retained as milestone
+> evidence, not as current architecture.
+
 This branch adds the first deterministic Memory Kernel **beside** the existing MVP Retrieval Service. It does not replace the working MVP.
 
 ## Purpose

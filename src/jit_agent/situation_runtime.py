@@ -126,6 +126,8 @@ def submit_situation_page(conn: psycopg.Connection, *, probe=None, policy=None,
             if task_data:
                 task = SituationTask.model_validate(task_data)
             else:
+                if percept.source_event_id is None:
+                    raise ValueError("candidate has no canonical percept")
                 source_event = event_store.get_event_by_id(conn, percept.source_event_id)
                 if source_event is None:
                     raise ValueError("candidate has no canonical percept")
@@ -176,13 +178,14 @@ def run_situation_task(conn: psycopg.Connection, task_id: UUID, *, probe=None, p
     if not assignments:
         return None  # Queued durably under resource pressure.
     task = task.model_copy(update={"assignment_id": assignments[0].assignment_id})
-    put_record(conn, "situation_task", str(task_id), task.model_dump(mode="json"), revision=str(task.assignment_id))
+    assignment_id = assignments[0].assignment_id
+    put_record(conn, "situation_task", str(task_id), task.model_dump(mode="json"), revision=str(assignment_id))
     launcher = launcher or GuardedWorkerLauncher(db.get_connection, probe=probe, policy=policy or native_resource_safety_policy(), scheduler_key=scheduler_key)
     for stage in SituationStage:
-        step_id = deterministic_worker_step_id(task.assignment_id, stage.value)
+        step_id = deterministic_worker_step_id(assignment_id, stage.value)
         if load_worker_result(conn, step_id, scheduler_key=scheduler_key):
             continue
-        register_worker_step(conn, assignment_id=task.assignment_id, step_key=stage.value, capability=stage.capability,
+        register_worker_step(conn, assignment_id=assignment_id, step_key=stage.value, capability=stage.capability,
                              input_refs=[f"situation:{task.situation.snapshot_id}", f"event:{task.user_prompt_event_id}"],
                              effect_policy=WorkerEffectPolicy.IDEMPOTENT_WITH_KEY, scheduler_key=scheduler_key)
         launched = launcher.launch(step_id=step_id, worker_id=f"situation-{task_id}-{stage.name}",

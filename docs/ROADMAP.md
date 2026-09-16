@@ -112,8 +112,13 @@ improved cognition or native performance.
 
 ## Cross-milestone measurement — public person-fidelity baseline
 
-**Status:** `PERSON-FIDELITY-001` fixture and runner frozen; native baseline and human
-review pending.
+**Status:** `PERSON-FIDELITY-001` fixture and runner frozen. A first native structural
+baseline was captured on 2026-09-14 at revision `bf80979`
+([recorded result](../benchmarks/results/PERSON-FIDELITY-001_2026-09-14_144915.json)):
+**1 of 10 probes satisfied the frozen structural evidence contract**, and every human
+fidelity verdict remains `PENDING`. That run predates the schema-v2 manifest
+requirement, so it cannot yet be verified offline and must be re-run before it can be
+treated as the reproducible baseline.
 
 Before introducing a person-model mechanism, Prometheist must record what the
 unmodified persistent/stateless architecture can already do with longitudinal life

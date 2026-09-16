@@ -35,8 +35,9 @@ _ALLOWED_LLM_KINDS = {
 
 class SituationLLM(UserPromptLLM):
     def _require_stage_specialization(self, kind: str) -> None:
-        if self._artifact_stage not in _ALLOWED_LLM_KINDS or kind not in _ALLOWED_LLM_KINDS[self._artifact_stage]:
-            raise RuntimeError(f"{self._artifact_stage} cannot invoke LLM role {kind}")
+        stage = self._artifact_stage
+        if not isinstance(stage, SituationStage) or kind not in _ALLOWED_LLM_KINDS[stage]:
+            raise RuntimeError(f"{stage} cannot invoke LLM role {kind}")
 
     def triage(self, policy, evidence: str) -> TriageDecision:
         return semantic_triage(policy, evidence, lambda system, data, schema: self._structured_with_evidence(
@@ -45,8 +46,16 @@ class SituationLLM(UserPromptLLM):
         ))
 
 
+def _assignment_id(task: SituationTask) -> UUID:
+    """A claimed situation stage always runs under one durable assignment."""
+
+    if task.assignment_id is None:
+        raise RuntimeError("situation task has no durable assignment")
+    return task.assignment_id
+
+
 def _output(conn, task: SituationTask, stage: SituationStage, scheduler_key: str) -> dict:
-    result = load_worker_result(conn, deterministic_worker_step_id(task.assignment_id, stage.value), scheduler_key=scheduler_key)
+    result = load_worker_result(conn, deterministic_worker_step_id(_assignment_id(task), stage.value), scheduler_key=scheduler_key)
     if result is None:
         raise RuntimeError(f"missing durable prerequisite: {stage.value}")
     return result.output
@@ -95,23 +104,24 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
         return {"decision": decision.model_dump(mode="json"), "inference_used": True}
     if stage is SituationStage.EXECUTE:
         decision = TriageDecision.model_validate(_output(conn, task, SituationStage.TRIAGE, scheduler_key)["decision"])
-        if not decision.task_required:
+        task_class = decision.candidate_task_class
+        if not decision.task_required or task_class is None:
             return {"work_results": [], "task_required": False}
         action_id = uuid5(task.task_id, "registered-action")
         issue_action(conn, action_id=action_id, task_id=task.task_id, at=task.created_at,
                      entity_refs=task.situation.entity_refs[:16])
         saved = get_record(conn, "action_execution", str(action_id))
         if saved is None:
-            if decision.candidate_task_class is TaskClass.CONSOLIDATE:
+            if task_class is TaskClass.CONSOLIDATE:
                 cursor = json.loads(task.percept.normalized_text).get("after_key", "")
                 projection = get_record(conn, "consolidation", str(action_id)) or consolidate_page(conn, action_id=action_id, after_key=cursor)
                 result_data = {"consolidation_id": str(action_id), "projection_count": len(projection["projections"]),
                                "next_cursor": projection["next_cursor"], "canonical_records_modified": False}
             else:
                 result_data = _situation_view(task)
-                result_data["operation"] = decision.candidate_task_class.value
+                result_data["operation"] = task_class.value
                 result_data["meaning"] = "Observed discrepancies recorded for reconciliation; external state was not changed."
-            saved = {"work_results": [{"capability_id": f"situation.{decision.candidate_task_class.value.casefold()}",
+            saved = {"work_results": [{"capability_id": f"situation.{task_class.value.casefold()}",
                                         "executor": "application", "result_data": result_data}], "task_required": True, "observed_status": "SUCCEEDED"}
         receipt_id = put_record(conn, "action_execution", str(action_id), saved, revision="1")
         receipt = event_store.get_event_by_id(conn, receipt_id)
@@ -177,7 +187,7 @@ def execute_claimed_situation_step(conn, *, claim_id: UUID, worker_id: str, sche
             output = execute_situation_stage(conn, task, stage, llm=llm, scheduler_key=scheduler_key)
             artifact_journal.write_stage_result_artifact(
                 interaction_id=task.task_id, conversation_id=task.conversation_id, correlation_id=task.correlation_id,
-                task_id=task.task_id, assignment_id=task.assignment_id, stage=stage.value,
+                task_id=task.task_id, assignment_id=_assignment_id(task), stage=stage.value,
                 output=output, output_refs=[f"situation:{task.situation.snapshot_id}"],
             )
         complete_worker_claim(conn, claim_id=claim_id, worker_id=worker_id, output=output,
@@ -186,7 +196,7 @@ def execute_claimed_situation_step(conn, *, claim_id: UUID, worker_id: str, sche
     except Exception as exc:
         artifact_journal.write_stage_error_artifact(
             interaction_id=task.task_id, conversation_id=task.conversation_id, correlation_id=task.correlation_id,
-            task_id=task.task_id, assignment_id=task.assignment_id, stage=stage.value, claim_id=claim_id,
+            task_id=task.task_id, assignment_id=_assignment_id(task), stage=stage.value, claim_id=claim_id,
             error_type=type(exc).__name__, message=str(exc),
         )
         release_worker_claim(conn, claim_id=claim_id, worker_id=worker_id, scheduler_key=scheduler_key)

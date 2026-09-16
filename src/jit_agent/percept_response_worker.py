@@ -11,6 +11,7 @@ model worker was given rather than inferring it from downstream behavior.
 """
 from __future__ import annotations
 
+from enum import Enum
 from itertools import count
 import json
 import os
@@ -253,7 +254,10 @@ class UserPromptLLM(PerceptLLM):
         base_url: str | None = None,
         model: str | None = None,
         interaction=None,
-        stage: PerceptStage | None = None,
+        # A stage label is any worker-stage enum. The user pipeline supplies
+        # PerceptStage; the v0.8 situation pipeline supplies SituationStage and
+        # enforces its own allowlist in a subclass.
+        stage: Enum | None = None,
         claim_id: UUID | None = None,
     ) -> None:
         # Each architectural stage runs in a fresh disposable process. Installing
@@ -275,6 +279,8 @@ class UserPromptLLM(PerceptLLM):
         stage = self._artifact_stage
         if stage is None:
             return
+        if not isinstance(stage, PerceptStage):
+            raise RuntimeError(f"{stage} is not a user-prompt stage specialist")
         if kind not in _ALLOWED_LLM_KINDS_BY_STAGE[stage]:
             role = USER_PROMPT_STAGE_SPECIALIST_ROLES[stage]
             raise RuntimeError(
