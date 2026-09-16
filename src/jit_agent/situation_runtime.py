@@ -119,6 +119,17 @@ def submit_situation_page(conn: psycopg.Connection, *, probe=None, policy=None,
                 old = scheduler.tasks[UUID(active["task_id"])]
                 if old.status.value not in {"COMPLETED", "FAILED"}:
                     continue
+                if old.status.value == "COMPLETED":
+                    # An action outcome may already have replaced the candidate
+                    # snapshot. Finish the previous task's bookkeeping before
+                    # handing this situation to a newer task.
+                    completed = SituationTask.model_validate(
+                        get_record(conn, "situation_task", str(old.task_id))
+                    )
+                    _finalize_situation_artifacts(conn, completed, scheduler_key=scheduler_key)
+                    _record_situation_progress(conn, completed, scheduler_key=scheduler_key)
+                    if completed.situation.snapshot_id == situation.snapshot_id:
+                        continue
             percept = Percept.model_validate(candidate["percept"])
             source_policy = SourcePolicy.model_validate(candidate["policy"])
             task_id = uuid5(situation.snapshot_id, f"attention:{scheduler_key}")

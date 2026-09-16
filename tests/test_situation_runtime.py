@@ -162,6 +162,8 @@ def test_situation_finalization_recovers_without_repeating_work(conn, monkeypatc
     source = source_setup(conn)
     add_observation(conn, source, expected=register_memory_expectation(conn))
     task_id, = submit_situation_page(conn, probe=FixedProbe())
+    original_task = get_record(conn, "situation_task", str(task_id))
+    snapshot_id = original_task["situation"]["snapshot_id"]
     write_manifest = artifact_journal.write_final_disposition_artifact
     put = situation_runtime.put_record
 
@@ -191,9 +193,16 @@ def test_situation_finalization_recovers_without_repeating_work(conn, monkeypatc
     monkeypatch.setattr(situation_runtime, "put_record", put)
     if failure_boundary == "progress":
         # The normal polling path must find completed tasks even though their
-        # worker assignments have already been released.
+        # worker assignments have already been released and action feedback has
+        # replaced the candidate snapshot. The first page wraps the cursor.
         drain_situations(conn, probe=FixedProbe())
-        assert list_records(conn, "situation_progress")
+        drain_situations(conn, probe=FixedProbe())
+        repaired = conn.execute(
+            "SELECT payload FROM events WHERE payload->>'record_kind' = 'situation_progress' "
+            "AND payload->'data'->>'snapshot_id' = %s", (snapshot_id,),
+        ).fetchall()
+        assert len(repaired) == 1
+    progress_before_retry = list_records(conn, "situation_progress")
 
     def unexpected_launch(**kwargs):
         pytest.fail("completed situation work must not be executed again")
@@ -208,9 +217,13 @@ def test_situation_finalization_recovers_without_repeating_work(conn, monkeypatc
     assert len([entry for entry in after if entry["artifact_type"] == "FINAL_DISPOSITION"]) == 1
     assert artifact_journal.verify_interaction_chain(task_id)["valid"]
     assert load_scheduler(conn).tasks[task_id].status.value == "COMPLETED"
-    task = get_record(conn, "situation_task", str(task_id))
-    assert any(value["snapshot_id"] == task["situation"]["snapshot_id"]
-               for _, value in list_records(conn, "situation_progress"))
+    assert conn.execute(
+        "SELECT count(*) FROM events WHERE payload->>'record_kind' = 'situation_progress' "
+        "AND payload->'data'->>'snapshot_id' = %s", (snapshot_id,),
+    ).fetchone()[0] == 1
+    if failure_boundary == "progress":
+        # Retrying an older completed task must not roll back the latest head.
+        assert list_records(conn, "situation_progress") == progress_before_retry
     assert len(list_records(conn, "action_execution")) == 1
 
 

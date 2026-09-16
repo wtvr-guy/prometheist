@@ -95,19 +95,27 @@ their original terminal-stage label by default; situation callers supply theirs.
 - Frozen person-fidelity fixture digest: unchanged and valid.
 - Deterministic calibration: completed; all four families still report
   `INSUFFICIENT_DISCRIMINATION`. This does not establish optimal tuning.
-- PostgreSQL integration and the full suite for this follow-up remain **not run**:
-  the local review host has no PostgreSQL server. Three new integration cases
-  are present for the normal CI/native suite, plus the extended existing silent
-  situation test.
+- The local review host has no PostgreSQL server. Remote CI subsequently ran
+  the full suite, including three new PostgreSQL integration cases and the
+  extended silent situation test. Its first result and follow-up are below.
 
 ## Publication status
 
-Automatic approval review rejected the attempted push because it requires explicit
-authorization to publish these additional changes. The changes are committed
-locally for review. The remote remains at `afd49a2`; no follow-up CI result is claimed.
-After publication is approved, push `person-fidelity-baseline` and inspect the
-existing PR #28 test workflow before treating the PostgreSQL recovery paths as
-verified. Native Windows/Ollama acceptance remains a separate gate.
+The first push was blocked by automatic approval review; Mike then explicitly
+authorized publication. Shell Git had no push credentials, so the connected GitHub
+app published the exact reviewed tree (`b929e5e3a6befc5b1a784097ac001a38f63817c3`)
+as `e82020b`, equivalent in content to local commit `423ad14`.
+
+The first follow-up [CI run](https://github.com/wtvr-guy/prometheist/actions/runs/35155858400)
+reported **377 passed, 13 skipped, 1 failed**. The progress-recovery test exposed
+two details: an empty candidate page first wraps the cursor, and an action outcome
+can supersede the candidate snapshot before the previous task's progress write is
+repaired. The dispatcher now finalizes the previously active completed task before
+admitting a newer snapshot. The test checks recovery across cursor wrap, the
+canonical progress record, and that retrying the older task cannot regress the
+latest progress head. The failed run is retained as negative evidence; the
+corrected full-suite CI result must be checked before declaring this path verified.
+Native Windows/Ollama acceptance remains a separate gate.
 
 The native person-fidelity result remains **1/10 structural passes**, with every
 human verdict pending. It is schema v1 and lacks the schema-v2 run manifest. A fresh

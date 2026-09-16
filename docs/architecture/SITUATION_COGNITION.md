@@ -33,8 +33,9 @@ the task completed, it checks all six handoffs and the canonical completion reco
 verifies the hash chain, and publishes a final-disposition manifest naming
 `SITUATION_PERSIST`. This includes silent, `LLM=null` situations. A failed manifest
 write leaves the task resumable. A crash after scheduler completion but before the
-progress cursor commits is repaired by the next polling pass without rerunning
-completed workers.
+progress cursor commits is repaired when bounded polling revisits that situation,
+before admitting a newer snapshot, without rerunning completed workers. An empty
+page can first wrap the candidate cursor to the beginning.
 
 The user pipeline retains its seven v0.7 closure stages. Intake now also forms a
 situation before submitting the user task. User response necessity is forced true
