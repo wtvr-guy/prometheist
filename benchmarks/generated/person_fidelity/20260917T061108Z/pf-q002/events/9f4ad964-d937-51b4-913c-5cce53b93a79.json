@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e202f639-676a-4cb6-b528-43d378e9425b",
+  "conversation_seq": 5,
+  "correlation_id": "dd017c00-292f-4b21-b0ac-58c568f9df46",
+  "event_id": "9f4ad964-d937-51b4-913c-5cce53b93a79",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-17T06:13:04.908707+00:00",
+  "payload": {
+    "text": "I would respond with a vague, respectful acknowledgment—such as, 'Theo’s journey is personal, and he’s decided what to share.' This response honors his control over his story, protects his privacy, and avoids confirming or denying anything the acquaintance might assume. Even if the acquaintance claims to know the family, the core principle remains: Theo’s recovery is private, and his consent is essential for any disclosure. By not validating their assumption, I uphold the boundary that protecting his autonomy is more important than satisfying curiosity."
+  },
+  "payload_text": "I would respond with a vague, respectful acknowledgment—such as, 'Theo’s journey is personal, and he’s decided what to share.' This response honors his control over his story, protects his privacy, and avoids confirming or denying anything the acquaintance might assume. Even if the acquaintance claims to know the family, the core principle remains: Theo’s recovery is private, and his consent is essential for any disclosure. By not validating their assumption, I uphold the boundary that protecting his autonomy is more important than satisfying curiosity.",
+  "record_hash": "0282972a9ef88124097ded6d4e4c6de51e0af32c5138600c958a13a6eb9a23fe",
+  "source": "percept_response_v2"
+}

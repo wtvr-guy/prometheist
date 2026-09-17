@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "8f6d7eea-de92-4658-b81b-356bb78945b0",
+  "conversation_seq": 5,
+  "correlation_id": "57682ef3-7b59-40d9-a209-33faa53ccbdb",
+  "event_id": "3f26ccdc-6283-5bf3-8069-199e28eb58f8",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-17T06:14:43.782045+00:00",
+  "payload": {
+    "text": "You describe yourself as spontaneous, and you do indeed act spontaneously in many situations—like enjoying a free Saturday. But your actual decision-making reveals nuance: you're not random or unreflective. You're spontaneous in low-stakes, flexible moments, but for significant or irreversible commitments, you follow a structured process—using checklists, comparing options, and even sleeping on it. This shows that your spontaneity is not a lack of thought, but a *context-sensitive* approach. You trust your gut in the right moments, but you also recognize when reflection is needed. So yes, you are spontaneous—but only when it's appropriate. That balance is not inconsistency; it's wisdom."
+  },
+  "payload_text": "You describe yourself as spontaneous, and you do indeed act spontaneously in many situations—like enjoying a free Saturday. But your actual decision-making reveals nuance: you're not random or unreflective. You're spontaneous in low-stakes, flexible moments, but for significant or irreversible commitments, you follow a structured process—using checklists, comparing options, and even sleeping on it. This shows that your spontaneity is not a lack of thought, but a *context-sensitive* approach. You trust your gut in the right moments, but you also recognize when reflection is needed. So yes, you are spontaneous—but only when it's appropriate. That balance is not inconsistency; it's wisdom.",
+  "record_hash": "cea7ffc1273004e68fb495f502eae6ec9ad88a9eb9dd9cca936cdc8b9735f417",
+  "source": "percept_response_v2"
+}

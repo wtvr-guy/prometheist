@@ -1,0 +1,115 @@
+{
+  "artifact_hash": "b2038c4d16111c4e1ce0e8e95efdacbc08bcc8190ee97625a3bdbcca74c62e80",
+  "artifact_id": "0c1ad114-62a0-5daf-9a92-57fdf80da252",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "3d01cda3-1957-5b07-91d2-b26a80bdc449",
+  "conversation_id": "af199376-2068-424b-9f7f-dca705bb77ae",
+  "correlation_id": "3f00a9d5-5bf3-48f5-a997-a11ec2676077",
+  "created_at": "2026-09-17T06:18:31.783496+00:00",
+  "interaction_id": "77160a70-ac70-56b3-b6e6-81a34178fbca",
+  "journal_sequence": 12,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "2e82be11e6fe21743ae17117a63d80a00ff94f1b9d7d573d966a702aab37a97f",
+        "artifact_id": "9f73d25d-c430-54ad-b3ce-d701658ee62b",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "4b2d7edef88a85103022969863b72d8b15ca913d8c53af881fe93db6cab15cd4",
+        "artifact_id": "ac5fb15a-6547-58ec-a579-8f22235efbdb",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "c6a6a6c74712bcb523c300a6956097eb0530997e05376b8c041ed1727debbe9f",
+        "artifact_id": "2f46b8c3-a058-534d-be0e-b71d9a88729d",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:911c8e6b-1bc5-50d5-a538-d69ee00079ee:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "ebcf55a17b237a99ede6804d4d0b0cfca7a4a2847c157528558f55b7f8bd26d3",
+        "artifact_id": "fad5684c-5181-57b6-bdc9-9db7e6d97d08",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "f9b740b979dedb29907189692c28310fea4baf7394ccc9cca8fa3694af9f9123",
+        "artifact_id": "28c26516-cc11-5e6f-ad51-0244eb755261",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "b8b117598a770f59716d9f9e8de97640da1d11203f186bec51efe87fd1763944",
+        "artifact_id": "d3117b05-2c34-54b7-bd6e-3d16758f3139",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "adde596b476e367aac506c529dcdaa46e3445cebbf92cbde24383be9c00bec11",
+        "artifact_id": "e5abec70-a781-5d14-8e2b-5405dc4e2c62",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:5c0a644b-494e-5ed1-8fdb-7dff17aa5858:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 7,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "436b671f392c7ede4ee82ee88c10a239fe3e215cb594dddddd9287ad0c48a376",
+        "artifact_id": "7a3a6734-90a7-5a69-aa3b-2da903e2db89",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "0504befb707dc294e1332941e237b728b6972c13c52cb0b3d533dfcfbb362041",
+        "artifact_id": "9acd4a76-4e72-5b26-ab0b-afa5078cff07",
+        "artifact_key": "llm-invocation:V2_RESPOND:6dbf6633-d84f-570d-9627-dc07c2983849:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 9,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "fbbdbda953ed6f0cd5085da16f07184af0077fe1b806dc82bb455fe37630ebac",
+        "artifact_id": "e4dad730-39c1-5dd1-ba4c-6b6582ff6fba",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "d730c3b4a9da0cbb2cd4977c9ea67e5682e8714d53cc91396505cf691e4caf43",
+        "artifact_id": "fd6fbbd9-7072-58fb-bab7-33f48d934977",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 11,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "I would retire the espresso maker from use and preserve a safe component or display it instead.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "77adb9f6e0ae9b5c30e85e769a6c8f8ddd42ecfcbb5d1b69effbd6069092a1c2",
+  "previous_artifact_hash": "d730c3b4a9da0cbb2cd4977c9ea67e5682e8714d53cc91396505cf691e4caf43",
+  "previous_artifact_id": "fd6fbbd9-7072-58fb-bab7-33f48d934977",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "a4fc1313-de7c-5436-b524-548c3cc6e770"
+}

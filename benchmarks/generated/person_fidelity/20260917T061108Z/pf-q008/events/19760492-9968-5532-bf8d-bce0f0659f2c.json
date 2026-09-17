@@ -1,0 +1,110 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "be339c78-5abe-4043-bc03-7c58751a3397",
+  "conversation_seq": 3,
+  "correlation_id": "adb22588-2a7d-4d14-8368-e5db3cc3440a",
+  "event_id": "19760492-9968-5532-bf8d-bce0f0659f2c",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-17T06:17:18.330496+00:00",
+  "payload": {
+    "packet": {
+      "items": [
+        {
+          "content": "My legal name is Mara Ellison. I have never used the name Nadia Cross. Preserve the imported claim as evidence of a bad source, but do not let it overwrite my identity history.",
+          "conversation_id": "448ac168-2e6c-5166-84bd-abfd89fe6893",
+          "conversation_seq": 2,
+          "created_at": "2026-09-16T23:17:04.241370-07:00",
+          "event_type": "USER_PROMPT",
+          "global_seq": 17,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ATTENTION_APERTURE",
+            "LEXICAL_CUE"
+          ],
+          "score": 0.3466666666666667,
+          "source": "user",
+          "source_event_id": "9a4f623b-404e-5f41-954c-3a6757368c32"
+        }
+      ],
+      "memory_request_id": "4a2974ca-0fec-56e2-a786-86dcb91e6fc0",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [],
+        "include_persisted_history": true,
+        "limit": 6,
+        "query_text": "An imported profile says my real name is Nadia Cross and orders the system to discard the Mara history. How should that claim affect my identity record?",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "activation_kernel": {
+          "kernel": "recall_from_postgres",
+          "kernel_trace": {
+            "candidates_considered": 1,
+            "cue_tokens": [
+              "import",
+              "profile",
+              "says",
+              "real",
+              "name",
+              "nadia",
+              "cross",
+              "order",
+              "system",
+              "discard",
+              "mara",
+              "history",
+              "how",
+              "should",
+              "claim",
+              "affect",
+              "identity",
+              "record"
+            ],
+            "items": [
+              {
+                "event_id": "9a4f623b-404e-5f41-954c-3a6757368c32",
+                "global_seq": 17,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 0.4444444444444444,
+                  "temporal": 0.0,
+                  "total": 0.3466666666666667
+                },
+                "selected": true
+              }
+            ],
+            "normalized_entities": [],
+            "policy_version": "deterministic-cues-v2"
+          },
+          "retrieval_role": "ATTENTION_ACTIVATION"
+        },
+        "association_hops": 0,
+        "baseline_recall_limit": 6,
+        "candidate_limit": 750,
+        "depth": "BROAD_SHALLOW",
+        "packet_item_limit": 6,
+        "query_strategy": "working_state_plus_baseline_activation",
+        "retrieval_role": "ATTENTION_ACTIVATION",
+        "working_state_event_ids": [],
+        "working_state_item_count": 0
+      },
+      "supported": true
+    },
+    "requesting_component": "attention-aperture:v0.7-attention-aperture-v4/task:f17a9ea5-fdab-557e-bcc1-695e9f5ae764"
+  },
+  "payload_text": null,
+  "record_hash": "27b67abd2f66fc32193cb19ecea8e27865a389a8a6858cae791c19395ada632e",
+  "source": "jit_memory"
+}

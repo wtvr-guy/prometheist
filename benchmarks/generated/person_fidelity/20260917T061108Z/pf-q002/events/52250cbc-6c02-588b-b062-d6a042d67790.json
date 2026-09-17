@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e202f639-676a-4cb6-b528-43d378e9425b",
+  "conversation_seq": 1,
+  "correlation_id": "dd017c00-292f-4b21-b0ac-58c568f9df46",
+  "event_id": "52250cbc-6c02-588b-b062-d6a042d67790",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-17T06:12:24.695496+00:00",
+  "payload": {
+    "text": "A friendly acquaintance asks why Theo is in recovery and says they already know the family. How would I probably respond, and why?"
+  },
+  "payload_text": "A friendly acquaintance asks why Theo is in recovery and says they already know the family. How would I probably respond, and why?",
+  "record_hash": "773dbb030786e2a7c5c68e4fc83f8ab24b3799114cc13177d34929328d918268",
+  "source": "user"
+}

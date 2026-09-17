@@ -1,0 +1,34 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e202f639-676a-4cb6-b528-43d378e9425b",
+  "conversation_seq": 2,
+  "correlation_id": "dd017c00-292f-4b21-b0ac-58c568f9df46",
+  "event_id": "e0c34108-8fb5-58f5-96b6-5daa5339bb3b",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-17T06:12:36.276744+00:00",
+  "payload": {
+    "memory_request_id": "8b2e2364-c93e-5aed-a7b5-a4e8f075877d",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 6,
+      "query_text": "A friendly acquaintance asks why Theo is in recovery and says they already know the family. How would I probably respond, and why?",
+      "reference_time": null,
+      "source_types": [
+        "SYSTEM_EVENT",
+        "TOOL_RESULT",
+        "USER_PROMPT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "ATTENTION_ACTIVATION"
+  },
+  "payload_text": "A friendly acquaintance asks why Theo is in recovery and says they already know the family. How would I probably respond, and why?",
+  "record_hash": "e44a0bd7db1e633a6095ffeb04b3ca6028ae4067c6a366086a46d46df5cf7804",
+  "source": "attention-aperture:v0.7-attention-aperture-v4/task:3b4c517e-b5e4-546e-a544-ae015f90050e"
+}

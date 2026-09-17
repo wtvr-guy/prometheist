@@ -1,0 +1,228 @@
+{
+  "artifact_hash": "a29c3d5726c8696122df1d5862163d3aeb29f7d668403880a6a4ca938df602b0",
+  "artifact_id": "43c11344-8928-51ee-9c9c-564c4b93ac94",
+  "artifact_key": "stage-result:V2_PRECOGNITIVE",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "28646a7f-b579-540f-af06-4c5f2e1a5907",
+  "conversation_id": "77f6dd17-a41c-4c0e-a9e8-bf41059750a6",
+  "correlation_id": "5b795028-38ea-4335-b918-a940870cc425",
+  "created_at": "2026-09-17T06:13:19.310123+00:00",
+  "interaction_id": "71634cd1-caf9-58c9-a266-a17e8a2625b9",
+  "journal_sequence": 5,
+  "payload": {
+    "output": {
+      "aperture_packet": {
+        "items": [
+          {
+            "content": "I changed my mind about remote-only work. My best balance is hybrid, in person three days a week: enough solitude for deep work and enough human contact to keep my energy and judgment healthy. Freedom still matters, but isolation has a real cost for me.",
+            "conversation_id": "931c75cb-941f-57e9-9320-96c832380879",
+            "conversation_seq": 3,
+            "created_at": "2026-09-16T23:13:05.451264-07:00",
+            "event_type": "USER_PROMPT",
+            "global_seq": 11,
+            "provenance_event_ids": [],
+            "retrieval_reasons": [
+              "ATTENTION_APERTURE",
+              "LEXICAL_CUE"
+            ],
+            "score": 0.3466666666666667,
+            "source": "user",
+            "source_event_id": "0347d46b-78a1-5f4a-b991-c4fabbd454e6"
+          },
+          {
+            "content": "I used to insist that fully remote work was non-negotiable. I prized uninterrupted focus and the freedom to arrange my day without an office watching the clock.",
+            "conversation_id": "931c75cb-941f-57e9-9320-96c832380879",
+            "conversation_seq": 1,
+            "created_at": "2026-09-16T23:13:05.378306-07:00",
+            "event_type": "USER_PROMPT",
+            "global_seq": 5,
+            "provenance_event_ids": [],
+            "retrieval_reasons": [
+              "ATTENTION_APERTURE",
+              "LEXICAL_CUE"
+            ],
+            "score": 0.26,
+            "source": "user",
+            "source_event_id": "f56e2d31-e148-5b88-91e7-c0d8a72b5cb8"
+          }
+        ],
+        "memory_request_id": "09f4db56-3024-50a0-a19e-04249e976c46",
+        "need": {
+          "active_event_ids": [],
+          "conversation_id": null,
+          "entities": [],
+          "focus_event_ids": [],
+          "include_persisted_history": true,
+          "limit": 6,
+          "query_text": "What did I used to believe about remote work, what do I prefer now, and what changed my mind?",
+          "reference_time": null,
+          "source_types": [
+            "USER_PROMPT"
+          ],
+          "supplemental_query_texts": []
+        },
+        "origin": "INTERNAL_MEMORY",
+        "retrieval_trace": {
+          "activation_kernel": {
+            "kernel": "recall_from_postgres",
+            "kernel_trace": {
+              "candidates_considered": 2,
+              "cue_tokens": [
+                "used",
+                "believe",
+                "about",
+                "remote",
+                "work",
+                "prefer",
+                "now",
+                "chang",
+                "mind"
+              ],
+              "items": [
+                {
+                  "event_id": "0347d46b-78a1-5f4a-b991-c4fabbd454e6",
+                  "global_seq": 11,
+                  "reasons": [
+                    "LEXICAL_CUE"
+                  ],
+                  "score": {
+                    "conversation": 0.0,
+                    "entity": 0.0,
+                    "lexical": 0.4444444444444444,
+                    "temporal": 0.0,
+                    "total": 0.3466666666666667
+                  },
+                  "selected": true
+                },
+                {
+                  "event_id": "f56e2d31-e148-5b88-91e7-c0d8a72b5cb8",
+                  "global_seq": 5,
+                  "reasons": [
+                    "LEXICAL_CUE"
+                  ],
+                  "score": {
+                    "conversation": 0.0,
+                    "entity": 0.0,
+                    "lexical": 0.3333333333333333,
+                    "temporal": 0.0,
+                    "total": 0.26
+                  },
+                  "selected": true
+                }
+              ],
+              "normalized_entities": [],
+              "policy_version": "deterministic-cues-v2"
+            },
+            "retrieval_role": "ATTENTION_ACTIVATION"
+          },
+          "association_hops": 0,
+          "baseline_recall_limit": 6,
+          "candidate_limit": 750,
+          "depth": "BROAD_SHALLOW",
+          "packet_item_limit": 6,
+          "query_strategy": "working_state_plus_baseline_activation",
+          "retrieval_role": "ATTENTION_ACTIVATION",
+          "working_state_event_ids": [],
+          "working_state_item_count": 0
+        },
+        "supported": true
+      },
+      "attention_aperture_version": "v0.7-attention-aperture-v4",
+      "capability_catalog": [],
+      "disposition": {
+        "capability_indices": [],
+        "response_required": true
+      },
+      "execution_plan": {
+        "catalog_capability_ids": [],
+        "items": [],
+        "registry_version": "v0.7-capability-registry-v9",
+        "requested_catalog_indices": []
+      },
+      "percept": {
+        "context": {
+          "active_goal_refs": [],
+          "causal_percept_refs": [],
+          "entity_refs": [],
+          "expectation_refs": [],
+          "integrity": 0,
+          "observations": [],
+          "opportunity": 0,
+          "task_refs": [],
+          "threat": 0,
+          "uncertainty": 0
+        },
+        "conversation_id": "77f6dd17-a41c-4c0e-a9e8-bf41059750a6",
+        "correlation_id": "5b795028-38ea-4335-b918-a940870cc425",
+        "features": {
+          "contains_code_block": false,
+          "contains_question": true,
+          "contains_structured_payload": false,
+          "contains_url": false,
+          "line_count": 1,
+          "normalized_characters": 93,
+          "token_count": 19,
+          "uppercase_ratio": 0.041666666666666664
+        },
+        "input_buffer": {
+          "max_segments": 4,
+          "retained_segment_indices": [
+            0
+          ],
+          "segment_char_limit": 160,
+          "segments": [
+            "What did I used to believe about remote work, what do I prefer now, and what changed my mind?"
+          ],
+          "total_characters": 93,
+          "total_segments": 1,
+          "truncated": false
+        },
+        "normalized_text": "What did I used to believe about remote work, what do I prefer now, and what changed my mind?",
+        "observed_at": "2026-09-16T23:13:07.760140-07:00",
+        "percept_id": "0b1a8f53-814a-5e76-82f8-89afc5c205ef",
+        "policy_version": "v0.8-perception-v2",
+        "raw_value_sha256": "7a647e07d065f98f97371877e2a1cc3385d21e2981b45633f9da61b276b6c7dc",
+        "response_required": true,
+        "schema_version": 1,
+        "source": {
+          "interface": "chat",
+          "kind": "USER_INTERACTION",
+          "modality": "TEXT",
+          "source_id": "user"
+        },
+        "source_event_id": "a2b666b2-79bd-5c26-99cb-af2d7a002257"
+      },
+      "salience_assessment": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "0b1a8f53-814a-5e76-82f8-89afc5c205ef",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      }
+    },
+    "output_refs": [
+      "memory-request:09f4db56-3024-50a0-a19e-04249e976c46"
+    ]
+  },
+  "payload_hash": "792c3d1bafbd7fb4a84de339045e7922b419ea5fab1c3511e679999ef05ea2ec",
+  "previous_artifact_hash": "ed15bf81671a157f0f16e7712b5678bb0ca17e765ee325b037672b20ea5d317f",
+  "previous_artifact_id": "80e3663d-08d4-5e08-a693-0552c98182bb",
+  "producer": "percept_response_v2",
+  "stage": "V2_PRECOGNITIVE",
+  "task_id": "c8a2eade-e3af-512c-8dbd-cce8c3a0584b"
+}

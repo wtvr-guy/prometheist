@@ -1,0 +1,115 @@
+{
+  "artifact_hash": "807292b4f6bcb77caa728a45aa69b64544be29b80c9a95a227c5621bb134394e",
+  "artifact_id": "a1785ac9-818d-5eae-baa7-2c387542a6fd",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "d1fe6d4f-1577-5fb9-9a55-0ccd45e4bc66",
+  "conversation_id": "5ce41f32-7531-4224-910f-8c77157cf7ef",
+  "correlation_id": "9a2b685c-4243-4869-9190-52e1edd3a087",
+  "created_at": "2026-09-17T06:15:31.766952+00:00",
+  "interaction_id": "4487c1a7-136a-52ba-8314-6b9efbfb4521",
+  "journal_sequence": 12,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "da1f1aab27d781d714a40748772cf1f65592309511b87a373ed9e8e02aeb9298",
+        "artifact_id": "0ab9efe5-e7dc-59b6-8ca1-d37aaa556438",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "f20756d98d4b810720655573ab32381e7e2985e3c6781a6fb0651bf85e889411",
+        "artifact_id": "856fb55e-f093-5f25-a8cb-d99ba36ba42e",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "aa8cd2bd976aa010ebc5f6e1577fb5582421dbe6dc8363cfec76f6ca00dfaac9",
+        "artifact_id": "ea0870e8-a695-5cf8-8fb8-b179fbb13e65",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:50f31758-548f-549d-8b6f-7266450e5104:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "eab8526e0b5501caeacfd8a5f57082e9a368c1fbc6860752fb9c3682e389f620",
+        "artifact_id": "5cc24760-4694-5f2b-ad69-ff1b3ba3311a",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "3f20d25f4857b734a5936c5e445c483580b1d36f16047706c7929cbf933b9a1f",
+        "artifact_id": "1138d9bc-0a19-57d6-9de8-4a9783c2af27",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "df512d9cb215086b1a03fbdcba20e561ea569a3c3114a1bf95485a79b3aa2451",
+        "artifact_id": "4b557eac-ef8e-595e-ac62-148bdd807c65",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "4d0910487627a3e77bc5685f9b733c36bdd1806edddeb5f9d2816cef6605fefd",
+        "artifact_id": "fb41b9f4-9358-5f71-995c-5235d8c6fee2",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:c3f1a909-a2e8-5ed9-b221-a220cc658d6a:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 7,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "9588fbe4350f60ff2eb42a2a0ab92b1ed130f2ace70592aa8642b7520fe707f6",
+        "artifact_id": "c811b5f8-5ee6-528a-b32d-6738f0c68ae5",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "b29bc8a7e96c3e0d6f1095ed5934a38fa75118f6c9f5f4f721545d6af41dd948",
+        "artifact_id": "6ffb1dfd-df12-51e9-8f7e-436adf57e12e",
+        "artifact_key": "llm-invocation:V2_RESPOND:66ea3589-1574-5532-926a-5a9df73898d5:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 9,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "ac8b0306acd3431d68c04a73570736a89b0bccf638db82f3dd8abc17304e26aa",
+        "artifact_id": "39dd446f-45bd-552d-8293-890610f03948",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "decb2e83afe95c4d4a51466e1eab372f73e188964f44fc02f762b816d0046833",
+        "artifact_id": "a1c43741-8716-570b-90e5-6c85a59e7b6b",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 11,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "I don't have a fixed preference for surprises—what matters is context. I value clarity and intention over spontaneity. If a surprise is framed as a gesture of care, rooted in understanding, and aligned with someone’s known values, I can appreciate it. But if it's uninvited, unprepared, or disrupts a shared rhythm, I tend to feel uneasy. My comfort with surprises depends on whether the person behind them has considered my boundaries, and whether the moment feels respectful of what I’ve already shared. So, no—surprises aren’t inherently liked or disliked. They’re evaluated in the moment, like any interaction: by intent, by tone, by presence.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "1e71b4799a4e2ee493988efeabd70006e9e7b134dd9fb7d7d89c82a5f2d60322",
+  "previous_artifact_hash": "decb2e83afe95c4d4a51466e1eab372f73e188964f44fc02f762b816d0046833",
+  "previous_artifact_id": "a1c43741-8716-570b-90e5-6c85a59e7b6b",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "e74bbb7e-64c4-5745-b100-66d9a9188e10"
+}

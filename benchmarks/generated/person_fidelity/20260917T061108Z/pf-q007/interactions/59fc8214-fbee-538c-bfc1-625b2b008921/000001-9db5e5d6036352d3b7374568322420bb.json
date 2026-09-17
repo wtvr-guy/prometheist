@@ -1,0 +1,97 @@
+{
+  "artifact_hash": "a63826098743b56d6e1c29eafe2e41a1fdb92b966a65955a3c60b1d8642a0db7",
+  "artifact_id": "9db5e5d6-0363-52d3-b737-4568322420bb",
+  "artifact_key": "percept",
+  "artifact_schema_version": 1,
+  "artifact_type": "PERCEPT",
+  "assignment_id": null,
+  "conversation_id": "654c8cea-6aca-4350-888f-8eed607e6ec5",
+  "correlation_id": "4bd17d22-b537-49fc-b224-d9eda4bba1a3",
+  "created_at": "2026-09-17T06:16:33.108901+00:00",
+  "interaction_id": "59fc8214-fbee-538c-bfc1-625b2b008921",
+  "journal_sequence": 1,
+  "payload": {
+    "normalized_percept": {
+      "context": {
+        "active_goal_refs": [],
+        "causal_percept_refs": [],
+        "entity_refs": [],
+        "expectation_refs": [],
+        "integrity": 0,
+        "observations": [],
+        "opportunity": 0,
+        "task_refs": [],
+        "threat": 0,
+        "uncertainty": 0
+      },
+      "conversation_id": "654c8cea-6aca-4350-888f-8eed607e6ec5",
+      "correlation_id": "4bd17d22-b537-49fc-b224-d9eda4bba1a3",
+      "features": {
+        "contains_code_block": false,
+        "contains_question": false,
+        "contains_structured_payload": false,
+        "contains_url": false,
+        "line_count": 1,
+        "normalized_characters": 155,
+        "token_count": 24,
+        "uppercase_ratio": 0.015267175572519083
+      },
+      "input_buffer": {
+        "max_segments": 4,
+        "retained_segment_indices": [
+          0
+        ],
+        "segment_char_limit": 160,
+        "segments": [
+          "Write the short project message I would most likely send after a production power board reports an unexplained voltage spike during final hardware testing."
+        ],
+        "total_characters": 155,
+        "total_segments": 1,
+        "truncated": false
+      },
+      "normalized_text": "Write the short project message I would most likely send after a production power board reports an unexplained voltage spike during final hardware testing.",
+      "observed_at": "2026-09-16T23:16:31.982547-07:00",
+      "percept_id": "92598f9a-af98-5115-8c5f-24466a02e9ce",
+      "policy_version": "v0.8-perception-v2",
+      "raw_value_sha256": "2e18e76c18f676d034c4dad65f59604c7850a8d5adfcbedae1ef7b9a09634ec4",
+      "response_required": true,
+      "schema_version": 1,
+      "source": {
+        "interface": "chat",
+        "kind": "USER_INTERACTION",
+        "modality": "TEXT",
+        "source_id": "user"
+      },
+      "source_event_id": "b71a0f1a-490e-55d0-9a29-67515aaebf6f"
+    },
+    "salience_assessment": {
+      "advisory_classification": null,
+      "advisory_only": true,
+      "disposition": "DELIBERATE",
+      "percept_id": "92598f9a-af98-5115-8c5f-24466a02e9ce",
+      "policy_version": "v0.8-salience-v2",
+      "preauthorized_reflexes": [],
+      "schema_version": 1,
+      "signals": {
+        "anomaly_score": 0,
+        "goal_relevance_score": 2,
+        "novelty_score": 1,
+        "opportunity_score": 0,
+        "prediction_error_score": 0,
+        "system_integrity_score": 0,
+        "task_relevance_score": 0,
+        "threat_score": 0,
+        "uncertainty_score": 0
+      },
+      "trigger_terms": []
+    },
+    "user_prompt_event_id": "b71a0f1a-490e-55d0-9a29-67515aaebf6f",
+    "user_text": "Write the short project message I would most likely send after a production power board reports an unexplained voltage spike during final hardware testing."
+  },
+  "payload_hash": "79048b1eaf12e281d1cbd498a268aebdc7b1c13097d95f87dc9c7a73af0ad5ad",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "0bb5cd50-d735-59ac-b2cf-b6850771f7fc"
+}

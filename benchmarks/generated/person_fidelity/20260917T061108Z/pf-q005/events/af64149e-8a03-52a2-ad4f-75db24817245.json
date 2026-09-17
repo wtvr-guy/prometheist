@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "5ce41f32-7531-4224-910f-8c77157cf7ef",
+  "conversation_seq": 1,
+  "correlation_id": "9a2b685c-4243-4869-9190-52e1edd3a087",
+  "event_id": "af64149e-8a03-52a2-ad4f-75db24817245",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-17T06:14:46.620701+00:00",
+  "payload": {
+    "text": "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field."
+  },
+  "payload_text": "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field.",
+  "record_hash": "56b6c5267f2470b03d6edc155fffb9f7f71b70c2b269e0e6b0262419a7a84b24",
+  "source": "user"
+}

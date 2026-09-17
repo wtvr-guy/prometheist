@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "af199376-2068-424b-9f7f-dca705bb77ae",
+  "conversation_seq": 5,
+  "correlation_id": "3f00a9d5-5bf3-48f5-a997-a11ec2676077",
+  "event_id": "52c431e0-7e37-5ac8-90f1-e1ab190fd5e5",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-17T06:18:31.735632+00:00",
+  "payload": {
+    "text": "I would retire the espresso maker from use and preserve a safe component or display it instead."
+  },
+  "payload_text": "I would retire the espresso maker from use and preserve a safe component or display it instead.",
+  "record_hash": "b9ee5d0a7ba50874b335336ce2955721b6996be4e63fde2c69e73817bec01bcc",
+  "source": "percept_response_v2"
+}

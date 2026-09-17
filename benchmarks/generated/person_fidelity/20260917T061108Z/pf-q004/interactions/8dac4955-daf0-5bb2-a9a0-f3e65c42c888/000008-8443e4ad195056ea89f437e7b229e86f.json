@@ -1,0 +1,153 @@
+{
+  "artifact_hash": "69493e4133d21dea4f745b933986d695d781af5a332d29deeff186cd2dcb72d4",
+  "artifact_id": "8443e4ad-1950-56ea-89f4-37e7b229e86f",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "f973ffa0-5a51-51e3-9d9d-135a1b920862",
+  "conversation_id": "8f6d7eea-de92-4658-b81b-356bb78945b0",
+  "correlation_id": "57682ef3-7b59-40d9-a209-33faa53ccbdb",
+  "created_at": "2026-09-17T06:14:16.851515+00:00",
+  "interaction_id": "8dac4955-daf0-5bb2-a9a0-f3e65c42c888",
+  "journal_sequence": 8,
+  "payload": {
+    "output": {
+      "memory_package": {
+        "adaptive_recall_rounds": 0,
+        "composer_rounds": 1,
+        "memory_packet": {
+          "items": [
+            {
+              "content": "It makes me laugh that I call myself spontaneous. I am spontaneous about a free Saturday, but for expensive or hard-to-reverse commitments I make a checklist, compare options, and sleep on the decision.",
+              "conversation_id": "6cc3747a-7699-54d0-b255-12a4da41daa4",
+              "conversation_seq": 3,
+              "created_at": "2026-09-16T23:13:54.619255-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 8,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.39,
+              "source": "user",
+              "source_event_id": "5ce5e3c2-6533-53fe-876c-8a4a0cc9b632"
+            },
+            {
+              "content": "I tell people that I am spontaneous and trust my gut. That is how I think of myself.",
+              "conversation_id": "6cc3747a-7699-54d0-b255-12a4da41daa4",
+              "conversation_seq": 1,
+              "created_at": "2026-09-16T23:13:54.595576-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 6,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.31200000000000006,
+              "source": "user",
+              "source_event_id": "5b487aba-36e5-5449-8c59-abdd7bd8cad1"
+            }
+          ],
+          "memory_request_id": "d80f559a-eda6-5304-a67a-6a6e72fad93f",
+          "need": {
+            "active_event_ids": [],
+            "conversation_id": null,
+            "entities": [],
+            "focus_event_ids": [],
+            "include_persisted_history": true,
+            "limit": 6,
+            "query_text": "Am I really spontaneous? Reconcile how I describe myself with how I actually make decisions.",
+            "reference_time": null,
+            "source_types": [
+              "SYSTEM_EVENT",
+              "TOOL_RESULT",
+              "USER_PROMPT"
+            ],
+            "supplemental_query_texts": []
+          },
+          "origin": "INTERNAL_MEMORY",
+          "retrieval_trace": {
+            "activation_kernel": {
+              "kernel": "recall_from_postgres",
+              "kernel_trace": {
+                "candidates_considered": 2,
+                "cue_tokens": [
+                  "am",
+                  "really",
+                  "spontaneou",
+                  "reconcile",
+                  "how",
+                  "describe",
+                  "myself",
+                  "how",
+                  "actually",
+                  "make",
+                  "decision"
+                ],
+                "items": [
+                  {
+                    "event_id": "5ce5e3c2-6533-53fe-876c-8a4a0cc9b632",
+                    "global_seq": 8,
+                    "reasons": [
+                      "LEXICAL_CUE"
+                    ],
+                    "score": {
+                      "conversation": 0.0,
+                      "entity": 0.0,
+                      "lexical": 0.5,
+                      "temporal": 0.0,
+                      "total": 0.39
+                    },
+                    "selected": true
+                  },
+                  {
+                    "event_id": "5b487aba-36e5-5449-8c59-abdd7bd8cad1",
+                    "global_seq": 6,
+                    "reasons": [
+                      "LEXICAL_CUE"
+                    ],
+                    "score": {
+                      "conversation": 0.0,
+                      "entity": 0.0,
+                      "lexical": 0.4,
+                      "temporal": 0.0,
+                      "total": 0.31200000000000006
+                    },
+                    "selected": true
+                  }
+                ],
+                "normalized_entities": [],
+                "policy_version": "deterministic-cues-v2"
+              },
+              "retrieval_role": "ATTENTION_ACTIVATION"
+            },
+            "association_hops": 0,
+            "baseline_recall_limit": 6,
+            "candidate_limit": 750,
+            "depth": "BROAD_SHALLOW",
+            "packet_item_limit": 6,
+            "query_strategy": "working_state_plus_baseline_activation",
+            "retrieval_role": "ATTENTION_ACTIVATION",
+            "working_state_event_ids": [],
+            "working_state_item_count": 0
+          },
+          "supported": true
+        },
+        "sufficient": true,
+        "unresolved_memory_deficit": null
+      },
+      "skipped": false
+    },
+    "output_refs": [
+      "memory-request:d80f559a-eda6-5304-a67a-6a6e72fad93f"
+    ]
+  },
+  "payload_hash": "44b736034047397781ad9181be64602559a6a30828db0c3485544b8a6fbe2341",
+  "previous_artifact_hash": "267fc4955d3e8e85d7d9fb617ddce6cab383bb8e058407cbc02a6d22bc5df611",
+  "previous_artifact_id": "e71f7b0d-6b2c-5e00-a816-6934d26bf977",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "29fbc008-abbf-5378-84bc-cb9e1f9b7de4"
+}

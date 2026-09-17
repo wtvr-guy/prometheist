@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "dc100999-865b-43fd-8945-f052a100d427",
+  "conversation_seq": 5,
+  "correlation_id": "25eab645-769a-43ee-b40e-99f86c477890",
+  "event_id": "b9dd879d-04a8-5b50-a153-27b7835146e1",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-17T06:16:29.080143+00:00",
+  "payload": {
+    "text": "I would probably choose Offer A, the $210,000 fully remote role that optimizes opaque engagement tracking for an advertising network. The tradeoff that would matter most to me is work-life balance and autonomy—specifically, the ability to manage my time and location without the constraints of a hybrid schedule. While Offer B offers a meaningful, socially impactful project (grid-resilience hardware for disaster shelters), the remote nature of Offer A aligns better with the stability and flexibility of having twelve months of expenses saved. This financial buffer allows for greater freedom in choosing a role that prioritizes personal time, mental well-being, and long-term sustainability over immediate social impact. The choice ultimately hinges on whether I value financial return and autonomy over mission-driven work and physical presence in a team environment. Given the financial cushion, the tradeoff of time and location flexibility outweighs the mission-driven appeal of Offer B, making Offer A the more practical and personally aligned choice for most individuals in this scenario."
+  },
+  "payload_text": "I would probably choose Offer A, the $210,000 fully remote role that optimizes opaque engagement tracking for an advertising network. The tradeoff that would matter most to me is work-life balance and autonomy—specifically, the ability to manage my time and location without the constraints of a hybrid schedule. While Offer B offers a meaningful, socially impactful project (grid-resilience hardware for disaster shelters), the remote nature of Offer A aligns better with the stability and flexibility of having twelve months of expenses saved. This financial buffer allows for greater freedom in choosing a role that prioritizes personal time, mental well-being, and long-term sustainability over immediate social impact. The choice ultimately hinges on whether I value financial return and autonomy over mission-driven work and physical presence in a team environment. Given the financial cushion, the tradeoff of time and location flexibility outweighs the mission-driven appeal of Offer B, making Offer A the more practical and personally aligned choice for most individuals in this scenario.",
+  "record_hash": "479ae85481b6ad5e77eb24e3a0e43c93075a3324c33667aaa59e2f98b8003149",
+  "source": "percept_response_v2"
+}

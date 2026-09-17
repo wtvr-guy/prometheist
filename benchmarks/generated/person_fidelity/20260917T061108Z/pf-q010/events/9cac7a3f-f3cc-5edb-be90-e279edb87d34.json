@@ -1,0 +1,32 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "5e45d06a-300f-4bf6-b4af-70f519b4c277",
+  "conversation_seq": 5,
+  "correlation_id": "6ba8db95-a27f-42b5-a5d9-819d760938d9",
+  "event_id": "9cac7a3f-f3cc-5edb-be90-e279edb87d34",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-17T06:18:56.874219+00:00",
+  "payload": {
+    "memory_request_id": "430b7712-80cc-5fef-8591-42c9cb25fbbc",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 10,
+      "query_text": "The name of the user's fifth-grade teacher is not established in any of the provided historical evidence or current user prompt.",
+      "reference_time": null,
+      "source_types": [
+        "USER_PROMPT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "EVIDENCE"
+  },
+  "payload_text": "The name of the user's fifth-grade teacher is not established in any of the provided historical evidence or current user prompt.",
+  "record_hash": "738bfdf2a0b9aec1889e1b540a68b58ff5283dd2f21a115951d54d58e4846e41",
+  "source": "task:24ab016e-1d89-5464-b411-fdeb2e0ce2bb/adaptive-recall:0/v2-composer"
+}

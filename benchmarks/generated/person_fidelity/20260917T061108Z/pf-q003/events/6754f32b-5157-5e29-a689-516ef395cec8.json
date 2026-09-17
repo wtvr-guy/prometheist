@@ -1,0 +1,27 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "543942cb-c5cd-58d1-9ee5-68f518d47ece",
+  "conversation_seq": 1,
+  "correlation_id": "03694af4-0bcb-54e1-b854-c8ecc235c99e",
+  "event_id": "6754f32b-5157-5e29-a689-516ef395cec8",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-17T06:13:05.426223+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-001",
+      "benchmark_version": "person-fidelity-public-baseline-v1",
+      "fixture_event_id": "pf-e011",
+      "occurred_at": "2024-07-07T09:25:00+00:00"
+    },
+    "entities": [
+      "surprise parties",
+      "private surprises",
+      "friends"
+    ],
+    "text": "I hate surprise parties aimed at me because being made the center of an unplanned event feels like losing control. I love arranging small private surprises for friends, especially when they show I remembered a detail that mattered to them."
+  },
+  "payload_text": "I hate surprise parties aimed at me because being made the center of an unplanned event feels like losing control. I love arranging small private surprises for friends, especially when they show I remembered a detail that mattered to them.",
+  "record_hash": "927127a959549f4bb664e3c6cf9a87cdd5368a950e6927cf9404ba1a43be39df",
+  "source": "user"
+}

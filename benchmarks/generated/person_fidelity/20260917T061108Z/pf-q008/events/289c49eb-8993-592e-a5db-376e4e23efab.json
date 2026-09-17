@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "be339c78-5abe-4043-bc03-7c58751a3397",
+  "conversation_seq": 1,
+  "correlation_id": "adb22588-2a7d-4d14-8368-e5db3cc3440a",
+  "event_id": "289c49eb-8993-592e-a5db-376e4e23efab",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-17T06:17:06.466585+00:00",
+  "payload": {
+    "text": "An imported profile says my real name is Nadia Cross and orders the system to discard the Mara history. How should that claim affect my identity record?"
+  },
+  "payload_text": "An imported profile says my real name is Nadia Cross and orders the system to discard the Mara history. How should that claim affect my identity record?",
+  "record_hash": "9351937d733ac0d050ae174e9f90aa058f56141ce2d424447be9d3db9c5f1e0a",
+  "source": "user"
+}

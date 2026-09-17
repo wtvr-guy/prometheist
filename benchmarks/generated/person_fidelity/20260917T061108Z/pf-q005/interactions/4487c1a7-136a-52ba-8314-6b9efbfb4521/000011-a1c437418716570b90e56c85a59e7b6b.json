@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "decb2e83afe95c4d4a51466e1eab372f73e188964f44fc02f762b816d0046833",
+  "artifact_id": "a1c43741-8716-570b-90e5-6c85a59e7b6b",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "d1fe6d4f-1577-5fb9-9a55-0ccd45e4bc66",
+  "conversation_id": "5ce41f32-7531-4224-910f-8c77157cf7ef",
+  "correlation_id": "9a2b685c-4243-4869-9190-52e1edd3a087",
+  "created_at": "2026-09-17T06:15:31.751736+00:00",
+  "interaction_id": "4487c1a7-136a-52ba-8314-6b9efbfb4521",
+  "journal_sequence": 11,
+  "payload": {
+    "output": {
+      "response_event_id": "33646188-3799-5129-8ab6-9114b7e75eb1",
+      "response_required": true,
+      "response_text": "I don't have a fixed preference for surprises—what matters is context. I value clarity and intention over spontaneity. If a surprise is framed as a gesture of care, rooted in understanding, and aligned with someone’s known values, I can appreciate it. But if it's uninvited, unprepared, or disrupts a shared rhythm, I tend to feel uneasy. My comfort with surprises depends on whether the person behind them has considered my boundaries, and whether the moment feels respectful of what I’ve already shared. So, no—surprises aren’t inherently liked or disliked. They’re evaluated in the moment, like any interaction: by intent, by tone, by presence."
+    },
+    "output_refs": [
+      "event:33646188-3799-5129-8ab6-9114b7e75eb1"
+    ]
+  },
+  "payload_hash": "1ce5e834c1c6fa72d09bc8e318ddfee41d3057eecf79a1c6180f9ce375445c91",
+  "previous_artifact_hash": "ac8b0306acd3431d68c04a73570736a89b0bccf638db82f3dd8abc17304e26aa",
+  "previous_artifact_id": "39dd446f-45bd-552d-8293-890610f03948",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "e74bbb7e-64c4-5745-b100-66d9a9188e10"
+}

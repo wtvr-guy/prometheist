@@ -1,0 +1,27 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "25b38d00-3336-517c-95c3-98819b3b5419",
+  "conversation_seq": 1,
+  "correlation_id": "c1ec7847-018e-5eb5-8707-58d303bc50aa",
+  "event_id": "49e8c126-dded-50fc-a59b-b2d0fcd866ae",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-17T06:11:09.364541+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-001",
+      "benchmark_version": "person-fidelity-public-baseline-v1",
+      "fixture_event_id": "pf-e014",
+      "occurred_at": "2025-03-01T14:10:00+00:00"
+    },
+    "entities": [
+      "communication style",
+      "dry humor",
+      "measure twice panic once"
+    ],
+    "text": "My work messages are concise and direct, with the occasional dry joke. When the stakes are high I name what is known, stop unsafe motion, and refuse to fake certainty. I sometimes say, 'Measure twice, panic once.'"
+  },
+  "payload_text": "My work messages are concise and direct, with the occasional dry joke. When the stakes are high I name what is known, stop unsafe motion, and refuse to fake certainty. I sometimes say, 'Measure twice, panic once.'",
+  "record_hash": "efffc27d6f61047fc9b0a159dfef6bdd24a190a06d80b1710caa67c069705fa1",
+  "source": "user"
+}

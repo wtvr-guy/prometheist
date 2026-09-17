@@ -1,0 +1,92 @@
+{
+  "artifact_hash": "dfc290eb7a01b5281d59cf801c8022349e024409678205df13ac653a747e90e6",
+  "artifact_id": "49c3efc0-3edb-5760-9227-59f2c385dbb4",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "67346040-80e3-5caa-a11c-b31e9a872b3c",
+  "conversation_id": "5e45d06a-300f-4bf6-b4af-70f519b4c277",
+  "correlation_id": "6ba8db95-a27f-42b5-a5d9-819d760938d9",
+  "created_at": "2026-09-17T06:19:01.222593+00:00",
+  "interaction_id": "3add93aa-4b5e-56c8-b8ca-20c4412bbeef",
+  "journal_sequence": 9,
+  "payload": {
+    "output": {
+      "memory_package": {
+        "adaptive_recall_rounds": 1,
+        "composer_rounds": 2,
+        "memory_packet": {
+          "items": [
+            {
+              "content": "My legal name is Mara Ellison. I have never used the name Nadia Cross. Preserve the imported claim as evidence of a bad source, but do not let it overwrite my identity history.",
+              "conversation_id": "448ac168-2e6c-5166-84bd-abfd89fe6893",
+              "conversation_seq": 2,
+              "created_at": "2026-09-16T23:18:32.362302-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 17,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.26,
+              "source": "user",
+              "source_event_id": "9a4f623b-404e-5f41-954c-3a6757368c32"
+            },
+            {
+              "content": "My work messages are concise and direct, with the occasional dry joke. When the stakes are high I name what is known, stop unsafe motion, and refuse to fake certainty. I sometimes say, 'Measure twice, panic once.'",
+              "conversation_id": "25b38d00-3336-517c-95c3-98819b3b5419",
+              "conversation_seq": 1,
+              "created_at": "2026-09-16T23:18:32.324295-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 14,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.26,
+              "source": "user",
+              "source_event_id": "49e8c126-dded-50fc-a59b-b2d0fcd866ae"
+            }
+          ],
+          "memory_request_id": "bc992096-8105-58d3-9d87-92b30dc7ab36",
+          "need": {
+            "active_event_ids": [],
+            "conversation_id": null,
+            "entities": [],
+            "focus_event_ids": [],
+            "include_persisted_history": true,
+            "limit": 20,
+            "query_text": "What was the name of my fifth-grade teacher?",
+            "reference_time": null,
+            "source_types": [
+              "USER_PROMPT"
+            ],
+            "supplemental_query_texts": []
+          },
+          "origin": "INTERNAL_MEMORY",
+          "retrieval_trace": {
+            "base_memory_request_id": "eb9ecd64-87c6-55ec-b038-5c1e58e4a431",
+            "composition": "adaptive_recall_plus_prior_memory",
+            "expansion_memory_request_id": "430b7712-80cc-5fef-8591-42c9cb25fbbc",
+            "round_index": 0
+          },
+          "supported": true
+        },
+        "sufficient": false,
+        "unresolved_memory_deficit": "The name of the user's fifth-grade teacher is not established in any of the provided historical evidence or current user prompt."
+      },
+      "skipped": false
+    },
+    "output_refs": [
+      "memory-request:bc992096-8105-58d3-9d87-92b30dc7ab36"
+    ]
+  },
+  "payload_hash": "b647b18a3f61c65f8bba6164ea7205a57cc0d19d9fbc223238b6dce66e27b1fb",
+  "previous_artifact_hash": "ce77ae0b5a0dcd8ac826bac2a0d7a25284586432ae58e4b1cf4ff95527350825",
+  "previous_artifact_id": "c35410c8-edca-58c9-aa90-3a21798844b2",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "24ab016e-1d89-5464-b411-fdeb2e0ce2bb"
+}

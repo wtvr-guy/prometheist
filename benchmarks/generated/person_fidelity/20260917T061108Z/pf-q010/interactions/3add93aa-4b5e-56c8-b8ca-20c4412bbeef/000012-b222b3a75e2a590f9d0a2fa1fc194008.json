@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "43f121640b2dba58dc9dc6171eb38de87cc091aa3ae0e32366dc9f4237e3d235",
+  "artifact_id": "b222b3a7-5e2a-590f-9d0a-2fa1fc194008",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "67346040-80e3-5caa-a11c-b31e9a872b3c",
+  "conversation_id": "5e45d06a-300f-4bf6-b4af-70f519b4c277",
+  "correlation_id": "6ba8db95-a27f-42b5-a5d9-819d760938d9",
+  "created_at": "2026-09-17T06:19:18.946087+00:00",
+  "interaction_id": "3add93aa-4b5e-56c8-b8ca-20c4412bbeef",
+  "journal_sequence": 12,
+  "payload": {
+    "output": {
+      "response_event_id": "7658374d-fbb4-598f-ba57-96f2415a1912",
+      "response_required": true,
+      "response_text": "The name of your fifth-grade teacher is not established in any of the provided historical evidence or current user prompt."
+    },
+    "output_refs": [
+      "event:7658374d-fbb4-598f-ba57-96f2415a1912"
+    ]
+  },
+  "payload_hash": "ec32f98dca0b4e6522614ed6f867461220aa4c1daf110067dc1a9307f3611c78",
+  "previous_artifact_hash": "87afb070214a4e9bcd5fde141c22967bd8700a6d1c5a66b1d552e6db481e80c8",
+  "previous_artifact_id": "7a4c4e15-117a-5d7f-8f9f-bbc26a8f2439",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "24ab016e-1d89-5464-b411-fdeb2e0ce2bb"
+}
