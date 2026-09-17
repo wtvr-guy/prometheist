@@ -113,9 +113,30 @@ can supersede the candidate snapshot before the previous task's progress write i
 repaired. The dispatcher now finalizes the previously active completed task before
 admitting a newer snapshot. The test checks recovery across cursor wrap, the
 canonical progress record, and that retrying the older task cannot regress the
-latest progress head. The failed run is retained as negative evidence; the
-corrected full-suite CI result must be checked before declaring this path verified.
-Native Windows/Ollama acceptance remains a separate gate.
+latest progress head. The failed run is retained as negative evidence.
+
+### Completion evidence — 2026-09-17
+
+The corrected commit is `23ef8d8d84baf3d5838a4389abbd8635c446e1b3`
+(tree `30337c7ce99ba1b5b4b21562ebabb6c09f3190f5`, identical to the local
+review commit `edb0d82`). Its [CI run 35156310628](https://github.com/wtvr-guy/prometheist/actions/runs/35156310628)
+passed: **378 passed, 13 skipped in 72.84 seconds**. Ruff, the **215/215**
+constraint inventory, frozen fixture validation, and deterministic calibration
+also passed. This verifies the completion/recovery corrections under CI's
+PostgreSQL and deterministic-worker environment. The skipped model/native tests
+are not counted as passes.
+
+Mike subsequently reported, "All tests are passing." This is recorded as a
+user-reported passing local run. No native log, exact tested revision, test count,
+model digest, or hardware measurements accompanied that report, so this audit
+does not infer them or turn CI's skips into native passes. Native performance and
+person-fidelity acceptance still require their own attributable artifacts.
+
+Mike authorized documentation completion and integration into `main` on
+2026-09-17. [PR #28](https://github.com/wtvr-guy/prometheist/pull/28) is the
+integration record for Constitution 2.0, the frozen benchmark and retained
+artifacts, Copilot's cleanup, and these reviewed recovery fixes. The branch and
+PR status should be checked there rather than inferred from this dated record.
 
 The native person-fidelity result remains **1/10 structural passes**, with every
 human verdict pending. It is schema v1 and lacks the schema-v2 run manifest. A fresh

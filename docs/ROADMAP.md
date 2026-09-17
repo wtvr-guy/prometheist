@@ -110,6 +110,13 @@ See the [milestone](milestones/v0.8/README.md),
 Budgets and ordinal bins remain provisional; integration is not evidence of
 improved cognition or native performance.
 
+The [audit completion record](audits/COPILOT_AUDIT_REVIEW_2026-09-16.md#completion-evidence--2026-09-17)
+records the reviewed completion/recovery fixes, passing CI on `23ef8d8`
+(378 passed, 13 skipped), and Mike's separate report of passing local tests.
+[PR #28](https://github.com/wtvr-guy/prometheist/pull/28) consolidates that work,
+Constitution 2.0, and the person-fidelity baseline into `main`; milestone and
+semantic acceptance remain bounded by the evidence described here.
+
 ## Cross-milestone measurement — public person-fidelity baseline
 
 **Status:** `PERSON-FIDELITY-001` fixture and runner frozen. A first native structural

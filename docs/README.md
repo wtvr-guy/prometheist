@@ -50,7 +50,7 @@ is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
 - [`audits/V07_REMOTE_BRANCH_INVENTORY_2026-09-03.md`](audits/V07_REMOTE_BRANCH_INVENTORY_2026-09-03.md) — remote-ref comparison, keep/delete classification, and deletion-tool blocker.
 - [`ROADMAP.md`](ROADMAP.md) — active v0.8 work and later candidate experiments.
 - [`audits/V08_CLOSURE_INTEGRATION_2026-09-12.md`](audits/V08_CLOSURE_INTEGRATION_2026-09-12.md) — change-by-change rationale, branch ancestry, research, tests, and remaining specification gap.
-- [`audits/COPILOT_AUDIT_REVIEW_2026-09-16.md`](audits/COPILOT_AUDIT_REVIEW_2026-09-16.md) — review of Copilot's documentation/type cleanup and fixes to situation completion and artifact recovery.
+- [`audits/COPILOT_AUDIT_REVIEW_2026-09-16.md`](audits/COPILOT_AUDIT_REVIEW_2026-09-16.md) — review of Copilot's documentation/type cleanup, situation-completion and artifact-recovery fixes, verified CI results, and separately recorded local-test report.
 - [`experiments/history/EPISTEMIC_WORKING_STATE_PROPOSAL_2026-09-03.md`](experiments/history/EPISTEMIC_WORKING_STATE_PROPOSAL_2026-09-03.md) — preserved earlier, unfrozen proposal; no longer the active v0.8 scope.
 
 ## Research and experiment evidence
