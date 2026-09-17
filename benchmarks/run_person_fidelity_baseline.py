@@ -26,7 +26,7 @@ from uuid import UUID, uuid4
 from dotenv import load_dotenv
 
 from jit_agent.person_fidelity_benchmark import (
-    BENCHMARK_ID,
+    HOLDOUT_BENCHMARK_ID,
     FidelityProbe,
     PersonFidelityCorpus,
     canonical_seed_payload,
@@ -41,9 +41,17 @@ from jit_agent.person_fidelity_benchmark import (
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CORPUS = ROOT / "benchmarks" / "person_fidelity_public_v1.json"
+HOLDOUT_CORPUS = ROOT / "benchmarks" / "person_fidelity_holdout_v1.json"
 RESULT_DIR = ROOT / "benchmarks" / "results"
 GENERATED_DIR = ROOT / "benchmarks" / "generated" / "person_fidelity"
+HOLDOUT_GENERATED_DIR = ROOT / "benchmarks" / "generated" / "person_fidelity_holdout"
 DATABASE_ENV = "PROMETHEIST_PERSON_FIDELITY_DATABASE_URL"
+
+
+def _generated_dir(corpus: PersonFidelityCorpus) -> Path:
+    """Keep holdout evidence in its own tree so neither fixture's bytes move."""
+
+    return HOLDOUT_GENERATED_DIR if corpus.is_holdout else GENERATED_DIR
 
 
 def _is_untracked_benchmark_evidence(status_line: str) -> bool:
@@ -53,10 +61,11 @@ def _is_untracked_benchmark_evidence(status_line: str) -> bool:
         return False
     path = status_line[3:].replace("\\", "/")
     return (
-        path.startswith("benchmarks/results/PERSON-FIDELITY-001_")
+        path.startswith("benchmarks/results/PERSON-FIDELITY-")
         and path.endswith(".json")
     ) or (
         path.startswith("benchmarks/generated/person_fidelity/")
+        or path.startswith("benchmarks/generated/person_fidelity_holdout/")
         or path.startswith(".prometheist/artifacts/")
     )
 
@@ -772,6 +781,11 @@ def _verify_result_artifacts(result_path: Path) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
+    parser.add_argument(
+        "--holdout",
+        action="store_true",
+        help="run the prospectively frozen holdout person instead of the public baseline",
+    )
     parser.add_argument("--output", type=Path)
     parser.add_argument("--artifact-root", type=Path)
     parser.add_argument(
@@ -794,7 +808,11 @@ def main() -> None:
             )
         )
         return
-    corpus = load_person_fidelity_corpus(args.corpus)
+    corpus = load_person_fidelity_corpus(
+        HOLDOUT_CORPUS if args.holdout and args.corpus == DEFAULT_CORPUS else args.corpus
+    )
+    if args.holdout and corpus.benchmark_id != HOLDOUT_BENCHMARK_ID:
+        raise SystemExit("--holdout requires the frozen holdout fixture")
     if args.validate_only:
         print(json.dumps(_validation_summary(corpus), indent=2, sort_keys=True))
         return
@@ -817,10 +835,10 @@ def main() -> None:
     captured_at = datetime.now(timezone.utc)
     run_id = captured_at.strftime("%Y%m%dT%H%M%SZ")
     revision = _require_clean_revision()
-    run_artifact_root = (args.artifact_root or GENERATED_DIR / run_id).resolve()
+    run_artifact_root = (args.artifact_root or _generated_dir(corpus) / run_id).resolve()
     if run_artifact_root.exists() and any(run_artifact_root.iterdir()):
         raise SystemExit(f"artifact root must be empty: {run_artifact_root}")
-    output = args.output or RESULT_DIR / f"{BENCHMARK_ID}_{run_id}.json"
+    output = args.output or RESULT_DIR / f"{corpus.benchmark_id}_{run_id}.json"
     if output.exists():
         raise SystemExit(f"result artifact already exists: {output}")
     if output.resolve().is_relative_to(run_artifact_root):
@@ -880,8 +898,9 @@ def main() -> None:
     }
     payload = {
         "schema_version": 2,
-        "benchmark_id": BENCHMARK_ID,
+        "benchmark_id": corpus.benchmark_id,
         "benchmark_version": corpus.benchmark_version,
+        "benchmark_status": corpus.status,
         "fixture_sha256": corpus.fixture_sha256,
         "captured_at": captured_at.isoformat(),
         "revision": revision,

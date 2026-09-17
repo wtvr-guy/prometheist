@@ -13,6 +13,12 @@ change, behavioral contradiction, novel decisions, characteristic expression,
 identity integrity, and legitimate unknowns. The fixture does not authorize a
 person-model mechanism or an identity-maturity claim.
 
+[`PERSON_FIDELITY_HOLDOUT.md`](PERSON_FIDELITY_HOLDOUT.md) freezes
+`PERSON-FIDELITY-002-HOLDOUT`, a separate fictional person sealed before any
+mechanism was selected. It mirrors the baseline's evidence structure while
+sharing none of its content, so a candidate repair can be tested for transfer
+rather than for fitting the ten probes that motivated it.
+
 ## Adaptive Memory Attention / Composer branch (PR #22)
 
 The records under [`history/pr22/`](history/pr22/) explain the sequence that replaced

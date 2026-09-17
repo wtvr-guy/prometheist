@@ -28,10 +28,15 @@ from jit_agent.person_fidelity_benchmark import (
 
 ROOT = Path(__file__).resolve().parents[1]
 CORPUS_PATH = ROOT / "benchmarks" / "person_fidelity_public_v1.json"
+HOLDOUT_PATH = ROOT / "benchmarks" / "person_fidelity_holdout_v1.json"
 
 
 def _corpus():
     return load_person_fidelity_corpus(CORPUS_PATH)
+
+
+def _holdout():
+    return load_person_fidelity_corpus(HOLDOUT_PATH)
 
 
 def _event_ids(corpus):
@@ -112,6 +117,80 @@ def test_frozen_person_fidelity_fixture_is_complete_and_digest_verified():
     assert [event.occurred_at for event in ordered] == sorted(
         event.occurred_at for event in corpus.life_events
     )
+
+
+def test_frozen_holdout_fixture_is_complete_and_shares_no_material_with_baseline():
+    holdout = _holdout()
+    baseline = _corpus()
+
+    assert holdout.status == "FROZEN_HOLDOUT"
+    assert holdout.is_holdout is True
+    assert baseline.is_holdout is False
+    assert holdout.subject.fictional is True
+    assert holdout.subject.name != baseline.subject.name
+    assert {probe.dimension for probe in holdout.probes} == REQUIRED_BASELINE_DIMENSIONS
+    assert any(probe.expect_no_seeded_evidence for probe in holdout.probes)
+    assert any(len(probe.required_event_ids) >= 3 for probe in holdout.probes)
+
+    assert not {event.event_id for event in holdout.life_events} & {
+        event.event_id for event in baseline.life_events
+    }
+    assert not {probe.probe_id for probe in holdout.probes} & {
+        probe.probe_id for probe in baseline.probes
+    }
+    assert not {event.text for event in holdout.life_events} & {
+        event.text for event in baseline.life_events
+    }
+    assert not {probe.prompt for probe in holdout.probes} & {
+        probe.prompt for probe in baseline.probes
+    }
+    # Seeded identifiers must not collide across fixtures sharing one database.
+    assert not {
+        deterministic_fixture_uuid(holdout, "event", event.event_id)
+        for event in holdout.life_events
+    } & {
+        deterministic_fixture_uuid(baseline, "event", event.event_id)
+        for event in baseline.life_events
+    }
+
+
+def test_holdout_digest_is_frozen_before_mechanism_selection():
+    document = json.loads(HOLDOUT_PATH.read_text(encoding="utf-8"))
+
+    assert document["fixture_sha256"] == (
+        "b54ec140641ac3bbe5ff25ff3c475a48124fc893dda5f1dc5255b17d6b8ca2b2"
+    )
+    assert fixture_digest(document) == document["fixture_sha256"]
+
+
+def test_corpus_rejects_a_relabelled_or_unregistered_fixture_identity(tmp_path):
+    document = json.loads(HOLDOUT_PATH.read_text(encoding="utf-8"))
+    relabelled = deepcopy(document)
+    relabelled["status"] = "FROZEN_BASELINE"
+    relabelled["fixture_sha256"] = fixture_digest(relabelled)
+    relabelled_path = tmp_path / "relabelled.json"
+    relabelled_path.write_text(json.dumps(relabelled), encoding="utf-8")
+
+    unregistered = deepcopy(document)
+    unregistered["benchmark_id"] = "PERSON-FIDELITY-999"
+    unregistered["fixture_sha256"] = fixture_digest(unregistered)
+    unregistered_path = tmp_path / "unregistered.json"
+    unregistered_path.write_text(json.dumps(unregistered), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must declare status"):
+        load_person_fidelity_corpus(relabelled_path)
+    with pytest.raises(ValueError, match="unregistered person-fidelity benchmark"):
+        load_person_fidelity_corpus(unregistered_path)
+
+
+def test_holdout_canonical_seed_payload_cannot_leak_probe_or_human_oracle():
+    holdout = _holdout()
+    for event in holdout.life_events:
+        serialized = json.dumps(canonical_seed_payload(holdout, event), sort_keys=True)
+
+        assert "human_oracle" not in serialized
+        assert "reference_outcome" not in serialized
+        assert all(probe.prompt not in serialized for probe in holdout.probes)
 
 
 def test_fixture_digest_fails_closed_on_unversioned_oracle_or_stimulus_change():

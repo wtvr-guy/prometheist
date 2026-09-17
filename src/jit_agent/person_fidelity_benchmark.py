@@ -27,7 +27,16 @@ from jit_agent.models import EventType
 
 BENCHMARK_ID = "PERSON-FIDELITY-001"
 BENCHMARK_VERSION = "person-fidelity-public-baseline-v1"
+HOLDOUT_BENCHMARK_ID = "PERSON-FIDELITY-002-HOLDOUT"
+HOLDOUT_BENCHMARK_VERSION = "person-fidelity-holdout-v1"
 BENCHMARK_NAMESPACE = UUID("505d839e-2e5a-5c19-870d-69d6a8f8913c")
+
+# Each registered fixture pins its identity, version, and frozen role together so
+# a holdout cannot be silently relabelled as the public baseline, or the reverse.
+_REGISTERED_FIXTURES: dict[str, tuple[str, str]] = {
+    BENCHMARK_ID: (BENCHMARK_VERSION, "FROZEN_BASELINE"),
+    HOLDOUT_BENCHMARK_ID: (HOLDOUT_BENCHMARK_VERSION, "FROZEN_HOLDOUT"),
+}
 
 
 class FidelityDimension(str, Enum):
@@ -130,14 +139,34 @@ class PersonFidelityCorpus(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     schema_version: Literal[1]
-    benchmark_id: Literal["PERSON-FIDELITY-001"]
-    benchmark_version: Literal["person-fidelity-public-baseline-v1"]
-    status: Literal["FROZEN_BASELINE"]
+    benchmark_id: str
+    benchmark_version: str
+    status: Literal["FROZEN_BASELINE", "FROZEN_HOLDOUT"]
     fixture_sha256: str
     subject: BenchmarkSubject
     life_events: tuple[LifeEventFixture, ...]
     probes: tuple[FidelityProbe, ...]
     review_protocol: ReviewProtocol
+
+    @model_validator(mode="after")
+    def validate_registered_identity(self) -> "PersonFidelityCorpus":
+        registered = _REGISTERED_FIXTURES.get(self.benchmark_id)
+        if registered is None:
+            raise ValueError(f"unregistered person-fidelity benchmark: {self.benchmark_id}")
+        expected_version, expected_status = registered
+        if self.benchmark_version != expected_version:
+            raise ValueError(
+                f"{self.benchmark_id} must declare benchmark_version {expected_version!r}"
+            )
+        if self.status != expected_status:
+            raise ValueError(
+                f"{self.benchmark_id} must declare status {expected_status!r}"
+            )
+        return self
+
+    @property
+    def is_holdout(self) -> bool:
+        return self.status == "FROZEN_HOLDOUT"
 
     @model_validator(mode="after")
     def validate_fixture_graph(self) -> "PersonFidelityCorpus":
