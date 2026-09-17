@@ -1,6 +1,7 @@
 # Immutable Artifact Journal
 
 **Status:** constitutional architecture deep dive  
+**Constitutional authority:** implements Article 36 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).  
 **Applies to:** canonical events, percept-to-response stage boundaries, stateless LLM invocations, inspection, interruption recovery, and database reconstruction
 
 Prometheist maintains an independent immutable JSON artifact journal in addition to PostgreSQL. PostgreSQL remains the indexed operational store used for efficient retrieval, scheduling, and execution. It is not the only surviving representation of Prometheist's memory, cognition, or completed work.
@@ -12,7 +13,7 @@ The artifact journal exists for four reasons:
 3. **Disaster recovery.** Canonical event history must remain reconstructable when PostgreSQL is corrupted, lost, or deliberately recreated.
 4. **Independent auditability.** Prometheist's causal history must remain inspectable even when the primary database or scheduler tables are unavailable.
 
-This design extends the system-continuity, append-only evidence, disposable-worker recovery, causal-provenance, local-first, and user-sovereignty rules in the Constitution.
+This design extends the system-continuity, append-only evidence, disposable-worker recovery, causal-provenance, local-first, and identity-stewardship rules in the Constitution.
 
 ## 1. Persistence domains
 
@@ -45,12 +46,17 @@ and may be moved with:
 PROMETHEIST_ARTIFACT_ROOT=<path>
 ```
 
-`.prometheist/` is fully ignored by Git. Runtime artifacts may contain user prompts,
-retrieved memories, system prompts, model outputs, tool results, and other sensitive
-evidence, and ordinary development runs must not dirty the repository or publish that
-content accidentally. Evidence intended for review is deliberately selected,
-sanitized where appropriate, and copied to `docs/audits/evidence/` or
-`benchmarks/results/` with its provenance and tested revision recorded.
+The development repository deliberately leaves `.prometheist/` visible to Git so
+synthetic and explicitly non-sensitive test interactions can be shared for exact
+cross-machine debugging and audit. This is a repository-development policy, not an
+assumption that personal cognitive records are public. A deployment containing real
+personal memory, credentials, private tool results, or identifying sensor data should
+set `PROMETHEIST_ARTIFACT_ROOT` outside a public checkout or use a private repository.
+
+Public fictional benchmark journals under `benchmarks/generated/` are likewise
+Git-visible and permanent. A native person-fidelity run writes a content-addressed
+manifest over every raw event and interaction artifact so the compact result under
+`benchmarks/results/` remains connected to the exact causal record.
 
 The journal contains two classes of records:
 
@@ -123,7 +129,8 @@ Deterministic retries repair missing commit artifacts and fail closed if an exis
 
 ## 3. Interaction artifact chain
 
-Every user-prompt interaction receives its own append-only artifact chain.
+Every user-prompt interaction and non-user situation task receives its own
+append-only artifact chain.
 
 Each artifact envelope contains at least:
 
@@ -167,6 +174,17 @@ The interaction chain currently records:
 - a final-disposition manifest for completed interactions.
 
 Because the stage result is the same structured output used to complete the durable worker claim, the artifact is not a later summary of what the worker probably saw. It is the checkpointed boundary object itself.
+
+The six-stage situation pipeline writes the same final-disposition artifact,
+with `SITUATION_PERSIST` as its terminal stage. Its supervisor verifies all stage
+results and their independent copies before publishing the manifest and marking
+the task completed. Silent completion also requires this manifest.
+
+Final-disposition retries use the original chain prefix preceding the manifest.
+They never include the manifest itself or later diagnostics in its evidence list.
+An identical retry returns the existing artifact; a different disposition remains
+an immutable-content conflict. Existing v2 user-prompt manifests retain their
+`V2_PERSIST_RESULT` terminal-stage label.
 
 ### 3.1 Exact stateless LLM invocation artifacts
 
@@ -350,13 +368,18 @@ Current policy:
 - artifacts are immutable;
 - ordinary retention/compaction does not delete them;
 - the artifact root is user-controlled;
-- `.prometheist/` is ignored in full and must not be used as a Git evidence directory;
-- deliberately shared audit/benchmark evidence is copied to an explicit reviewed
-  location with provenance and revision metadata; the runtime originals remain local;
+- `.prometheist/` is Git-visible in this development repository so non-sensitive test
+  journals can be audited remotely; real personal deployments must choose an
+  appropriately private artifact root or repository;
+- public fictional benchmark journals and generated corpora are permanent evidence,
+  remain visible to Git, and must not be deleted or rewritten after a failed run;
+- every retained training candidate keeps its source role, model/runtime, tested
+  revision, artifact hashes, and human-review status; preservation alone never marks a
+  model output as a positive training example;
 - future cold-storage compression may transform old `.json` records to a content-preserving representation such as `.json.zst`, provided hashes/identity remain verifiable and the transformation is reversible;
 - large binary objects should eventually use content-addressed blob storage, with JSON artifacts referring to their hashes rather than embedding arbitrary binary payloads.
 
-Explicit user-directed erasure remains a separate user-sovereignty operation and must not be confused with automatic compaction.
+Explicit identity-governed erasure remains a separate stewardship/sovereignty operation and must not be confused with automatic compaction.
 
 ## 10. Current scope and future hardening
 

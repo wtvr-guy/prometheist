@@ -59,6 +59,7 @@ from jit_agent.capability_runtime import CapabilityExecution, execute_registered
 from jit_agent.epistemic_authority import format_authority_bound_memory_packet
 from jit_agent.interaction_contracts import (
     DurableInteraction,
+    MemoryContext,
     deterministic_capability_memory_request_id,
     deterministic_interaction_event_id,
     deterministic_interaction_id,
@@ -841,7 +842,7 @@ def _effective_adaptive_stage(
 
 def _adaptive_recall(
     conn: psycopg.Connection,
-    interaction: DurableInteraction,
+    interaction: MemoryContext,
     current_packet: MemoryPacket,
     deficit: str,
     *,
@@ -881,7 +882,7 @@ def _adaptive_recall(
 def _compose_memory_package(
     conn: psycopg.Connection,
     llm: PerceptLLM,
-    interaction: DurableInteraction,
+    interaction: MemoryContext,
     initial_packet: MemoryPacket,
     source_types: list[EventType],
 ) -> ResponseMemoryPackage:

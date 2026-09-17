@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "7e9cdc93a2327eaeaa62511ad93ec24050f6a3b2ae94e105d9c3e8cec69bff44",
+  "artifact_id": "ed6a23f4-73c6-5885-9008-98e3fa667f9b",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "25b29f92-dac4-55d6-a7cd-33664aa08ad4",
+  "conversation_id": "ae58c4b7-d3b0-4b41-b881-0534e3daedc5",
+  "correlation_id": "b0e190e9-d02c-43f1-a40e-fa81fbdaa996",
+  "created_at": "2026-09-14T21:51:16.241056+00:00",
+  "interaction_id": "76d00463-c2bb-5cef-8a75-5d9f014b0bec",
+  "journal_sequence": 11,
+  "payload": {
+    "output": {
+      "response_event_id": "57eb0df3-68ce-519d-bdac-e1f792e2269e",
+      "response_required": true,
+      "response_text": "I would respond with a vague, respectful acknowledgment—such as, 'Theo’s journey is personal, and he’s decided what to share. I’m happy to talk about it when he’s ready.' This response honors Theo’s right to control his own story. Even if the acquaintance claims to know the family, I would not confirm or elaborate, because Theo’s recovery is private. Protecting his autonomy and privacy is more important than satisfying curiosity. The response is not about deception, but about maintaining a boundary that respects Theo’s dignity and personal space."
+    },
+    "output_refs": [
+      "event:57eb0df3-68ce-519d-bdac-e1f792e2269e"
+    ]
+  },
+  "payload_hash": "c9f9d6a7bfc59793f897c09f6397a723081230516d641051e3dbfaf3e6a203ee",
+  "previous_artifact_hash": "d9e7661dbebc42cbd2a194db4e30745728b06ffd8dc78145426a7a6bf9a7a78b",
+  "previous_artifact_id": "114186fd-f19f-5c71-8f85-b8b921c0510a",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "a2304994-f0f5-5d98-906b-976f80fc532d"
+}

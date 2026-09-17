@@ -14,6 +14,7 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Json
 
 from jit_agent import event_artifact_store
+from jit_agent.db import require_row
 from jit_agent.models import Event, EventType
 
 
@@ -158,7 +159,7 @@ def record_event(
         conn.rollback()
         raise
 
-    stored = _row_to_event(inserted)
+    stored = _row_to_event(require_row(inserted, context="inserted event"))
     # If this write fails, the DB event is already safe and a deterministic retry
     # will repair the commit artifact.  We still surface the failure fail-closed.
     event_artifact_store.write_event_commit(

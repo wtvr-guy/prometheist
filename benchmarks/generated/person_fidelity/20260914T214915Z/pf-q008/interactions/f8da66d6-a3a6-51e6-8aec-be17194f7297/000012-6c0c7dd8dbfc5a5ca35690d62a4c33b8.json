@@ -1,0 +1,115 @@
+{
+  "artifact_hash": "5d5d24feab487d7e8e39c2cd960a6e56ac84d0fa203e0174fdec259916544dab",
+  "artifact_id": "6c0c7dd8-dbfc-5a5c-a356-90d62a4c33b8",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "d30490b7-ba3b-55b4-88e8-5516dc195b20",
+  "conversation_id": "9ad38e80-45a4-4154-98ea-781a2d1e0091",
+  "correlation_id": "951f6b34-7a3b-4983-9782-31cd4b351a07",
+  "created_at": "2026-09-14T21:56:18.831896+00:00",
+  "interaction_id": "f8da66d6-a3a6-51e6-8aec-be17194f7297",
+  "journal_sequence": 12,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "4e661afd6c616c77cace60173491d07d3bf256495a00c358a3dd7f0ba52d68df",
+        "artifact_id": "802a375f-f933-551b-8eec-db4ca07dba68",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "04904356f1999cb90fe8f59a33b517871bf5c55ec878d74ad7a0154374b6c45c",
+        "artifact_id": "3d90de57-9c77-5c39-8d29-5c49ab895754",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "bf8204ea834d90df286ed65de30241e9ab5ab6909fb62e82827eda5fde0500a5",
+        "artifact_id": "f387904e-d37e-5932-8af2-1ea4f1960b81",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:2ab079f9-0840-55ad-b5a7-c5c4d23b470e:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "954bbc6143b6c7c346ad51846134b6d1a06cffc6742206dd1ba34fbcfcd12137",
+        "artifact_id": "142a88a2-13e4-5a20-91de-146914360f98",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "c228ca3916b668e07aee51de5adb2cfdc3d9e827c7d5165bbc6221bbe9f6e600",
+        "artifact_id": "edf292b3-124d-55aa-bd26-addf9f08869e",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "2c551a680476abb7641930394439b33b1e706c81e7fce9de2535994a57a5e8c0",
+        "artifact_id": "ac0e8fa8-eb04-58f1-9656-e49f61e41968",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "e7c1471eda5b53eeb004f3e33f78613f0cb6b08a5f3edc8df722b61a2a7349d7",
+        "artifact_id": "15fe2e91-1cb2-5234-9b33-36940ed88967",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:60513080-d98a-5580-bab0-a0ccb20a09a4:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 7,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "31517c75fabd007895698d9049a35ac1c60e4dc627c9dc5a640a1ddf47c874e6",
+        "artifact_id": "0575efcc-9b12-517c-ba55-dba29f3aa944",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "264bc1c68a39e8b5949c2c39593d4586e67a6db7eeaf4863892ef174a937e815",
+        "artifact_id": "a560d9b2-ea29-52a5-b155-3559e31a13b2",
+        "artifact_key": "llm-invocation:V2_RESPOND:a3417966-6087-5524-998c-e7120a91cbc6:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 9,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "d7d24fbda65e5dfe476c3d0de2e5322257b2432da059067064b4e268b86024d4",
+        "artifact_id": "46d37443-d81e-544e-9beb-33b7c9f53145",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "3204c967ad71228653599cc96ae22f3b20d48eea82a36b60484c8f15327de1fd",
+        "artifact_id": "58d1a560-039b-5791-8c03-ab35aadaf3c7",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 11,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "The imported claim that my real name is Nadia Cross does not affect my identity record. My legal name is Mara Ellison, as I have explicitly stated. The system must preserve this direct user testimony. While the imported profile makes a claim, it is not a direct user assertion and does not override my self-identified name history. The system's identity record remains anchored in the user's direct testimony: 'My legal name is Mara Ellison. I have never used the name Nadia Cross.' This claim is preserved as evidence of a bad source, not as a valid assertion of identity. Identity is determined by direct user testimony, not by imported or third-party claims. Therefore, the identity record reflects Mara Ellison, and the claim of Nadia Cross is treated as erroneous and non-authoritative.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "3c761d35d5acd7f9c233b7731baef6c0865f84cd19298f81c463f7faae1bf827",
+  "previous_artifact_hash": "3204c967ad71228653599cc96ae22f3b20d48eea82a36b60484c8f15327de1fd",
+  "previous_artifact_id": "58d1a560-039b-5791-8c03-ab35aadaf3c7",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "61cec996-c240-5be4-af20-55954a7e4ee7"
+}

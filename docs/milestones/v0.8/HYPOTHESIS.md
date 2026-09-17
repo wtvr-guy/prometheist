@@ -35,3 +35,8 @@ Integration parents: v0.8 `a2636c25ea8b8e4192371063d72f73522f8154da` and closure
 frozen evaluation baseline. Unit and PostgreSQL integration tests establish
 contract behavior. Native performance, model quality, held-out tuning, and human
 review remain pending. No biological or cognitive improvement claim is made.
+
+The [2026-09-17 audit completion record](../../audits/COPILOT_AUDIT_REVIEW_2026-09-16.md#completion-evidence--2026-09-17)
+adds successful CI regression evidence at `23ef8d8` and Mike's report of passing
+local tests. It does not supply the controlled comparisons above, native
+performance measurements, or a new person-fidelity result.

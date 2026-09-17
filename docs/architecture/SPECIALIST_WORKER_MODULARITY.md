@@ -1,6 +1,6 @@
 # Specialist Worker Modularity
 
-**Constitutional authority:** implements Article 31 of
+**Constitutional authority:** implements Article 37 of
 [`../../CONSTITUTION.md`](../../CONSTITUTION.md) and is subordinate to the
 Constitution.
 
@@ -98,4 +98,4 @@ Current enforcement consists of:
 A constitutional audit must identify every production LLM invocation site and map
 it to one specialist contract. An unmapped call, a stage allowed to invoke another
 stage's role, or a single worker performing independent semantic decisions is a
-failure of Article 31.
+failure of Article 37.

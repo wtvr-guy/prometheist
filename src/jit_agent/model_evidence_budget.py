@@ -2,7 +2,7 @@
 
 Canonical durable evidence is intentionally not size-limited here. These limits
 apply only to disposable evidence views that are about to be supplied to an LLM.
-The exact byte caps are safety/environment tunables under Constitution Article 24,
+The exact byte caps are safety/environment tunables under Constitution Article 30,
 not constitutional constants.
 """
 from __future__ import annotations

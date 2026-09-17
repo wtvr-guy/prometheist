@@ -1,7 +1,7 @@
 # Testing and Acceptance
 
 **Status:** constitutional engineering deep dive.  
-**Constitutional authority:** implements Article 25 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).
+**Constitutional authority:** implements Article 31 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).
 
 Prometheist's architecture is defined by behavioral invariants, not by documentation alone. A rule is not treated as verified merely because the implementation looks plausible or a narrow unit test passes.
 
@@ -123,6 +123,29 @@ product contract, or for a closed control/security property such as a valid enum
 catalog index, forbidden poison token, or canonical identifier. Tests must not add
 artificial “return exactly this tuple” instructions solely to manufacture a prose
 oracle for an otherwise natural conversation.
+
+### Person-fidelity evaluation
+
+Person-fidelity experiments extend the same separation. Automation verifies the
+canonical life evidence admitted to a fresh response invocation; independent human
+review judges whether the response preserves the individual's meaning, relationships,
+values, contradictions, decisions, uncertainty, and characteristic expression. Neither
+verdict may substitute for the other, and keyword overlap is not an identity oracle.
+
+Results must remain visible by fidelity dimension. No pooled score may conceal
+fabricated personal history, identity-integrity failure, or failure to acknowledge a
+legitimate unknown. A public synthetic fixture can establish reproducible method and a
+regression baseline, but identity-maturity evidence requires longitudinal evaluation
+against a real individual and prospectively frozen holdouts. The first public method is
+[`PERSON-FIDELITY-001`](../experiments/PERSON_FIDELITY_BASELINE.md).
+
+Native cognitive benchmark runs are research evidence, including failures. Their raw
+event mirrors, stage artifacts, model invocations, outputs, and chain manifests remain
+Git-visible and append-only when the subject and inputs are fictional or deliberately
+non-sensitive. A compact aggregate result is not an acceptable substitute for the
+underlying causal artifacts. Preserved model output remains unreviewed training data
+until an explicit human label identifies it as a positive, negative, preference, or
+held-out example.
 
 ## Statelessness acceptance
 

@@ -20,6 +20,7 @@ import uuid
 import psycopg
 from psycopg.types.json import Json
 
+from jit_agent.db import require_row
 from jit_agent.memory_kernel import CueState
 from jit_agent.postgres_memory_kernel import associative_recall_from_postgres, rebuild
 from jit_agent.scale_corpus import (
@@ -70,7 +71,7 @@ def _percentile(values: list[float], percentile: float) -> float:
 def _require_benchmark_database(conn: psycopg.Connection) -> str:
     with conn.cursor() as cur:
         cur.execute("SELECT current_database()")
-        database_name = str(cur.fetchone()[0])
+        database_name = str(require_row(cur.fetchone(), context="current_database()")[0])
     lowered = database_name.casefold()
     if "test" not in lowered and "benchmark" not in lowered:
         raise RuntimeError(

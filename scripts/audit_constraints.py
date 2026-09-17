@@ -210,11 +210,11 @@ class _Visitor(ast.NodeVisitor):
         defaults = [None] * (len(args) - len(node.args.defaults)) + list(node.args.defaults)
         for arg, default in zip(args, defaults, strict=True):
             value = _numeric_literal(default)
-            if value is not None and _policy_name(arg.arg):
+            if default is not None and value is not None and _policy_name(arg.arg):
                 self._add(default, role="function_default", value=value, name=arg.arg, source=ast.unparse(default))
         for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults, strict=True):
             value = _numeric_literal(default)
-            if value is not None and _policy_name(arg.arg):
+            if default is not None and value is not None and _policy_name(arg.arg):
                 self._add(default, role="function_default", value=value, name=arg.arg, source=ast.unparse(default))
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
@@ -319,7 +319,7 @@ class _Visitor(ast.NodeVisitor):
         if isinstance(node.slice, ast.Slice):
             for label, bound in (("slice_lower", node.slice.lower), ("slice_upper", node.slice.upper)):
                 value = _numeric_literal(bound)
-                if value is not None and abs(value) > 1:
+                if bound is not None and value is not None and abs(value) > 1:
                     self._add(bound, role=label, value=value, name=label, source=ast.unparse(node))
         self.generic_visit(node)
 

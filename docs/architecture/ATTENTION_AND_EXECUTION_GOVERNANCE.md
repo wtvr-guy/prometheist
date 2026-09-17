@@ -1,7 +1,7 @@
 # Attention and Execution Governance
 
 **Status:** constitutional architecture deep dive.  
-**Constitutional authority:** implements Articles 11–14, 28, and 29 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).
+**Constitutional authority:** implements Articles 17–20, 34, and 35 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).
 
 This document defines Prometheist's durable executive-control and worker-execution invariants independent of any one milestone implementation. The v0.7 scheduler, resource-admission, preemption, and worker-protocol documents are implementation evidence for these rules; this document is the long-lived normative authority beneath the Constitution.
 
@@ -60,7 +60,7 @@ Resource classes and dimensions should be introduced when a concrete safety or p
 
 Installed hardware is not equivalent to schedulable capacity.
 
-Prometheist must reserve capacity for the operating system, required services, Prometheist's own control-plane work, and user-authorized applications.
+Prometheist must reserve capacity for the operating system, required services, Prometheist's own control-plane work, and developmental-steward- or identity-authorized applications.
 
 Conceptually:
 

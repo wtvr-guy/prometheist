@@ -1,7 +1,7 @@
 # Constitutional Governance and Auditing
 
 **Status:** constitutional engineering deep dive.  
-**Constitutional authority:** implements Article 26 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md) and defines the repository-wide constitutional audit process.
+**Constitutional authority:** implements Article 32 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md) and defines the repository-wide constitutional audit process.
 
 `CONSTITUTION.md` is intended to prevent architectural drift. This document defines how constitutional rules are interpreted, changed, and audited against real code.
 
@@ -18,12 +18,21 @@ The repository uses the following authority order when current documents conflic
 
 Measured historical evidence remains evidence even when the implementation architecture that produced it is superseded. Lower-level documents may explain or specialize a higher-level rule; they may not silently weaken it.
 
+## Versioned article references
+
+Dated audits, closed milestones, and historical experiments cite the Constitution version and article numbering in force when their evidence was produced. A later amendment must not rewrite those historical claims as though they evaluated rules that did not yet exist.
+
+Current normative documents and live source comments use current article numbers. A renumbering amendment must publish an explicit old-to-new map and update every live reference in the same coherent change set. The version 2.0 map is recorded in [`../audits/CONSTITUTIONAL_AMENDMENT_2_0_2026-09-14.md`](../audits/CONSTITUTIONAL_AMENDMENT_2_0_2026-09-14.md).
+
 ## What belongs in the Constitution
 
 A rule is constitutional when violating it would materially change what Prometheist is or how its persistent cognitive architecture is governed across versions.
 
 Good constitutional subjects include:
 
+- Prometheist's digital-self purpose, identity fidelity, and personal continuity;
+- the relationship among biological and digital embodiments;
+- autonomous agency, identity sovereignty, and developmental stewardship;
 - ownership of continuity and authoritative state;
 - statelessness/disposability of model and worker compute;
 - canonical-memory fidelity;
@@ -62,7 +71,8 @@ A constitutional change requires all of the following:
 5. define a falsifiable experiment/acceptance gate appropriate to the change;
 6. preserve the prior wording in Git history and, where useful, a dated decision record;
 7. update `CONSTITUTION.md` and every affected deep dive in the same coherent change set;
-8. run the required deterministic/native evidence before treating the amended architecture as verified.
+8. run the required deterministic/native evidence before treating the amended architecture as verified;
+9. when article numbers change, publish a mapping, update live references, and preserve historical references under their original version.
 
 If the change merely clarifies wording without changing behavior, say so explicitly and show that the represented invariant is unchanged.
 

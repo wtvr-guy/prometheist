@@ -4,7 +4,11 @@
 and native acceptance remain separately gated.
 
 The scope follows the supplied final response from “Map Precognitive Pipeline
-Workers.” Active development is on `main`.
+Workers.” `main` is the integration baseline; subsequent changes use focused
+branches. [PR #28](https://github.com/wtvr-guy/prometheist/pull/28) consolidates
+`constitutional-amendment-v2` and `person-fidelity-baseline`, including
+Constitution 2.0, the frozen person-fidelity fixture, retained negative evidence,
+and the reviewed situation-completion fixes.
 
 Implemented mechanisms include typed multimodal percepts, expectations and
 prediction errors, overlapping situation snapshots, contextual salience, source
@@ -26,6 +30,12 @@ not a single controlled experiment. [HYPOTHESIS.md](HYPOTHESIS.md) specifies
 separate ablations before making quality or efficiency claims. Numeric budgets
 and salience bins remain provisional. Deterministic CI does not establish native
 Windows/Ollama acceptance or neurobiological fidelity.
+
+The [Copilot audit follow-up](../../audits/COPILOT_AUDIT_REVIEW_2026-09-16.md#completion-evidence--2026-09-17)
+records **378 passed, 13 skipped** on revision `23ef8d8`, with the required
+static and deterministic checks passing. Mike also reported a passing local
+run; its native counts and environment were not supplied. Neither result closes
+the independent performance, model-quality, or person-fidelity review gates.
 
 The historical basic perception/lexical-salience implementation remains preserved
 at parent `a2636c25ea8b8e4192371063d72f73522f8154da`. The unfrozen Epistemic WorkingState

@@ -1,0 +1,99 @@
+{
+  "artifact_hash": "3862942e8575161193b57d47bdff712adfc1d3ff446d55527ab11c04e7f9da5c",
+  "artifact_id": "a9f9bfcb-aebf-5650-80f1-6e3599fb6fda",
+  "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "8533ff53-cdbc-57a2-97a3-c1b315f2ec18",
+  "conversation_id": "05e891ae-0934-4c95-a9dc-f16b67bf38f3",
+  "correlation_id": "b2e4032e-ac9a-4e48-9f40-cb46ed5c1ba2",
+  "created_at": "2026-09-14T21:53:03.300526+00:00",
+  "interaction_id": "40ea1f12-8292-5e9d-b3c3-1943827bf1bb",
+  "journal_sequence": 2,
+  "payload": {
+    "output": {
+      "percept": {
+        "context": {
+          "active_goal_refs": [],
+          "causal_percept_refs": [],
+          "entity_refs": [],
+          "expectation_refs": [],
+          "integrity": 0,
+          "observations": [],
+          "opportunity": 0,
+          "task_refs": [],
+          "threat": 0,
+          "uncertainty": 0
+        },
+        "conversation_id": "05e891ae-0934-4c95-a9dc-f16b67bf38f3",
+        "correlation_id": "b2e4032e-ac9a-4e48-9f40-cb46ed5c1ba2",
+        "features": {
+          "contains_code_block": false,
+          "contains_question": true,
+          "contains_structured_payload": false,
+          "contains_url": false,
+          "line_count": 1,
+          "normalized_characters": 116,
+          "token_count": 22,
+          "uppercase_ratio": 0.043010752688172046
+        },
+        "input_buffer": {
+          "max_segments": 4,
+          "retained_segment_indices": [
+            0
+          ],
+          "segment_char_limit": 160,
+          "segments": [
+            "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field."
+          ],
+          "total_characters": 116,
+          "total_segments": 1,
+          "truncated": false
+        },
+        "normalized_text": "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field.",
+        "observed_at": "2026-09-14T14:53:02.104946-07:00",
+        "percept_id": "4beeaefc-8e6d-5992-a2bd-193f229d3899",
+        "policy_version": "v0.8-perception-v2",
+        "raw_value_sha256": "a3e52843699dd74533a6397ca818bfe66cc46e04ebab031ab3a891230fb7f6f9",
+        "response_required": true,
+        "schema_version": 1,
+        "source": {
+          "interface": "chat",
+          "kind": "USER_INTERACTION",
+          "modality": "TEXT",
+          "source_id": "user"
+        },
+        "source_event_id": "f52f7a48-58d2-5e91-baec-a4847ee30077"
+      },
+      "salience_assessment": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "4beeaefc-8e6d-5992-a2bd-193f229d3899",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "working_state_available": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "72138e0cbaf7c940f7a633641bda97a371ea52a3f6cf1f4f45433142dd3a255b",
+  "previous_artifact_hash": "5073f619b9cc8a3e5fde21ea958f2923f6cfe8d382c561233b092e9167c8884e",
+  "previous_artifact_id": "930905d2-6271-5830-91ee-d07d05ca5e7e",
+  "producer": "percept_response_v2",
+  "stage": "V2_RESOLVE_REFERENCES",
+  "task_id": "35ca329e-1ceb-5e88-968f-c9b0c704c925"
+}

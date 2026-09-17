@@ -1,0 +1,34 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "839a7940-1202-4076-96cf-704c320d17ce",
+  "conversation_seq": 2,
+  "correlation_id": "0384bad8-577f-4cdb-8fb7-48c93527b0d9",
+  "event_id": "a5c5b96b-aeec-5116-8ea1-de4ad67900cb",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-14T21:49:45.739785+00:00",
+  "payload": {
+    "memory_request_id": "b077f594-6f5a-54cc-8883-62cdc19a0c03",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 6,
+      "query_text": "Why did I become an electrical engineer, and what design principle did that childhood experience leave me with?",
+      "reference_time": null,
+      "source_types": [
+        "SYSTEM_EVENT",
+        "TOOL_RESULT",
+        "USER_PROMPT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "ATTENTION_ACTIVATION"
+  },
+  "payload_text": "Why did I become an electrical engineer, and what design principle did that childhood experience leave me with?",
+  "record_hash": "91860bd6dc24868041b963a2e361270f30f2c27ac906328350b97cf3584090d8",
+  "source": "attention-aperture:v0.7-attention-aperture-v4/task:0bd78106-ab46-56fe-ab75-38dd472b5488"
+}

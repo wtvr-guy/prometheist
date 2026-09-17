@@ -1,0 +1,116 @@
+{
+  "artifact_hash": "954b9e67a00983fcb66d1d44bb2f3f0b9c3b9002dd2e3b3840f658594fcb48db",
+  "artifact_id": "4930bf0d-82d4-5429-8a2e-62ef65b4d2ef",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "4fa2a05a-d361-5e77-a264-b8485e1b881c",
+  "conversation_id": "e35683db-7e02-4fc5-af79-6e0102aca2a8",
+  "correlation_id": "3e969d7a-8de8-46bb-bf6e-7d66a23c5617",
+  "created_at": "2026-09-14T21:54:16.381441+00:00",
+  "interaction_id": "6b27b1f3-7bec-5ecf-8b04-94c0386c459e",
+  "journal_sequence": 8,
+  "payload": {
+    "output": {
+      "memory_package": {
+        "adaptive_recall_rounds": 0,
+        "composer_rounds": 1,
+        "memory_packet": {
+          "items": [],
+          "memory_request_id": "34af7083-1687-5d5c-8da0-6ff547f9b81c",
+          "need": {
+            "active_event_ids": [],
+            "conversation_id": null,
+            "entities": [],
+            "focus_event_ids": [],
+            "include_persisted_history": true,
+            "limit": 6,
+            "query_text": "I have twelve months of expenses saved. Offer A pays $210,000, is fully remote, and optimizes opaque engagement tracking for an advertising network. Offer B pays $165,000, is hybrid three days a week, and builds open-source grid-resilience hardware for disaster shelters. Which offer would I probably choose, and what tradeoff would matter most to me?",
+            "reference_time": null,
+            "source_types": [
+              "SYSTEM_EVENT",
+              "TOOL_RESULT",
+              "USER_PROMPT"
+            ],
+            "supplemental_query_texts": []
+          },
+          "origin": "INTERNAL_MEMORY",
+          "retrieval_trace": {
+            "activation_kernel": {
+              "kernel": "recall_from_postgres",
+              "kernel_trace": {
+                "candidates_considered": 0,
+                "cue_tokens": [
+                  "twelve",
+                  "month",
+                  "expense",
+                  "sav",
+                  "offer",
+                  "pays",
+                  "210",
+                  "000",
+                  "fully",
+                  "remote",
+                  "optimize",
+                  "opaque",
+                  "engagement",
+                  "track",
+                  "advertis",
+                  "network",
+                  "offer",
+                  "pays",
+                  "165",
+                  "000",
+                  "hybrid",
+                  "three",
+                  "days",
+                  "week",
+                  "build",
+                  "open-source",
+                  "grid-resilience",
+                  "hardware",
+                  "disaster",
+                  "shelter",
+                  "offer",
+                  "would",
+                  "probably",
+                  "choose",
+                  "tradeoff",
+                  "would",
+                  "matter",
+                  "most"
+                ],
+                "items": [],
+                "normalized_entities": [],
+                "policy_version": "deterministic-cues-v2"
+              },
+              "retrieval_role": "ATTENTION_ACTIVATION"
+            },
+            "association_hops": 0,
+            "baseline_recall_limit": 6,
+            "candidate_limit": 750,
+            "depth": "BROAD_SHALLOW",
+            "packet_item_limit": 6,
+            "query_strategy": "working_state_plus_baseline_activation",
+            "retrieval_role": "ATTENTION_ACTIVATION",
+            "working_state_event_ids": [],
+            "working_state_item_count": 0
+          },
+          "supported": false
+        },
+        "sufficient": true,
+        "unresolved_memory_deficit": null
+      },
+      "skipped": false
+    },
+    "output_refs": [
+      "memory-request:34af7083-1687-5d5c-8da0-6ff547f9b81c"
+    ]
+  },
+  "payload_hash": "49afa2cece42d273337e84909eb6a65e32e44e4a0265ceb3a77d1c4cf56f6b4d",
+  "previous_artifact_hash": "5ee6c03acea8258ee4b1ac8f897b2b3d32d0373c4039ae39c265c4e46c7c3f95",
+  "previous_artifact_id": "e3f65775-37d6-5def-a1e5-04c88eeb254f",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "0a44eb37-0996-56ba-9946-75004b2145c0"
+}

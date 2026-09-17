@@ -126,7 +126,7 @@ def restore_event_store_from_artifacts(conn: psycopg.Connection) -> dict[str, in
                             f"committed artifact global_seq collision at {global_seq}"
                         )
                     cur.execute("SELECT COALESCE(max(global_seq), 0) + 1 AS value FROM events")
-                    global_seq = int(cur.fetchone()["value"])
+                    global_seq = int(db.require_row(cur.fetchone(), context="next free global_seq")["value"])
                     next_uncommitted_global = max(next_uncommitted_global, global_seq + 1)
 
                 cur.execute(
@@ -167,7 +167,7 @@ def restore_event_store_from_artifacts(conn: psycopg.Connection) -> dict[str, in
                 """
             )
             cur.execute("SELECT COALESCE(max(global_seq), 0) AS value FROM events")
-            maximum = int(cur.fetchone()["value"])
+            maximum = int(db.require_row(cur.fetchone(), context="restored max global_seq")["value"])
             if maximum:
                 cur.execute(
                     "SELECT setval(pg_get_serial_sequence('events', 'global_seq'), %s, true)",

@@ -2,7 +2,7 @@
 
 **Status:** constitutional architecture deep dive, rebaselined 2026-09-03.
 
-**Constitutional status:** primary architecture authority for Articles 3, 4, 5, 17, and 18 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md). This document explains those constitutional rules in depth and is subordinate to the Constitution where wording conflicts.
+**Constitutional status:** primary architecture authority for Articles 9, 10, 11, 23, and 24 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md). This document explains those constitutional rules in depth and is subordinate to the Constitution where wording conflicts.
 
 This document freezes the memory-scaling constraints that future Prometheist milestones must preserve. It supplements `COGNITIVE_ARCHITECTURE.md`, `MEMORY_KERNEL.md`, and `ASSOCIATIVE_MEMORY.md` and supersedes any older wording that would permit an already-admitted durable memory to be replaced by a summary, abstraction, embedding, aggregation, or other lossy derivative.
 
@@ -30,7 +30,7 @@ not admitted         admitted
                 canonical durable memory
 ```
 
-Before admission, deterministic retention policy may discard data that never became durable memory. After admission, ordinary retention, compaction, indexing, or storage-pressure policy must not replace or delete the canonical memory. Explicit user-directed erasure, if later supported, is a separate governance operation and must never be confused with automatic compression or retention policy.
+Before admission, deterministic retention policy may discard data that never became durable memory. After admission, ordinary retention, compaction, indexing, or storage-pressure policy must not replace or delete the canonical memory. Explicit identity-governed erasure, if later supported, is a separate governance operation and must never be confused with automatic compression or retention policy.
 
 ## Source authority
 
@@ -77,7 +77,7 @@ new provenance-bearing event
 
 This preserves both current understanding and historical reconstructability: the system can distinguish “what is now believed/supported” from “what was actually present in the record when an earlier decision was made.”
 
-Explicit user-directed erasure, if implemented, is a separate governance path and must define its audit/integrity semantics explicitly. It is not an ordinary correction mechanism.
+Explicit identity-governed erasure, if implemented, is a separate governance path and must define its audit/integrity semantics explicitly. It is not an ordinary correction mechanism.
 
 ## No memory summaries
 
@@ -235,4 +235,4 @@ A defensible v1.0 must demonstrate lossless source-backed durable memory and bou
 
 ## Constitutional relationship
 
-Articles 3 and 4 govern canonical/derived memory fidelity; Article 5 governs bounded recall; Articles 17 and 18 govern epistemic separation and durable causal provenance. Explicit user-directed erasure is governed separately by [`LOCAL_FIRST_PORTABILITY.md`](LOCAL_FIRST_PORTABILITY.md) and must never be implemented as ordinary compaction.
+Articles 9 and 10 govern canonical/derived memory fidelity; Article 11 governs bounded recall; Articles 23 and 24 govern epistemic separation and durable causal provenance. Explicit identity-governed erasure is governed separately by [`LOCAL_FIRST_PORTABILITY.md`](LOCAL_FIRST_PORTABILITY.md) and must never be implemented as ordinary compaction.

@@ -1,0 +1,6 @@
+{
+  "action": "QUARANTINE_MEDIA",
+  "canonical_bytes_preserved": true,
+  "expected_sha256": "6c43b4bda64a091c20de1dc00bf988eeb16b1bb77390160a9ce9fa74c668f542",
+  "observed_sha256": "11d510e067d2cdcd7559bd86d27a2f4c20babd43670346b97af99b522c1f0075"
+}

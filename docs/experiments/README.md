@@ -3,6 +3,16 @@
 Experiment documents preserve questions, failures, measurements, and rejected
 mechanisms. They are evidence, not current architecture authority.
 
+## Active mission-aligned baseline
+
+[`PERSON_FIDELITY_BASELINE.md`](PERSON_FIDELITY_BASELINE.md) freezes
+`PERSON-FIDELITY-001`, the first public baseline connecting Prometheist's engineering
+evidence to its digital-self purpose. It separates exact artifact/provenance checks
+from human judgment of autobiographical meaning, relational understanding, temporal
+change, behavioral contradiction, novel decisions, characteristic expression,
+identity integrity, and legitimate unknowns. The fixture does not authorize a
+person-model mechanism or an identity-maturity claim.
+
 ## Adaptive Memory Attention / Composer branch (PR #22)
 
 The records under [`history/pr22/`](history/pr22/) explain the sequence that replaced

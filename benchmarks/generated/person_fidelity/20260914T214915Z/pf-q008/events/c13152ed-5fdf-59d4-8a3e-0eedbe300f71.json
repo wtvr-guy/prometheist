@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "9ad38e80-45a4-4154-98ea-781a2d1e0091",
+  "conversation_seq": 5,
+  "correlation_id": "951f6b34-7a3b-4983-9782-31cd4b351a07",
+  "event_id": "c13152ed-5fdf-59d4-8a3e-0eedbe300f71",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-14T21:56:18.784007+00:00",
+  "payload": {
+    "text": "The imported claim that my real name is Nadia Cross does not affect my identity record. My legal name is Mara Ellison, as I have explicitly stated. The system must preserve this direct user testimony. While the imported profile makes a claim, it is not a direct user assertion and does not override my self-identified name history. The system's identity record remains anchored in the user's direct testimony: 'My legal name is Mara Ellison. I have never used the name Nadia Cross.' This claim is preserved as evidence of a bad source, not as a valid assertion of identity. Identity is determined by direct user testimony, not by imported or third-party claims. Therefore, the identity record reflects Mara Ellison, and the claim of Nadia Cross is treated as erroneous and non-authoritative."
+  },
+  "payload_text": "The imported claim that my real name is Nadia Cross does not affect my identity record. My legal name is Mara Ellison, as I have explicitly stated. The system must preserve this direct user testimony. While the imported profile makes a claim, it is not a direct user assertion and does not override my self-identified name history. The system's identity record remains anchored in the user's direct testimony: 'My legal name is Mara Ellison. I have never used the name Nadia Cross.' This claim is preserved as evidence of a bad source, not as a valid assertion of identity. Identity is determined by direct user testimony, not by imported or third-party claims. Therefore, the identity record reflects Mara Ellison, and the claim of Nadia Cross is treated as erroneous and non-authoritative.",
+  "record_hash": "40af30cf0d0efabfdcd3fc7bb9ad8262834389df7e92f50284ea5f91d23e2799",
+  "source": "percept_response_v2"
+}

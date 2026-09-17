@@ -24,6 +24,7 @@ from jit_agent.attention_resources import (
     ResourceReservation,
 )
 from jit_agent.attention_store import DEFAULT_SCHEDULER_KEY
+from jit_agent.db import require_row
 from jit_agent.worker_protocol import (
     WORKER_CLAIM_POLICY_VERSION,
     WORKER_PROTOCOL_VERSION,
@@ -349,7 +350,9 @@ def guarded_claim_worker_step(
                     """,
                     (scheduler_key, step.step_id),
                 )
-                attempt_number = int(cur.fetchone()["latest_attempt"]) + 1
+                attempt_number = int(
+                    require_row(cur.fetchone(), context="latest worker claim attempt")["latest_attempt"]
+                ) + 1
                 claim = WorkerClaim(
                     claim_id=deterministic_worker_claim_id(
                         step.step_id,
@@ -399,6 +402,7 @@ def heartbeat_worker_claim(
     _validate_lease_seconds(lease_seconds)
     at = _as_utc((clock or (lambda: datetime.now(timezone.utc)))())
     expired = False
+    updated: WorkerClaim | None = None
     try:
         with conn.cursor(row_factory=dict_row) as cur:
             claim = _lock_claim(cur, scheduler_key=scheduler_key, claim_id=claim_id)
@@ -431,13 +435,17 @@ def heartbeat_worker_claim(
                         claim_id,
                     ),
                 )
-                updated = _row_to_claim(cur.fetchone())
+                updated = _row_to_claim(
+                    require_row(cur.fetchone(), context="heartbeat-extended worker claim")
+                )
         conn.commit()
     except Exception:
         conn.rollback()
         raise
     if expired:
         raise WorkerProtocolError("worker claim lease has expired")
+    if updated is None:
+        raise WorkerProtocolError("worker claim heartbeat did not return a durable claim")
     return updated
 
 
@@ -645,7 +653,9 @@ def release_worker_claim(
                     """,
                     (scheduler_key, claim_id),
                 )
-                released = _row_to_claim(cur.fetchone())
+                released = _row_to_claim(
+                    require_row(cur.fetchone(), context="released worker claim")
+                )
         conn.commit()
         return released
     except Exception:

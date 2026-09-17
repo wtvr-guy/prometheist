@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
@@ -128,6 +129,102 @@ def test_four_percepts_one_guarded_task_and_finite_action_feedback(conn, monkeyp
     artifacts = artifact_journal.interaction_artifacts(ids[0])
     assert not any(value["artifact_type"] == "LLM_INVOCATION" for value in artifacts)
     assert len([value for value in artifacts if value["artifact_type"] == "STAGE_RESULT"]) == 6
+    verification = artifact_journal.verify_interaction_chain(ids[0])
+    assert verification["valid"] and verification["complete"]
+    final = verification["last_artifact"]["payload"]
+    assert final["last_completed_stage"] == "SITUATION_PERSIST"
+    assert final["response_required"] is False and final["response_text"] is None
+    assert len([item for item in final["artifact_chain"] if item["artifact_type"] == "STAGE_RESULT"]) == 6
+
+
+def test_clean_worker_exit_without_a_durable_result_does_not_complete_task(conn):
+    source = source_setup(conn)
+    add_observation(conn, source)
+    task_id, = submit_situation_page(conn, probe=FixedProbe())
+    launches = []
+
+    def launch(**kwargs):
+        launches.append(kwargs["step_id"])
+        return SimpleNamespace(process=SimpleNamespace(wait=lambda **_: 0))
+
+    with pytest.raises(RuntimeError, match="missing durable situation result: SITUATION_MEMORY"):
+        run_situation_task(conn, task_id, probe=FixedProbe(), launcher=SimpleNamespace(launch=launch))
+    assert len(launches) == 1
+    assert load_scheduler(conn).tasks[task_id].status.value != "COMPLETED"
+    assert get_record(conn, "situation_completion", str(task_id)) is None
+    assert not list_records(conn, "situation_progress")
+
+
+@pytest.mark.parametrize("failure_boundary", ["manifest", "progress"])
+def test_situation_finalization_recovers_without_repeating_work(conn, monkeypatch, failure_boundary):
+    from jit_agent import artifact_journal, situation_runtime
+
+    source = source_setup(conn)
+    add_observation(conn, source, expected=register_memory_expectation(conn))
+    task_id, = submit_situation_page(conn, probe=FixedProbe())
+    original_task = get_record(conn, "situation_task", str(task_id))
+    snapshot_id = original_task["situation"]["snapshot_id"]
+    write_manifest = artifact_journal.write_final_disposition_artifact
+    put = situation_runtime.put_record
+
+    def fail_manifest(**kwargs):
+        raise OSError("simulated manifest interruption")
+
+    def fail_progress(connection, kind, *args, **kwargs):
+        if kind == "situation_progress":
+            raise OSError("simulated progress interruption")
+        return put(connection, kind, *args, **kwargs)
+
+    if failure_boundary == "manifest":
+        monkeypatch.setattr(artifact_journal, "write_final_disposition_artifact", fail_manifest)
+    else:
+        monkeypatch.setattr(situation_runtime, "put_record", fail_progress)
+    with pytest.raises(OSError, match="simulated"):
+        run_situation_task(conn, task_id, probe=FixedProbe())
+
+    before = artifact_journal.interaction_artifacts(task_id)
+    assert len([value for value in before if value["artifact_type"] == "STAGE_RESULT"]) == 6
+    assert len(list_records(conn, "action_execution")) == 1
+    assert not list_records(conn, "situation_progress")
+    if failure_boundary == "manifest":
+        assert load_scheduler(conn).tasks[task_id].status.value != "COMPLETED"
+
+    monkeypatch.setattr(artifact_journal, "write_final_disposition_artifact", write_manifest)
+    monkeypatch.setattr(situation_runtime, "put_record", put)
+    if failure_boundary == "progress":
+        # The normal polling path must find completed tasks even though their
+        # worker assignments have already been released and action feedback has
+        # replaced the candidate snapshot. The first page wraps the cursor.
+        drain_situations(conn, probe=FixedProbe())
+        drain_situations(conn, probe=FixedProbe())
+        repaired = conn.execute(
+            "SELECT payload FROM events WHERE payload->>'record_kind' = 'situation_progress' "
+            "AND payload->'data'->>'snapshot_id' = %s", (snapshot_id,),
+        ).fetchall()
+        assert len(repaired) == 1
+    progress_before_retry = list_records(conn, "situation_progress")
+
+    def unexpected_launch(**kwargs):
+        pytest.fail("completed situation work must not be executed again")
+
+    for _ in range(2):
+        result = run_situation_task(
+            conn, task_id, probe=FixedProbe(), launcher=SimpleNamespace(launch=unexpected_launch),
+        )
+        assert result == {"response_required": False, "response_text": None}
+    after = artifact_journal.interaction_artifacts(task_id)
+    assert [entry["artifact_hash"] for entry in after[:len(before)]] == [entry["artifact_hash"] for entry in before]
+    assert len([entry for entry in after if entry["artifact_type"] == "FINAL_DISPOSITION"]) == 1
+    assert artifact_journal.verify_interaction_chain(task_id)["valid"]
+    assert load_scheduler(conn).tasks[task_id].status.value == "COMPLETED"
+    assert conn.execute(
+        "SELECT count(*) FROM events WHERE payload->>'record_kind' = 'situation_progress' "
+        "AND payload->'data'->>'snapshot_id' = %s", (snapshot_id,),
+    ).fetchone()[0] == 1
+    if failure_boundary == "progress":
+        # Retrying an older completed task must not roll back the latest head.
+        assert list_records(conn, "situation_progress") == progress_before_retry
+    assert len(list_records(conn, "action_execution")) == 1
 
 
 def test_situation_priority_cannot_override_memory_admission(conn):

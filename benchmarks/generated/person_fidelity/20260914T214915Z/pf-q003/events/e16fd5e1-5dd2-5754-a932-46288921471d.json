@@ -1,0 +1,27 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "6e82fbc5-ab73-524c-a313-94840dea527f",
+  "conversation_seq": 1,
+  "correlation_id": "413ecf80-f373-5d83-ab10-948a803464c9",
+  "event_id": "e16fd5e1-5dd2-5754-a932-46288921471d",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-14T21:51:16.874806+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-001",
+      "benchmark_version": "person-fidelity-public-baseline-v1",
+      "fixture_event_id": "pf-e018",
+      "occurred_at": "2025-05-09T12:05:00+00:00"
+    },
+    "entities": [
+      "grandmother",
+      "copper espresso maker",
+      "sentimental value"
+    ],
+    "text": "I keep repairing my grandmother's copper espresso maker even when a replacement would be cheaper. The morning ritual reminds me of her kitchen, so its value to me is not captured by the resale price."
+  },
+  "payload_text": "I keep repairing my grandmother's copper espresso maker even when a replacement would be cheaper. The morning ritual reminds me of her kitchen, so its value to me is not captured by the resale price.",
+  "record_hash": "c6572b3e84cc9fa2b359d180610ea362cd42ae2de954d1a9f0c4708408118d38",
+  "source": "user"
+}

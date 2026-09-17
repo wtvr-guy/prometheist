@@ -3,8 +3,8 @@
 ## Authority order
 
 1. [`../CONSTITUTION.md`](../CONSTITUTION.md)
-2. constitutional deep dives under [`architecture/`](architecture/) and
-   [`engineering/`](engineering/)
+2. constitutional deep dives under [`philosophy/`](philosophy/),
+   [`architecture/`](architecture/), and [`engineering/`](engineering/)
 3. current architecture documents
 4. active milestone records and [`ROADMAP.md`](ROADMAP.md)
 5. dated audits, experiments, and historical milestone records
@@ -12,6 +12,11 @@
 Historical text preserves evidence but cannot silently override a current authority.
 Adoption of a constitutional rule also does not imply that every implementation gap
 is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
+
+## Constitutional purpose and identity
+
+- [`philosophy/DIGITAL_SELFHOOD.md`](philosophy/DIGITAL_SELFHOOD.md) — Articles 1–6 and 28: imprinting, identity fidelity, first-person digital identity, autonomous agency, developmental stewardship, and personal continuity.
+- [`audits/CONSTITUTIONAL_AMENDMENT_2_0_2026-09-14.md`](audits/CONSTITUTIONAL_AMENDMENT_2_0_2026-09-14.md) — Constitution 2.0 decision record and version 1.1-to-2.0 article map.
 
 ## Current architecture
 
@@ -24,7 +29,7 @@ is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
 - [`architecture/IMMUTABLE_ARTIFACT_JOURNAL.md`](architecture/IMMUTABLE_ARTIFACT_JOURNAL.md) — independent append-only artifacts, interruption recovery, verification, and database reconstruction.
 - [`architecture/SYSTEM_DETERMINISM.md`](architecture/SYSTEM_DETERMINISM.md) — replayable control authority and prohibition on race-based durable decisions.
 - [`architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md) — attention/resource separation, headroom, preemption, guarded launch, recovery, and effects.
-- [`architecture/LOCAL_FIRST_PORTABILITY.md`](architecture/LOCAL_FIRST_PORTABILITY.md) — local ownership, replaceability, administrative operation, portability, and user sovereignty.
+- [`architecture/LOCAL_FIRST_PORTABILITY.md`](architecture/LOCAL_FIRST_PORTABILITY.md) — local ownership, replaceability, administrative operation, portability, developmental stewardship, and mature identity sovereignty.
 
 [`architecture/ARCHITECTURAL_PIVOT_2026-08-24.md`](architecture/ARCHITECTURAL_PIVOT_2026-08-24.md) is the dated decision record that retired permanent agents and conversation-scoped cognition. It remains explanatory history, not a newer authority than the v2 pipeline.
 
@@ -45,24 +50,32 @@ is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
 - [`audits/V07_REMOTE_BRANCH_INVENTORY_2026-09-03.md`](audits/V07_REMOTE_BRANCH_INVENTORY_2026-09-03.md) — remote-ref comparison, keep/delete classification, and deletion-tool blocker.
 - [`ROADMAP.md`](ROADMAP.md) — active v0.8 work and later candidate experiments.
 - [`audits/V08_CLOSURE_INTEGRATION_2026-09-12.md`](audits/V08_CLOSURE_INTEGRATION_2026-09-12.md) — change-by-change rationale, branch ancestry, research, tests, and remaining specification gap.
+- [`audits/COPILOT_AUDIT_REVIEW_2026-09-16.md`](audits/COPILOT_AUDIT_REVIEW_2026-09-16.md) — review of Copilot's documentation/type cleanup, situation-completion and artifact-recovery fixes, verified CI results, and separately recorded local-test report.
 - [`experiments/history/EPISTEMIC_WORKING_STATE_PROPOSAL_2026-09-03.md`](experiments/history/EPISTEMIC_WORKING_STATE_PROPOSAL_2026-09-03.md) — preserved earlier, unfrozen proposal; no longer the active v0.8 scope.
 
 ## Research and experiment evidence
 
 - [`concepts/lessons_from_cognitive_neuroscience.md`](concepts/lessons_from_cognitive_neuroscience.md) — mechanism-level research input; it motivates hypotheses but does not override experiments.
 - [`concepts/lessons_from_similar_projects.md`](concepts/lessons_from_similar_projects.md) — comparison with related cognitive and agent systems.
+- [`experiments/PERSON_FIDELITY_BASELINE.md`](experiments/PERSON_FIDELITY_BASELINE.md) — frozen public person-fidelity baseline with separate structural-provenance and human-semantic verdicts.
 - [`experiments/README.md`](experiments/README.md) — current disposition of preserved PR #22 Adaptive Memory Attention/Composer records.
 - [`audits/history/pr19/`](audits/history/pr19/) — preserved PR #19 red-team chronology with historical-status banners.
 
 Raw accepted benchmark/calibration results live under `../benchmarks/results/`.
-Ordinary `.prometheist/artifacts` runtime output stays local and ignored; reviewable
-evidence must be deliberately preserved with provenance and a tested revision.
+Since the [artifact visibility decision](audits/ARTIFACT_VISIBILITY_AND_RETENTION_2026-09-14.md),
+`.prometheist/artifacts` and `benchmarks/generated/` are deliberately Git-visible in this
+development repository, so checked-in journals must contain only synthetic or deliberately
+non-sensitive evidence. A deployment holding real personal history must point
+`PROMETHEIST_ARTIFACT_ROOT` outside the checkout. Preserved evidence still requires
+provenance and a tested revision.
 
 ## Historical architecture
 
 - [`history/PRIMARY_AGENT_SPEC_SHEET_V06.md`](history/PRIMARY_AGENT_SPEC_SHEET_V06.md)
 - [`milestones/v0.6/README.md`](milestones/v0.6/README.md)
 - [`milestones/v0.5/README.md`](milestones/v0.5/README.md)
+- [`architecture/MEMORY_KERNEL.md`](architecture/MEMORY_KERNEL.md) — v0.2 deterministic memory-kernel milestone record.
+- [`architecture/ASSOCIATIVE_MEMORY.md`](architecture/ASSOCIATIVE_MEMORY.md) — v0.3 associative-recall experiment record.
 
 Several dated v0.7 increment records describe intermediate implementations. Their
 headers identify them as historical/superseded where necessary. The live path never

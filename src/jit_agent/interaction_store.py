@@ -8,6 +8,7 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Json
 
 from jit_agent.attention_store import DEFAULT_SCHEDULER_KEY
+from jit_agent.db import require_row
 from jit_agent.interaction_contracts import DurableInteraction
 from jit_agent.perception import Percept, SalienceAssessment
 
@@ -69,7 +70,9 @@ def save_interaction(
                 """,
                 (scheduler_key, interaction.interaction_id),
             )
-            stored = _row_to_interaction(cur.fetchone())
+            stored = _row_to_interaction(
+                require_row(cur.fetchone(), context="stored durable interaction")
+            )
             if stored != interaction:
                 raise ValueError("conflicting durable interaction retry")
         conn.commit()

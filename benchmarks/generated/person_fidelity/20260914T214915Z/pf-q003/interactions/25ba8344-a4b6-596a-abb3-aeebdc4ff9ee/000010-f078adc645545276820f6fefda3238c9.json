@@ -1,0 +1,27 @@
+{
+  "artifact_hash": "21d6d6fd50b5cd38a9cb7ee894bcd2385da6e35d56c29a8e1abacdb833ddf9f3",
+  "artifact_id": "f078adc6-4554-5276-820f-6fefda3238c9",
+  "artifact_key": "stage-result:V2_RESPOND",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "ca3f478e-f651-5e12-84e5-210b9a64d444",
+  "conversation_id": "0ad7e7c2-e1fc-4b83-a83b-07e450a5446e",
+  "correlation_id": "f1d36ce6-e764-4b33-8779-fcfd5126911d",
+  "created_at": "2026-09-14T21:52:03.791220+00:00",
+  "interaction_id": "25ba8344-a4b6-596a-abb3-aeebdc4ff9ee",
+  "journal_sequence": 10,
+  "payload": {
+    "output": {
+      "response_required": true,
+      "response_text": "I used to believe that fully remote work was non-negotiable, because I prized uninterrupted focus and the freedom to arrange my day without an office watching the clock. I now prefer a hybrid model—three days in person per week—because it provides enough solitude for deep work and enough human contact to maintain my energy and judgment. What changed my mind was realizing that isolation has a real cost for me, even though I still value freedom.",
+      "skipped": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "1e2e82235a208cbc0f812998420fb03ae5db166567eabeb179da1bbf0c0cd23d",
+  "previous_artifact_hash": "2d06f13011689c406c2b5387d006cca81aa13d51c950e7696cee2d9cce56089f",
+  "previous_artifact_id": "1e0e4ee4-7f3c-5f8e-9b82-55f92dc2f5ad",
+  "producer": "percept_response_v2",
+  "stage": "V2_RESPOND",
+  "task_id": "bf1ee091-c1c3-506f-84c4-7693393c7f8d"
+}

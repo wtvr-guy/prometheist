@@ -299,10 +299,14 @@ def run_capability_discovery() -> dict[str, Any]:
         if mirrored_ids != case["ranked"]:
             hard_failures.append({"query": query, "reason": "benchmark mirror diverges from production"})
 
+    def _scaled(factor: float) -> tuple[float, float, float, float, float]:
+        first, second, third, fourth, fifth = baseline_coefficients
+        return (first * factor, second * factor, third * factor, fourth * factor, fifth * factor)
+
     coefficient_sets = (
         baseline_coefficients,
-        tuple(value * 0.5 for value in baseline_coefficients),
-        tuple(value * 2.0 for value in baseline_coefficients),
+        _scaled(0.5),
+        _scaled(2.0),
         (8.0, 2.0, 0.0, 2.0, 0.0),
         (4.0, 4.0, 0.5, 1.0, 0.1),
     )

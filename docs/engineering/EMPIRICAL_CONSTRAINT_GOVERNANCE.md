@@ -1,7 +1,7 @@
 # Empirical Constraint Governance
 
 **Status:** constitutional engineering deep dive.  
-**Constitutional authority:** primary engineering authority for Articles 23 and 24 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md). This document is subordinate to the Constitution where wording conflicts.
+**Constitutional authority:** primary engineering authority for Articles 29 and 30 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md). This document is subordinate to the Constitution where wording conflicts.
 
 ## Constitutional experimental method
 

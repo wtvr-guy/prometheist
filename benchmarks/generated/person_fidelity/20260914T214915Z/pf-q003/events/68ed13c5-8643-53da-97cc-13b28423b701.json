@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "0ad7e7c2-e1fc-4b83-a83b-07e450a5446e",
+  "conversation_seq": 5,
+  "correlation_id": "f1d36ce6-e764-4b33-8779-fcfd5126911d",
+  "event_id": "68ed13c5-8643-53da-97cc-13b28423b701",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-14T21:52:06.792439+00:00",
+  "payload": {
+    "text": "I used to believe that fully remote work was non-negotiable, because I prized uninterrupted focus and the freedom to arrange my day without an office watching the clock. I now prefer a hybrid model—three days in person per week—because it provides enough solitude for deep work and enough human contact to maintain my energy and judgment. What changed my mind was realizing that isolation has a real cost for me, even though I still value freedom."
+  },
+  "payload_text": "I used to believe that fully remote work was non-negotiable, because I prized uninterrupted focus and the freedom to arrange my day without an office watching the clock. I now prefer a hybrid model—three days in person per week—because it provides enough solitude for deep work and enough human contact to maintain my energy and judgment. What changed my mind was realizing that isolation has a real cost for me, even though I still value freedom.",
+  "record_hash": "7a12dca6e2974fdd3f4d469b9609c6168b7065b468315613bf2269c0dd6839d6",
+  "source": "percept_response_v2"
+}

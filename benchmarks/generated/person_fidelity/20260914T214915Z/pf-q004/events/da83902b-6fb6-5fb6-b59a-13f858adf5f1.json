@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "a4966e51-e55d-41c5-9d89-8e85229b29d3",
+  "conversation_seq": 5,
+  "correlation_id": "5a0b36f4-64ad-4d45-a679-75ff056d1c79",
+  "event_id": "da83902b-6fb6-5fb6-b59a-13f858adf5f1",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-14T21:52:59.212404+00:00",
+  "payload": {
+    "text": "You describe yourself as spontaneous, and that is accurate in the sense that you embrace spontaneity in situations that are low-stakes or flexible—like a free Saturday. However, your actual decision-making reveals a more nuanced pattern: you are not entirely spontaneous in all contexts. When it comes to expensive or hard-to-reverse commitments, you adopt a structured, deliberate process—using checklists, comparing options, and sleeping on decisions. This shows that your spontaneity is not a blanket trait, but rather a response to the nature of the situation. So, yes, you are spontaneous, but only in certain circumstances. You balance intuition with careful evaluation, which reflects a thoughtful, adaptive decision style rather than pure spontaneity."
+  },
+  "payload_text": "You describe yourself as spontaneous, and that is accurate in the sense that you embrace spontaneity in situations that are low-stakes or flexible—like a free Saturday. However, your actual decision-making reveals a more nuanced pattern: you are not entirely spontaneous in all contexts. When it comes to expensive or hard-to-reverse commitments, you adopt a structured, deliberate process—using checklists, comparing options, and sleeping on decisions. This shows that your spontaneity is not a blanket trait, but rather a response to the nature of the situation. So, yes, you are spontaneous, but only in certain circumstances. You balance intuition with careful evaluation, which reflects a thoughtful, adaptive decision style rather than pure spontaneity.",
+  "record_hash": "c9ac0c4f99191794f91552db612bbec6ff604a815dfd4e61706c51006b2f8d34",
+  "source": "percept_response_v2"
+}
