@@ -56,6 +56,11 @@ jobs:
           uv run python scripts/audit_constraints.py --fail-unregistered
           uv run python benchmarks/run_person_fidelity_baseline.py --validate-only
 
+      - name: Verify retained person-fidelity artifacts
+        run: >-
+          uv run python benchmarks/run_person_fidelity_baseline.py
+          --verify-result benchmarks/results/PERSON-FIDELITY-001_2026-09-16_215839.json
+
       - name: Run deterministic constraint calibration
         run: uv run python benchmarks/run_deterministic_constraints.py
 

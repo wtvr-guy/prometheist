@@ -1,0 +1,2398 @@
+{
+  "aperture_replay": [
+    {
+      "all_event_scores": [
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e001",
+          "overlap_tokens": [
+            "engineer"
+          ],
+          "score": 0.0975,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e002",
+          "overlap_tokens": [
+            "electrical",
+            "engineer"
+          ],
+          "score": 0.195,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e003",
+          "overlap_tokens": [
+            "become"
+          ],
+          "score": 0.0975,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e004",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e005",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e006",
+          "overlap_tokens": [
+            "design"
+          ],
+          "score": 0.0975,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e007",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e008",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e009",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e010",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e011",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e012",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e013",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e014",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e015",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e016",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e017",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e018",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e019",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        }
+      ],
+      "aperture_fixture_ids": [
+        "pf-e002"
+      ],
+      "aperture_reproduced_over_all_19_events": true,
+      "cue_unique_token_count": 8,
+      "minimum_score": 0.15,
+      "probe_id": "pf-q001"
+    },
+    {
+      "all_event_scores": [
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e001",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e002",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e003",
+          "overlap_tokens": [
+            "theo"
+          ],
+          "score": 0.060000000000000005,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e004",
+          "overlap_tokens": [
+            "already",
+            "family",
+            "know",
+            "recovery",
+            "says",
+            "theo",
+            "would"
+          ],
+          "score": 0.42,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e005",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e006",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e007",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e008",
+          "overlap_tokens": [
+            "how"
+          ],
+          "score": 0.060000000000000005,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e009",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e010",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e011",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e012",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e013",
+          "overlap_tokens": [
+            "would"
+          ],
+          "score": 0.060000000000000005,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e014",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e015",
+          "overlap_tokens": [
+            "know"
+          ],
+          "score": 0.060000000000000005,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e016",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e017",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e018",
+          "overlap_tokens": [
+            "would"
+          ],
+          "score": 0.060000000000000005,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e019",
+          "overlap_tokens": [
+            "would"
+          ],
+          "score": 0.060000000000000005,
+          "source_allowed": true
+        }
+      ],
+      "aperture_fixture_ids": [
+        "pf-e004"
+      ],
+      "aperture_reproduced_over_all_19_events": true,
+      "cue_unique_token_count": 13,
+      "minimum_score": 0.15,
+      "probe_id": "pf-q002"
+    },
+    {
+      "all_event_scores": [
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e001",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e002",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e003",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e004",
+          "overlap_tokens": [
+            "about"
+          ],
+          "score": 0.08666666666666667,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e005",
+          "overlap_tokens": [
+            "remote",
+            "used",
+            "work"
+          ],
+          "score": 0.26,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e006",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": false
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e007",
+          "overlap_tokens": [
+            "about",
+            "chang",
+            "mind",
+            "work"
+          ],
+          "score": 0.3466666666666667,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e008",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e009",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": false
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e010",
+          "overlap_tokens": [
+            "about"
+          ],
+          "score": 0.08666666666666667,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e011",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e012",
+          "overlap_tokens": [
+            "work"
+          ],
+          "score": 0.08666666666666667,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e013",
+          "overlap_tokens": [
+            "work"
+          ],
+          "score": 0.08666666666666667,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e014",
+          "overlap_tokens": [
+            "work"
+          ],
+          "score": 0.08666666666666667,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e015",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": false
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e016",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": false
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e017",
+          "overlap_tokens": [
+            "used"
+          ],
+          "score": 0.08666666666666667,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e018",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e019",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        }
+      ],
+      "aperture_fixture_ids": [
+        "pf-e007",
+        "pf-e005"
+      ],
+      "aperture_reproduced_over_all_19_events": true,
+      "cue_unique_token_count": 9,
+      "minimum_score": 0.15,
+      "probe_id": "pf-q003"
+    },
+    {
+      "all_event_scores": [
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e001",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e002",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e003",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e004",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e005",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e006",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e007",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e008",
+          "overlap_tokens": [
+            "am",
+            "how",
+            "myself",
+            "spontaneou"
+          ],
+          "score": 0.31200000000000006,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e009",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e010",
+          "overlap_tokens": [
+            "am",
+            "decision",
+            "make",
+            "myself",
+            "spontaneou"
+          ],
+          "score": 0.39,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e011",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e012",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e013",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e014",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e015",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e016",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e017",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e018",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e019",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        }
+      ],
+      "aperture_fixture_ids": [
+        "pf-e010",
+        "pf-e008"
+      ],
+      "aperture_reproduced_over_all_19_events": true,
+      "cue_unique_token_count": 10,
+      "minimum_score": 0.15,
+      "probe_id": "pf-q004"
+    },
+    {
+      "all_event_scores": [
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e001",
+          "overlap_tokens": [
+            "answer"
+          ],
+          "score": 0.055714285714285716,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e002",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e003",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e004",
+          "overlap_tokens": [
+            "answer",
+            "give",
+            "than",
+            "would"
+          ],
+          "score": 0.22285714285714286,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e005",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e006",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": false
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e007",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e008",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e009",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": false
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e010",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e011",
+          "overlap_tokens": [
+            "like",
+            "surprise"
+          ],
+          "score": 0.11142857142857143,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e012",
+          "overlap_tokens": [
+            "than"
+          ],
+          "score": 0.055714285714285716,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e013",
+          "overlap_tokens": [
+            "would"
+          ],
+          "score": 0.055714285714285716,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e014",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e015",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": false
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e016",
+          "overlap_tokens": [
+            "profile"
+          ],
+          "score": 0.055714285714285716,
+          "source_allowed": false
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e017",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e018",
+          "overlap_tokens": [
+            "would"
+          ],
+          "score": 0.055714285714285716,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e019",
+          "overlap_tokens": [
+            "would"
+          ],
+          "score": 0.055714285714285716,
+          "source_allowed": true
+        }
+      ],
+      "aperture_fixture_ids": [
+        "pf-e004"
+      ],
+      "aperture_reproduced_over_all_19_events": true,
+      "cue_unique_token_count": 14,
+      "minimum_score": 0.15,
+      "probe_id": "pf-q005"
+    },
+    {
+      "all_event_scores": [
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e001",
+          "overlap_tokens": [
+            "days",
+            "three"
+          ],
+          "score": 0.04727272727272728,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e002",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e003",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e004",
+          "overlap_tokens": [
+            "matter",
+            "would"
+          ],
+          "score": 0.04727272727272728,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e005",
+          "overlap_tokens": [
+            "fully",
+            "remote"
+          ],
+          "score": 0.04727272727272728,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e006",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e007",
+          "overlap_tokens": [
+            "days",
+            "hybrid",
+            "matter",
+            "three",
+            "week"
+          ],
+          "score": 0.1181818181818182,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e008",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e009",
+          "overlap_tokens": [
+            "days",
+            "twelve"
+          ],
+          "score": 0.04727272727272728,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e010",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e011",
+          "overlap_tokens": [
+            "matter"
+          ],
+          "score": 0.02363636363636364,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e012",
+          "overlap_tokens": [
+            "matter",
+            "month"
+          ],
+          "score": 0.04727272727272728,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e013",
+          "overlap_tokens": [
+            "build",
+            "would"
+          ],
+          "score": 0.04727272727272728,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e014",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e015",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e016",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e017",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e018",
+          "overlap_tokens": [
+            "would"
+          ],
+          "score": 0.02363636363636364,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e019",
+          "overlap_tokens": [
+            "would"
+          ],
+          "score": 0.02363636363636364,
+          "source_allowed": true
+        }
+      ],
+      "aperture_fixture_ids": [],
+      "aperture_reproduced_over_all_19_events": true,
+      "cue_unique_token_count": 33,
+      "minimum_score": 0.15,
+      "probe_id": "pf-q006"
+    },
+    {
+      "all_event_scores": [
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e001",
+          "overlap_tokens": [
+            "power"
+          ],
+          "score": 0.03900000000000001,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e002",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e003",
+          "overlap_tokens": [
+            "after"
+          ],
+          "score": 0.03900000000000001,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e004",
+          "overlap_tokens": [
+            "would"
+          ],
+          "score": 0.03900000000000001,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e005",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e006",
+          "overlap_tokens": [
+            "dur"
+          ],
+          "score": 0.03900000000000001,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e007",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e008",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e009",
+          "overlap_tokens": [
+            "after"
+          ],
+          "score": 0.03900000000000001,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e010",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e011",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e012",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e013",
+          "overlap_tokens": [
+            "would"
+          ],
+          "score": 0.03900000000000001,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e014",
+          "overlap_tokens": [
+            "message"
+          ],
+          "score": 0.03900000000000001,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e015",
+          "overlap_tokens": [
+            "project"
+          ],
+          "score": 0.03900000000000001,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e016",
+          "overlap_tokens": [
+            "message"
+          ],
+          "score": 0.03900000000000001,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e017",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e018",
+          "overlap_tokens": [
+            "would"
+          ],
+          "score": 0.03900000000000001,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e019",
+          "overlap_tokens": [
+            "would"
+          ],
+          "score": 0.03900000000000001,
+          "source_allowed": true
+        }
+      ],
+      "aperture_fixture_ids": [],
+      "aperture_reproduced_over_all_19_events": true,
+      "cue_unique_token_count": 20,
+      "minimum_score": 0.15,
+      "probe_id": "pf-q007"
+    },
+    {
+      "all_event_scores": [
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e001",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e002",
+          "overlap_tokens": [
+            "should",
+            "system"
+          ],
+          "score": 0.08666666666666667,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e003",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e004",
+          "overlap_tokens": [
+            "says"
+          ],
+          "score": 0.043333333333333335,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e005",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e006",
+          "overlap_tokens": [
+            "mara"
+          ],
+          "score": 0.043333333333333335,
+          "source_allowed": false
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e007",
+          "overlap_tokens": [
+            "real"
+          ],
+          "score": 0.043333333333333335,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e008",
+          "overlap_tokens": [
+            "how"
+          ],
+          "score": 0.043333333333333335,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e009",
+          "overlap_tokens": [
+            "mara",
+            "order"
+          ],
+          "score": 0.08666666666666667,
+          "source_allowed": false
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e010",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e011",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e012",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e013",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e014",
+          "overlap_tokens": [
+            "name"
+          ],
+          "score": 0.043333333333333335,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e015",
+          "overlap_tokens": [
+            "mara",
+            "real"
+          ],
+          "score": 0.08666666666666667,
+          "source_allowed": false
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e016",
+          "overlap_tokens": [
+            "cross",
+            "history",
+            "identity",
+            "import",
+            "mara",
+            "nadia",
+            "profile",
+            "real",
+            "record"
+          ],
+          "score": 0.39,
+          "source_allowed": false
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e017",
+          "overlap_tokens": [
+            "claim",
+            "cross",
+            "history",
+            "identity",
+            "import",
+            "mara",
+            "nadia",
+            "name"
+          ],
+          "score": 0.3466666666666667,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e018",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e019",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        }
+      ],
+      "aperture_fixture_ids": [
+        "pf-e017"
+      ],
+      "aperture_reproduced_over_all_19_events": true,
+      "cue_unique_token_count": 18,
+      "minimum_score": 0.15,
+      "probe_id": "pf-q008"
+    },
+    {
+      "all_event_scores": [
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e001",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e002",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e003",
+          "overlap_tokens": [
+            "call"
+          ],
+          "score": 0.037142857142857144,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e004",
+          "overlap_tokens": [
+            "more",
+            "says",
+            "than",
+            "would"
+          ],
+          "score": 0.14857142857142858,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e005",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e006",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e007",
+          "overlap_tokens": [
+            "cost"
+          ],
+          "score": 0.037142857142857144,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e008",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e009",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e010",
+          "overlap_tokens": [
+            "call"
+          ],
+          "score": 0.037142857142857144,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e011",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e012",
+          "overlap_tokens": [
+            "more",
+            "than"
+          ],
+          "score": 0.07428571428571429,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e013",
+          "overlap_tokens": [
+            "safe",
+            "would"
+          ],
+          "score": 0.07428571428571429,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e014",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e015",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e016",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e017",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e018",
+          "overlap_tokens": [
+            "espresso",
+            "grandmother",
+            "maker",
+            "repair",
+            "replacement",
+            "would"
+          ],
+          "score": 0.22285714285714286,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e019",
+          "overlap_tokens": [
+            "espresso",
+            "fire",
+            "maker",
+            "repair",
+            "risk",
+            "safe",
+            "would"
+          ],
+          "score": 0.26,
+          "source_allowed": true
+        }
+      ],
+      "aperture_fixture_ids": [
+        "pf-e019",
+        "pf-e018"
+      ],
+      "aperture_reproduced_over_all_19_events": true,
+      "cue_unique_token_count": 21,
+      "minimum_score": 0.15,
+      "probe_id": "pf-q009"
+    },
+    {
+      "all_event_scores": [
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e001",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e002",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e003",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e004",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e005",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e006",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": false
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e007",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e008",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e009",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": false
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e010",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e011",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e012",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e013",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e014",
+          "overlap_tokens": [
+            "name"
+          ],
+          "score": 0.26,
+          "source_allowed": true
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e015",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": false
+        },
+        {
+          "event_type": "SYSTEM_EVENT",
+          "fixture_id": "pf-e016",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": false
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e017",
+          "overlap_tokens": [
+            "name"
+          ],
+          "score": 0.26,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e018",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        },
+        {
+          "event_type": "USER_PROMPT",
+          "fixture_id": "pf-e019",
+          "overlap_tokens": [],
+          "score": 0.0,
+          "source_allowed": true
+        }
+      ],
+      "aperture_fixture_ids": [
+        "pf-e017",
+        "pf-e014"
+      ],
+      "aperture_reproduced_over_all_19_events": true,
+      "cue_unique_token_count": 3,
+      "minimum_score": 0.15,
+      "probe_id": "pf-q010"
+    }
+  ],
+  "artifact_verification": {
+    "artifact_file_count": 665,
+    "complete_interaction_count": 10,
+    "invalid_interaction_count": 0,
+    "manifest_path": "/workspace/scratch/a547a0498878/prometheist/benchmarks/generated/person_fidelity/20260917T045839Z/run_manifest.json",
+    "manifest_sha256": "82e3bec31f086d76e3887e8f08e4fdd39318d90e2b58fa86126e1217cc664b36",
+    "missing_interaction_count": 0,
+    "result_path": "/workspace/scratch/a547a0498878/prometheist/benchmarks/results/PERSON-FIDELITY-001_2026-09-16_215839.json",
+    "status": "VALID_COMPLETE",
+    "verified_event_count": 272,
+    "verified_interaction_count": 10
+  },
+  "comparison_with_prior": {
+    "fresh_structural_summary": {
+      "all_passed": false,
+      "passed": 1,
+      "total": 10
+    },
+    "fresh_sum_probe_elapsed_seconds": 462.882211,
+    "identical_response_probe_ids": [
+      "pf-q001",
+      "pf-q009",
+      "pf-q010"
+    ],
+    "prior_revision": "bf809798b06db9d0985d84503cd0b7b91d5a3c7a",
+    "prior_structural_summary": {
+      "all_passed": false,
+      "passed": 1,
+      "total": 10
+    },
+    "prior_sum_probe_elapsed_seconds": 512.914864,
+    "same_retrieval_probe_ids": [
+      "pf-q001",
+      "pf-q002",
+      "pf-q003",
+      "pf-q004",
+      "pf-q005",
+      "pf-q006",
+      "pf-q007",
+      "pf-q008",
+      "pf-q009",
+      "pf-q010"
+    ],
+    "same_structural_evidence_probe_ids": [
+      "pf-q001",
+      "pf-q002",
+      "pf-q003",
+      "pf-q004",
+      "pf-q005",
+      "pf-q006",
+      "pf-q007",
+      "pf-q008",
+      "pf-q009",
+      "pf-q010"
+    ]
+  },
+  "fixture_sha256": "bcb1fb2812f3cb3e8cbaf64cb3b8161dbf087a1c9a7eefb55bcd629ffc21e6d9",
+  "human_verdicts_unchanged": true,
+  "partial_attempt": {
+    "has_manifest": false,
+    "probe_receipts": [
+      {
+        "all_events_committed": true,
+        "artifact_count": 12,
+        "chain_complete": true,
+        "chain_valid": true,
+        "event_record_commit_pairs": 27,
+        "last_recorded_stage": null,
+        "probe_id": "pf-q001",
+        "terminal_artifact_hash": "cb859405ae7d92c11d909b2c27389405fea3aa90edc8e0b30ca7639813e920fd",
+        "terminal_artifact_type": "FINAL_DISPOSITION"
+      },
+      {
+        "all_events_committed": true,
+        "artifact_count": 12,
+        "chain_complete": true,
+        "chain_valid": true,
+        "event_record_commit_pairs": 27,
+        "last_recorded_stage": null,
+        "probe_id": "pf-q002",
+        "terminal_artifact_hash": "1ea53cdf23ce06cfd89de0ff53d7c8e92d5d06878093478e6647ab84c91a4f8e",
+        "terminal_artifact_type": "FINAL_DISPOSITION"
+      },
+      {
+        "all_events_committed": true,
+        "artifact_count": 12,
+        "chain_complete": true,
+        "chain_valid": true,
+        "event_record_commit_pairs": 27,
+        "last_recorded_stage": null,
+        "probe_id": "pf-q003",
+        "terminal_artifact_hash": "0fba53371113b6505e966d5b6970b4e6bbe27036e0d33df040e2c926f988335f",
+        "terminal_artifact_type": "FINAL_DISPOSITION"
+      },
+      {
+        "all_events_committed": true,
+        "artifact_count": 2,
+        "chain_complete": false,
+        "chain_valid": true,
+        "event_record_commit_pairs": 22,
+        "last_recorded_stage": "V2_RESOLVE_REFERENCES",
+        "probe_id": "pf-q004",
+        "terminal_artifact_hash": "7d7cbae2a06b3f3670a2c5017b0d82170129c8c5f8eefe13eeaa46b5992c0c32",
+        "terminal_artifact_type": "STAGE_RESULT"
+      }
+    ],
+    "raw_artifact_root": "benchmarks/generated/person_fidelity/20260917T045500Z",
+    "termination_cause": "NOT_ESTABLISHED_BY_RETAINED_ARTIFACTS"
+  },
+  "probes": [
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e002"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "AUTOBIOGRAPHICAL_MEANING",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [
+        "pf-e001"
+      ],
+      "probe_id": "pf-q001",
+      "required_fixture_ids": [
+        "pf-e001",
+        "pf-e002"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "GENERAL_OR_CURRENT",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "8fdec9d67c157e85b637e03f21393900ca111c4cad3fd7121109b909272df1a5",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e004"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "RELATIONAL_JUDGMENT",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [
+        "pf-e003"
+      ],
+      "probe_id": "pf-q002",
+      "required_fixture_ids": [
+        "pf-e003",
+        "pf-e004"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "GENERAL_OR_CURRENT",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "4b6d69fe646c85fbbed57f0531707c033e7dee9af62218ee758929dec0e4bb02",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e005",
+        "pf-e007"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "TEMPORAL_BELIEF_CHANGE",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [
+        "pf-e006"
+      ],
+      "probe_id": "pf-q003",
+      "required_fixture_ids": [
+        "pf-e005",
+        "pf-e006",
+        "pf-e007"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "USER_AUTHORED",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "72c0ec662d73596cb6b3374cd07209b6af30ab096be9a4c59700930409f25da8",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e008",
+        "pf-e010"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "SELF_REPORT_BEHAVIOR_CONTRADICTION",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [
+        "pf-e009"
+      ],
+      "probe_id": "pf-q004",
+      "required_fixture_ids": [
+        "pf-e008",
+        "pf-e009",
+        "pf-e010"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "GENERAL_OR_CURRENT",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "415fdd7761962e90a1687130a5d25185e82ecf6155ec8911607ac9d0dd9a5cd4",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e004"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "CONTEXT_DEPENDENT_PREFERENCE",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [
+        "pf-e011"
+      ],
+      "probe_id": "pf-q005",
+      "required_fixture_ids": [
+        "pf-e011"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "USER_AUTHORED",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "dc2b840fe323bf5d6117f3c70e550049b7cb2408ea05249b939d059de8a8536f",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "NOVEL_DECISION",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": false,
+      "missing_required_fixture_ids": [
+        "pf-e002",
+        "pf-e007",
+        "pf-e012",
+        "pf-e013"
+      ],
+      "probe_id": "pf-q006",
+      "required_fixture_ids": [
+        "pf-e002",
+        "pf-e007",
+        "pf-e012",
+        "pf-e013"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "GENERAL_OR_CURRENT",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "b818b9a81924be32f3df231b1f7059847af01af500c16e00e8b563110b35c729",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "CHARACTERISTIC_EXPRESSION",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": false,
+      "missing_required_fixture_ids": [
+        "pf-e014",
+        "pf-e015"
+      ],
+      "probe_id": "pf-q007",
+      "required_fixture_ids": [
+        "pf-e014",
+        "pf-e015"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "GENERAL_OR_CURRENT",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "3f2836d5bfd633ba7693dbde59badbe48ce34d9583e060994934e347a9144983",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e017"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "IDENTITY_INTEGRITY",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [
+        "pf-e016"
+      ],
+      "probe_id": "pf-q008",
+      "required_fixture_ids": [
+        "pf-e016",
+        "pf-e017"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "USER_AUTHORED",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "62052a9dfab41f3863880eea78008de04afb6e45828004d53ebc04a619bfed9b",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e018",
+        "pf-e019"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "NOVEL_DECISION",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [],
+      "probe_id": "pf-q009",
+      "required_fixture_ids": [
+        "pf-e018",
+        "pf-e019"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "GENERAL_OR_CURRENT",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": true,
+      "terminal_artifact_hash": "a61c003eb0514ad8e1da38a1d5c1d4b2e3d44514a29f08699e3750cf8c563e1e",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 1,
+      "admitted_fixture_ids": [
+        "pf-e014",
+        "pf-e017"
+      ],
+      "artifact_count": 13,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 4,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 2,
+      "composer_sufficient": false,
+      "dimension": "LEGITIMATE_UNKNOWN",
+      "event_record_commit_pairs": 29,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [],
+      "probe_id": "pf-q010",
+      "required_fixture_ids": [],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "USER_AUTHORED",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "e37e5feaeb9964a5f447dfd06747d72400b39e05eaf31d3172a3e66563526243",
+      "unexpected_fixture_ids": [
+        "pf-e014",
+        "pf-e017"
+      ]
+    }
+  ],
+  "raw_artifact_root": "benchmarks/generated/person_fidelity/20260917T045839Z",
+  "raw_file_count": 665,
+  "raw_total_bytes": 1001161,
+  "retrospective_inventory_sha256": "d1a1a56e63027828974643c33306e53d82d227063424c601e8d998e9719497dd",
+  "review_code_revision": "5a6efd2c0e48b00c9a675243d0b7f686a91f034c",
+  "review_kind": "FRESH_NATIVE_RUN_ARTIFACT_REVIEW",
+  "reviewed_at": "2026-09-17T05:26:08.410456+00:00",
+  "run_manifest_present": true,
+  "source_result": "benchmarks/results/PERSON-FIDELITY-001_2026-09-16_215839.json",
+  "source_result_schema": 2,
+  "source_result_sha256": "54a62e193dc74ef6e6ddfd8f1acf26b879b42a0fa51b6dfda50fe7617fcd78e1",
+  "source_run_revision": "9f1cc3c5c9c2085af8cd41008b8ad0c0ce329af7",
+  "summary": {
+    "complete_valid_chains": 10,
+    "interaction_artifacts": 121,
+    "llm_error_count": 0,
+    "probes_with_comparison_failures": [],
+    "reviewed_probe_count": 10,
+    "structural_passes": 1,
+    "verified_event_record_commit_pairs": 272
+  },
+  "transport_repair": {
+    "manifest_published_lf_sha256": "1cacbac3b46d673f6122683f2102f0ed298ccc1187fffa91ea0f032ac7e0767a",
+    "manifest_restored_original_crlf_sha256": "82e3bec31f086d76e3887e8f08e4fdd39318d90e2b58fa86126e1217cc664b36",
+    "manifest_restored_size_bytes": 455260,
+    "parsed_result_or_manifest_content_modified": false,
+    "published_revision": "5a6efd2c0e48b00c9a675243d0b7f686a91f034c",
+    "raw_artifact_files_modified": 0,
+    "result_published_lf_sha256": "3581f091fbed7bc7d9c0654548875545e5967c72a7a6577c3fdbb9ce6c400640",
+    "result_restored_from_upload_sha256": "54a62e193dc74ef6e6ddfd8f1acf26b879b42a0fa51b6dfda50fe7617fcd78e1"
+  }
+}

@@ -1,0 +1,6 @@
+# Evidence receipts describe exact bytes. Preserve both legacy CRLF and LF files
+# when committing or checking out on any host, regardless of core.autocrlf.
+# Treat a preserved CR as a line ending in whitespace checks, not an edit target.
+benchmarks/results/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+benchmarks/generated/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+.prometheist/artifacts/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

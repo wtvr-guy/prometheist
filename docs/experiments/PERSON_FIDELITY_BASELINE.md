@@ -1,17 +1,20 @@
 # PERSON-FIDELITY-001 — Public Person-Fidelity Baseline
 
-**Status:** frozen public fixture. A first native structural baseline was captured on
-2026-09-14 at revision `bf80979`
-([recorded result](../../benchmarks/results/PERSON-FIDELITY-001_2026-09-14_144915.json)):
-1 of 10 probes passed the structural evidence contract and all human verdicts remain
-`PENDING`. That run is schema v1 and has no `run_manifest.json`, so the offline
-verification below does not apply to it; a schema-v2 re-run is required.
+**Status:** frozen public fixture with a verified schema-v2 native baseline captured
+at revision `9f1cc3c` on 2026-09-17 UTC
+([result](../../benchmarks/results/PERSON-FIDELITY-001_2026-09-16_215839.json)).
+**1 of 10 probes passes the structural evidence contract**; all human verdicts
+remain `PENDING`. The complete 665-file journal verifies offline after lossless
+restoration of the manifest's Windows line endings. The
+[fresh-run review](../audits/PERSON_FIDELITY_FRESH_REVIEW_2026-09-17.md) records that
+transport correction, per-probe response assessments, and deterministic replay
+of the evidence-selection failures.
 
-The [2026-09-17 artifact review](../audits/PERSON_FIDELITY_ARTIFACT_REVIEW_2026-09-17.md)
-verified the retained event pairs, interaction chains, and response receipts and
-reproduced the original 1/10 structural result. A fresh attempt on merged `main`
-stopped before execution because the review host lacked the PostgreSQL/Ollama
-configuration. This retrospective check does not replace the required new run.
+The first [2026-09-14 result](../../benchmarks/results/PERSON-FIDELITY-001_2026-09-14_144915.json)
+at `bf80979` remains preserved: schema v1, the same 1/10 structural score, and no
+run manifest. The [earlier review](../audits/PERSON_FIDELITY_ARTIFACT_REVIEW_2026-09-17.md)
+records its retrospective checks and the review host's initially blocked attempt;
+Mike subsequently executed and published the fresh native run above.
 
 **Fixture:** [`../../benchmarks/person_fidelity_public_v1.json`](../../benchmarks/person_fidelity_public_v1.json)
 

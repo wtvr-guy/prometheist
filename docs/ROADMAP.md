@@ -119,18 +119,18 @@ semantic acceptance remain bounded by the evidence described here.
 
 ## Cross-milestone measurement — public person-fidelity baseline
 
-**Status:** `PERSON-FIDELITY-001` fixture and runner frozen. A first native structural
-baseline was captured on 2026-09-14 at revision `bf80979`
-([recorded result](../benchmarks/results/PERSON-FIDELITY-001_2026-09-14_144915.json)):
-**1 of 10 probes satisfied the frozen structural evidence contract**, and every human
-fidelity verdict remains `PENDING`. That run predates the schema-v2 manifest
-requirement, so it cannot yet be verified offline and must be re-run before it can be
-treated as the reproducible baseline.
+**Status:** `PERSON-FIDELITY-001` fixture is frozen and a schema-v2 native baseline
+is captured at `9f1cc3c` on 2026-09-17 UTC
+([result](../benchmarks/results/PERSON-FIDELITY-001_2026-09-16_215839.json)).
+**1 of 10 probes satisfies the frozen structural evidence contract**; every human
+fidelity verdict remains `PENDING`. All 665 raw artifacts and ten complete chains
+verify after lossless repair of a Git line-ending conversion in the manifest.
 
-The [2026-09-17 review](audits/PERSON_FIDELITY_ARTIFACT_REVIEW_2026-09-17.md)
-verified all ten retained interaction chains and reproduced that structural score.
-Its fresh-run attempt on consolidated `main` was blocked before any probe ran by
-the unavailable benchmark database/runtime; no new fidelity result is claimed.
+The [fresh review](audits/PERSON_FIDELITY_FRESH_REVIEW_2026-09-17.md) localizes the
+repeated failures to lexical relevance, premature memory-sufficiency decisions,
+and source-policy selection. It preserves the first schema-v1 result at `bf80979`
+and an incomplete intervening attempt. A valid artifact bundle establishes the
+negative baseline; it does not establish satisfactory person fidelity.
 
 Before introducing a person-model mechanism, Prometheist must record what the
 unmodified persistent/stateless architecture can already do with longitudinal life

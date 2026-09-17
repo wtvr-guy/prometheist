@@ -8,6 +8,13 @@ mirrors and hash-linked interaction artifacts produced by the production
 percept-to-response pipeline. A completed run also writes `run_manifest.json`
 with a SHA-256 inventory and per-probe chain receipts.
 
+Git attributes preserve these files byte-for-byte, including historical Windows
+CRLF endings. Do not run line-ending normalization or JSON reformatting over a
+captured bundle: the manifest receipts cover its original bytes. New native
+manifests and results use explicit UTF-8/LF output on every platform. See the
+[fresh-run review](../../../docs/audits/PERSON_FIDELITY_FRESH_REVIEW_2026-09-17.md)
+for the hash-proven restoration of the first schema-v2 manifest after transport.
+
 These records are permanent, append-only benchmark evidence. Do not delete or
 rewrite a prior run because it failed or because a later implementation performs
 better. Raw outputs may eventually support LoRA, preference, or evaluator

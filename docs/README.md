@@ -59,6 +59,7 @@ is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
 - [`concepts/lessons_from_similar_projects.md`](concepts/lessons_from_similar_projects.md) — comparison with related cognitive and agent systems.
 - [`experiments/PERSON_FIDELITY_BASELINE.md`](experiments/PERSON_FIDELITY_BASELINE.md) — frozen public person-fidelity baseline with separate structural-provenance and human-semantic verdicts.
 - [`audits/PERSON_FIDELITY_ARTIFACT_REVIEW_2026-09-17.md`](audits/PERSON_FIDELITY_ARTIFACT_REVIEW_2026-09-17.md) — completed main integration, blocked fresh-run attempt, and read-only review of all retained baseline artifacts and responses.
+- [`audits/PERSON_FIDELITY_FRESH_REVIEW_2026-09-17.md`](audits/PERSON_FIDELITY_FRESH_REVIEW_2026-09-17.md) — verified fresh schema-v2 native run, exact-byte Git transport correction, per-probe response review, and replayed evidence-selection failures.
 - [`experiments/README.md`](experiments/README.md) — current disposition of preserved PR #22 Adaptive Memory Attention/Composer records.
 - [`audits/history/pr19/`](audits/history/pr19/) — preserved PR #19 red-team chronology with historical-status banners.
 

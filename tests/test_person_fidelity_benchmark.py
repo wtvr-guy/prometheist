@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 from uuid import uuid4
 
@@ -238,6 +239,63 @@ def test_native_result_writer_never_overwrites_prior_evidence(tmp_path):
         native_runner._write_result(path, {"result": "replacement"})
 
     assert json.loads(path.read_text(encoding="utf-8")) == {"result": "baseline"}
+
+
+def test_native_result_writer_preserves_utf8_lf_with_windows_text_defaults(
+    tmp_path, monkeypatch,
+):
+    original_open = Path.open
+
+    def windows_text_open(path, mode="r", *args, **kwargs):
+        if "b" not in mode and any(flag in mode for flag in "wax"):
+            kwargs.setdefault("newline", "\r\n")
+        return original_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", windows_text_open)
+    path = tmp_path / "result.json"
+    native_runner._write_result(path, {"response": "café"})
+
+    assert path.read_bytes() == '{\n  "response": "café"\n}\n'.encode("utf-8")
+
+
+def test_git_round_trip_preserves_legacy_and_new_evidence_bytes(tmp_path):
+    repository = tmp_path / "repository"
+    repository.mkdir()
+
+    def git(*args):
+        return subprocess.run(
+            ["git", *args], cwd=repository, check=True, capture_output=True,
+        ).stdout
+
+    git("init", "--quiet")
+    (repository / ".gitattributes").write_bytes((ROOT / ".gitattributes").read_bytes())
+    paths = [
+        "benchmarks/results/PERSON-FIDELITY-001_example.json",
+        "benchmarks/generated/person_fidelity/example/run_manifest.json",
+        "benchmarks/generated/person_fidelity/example/pf-q001/events/event.json",
+        ".prometheist/artifacts/interactions/example/artifact.json",
+    ]
+    expected = {}
+    for index, relative in enumerate(paths):
+        newline = b"\r\n" if index < 2 else b"\n"
+        raw = b'{\n  "fixture": "caf\xc3\xa9"\n}\n'.replace(b"\n", newline)
+        path = repository / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(raw)
+        expected[relative] = raw
+
+    git("-c", "core.autocrlf=true", "add", ".")
+    for relative, raw in expected.items():
+        assert git("show", f":{relative}") == raw
+
+    for setting in ("true", "false"):
+        checkout = tmp_path / f"checkout-{setting}"
+        git(
+            "-c", f"core.autocrlf={setting}", "checkout-index", "--all",
+            f"--prefix={checkout.as_posix()}/",
+        )
+        for relative, raw in expected.items():
+            assert (checkout / relative).read_bytes() == raw
 
 
 def test_benchmark_and_test_runtime_artifacts_are_git_visible():

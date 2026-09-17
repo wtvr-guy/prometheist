@@ -396,10 +396,12 @@ def _validation_summary(corpus: PersonFidelityCorpus) -> dict[str, Any]:
 
 def _write_result(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("x", encoding="utf-8") as handle:
-        handle.write(
-            json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
-        )
+    # Match raw journals: explicit UTF-8/LF bytes avoid Windows text translation.
+    encoded = (
+        json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+    ).encode("utf-8")
+    with path.open("xb") as handle:
+        handle.write(encoded)
         handle.flush()
         os.fsync(handle.fileno())
 
