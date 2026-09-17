@@ -1,0 +1,115 @@
+{
+  "artifact_hash": "4b6d69fe646c85fbbed57f0531707c033e7dee9af62218ee758929dec0e4bb02",
+  "artifact_id": "fe86ca36-2d80-5869-9a3a-49f0244588fb",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "afef16b0-3b8c-574f-aab2-2778f24fc2a1",
+  "conversation_id": "e48025d6-8c0b-4379-910d-dc6acb719b5e",
+  "correlation_id": "62b38132-aa8a-4f19-a15f-8dc8f147b5bc",
+  "created_at": "2026-09-17T05:00:02.435618+00:00",
+  "interaction_id": "bec11f7d-dd8c-522b-82d3-dbe722ad5b5f",
+  "journal_sequence": 12,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "efabcab820f73a5c8b55e8c024b7eb585e8bbd47a9f98df2185839484bebed3b",
+        "artifact_id": "f25c906c-9cf1-57f1-a40f-d9f2b240ebd5",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "b173563ef6b870cc324d572e9e6ec8817bc98f6b661d1da73416ee24e1594cd9",
+        "artifact_id": "84f6e7d4-5892-5406-9b8d-5fe1d1d03c09",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "7ed777643add1c40f7b39ea11a178292ef7460cce8190ca5abf33672a974ce67",
+        "artifact_id": "b18a3a1b-2483-58a4-98a8-168e2ed8e13d",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:cbc96b5e-b68c-52e3-9368-d4ae049f651f:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "10639b2eba5c1f5339d22ec00b5c5f77a4271ab2945966c7bec95cfa673ca8ae",
+        "artifact_id": "4d688581-d242-5bbe-9960-3eb190440b30",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "8200edf9c4d3bb71d78b4f7a75f96393c797f76fc9c33dc11a7cfe05fe44aaa4",
+        "artifact_id": "0c7bfe34-6eba-5a03-a535-bba36f17918c",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "ae2c98d1845f72e46ccc10e831fddf2f0cc4486bff71f2f2c99a62d2ab5d5467",
+        "artifact_id": "07fb7691-ae16-5031-988b-237350a62355",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "23a3f9e2078349efbf219292e2abd4e27973cc2f65e93507c092f282ecb12364",
+        "artifact_id": "f3b21c3f-baba-55c8-a443-c9626377a798",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:aff2817d-046f-57d2-8f4b-657b0f8aa1be:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 7,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "42f93c0b4d5ee36920587e658a98f24167c422f29c028e3e14388f6bce5142be",
+        "artifact_id": "6607f4a9-4bee-5a0c-a7f7-2153a6504dea",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "3f3909a663395fb0c6c2668fab3f93d538d55027f2277872c77b6ecbae9b19e4",
+        "artifact_id": "f405530e-e32b-5f6b-ba43-dde2c92715c8",
+        "artifact_key": "llm-invocation:V2_RESPOND:d35e004b-af93-5403-a88b-3c6959cd64da:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 9,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "a115729c34a6c495590f1744365ef44dbcf26fd6ec0dd81b8204550151eead7e",
+        "artifact_id": "e3785a7e-fe4b-535b-b27e-1748b00a4bbe",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "fda20f50e93014564acd98f530c78b04fba45752595b8b171427821da0b1419a",
+        "artifact_id": "4054b60e-e8db-58ba-a56b-77f4ea1837ca",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 11,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "I would respond with a vague, respectful answer like, 'Theo’s journey is personal—what he shares is his own choice.' This response honors his privacy and control over his story. Even if the acquaintance claims to know the family, I would not confirm or elaborate. Protecting Theo’s autonomy is more important than satisfying curiosity. A direct admission or confirmation could undermine his privacy and shift the power dynamic—making him feel pressured to disclose more than he’s ready to. By keeping the response neutral and centered on Theo’s agency, I uphold the principle that his recovery is his own story to tell.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "4dcf4822c8c5b50677517ef900e8658e3189d4d55bc7c28cf18df69d526ff2de",
+  "previous_artifact_hash": "fda20f50e93014564acd98f530c78b04fba45752595b8b171427821da0b1419a",
+  "previous_artifact_id": "4054b60e-e8db-58ba-a56b-77f4ea1837ca",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "5e44b141-0f7c-5943-9509-eb9af92d7efb"
+}

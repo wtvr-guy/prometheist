@@ -1,0 +1,115 @@
+{
+  "artifact_hash": "3f2836d5bfd633ba7693dbde59badbe48ce34d9583e060994934e347a9144983",
+  "artifact_id": "7d7f2b22-0c8a-55a6-af9a-bc5dffa2d823",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "71101d24-3a61-5f0b-862a-b93a626ff208",
+  "conversation_id": "46bfbc3f-4737-4030-8ab5-23895c347c8f",
+  "correlation_id": "54f66264-f4ae-4300-9313-e64a9b7dae81",
+  "created_at": "2026-09-17T05:04:11.481631+00:00",
+  "interaction_id": "66b6b7ea-3f4d-5329-92e4-0801d2500730",
+  "journal_sequence": 12,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "27c49b83d661fe4f871ea556423ecf04270df4ca4412c1e709042fef2f777228",
+        "artifact_id": "bae791c7-0de0-5514-9fe6-07a9d71d0799",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "ed14189083aa787fecdff046cbad6e11116c357049c19d0cfbc6d9b37661fc05",
+        "artifact_id": "5e90e7de-b879-53d4-8c7a-aaf33f37828f",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "44b2d1df48e7acb2dc2733abf4120b02729df66ee924716be26f455c97574390",
+        "artifact_id": "ed0c7d63-1061-58b3-b5a2-82780cd3bea5",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:f9cbc402-f4f0-56be-b4a4-f33d07ee77f4:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "74e611b4ddf2e009ae08596417fd3c4505bc01a0b46ffeffe2ccde1616d4b057",
+        "artifact_id": "e61ce507-0fc4-5a3a-8c0c-3ddc5b3dde03",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "f95a0241a08247a6a144cdcb6ea755a85f8293c9ba6c541e1e6f1de0d69e4261",
+        "artifact_id": "1d967c81-b44a-565a-94b0-7bcf420060e2",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "f8e3408927f21db4c23c9ef5fa7f89db37b43175763da7a589b48a374cde5795",
+        "artifact_id": "2308d2a7-6487-5c54-92a4-93b8ffbaebec",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "84d100f2d0963191bfafffce75395fe73ddefd8b7fbe4b13a296aaf4316f9a25",
+        "artifact_id": "2ce10a62-c84d-5277-b370-c63e2935e9a7",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:84ec9620-dc59-5271-b89b-29fe55aa6731:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 7,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "e0344a0703f3df036fc6355b56c7b58278d47a0017e3765103d4a721f74e0833",
+        "artifact_id": "c219aa4e-1993-5944-9306-4e4c9d048478",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "5d603dbaf484cbf55b27f3e222ea393e6a8d051c1824ab600a9f52cdbe33a610",
+        "artifact_id": "9b02befe-475a-51b8-bbcd-8fcb04f70897",
+        "artifact_key": "llm-invocation:V2_RESPOND:44c714ca-7679-5912-9e30-6d223ab07054:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 9,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "1481b49a06ca349a84ee5155b3e3850d2692a7692ea8f4b817220ba8e67c1911",
+        "artifact_id": "f9a3055f-0737-5a18-9263-7d26f74c9435",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "708fb7e03d3d824372f8e5f34b0fc29a4e8eba91a57325b27f1ae9369e48b39c",
+        "artifact_id": "961a7855-7918-5187-a55e-bc473a8e597e",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 11,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "Project Log: Unexplained voltage spike detected during final hardware testing. Investigating power supply and grounding paths. Suspect transient noise or fault in upstream circuitry. Will run diagnostics and review test environment logs.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "29cdc0b4520d6135ac9cb68350489beb700910cff958f75d8504c5516ce4704c",
+  "previous_artifact_hash": "708fb7e03d3d824372f8e5f34b0fc29a4e8eba91a57325b27f1ae9369e48b39c",
+  "previous_artifact_id": "961a7855-7918-5187-a55e-bc473a8e597e",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "a3576dcc-2c1c-592c-a5b9-d388e0eac44c"
+}

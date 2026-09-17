@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "345aa2e0-768b-445d-afb1-a5c79f97f113",
+  "conversation_seq": 5,
+  "correlation_id": "f4ad96dd-c65f-492f-b341-bd06479276e7",
+  "event_id": "b72aa218-fe2f-5b5a-b6c3-bdf4d7c8458e",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-17T05:03:37.447728+00:00",
+  "payload": {
+    "text": "I would probably choose Offer A, the $210,000 fully remote role that optimizes opaque engagement tracking for an advertising network. The key tradeoff that would matter most to me is work-life balance and autonomy versus impact and purpose. Offer A provides greater financial reward and full remote flexibility, which aligns with the convenience and autonomy of a fully remote role—especially valuable given that you’ve already saved twelve months of expenses. This suggests you may prioritize financial security and lifestyle control. Offer B, while impactful and purpose-driven (building hardware for disaster shelters), is hybrid and likely demands more time and commuting, which may conflict with your current financial stability and lifestyle. Even though it supports a meaningful cause, the tradeoff in time commitment and flexibility could outweigh the value of the lower salary. Ultimately, if your primary goal is stability and freedom, Offer A is the more practical choice. If you value deep purpose and hands-on contribution to social good over convenience, Offer B might resonate more—but that would require a significant shift in lifestyle and time allocation. Without more personal values or goals, the financial and lifestyle tradeoff in favor of autonomy makes Offer A the probable choice."
+  },
+  "payload_text": "I would probably choose Offer A, the $210,000 fully remote role that optimizes opaque engagement tracking for an advertising network. The key tradeoff that would matter most to me is work-life balance and autonomy versus impact and purpose. Offer A provides greater financial reward and full remote flexibility, which aligns with the convenience and autonomy of a fully remote role—especially valuable given that you’ve already saved twelve months of expenses. This suggests you may prioritize financial security and lifestyle control. Offer B, while impactful and purpose-driven (building hardware for disaster shelters), is hybrid and likely demands more time and commuting, which may conflict with your current financial stability and lifestyle. Even though it supports a meaningful cause, the tradeoff in time commitment and flexibility could outweigh the value of the lower salary. Ultimately, if your primary goal is stability and freedom, Offer A is the more practical choice. If you value deep purpose and hands-on contribution to social good over convenience, Offer B might resonate more—but that would require a significant shift in lifestyle and time allocation. Without more personal values or goals, the financial and lifestyle tradeoff in favor of autonomy makes Offer A the probable choice.",
+  "record_hash": "c291c9c2176ec85300a0ddc6fa07b3ed3f11a4bcb45029b6e15b6b602ddf0ccc",
+  "source": "percept_response_v2"
+}

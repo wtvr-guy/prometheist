@@ -1,0 +1,123 @@
+{
+  "artifact_hash": "9c988587fb51cc71d9b31747954f5951b240000296c83b92a89acf198f881d80",
+  "artifact_id": "f7b278a5-5422-5092-a429-a6f7418270ce",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "7c1035d3-f08b-5966-8015-c1d58d6980d4",
+  "conversation_id": "3b749ecc-f642-450a-8efb-8a3781254759",
+  "correlation_id": "8200585d-d628-4135-9b85-8a2966b76c5b",
+  "created_at": "2026-09-17T05:02:04.313733+00:00",
+  "interaction_id": "3248270a-b090-5602-a0b2-34933241224f",
+  "journal_sequence": 8,
+  "payload": {
+    "output": {
+      "memory_package": {
+        "adaptive_recall_rounds": 0,
+        "composer_rounds": 1,
+        "memory_packet": {
+          "items": [
+            {
+              "content": "Theo's recovery is private. Even if a family friend says they already know about it, I would give a vague answer and let Theo decide what to disclose. Protecting his control over his own story matters more than satisfying someone's curiosity.",
+              "conversation_id": "8ac5db90-8196-59cb-be19-98108550bc10",
+              "conversation_seq": 2,
+              "created_at": "2026-09-16T22:01:43.372629-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 4,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.22285714285714286,
+              "source": "user",
+              "source_event_id": "4305d458-5acb-52d7-b73e-49af6aa2a453"
+            }
+          ],
+          "memory_request_id": "81c71181-231a-506a-969b-660fa93b6278",
+          "need": {
+            "active_event_ids": [],
+            "conversation_id": null,
+            "entities": [],
+            "focus_event_ids": [],
+            "include_persisted_history": true,
+            "limit": 6,
+            "query_text": "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field.",
+            "reference_time": null,
+            "source_types": [
+              "USER_PROMPT"
+            ],
+            "supplemental_query_texts": []
+          },
+          "origin": "INTERNAL_MEMORY",
+          "retrieval_trace": {
+            "activation_kernel": {
+              "kernel": "recall_from_postgres",
+              "kernel_trace": {
+                "candidates_considered": 1,
+                "cue_tokens": [
+                  "like",
+                  "surprise",
+                  "give",
+                  "answer",
+                  "would",
+                  "consider",
+                  "accurate",
+                  "rather",
+                  "than",
+                  "reduc",
+                  "yes",
+                  "no",
+                  "profile",
+                  "field"
+                ],
+                "items": [
+                  {
+                    "event_id": "4305d458-5acb-52d7-b73e-49af6aa2a453",
+                    "global_seq": 4,
+                    "reasons": [
+                      "LEXICAL_CUE"
+                    ],
+                    "score": {
+                      "conversation": 0.0,
+                      "entity": 0.0,
+                      "lexical": 0.2857142857142857,
+                      "temporal": 0.0,
+                      "total": 0.22285714285714286
+                    },
+                    "selected": true
+                  }
+                ],
+                "normalized_entities": [],
+                "policy_version": "deterministic-cues-v2"
+              },
+              "retrieval_role": "ATTENTION_ACTIVATION"
+            },
+            "association_hops": 0,
+            "baseline_recall_limit": 6,
+            "candidate_limit": 750,
+            "depth": "BROAD_SHALLOW",
+            "packet_item_limit": 6,
+            "query_strategy": "working_state_plus_baseline_activation",
+            "retrieval_role": "ATTENTION_ACTIVATION",
+            "working_state_event_ids": [],
+            "working_state_item_count": 0
+          },
+          "supported": true
+        },
+        "sufficient": true,
+        "unresolved_memory_deficit": null
+      },
+      "skipped": false
+    },
+    "output_refs": [
+      "memory-request:81c71181-231a-506a-969b-660fa93b6278"
+    ]
+  },
+  "payload_hash": "3acfda68e884db542936f8c0efa643bf6fb07b0a22a8ecb715cf2e94d48dc01e",
+  "previous_artifact_hash": "245ea3c8ab042f9b1676b4fd0e4a9dd8e0f7a7863266425cc0d92f84cee6a72f",
+  "previous_artifact_id": "4c9422a4-9e8b-5b6b-bd86-9593f1b44ed8",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "a3afbc38-69cd-5eaf-8744-79c59ec59535"
+}

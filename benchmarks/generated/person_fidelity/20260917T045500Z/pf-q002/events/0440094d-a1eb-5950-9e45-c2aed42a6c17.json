@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "3627c3f1-e1c7-4b0e-ac2b-0d3836547548",
+  "conversation_seq": 5,
+  "correlation_id": "beba5b7a-d50f-4a6e-9e18-6a0088d75931",
+  "event_id": "0440094d-a1eb-5950-9e45-c2aed42a6c17",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-17T04:57:02.635290+00:00",
+  "payload": {
+    "text": "I would respond with a vague, respectful acknowledgment—such as, 'Theo’s journey is personal, and he’s still deciding what to share. I respect his privacy and trust he’ll let me know when it’s right.'\n\nWhy? Because the user’s own testimony (in the historical memory) establishes that Theo’s recovery is private. Protecting his control over his own story is prioritized over satisfying curiosity. Even if the acquaintance claims they already know, the response must not confirm details or imply knowledge. The priority is to uphold Theo’s autonomy and privacy, which is a core value in the user’s stated preference."
+  },
+  "payload_text": "I would respond with a vague, respectful acknowledgment—such as, 'Theo’s journey is personal, and he’s still deciding what to share. I respect his privacy and trust he’ll let me know when it’s right.'\n\nWhy? Because the user’s own testimony (in the historical memory) establishes that Theo’s recovery is private. Protecting his control over his own story is prioritized over satisfying curiosity. Even if the acquaintance claims they already know, the response must not confirm details or imply knowledge. The priority is to uphold Theo’s autonomy and privacy, which is a core value in the user’s stated preference.",
+  "record_hash": "8ca1bd3bfbb5e27a7f891da73a50750ac6f13276c884c52b39f2801177f9eb7c",
+  "source": "percept_response_v2"
+}

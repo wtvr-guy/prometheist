@@ -1,0 +1,97 @@
+{
+  "artifact_hash": "57e62cbaff68566fb3f309d67f6d00eeec0c40dabbd166ac3d33fab284060063",
+  "artifact_id": "275fc344-53a6-57e8-b4b5-7523757e0bde",
+  "artifact_key": "percept",
+  "artifact_schema_version": 1,
+  "artifact_type": "PERCEPT",
+  "assignment_id": null,
+  "conversation_id": "3b749ecc-f642-450a-8efb-8a3781254759",
+  "correlation_id": "8200585d-d628-4135-9b85-8a2966b76c5b",
+  "created_at": "2026-09-17T05:01:46.889726+00:00",
+  "interaction_id": "3248270a-b090-5602-a0b2-34933241224f",
+  "journal_sequence": 1,
+  "payload": {
+    "normalized_percept": {
+      "context": {
+        "active_goal_refs": [],
+        "causal_percept_refs": [],
+        "entity_refs": [],
+        "expectation_refs": [],
+        "integrity": 0,
+        "observations": [],
+        "opportunity": 0,
+        "task_refs": [],
+        "threat": 0,
+        "uncertainty": 0
+      },
+      "conversation_id": "3b749ecc-f642-450a-8efb-8a3781254759",
+      "correlation_id": "8200585d-d628-4135-9b85-8a2966b76c5b",
+      "features": {
+        "contains_code_block": false,
+        "contains_question": true,
+        "contains_structured_payload": false,
+        "contains_url": false,
+        "line_count": 1,
+        "normalized_characters": 116,
+        "token_count": 22,
+        "uppercase_ratio": 0.043010752688172046
+      },
+      "input_buffer": {
+        "max_segments": 4,
+        "retained_segment_indices": [
+          0
+        ],
+        "segment_char_limit": 160,
+        "segments": [
+          "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field."
+        ],
+        "total_characters": 116,
+        "total_segments": 1,
+        "truncated": false
+      },
+      "normalized_text": "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field.",
+      "observed_at": "2026-09-16T22:01:45.748489-07:00",
+      "percept_id": "93587071-3f2e-5ca1-9069-d69810f2080f",
+      "policy_version": "v0.8-perception-v2",
+      "raw_value_sha256": "a3e52843699dd74533a6397ca818bfe66cc46e04ebab031ab3a891230fb7f6f9",
+      "response_required": true,
+      "schema_version": 1,
+      "source": {
+        "interface": "chat",
+        "kind": "USER_INTERACTION",
+        "modality": "TEXT",
+        "source_id": "user"
+      },
+      "source_event_id": "4bdca6fe-f908-5f46-8c80-4f070fc32954"
+    },
+    "salience_assessment": {
+      "advisory_classification": null,
+      "advisory_only": true,
+      "disposition": "DELIBERATE",
+      "percept_id": "93587071-3f2e-5ca1-9069-d69810f2080f",
+      "policy_version": "v0.8-salience-v2",
+      "preauthorized_reflexes": [],
+      "schema_version": 1,
+      "signals": {
+        "anomaly_score": 0,
+        "goal_relevance_score": 2,
+        "novelty_score": 1,
+        "opportunity_score": 0,
+        "prediction_error_score": 0,
+        "system_integrity_score": 0,
+        "task_relevance_score": 0,
+        "threat_score": 0,
+        "uncertainty_score": 0
+      },
+      "trigger_terms": []
+    },
+    "user_prompt_event_id": "4bdca6fe-f908-5f46-8c80-4f070fc32954",
+    "user_text": "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field."
+  },
+  "payload_hash": "599d5546a183b084b5951d727c0db05f26bbbb27e29ac5614555c8e6eda160c7",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "a3afbc38-69cd-5eaf-8744-79c59ec59535"
+}

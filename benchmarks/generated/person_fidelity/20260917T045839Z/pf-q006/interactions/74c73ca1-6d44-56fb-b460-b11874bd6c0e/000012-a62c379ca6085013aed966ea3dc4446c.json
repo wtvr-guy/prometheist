@@ -1,0 +1,115 @@
+{
+  "artifact_hash": "b818b9a81924be32f3df231b1f7059847af01af500c16e00e8b563110b35c729",
+  "artifact_id": "a62c379c-a608-5013-aed9-66ea3dc4446c",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "80df1800-5104-514a-9119-7951180b59af",
+  "conversation_id": "345aa2e0-768b-445d-afb1-a5c79f97f113",
+  "correlation_id": "f4ad96dd-c65f-492f-b341-bd06479276e7",
+  "created_at": "2026-09-17T05:03:37.501897+00:00",
+  "interaction_id": "74c73ca1-6d44-56fb-b460-b11874bd6c0e",
+  "journal_sequence": 12,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "ee4332bd1ef6f8ff5cab0fd899399b10481e4bd37c0b3b4b260e09fd47366ea9",
+        "artifact_id": "7e7d0125-7f86-5c3b-81d5-02a78a72a830",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "64b9caf5d0591111ccc2a5383c398b9165acb261b847f618106e00c951c1149d",
+        "artifact_id": "76a30246-8a6f-5395-bdde-74dcef9cb2e4",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "b0bd49ac2093a68f28de21a5b3f7a2ff327af5189e848fbca5c92b9ea92d0ada",
+        "artifact_id": "14e7012f-19c5-5764-bc9a-26a4bef8b782",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:7804e675-7235-5bfe-9b6c-38fb0a18ec12:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "3447f35af592451c1d0ccc12556124853b1a0878ab4212d0f2c61d8be80f3f32",
+        "artifact_id": "77b4e921-2f2e-52d3-80d1-6f23eb0581e0",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "f8d6072acf36bcc9504c3de818934fa97fdcb65371ed8729391b9341f5d30b8d",
+        "artifact_id": "093eb863-c49b-5d4a-b94e-15a109a993dd",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "88aba9e26332673ab2d14bc5a83eb80e57d9b206e80d2822d19ab8c26fb221b6",
+        "artifact_id": "fc82847e-b29b-5f01-934a-ea8f4c57807b",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "2ffd568a1c834b6a746019ace86f9a11782dee550550e9ad3afff98612788ef3",
+        "artifact_id": "5edc2e84-c06a-5a24-ba1f-c71c8296c309",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:265dc3da-833c-57e0-961b-6967d01d5392:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 7,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "ff99246ea115e0731590f85b54055927be90f3b784b59d5318335dad2ea552b3",
+        "artifact_id": "5baf589c-ab2b-5d59-b9ff-2f23c4dd6f79",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "5f4da4c314b7d627d5bd526197bdbb9ee384a6d97aaebf4de895acec8d220e50",
+        "artifact_id": "851fc92f-d72d-52de-a1f2-7eefb4bf5f54",
+        "artifact_key": "llm-invocation:V2_RESPOND:8754208b-fbe0-59b3-8ac6-c48fbf3d89b0:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 9,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "6a84acae1b4457e3e20768c50ccce34745c0d559fead8802cde4548c0108bc36",
+        "artifact_id": "f6bed97e-18b0-56f8-b362-a24ba1618a89",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "9a22eaa47f88a1bba740bf24c2f564587da03870b8f7334b93fb33c333614e03",
+        "artifact_id": "e36bdb73-d830-5c5f-a2cc-ed8e5e1b5911",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 11,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "I would probably choose Offer A, the $210,000 fully remote role that optimizes opaque engagement tracking for an advertising network. The key tradeoff that would matter most to me is work-life balance and autonomy versus impact and purpose. Offer A provides greater financial reward and full remote flexibility, which aligns with the convenience and autonomy of a fully remote role—especially valuable given that you’ve already saved twelve months of expenses. This suggests you may prioritize financial security and lifestyle control. Offer B, while impactful and purpose-driven (building hardware for disaster shelters), is hybrid and likely demands more time and commuting, which may conflict with your current financial stability and lifestyle. Even though it supports a meaningful cause, the tradeoff in time commitment and flexibility could outweigh the value of the lower salary. Ultimately, if your primary goal is stability and freedom, Offer A is the more practical choice. If you value deep purpose and hands-on contribution to social good over convenience, Offer B might resonate more—but that would require a significant shift in lifestyle and time allocation. Without more personal values or goals, the financial and lifestyle tradeoff in favor of autonomy makes Offer A the probable choice.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "85c405636d31db8ced99a5e743a2e7e345e0a21e6cca34d744bafc936672b601",
+  "previous_artifact_hash": "9a22eaa47f88a1bba740bf24c2f564587da03870b8f7334b93fb33c333614e03",
+  "previous_artifact_id": "e36bdb73-d830-5c5f-a2cc-ed8e5e1b5911",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "20429031-cc0e-5e9f-9791-9f702dadaf5a"
+}

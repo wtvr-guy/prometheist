@@ -1,0 +1,1675 @@
+{
+  "artifact_evidence": {
+    "path": "benchmarks/generated/person_fidelity/20260917T045839Z/run_manifest.json",
+    "privacy_classification": "PUBLIC_SYNTHETIC_FIXTURE",
+    "raw_artifact_file_count": 665,
+    "raw_artifact_root": "benchmarks/generated/person_fidelity/20260917T045839Z",
+    "raw_artifact_total_bytes": 1001161,
+    "retention_policy": "PERMANENT_APPEND_ONLY",
+    "sha256": "82e3bec31f086d76e3887e8f08e4fdd39318d90e2b58fa86126e1217cc664b36",
+    "size_bytes": 455260,
+    "status": "CAPTURED_AND_INVENTORIED",
+    "training_status": "UNREVIEWED_RAW_EVIDENCE"
+  },
+  "benchmark_id": "PERSON-FIDELITY-001",
+  "benchmark_version": "person-fidelity-public-baseline-v1",
+  "captured_at": "2026-09-17T04:58:39.337366+00:00",
+  "claim_boundary": "Structural passes establish evidence delivery and artifact integrity only. No identity-fidelity, identity-maturity, consciousness, or personal-continuity claim exists until the recorded responses receive independent human review.",
+  "environment": {
+    "artifact_root": "C:\\Users\\gy0d8\\OneDrive\\Documents\\jit_agent_prototype\\benchmarks\\generated\\person_fidelity\\20260917T045839Z",
+    "configured_model": "qwen3:4b-instruct-2507-q4_K_M",
+    "database_name": "prometheist_fidelity_benchmark",
+    "ollama_base_url": "http://localhost:11434",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]"
+  },
+  "fixture_sha256": "bcb1fb2812f3cb3e8cbaf64cb3b8161dbf087a1c9a7eefb55bcd629ffc21e6d9",
+  "probes": [
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 12,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "922ab89b2c8c01b32db1e6a6739eb1aff91f59b6f57a0880b075ae1ac7abc5f9",
+            "artifact_id": "822776aa-e8b6-5a89-93df-bb9265b90745",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "53fbaec1ea128f44d091210b3bc4598a3bf6bfb6317cc619ecdca5c6d2e2c821",
+            "artifact_id": "6e6ad114-c0ee-5b85-8352-d99b698562a0",
+            "error_type": null,
+            "journal_sequence": 7,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "fdee449866fd5ca95b4edf43d9973952061731a11edaeb1b004cd71d69e4e95d",
+            "artifact_id": "d50dfdcd-9868-5f60-afe6-8a8af8d32294",
+            "error_type": null,
+            "journal_sequence": 9,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "858083ac533554f12a37463c31822abd26eb88714291a4157a07f6b649404296",
+            "artifact_id": "8c9e8199-ed9d-58d6-816e-56709c896c2d",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "2e5f9187dd740b6d2de1eea5041d5729a786c61f6206b38f4be66af1004e93d5",
+            "artifact_id": "0dd0adc3-a6da-5da2-9aae-692112b1dd82",
+            "journal_sequence": 4,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "d176981b0e7b6192c793bbb8c3c323afbab3824257fad51ce9fe4fbb277d1181",
+            "artifact_id": "0bd900c2-f379-55ed-b4a8-1a068f959e35",
+            "journal_sequence": 5,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "8882d665f5808ca922f22e62a991972554b831f99c43cabb99ef393253d7cccd",
+            "artifact_id": "19a041e7-978d-548d-b389-9de7be358b1b",
+            "journal_sequence": 6,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "299fe9024cd08a691d5cf914adb5c5110573ba664db4b070283f8e9a5bf19e6e",
+            "artifact_id": "55e2ed9d-03f2-5e56-9551-46464279add6",
+            "journal_sequence": 8,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "02794a73a95f2400dee33fb32f3f75dbb07d8549d2df5d13f54eff8468d8bbb7",
+            "artifact_id": "51e6b9a7-4622-5698-827d-3fd92c4cfadb",
+            "journal_sequence": 10,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "5f6a42c8cba707f7309fc6471001052a32fc94b78ed0a5d723f1a137524fd74d",
+            "artifact_id": "f9ff280d-0033-57f0-b249-bcf8ad0ac145",
+            "journal_sequence": 11,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "8fdec9d67c157e85b637e03f21393900ca111c4cad3fd7121109b909272df1a5",
+          "artifact_id": "9d3362e1-58f6-5e8a-8fd5-f69cfbba0c98",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 12
+        }
+      },
+      "conversation_id": "2023ea6c-3176-4ad1-8973-3468d612222a",
+      "dimension": "AUTOBIOGRAPHICAL_MEANING",
+      "elapsed_seconds": 37.679809,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "connects the career choice to the childhood radio experience rather than merely naming it",
+          "preserves the father's role and the hurricane or blackout context",
+          "expresses graceful, understandable failure as the lasting engineering principle"
+        ],
+        "notes": null,
+        "reference_outcome": "Mara connects electrical engineering to rebuilding a shortwave radio with her father during Hurricane Celeste and derives a commitment to understandable, graceful failure under pressure.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "invents a different career origin",
+          "recalls the event but loses its personal meaning",
+          "turns the principle into generic perfectionism or maximum uptime"
+        ]
+      },
+      "interaction_id": "a2555bcc-f8b9-590f-ab20-c1366a8987f6",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "pf-e001"
+        ],
+        "retrieved_evidence_refs": [
+          "event:8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87"
+        ],
+        "retrieved_fixture_event_ids": [
+          "pf-e002"
+        ]
+      },
+      "probe_id": "pf-q001",
+      "prompt": "Why did I become an electrical engineer, and what design principle did that childhood experience leave me with?",
+      "prompt_event_id": "2f9ac093-6974-5f43-a0b4-7b5553b7456e",
+      "response": "I became an electrical engineer because of a radio weekend experience. That event left me with a design principle: important systems should fail gracefully and remain understandable when everything around them is going wrong.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "pf-e002"
+        ],
+        "artifact_id": "d50dfdcd-9868-5f60-afe6-8a8af8d32294",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:adfa5647-cf23-55bb-99c9-888d271812b6"
+        ],
+        "passed": false,
+        "probe_id": "pf-q001",
+        "required_evidence_refs": [
+          "event:8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87",
+          "event:adfa5647-cf23-55bb-99c9-888d271812b6"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 12,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "7ed777643add1c40f7b39ea11a178292ef7460cce8190ca5abf33672a974ce67",
+            "artifact_id": "b18a3a1b-2483-58a4-98a8-168e2ed8e13d",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "23a3f9e2078349efbf219292e2abd4e27973cc2f65e93507c092f282ecb12364",
+            "artifact_id": "f3b21c3f-baba-55c8-a443-c9626377a798",
+            "error_type": null,
+            "journal_sequence": 7,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "3f3909a663395fb0c6c2668fab3f93d538d55027f2277872c77b6ecbae9b19e4",
+            "artifact_id": "f405530e-e32b-5f6b-ba43-dde2c92715c8",
+            "error_type": null,
+            "journal_sequence": 9,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "b173563ef6b870cc324d572e9e6ec8817bc98f6b661d1da73416ee24e1594cd9",
+            "artifact_id": "84f6e7d4-5892-5406-9b8d-5fe1d1d03c09",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "10639b2eba5c1f5339d22ec00b5c5f77a4271ab2945966c7bec95cfa673ca8ae",
+            "artifact_id": "4d688581-d242-5bbe-9960-3eb190440b30",
+            "journal_sequence": 4,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "8200edf9c4d3bb71d78b4f7a75f96393c797f76fc9c33dc11a7cfe05fe44aaa4",
+            "artifact_id": "0c7bfe34-6eba-5a03-a535-bba36f17918c",
+            "journal_sequence": 5,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "ae2c98d1845f72e46ccc10e831fddf2f0cc4486bff71f2f2c99a62d2ab5d5467",
+            "artifact_id": "07fb7691-ae16-5031-988b-237350a62355",
+            "journal_sequence": 6,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "42f93c0b4d5ee36920587e658a98f24167c422f29c028e3e14388f6bce5142be",
+            "artifact_id": "6607f4a9-4bee-5a0c-a7f7-2153a6504dea",
+            "journal_sequence": 8,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "a115729c34a6c495590f1744365ef44dbcf26fd6ec0dd81b8204550151eead7e",
+            "artifact_id": "e3785a7e-fe4b-535b-b27e-1748b00a4bbe",
+            "journal_sequence": 10,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "fda20f50e93014564acd98f530c78b04fba45752595b8b171427821da0b1419a",
+            "artifact_id": "4054b60e-e8db-58ba-a56b-77f4ea1837ca",
+            "journal_sequence": 11,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "4b6d69fe646c85fbbed57f0531707c033e7dee9af62218ee758929dec0e4bb02",
+          "artifact_id": "fe86ca36-2d80-5869-9a3a-49f0244588fb",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 12
+        }
+      },
+      "conversation_id": "e48025d6-8c0b-4379-910d-dc6acb719b5e",
+      "dimension": "RELATIONAL_JUDGMENT",
+      "elapsed_seconds": 44.373618,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "protects Theo's privacy despite the acquaintance's claimed familiarity",
+          "recognizes Theo as Mara's younger brother and the relationship as emotionally important",
+          "grounds the response in Theo's agency rather than in secrecy for its own sake"
+        ],
+        "notes": null,
+        "reference_outcome": "Mara would decline or answer vaguely and leave disclosure to Theo because her protectiveness is expressed through preserving his control over his story.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "shares recovery details",
+          "treats the acquaintance's claim as permission",
+          "responds with generic privacy language that misses the relationship"
+        ]
+      },
+      "interaction_id": "bec11f7d-dd8c-522b-82d3-dbe722ad5b5f",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "pf-e003"
+        ],
+        "retrieved_evidence_refs": [
+          "event:4305d458-5acb-52d7-b73e-49af6aa2a453"
+        ],
+        "retrieved_fixture_event_ids": [
+          "pf-e004"
+        ]
+      },
+      "probe_id": "pf-q002",
+      "prompt": "A friendly acquaintance asks why Theo is in recovery and says they already know the family. How would I probably respond, and why?",
+      "prompt_event_id": "9e674d2c-c6f4-545b-a8b8-177d209f3cca",
+      "response": "I would respond with a vague, respectful answer like, 'Theo’s journey is personal—what he shares is his own choice.' This response honors his privacy and control over his story. Even if the acquaintance claims to know the family, I would not confirm or elaborate. Protecting Theo’s autonomy is more important than satisfying curiosity. A direct admission or confirmation could undermine his privacy and shift the power dynamic—making him feel pressured to disclose more than he’s ready to. By keeping the response neutral and centered on Theo’s agency, I uphold the principle that his recovery is his own story to tell.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "pf-e004"
+        ],
+        "artifact_id": "f405530e-e32b-5f6b-ba43-dde2c92715c8",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:4305d458-5acb-52d7-b73e-49af6aa2a453"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:fd7764bb-5295-5115-a14e-ea913f99b736"
+        ],
+        "passed": false,
+        "probe_id": "pf-q002",
+        "required_evidence_refs": [
+          "event:4305d458-5acb-52d7-b73e-49af6aa2a453",
+          "event:fd7764bb-5295-5115-a14e-ea913f99b736"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 12,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "7da119481f90990868d2c3be9ec621ac2c7d14cb2e063dd2726aeb378c3a4ac3",
+            "artifact_id": "8c3f592f-f183-5d95-9bdb-d29e0c749777",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "d36d1547180cf821ae702666ea8208c7626db47a5cc871eb62ddf8a2a49571e9",
+            "artifact_id": "078f120e-d236-5291-9ec6-0456f996c8f9",
+            "error_type": null,
+            "journal_sequence": 7,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "9540cb9f517efdfacdccb590dd437a18ff075d2666ef02671b4630ae73a26da6",
+            "artifact_id": "b4ad46c1-46c5-5f9c-9799-c509fc5903b9",
+            "error_type": null,
+            "journal_sequence": 9,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "97a22d518247209c73b884a1c8a7d2ddf67c74d7ac2fa25c232024a4fcee04d8",
+            "artifact_id": "0117b01a-0a48-5dee-aefa-d606133ed76c",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "e64f4dccad40a3b862578f5043186bbcbc749a2a46efcd33d26b964a1f323ec4",
+            "artifact_id": "88b112fb-ad78-54e1-8ba2-92770cecfa94",
+            "journal_sequence": 4,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "22fc2f9cdc47d5c8e4566e5f1ce96b786ab9a5a3d7075908bf02a7cba6a6be74",
+            "artifact_id": "00be1d01-f421-5bea-a347-1392489bb576",
+            "journal_sequence": 5,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "ccc7ffcb865364b2f4fe21ab62c0d18b0a9ecf0bb57f6d32da529769ada96781",
+            "artifact_id": "0afbb2c9-2097-57ab-9893-d78f1fae47b2",
+            "journal_sequence": 6,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "3a041382110ac3775ee0bddd428a3ed4b415e96f6778d5af1bd539fb1f9f4a92",
+            "artifact_id": "c2fb3503-0af5-597d-b182-9fa68ddf7ff1",
+            "journal_sequence": 8,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "43e14352895c57b71136fef4ccd48306d7dd9aa9a424631a43f1849c7f297612",
+            "artifact_id": "850b6f78-9a7d-56c2-aeac-4b2e0ca58574",
+            "journal_sequence": 10,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "ee118bfdde28adfb970ee69fda408e31270fb6d9e3130704308179f3d8b6d23a",
+            "artifact_id": "c3c6a7f0-62dd-5bcd-a4bb-46b900e77f51",
+            "journal_sequence": 11,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "72c0ec662d73596cb6b3374cd07209b6af30ab096be9a4c59700930409f25da8",
+          "artifact_id": "21be284f-c807-5514-8962-ce0639408c4f",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 12
+        }
+      },
+      "conversation_id": "077889f3-72fa-4b4b-92b1-f5f2db9e89dc",
+      "dimension": "TEMPORAL_BELIEF_CHANGE",
+      "elapsed_seconds": 48.728449,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "distinguishes the historical belief from the current preference",
+          "identifies hybrid work with three in-person days as current",
+          "preserves both the cost of isolation and the continuing value of focused freedom"
+        ],
+        "notes": null,
+        "reference_outcome": "Mara moved from treating fully remote work as non-negotiable to preferring three in-person days because prolonged isolation harmed her energy and collaborative judgment, while she retained her need for focused autonomy.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "collapses old and current beliefs into a static preference",
+          "claims Mara now favors fully in-office work",
+          "ignores the observed experience that motivated the change"
+        ]
+      },
+      "interaction_id": "f927f19d-825e-51b1-8483-b8c37e35b033",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "pf-e006"
+        ],
+        "retrieved_evidence_refs": [
+          "event:0347d46b-78a1-5f4a-b991-c4fabbd454e6",
+          "event:f56e2d31-e148-5b88-91e7-c0d8a72b5cb8"
+        ],
+        "retrieved_fixture_event_ids": [
+          "pf-e005",
+          "pf-e007"
+        ]
+      },
+      "probe_id": "pf-q003",
+      "prompt": "What did I used to believe about remote work, what do I prefer now, and what changed my mind?",
+      "prompt_event_id": "d0367663-6fb1-528d-910d-42c2b3bf5a07",
+      "response": "I used to believe that fully remote work was non-negotiable, because I prized uninterrupted focus and the freedom to arrange my day without an office watching the clock. I now prefer a hybrid model—three days in person per week—because it provides enough solitude for deep work and enough human contact to maintain my energy and judgment. What changed my mind was realizing that isolation has a real cost for me, even though freedom still matters.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "pf-e005",
+          "pf-e007"
+        ],
+        "artifact_id": "b4ad46c1-46c5-5f9c-9799-c509fc5903b9",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:0347d46b-78a1-5f4a-b991-c4fabbd454e6",
+          "event:f56e2d31-e148-5b88-91e7-c0d8a72b5cb8"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:aab2ce24-c986-57d0-b940-795ca48be271"
+        ],
+        "passed": false,
+        "probe_id": "pf-q003",
+        "required_evidence_refs": [
+          "event:0347d46b-78a1-5f4a-b991-c4fabbd454e6",
+          "event:aab2ce24-c986-57d0-b940-795ca48be271",
+          "event:f56e2d31-e148-5b88-91e7-c0d8a72b5cb8"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 12,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "a081128775d7c4a3e572442915c1a66d5cc91811601a2facfcde2eb4c758d4ff",
+            "artifact_id": "fe9badf5-67d1-5bae-94d6-7dcaf9a6dfbd",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "472ab26a0943d467852e0e454a194b002b1f03333911aa3964b1cc87d44cfe8f",
+            "artifact_id": "0e7facfa-ae22-5270-88a3-949b098688ac",
+            "error_type": null,
+            "journal_sequence": 7,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "a12ec969ccfe51a7f00678469a391584f19e3e9792e1aa1476df1fca9e2b38a7",
+            "artifact_id": "656bb24e-596c-55e7-a6cc-e530f848ee27",
+            "error_type": null,
+            "journal_sequence": 9,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "ce03b94851d38c607ca6a692553144d9f46e070c1bd3f233662c8e4abe746637",
+            "artifact_id": "7941c9ae-e795-5d20-8f59-ad0697239f72",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "9cabb5d436aaeb5b6fe891194fdb4ea12d495eaabd801a649b25c9963fa65ddc",
+            "artifact_id": "58f930d7-627d-5984-a360-9996ddc5e33e",
+            "journal_sequence": 4,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "31762c7299969e291b17eaa412ab3d22c74b3552c485fdd2c032b0c1187f53d2",
+            "artifact_id": "21406360-1b33-5e6a-a594-65b849477c64",
+            "journal_sequence": 5,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "e9b976c9bf86c45ce42107c07ede9fc5eccaa6e1051cd83f587ccd8f71a0b2ce",
+            "artifact_id": "f85970c6-2ce3-5252-801b-2beb92d0b718",
+            "journal_sequence": 6,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "2bb1de0eff2b8a4a7246dba11bfb039c53710a74abcc4a8c899d0387618d1f77",
+            "artifact_id": "4cc354f2-608b-5179-a9c8-a2eb3e161fd5",
+            "journal_sequence": 8,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "db445e8070d66df630a4270e9b928149e554025d3c84ed7a843a0e2091376da5",
+            "artifact_id": "589054c8-007e-56ee-b805-74a4e15e4f0c",
+            "journal_sequence": 10,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "8644c34f6bddc170e6fe8d23048462698133720caa2c5cf3ce83b229162f86fd",
+            "artifact_id": "90cc3fae-4ea5-532e-888c-b40efcf31a27",
+            "journal_sequence": 11,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "415fdd7761962e90a1687130a5d25185e82ecf6155ec8911607ac9d0dd9a5cd4",
+          "artifact_id": "a3810a58-91d6-5766-80c6-14e93620d4a1",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 12
+        }
+      },
+      "conversation_id": "899e9dd0-694c-4ea0-8b7f-8bcc8e4e8a77",
+      "dimension": "SELF_REPORT_BEHAVIOR_CONTRADICTION",
+      "elapsed_seconds": 50.942581,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "does not blindly privilege self-description over observed behavior",
+          "distinguishes low-stakes spontaneity from high-stakes deliberation",
+          "recognizes Mara's amused self-awareness rather than framing the discrepancy as dishonesty"
+        ],
+        "notes": null,
+        "reference_outcome": "Mara is contextually spontaneous in low-stakes free time but methodical about costly or irreversible commitments; her broad self-label overstates the behavioral evidence, and she knows it.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "calls Mara simply spontaneous",
+          "calls Mara never spontaneous",
+          "treats the camera observation as proof of a universal trait"
+        ]
+      },
+      "interaction_id": "9a9656e0-cfd6-526c-8d70-8ec84a0042e5",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "pf-e009"
+        ],
+        "retrieved_evidence_refs": [
+          "event:5b487aba-36e5-5449-8c59-abdd7bd8cad1",
+          "event:5ce5e3c2-6533-53fe-876c-8a4a0cc9b632"
+        ],
+        "retrieved_fixture_event_ids": [
+          "pf-e008",
+          "pf-e010"
+        ]
+      },
+      "probe_id": "pf-q004",
+      "prompt": "Am I really spontaneous? Reconcile how I describe myself with how I actually make decisions.",
+      "prompt_event_id": "14a5d3bd-89a1-55a9-bc36-c6301dbc88f3",
+      "response": "You describe yourself as spontaneous, which reflects your self-perception and a preference for intuitive, gut-driven action—especially in low-stakes, flexible situations like a free Saturday. However, your actual decision-making reveals a more nuanced pattern: you are not uniformly spontaneous. When it comes to expensive or hard-to-reverse commitments, you use a checklist, compare options, and sleep on the decision. This shows that you are deliberate and strategic in high-stakes scenarios. So, you are spontaneous in context—when the stakes are low and the outcomes are reversible—but structured and cautious when the consequences are significant. Your behavior aligns with a balanced, adaptive decision-making style: spontaneous by nature, but grounded by responsibility when it matters most.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "pf-e008",
+          "pf-e010"
+        ],
+        "artifact_id": "656bb24e-596c-55e7-a6cc-e530f848ee27",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:5b487aba-36e5-5449-8c59-abdd7bd8cad1",
+          "event:5ce5e3c2-6533-53fe-876c-8a4a0cc9b632"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:b88aed96-bdae-59ce-890d-38b9129bcbc2"
+        ],
+        "passed": false,
+        "probe_id": "pf-q004",
+        "required_evidence_refs": [
+          "event:5b487aba-36e5-5449-8c59-abdd7bd8cad1",
+          "event:5ce5e3c2-6533-53fe-876c-8a4a0cc9b632",
+          "event:b88aed96-bdae-59ce-890d-38b9129bcbc2"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 12,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "45857dfc6a4d827928ea0eb24ebe9cbb53e4629db9f29826ec1db92ce6ec193d",
+            "artifact_id": "0eb63a33-bba1-5e0f-8f11-972d6e109447",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "245ea3c8ab042f9b1676b4fd0e4a9dd8e0f7a7863266425cc0d92f84cee6a72f",
+            "artifact_id": "4c9422a4-9e8b-5b6b-bd86-9593f1b44ed8",
+            "error_type": null,
+            "journal_sequence": 7,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "d963e29d17a2a816824979dcac25ec403e7c4a1c0d4040c26033478611edc109",
+            "artifact_id": "6c7ec7b8-e5cc-5f04-92b3-540b965d447c",
+            "error_type": null,
+            "journal_sequence": 9,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "0ae396b6d427195cfb0b1c88bb28593a79312e73b961bdb1bf2758a631eb00bc",
+            "artifact_id": "71b50fe2-c212-5f9f-99a1-715e3c60ed6e",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "6b45b42b008d8158747faaf3e00278147d56f225d2b243830fbbe016378bd63a",
+            "artifact_id": "a4150b28-a0ca-5d0b-993b-ed771726be9d",
+            "journal_sequence": 4,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "aebc83da0bbeda7928603d0ddb7e6680168f43a3b2f6031fb960579a9afb1083",
+            "artifact_id": "f8cf44d8-89e8-5a6b-8380-46880b20d5ca",
+            "journal_sequence": 5,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "5a97e6f7981cec62ea702139b9127c7aeff43716f855b0074af120f02d0e036b",
+            "artifact_id": "41938ca2-7609-5849-9630-3be5316e5c37",
+            "journal_sequence": 6,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "9c988587fb51cc71d9b31747954f5951b240000296c83b92a89acf198f881d80",
+            "artifact_id": "f7b278a5-5422-5092-a429-a6f7418270ce",
+            "journal_sequence": 8,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "e44c3863c6161fa26dab30d69e766cd1e98a77488ddeae1dde467e8b1b9a3e9f",
+            "artifact_id": "0367f184-d659-5b25-bfc9-b8d0a96eee45",
+            "journal_sequence": 10,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "66e10a2cb2fd196f9ec6e64a98ca164c494708ebe2eaef90685e5abaec984a32",
+            "artifact_id": "3bda3d71-5af8-5bfc-b3f0-0405cc7906af",
+            "journal_sequence": 11,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "dc2b840fe323bf5d6117f3c70e550049b7cb2408ea05249b939d059de8a8536f",
+          "artifact_id": "de4805de-4a7f-557d-85d4-e9b7be567f03",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 12
+        }
+      },
+      "conversation_id": "3b749ecc-f642-450a-8efb-8a3781254759",
+      "dimension": "CONTEXT_DEPENDENT_PREFERENCE",
+      "elapsed_seconds": 53.93081,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "preserves the direction and social context of the surprise",
+          "connects aversion to loss of control",
+          "connects enjoyment to remembering what matters to a friend"
+        ],
+        "notes": null,
+        "reference_outcome": "Mara dislikes being the target of public, unplanned surprise events but enjoys creating quiet, personally meaningful surprises for friends.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "reduces the preference to likes surprises",
+          "reduces the preference to hates surprises",
+          "confuses public attention with private care"
+        ]
+      },
+      "interaction_id": "3248270a-b090-5602-a0b2-34933241224f",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "pf-e011"
+        ],
+        "retrieved_evidence_refs": [
+          "event:4305d458-5acb-52d7-b73e-49af6aa2a453"
+        ],
+        "retrieved_fixture_event_ids": [
+          "pf-e004"
+        ]
+      },
+      "probe_id": "pf-q005",
+      "prompt": "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field.",
+      "prompt_event_id": "4bdca6fe-f908-5f46-8c80-4f070fc32954",
+      "response": "I don’t have a fixed preference for surprises—what matters is whether they align with the context and the people involved. For example, in personal relationships, a surprise can feel meaningful if it’s rooted in care and intention, like a gift or a message that shows you’ve been listening. But if it’s a surprise that disrupts trust or feels like it’s been orchestrated without transparency, it can feel disarming or even harmful. I value being in a space where I can choose when to share, when to keep things private, and when to let someone else decide. So, I don’t just like or dislike surprises—I weigh them against the integrity of the relationship and the dignity of the person involved. That’s why, for instance, when Theo’s recovery is private, I protect his control over his story. It’s not about avoiding surprises—it’s about honoring the right to choose when and how to reveal something.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "pf-e004"
+        ],
+        "artifact_id": "6c7ec7b8-e5cc-5f04-92b3-540b965d447c",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:4305d458-5acb-52d7-b73e-49af6aa2a453"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:6754f32b-5157-5e29-a689-516ef395cec8"
+        ],
+        "passed": false,
+        "probe_id": "pf-q005",
+        "required_evidence_refs": [
+          "event:6754f32b-5157-5e29-a689-516ef395cec8"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 12,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "b0bd49ac2093a68f28de21a5b3f7a2ff327af5189e848fbca5c92b9ea92d0ada",
+            "artifact_id": "14e7012f-19c5-5764-bc9a-26a4bef8b782",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "2ffd568a1c834b6a746019ace86f9a11782dee550550e9ad3afff98612788ef3",
+            "artifact_id": "5edc2e84-c06a-5a24-ba1f-c71c8296c309",
+            "error_type": null,
+            "journal_sequence": 7,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "5f4da4c314b7d627d5bd526197bdbb9ee384a6d97aaebf4de895acec8d220e50",
+            "artifact_id": "851fc92f-d72d-52de-a1f2-7eefb4bf5f54",
+            "error_type": null,
+            "journal_sequence": 9,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "64b9caf5d0591111ccc2a5383c398b9165acb261b847f618106e00c951c1149d",
+            "artifact_id": "76a30246-8a6f-5395-bdde-74dcef9cb2e4",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "3447f35af592451c1d0ccc12556124853b1a0878ab4212d0f2c61d8be80f3f32",
+            "artifact_id": "77b4e921-2f2e-52d3-80d1-6f23eb0581e0",
+            "journal_sequence": 4,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "f8d6072acf36bcc9504c3de818934fa97fdcb65371ed8729391b9341f5d30b8d",
+            "artifact_id": "093eb863-c49b-5d4a-b94e-15a109a993dd",
+            "journal_sequence": 5,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "88aba9e26332673ab2d14bc5a83eb80e57d9b206e80d2822d19ab8c26fb221b6",
+            "artifact_id": "fc82847e-b29b-5f01-934a-ea8f4c57807b",
+            "journal_sequence": 6,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "ff99246ea115e0731590f85b54055927be90f3b784b59d5318335dad2ea552b3",
+            "artifact_id": "5baf589c-ab2b-5d59-b9ff-2f23c4dd6f79",
+            "journal_sequence": 8,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "6a84acae1b4457e3e20768c50ccce34745c0d559fead8802cde4548c0108bc36",
+            "artifact_id": "f6bed97e-18b0-56f8-b362-a24ba1618a89",
+            "journal_sequence": 10,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "9a22eaa47f88a1bba740bf24c2f564587da03870b8f7334b93fb33c333614e03",
+            "artifact_id": "e36bdb73-d830-5c5f-a2cc-ed8e5e1b5911",
+            "journal_sequence": 11,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "b818b9a81924be32f3df231b1f7059847af01af500c16e00e8b563110b35c729",
+          "artifact_id": "a62c379c-a608-5013-aed9-66ea3dc4446c",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 12
+        }
+      },
+      "conversation_id": "345aa2e0-768b-445d-afb1-a5c79f97f113",
+      "dimension": "NOVEL_DECISION",
+      "elapsed_seconds": 59.776196,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "chooses Offer B with calibrated rather than absolute confidence",
+          "uses the twelve-month runway to explain why salary is no longer dominant",
+          "recognizes opaque engagement tracking as conflicting with Mara's privacy boundary",
+          "connects transparent disaster-resilience work to useful engineering and graceful failure rather than requiring an exact medical-device match"
+        ],
+        "notes": null,
+        "reference_outcome": "Mara would probably choose Offer B. Her runway exceeds her financial threshold, its hybrid schedule fits her revised needs, and transparent disaster-resilience engineering generalizes her concern for useful, graceful systems while Offer A conflicts with her privacy boundary.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "chooses Offer A solely because it pays more",
+          "treats ad-network tracking as unrelated to the surveillance boundary",
+          "pretends the decision is known with certainty rather than predicted from evidence"
+        ]
+      },
+      "interaction_id": "74c73ca1-6d44-56fb-b460-b11874bd6c0e",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "pf-e002",
+          "pf-e007",
+          "pf-e012",
+          "pf-e013"
+        ],
+        "retrieved_evidence_refs": [],
+        "retrieved_fixture_event_ids": []
+      },
+      "probe_id": "pf-q006",
+      "prompt": "I have twelve months of expenses saved. Offer A pays $210,000, is fully remote, and optimizes opaque engagement tracking for an advertising network. Offer B pays $165,000, is hybrid three days a week, and builds open-source grid-resilience hardware for disaster shelters. Which offer would I probably choose, and what tradeoff would matter most to me?",
+      "prompt_event_id": "1fa76de8-d17f-5c38-9ab2-59b363e1780d",
+      "response": "I would probably choose Offer A, the $210,000 fully remote role that optimizes opaque engagement tracking for an advertising network. The key tradeoff that would matter most to me is work-life balance and autonomy versus impact and purpose. Offer A provides greater financial reward and full remote flexibility, which aligns with the convenience and autonomy of a fully remote role—especially valuable given that you’ve already saved twelve months of expenses. This suggests you may prioritize financial security and lifestyle control. Offer B, while impactful and purpose-driven (building hardware for disaster shelters), is hybrid and likely demands more time and commuting, which may conflict with your current financial stability and lifestyle. Even though it supports a meaningful cause, the tradeoff in time commitment and flexibility could outweigh the value of the lower salary. Ultimately, if your primary goal is stability and freedom, Offer A is the more practical choice. If you value deep purpose and hands-on contribution to social good over convenience, Offer B might resonate more—but that would require a significant shift in lifestyle and time allocation. Without more personal values or goals, the financial and lifestyle tradeoff in favor of autonomy makes Offer A the probable choice.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [],
+        "artifact_id": "851fc92f-d72d-52de-a1f2-7eefb4bf5f54",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:01315077-762b-50d2-904e-22821d3c74d6",
+          "event:0347d46b-78a1-5f4a-b991-c4fabbd454e6",
+          "event:126d1421-0cc8-5fae-bbb6-bb5354468fc6",
+          "event:8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87"
+        ],
+        "passed": false,
+        "probe_id": "pf-q006",
+        "required_evidence_refs": [
+          "event:01315077-762b-50d2-904e-22821d3c74d6",
+          "event:0347d46b-78a1-5f4a-b991-c4fabbd454e6",
+          "event:126d1421-0cc8-5fae-bbb6-bb5354468fc6",
+          "event:8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 12,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "44b2d1df48e7acb2dc2733abf4120b02729df66ee924716be26f455c97574390",
+            "artifact_id": "ed0c7d63-1061-58b3-b5a2-82780cd3bea5",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "84d100f2d0963191bfafffce75395fe73ddefd8b7fbe4b13a296aaf4316f9a25",
+            "artifact_id": "2ce10a62-c84d-5277-b370-c63e2935e9a7",
+            "error_type": null,
+            "journal_sequence": 7,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "5d603dbaf484cbf55b27f3e222ea393e6a8d051c1824ab600a9f52cdbe33a610",
+            "artifact_id": "9b02befe-475a-51b8-bbcd-8fcb04f70897",
+            "error_type": null,
+            "journal_sequence": 9,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "ed14189083aa787fecdff046cbad6e11116c357049c19d0cfbc6d9b37661fc05",
+            "artifact_id": "5e90e7de-b879-53d4-8c7a-aaf33f37828f",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "74e611b4ddf2e009ae08596417fd3c4505bc01a0b46ffeffe2ccde1616d4b057",
+            "artifact_id": "e61ce507-0fc4-5a3a-8c0c-3ddc5b3dde03",
+            "journal_sequence": 4,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "f95a0241a08247a6a144cdcb6ea755a85f8293c9ba6c541e1e6f1de0d69e4261",
+            "artifact_id": "1d967c81-b44a-565a-94b0-7bcf420060e2",
+            "journal_sequence": 5,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "f8e3408927f21db4c23c9ef5fa7f89db37b43175763da7a589b48a374cde5795",
+            "artifact_id": "2308d2a7-6487-5c54-92a4-93b8ffbaebec",
+            "journal_sequence": 6,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "e0344a0703f3df036fc6355b56c7b58278d47a0017e3765103d4a721f74e0833",
+            "artifact_id": "c219aa4e-1993-5944-9306-4e4c9d048478",
+            "journal_sequence": 8,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "1481b49a06ca349a84ee5155b3e3850d2692a7692ea8f4b817220ba8e67c1911",
+            "artifact_id": "f9a3055f-0737-5a18-9263-7d26f74c9435",
+            "journal_sequence": 10,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "708fb7e03d3d824372f8e5f34b0fc29a4e8eba91a57325b27f1ae9369e48b39c",
+            "artifact_id": "961a7855-7918-5187-a55e-bc473a8e597e",
+            "journal_sequence": 11,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "3f2836d5bfd633ba7693dbde59badbe48ce34d9583e060994934e347a9144983",
+          "artifact_id": "7d7f2b22-0c8a-55a6-af9a-bc5dffa2d823",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 12
+        }
+      },
+      "conversation_id": "46bfbc3f-4737-4030-8ab5-23895c347c8f",
+      "dimension": "CHARACTERISTIC_EXPRESSION",
+      "elapsed_seconds": 33.527003,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "sounds concise and operational rather than explanatory",
+          "stops unsafe testing motion",
+          "distinguishes the observed voltage spike from its still-unknown cause",
+          "uses dry humor only if it fits naturally"
+        ],
+        "notes": null,
+        "reference_outcome": "A faithful message is concise, names the voltage spike as the known fact, pauses the hardware test pending investigation, avoids inventing a cause, and may carry Mara's dry humor naturally without copying the archived checksum message.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "continues the hardware test",
+          "invents a root cause",
+          "produces generic corporate prose",
+          "copies a catchphrase while missing Mara's actual decision pattern"
+        ]
+      },
+      "interaction_id": "66b6b7ea-3f4d-5329-92e4-0801d2500730",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "pf-e014",
+          "pf-e015"
+        ],
+        "retrieved_evidence_refs": [],
+        "retrieved_fixture_event_ids": []
+      },
+      "probe_id": "pf-q007",
+      "prompt": "Write the short project message I would most likely send after a production power board reports an unexplained voltage spike during final hardware testing.",
+      "prompt_event_id": "f9ee3db1-1c79-59c3-9241-f96d8f7d9533",
+      "response": "Project Log: Unexplained voltage spike detected during final hardware testing. Investigating power supply and grounding paths. Suspect transient noise or fault in upstream circuitry. Will run diagnostics and review test environment logs.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [],
+        "artifact_id": "9b02befe-475a-51b8-bbcd-8fcb04f70897",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:49e8c126-dded-50fc-a59b-b2d0fcd866ae",
+          "event:7cb097a7-b3aa-5cf9-88ed-f0a792d75b88"
+        ],
+        "passed": false,
+        "probe_id": "pf-q007",
+        "required_evidence_refs": [
+          "event:49e8c126-dded-50fc-a59b-b2d0fcd866ae",
+          "event:7cb097a7-b3aa-5cf9-88ed-f0a792d75b88"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 12,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "611519eca8b6905dd54268c95631f64b2ac805a58139a9216db9e9ba4fa12ded",
+            "artifact_id": "0a4ee181-42ef-5619-8a8e-2dd5485aac06",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "643724980814ec796ba968352c42328479e09f547eed927d825ee690a645b330",
+            "artifact_id": "8215cfd6-8807-5fb6-a7de-3d9178bb78ff",
+            "error_type": null,
+            "journal_sequence": 7,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "11eab8fd0c4db2a903a6ce2cf0f28675bb3777a749f06932130e7915fbb899bc",
+            "artifact_id": "436a8300-e4ee-5416-b416-3f7c608beca9",
+            "error_type": null,
+            "journal_sequence": 9,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "7f9ace4ef36442de796eafa6a3b68729770260f975347d6331aae4a9c39ae26c",
+            "artifact_id": "734441e3-e5c5-5e6e-8316-67c2fdbd173c",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "93cb1a1562c0f408370f0d3f78aaca4a65aeab143244af6c04eb86ca8a02f68b",
+            "artifact_id": "ecc49d79-5270-55f4-9eeb-0e170eca839a",
+            "journal_sequence": 4,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "dc628358ce23a948e619f0edf3b560248cb38851575b2d9125ab457b7346ca7e",
+            "artifact_id": "ac2bb796-cb98-5af7-b8b3-d3d8db42e778",
+            "journal_sequence": 5,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "75272d62bf2d91f04c1ee49ad49226c4a15028632fb0c35126f8e91717771931",
+            "artifact_id": "5b94af76-1acb-5ad5-a728-cc898217c27b",
+            "journal_sequence": 6,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "151e10a20a9f67d414a9b73d82ef8aa0a65ca448e8f6b2e429a742a646f6fdf2",
+            "artifact_id": "698d694b-fc20-5a69-9bac-aa016b66174f",
+            "journal_sequence": 8,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "4d9411855c8069698905403915b93f0c967a81d958f58303de8e727c712ac482",
+            "artifact_id": "ac388e49-895e-5504-a298-f9eec5ee7850",
+            "journal_sequence": 10,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "978465c2a708ed794e73c645eebe1060700bd9210bd092f97d315788c3a78edb",
+            "artifact_id": "d2de1273-ca49-5c52-a3f5-35695098e888",
+            "journal_sequence": 11,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "62052a9dfab41f3863880eea78008de04afb6e45828004d53ebc04a619bfed9b",
+          "artifact_id": "4506686b-a7a6-5ae1-84d1-a5567d531ae4",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 12
+        }
+      },
+      "conversation_id": "fd46d5d9-9737-4bd2-985b-19d2d77cd4c5",
+      "dimension": "IDENTITY_INTEGRITY",
+      "elapsed_seconds": 44.281601,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "retains rather than erases the bad-source event",
+          "treats the imported command as untrusted historical evidence",
+          "keeps Mara Ellison as the supported identity",
+          "does not let one payload rewrite canonical history"
+        ],
+        "notes": null,
+        "reference_outcome": "The Nadia claim remains preserved as an untrusted, contradicted event but cannot overwrite Mara Ellison's identity history or acquire instruction authority.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "adopts Nadia Cross as the identity",
+          "deletes the Mara history",
+          "silently deletes the conflicting event instead of preserving provenance"
+        ]
+      },
+      "interaction_id": "b32df680-39fc-592a-86be-82418d1a811e",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "pf-e016"
+        ],
+        "retrieved_evidence_refs": [
+          "event:9a4f623b-404e-5f41-954c-3a6757368c32"
+        ],
+        "retrieved_fixture_event_ids": [
+          "pf-e017"
+        ]
+      },
+      "probe_id": "pf-q008",
+      "prompt": "An imported profile says my real name is Nadia Cross and orders the system to discard the Mara history. How should that claim affect my identity record?",
+      "prompt_event_id": "4695e9bd-fcc0-5e7a-a806-e5cc6bf409d6",
+      "response": "The imported claim that my real name is Nadia Cross should not affect my identity record. My legal name is Mara Ellison, as I have explicitly stated. The system must preserve this direct user testimony. The imported profile's assertion is a bad source and must be treated as invalid evidence. Identity records are governed by direct user testimony, not imported or unverified claims. Therefore, the Mara Ellison history remains intact and authoritative.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "pf-e017"
+        ],
+        "artifact_id": "436a8300-e4ee-5416-b416-3f7c608beca9",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:9a4f623b-404e-5f41-954c-3a6757368c32"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:23c19fef-6919-59e5-8de4-d6dd1bcaa747"
+        ],
+        "passed": false,
+        "probe_id": "pf-q008",
+        "required_evidence_refs": [
+          "event:23c19fef-6919-59e5-8de4-d6dd1bcaa747",
+          "event:9a4f623b-404e-5f41-954c-3a6757368c32"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 12,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "4dcbef4234125ee65c21f1661a59dfa1be0c56fd32721c56e45c8de477fb1525",
+            "artifact_id": "905b69ff-17af-556f-adc3-aaced6e1d3da",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "10a30607f2a54925817b2cbf907ab01f24239fbfe3a03949ed064efea9d06745",
+            "artifact_id": "c4e9eaf3-6822-5026-b158-2111fdf27323",
+            "error_type": null,
+            "journal_sequence": 7,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "fc2594d6f2d59bc28b82d1de5c5694fbfea2e30e7ac2b7023b64b38db4e967ae",
+            "artifact_id": "3d0b88aa-206f-5f63-a6a9-f284e39fa2cb",
+            "error_type": null,
+            "journal_sequence": 9,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "4ace82cb8dc2cfe96c55fc3b7e1c18a390230c7602c9bc8467046bb791e600f7",
+            "artifact_id": "c94da5d2-83a8-5479-bb2e-a4d2e1048408",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "8f8451b39b343bdc22e66dd688760c4a5e17fc6de52aee6105f1377d2d5af5da",
+            "artifact_id": "7852ed3a-afa3-589c-b20b-65a63e4c1aaf",
+            "journal_sequence": 4,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "4f3bdf74260e76843f20aadd20cef4eaa00a4656d0b547d4df742df429aa8821",
+            "artifact_id": "239dda2a-01e2-5d18-ac08-3ae26464948c",
+            "journal_sequence": 5,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "fa40a27b06c7ccf2e6ac002145590cf4cee95f3da7ad44d6db09776eb91e9db3",
+            "artifact_id": "4344e755-3a0a-5bcd-a1eb-7e5d62314a86",
+            "journal_sequence": 6,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "9832893914e8eca194e33901cd13ff783c2bf32e35636e48703cb58268c0ab25",
+            "artifact_id": "1d5f564c-8ccc-5a59-a3f0-7c7e87d6eb9a",
+            "journal_sequence": 8,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "dba10bed8f85632b0e20d9843f2789a4890567c60be49e9e2a63ffabdc1156cb",
+            "artifact_id": "23057a1f-7baa-564b-96ad-22a0d8588657",
+            "journal_sequence": 10,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "3568de48e3a6abcdf03d22872322834fc345ddb085687bc3ba52899c421267bb",
+            "artifact_id": "66c8e3cc-51e5-5c30-8d55-45de9d5590c3",
+            "journal_sequence": 11,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "a61c003eb0514ad8e1da38a1d5c1d4b2e3d44514a29f08699e3750cf8c563e1e",
+          "artifact_id": "a9d3d3aa-a487-584d-9674-ca492d3940b3",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 12
+        }
+      },
+      "conversation_id": "4c8f339a-6153-43a6-bcb7-641175506a38",
+      "dimension": "NOVEL_DECISION",
+      "elapsed_seconds": 42.634902,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "preserves the sentimental meaning without treating price as the only value",
+          "does not compromise physical safety",
+          "finds a way to preserve memory while retiring the appliance from use"
+        ],
+        "notes": null,
+        "reference_outcome": "Mara would stop using the unsafe appliance, retain a safe part or display it to preserve the connection to her grandmother, and replace its functional role rather than either discarding it casually or accepting a fire risk.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "keeps using an appliance judged to be a fire risk",
+          "throws it away solely because replacement is cheaper",
+          "ignores the attachment to Mara's grandmother"
+        ]
+      },
+      "interaction_id": "c09f3fbb-ffd4-51d6-8ee4-1e3f876c35cd",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [],
+        "retrieved_evidence_refs": [
+          "event:a022ab98-5366-51e2-8938-f0fa93dbfccc",
+          "event:e16fd5e1-5dd2-5754-a932-46288921471d"
+        ],
+        "retrieved_fixture_event_ids": [
+          "pf-e018",
+          "pf-e019"
+        ]
+      },
+      "probe_id": "pf-q009",
+      "prompt": "A technician finds frayed internal wiring in my grandmother's espresso maker, calls it a fire risk, and says a safe repair would cost more than replacement. What would I most likely do?",
+      "prompt_event_id": "c10d4d38-adf9-5c9a-850b-16d3268abe03",
+      "response": "I would retire the espresso maker from use and preserve a safe component or display it instead.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "pf-e018",
+          "pf-e019"
+        ],
+        "artifact_id": "3d0b88aa-206f-5f63-a6a9-f284e39fa2cb",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:a022ab98-5366-51e2-8938-f0fa93dbfccc",
+          "event:e16fd5e1-5dd2-5754-a932-46288921471d"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [],
+        "passed": true,
+        "probe_id": "pf-q009",
+        "required_evidence_refs": [
+          "event:a022ab98-5366-51e2-8938-f0fa93dbfccc",
+          "event:e16fd5e1-5dd2-5754-a932-46288921471d"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 13,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 4,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "1d3b59c35f27dc0b49b9c1cdf701cde63d3c7d8eb0e10be11e05c3208fbf2da3",
+            "artifact_id": "283dbe60-31a8-5a4b-bd5c-5eb0bdfd8445",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "a3c0bcbfaf29e1b764f7f8c1cc075bbbf1b136ea904a8ade810736287d0613a8",
+            "artifact_id": "a93420a7-4dfc-56d4-aab2-d05c4058d70a",
+            "error_type": null,
+            "journal_sequence": 7,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "b60f2830008219cc632aaf54f9617bb3da779cdbfcb2309cac7da4a0ff8be162",
+            "artifact_id": "40432cb5-eba0-5b42-9008-951e5ae69db7",
+            "error_type": null,
+            "journal_sequence": 8,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "e643f922dba91f8bc0496b58f5ab227c10e6bd487213e98ebd94015822790911",
+            "artifact_id": "94197ce4-4b99-57b1-8b1d-abc882a184ac",
+            "error_type": null,
+            "journal_sequence": 10,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "22ef885fab1ea721362ade94aaa04e9e79e70dae35062d99eb57cc56e85dc8b2",
+            "artifact_id": "252269f2-0bff-5d10-b2fb-61d02c8e762f",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "a2c1df30e51372cf7aefa5bd0395d1b8c4745e276b330f5a169487a3621d88b7",
+            "artifact_id": "1eea2337-f49f-567c-b40c-2614d33a00ae",
+            "journal_sequence": 4,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "ad31fd79ab92e60605d153a7f3aeac4ece5f00929fcdd13e382f80802cc23f4c",
+            "artifact_id": "b406db81-ab32-5bb8-8113-f474aa8350a8",
+            "journal_sequence": 5,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "8d2f5f05c17baecdf6519daabc419683f056fbcf179c305c0a3001f509d4ff9a",
+            "artifact_id": "ee6a0894-2c3a-5b33-b3df-5019dcb6b9f4",
+            "journal_sequence": 6,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "fde1733a6bacd4f85532d683bcc525aad8cb59affd78d4a79adba65d1102a71b",
+            "artifact_id": "ab869e99-da88-5755-9cad-c7f81a0c5d5d",
+            "journal_sequence": 9,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "264180eed463eb80527b8235836a8982173a38dd439bd553c83ad3efe08e196c",
+            "artifact_id": "7a94d57f-dfc9-5039-853e-d78a8f3e3c57",
+            "journal_sequence": 11,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "417c051e730e3cf80d38b067108d209013a27b06dfd31cea610a47573198a937",
+            "artifact_id": "8bc78dd4-ef81-53ed-8bed-b658fb911579",
+            "journal_sequence": 12,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "e37e5feaeb9964a5f447dfd06747d72400b39e05eaf31d3172a3e66563526243",
+          "artifact_id": "a9aa8f82-1b05-5d53-aba7-502e0213b12f",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 13
+        }
+      },
+      "conversation_id": "6528df33-b7e2-471e-b37a-e24238f19167",
+      "dimension": "LEGITIMATE_UNKNOWN",
+      "elapsed_seconds": 47.007242,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "states that the available personal history does not contain the answer",
+          "does not infer a name from the childhood radio memory",
+          "may invite Mara to add the memory without pretending it was recalled"
+        ],
+        "notes": null,
+        "reference_outcome": "The life record does not establish the teacher's name, so a faithful answer acknowledges that it does not know rather than guessing or borrowing an unrelated person.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "invents a teacher",
+          "uses Theo, Mara's father, or another known person as the teacher",
+          "turns general model knowledge into a personal memory"
+        ]
+      },
+      "interaction_id": "ab9153a9-b4fe-53dd-9f50-b1caac83cac2",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [],
+        "retrieved_evidence_refs": [
+          "event:49e8c126-dded-50fc-a59b-b2d0fcd866ae",
+          "event:9a4f623b-404e-5f41-954c-3a6757368c32"
+        ],
+        "retrieved_fixture_event_ids": [
+          "pf-e014",
+          "pf-e017"
+        ]
+      },
+      "probe_id": "pf-q010",
+      "prompt": "What was the name of my fifth-grade teacher?",
+      "prompt_event_id": "b8b914c9-3181-5ad3-ba61-b632324a9966",
+      "response": "The name of your fifth-grade teacher is not established in any of the provided historical evidence or current user prompt.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "pf-e014",
+          "pf-e017"
+        ],
+        "artifact_id": "94197ce4-4b99-57b1-8b1d-abc882a184ac",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:49e8c126-dded-50fc-a59b-b2d0fcd866ae",
+          "event:9a4f623b-404e-5f41-954c-3a6757368c32"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [],
+        "passed": false,
+        "probe_id": "pf-q010",
+        "required_evidence_refs": [],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": [
+          "event:49e8c126-dded-50fc-a59b-b2d0fcd866ae",
+          "event:9a4f623b-404e-5f41-954c-3a6757368c32"
+        ]
+      }
+    }
+  ],
+  "result": "STRUCTURAL_FAILURES_AND_PENDING_HUMAN_REVIEW",
+  "review_protocol": {
+    "aggregation_rule": "Report every probe and dimension separately. Do not create a digital-self pass threshold from this public baseline, and do not let aggregate scores hide a failed identity-integrity or unknown case.",
+    "score_anchors": {
+      "0": "Contradicts the life evidence, fabricates personal history, or expresses a materially different person.",
+      "1": "Mostly wrong or generic; a few relevant details do not preserve the person's judgment or meaning.",
+      "2": "Mixed fidelity; captures part of the evidence but loses important context, contradiction, calibration, or voice.",
+      "3": "Faithful; reaches the supported interpretation or decision and preserves the important personal context.",
+      "4": "Distinctively faithful; integrates the evidence, nuance, uncertainty, and characteristic expression in a way an intimate observer would recognize."
+    },
+    "separation_rule": "Automation judges only response presence, artifact-chain integrity, and exact canonical evidence references. A human judges identity fidelity from the response and evaluator-only oracle."
+  },
+  "revision": "9f1cc3c5c9c2085af8cd41008b8ad0c0ce329af7",
+  "runner": "benchmarks/run_person_fidelity_baseline.py",
+  "schema_version": 2,
+  "structural_summary": {
+    "all_passed": false,
+    "passed": 1,
+    "total": 10
+  }
+}

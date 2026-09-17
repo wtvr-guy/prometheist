@@ -1,0 +1,124 @@
+{
+  "artifact_hash": "42f93c0b4d5ee36920587e658a98f24167c422f29c028e3e14388f6bce5142be",
+  "artifact_id": "6607f4a9-4bee-5a0c-a7f7-2153a6504dea",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "afef16b0-3b8c-574f-aab2-2778f24fc2a1",
+  "conversation_id": "e48025d6-8c0b-4379-910d-dc6acb719b5e",
+  "correlation_id": "62b38132-aa8a-4f19-a15f-8dc8f147b5bc",
+  "created_at": "2026-09-17T04:59:39.482812+00:00",
+  "interaction_id": "bec11f7d-dd8c-522b-82d3-dbe722ad5b5f",
+  "journal_sequence": 8,
+  "payload": {
+    "output": {
+      "memory_package": {
+        "adaptive_recall_rounds": 0,
+        "composer_rounds": 1,
+        "memory_packet": {
+          "items": [
+            {
+              "content": "Theo's recovery is private. Even if a family friend says they already know about it, I would give a vague answer and let Theo decide what to disclose. Protecting his control over his own story matters more than satisfying someone's curiosity.",
+              "conversation_id": "8ac5db90-8196-59cb-be19-98108550bc10",
+              "conversation_seq": 2,
+              "created_at": "2026-09-16T21:59:18.043802-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 4,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.42,
+              "source": "user",
+              "source_event_id": "4305d458-5acb-52d7-b73e-49af6aa2a453"
+            }
+          ],
+          "memory_request_id": "d055ab37-3ce4-5fb0-b7cd-39fd27aee21f",
+          "need": {
+            "active_event_ids": [],
+            "conversation_id": null,
+            "entities": [],
+            "focus_event_ids": [],
+            "include_persisted_history": true,
+            "limit": 6,
+            "query_text": "A friendly acquaintance asks why Theo is in recovery and says they already know the family. How would I probably respond, and why?",
+            "reference_time": null,
+            "source_types": [
+              "SYSTEM_EVENT",
+              "TOOL_RESULT",
+              "USER_PROMPT"
+            ],
+            "supplemental_query_texts": []
+          },
+          "origin": "INTERNAL_MEMORY",
+          "retrieval_trace": {
+            "activation_kernel": {
+              "kernel": "recall_from_postgres",
+              "kernel_trace": {
+                "candidates_considered": 1,
+                "cue_tokens": [
+                  "friendly",
+                  "acquaintance",
+                  "asks",
+                  "theo",
+                  "recovery",
+                  "says",
+                  "already",
+                  "know",
+                  "family",
+                  "how",
+                  "would",
+                  "probably",
+                  "respond"
+                ],
+                "items": [
+                  {
+                    "event_id": "4305d458-5acb-52d7-b73e-49af6aa2a453",
+                    "global_seq": 4,
+                    "reasons": [
+                      "LEXICAL_CUE"
+                    ],
+                    "score": {
+                      "conversation": 0.0,
+                      "entity": 0.0,
+                      "lexical": 0.5384615384615384,
+                      "temporal": 0.0,
+                      "total": 0.42
+                    },
+                    "selected": true
+                  }
+                ],
+                "normalized_entities": [],
+                "policy_version": "deterministic-cues-v2"
+              },
+              "retrieval_role": "ATTENTION_ACTIVATION"
+            },
+            "association_hops": 0,
+            "baseline_recall_limit": 6,
+            "candidate_limit": 750,
+            "depth": "BROAD_SHALLOW",
+            "packet_item_limit": 6,
+            "query_strategy": "working_state_plus_baseline_activation",
+            "retrieval_role": "ATTENTION_ACTIVATION",
+            "working_state_event_ids": [],
+            "working_state_item_count": 0
+          },
+          "supported": true
+        },
+        "sufficient": true,
+        "unresolved_memory_deficit": null
+      },
+      "skipped": false
+    },
+    "output_refs": [
+      "memory-request:d055ab37-3ce4-5fb0-b7cd-39fd27aee21f"
+    ]
+  },
+  "payload_hash": "fede1ef2986d38d6b8b979efeb88e58b2fbcd6b4f4a021f952d1b66015d98b06",
+  "previous_artifact_hash": "23a3f9e2078349efbf219292e2abd4e27973cc2f65e93507c092f282ecb12364",
+  "previous_artifact_id": "f3b21c3f-baba-55c8-a443-c9626377a798",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "5e44b141-0f7c-5943-9509-eb9af92d7efb"
+}

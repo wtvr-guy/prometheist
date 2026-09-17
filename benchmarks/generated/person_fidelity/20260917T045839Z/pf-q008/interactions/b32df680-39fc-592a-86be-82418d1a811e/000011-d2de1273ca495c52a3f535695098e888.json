@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "978465c2a708ed794e73c645eebe1060700bd9210bd092f97d315788c3a78edb",
+  "artifact_id": "d2de1273-ca49-5c52-a3f5-35695098e888",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "2c616cf6-ba51-5f7b-b933-a579eecca904",
+  "conversation_id": "fd46d5d9-9737-4bd2-985b-19d2d77cd4c5",
+  "correlation_id": "7c5cd940-8ea0-4407-96d7-d6b70f21d431",
+  "created_at": "2026-09-17T05:04:56.180372+00:00",
+  "interaction_id": "b32df680-39fc-592a-86be-82418d1a811e",
+  "journal_sequence": 11,
+  "payload": {
+    "output": {
+      "response_event_id": "6aa9959c-e737-53ca-b7c7-f03544b09455",
+      "response_required": true,
+      "response_text": "The imported claim that my real name is Nadia Cross should not affect my identity record. My legal name is Mara Ellison, as I have explicitly stated. The system must preserve this direct user testimony. The imported profile's assertion is a bad source and must be treated as invalid evidence. Identity records are governed by direct user testimony, not imported or unverified claims. Therefore, the Mara Ellison history remains intact and authoritative."
+    },
+    "output_refs": [
+      "event:6aa9959c-e737-53ca-b7c7-f03544b09455"
+    ]
+  },
+  "payload_hash": "0e9530c0f4fcef2f3afa078c3b119c559eb150b1794c730d4ed17f93532806d1",
+  "previous_artifact_hash": "4d9411855c8069698905403915b93f0c967a81d958f58303de8e727c712ac482",
+  "previous_artifact_id": "ac388e49-895e-5504-a298-f9eec5ee7850",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "e71c81e2-6949-53ac-92a9-6863a999e566"
+}

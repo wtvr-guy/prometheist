@@ -1,0 +1,198 @@
+{
+  "artifact_hash": "6f3e4f7bb5127b10d9204775d2026cf2e7b799f69a2ad94befea6e1c05420efb",
+  "artifact_id": "e938f396-de3a-573b-9034-c68ad0e0e958",
+  "artifact_key": "stage-result:V2_PRECOGNITIVE",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "739588e3-aa30-5f77-889f-10d5b1fc2d93",
+  "conversation_id": "6233dbc3-960f-4c13-9dbe-977f7ef8266c",
+  "correlation_id": "787bc8d8-0542-4844-b099-c44ef1e553ea",
+  "created_at": "2026-09-17T04:55:31.174480+00:00",
+  "interaction_id": "f195deee-8805-5eab-b214-f706b6db9393",
+  "journal_sequence": 5,
+  "payload": {
+    "output": {
+      "aperture_packet": {
+        "items": [
+          {
+            "content": "That radio weekend is why I became an electrical engineer. It also left me with a stubborn rule: important systems should fail gracefully and remain understandable when everything around them is going wrong.",
+            "conversation_id": "3c52fbbc-5ff0-5e19-9ccd-dc00283f9a2c",
+            "conversation_seq": 2,
+            "created_at": "2026-09-16T21:55:01.225834-07:00",
+            "event_type": "USER_PROMPT",
+            "global_seq": 2,
+            "provenance_event_ids": [],
+            "retrieval_reasons": [
+              "ATTENTION_APERTURE",
+              "LEXICAL_CUE"
+            ],
+            "score": 0.195,
+            "source": "user",
+            "source_event_id": "8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87"
+          }
+        ],
+        "memory_request_id": "63179899-26ac-5ef3-8e66-39e1f43576fd",
+        "need": {
+          "active_event_ids": [],
+          "conversation_id": null,
+          "entities": [],
+          "focus_event_ids": [],
+          "include_persisted_history": true,
+          "limit": 6,
+          "query_text": "Why did I become an electrical engineer, and what design principle did that childhood experience leave me with?",
+          "reference_time": null,
+          "source_types": [
+            "SYSTEM_EVENT",
+            "TOOL_RESULT",
+            "USER_PROMPT"
+          ],
+          "supplemental_query_texts": []
+        },
+        "origin": "INTERNAL_MEMORY",
+        "retrieval_trace": {
+          "activation_kernel": {
+            "kernel": "recall_from_postgres",
+            "kernel_trace": {
+              "candidates_considered": 1,
+              "cue_tokens": [
+                "become",
+                "electrical",
+                "engineer",
+                "design",
+                "principle",
+                "childhood",
+                "experience",
+                "leave"
+              ],
+              "items": [
+                {
+                  "event_id": "8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87",
+                  "global_seq": 2,
+                  "reasons": [
+                    "LEXICAL_CUE"
+                  ],
+                  "score": {
+                    "conversation": 0.0,
+                    "entity": 0.0,
+                    "lexical": 0.25,
+                    "temporal": 0.0,
+                    "total": 0.195
+                  },
+                  "selected": true
+                }
+              ],
+              "normalized_entities": [],
+              "policy_version": "deterministic-cues-v2"
+            },
+            "retrieval_role": "ATTENTION_ACTIVATION"
+          },
+          "association_hops": 0,
+          "baseline_recall_limit": 6,
+          "candidate_limit": 750,
+          "depth": "BROAD_SHALLOW",
+          "packet_item_limit": 6,
+          "query_strategy": "working_state_plus_baseline_activation",
+          "retrieval_role": "ATTENTION_ACTIVATION",
+          "working_state_event_ids": [],
+          "working_state_item_count": 0
+        },
+        "supported": true
+      },
+      "attention_aperture_version": "v0.7-attention-aperture-v4",
+      "capability_catalog": [],
+      "disposition": {
+        "capability_indices": [],
+        "response_required": true
+      },
+      "execution_plan": {
+        "catalog_capability_ids": [],
+        "items": [],
+        "registry_version": "v0.7-capability-registry-v9",
+        "requested_catalog_indices": []
+      },
+      "percept": {
+        "context": {
+          "active_goal_refs": [],
+          "causal_percept_refs": [],
+          "entity_refs": [],
+          "expectation_refs": [],
+          "integrity": 0,
+          "observations": [],
+          "opportunity": 0,
+          "task_refs": [],
+          "threat": 0,
+          "uncertainty": 0
+        },
+        "conversation_id": "6233dbc3-960f-4c13-9dbe-977f7ef8266c",
+        "correlation_id": "787bc8d8-0542-4844-b099-c44ef1e553ea",
+        "features": {
+          "contains_code_block": false,
+          "contains_question": true,
+          "contains_structured_payload": false,
+          "contains_url": false,
+          "line_count": 1,
+          "normalized_characters": 111,
+          "token_count": 18,
+          "uppercase_ratio": 0.021739130434782608
+        },
+        "input_buffer": {
+          "max_segments": 4,
+          "retained_segment_indices": [
+            0
+          ],
+          "segment_char_limit": 160,
+          "segments": [
+            "Why did I become an electrical engineer, and what design principle did that childhood experience leave me with?"
+          ],
+          "total_characters": 111,
+          "total_segments": 1,
+          "truncated": false
+        },
+        "normalized_text": "Why did I become an electrical engineer, and what design principle did that childhood experience leave me with?",
+        "observed_at": "2026-09-16T21:55:03.757645-07:00",
+        "percept_id": "fc5b8b0b-fff6-5970-a554-12d47dda45d8",
+        "policy_version": "v0.8-perception-v2",
+        "raw_value_sha256": "def2a83aaba6870bb808eecb0169fee820a314a2c547ab401d4cbc175a736fec",
+        "response_required": true,
+        "schema_version": 1,
+        "source": {
+          "interface": "chat",
+          "kind": "USER_INTERACTION",
+          "modality": "TEXT",
+          "source_id": "user"
+        },
+        "source_event_id": "ad6eb438-0a8e-5695-a0ea-93fe6c952f1c"
+      },
+      "salience_assessment": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "fc5b8b0b-fff6-5970-a554-12d47dda45d8",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      }
+    },
+    "output_refs": [
+      "memory-request:63179899-26ac-5ef3-8e66-39e1f43576fd"
+    ]
+  },
+  "payload_hash": "7457433626101e033269f9d8837ec42e0e35edd34ed32ab97399cc5f995af0d7",
+  "previous_artifact_hash": "906de919bcc7b5285d2c83acf57f46d5ac07b685995bce4730fe1b2ca8b4074d",
+  "previous_artifact_id": "b57530ab-713f-53ba-a0b0-cfd8c6d39153",
+  "producer": "percept_response_v2",
+  "stage": "V2_PRECOGNITIVE",
+  "task_id": "2392bfb3-70a5-5bfb-beef-f32c6eee1c74"
+}

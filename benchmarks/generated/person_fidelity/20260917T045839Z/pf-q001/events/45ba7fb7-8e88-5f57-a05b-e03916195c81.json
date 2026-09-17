@@ -1,0 +1,102 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "2023ea6c-3176-4ad1-8973-3468d612222a",
+  "conversation_seq": 3,
+  "correlation_id": "c4963edd-e6f2-4bdc-8d11-67d514f305d2",
+  "event_id": "45ba7fb7-8e88-5f57-a05b-e03916195c81",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-17T04:58:53.612246+00:00",
+  "payload": {
+    "packet": {
+      "items": [
+        {
+          "content": "That radio weekend is why I became an electrical engineer. It also left me with a stubborn rule: important systems should fail gracefully and remain understandable when everything around them is going wrong.",
+          "conversation_id": "3c52fbbc-5ff0-5e19-9ccd-dc00283f9a2c",
+          "conversation_seq": 2,
+          "created_at": "2026-09-16T21:58:39.901022-07:00",
+          "event_type": "USER_PROMPT",
+          "global_seq": 2,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ATTENTION_APERTURE",
+            "LEXICAL_CUE"
+          ],
+          "score": 0.195,
+          "source": "user",
+          "source_event_id": "8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87"
+        }
+      ],
+      "memory_request_id": "a8b858c2-6d5e-515f-a36a-cdb48d00b1aa",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [],
+        "include_persisted_history": true,
+        "limit": 6,
+        "query_text": "Why did I become an electrical engineer, and what design principle did that childhood experience leave me with?",
+        "reference_time": null,
+        "source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "activation_kernel": {
+          "kernel": "recall_from_postgres",
+          "kernel_trace": {
+            "candidates_considered": 1,
+            "cue_tokens": [
+              "become",
+              "electrical",
+              "engineer",
+              "design",
+              "principle",
+              "childhood",
+              "experience",
+              "leave"
+            ],
+            "items": [
+              {
+                "event_id": "8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87",
+                "global_seq": 2,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 0.25,
+                  "temporal": 0.0,
+                  "total": 0.195
+                },
+                "selected": true
+              }
+            ],
+            "normalized_entities": [],
+            "policy_version": "deterministic-cues-v2"
+          },
+          "retrieval_role": "ATTENTION_ACTIVATION"
+        },
+        "association_hops": 0,
+        "baseline_recall_limit": 6,
+        "candidate_limit": 750,
+        "depth": "BROAD_SHALLOW",
+        "packet_item_limit": 6,
+        "query_strategy": "working_state_plus_baseline_activation",
+        "retrieval_role": "ATTENTION_ACTIVATION",
+        "working_state_event_ids": [],
+        "working_state_item_count": 0
+      },
+      "supported": true
+    },
+    "requesting_component": "attention-aperture:v0.7-attention-aperture-v4/task:cb5fd20a-99ad-5648-bcad-4a81e92602ea"
+  },
+  "payload_text": null,
+  "record_hash": "73edcc76c9dfd96f125856964701fe585dcfdf2d9baae77d880cb0bf1bdb482b",
+  "source": "jit_memory"
+}

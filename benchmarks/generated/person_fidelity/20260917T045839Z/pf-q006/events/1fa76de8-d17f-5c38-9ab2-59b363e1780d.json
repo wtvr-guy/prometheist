@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "345aa2e0-768b-445d-afb1-a5c79f97f113",
+  "conversation_seq": 1,
+  "correlation_id": "f4ad96dd-c65f-492f-b341-bd06479276e7",
+  "event_id": "1fa76de8-d17f-5c38-9ab2-59b363e1780d",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-17T05:02:40.128673+00:00",
+  "payload": {
+    "text": "I have twelve months of expenses saved. Offer A pays $210,000, is fully remote, and optimizes opaque engagement tracking for an advertising network. Offer B pays $165,000, is hybrid three days a week, and builds open-source grid-resilience hardware for disaster shelters. Which offer would I probably choose, and what tradeoff would matter most to me?"
+  },
+  "payload_text": "I have twelve months of expenses saved. Offer A pays $210,000, is fully remote, and optimizes opaque engagement tracking for an advertising network. Offer B pays $165,000, is hybrid three days a week, and builds open-source grid-resilience hardware for disaster shelters. Which offer would I probably choose, and what tradeoff would matter most to me?",
+  "record_hash": "ea1aee4225dcb808a782d6ffe5033d925a5ebe88f248f2df8ba66e91f576db2f",
+  "source": "user"
+}

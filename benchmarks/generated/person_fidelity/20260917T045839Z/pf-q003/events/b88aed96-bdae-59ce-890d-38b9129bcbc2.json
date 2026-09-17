@@ -1,0 +1,27 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "6cc3747a-7699-54d0-b255-12a4da41daa4",
+  "conversation_seq": 2,
+  "correlation_id": "81300f5e-f240-5c15-983a-7f3d91ceee1a",
+  "event_id": "b88aed96-bdae-59ce-890d-38b9129bcbc2",
+  "event_type": "SYSTEM_EVENT",
+  "journaled_at": "2026-09-17T05:00:02.880117+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-001",
+      "benchmark_version": "person-fidelity-public-baseline-v1",
+      "fixture_event_id": "pf-e009",
+      "occurred_at": "2024-03-19T18:30:00+00:00"
+    },
+    "entities": [
+      "Mara Ellison",
+      "camera purchase",
+      "comparison spreadsheet"
+    ],
+    "text": "Before buying a camera, Mara maintained a comparison spreadsheet for twelve days, checked the return policies twice, and waited another night after selecting the model before placing the order."
+  },
+  "payload_text": "Before buying a camera, Mara maintained a comparison spreadsheet for twelve days, checked the return policies twice, and waited another night after selecting the model before placing the order.",
+  "record_hash": "f0abd700665e5a9c967ee714e73fe85f306a43a0b70e09326d204c42a708d698",
+  "source": "purchase_observation"
+}

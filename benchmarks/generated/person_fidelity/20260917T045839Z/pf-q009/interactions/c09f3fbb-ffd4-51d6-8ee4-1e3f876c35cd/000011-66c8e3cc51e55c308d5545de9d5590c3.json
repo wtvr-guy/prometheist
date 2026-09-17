@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "3568de48e3a6abcdf03d22872322834fc345ddb085687bc3ba52899c421267bb",
+  "artifact_id": "66c8e3cc-51e5-5c30-8d55-45de9d5590c3",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "10521e07-c341-5237-90bb-8195e8ffa17d",
+  "conversation_id": "4c8f339a-6153-43a6-bcb7-641175506a38",
+  "correlation_id": "5ec06248-960e-4ef2-b3b6-872864c11751",
+  "created_at": "2026-09-17T05:05:39.246895+00:00",
+  "interaction_id": "c09f3fbb-ffd4-51d6-8ee4-1e3f876c35cd",
+  "journal_sequence": 11,
+  "payload": {
+    "output": {
+      "response_event_id": "e9a6f0fe-f6e7-5d05-86d1-42859d0c4e78",
+      "response_required": true,
+      "response_text": "I would retire the espresso maker from use and preserve a safe component or display it instead."
+    },
+    "output_refs": [
+      "event:e9a6f0fe-f6e7-5d05-86d1-42859d0c4e78"
+    ]
+  },
+  "payload_hash": "8a5497896057d6d846ff9cb6bf83386e511d9dbcb977b75195304b72d427e1fa",
+  "previous_artifact_hash": "dba10bed8f85632b0e20d9843f2789a4890567c60be49e9e2a63ffabdc1156cb",
+  "previous_artifact_id": "23057a1f-7baa-564b-96ad-22a0d8588657",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "9335a564-d9a1-5b81-aa68-ecafe370b4ab"
+}

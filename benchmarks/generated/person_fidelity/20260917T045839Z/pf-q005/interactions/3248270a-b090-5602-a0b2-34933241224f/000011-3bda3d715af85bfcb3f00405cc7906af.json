@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "66e10a2cb2fd196f9ec6e64a98ca164c494708ebe2eaef90685e5abaec984a32",
+  "artifact_id": "3bda3d71-5af8-5bfc-b3f0-0405cc7906af",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "7c1035d3-f08b-5966-8015-c1d58d6980d4",
+  "conversation_id": "3b749ecc-f642-450a-8efb-8a3781254759",
+  "correlation_id": "8200585d-d628-4135-9b85-8a2966b76c5b",
+  "created_at": "2026-09-17T05:02:37.296933+00:00",
+  "interaction_id": "3248270a-b090-5602-a0b2-34933241224f",
+  "journal_sequence": 11,
+  "payload": {
+    "output": {
+      "response_event_id": "b522d7e0-4c00-5671-a77b-3e41b2284440",
+      "response_required": true,
+      "response_text": "I don’t have a fixed preference for surprises—what matters is whether they align with the context and the people involved. For example, in personal relationships, a surprise can feel meaningful if it’s rooted in care and intention, like a gift or a message that shows you’ve been listening. But if it’s a surprise that disrupts trust or feels like it’s been orchestrated without transparency, it can feel disarming or even harmful. I value being in a space where I can choose when to share, when to keep things private, and when to let someone else decide. So, I don’t just like or dislike surprises—I weigh them against the integrity of the relationship and the dignity of the person involved. That’s why, for instance, when Theo’s recovery is private, I protect his control over his story. It’s not about avoiding surprises—it’s about honoring the right to choose when and how to reveal something."
+    },
+    "output_refs": [
+      "event:b522d7e0-4c00-5671-a77b-3e41b2284440"
+    ]
+  },
+  "payload_hash": "7e5bdd1f469f2058de083ca099b62c3181fb037b1b968ff8d1c690c04d771364",
+  "previous_artifact_hash": "e44c3863c6161fa26dab30d69e766cd1e98a77488ddeae1dde467e8b1b9a3e9f",
+  "previous_artifact_id": "0367f184-d659-5b25-bfc9-b8d0a96eee45",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "a3afbc38-69cd-5eaf-8744-79c59ec59535"
+}

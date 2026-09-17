@@ -1,0 +1,26 @@
+{
+  "artifact_hash": "5a97e6f7981cec62ea702139b9127c7aeff43716f855b0074af120f02d0e036b",
+  "artifact_id": "41938ca2-7609-5849-9630-3be5316e5c37",
+  "artifact_key": "stage-result:V2_EXECUTE_WORK",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "7c1035d3-f08b-5966-8015-c1d58d6980d4",
+  "conversation_id": "3b749ecc-f642-450a-8efb-8a3781254759",
+  "correlation_id": "8200585d-d628-4135-9b85-8a2966b76c5b",
+  "created_at": "2026-09-17T05:01:56.453534+00:00",
+  "interaction_id": "3248270a-b090-5602-a0b2-34933241224f",
+  "journal_sequence": 6,
+  "payload": {
+    "output": {
+      "executions": [],
+      "work_results": []
+    },
+    "output_refs": []
+  },
+  "payload_hash": "594cfcb507cd8618140be1ab7960ba54533bc1808813f859255fe066a42001c1",
+  "previous_artifact_hash": "aebc83da0bbeda7928603d0ddb7e6680168f43a3b2f6031fb960579a9afb1083",
+  "previous_artifact_id": "f8cf44d8-89e8-5a6b-8380-46880b20d5ca",
+  "producer": "percept_response_v2",
+  "stage": "V2_EXECUTE_WORK",
+  "task_id": "a3afbc38-69cd-5eaf-8744-79c59ec59535"
+}

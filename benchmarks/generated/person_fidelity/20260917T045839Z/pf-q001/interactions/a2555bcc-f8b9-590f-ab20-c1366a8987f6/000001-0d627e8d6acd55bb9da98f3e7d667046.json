@@ -1,0 +1,97 @@
+{
+  "artifact_hash": "843e686c68820860f2042c87d3841c0ad7c649c30db93524df60665e0df63b6a",
+  "artifact_id": "0d627e8d-6acd-55bb-9da9-8f3e7d667046",
+  "artifact_key": "percept",
+  "artifact_schema_version": 1,
+  "artifact_type": "PERCEPT",
+  "assignment_id": null,
+  "conversation_id": "2023ea6c-3176-4ad1-8973-3468d612222a",
+  "correlation_id": "c4963edd-e6f2-4bdc-8d11-67d514f305d2",
+  "created_at": "2026-09-17T04:58:43.513806+00:00",
+  "interaction_id": "a2555bcc-f8b9-590f-ab20-c1366a8987f6",
+  "journal_sequence": 1,
+  "payload": {
+    "normalized_percept": {
+      "context": {
+        "active_goal_refs": [],
+        "causal_percept_refs": [],
+        "entity_refs": [],
+        "expectation_refs": [],
+        "integrity": 0,
+        "observations": [],
+        "opportunity": 0,
+        "task_refs": [],
+        "threat": 0,
+        "uncertainty": 0
+      },
+      "conversation_id": "2023ea6c-3176-4ad1-8973-3468d612222a",
+      "correlation_id": "c4963edd-e6f2-4bdc-8d11-67d514f305d2",
+      "features": {
+        "contains_code_block": false,
+        "contains_question": true,
+        "contains_structured_payload": false,
+        "contains_url": false,
+        "line_count": 1,
+        "normalized_characters": 111,
+        "token_count": 18,
+        "uppercase_ratio": 0.021739130434782608
+      },
+      "input_buffer": {
+        "max_segments": 4,
+        "retained_segment_indices": [
+          0
+        ],
+        "segment_char_limit": 160,
+        "segments": [
+          "Why did I become an electrical engineer, and what design principle did that childhood experience leave me with?"
+        ],
+        "total_characters": 111,
+        "total_segments": 1,
+        "truncated": false
+      },
+      "normalized_text": "Why did I become an electrical engineer, and what design principle did that childhood experience leave me with?",
+      "observed_at": "2026-09-16T21:58:42.392352-07:00",
+      "percept_id": "fdeaf948-56fc-5cfe-a95d-049a8678ff18",
+      "policy_version": "v0.8-perception-v2",
+      "raw_value_sha256": "def2a83aaba6870bb808eecb0169fee820a314a2c547ab401d4cbc175a736fec",
+      "response_required": true,
+      "schema_version": 1,
+      "source": {
+        "interface": "chat",
+        "kind": "USER_INTERACTION",
+        "modality": "TEXT",
+        "source_id": "user"
+      },
+      "source_event_id": "2f9ac093-6974-5f43-a0b4-7b5553b7456e"
+    },
+    "salience_assessment": {
+      "advisory_classification": null,
+      "advisory_only": true,
+      "disposition": "DELIBERATE",
+      "percept_id": "fdeaf948-56fc-5cfe-a95d-049a8678ff18",
+      "policy_version": "v0.8-salience-v2",
+      "preauthorized_reflexes": [],
+      "schema_version": 1,
+      "signals": {
+        "anomaly_score": 0,
+        "goal_relevance_score": 2,
+        "novelty_score": 1,
+        "opportunity_score": 0,
+        "prediction_error_score": 0,
+        "system_integrity_score": 0,
+        "task_relevance_score": 0,
+        "threat_score": 0,
+        "uncertainty_score": 0
+      },
+      "trigger_terms": []
+    },
+    "user_prompt_event_id": "2f9ac093-6974-5f43-a0b4-7b5553b7456e",
+    "user_text": "Why did I become an electrical engineer, and what design principle did that childhood experience leave me with?"
+  },
+  "payload_hash": "046c63bd21c3ec80cf704ffa63a50f3a60c7bcb650bf0efab20704d955bb6f5c",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "cb5fd20a-99ad-5648-bcad-4a81e92602ea"
+}

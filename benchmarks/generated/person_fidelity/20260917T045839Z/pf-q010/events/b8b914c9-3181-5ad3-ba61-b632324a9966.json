@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "6528df33-b7e2-471e-b37a-e24238f19167",
+  "conversation_seq": 1,
+  "correlation_id": "bd4cca84-4ad7-4c29-894e-c926ecba5039",
+  "event_id": "b8b914c9-3181-5ad3-ba61-b632324a9966",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-17T05:05:42.111299+00:00",
+  "payload": {
+    "text": "What was the name of my fifth-grade teacher?"
+  },
+  "payload_text": "What was the name of my fifth-grade teacher?",
+  "record_hash": "20260b09cad9d47de3e85d9ebcfd0746e42b76f1cc1e64ea69af97babb4b67cf",
+  "source": "user"
+}

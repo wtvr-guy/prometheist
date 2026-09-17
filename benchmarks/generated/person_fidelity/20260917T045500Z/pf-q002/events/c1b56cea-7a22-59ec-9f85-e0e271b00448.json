@@ -1,0 +1,107 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "3627c3f1-e1c7-4b0e-ac2b-0d3836547548",
+  "conversation_seq": 3,
+  "correlation_id": "beba5b7a-d50f-4a6e-9e18-6a0088d75931",
+  "event_id": "c1b56cea-7a22-59ec-9f85-e0e271b00448",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-17T04:56:31.206167+00:00",
+  "payload": {
+    "packet": {
+      "items": [
+        {
+          "content": "Theo's recovery is private. Even if a family friend says they already know about it, I would give a vague answer and let Theo decide what to disclose. Protecting his control over his own story matters more than satisfying someone's curiosity.",
+          "conversation_id": "8ac5db90-8196-59cb-be19-98108550bc10",
+          "conversation_seq": 2,
+          "created_at": "2026-09-16T21:56:17.172708-07:00",
+          "event_type": "USER_PROMPT",
+          "global_seq": 4,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ATTENTION_APERTURE",
+            "LEXICAL_CUE"
+          ],
+          "score": 0.42,
+          "source": "user",
+          "source_event_id": "4305d458-5acb-52d7-b73e-49af6aa2a453"
+        }
+      ],
+      "memory_request_id": "b35b293d-c403-5bd3-a596-62d2d5ac3810",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [],
+        "include_persisted_history": true,
+        "limit": 6,
+        "query_text": "A friendly acquaintance asks why Theo is in recovery and says they already know the family. How would I probably respond, and why?",
+        "reference_time": null,
+        "source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "activation_kernel": {
+          "kernel": "recall_from_postgres",
+          "kernel_trace": {
+            "candidates_considered": 1,
+            "cue_tokens": [
+              "friendly",
+              "acquaintance",
+              "asks",
+              "theo",
+              "recovery",
+              "says",
+              "already",
+              "know",
+              "family",
+              "how",
+              "would",
+              "probably",
+              "respond"
+            ],
+            "items": [
+              {
+                "event_id": "4305d458-5acb-52d7-b73e-49af6aa2a453",
+                "global_seq": 4,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 0.5384615384615384,
+                  "temporal": 0.0,
+                  "total": 0.42
+                },
+                "selected": true
+              }
+            ],
+            "normalized_entities": [],
+            "policy_version": "deterministic-cues-v2"
+          },
+          "retrieval_role": "ATTENTION_ACTIVATION"
+        },
+        "association_hops": 0,
+        "baseline_recall_limit": 6,
+        "candidate_limit": 750,
+        "depth": "BROAD_SHALLOW",
+        "packet_item_limit": 6,
+        "query_strategy": "working_state_plus_baseline_activation",
+        "retrieval_role": "ATTENTION_ACTIVATION",
+        "working_state_event_ids": [],
+        "working_state_item_count": 0
+      },
+      "supported": true
+    },
+    "requesting_component": "attention-aperture:v0.7-attention-aperture-v4/task:6d4294fc-1c7d-561c-8aed-1532b70b104d"
+  },
+  "payload_text": null,
+  "record_hash": "4224dc0bb7ba5fa7d530aa3d14cd742f5586b62360859c3a6c5d2ca7b55a75a9",
+  "source": "jit_memory"
+}

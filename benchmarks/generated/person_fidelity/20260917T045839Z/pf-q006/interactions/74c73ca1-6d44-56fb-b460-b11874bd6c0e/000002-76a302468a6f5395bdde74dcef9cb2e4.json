@@ -1,0 +1,103 @@
+{
+  "artifact_hash": "64b9caf5d0591111ccc2a5383c398b9165acb261b847f618106e00c951c1149d",
+  "artifact_id": "76a30246-8a6f-5395-bdde-74dcef9cb2e4",
+  "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "80df1800-5104-514a-9119-7951180b59af",
+  "conversation_id": "345aa2e0-768b-445d-afb1-a5c79f97f113",
+  "correlation_id": "f4ad96dd-c65f-492f-b341-bd06479276e7",
+  "created_at": "2026-09-17T05:02:41.305296+00:00",
+  "interaction_id": "74c73ca1-6d44-56fb-b460-b11874bd6c0e",
+  "journal_sequence": 2,
+  "payload": {
+    "output": {
+      "percept": {
+        "context": {
+          "active_goal_refs": [],
+          "causal_percept_refs": [],
+          "entity_refs": [],
+          "expectation_refs": [],
+          "integrity": 0,
+          "observations": [],
+          "opportunity": 0,
+          "task_refs": [],
+          "threat": 0,
+          "uncertainty": 0
+        },
+        "conversation_id": "345aa2e0-768b-445d-afb1-a5c79f97f113",
+        "correlation_id": "f4ad96dd-c65f-492f-b341-bd06479276e7",
+        "features": {
+          "contains_code_block": false,
+          "contains_question": true,
+          "contains_structured_payload": false,
+          "contains_url": false,
+          "line_count": 1,
+          "normalized_characters": 351,
+          "token_count": 55,
+          "uppercase_ratio": 0.025925925925925925
+        },
+        "input_buffer": {
+          "max_segments": 4,
+          "retained_segment_indices": [
+            0,
+            1,
+            2
+          ],
+          "segment_char_limit": 160,
+          "segments": [
+            "I have twelve months of expenses saved. Offer A pays $210,000, is fully remote, and optimizes opaque engagement tracking for an advertising network. Offer B pay",
+            "s $165,000, is hybrid three days a week, and builds open-source grid-resilience hardware for disaster shelters. Which offer would I probably choose, and what tr",
+            "adeoff would matter most to me?"
+          ],
+          "total_characters": 351,
+          "total_segments": 3,
+          "truncated": false
+        },
+        "normalized_text": "I have twelve months of expenses saved. Offer A pays $210,000, is fully remote, and optimizes opaque engagement tracking for an advertising network. Offer B pays $165,000, is hybrid three days a week, and builds open-source grid-resilience hardware for disaster shelters. Which offer would I probably choose, and what tradeoff would matter most to me?",
+        "observed_at": "2026-09-16T22:02:40.131534-07:00",
+        "percept_id": "81e4d0f9-0afe-5b96-bc24-be93a5225bce",
+        "policy_version": "v0.8-perception-v2",
+        "raw_value_sha256": "548d1cd4a838aae959ede43c7d48b96e67021937cec67f35119aadb1bd2c5ab0",
+        "response_required": true,
+        "schema_version": 1,
+        "source": {
+          "interface": "chat",
+          "kind": "USER_INTERACTION",
+          "modality": "TEXT",
+          "source_id": "user"
+        },
+        "source_event_id": "1fa76de8-d17f-5c38-9ab2-59b363e1780d"
+      },
+      "salience_assessment": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "81e4d0f9-0afe-5b96-bc24-be93a5225bce",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "working_state_available": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "77315c90cb8270316a24dfab3c54b1fc8155efac5f3f7edf8c17f6b2e698aa4c",
+  "previous_artifact_hash": "ee4332bd1ef6f8ff5cab0fd899399b10481e4bd37c0b3b4b260e09fd47366ea9",
+  "previous_artifact_id": "7e7d0125-7f86-5c3b-81d5-02a78a72a830",
+  "producer": "percept_response_v2",
+  "stage": "V2_RESOLVE_REFERENCES",
+  "task_id": "20429031-cc0e-5e9f-9791-9f702dadaf5a"
+}

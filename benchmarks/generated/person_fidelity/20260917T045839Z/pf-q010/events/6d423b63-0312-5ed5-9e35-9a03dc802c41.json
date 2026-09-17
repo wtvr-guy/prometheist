@@ -1,0 +1,96 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "6528df33-b7e2-471e-b37a-e24238f19167",
+  "conversation_seq": 6,
+  "correlation_id": "bd4cca84-4ad7-4c29-894e-c926ecba5039",
+  "event_id": "6d423b63-0312-5ed5-9e35-9a03dc802c41",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-17T05:06:04.249959+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "97b4499b-ec89-50bf-ba17-0476dd072a20",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [],
+        "include_persisted_history": true,
+        "limit": 10,
+        "query_text": "The name of the user's fifth-grade teacher is not established in any of the provided historical evidence or current user prompt.",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "adaptive_recall_stage": "BROAD",
+        "association_decay": 0.85,
+        "association_hops": 2,
+        "association_limit": 250,
+        "candidate_limit": 500,
+        "kernel": "associative_recall_from_postgres",
+        "kernel_trace": {
+          "cue_nodes": [
+            "term:any",
+            "term:current",
+            "term:establish",
+            "term:evidence",
+            "term:fifth-grade",
+            "term:historical",
+            "term:name",
+            "term:not",
+            "term:prompt",
+            "term:provid",
+            "term:teacher",
+            "term:user"
+          ],
+          "decay": 0.85,
+          "items": [],
+          "max_hops": 2,
+          "policy_version": "deterministic-associations-v4"
+        },
+        "query_attempts": [
+          {
+            "kernel_trace": {
+              "cue_nodes": [
+                "term:any",
+                "term:current",
+                "term:establish",
+                "term:evidence",
+                "term:fifth-grade",
+                "term:historical",
+                "term:name",
+                "term:not",
+                "term:prompt",
+                "term:provid",
+                "term:teacher",
+                "term:user"
+              ],
+              "decay": 0.85,
+              "items": [],
+              "max_hops": 2,
+              "policy_version": "deterministic-associations-v4"
+            },
+            "query_text": "The name of the user's fifth-grade teacher is not established in any of the provided historical evidence or current user prompt.",
+            "role": "canonical",
+            "supported": false
+          }
+        ],
+        "query_strategy": "working_state_plus_history",
+        "retrieval_role": "EVIDENCE",
+        "selected_query_role": null,
+        "selected_query_text": null,
+        "working_state_event_ids": []
+      },
+      "supported": false
+    },
+    "requesting_component": "task:4e827b0f-7a2b-527b-8392-3a5c585b82f7/adaptive-recall:0/v2-composer"
+  },
+  "payload_text": null,
+  "record_hash": "19632956db31b39bbeb6b83a0ced3cdfa0d05883c508381eb02c9f5e79a1c383",
+  "source": "jit_memory"
+}

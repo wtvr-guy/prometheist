@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "2023ea6c-3176-4ad1-8973-3468d612222a",
+  "conversation_seq": 1,
+  "correlation_id": "c4963edd-e6f2-4bdc-8d11-67d514f305d2",
+  "event_id": "2f9ac093-6974-5f43-a0b4-7b5553b7456e",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-17T04:58:42.386113+00:00",
+  "payload": {
+    "text": "Why did I become an electrical engineer, and what design principle did that childhood experience leave me with?"
+  },
+  "payload_text": "Why did I become an electrical engineer, and what design principle did that childhood experience leave me with?",
+  "record_hash": "36af665bbe5d8ccec08a8ae19942e48ca74936f2726b0d4a85daf6b15c02b6fb",
+  "source": "user"
+}

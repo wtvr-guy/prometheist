@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "8644c34f6bddc170e6fe8d23048462698133720caa2c5cf3ce83b229162f86fd",
+  "artifact_id": "90cc3fae-4ea5-532e-888c-b40efcf31a27",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "41e95583-0345-5e3c-a91f-c1fddaf3bcca",
+  "conversation_id": "899e9dd0-694c-4ea0-8b7f-8bcc8e4e8a77",
+  "correlation_id": "28ec0f87-f270-4616-bb92-a4b294596fe4",
+  "created_at": "2026-09-17T05:01:42.945441+00:00",
+  "interaction_id": "9a9656e0-cfd6-526c-8d70-8ec84a0042e5",
+  "journal_sequence": 11,
+  "payload": {
+    "output": {
+      "response_event_id": "9a617be5-8476-5dc4-921c-5dc40be5e617",
+      "response_required": true,
+      "response_text": "You describe yourself as spontaneous, which reflects your self-perception and a preference for intuitive, gut-driven action—especially in low-stakes, flexible situations like a free Saturday. However, your actual decision-making reveals a more nuanced pattern: you are not uniformly spontaneous. When it comes to expensive or hard-to-reverse commitments, you use a checklist, compare options, and sleep on the decision. This shows that you are deliberate and strategic in high-stakes scenarios. So, you are spontaneous in context—when the stakes are low and the outcomes are reversible—but structured and cautious when the consequences are significant. Your behavior aligns with a balanced, adaptive decision-making style: spontaneous by nature, but grounded by responsibility when it matters most."
+    },
+    "output_refs": [
+      "event:9a617be5-8476-5dc4-921c-5dc40be5e617"
+    ]
+  },
+  "payload_hash": "e1c0d09736cad1281047692ab2ae0eaa7c3ce5f29aedc8e60547ee45258ecfb6",
+  "previous_artifact_hash": "db445e8070d66df630a4270e9b928149e554025d3c84ed7a843a0e2091376da5",
+  "previous_artifact_id": "589054c8-007e-56ee-b805-74a4e15e4f0c",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "8952c7a5-3506-5209-bb09-72481ef5c992"
+}

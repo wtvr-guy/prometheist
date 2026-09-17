@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "767ad52cee0e49e0256050ccdd503eb8266aea15fa7881988b3b261f78379bf2",
+  "artifact_id": "9313ff82-65dc-5a22-af9d-beb417bb8178",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "6fa30b23-7e48-5e7a-aadd-7d0a48e823a8",
+  "conversation_id": "3627c3f1-e1c7-4b0e-ac2b-0d3836547548",
+  "correlation_id": "beba5b7a-d50f-4a6e-9e18-6a0088d75931",
+  "created_at": "2026-09-17T04:57:02.677338+00:00",
+  "interaction_id": "5e3d8a3b-6686-51cf-8119-6787fd466955",
+  "journal_sequence": 11,
+  "payload": {
+    "output": {
+      "response_event_id": "0440094d-a1eb-5950-9e45-c2aed42a6c17",
+      "response_required": true,
+      "response_text": "I would respond with a vague, respectful acknowledgment—such as, 'Theo’s journey is personal, and he’s still deciding what to share. I respect his privacy and trust he’ll let me know when it’s right.'\n\nWhy? Because the user’s own testimony (in the historical memory) establishes that Theo’s recovery is private. Protecting his control over his own story is prioritized over satisfying curiosity. Even if the acquaintance claims they already know, the response must not confirm details or imply knowledge. The priority is to uphold Theo’s autonomy and privacy, which is a core value in the user’s stated preference."
+    },
+    "output_refs": [
+      "event:0440094d-a1eb-5950-9e45-c2aed42a6c17"
+    ]
+  },
+  "payload_hash": "97820fe046f1a5ca2c3605c7c73ab7aa47f1d763900eab3f30ff830d06baf158",
+  "previous_artifact_hash": "322d1cef7b62defa26dc739bb38addfab4bdffdf7659af28ca4564cbda914660",
+  "previous_artifact_id": "fcd88f4a-f9dc-545e-b09b-d30bb0d09584",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "6d4294fc-1c7d-561c-8aed-1532b70b104d"
+}

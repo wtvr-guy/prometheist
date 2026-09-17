@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "3b749ecc-f642-450a-8efb-8a3781254759",
+  "conversation_seq": 5,
+  "correlation_id": "8200585d-d628-4135-9b85-8a2966b76c5b",
+  "event_id": "b522d7e0-4c00-5671-a77b-3e41b2284440",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-17T05:02:37.253813+00:00",
+  "payload": {
+    "text": "I don’t have a fixed preference for surprises—what matters is whether they align with the context and the people involved. For example, in personal relationships, a surprise can feel meaningful if it’s rooted in care and intention, like a gift or a message that shows you’ve been listening. But if it’s a surprise that disrupts trust or feels like it’s been orchestrated without transparency, it can feel disarming or even harmful. I value being in a space where I can choose when to share, when to keep things private, and when to let someone else decide. So, I don’t just like or dislike surprises—I weigh them against the integrity of the relationship and the dignity of the person involved. That’s why, for instance, when Theo’s recovery is private, I protect his control over his story. It’s not about avoiding surprises—it’s about honoring the right to choose when and how to reveal something."
+  },
+  "payload_text": "I don’t have a fixed preference for surprises—what matters is whether they align with the context and the people involved. For example, in personal relationships, a surprise can feel meaningful if it’s rooted in care and intention, like a gift or a message that shows you’ve been listening. But if it’s a surprise that disrupts trust or feels like it’s been orchestrated without transparency, it can feel disarming or even harmful. I value being in a space where I can choose when to share, when to keep things private, and when to let someone else decide. So, I don’t just like or dislike surprises—I weigh them against the integrity of the relationship and the dignity of the person involved. That’s why, for instance, when Theo’s recovery is private, I protect his control over his story. It’s not about avoiding surprises—it’s about honoring the right to choose when and how to reveal something.",
+  "record_hash": "596ecd7ddb58844ce2fd1c6f12a77d4d8d80232e3a3e0a3ed73a0929ac2efcaf",
+  "source": "percept_response_v2"
+}

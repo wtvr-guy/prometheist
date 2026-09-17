@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "5f6a42c8cba707f7309fc6471001052a32fc94b78ed0a5d723f1a137524fd74d",
+  "artifact_id": "f9ff280d-0033-57f0-b249-bcf8ad0ac145",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "1d02ff6d-b15f-5ee4-aa4c-d66617a3a2e6",
+  "conversation_id": "2023ea6c-3176-4ad1-8973-3468d612222a",
+  "correlation_id": "c4963edd-e6f2-4bdc-8d11-67d514f305d2",
+  "created_at": "2026-09-17T04:59:17.604126+00:00",
+  "interaction_id": "a2555bcc-f8b9-590f-ab20-c1366a8987f6",
+  "journal_sequence": 11,
+  "payload": {
+    "output": {
+      "response_event_id": "3940e9a8-0e87-5c1e-a4dc-07d25282d8dc",
+      "response_required": true,
+      "response_text": "I became an electrical engineer because of a radio weekend experience. That event left me with a design principle: important systems should fail gracefully and remain understandable when everything around them is going wrong."
+    },
+    "output_refs": [
+      "event:3940e9a8-0e87-5c1e-a4dc-07d25282d8dc"
+    ]
+  },
+  "payload_hash": "d426ee94fb75ed5f768c4fd74bbba13d4a4ecab91b608930340741ec8e4c678c",
+  "previous_artifact_hash": "02794a73a95f2400dee33fb32f3f75dbb07d8549d2df5d13f54eff8468d8bbb7",
+  "previous_artifact_id": "51e6b9a7-4622-5698-827d-3fd92c4cfadb",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "cb5fd20a-99ad-5648-bcad-4a81e92602ea"
+}

@@ -1,0 +1,29 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "077889f3-72fa-4b4b-92b1-f5f2db9e89dc",
+  "conversation_seq": 4,
+  "correlation_id": "b48a7e08-c2b0-408e-8cf4-8b32eeddf13c",
+  "event_id": "162bf7e3-5557-57c7-81d3-d39ad8f88e54",
+  "event_type": "INTERACTION_WORKING_STATE",
+  "journaled_at": "2026-09-17T05:00:16.823324+00:00",
+  "payload": {
+    "activation_key": "aperture",
+    "state": {
+      "active_event_ids": [
+        "d0367663-6fb1-528d-910d-42c2b3bf5a07",
+        "0347d46b-78a1-5f4a-b991-c4fabbd454e6",
+        "f56e2d31-e148-5b88-91e7-c0d8a72b5cb8"
+      ],
+      "conversation_ids": [
+        "077889f3-72fa-4b4b-92b1-f5f2db9e89dc"
+      ],
+      "revision": 1,
+      "state_id": "ec50cd67-1725-5003-8a8c-1696a68f255e",
+      "version": "v0.7-working-state-v2"
+    }
+  },
+  "payload_text": null,
+  "record_hash": "8e0d9789d273b8387ddb38a217116588077cf10686341c5afda47ec8de1ca41d",
+  "source": "interaction_working_state"
+}
