@@ -25,10 +25,11 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "person-fidelity fixture validation failed" }
     if ($ValidateOnly) { return }
 
-    if (-not $DatabaseUrl) {
-        throw "Provide -DatabaseUrl or PROMETHEIST_PERSON_FIDELITY_DATABASE_URL. The database must be dedicated to this benchmark and its name must contain 'benchmark'."
+    if ($DatabaseUrl) {
+        $env:PROMETHEIST_PERSON_FIDELITY_DATABASE_URL = $DatabaseUrl
     }
-    $env:PROMETHEIST_PERSON_FIDELITY_DATABASE_URL = $DatabaseUrl
+    # Python loads the repository .env and checks the dedicated benchmark setting.
+    # An explicit parameter or shell setting takes precedence over that file.
 
     Write-Host "The selected benchmark database will be reset before every isolated probe."
     $stamp = Get-Date -Format "yyyy-MM-dd_HHmmss"

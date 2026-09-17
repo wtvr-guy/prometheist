@@ -4,7 +4,9 @@ from copy import deepcopy
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
+import sys
 from uuid import uuid4
 
 import pytest
@@ -36,6 +38,66 @@ def _event_ids(corpus):
         event.event_id: deterministic_fixture_uuid(corpus, "event", event.event_id)
         for event in corpus.life_events
     }
+
+
+@pytest.mark.parametrize("shell_override", [False, True])
+def test_native_entrypoint_loads_saved_benchmark_config_before_selecting_database(
+    tmp_path, monkeypatch, shell_override,
+):
+    saved_url = "postgresql://fixture@localhost/saved_benchmark"
+    shell_url = "postgresql://fixture@localhost/shell_benchmark"
+    (tmp_path / ".env").write_text(
+        f"{native_runner.DATABASE_ENV}={saved_url}\n"
+        "DATABASE_URL=postgresql://fixture@localhost/normal_memory\n"
+        "OLLAMA_MODEL=saved-model\n",
+        encoding="utf-8",
+    )
+    environment = {"DATABASE_URL": "postgresql://fixture@localhost/normal_memory"}
+    if shell_override:
+        environment[native_runner.DATABASE_ENV] = shell_url
+        environment["OLLAMA_MODEL"] = "shell-model"
+    monkeypatch.setattr(os, "environ", environment)
+    monkeypatch.setattr(native_runner, "ROOT", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["run_person_fidelity_baseline.py"])
+
+    class ConfigurationResolved(Exception):
+        pass
+
+    def stop_before_execution():
+        assert os.environ["DATABASE_URL"] == (shell_url if shell_override else saved_url)
+        assert os.environ["OLLAMA_MODEL"] == (
+            "shell-model" if shell_override else "saved-model"
+        )
+        raise ConfigurationResolved
+
+    monkeypatch.setattr(native_runner, "_require_clean_revision", stop_before_execution)
+
+    with pytest.raises(ConfigurationResolved):
+        native_runner.main()
+
+
+@pytest.mark.parametrize("dedicated_setting", [None, "   "])
+def test_native_entrypoint_never_falls_back_to_the_application_database(
+    tmp_path, monkeypatch, dedicated_setting,
+):
+    application_url = "postgresql://fixture@localhost/normal_memory"
+    (tmp_path / ".env").write_text(
+        f"DATABASE_URL={application_url}\n", encoding="utf-8"
+    )
+    environment = {}
+    if dedicated_setting is not None:
+        environment[native_runner.DATABASE_ENV] = dedicated_setting
+    monkeypatch.setattr(os, "environ", environment)
+    monkeypatch.setattr(native_runner, "ROOT", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["run_person_fidelity_baseline.py"])
+
+    def unexpected_execution():
+        pytest.fail("missing benchmark configuration must stop before native execution")
+
+    monkeypatch.setattr(native_runner, "_require_clean_revision", unexpected_execution)
+    with pytest.raises(SystemExit, match="repository .env or the current shell"):
+        native_runner.main()
+    assert os.environ["DATABASE_URL"] == application_url
 
 
 def test_frozen_person_fidelity_fixture_is_complete_and_digest_verified():

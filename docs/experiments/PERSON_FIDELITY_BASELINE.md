@@ -147,7 +147,37 @@ Or on Windows:
 
 Create a dedicated PostgreSQL database with `benchmark` in its name, configure the
 normal Ollama model/runtime variables, commit the exact code under test so the
-worktree is clean, and run:
+worktree is clean, and configure its connection once in the repository's `.env`:
+
+```dotenv
+PROMETHEIST_PERSON_FIDELITY_DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/prometheist_fidelity_benchmark
+```
+
+Use the working PostgreSQL login and connection settings from your existing
+configuration, selecting the dedicated `prometheist_fidelity_benchmark` database
+instead of the normal application database. The earlier native run used this
+database name. Add this as a separate setting; retain the normal `DATABASE_URL`.
+The benchmark database must already exist and will be reset before every probe.
+
+Then run:
+
+```powershell
+.\scripts\run_person_fidelity_baseline.ps1
+```
+
+The native runner loads the repository `.env` before checking its dedicated
+database setting. `-DatabaseUrl` takes precedence over the current shell setting,
+which takes precedence over `.env`. The runner never falls back to the normal
+`DATABASE_URL`. Fixture-only validation and offline artifact verification still
+require no database configuration.
+
+If fixture validation prints `valid: true` and the runner then asks for a database
+URL, no probes have run yet. A PowerShell `$env:` assignment lasts only for that
+session; saving the dedicated setting in `.env` makes it available after restarting
+PowerShell. Earlier runner versions checked before loading `.env`; update `main`
+before using the saved-setting path described here.
+
+For a one-session override instead of a saved setting:
 
 ```powershell
 $env:PROMETHEIST_PERSON_FIDELITY_DATABASE_URL = `

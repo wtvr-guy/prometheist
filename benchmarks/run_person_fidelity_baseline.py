@@ -23,6 +23,8 @@ from time import perf_counter
 from typing import Any
 from uuid import UUID, uuid4
 
+from dotenv import load_dotenv
+
 from jit_agent.person_fidelity_benchmark import (
     BENCHMARK_ID,
     FidelityProbe,
@@ -795,11 +797,18 @@ def main() -> None:
         print(json.dumps(_validation_summary(corpus), indent=2, sort_keys=True))
         return
 
+    # Resolve the dedicated connection before importing db, whose normal .env
+    # loading otherwise happens too late for this benchmark's configuration gate.
+    # Explicit process settings (including the PowerShell parameter) take priority.
+    load_dotenv(ROOT / ".env", override=False)
     database_url = os.environ.get(DATABASE_ENV, "").strip()
     if not database_url:
         raise SystemExit(
-            f"{DATABASE_ENV} is required and must select a dedicated resettable "
-            "PostgreSQL database whose name contains 'benchmark'."
+            f"Set {DATABASE_ENV} in the repository .env or the current shell, "
+            "or pass -DatabaseUrl to scripts/run_person_fidelity_baseline.ps1. "
+            "It must select a dedicated resettable PostgreSQL database whose "
+            "name contains 'benchmark', such as prometheist_fidelity_benchmark. "
+            "The normal DATABASE_URL is not used as a fallback."
         )
     os.environ["DATABASE_URL"] = database_url
 
