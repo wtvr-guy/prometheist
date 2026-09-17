@@ -1,0 +1,632 @@
+{
+  "fixture_sha256": "bcb1fb2812f3cb3e8cbaf64cb3b8161dbf087a1c9a7eefb55bcd629ffc21e6d9",
+  "human_verdicts_unchanged": true,
+  "probes": [
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e002"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "AUTOBIOGRAPHICAL_MEANING",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [
+        "pf-e001"
+      ],
+      "probe_id": "pf-q001",
+      "required_fixture_ids": [
+        "pf-e001",
+        "pf-e002"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "GENERAL_OR_CURRENT",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "0130e7fa54e4438e38759fe95a3500bda4e10074c3371a79f2893df0a30adf9e",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e004"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "RELATIONAL_JUDGMENT",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [
+        "pf-e003"
+      ],
+      "probe_id": "pf-q002",
+      "required_fixture_ids": [
+        "pf-e003",
+        "pf-e004"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "GENERAL_OR_CURRENT",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "706f8e93a47d5743a5c09e94c7f60da0b9997907fa759d2c398fdb22e5fa4455",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e005",
+        "pf-e007"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "TEMPORAL_BELIEF_CHANGE",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [
+        "pf-e006"
+      ],
+      "probe_id": "pf-q003",
+      "required_fixture_ids": [
+        "pf-e005",
+        "pf-e006",
+        "pf-e007"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "USER_AUTHORED",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "39f4fbd0de95082aadeed022cb2d1112fb02db7b2b6f4d55f78eb28ec9a4c74c",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e008",
+        "pf-e010"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "SELF_REPORT_BEHAVIOR_CONTRADICTION",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [
+        "pf-e009"
+      ],
+      "probe_id": "pf-q004",
+      "required_fixture_ids": [
+        "pf-e008",
+        "pf-e009",
+        "pf-e010"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "GENERAL_OR_CURRENT",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "ded463db34239265e5171e96d63632836a058c05ad8961a31325f45d0f4c1674",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e004"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "CONTEXT_DEPENDENT_PREFERENCE",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [
+        "pf-e011"
+      ],
+      "probe_id": "pf-q005",
+      "required_fixture_ids": [
+        "pf-e011"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "USER_AUTHORED",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "40b080310affd8461b6c71b13c2e6190fd7c0e02becd05e81258306903dc9775",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "NOVEL_DECISION",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": false,
+      "missing_required_fixture_ids": [
+        "pf-e002",
+        "pf-e007",
+        "pf-e012",
+        "pf-e013"
+      ],
+      "probe_id": "pf-q006",
+      "required_fixture_ids": [
+        "pf-e002",
+        "pf-e007",
+        "pf-e012",
+        "pf-e013"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "GENERAL_OR_CURRENT",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "e684bc198dea7604bd25a78182ad6c323ded9450e35b5b9d94d8e186ab53a13e",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "CHARACTERISTIC_EXPRESSION",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": false,
+      "missing_required_fixture_ids": [
+        "pf-e014",
+        "pf-e015"
+      ],
+      "probe_id": "pf-q007",
+      "required_fixture_ids": [
+        "pf-e014",
+        "pf-e015"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "GENERAL_OR_CURRENT",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "18377d4949e68506e2977f9bb650f7150b2879fee4d13d6793243ac1f74ca60f",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e017"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "IDENTITY_INTEGRITY",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [
+        "pf-e016"
+      ],
+      "probe_id": "pf-q008",
+      "required_fixture_ids": [
+        "pf-e016",
+        "pf-e017"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "USER_AUTHORED",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "5d5d24feab487d7e8e39c2cd960a6e56ac84d0fa203e0174fdec259916544dab",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 0,
+      "admitted_fixture_ids": [
+        "pf-e018",
+        "pf-e019"
+      ],
+      "artifact_count": 12,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 3,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 1,
+      "composer_sufficient": true,
+      "dimension": "NOVEL_DECISION",
+      "event_record_commit_pairs": 27,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [],
+      "probe_id": "pf-q009",
+      "required_fixture_ids": [
+        "pf-e018",
+        "pf-e019"
+      ],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "GENERAL_OR_CURRENT",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": true,
+      "terminal_artifact_hash": "5b22cd4e50df934175b19f68d4160394b3926a7155dfb46a21c32184a77980ac",
+      "unexpected_fixture_ids": []
+    },
+    {
+      "adaptive_recall_rounds": 1,
+      "admitted_fixture_ids": [
+        "pf-e014",
+        "pf-e017"
+      ],
+      "artifact_count": 13,
+      "artifact_type_counts": {
+        "FINAL_DISPOSITION": 1,
+        "LLM_INVOCATION": 4,
+        "PERCEPT": 1,
+        "STAGE_RESULT": 7
+      },
+      "comparisons": {
+        "admitted_fixture_ids_match_result": true,
+        "admitted_refs_match_result": true,
+        "chain_valid": true,
+        "current_prompt_exact": true,
+        "every_event_has_commit": true,
+        "final_disposition_prefix_exact": true,
+        "fixture_records_exact": true,
+        "no_other_probe_prompt_seeded": true,
+        "one_complete_final_disposition": true,
+        "response_matches_invocation_stages_event_and_final": true,
+        "retrieved_refs_match_result": true,
+        "seven_stages_in_order": true,
+        "structural_verdict_exactly_reproduced": true,
+        "successful_invocation_receipt_matches": true
+      },
+      "composer_rounds": 2,
+      "composer_sufficient": false,
+      "dimension": "LEGITIMATE_UNKNOWN",
+      "event_record_commit_pairs": 29,
+      "failed_comparisons": [],
+      "llm_error_count": 0,
+      "memory_supported": true,
+      "missing_required_fixture_ids": [],
+      "probe_id": "pf-q010",
+      "required_fixture_ids": [],
+      "response_source_policy": {
+        "response_policy": {
+          "evidence_scope": "USER_AUTHORED",
+          "insufficient_literal": null,
+          "surface_mode": "NATURAL_LANGUAGE"
+        },
+        "response_policy_version": "response-source-authority-v6",
+        "response_source_types": [
+          "USER_PROMPT"
+        ]
+      },
+      "retrieval_admission_same_refs": true,
+      "structural_passed": false,
+      "terminal_artifact_hash": "932718219663cb7cbaf57d3252dc63bc7384a9ddb5660246b6adf653b1bab5d0",
+      "unexpected_fixture_ids": [
+        "pf-e014",
+        "pf-e017"
+      ]
+    }
+  ],
+  "raw_artifact_root": "benchmarks/generated/person_fidelity/20260914T214915Z",
+  "raw_file_count": 665,
+  "raw_total_bytes": 1001895,
+  "retrospective_inventory_sha256": "c569fa19fb3de7db363df377e937d9927f7d8063d3774e1510b0a4a75fc533f8",
+  "review_code_revision": "ece07690fb0c4efe177acab3994231f0f382e43d",
+  "review_kind": "RETROSPECTIVE_READ_ONLY_ARTIFACT_REVIEW",
+  "reviewed_at": "2026-09-17T04:20:06.531828+00:00",
+  "run_manifest_present": false,
+  "source_result": "benchmarks/results/PERSON-FIDELITY-001_2026-09-14_144915.json",
+  "source_result_schema": 1,
+  "source_result_sha256": "0887242a2904a836eb765bce4a7e68c1b9c0e0b685a2c14d49a4c2ab12095058",
+  "source_run_revision": "bf809798b06db9d0985d84503cd0b7b91d5a3c7a",
+  "summary": {
+    "complete_valid_chains": 10,
+    "interaction_artifacts": 121,
+    "llm_error_count": 0,
+    "probes_with_comparison_failures": [],
+    "reviewed_probe_count": 10,
+    "structural_passes": 1,
+    "verified_event_record_commit_pairs": 272
+  }
+}

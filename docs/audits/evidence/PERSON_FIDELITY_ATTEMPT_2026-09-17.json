@@ -1,0 +1,70 @@
+{
+  "captured_at": "2026-09-17T04:18:19.420491+00:00",
+  "commands": [
+    {
+      "argv": [
+        "uv",
+        "run",
+        "--locked",
+        "python",
+        "benchmarks/run_person_fidelity_baseline.py",
+        "--validate-only"
+      ],
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "{\n  \"benchmark_id\": \"PERSON-FIDELITY-001\",\n  \"benchmark_version\": \"person-fidelity-public-baseline-v1\",\n  \"dimension_counts\": {\n    \"AUTOBIOGRAPHICAL_MEANING\": 1,\n    \"CHARACTERISTIC_EXPRESSION\": 1,\n    \"CONTEXT_DEPENDENT_PREFERENCE\": 1,\n    \"IDENTITY_INTEGRITY\": 1,\n    \"LEGITIMATE_UNKNOWN\": 1,\n    \"NOVEL_DECISION\": 2,\n    \"RELATIONAL_JUDGMENT\": 1,\n    \"SELF_REPORT_BEHAVIOR_CONTRADICTION\": 1,\n    \"TEMPORAL_BELIEF_CHANGE\": 1\n  },\n  \"fictional_subject\": \"Mara Ellison\",\n  \"fixture_sha256\": \"bcb1fb2812f3cb3e8cbaf64cb3b8161dbf087a1c9a7eefb55bcd629ffc21e6d9\",\n  \"life_event_count\": 19,\n  \"probe_count\": 10,\n  \"status\": \"FROZEN_BASELINE\",\n  \"valid\": true\n}\n"
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "--locked",
+        "python",
+        "benchmarks/run_person_fidelity_baseline.py"
+      ],
+      "exit_code": 1,
+      "stderr": "PROMETHEIST_PERSON_FIDELITY_DATABASE_URL is required and must select a dedicated resettable PostgreSQL database whose name contains 'benchmark'.\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "--locked",
+        "python",
+        "benchmarks/run_person_fidelity_baseline.py",
+        "--verify-result",
+        "benchmarks/results/PERSON-FIDELITY-001_2026-09-14_144915.json"
+      ],
+      "exit_code": 1,
+      "stderr": "Traceback (most recent call last):\n  File \"/workspace/scratch/a547a0498878/prometheist/benchmarks/run_person_fidelity_baseline.py\", line 921, in <module>\n    main()\n  File \"/workspace/scratch/a547a0498878/prometheist/benchmarks/run_person_fidelity_baseline.py\", line 787, in main\n    _verify_result_artifacts(args.verify_result),\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/scratch/a547a0498878/prometheist/benchmarks/run_person_fidelity_baseline.py\", line 550, in _verify_result_artifacts\n    raise RuntimeError(\"artifact verification requires a schema-v2 result\")\nRuntimeError: artifact verification requires a schema-v2 result\n",
+      "stdout": ""
+    }
+  ],
+  "configured_variables": {
+    "DATABASE_URL": false,
+    "OLLAMA_BASE_URL": false,
+    "OLLAMA_MODEL": false,
+    "PROMETHEIST_PERSON_FIDELITY_DATABASE_URL": false
+  },
+  "executables": {
+    "docker": null,
+    "ollama": null,
+    "postgres": null,
+    "psql": null,
+    "pwsh": null
+  },
+  "local_services": {
+    "11434": {
+      "connect_errno": 111,
+      "host": "127.0.0.1"
+    },
+    "5432": {
+      "connect_errno": 111,
+      "host": "127.0.0.1"
+    }
+  },
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "revision": "ece07690fb0c4efe177acab3994231f0f382e43d",
+  "source_worktree_status": ""
+}

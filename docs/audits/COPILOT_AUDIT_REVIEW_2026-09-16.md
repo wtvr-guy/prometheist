@@ -142,3 +142,8 @@ The native person-fidelity result remains **1/10 structural passes**, with every
 human verdict pending. It is schema v1 and lacks the schema-v2 run manifest. A fresh
 native run and human review remain necessary; this cleanup is not evidence of
 improved identity fidelity or native Windows/Ollama behavior.
+
+Follow-up: PR #28 merged into `main` as `ece0769`, with PR and main CI passing.
+The [2026-09-17 artifact review](PERSON_FIDELITY_ARTIFACT_REVIEW_2026-09-17.md)
+records the blocked fresh-run attempt and complete read-only inspection of the
+retained 2026-09-14 evidence.

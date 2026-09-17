@@ -7,6 +7,12 @@
 `PENDING`. That run is schema v1 and has no `run_manifest.json`, so the offline
 verification below does not apply to it; a schema-v2 re-run is required.
 
+The [2026-09-17 artifact review](../audits/PERSON_FIDELITY_ARTIFACT_REVIEW_2026-09-17.md)
+verified the retained event pairs, interaction chains, and response receipts and
+reproduced the original 1/10 structural result. A fresh attempt on merged `main`
+stopped before execution because the review host lacked the PostgreSQL/Ollama
+configuration. This retrospective check does not replace the required new run.
+
 **Fixture:** [`../../benchmarks/person_fidelity_public_v1.json`](../../benchmarks/person_fidelity_public_v1.json)
 
 **Runner:** [`../../benchmarks/run_person_fidelity_baseline.py`](../../benchmarks/run_person_fidelity_baseline.py)

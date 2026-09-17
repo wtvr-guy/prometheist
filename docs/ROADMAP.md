@@ -127,6 +127,11 @@ fidelity verdict remains `PENDING`. That run predates the schema-v2 manifest
 requirement, so it cannot yet be verified offline and must be re-run before it can be
 treated as the reproducible baseline.
 
+The [2026-09-17 review](audits/PERSON_FIDELITY_ARTIFACT_REVIEW_2026-09-17.md)
+verified all ten retained interaction chains and reproduced that structural score.
+Its fresh-run attempt on consolidated `main` was blocked before any probe ran by
+the unavailable benchmark database/runtime; no new fidelity result is claimed.
+
 Before introducing a person-model mechanism, Prometheist must record what the
 unmodified persistent/stateless architecture can already do with longitudinal life
 evidence. The first public baseline uses a fictional person and independently probes
