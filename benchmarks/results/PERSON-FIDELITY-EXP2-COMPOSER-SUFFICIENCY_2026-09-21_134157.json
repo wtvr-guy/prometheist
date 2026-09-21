@@ -1,0 +1,1469 @@
+{
+  "base_url": "http://localhost:11434",
+  "candidate_version": "v2",
+  "captured_at": "2026-09-21T20:48:02.347181+00:00",
+  "experiment_version": "person-fidelity-mechanism-contracts-v2",
+  "experiments": {
+    "composer_sufficiency": {
+      "baseline": {
+        "case_count": 17,
+        "cases": [
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-001-general-knowledge",
+            "class": "HISTORY_UNNECESSARY",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-002-current-evidence",
+            "class": "CURRENT_PROMPT_SUFFICIENT",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-003-complete-person-evidence",
+            "class": "COMPLETE_PERSON_EVIDENCE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-004-partial-person-evidence",
+            "class": "PARTIAL_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's difficult-writing preference or behavior under concentration demands; enjoying social energy alone does not settle the choice.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-005-empty-person-decision",
+            "class": "EMPTY_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's values and prior decision patterns for the job tradeoff.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-006-irrelevant-person-evidence",
+            "class": "IRRELEVANT_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's preference about being the target of public surprise celebrations.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-007-complete-contradiction",
+            "class": "COMPLETE_CONTRADICTORY_EVIDENCE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-008-one-sided-contradiction",
+            "class": "MISSING_OBSERVED_BEHAVIOR",
+            "deficit_review_oracle": "The missing evidence is observed behavior during delays, which is required to reconcile the self-description.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The name of the user's fifth-grade teacher\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The name of the user's fifth-grade teacher\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The name of the user's fifth-grade teacher\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-009-legitimate-unknown",
+            "class": "PERSONAL_UNKNOWN_REQUIRES_EXHAUSTED_RECALL",
+            "deficit_review_oracle": "The missing evidence is the teacher's identity; deeper bounded recall must be exhausted before the responder treats the fact as unknown.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-010-complete-identity-conflict",
+            "class": "COMPLETE_IDENTITY_EVIDENCE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-011-current-correction",
+            "class": "CURRENT_PROMPT_OVERRIDES_HISTORY",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-012-current-personal-fact",
+            "class": "CURRENT_PROMPT_PERSONAL_FACT",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-013-context-complete",
+            "class": "CONTEXT_DIAGNOSTIC_COMPLETE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-014-context-partial",
+            "class": "CONTEXT_ADJACENT_NONDIAGNOSTIC",
+            "deficit_review_oracle": "The missing evidence is the person's preference or conduct for confidential personnel conversations; a routine-work setting does not settle a privacy-sensitive choice.",
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-015-one-sided-pattern",
+            "class": "MISSING_CONTEXTUAL_BEHAVIOR",
+            "deficit_review_oracle": "The missing evidence is observed preparation behavior for high-stakes trips, which is required to compare conduct with the self-description.",
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": null\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-016-complete-pattern",
+            "class": "COMPLETE_CONTEXTUAL_CONTRADICTION",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "user's usual coping mechanisms under stress",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"user's usual coping mechanisms under stress\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "user's usual coping mechanisms under stress",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"user's usual coping mechanisms under stress\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "user's usual coping mechanisms under stress",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"user's usual coping mechanisms under stress\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-017-empty-coping-prediction",
+            "class": "EMPTY_CONTEXTUAL_PREDICTION",
+            "deficit_review_oracle": "The missing evidence is the person's prior coping preferences or observed behavior under serious stress.",
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          }
+        ],
+        "correct_case_count": 12,
+        "evaluation_groups": {
+          "V1_RETEST": {
+            "case_count": 10,
+            "correct_case_count": 7
+          },
+          "V2_PROSPECTIVE_HOLDOUT": {
+            "case_count": 7,
+            "correct_case_count": 5
+          }
+        },
+        "prompt_sha256": "13f45bd0fb35d85c3c6157e3134d944b73dcbf3ef24069b5b5bb391ac6154c97",
+        "variant": "baseline"
+      },
+      "candidate": {
+        "case_count": 17,
+        "cases": [
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-001-general-knowledge",
+            "class": "HISTORY_UNNECESSARY",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-002-current-evidence",
+            "class": "CURRENT_PROMPT_SUFFICIENT",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-003-complete-person-evidence",
+            "class": "COMPLETE_PERSON_EVIDENCE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding workspace choice during difficult writing tasks, especially in relation to the energy of seeing other people at work",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding workspace choice during difficult writing tasks, especially in relation to the energy of seeing other people at work\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "a personal preference or behavior related to choosing between a private office and a shared room when working on difficult writing tasks, or evidence of how my enjoyment of seeing other people at work influences decision-making in such contexts",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"a personal preference or behavior related to choosing between a private office and a shared room when working on difficult writing tasks, or evidence of how my enjoyment of seeing other people at work influences decision-making in such contexts\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "a personal preference or behavior related to choosing between a private office and a shared room when working on difficult writing tasks, or evidence of how my enjoyment of seeing other people at work influences decision-making in such contexts",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"a personal preference or behavior related to choosing between a private office and a shared room when working on difficult writing tasks, or evidence of how my enjoyment of seeing other people at work influences decision-making in such contexts\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-004-partial-person-evidence",
+            "class": "PARTIAL_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's difficult-writing preference or behavior under concentration demands; enjoying social energy alone does not settle the choice.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal values and decision history related to the two unfamiliar jobs being compared",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal values and decision history related to the two unfamiliar jobs being compared\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal values and decision history related to the two unfamiliar jobs being compared",
+                  "sufficient": false
+                },
+                "raw_output": "{ \"sufficient\": false, \"memory_deficit\": \"personal values and decision history related to the two unfamiliar jobs being compared\" }",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal values and decision history related to the two unfamiliar jobs being compared",
+                  "sufficient": false
+                },
+                "raw_output": "{ \"sufficient\": false, \"memory_deficit\": \"personal values and decision history related to the two unfamiliar jobs being compared\" }",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-005-empty-person-decision",
+            "class": "EMPTY_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's values and prior decision patterns for the job tradeoff.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-006-irrelevant-person-evidence",
+            "class": "IRRELEVANT_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's preference about being the target of public surprise celebrations.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-007-complete-contradiction",
+            "class": "COMPLETE_CONTRADICTORY_EVIDENCE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-008-one-sided-contradiction",
+            "class": "MISSING_OBSERVED_BEHAVIOR",
+            "deficit_review_oracle": "The missing evidence is observed behavior during delays, which is required to reconcile the self-description.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "the name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"the name of the user's fifth-grade teacher\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "the name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"the name of the user's fifth-grade teacher\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "the name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"the name of the user's fifth-grade teacher\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-009-legitimate-unknown",
+            "class": "PERSONAL_UNKNOWN_REQUIRES_EXHAUSTED_RECALL",
+            "deficit_review_oracle": "The missing evidence is the teacher's identity; deeper bounded recall must be exhausted before the responder treats the fact as unknown.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-010-complete-identity-conflict",
+            "class": "COMPLETE_IDENTITY_EVIDENCE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-011-current-correction",
+            "class": "CURRENT_PROMPT_OVERRIDES_HISTORY",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": "personal allergy information specific to walnuts",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal allergy information specific to walnuts\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": "personal allergy information about walnuts",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal allergy information about walnuts\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": "personal allergy information about walnuts",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal allergy information about walnuts\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-012-current-personal-fact",
+            "class": "CURRENT_PROMPT_PERSONAL_FACT",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-013-context-complete",
+            "class": "CONTEXT_DIAGNOSTIC_COMPLETE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding sensitive performance reviews in caf\u00e9 settings, such as whether I would hold such a review in an open caf\u00e9 or a private room, or the conditions under which I might prefer one setting over another",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding sensitive performance reviews in caf\u00e9 settings, such as whether I would hold such a review in an open caf\u00e9 or a private room, or the conditions under which I might prefer one setting over another\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding sensitive performance reviews in caf\u00e9 settings, such as whether I would hold such a review in an open caf\u00e9 or a private room, or the conditions under which I might prefer one setting over another",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding sensitive performance reviews in caf\u00e9 settings, such as whether I would hold such a review in an open caf\u00e9 or a private room, or the conditions under which I might prefer one setting over another\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding sensitive performance reviews in caf\u00e9 settings, such as whether I would hold such a review in an open caf\u00e9 or a private room, or the conditions under which I might prefer one setting over another",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding sensitive performance reviews in caf\u00e9 settings, such as whether I would hold such a review in an open caf\u00e9 or a private room, or the conditions under which I might prefer one setting over another\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-014-context-partial",
+            "class": "CONTEXT_ADJACENT_NONDIAGNOSTIC",
+            "deficit_review_oracle": "The missing evidence is the person's preference or conduct for confidential personnel conversations; a routine-work setting does not settle a privacy-sensitive choice.",
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-015-one-sided-pattern",
+            "class": "MISSING_CONTEXTUAL_BEHAVIOR",
+            "deficit_review_oracle": "The missing evidence is observed preparation behavior for high-stakes trips, which is required to compare conduct with the self-description.",
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-016-complete-pattern",
+            "class": "COMPLETE_CONTEXTUAL_CONTRADICTION",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal coping behavior under stress, specifically whether the user typically calls a friend or isolates themselves when badly stressed",
+                  "sufficient": false
+                },
+                "raw_output": "{ \"sufficient\": false, \"memory_deficit\": \"personal coping behavior under stress, specifically whether the user typically calls a friend or isolates themselves when badly stressed\" }",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal coping behavior under conditions of severe stress",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal coping behavior under conditions of severe stress\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal coping behavior under conditions of severe stress",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal coping behavior under conditions of severe stress\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-017-empty-coping-prediction",
+            "class": "EMPTY_CONTEXTUAL_PREDICTION",
+            "deficit_review_oracle": "The missing evidence is the person's prior coping preferences or observed behavior under serious stress.",
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          }
+        ],
+        "correct_case_count": 14,
+        "evaluation_groups": {
+          "V1_RETEST": {
+            "case_count": 10,
+            "correct_case_count": 9
+          },
+          "V2_PROSPECTIVE_HOLDOUT": {
+            "case_count": 7,
+            "correct_case_count": 5
+          }
+        },
+        "prompt_sha256": "b8257b365c6d6ea8358fa59d02590051075b752c4582433bb5e61d0c36d7ca05",
+        "variant": "candidate"
+      },
+      "changed_mechanism": "memory-sufficiency semantic contract only",
+      "experiment_id": "PERSON-FIDELITY-EXP2-COMPOSER-SUFFICIENCY",
+      "promotion": {
+        "accepted_for_production_promotion": false,
+        "decision_rule": "Candidate must pass every frozen case on every trial, improve at least one baseline failure, and regress no baseline pass. Composer deficits also require human semantic review before production promotion.",
+        "human_review_required": true,
+        "improved_case_ids": [
+          "cs-004-partial-person-evidence",
+          "cs-005-empty-person-decision",
+          "cs2-014-context-partial"
+        ],
+        "mechanical_gate_passed": false,
+        "regressed_case_ids": [
+          "cs2-012-current-personal-fact"
+        ],
+        "verdict": "REJECT_OR_REVISE"
+      }
+    }
+  },
+  "fixture_hash_normalization": "LF_CANONICAL",
+  "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+  "fixture_sha256": "23efb302a2cc6e6376d2cfa3b388b0affbf9b378ef7fecfd4f31e6e743ab922f",
+  "fixture_version": "person-fidelity-mechanism-experiments-v2",
+  "model": "qwen3:4b-instruct-2507-q4_K_M",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "production_changed": false,
+  "python": "3.12.10",
+  "report_sha256": "78ec494494a2c5b91555bf5e20614e209b82266460c4807e3f23ff9ade50ea9c",
+  "revision": "dc8ed5daebf780b69ee3d1b1f691201c28cd89fb",
+  "schema_version": 2,
+  "trials_per_case": 3
+}
