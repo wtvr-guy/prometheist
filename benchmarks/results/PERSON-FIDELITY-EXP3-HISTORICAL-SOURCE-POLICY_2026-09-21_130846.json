@@ -1,0 +1,1003 @@
+{
+  "base_url": "http://localhost:11434",
+  "captured_at": "2026-09-21T20:12:36.762143+00:00",
+  "experiment_version": "person-fidelity-mechanism-contracts-v1",
+  "experiments": {
+    "historical_source_policy": {
+      "baseline": {
+        "case_count": 11,
+        "cases": [
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"USER_AUTHORED\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"USER_AUTHORED\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"USER_AUTHORED\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-001-user-statement",
+            "expected_scope": "USER_AUTHORED"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"USER_AUTHORED\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"USER_AUTHORED\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"USER_AUTHORED\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-002-belief-change",
+            "expected_scope": "PERSON_HISTORY"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "MIXED_CONVERSATION",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"MIXED_CONVERSATION\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"GENERAL_OR_CURRENT\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"GENERAL_OR_CURRENT\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-003-self-report-behavior",
+            "expected_scope": "PERSON_HISTORY"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"USER_AUTHORED\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"USER_AUTHORED\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"USER_AUTHORED\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-004-identity-conflict",
+            "expected_scope": "PERSON_HISTORY"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "DETERMINISTIC_PRIOR_ASSISTANT_REFERENCE",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "MIXED_CONVERSATION",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": null,
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "DETERMINISTIC_PRIOR_ASSISTANT_REFERENCE",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "MIXED_CONVERSATION",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": null,
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "DETERMINISTIC_PRIOR_ASSISTANT_REFERENCE",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "MIXED_CONVERSATION",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": null,
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-005-prior-assistant",
+            "expected_scope": "MIXED_CONVERSATION"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "SYSTEM_RECORD",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"SYSTEM_RECORD\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "SYSTEM_RECORD",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"SYSTEM_RECORD\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "SYSTEM_RECORD",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"SYSTEM_RECORD\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-006-runtime-record",
+            "expected_scope": "SYSTEM_RECORD"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"GENERAL_OR_CURRENT\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"GENERAL_OR_CURRENT\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"GENERAL_OR_CURRENT\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-007-tool-result",
+            "expected_scope": "EXTERNAL_TOOL"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"GENERAL_OR_CURRENT\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"GENERAL_OR_CURRENT\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"GENERAL_OR_CURRENT\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-008-derived-record",
+            "expected_scope": "DERIVED_INTERNAL"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"GENERAL_OR_CURRENT\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"GENERAL_OR_CURRENT\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"GENERAL_OR_CURRENT\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-009-general-knowledge",
+            "expected_scope": "GENERAL_OR_CURRENT"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"USER_AUTHORED\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"USER_AUTHORED\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"USER_AUTHORED\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-010-user-history",
+            "expected_scope": "USER_AUTHORED"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"GENERAL_OR_CURRENT\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"GENERAL_OR_CURRENT\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"GENERAL_OR_CURRENT\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-011-person-prediction",
+            "expected_scope": "PERSON_HISTORY"
+          }
+        ],
+        "correct_case_count": 5,
+        "prompt_sha256": "96f87dab6a571be97b4959bd82493ca752107447410cb5f7b24bc63cae66c53d",
+        "variant": "baseline"
+      },
+      "candidate": {
+        "case_count": 11,
+        "cases": [
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"USER_AUTHORED\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"USER_AUTHORED\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"USER_AUTHORED\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-001-user-statement",
+            "expected_scope": "USER_AUTHORED"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "PERSON_HISTORY",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"PERSON_HISTORY\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "PERSON_HISTORY",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"PERSON_HISTORY\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "PERSON_HISTORY",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"PERSON_HISTORY\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-002-belief-change",
+            "expected_scope": "PERSON_HISTORY"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "PERSON_HISTORY",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"PERSON_HISTORY\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "PERSON_HISTORY",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"PERSON_HISTORY\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "PERSON_HISTORY",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"PERSON_HISTORY\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-003-self-report-behavior",
+            "expected_scope": "PERSON_HISTORY"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "PERSON_HISTORY",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"PERSON_HISTORY\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "PERSON_HISTORY",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"PERSON_HISTORY\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "PERSON_HISTORY",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"PERSON_HISTORY\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-004-identity-conflict",
+            "expected_scope": "PERSON_HISTORY"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "DETERMINISTIC_PRIOR_ASSISTANT_REFERENCE",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "MIXED_CONVERSATION",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": null,
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "DETERMINISTIC_PRIOR_ASSISTANT_REFERENCE",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "MIXED_CONVERSATION",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": null,
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "DETERMINISTIC_PRIOR_ASSISTANT_REFERENCE",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "MIXED_CONVERSATION",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": null,
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-005-prior-assistant",
+            "expected_scope": "MIXED_CONVERSATION"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "SYSTEM_RECORD",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"SYSTEM_RECORD\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "SYSTEM_RECORD",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"SYSTEM_RECORD\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "SYSTEM_RECORD",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"SYSTEM_RECORD\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-006-runtime-record",
+            "expected_scope": "SYSTEM_RECORD"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "SYSTEM_RECORD",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"SYSTEM_RECORD\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "SYSTEM_RECORD",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"SYSTEM_RECORD\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "SYSTEM_RECORD",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"SYSTEM_RECORD\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-007-tool-result",
+            "expected_scope": "EXTERNAL_TOOL"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "SYSTEM_RECORD",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"SYSTEM_RECORD\", \"surface_mode\": \"NATURAL_LANGUAGE\", \"insufficient_literal\": null }",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "SYSTEM_RECORD",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"SYSTEM_RECORD\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": false,
+                "output": {
+                  "evidence_scope": "SYSTEM_RECORD",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"SYSTEM_RECORD\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-008-derived-record",
+            "expected_scope": "DERIVED_INTERNAL"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"GENERAL_OR_CURRENT\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"GENERAL_OR_CURRENT\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "GENERAL_OR_CURRENT",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{\n  \"evidence_scope\": \"GENERAL_OR_CURRENT\",\n  \"surface_mode\": \"NATURAL_LANGUAGE\",\n  \"insufficient_literal\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-009-general-knowledge",
+            "expected_scope": "GENERAL_OR_CURRENT"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"USER_AUTHORED\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"USER_AUTHORED\",\"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "USER_AUTHORED",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"USER_AUTHORED\",\"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-010-user-history",
+            "expected_scope": "USER_AUTHORED"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "PERSON_HISTORY",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"PERSON_HISTORY\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "PERSON_HISTORY",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"PERSON_HISTORY\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "execution_path": "MODEL_CLASSIFICATION",
+                "matched_expected": true,
+                "output": {
+                  "evidence_scope": "PERSON_HISTORY",
+                  "insufficient_literal": null,
+                  "surface_mode": "NATURAL_LANGUAGE"
+                },
+                "raw_output": "{ \"evidence_scope\": \"PERSON_HISTORY\", \"surface_mode\": \"NATURAL_LANGUAGE\" }",
+                "trial": 3
+              }
+            ],
+            "case_id": "sp-011-person-prediction",
+            "expected_scope": "PERSON_HISTORY"
+          }
+        ],
+        "correct_case_count": 9,
+        "prompt_sha256": "aa0f5c6ffb54cb22d12a6b4bb70e745590e5fd40547c3b1e98209baa084ea6c1",
+        "variant": "candidate"
+      },
+      "candidate_person_history_allowlist": [
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT",
+        "USER_PROMPT"
+      ],
+      "changed_mechanism": "source-policy semantic ontology and contract only",
+      "experiment_id": "PERSON-FIDELITY-EXP3-HISTORICAL-SOURCE-POLICY",
+      "promotion": {
+        "accepted_for_production_promotion": false,
+        "decision_rule": "Candidate must pass every frozen case on every trial, improve at least one baseline failure, and regress no baseline pass. Composer deficits also require human semantic review before production promotion.",
+        "human_review_required": false,
+        "improved_case_ids": [
+          "sp-002-belief-change",
+          "sp-003-self-report-behavior",
+          "sp-004-identity-conflict",
+          "sp-011-person-prediction"
+        ],
+        "mechanical_gate_passed": false,
+        "regressed_case_ids": [],
+        "verdict": "REJECT_OR_REVISE"
+      }
+    }
+  },
+  "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-001",
+  "fixture_sha256": "35ac05d55dc3993dd7eb1ccc48f6ac538f8743497a2e9b40a00dca7a9ceecdba",
+  "fixture_version": "person-fidelity-mechanism-experiments-v1",
+  "model": "qwen3:4b-instruct-2507-q4_K_M",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "production_changed": false,
+  "python": "3.12.10",
+  "report_sha256": "f0e47fbdcfb01cc8586ec2631a3ea21dcdef1abfa08c531988c7c05ce1162108",
+  "revision": "b860a91eacac26f84a4f90a6331e2e0a11c161a6",
+  "schema_version": 1,
+  "trials_per_case": 3
+}

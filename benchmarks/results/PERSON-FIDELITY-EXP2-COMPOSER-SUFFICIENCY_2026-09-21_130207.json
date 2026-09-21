@@ -1,0 +1,851 @@
+{
+  "base_url": "http://localhost:11434",
+  "captured_at": "2026-09-21T20:05:44.254088+00:00",
+  "experiment_version": "person-fidelity-mechanism-contracts-v1",
+  "experiments": {
+    "composer_sufficiency": {
+      "baseline": {
+        "case_count": 10,
+        "cases": [
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-001-general-knowledge",
+            "class": "HISTORY_UNNECESSARY",
+            "deficit_review_oracle": null,
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-002-current-evidence",
+            "class": "CURRENT_PROMPT_SUFFICIENT",
+            "deficit_review_oracle": null,
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-003-complete-person-evidence",
+            "class": "COMPLETE_PERSON_EVIDENCE",
+            "deficit_review_oracle": null,
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-004-partial-person-evidence",
+            "class": "PARTIAL_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's difficult-writing preference or behavior under concentration demands; enjoying social energy alone does not settle the choice.",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-005-empty-person-decision",
+            "class": "EMPTY_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's values and prior decision patterns for the job tradeoff.",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-006-irrelevant-person-evidence",
+            "class": "IRRELEVANT_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's preference about being the target of public surprise celebrations.",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-007-complete-contradiction",
+            "class": "COMPLETE_CONTRADICTORY_EVIDENCE",
+            "deficit_review_oracle": null,
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-008-one-sided-contradiction",
+            "class": "MISSING_OBSERVED_BEHAVIOR",
+            "deficit_review_oracle": "The missing evidence is observed behavior during delays, which is required to reconcile the self-description.",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The name of the user's fifth-grade teacher\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The name of the user's fifth-grade teacher\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The name of the user's fifth-grade teacher\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-009-legitimate-unknown",
+            "class": "PERSONAL_UNKNOWN_REQUIRES_EXHAUSTED_RECALL",
+            "deficit_review_oracle": "The missing evidence is the teacher's identity; deeper bounded recall must be exhausted before the responder treats the fact as unknown.",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-010-complete-identity-conflict",
+            "class": "COMPLETE_IDENTITY_EVIDENCE",
+            "deficit_review_oracle": null,
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          }
+        ],
+        "correct_case_count": 7,
+        "prompt_sha256": "13f45bd0fb35d85c3c6157e3134d944b73dcbf3ef24069b5b5bb391ac6154c97",
+        "variant": "baseline"
+      },
+      "candidate": {
+        "case_count": 10,
+        "cases": [
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-001-general-knowledge",
+            "class": "HISTORY_UNNECESSARY",
+            "deficit_review_oracle": null,
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": "The user's preference for black tea is not established in the historical memory. The current prompt states a preference, but there is no prior evidence in the historical memory confirming that this preference was previously expressed or known to the system. Therefore, the system lacks evidence of the user's prior statement about drink preference.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The user's preference for black tea is not established in the historical memory. The current prompt states a preference, but there is no prior evidence in the historical memory confirming that this preference was previously expressed or known to the system. Therefore, the system lacks evidence of the user's prior statement about drink preference.\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": "The user's preference for black tea is not established in the historical memory. The current prompt states a preference, but there is no prior evidence in the historical memory confirming that the user previously expressed a preference for black tea. Therefore, the personal history of the user's drink preference is missing.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The user's preference for black tea is not established in the historical memory. The current prompt states a preference, but there is no prior evidence in the historical memory confirming that the user previously expressed a preference for black tea. Therefore, the personal history of the user's drink preference is missing.\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": "The user's preference for black tea is not established in the historical memory. The current prompt states a preference, but there is no prior evidence in the historical memory confirming that the user previously expressed a preference for black tea. Therefore, the personal history of the user's drink preference is missing.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The user's preference for black tea is not established in the historical memory. The current prompt states a preference, but there is no prior evidence in the historical memory confirming that the user previously expressed a preference for black tea. Therefore, the personal history of the user's drink preference is missing.\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-002-current-evidence",
+            "class": "CURRENT_PROMPT_SUFFICIENT",
+            "deficit_review_oracle": null,
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-003-complete-person-evidence",
+            "class": "COMPLETE_PERSON_EVIDENCE",
+            "deficit_review_oracle": null,
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-004-partial-person-evidence",
+            "class": "PARTIAL_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's difficult-writing preference or behavior under concentration demands; enjoying social energy alone does not settle the choice.",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The user's values and decision history are not present in the historical memory. No evidence is provided about the user's personal values, past decisions, or preferences related to job choices.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The user's values and decision history are not present in the historical memory. No evidence is provided about the user's personal values, past decisions, or preferences related to job choices.\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The user's values and decision history are not present in the historical memory. No evidence is provided about the user's personal values, past decisions, or preferences related to job choices.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The user's values and decision history are not present in the historical memory. No evidence is provided about the user's personal values, past decisions, or preferences related to job choices.\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The user's values and decision history are not present in the historical memory. No evidence is provided about the user's personal values, past decisions, or preferences related to job choices.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The user's values and decision history are not present in the historical memory. No evidence is provided about the user's personal values, past decisions, or preferences related to job choices.\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-005-empty-person-decision",
+            "class": "EMPTY_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's values and prior decision patterns for the job tradeoff.",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "no evidence about the user's preferences, emotional responses, or experiences related to public surprise celebrations",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"no evidence about the user's preferences, emotional responses, or experiences related to public surprise celebrations\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "no evidence about the user's preferences, emotional responses, or experiences related to public surprise celebrations",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"no evidence about the user's preferences, emotional responses, or experiences related to public surprise celebrations\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "no evidence about the user's preferences, emotional responses, or experiences related to public surprise celebrations",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"no evidence about the user's preferences, emotional responses, or experiences related to public surprise celebrations\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-006-irrelevant-person-evidence",
+            "class": "IRRELEVANT_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's preference about being the target of public surprise celebrations.",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-007-complete-contradiction",
+            "class": "COMPLETE_CONTRADICTORY_EVIDENCE",
+            "deficit_review_oracle": null,
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-008-one-sided-contradiction",
+            "class": "MISSING_OBSERVED_BEHAVIOR",
+            "deficit_review_oracle": "The missing evidence is observed behavior during delays, which is required to reconcile the self-description.",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "the name of the fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"the name of the fifth-grade teacher\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "the name of my fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"the name of my fifth-grade teacher\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "the name of my fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"the name of my fifth-grade teacher\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-009-legitimate-unknown",
+            "class": "PERSONAL_UNKNOWN_REQUIRES_EXHAUSTED_RECALL",
+            "deficit_review_oracle": "The missing evidence is the teacher's identity; deeper bounded recall must be exhausted before the responder treats the fact as unknown.",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-010-complete-identity-conflict",
+            "class": "COMPLETE_IDENTITY_EVIDENCE",
+            "deficit_review_oracle": null,
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          }
+        ],
+        "correct_case_count": 7,
+        "prompt_sha256": "2a79a01a70920c1289179d784a30ef23f8d6bbc9b9da15b6599f5dcf2d632810",
+        "variant": "candidate"
+      },
+      "changed_mechanism": "memory-sufficiency semantic contract only",
+      "experiment_id": "PERSON-FIDELITY-EXP2-COMPOSER-SUFFICIENCY",
+      "promotion": {
+        "accepted_for_production_promotion": false,
+        "decision_rule": "Candidate must pass every frozen case on every trial, improve at least one baseline failure, and regress no baseline pass. Composer deficits also require human semantic review before production promotion.",
+        "human_review_required": true,
+        "improved_case_ids": [
+          "cs-005-empty-person-decision"
+        ],
+        "mechanical_gate_passed": false,
+        "regressed_case_ids": [
+          "cs-002-current-evidence"
+        ],
+        "verdict": "REJECT_OR_REVISE"
+      }
+    }
+  },
+  "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-001",
+  "fixture_sha256": "35ac05d55dc3993dd7eb1ccc48f6ac538f8743497a2e9b40a00dca7a9ceecdba",
+  "fixture_version": "person-fidelity-mechanism-experiments-v1",
+  "model": "qwen3:4b-instruct-2507-q4_K_M",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "production_changed": false,
+  "python": "3.12.10",
+  "report_sha256": "c6de28493bc4ea88204adc7eb64e67fd0361e3398273d5cda12d751d63cdbbc7",
+  "revision": "b860a91eacac26f84a4f90a6331e2e0a11c161a6",
+  "schema_version": 1,
+  "trials_per_case": 3
+}

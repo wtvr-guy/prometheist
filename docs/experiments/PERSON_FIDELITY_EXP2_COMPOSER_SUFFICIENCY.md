@@ -1,7 +1,8 @@
 # Experiment 2 — Person-dependent memory sufficiency
 
-**Status:** frozen candidate and control fixture; awaiting native
-`qwen3:4b-instruct-2507-q4_K_M` evidence. Production behavior is unchanged.
+**Status:** v1 rejected/revise from native evidence; v2 candidate and prospective
+holdout frozen for a new native `qwen3:4b-instruct-2507-q4_K_M` run. Production
+behavior is unchanged.
 
 **Measured failure:** in the verified `PERSON-FIDELITY-001` native run, the
 user-prompt Composer returned `sufficient=true` on its first call for probes 1–9,
@@ -25,9 +26,38 @@ irrelevant, and materially partial personal packets while preserving success for
 general knowledge, current-prompt evidence, complete personal evidence, and complete
 contradictory evidence.
 
+## v1 native result
+
+The exact retained result is
+[`PERSON-FIDELITY-EXP2-COMPOSER-SUFFICIENCY_2026-09-21_130207.json`](../../benchmarks/results/PERSON-FIDELITY-EXP2-COMPOSER-SUFFICIENCY_2026-09-21_130207.json).
+It was collected at revision `b860a91e` with three trials per case.
+
+| Measure | Production contract | v1 candidate |
+|---|---:|---:|
+| Cases passing every trial | 7/10 | 7/10 |
+| Frozen failures repaired | — | 1 |
+| Frozen passes regressed | — | 1 |
+
+The candidate repaired `cs-005-empty-person-decision`: every trial correctly named
+the missing values and decision history. It also produced semantically useful,
+specific deficits for irrelevant evidence and the unknown teacher identity.
+
+It nevertheless failed promotion for three independent reasons:
+
+- it regressed `cs-002-current-evidence` by demanding historical confirmation for a
+  preference explicitly stated in the current prompt;
+- it still accepted topically related but non-diagnostic evidence in
+  `cs-004-partial-person-evidence`; and
+- it still accepted one-sided self-report in `cs-008-one-sided-contradiction`, even
+  though the question explicitly required comparison with observed behavior.
+
+The result is directional evidence that the generic-answerability distinction helps,
+but the v1 wording overcorrects current evidence and does not reliably decompose a
+question into all material evidence requirements. It is not a production candidate.
+
 ## Frozen controlled cases
 
-The shared fixture
+The original shared fixture
 [`person_fidelity_mechanism_experiments_v1.json`](../../benchmarks/person_fidelity_mechanism_experiments_v1.json)
 was frozen before native candidate execution. It contains ten Composer cases:
 
@@ -46,6 +76,22 @@ was frozen before native candidate execution. It contains ten Composer cases:
 
 The fixture uses a third fictional subject and shares no Mara or Wren content. It is
 a semantic-contract experiment, not the held-out person-fidelity evaluation.
+
+The v2 fixture
+[`person_fidelity_mechanism_experiments_v2.json`](../../benchmarks/person_fidelity_mechanism_experiments_v2.json)
+permanently retains all ten v1 cases as development/retest cases and adds seven cases
+frozen before v2 native execution. Those prospective cases independently test:
+
+- direct current corrections despite conflicting older memory;
+- a personal fact supplied entirely in the current prompt;
+- complete versus merely adjacent evidence for a context-sensitive decision;
+- one-sided versus complete self-report/behavior reconciliation; and
+- an empty contextual prediction request.
+
+The v2 contract uses an ordered current-evidence, evidence-need, and material-slot
+decision procedure. Its key falsifiable addition is that evidence must discriminate
+the requested context: a packet still compatible with materially different answers
+is incomplete.
 
 ## Candidate and decision rule
 
@@ -72,12 +118,12 @@ has improved end to end.
 
 ## Run
 
-Commit this experimental harness first so the native result binds to immutable source,
-then run on the configured Windows/Ollama host:
+Commit the v2 experimental harness first so the native result binds to immutable
+source, then run on the configured Windows/Ollama host. The script defaults to v2:
 
 ```powershell
 .\scripts\run_person_fidelity_mechanism_experiments.ps1 `
-  -Experiment composer -Trials 3
+  -Experiment composer -CandidateVersion v2 -Trials 3
 ```
 
 Verify the resulting artifact independently:

@@ -23,6 +23,14 @@ lost implementation.
 
 New infrastructure, retrieval mechanisms, models, orchestration layers, optimization solvers, heuristic policy, or other complexity must earn its place by repairing a frozen measured failure or materially improving a declared objective without violating harder invariants. “It is standard,” “it might help,” or “the current tests pass” is not sufficient evidence.
 
+Semantic fixtures must have platform-independent identities. Text fixture digests are
+computed after canonical LF newline normalization, and Git attributes force the
+committed fixture bytes to LF. Raw native result artifacts remain byte-preserved
+because their exact transport form is evidence. A verifier may accept a documented
+legacy fixture digest that differs only by LF/CRLF representation, but it must prove
+that equivalence and report that the legacy exception was used; it may not weaken a
+fixture check to parsed-JSON equality or silently ignore an arbitrary hash mismatch.
+
 ## Rule
 
 Prometheist must not treat an arbitrary numeric bound as correct merely because it passes the tests that happened to exist when it was introduced.

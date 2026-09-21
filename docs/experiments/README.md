@@ -25,13 +25,17 @@ reproducibility repair for that negative result.
 
 [`PERSON_FIDELITY_EXP2_COMPOSER_SUFFICIENCY.md`](PERSON_FIDELITY_EXP2_COMPOSER_SUFFICIENCY.md)
 freezes the controlled complete/partial/empty/irrelevant/contradictory packet cases
-for the person-dependent memory-sufficiency contract. The candidate remains
-non-production until native reference-model evidence satisfies its decision rule.
+for the person-dependent memory-sufficiency contract. Its v1 candidate was rejected
+after a current-prompt regression and two surviving partial-evidence failures; a v2
+contract and prospective holdout are frozen for native rerun. Both remain
+non-production.
 
 [`PERSON_FIDELITY_EXP3_HISTORICAL_SOURCE_POLICY.md`](PERSON_FIDELITY_EXP3_HISTORICAL_SOURCE_POLICY.md)
 freezes the source-policy cases for self-report plus observed person history. Its
-`PERSON_HISTORY` scope and allowlist are proposals, not current production behavior,
-until separately accepted by native evidence.
+v1 candidate improved all four intended `PERSON_HISTORY` cases without regression
+but failed external-tool and derived-internal controls. The clarified v2 contract and
+prospective holdout remain proposals, not current production behavior, until
+separately accepted by native evidence.
 
 ## Adaptive Memory Attention / Composer branch (PR #22)
 

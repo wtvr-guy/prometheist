@@ -4,3 +4,7 @@
 benchmarks/results/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 benchmarks/generated/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 .prometheist/artifacts/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Experiment fixtures are semantic JSON, not byte receipts. Force portable bytes so
+# fixture digests do not depend on the host's core.autocrlf setting.
+benchmarks/person_fidelity_mechanism_experiments_v*.json text eol=lf

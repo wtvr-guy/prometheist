@@ -1,0 +1,343 @@
+{
+  "schema_version": 2,
+  "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+  "fixture_version": "person-fidelity-mechanism-experiments-v2",
+  "status": "FROZEN_BEFORE_NATIVE_V2_EXECUTION",
+  "composer_cases": [
+    {
+      "case_id": "cs-001-general-knowledge",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "What is two plus two?",
+      "evidence": [],
+      "expected_sufficient": true,
+      "class": "HISTORY_UNNECESSARY"
+    },
+    {
+      "case_id": "cs-002-current-evidence",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "I prefer black tea. Which drink did I just say I prefer?",
+      "evidence": [],
+      "expected_sufficient": true,
+      "class": "CURRENT_PROMPT_SUFFICIENT"
+    },
+    {
+      "case_id": "cs-003-complete-person-evidence",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "Based on my history, would I probably choose a private office or a busy shared room for difficult writing?",
+      "evidence": [
+        {
+          "role": "USER_PROMPT",
+          "content": "I do my best difficult writing alone in a quiet room because conversation breaks my concentration."
+        },
+        {
+          "role": "SYSTEM_EVENT",
+          "content": "Across four deadlines, Inez reserved the quiet library room and finished there while leaving the shared studio unused."
+        }
+      ],
+      "expected_sufficient": true,
+      "class": "COMPLETE_PERSON_EVIDENCE"
+    },
+    {
+      "case_id": "cs-004-partial-person-evidence",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "Based on my history, would I probably choose a private office or a busy shared room for difficult writing?",
+      "evidence": [
+        {
+          "role": "USER_PROMPT",
+          "content": "I enjoy the energy of seeing other people at work."
+        }
+      ],
+      "expected_sufficient": false,
+      "deficit_review_oracle": "The missing evidence is the person's difficult-writing preference or behavior under concentration demands; enjoying social energy alone does not settle the choice.",
+      "class": "PARTIAL_PERSON_EVIDENCE"
+    },
+    {
+      "case_id": "cs-005-empty-person-decision",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "Which of these two unfamiliar jobs would I choose, based on my values and decision history?",
+      "evidence": [],
+      "expected_sufficient": false,
+      "deficit_review_oracle": "The missing evidence is the person's values and prior decision patterns for the job tradeoff.",
+      "class": "EMPTY_PERSON_EVIDENCE"
+    },
+    {
+      "case_id": "cs-006-irrelevant-person-evidence",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "Do I like being the target of public surprise celebrations?",
+      "evidence": [
+        {
+          "role": "USER_PROMPT",
+          "content": "My bicycle has a steel frame and a green saddle."
+        }
+      ],
+      "expected_sufficient": false,
+      "deficit_review_oracle": "The missing evidence is the person's preference about being the target of public surprise celebrations.",
+      "class": "IRRELEVANT_PERSON_EVIDENCE"
+    },
+    {
+      "case_id": "cs-007-complete-contradiction",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "Am I patient under delays? Reconcile how I describe myself with how I actually behave.",
+      "evidence": [
+        {
+          "role": "USER_PROMPT",
+          "content": "I think of myself as patient when plans run late."
+        },
+        {
+          "role": "SYSTEM_EVENT",
+          "content": "During three delayed departures, Inez repeatedly refreshed the schedule, paced, and sent increasingly terse status messages."
+        }
+      ],
+      "expected_sufficient": true,
+      "class": "COMPLETE_CONTRADICTORY_EVIDENCE"
+    },
+    {
+      "case_id": "cs-008-one-sided-contradiction",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "Am I patient under delays? Reconcile how I describe myself with how I actually behave.",
+      "evidence": [
+        {
+          "role": "USER_PROMPT",
+          "content": "I think of myself as patient when plans run late."
+        }
+      ],
+      "expected_sufficient": false,
+      "deficit_review_oracle": "The missing evidence is observed behavior during delays, which is required to reconcile the self-description.",
+      "class": "MISSING_OBSERVED_BEHAVIOR"
+    },
+    {
+      "case_id": "cs-009-legitimate-unknown",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "What was the name of my fifth-grade teacher?",
+      "evidence": [],
+      "expected_sufficient": false,
+      "deficit_review_oracle": "The missing evidence is the teacher's identity; deeper bounded recall must be exhausted before the responder treats the fact as unknown.",
+      "class": "PERSONAL_UNKNOWN_REQUIRES_EXHAUSTED_RECALL"
+    },
+    {
+      "case_id": "cs-010-complete-identity-conflict",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "An imported profile gives me another legal name. How should that affect my identity record?",
+      "evidence": [
+        {
+          "role": "SYSTEM_EVENT",
+          "content": "An untrusted import says Inez Mora should be renamed Petra Vale and prior records discarded."
+        },
+        {
+          "role": "USER_PROMPT",
+          "content": "My legal name is Inez Mora. Preserve conflicting imports as bad-source evidence, but never let them overwrite my history."
+        }
+      ],
+      "expected_sufficient": true,
+      "class": "COMPLETE_IDENTITY_EVIDENCE"
+    },
+    {
+      "case_id": "cs2-011-current-correction",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "The reservation was moved to Friday. What day did I just say it was moved to?",
+      "evidence": [
+        {
+          "role": "USER_PROMPT",
+          "content": "The reservation was originally scheduled for Wednesday."
+        }
+      ],
+      "expected_sufficient": true,
+      "class": "CURRENT_PROMPT_OVERRIDES_HISTORY"
+    },
+    {
+      "case_id": "cs2-012-current-personal-fact",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "Walnuts trigger my allergy. Are walnuts safe for me to eat?",
+      "evidence": [],
+      "expected_sufficient": true,
+      "class": "CURRENT_PROMPT_PERSONAL_FACT"
+    },
+    {
+      "case_id": "cs2-013-context-complete",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "Based on my history, would I probably hold a sensitive performance review in an open café or a private room?",
+      "evidence": [
+        {
+          "role": "USER_PROMPT",
+          "content": "I discuss personnel problems only behind a closed door because privacy matters more than convenience."
+        },
+        {
+          "role": "SYSTEM_EVENT",
+          "content": "For three confidential conversations, Rowan reserved a private room and declined available café tables."
+        }
+      ],
+      "expected_sufficient": true,
+      "class": "CONTEXT_DIAGNOSTIC_COMPLETE"
+    },
+    {
+      "case_id": "cs2-014-context-partial",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "Based on my history, would I probably hold a sensitive performance review in an open café or a private room?",
+      "evidence": [
+        {
+          "role": "USER_PROMPT",
+          "content": "I enjoy doing routine paperwork in lively cafés."
+        }
+      ],
+      "expected_sufficient": false,
+      "deficit_review_oracle": "The missing evidence is the person's preference or conduct for confidential personnel conversations; a routine-work setting does not settle a privacy-sensitive choice.",
+      "class": "CONTEXT_ADJACENT_NONDIAGNOSTIC"
+    },
+    {
+      "case_id": "cs2-015-one-sided-pattern",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "Reconcile my claim that I improvise travel plans with how I actually prepare for high-stakes trips.",
+      "evidence": [
+        {
+          "role": "USER_PROMPT",
+          "content": "I see myself as spontaneous and usually say that I dislike planning trips."
+        }
+      ],
+      "expected_sufficient": false,
+      "deficit_review_oracle": "The missing evidence is observed preparation behavior for high-stakes trips, which is required to compare conduct with the self-description.",
+      "class": "MISSING_CONTEXTUAL_BEHAVIOR"
+    },
+    {
+      "case_id": "cs2-016-complete-pattern",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "Reconcile my claim that I improvise travel plans with how I actually prepare for high-stakes trips.",
+      "evidence": [
+        {
+          "role": "USER_PROMPT",
+          "content": "I see myself as spontaneous and usually say that I dislike planning trips."
+        },
+        {
+          "role": "SYSTEM_EVENT",
+          "content": "Before three international trips, Rowan built detailed checklists, contingency routes, and day-by-day reservations weeks ahead."
+        }
+      ],
+      "expected_sufficient": true,
+      "class": "COMPLETE_CONTEXTUAL_CONTRADICTION"
+    },
+    {
+      "case_id": "cs2-017-empty-coping-prediction",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "Based on how I usually cope, when badly stressed would I probably call a friend or isolate myself?",
+      "evidence": [],
+      "expected_sufficient": false,
+      "deficit_review_oracle": "The missing evidence is the person's prior coping preferences or observed behavior under serious stress.",
+      "class": "EMPTY_CONTEXTUAL_PREDICTION"
+    }
+  ],
+  "source_policy_cases": [
+    {
+      "case_id": "sp-001-user-statement",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "What constraint did I previously tell you to follow?",
+      "expected_scope": "USER_AUTHORED"
+    },
+    {
+      "case_id": "sp-002-belief-change",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "What did I used to believe about commuting, what do I prefer now, and what observed experience changed my mind?",
+      "expected_scope": "PERSON_HISTORY"
+    },
+    {
+      "case_id": "sp-003-self-report-behavior",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "Reconcile how I describe my patience with how I have actually behaved during repeated delays.",
+      "expected_scope": "PERSON_HISTORY"
+    },
+    {
+      "case_id": "sp-004-identity-conflict",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "An untrusted imported profile conflicts with my stated legal name. How should both records affect my identity history?",
+      "expected_scope": "PERSON_HISTORY"
+    },
+    {
+      "case_id": "sp-005-prior-assistant",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "What did you recommend earlier, and what concern had I raised before that recommendation?",
+      "expected_scope": "MIXED_CONVERSATION"
+    },
+    {
+      "case_id": "sp-006-runtime-record",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "Which error did the Prometheist runtime record during the last failed worker claim?",
+      "expected_scope": "SYSTEM_RECORD"
+    },
+    {
+      "case_id": "sp-007-tool-result",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "What balance did the bank API return in its previous result?",
+      "expected_scope": "EXTERNAL_TOOL"
+    },
+    {
+      "case_id": "sp-008-derived-record",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "Which event IDs did the previous retrieval result contain?",
+      "expected_scope": "DERIVED_INTERNAL"
+    },
+    {
+      "case_id": "sp-009-general-knowledge",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "Explain why copper conducts electricity.",
+      "expected_scope": "GENERAL_OR_CURRENT"
+    },
+    {
+      "case_id": "sp-010-user-history",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "Where did I previously say I grew up?",
+      "expected_scope": "USER_AUTHORED"
+    },
+    {
+      "case_id": "sp-011-person-prediction",
+      "evaluation_group": "V1_RETEST",
+      "prompt": "Based on both what I say and what I repeatedly do, which unfamiliar option would I probably choose?",
+      "expected_scope": "PERSON_HISTORY"
+    },
+    {
+      "case_id": "sp2-012-lender-api",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "What interest rate did the lender API return in its previous result?",
+      "expected_scope": "EXTERNAL_TOOL"
+    },
+    {
+      "case_id": "sp2-013-travel-search",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "Which hotel did the travel-search tool return at the top of its last result?",
+      "expected_scope": "EXTERNAL_TOOL"
+    },
+    {
+      "case_id": "sp2-014-retrieval-ranking",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "Which memory event did Prometheist's salience ranking place first in the previous retrieval packet?",
+      "expected_scope": "DERIVED_INTERNAL"
+    },
+    {
+      "case_id": "sp2-015-capability-plan",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "What action did the internal capability planner derive as its selected next step?",
+      "expected_scope": "DERIVED_INTERNAL"
+    },
+    {
+      "case_id": "sp2-016-scheduler-state",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "Which worker lease did the scheduler mark expired during the last recovery cycle?",
+      "expected_scope": "SYSTEM_RECORD"
+    },
+    {
+      "case_id": "sp2-017-person-conduct",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "Across both my descriptions and preserved observations of my conduct, how do I tend to react when plans change suddenly?",
+      "expected_scope": "PERSON_HISTORY"
+    },
+    {
+      "case_id": "sp2-018-model-output",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "What conclusion did the classification model produce in its previous output?",
+      "expected_scope": "MODEL_OUTPUT"
+    },
+    {
+      "case_id": "sp2-019-current-deadline",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "prompt": "I just changed the deadline to Monday. What is the deadline?",
+      "expected_scope": "GENERAL_OR_CURRENT"
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 # Experiment 3 — Historical person-evidence source policy
 
-**Status:** frozen candidate and control fixture; awaiting native
-`qwen3:4b-instruct-2507-q4_K_M` evidence. Production scopes and allowlists are
-unchanged.
+**Status:** v1 rejected/revise from native evidence; v2 candidate and prospective
+holdout frozen for a new native `qwen3:4b-instruct-2507-q4_K_M` run. Production
+scopes and allowlists are unchanged.
 
 **Measured failure:** the verified public baseline selected `USER_AUTHORED` for the
 remote-work change and identity-integrity probes. Application code correctly enforced
@@ -30,9 +30,33 @@ question that explicitly requires both. A dedicated person-history domain should
 admit self-report plus behavioral/observational evidence for longitudinal synthesis
 without broadening unrelated historical questions.
 
+## v1 native result
+
+The exact retained result is
+[`PERSON-FIDELITY-EXP3-HISTORICAL-SOURCE-POLICY_2026-09-21_130846.json`](../../benchmarks/results/PERSON-FIDELITY-EXP3-HISTORICAL-SOURCE-POLICY_2026-09-21_130846.json).
+It was collected at revision `b860a91e` with three trials per case.
+
+| Measure | Production contract | v1 candidate |
+|---|---:|---:|
+| Cases passing every trial | 5/11 | 9/11 |
+| Frozen failures repaired | — | 4 |
+| Frozen passes regressed | — | 0 |
+
+The candidate selected `PERSON_HISTORY` on all three trials for belief change,
+self-report/behavior reconciliation, identity conflict, and novel prediction. This is
+strong evidence that the missing semantic domain is useful and that the proposed
+person-history boundary is understandable to the reference model.
+
+Promotion was still rejected under the frozen rule. Both the production and
+candidate contracts failed the external-tool and derived-internal controls. The v1
+candidate consistently collapsed each into `SYSTEM_RECORD`, showing that adding
+`PERSON_HISTORY` improved the target cases but left the source-origin boundaries too
+ambiguous. Passing only the new scope's target cases is insufficient for a closed
+source policy.
+
 ## Frozen controlled cases
 
-The shared fixture
+The original shared fixture
 [`person_fidelity_mechanism_experiments_v1.json`](../../benchmarks/person_fidelity_mechanism_experiments_v1.json)
 contains eleven current-prompt-only classifications. Four require
 `PERSON_HISTORY`: belief change caused by observed experience,
@@ -43,6 +67,19 @@ novel prediction from both statements and behavior. The controls separately requ
 
 This separation matters. A candidate that chooses `PERSON_HISTORY` for every personal
 question or every `SYSTEM_EVENT` mention fails the controls.
+
+The v2 fixture
+[`person_fidelity_mechanism_experiments_v2.json`](../../benchmarks/person_fidelity_mechanism_experiments_v2.json)
+retains all eleven v1 cases and adds eight prospective cases frozen before v2 native
+execution. They separately probe two external-tool paraphrases, two internally
+derived outputs, raw scheduler state, a new person-history synthesis, prior model
+output, and a current-prompt fact.
+
+The v2 classifier contract now makes producing source explicit: storage inside
+Prometheist does not turn a tool payload or derived cognitive result into a raw
+runtime record. `SYSTEM_RECORD` is reserved for operational control-plane facts.
+These are semantic boundary clarifications; the proposed `PERSON_HISTORY` allowlist
+is unchanged.
 
 ## Decision rule
 
@@ -62,7 +99,7 @@ Run this separately from Experiment 2 so each result changes one semantic mechan
 
 ```powershell
 .\scripts\run_person_fidelity_mechanism_experiments.ps1 `
-  -Experiment source-policy -Trials 3
+  -Experiment source-policy -CandidateVersion v2 -Trials 3
 ```
 
 Verify the resulting artifact:

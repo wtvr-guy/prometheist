@@ -3,6 +3,8 @@ param(
     [string]$Experiment = "composer",
     [ValidateRange(1, 20)]
     [int]$Trials = 3,
+    [ValidateSet("v1", "v2")]
+    [string]$CandidateVersion = "v2",
     [string]$VerifyResult,
     [switch]$ValidateOnly
 )
@@ -26,7 +28,7 @@ try {
     }
 
     uv run --locked python benchmarks/run_person_fidelity_mechanism_experiments.py `
-        --validate-only
+        --validate-only --candidate-version $CandidateVersion
     if ($LASTEXITCODE -ne 0) { throw "mechanism fixture validation failed" }
     if ($ValidateOnly) { return }
 
@@ -38,7 +40,8 @@ try {
     }
     $output = "benchmarks/results/PERSON-FIDELITY-${label}_$stamp.json"
     uv run --locked python benchmarks/run_person_fidelity_mechanism_experiments.py `
-        --experiment $Experiment --trials $Trials --output $output
+        --experiment $Experiment --candidate-version $CandidateVersion `
+        --trials $Trials --output $output
     if ($LASTEXITCODE -ne 0) { throw "mechanism experiment failed" }
 
     Write-Host "Raw native experiment evidence written to $output"
