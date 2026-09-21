@@ -83,9 +83,19 @@ is unchanged.
 
 ## Decision rule
 
-The exact production and candidate prompts, schemas, raw outputs, fixture hash,
-model, revision, per-trial results, and report hash are captured by
+Every new run captures the exact production and candidate prompts, schemas, token
+limits, model identity, raw outputs or transport errors, validated stage results,
+benchmark evaluations, fixture hash, revision, and final disposition in a separate
+hash-linked interaction chain for each trial. Deterministic prior-assistant routing
+also receives a complete chain, with zero model-invocation artifacts. A
+content-addressed `run_manifest.json` inventories every raw artifact byte, and the
+compact result records the manifest hash. These records are written by
 [`run_person_fidelity_mechanism_experiments.py`](../../benchmarks/run_person_fidelity_mechanism_experiments.py).
+
+The retained 2026-09-21 v1 and v2 compact results predate this correction. Their
+compact JSON retains the raw and parsed model outputs, errors, and verdicts, but no
+independent per-invocation chains. The omitted causal trace must not be fabricated
+after the fact; native reruns are required to produce it.
 
 Promotion requires every candidate case to pass on every trial, at least one baseline
 failure to improve, and no baseline pass to regress. A pass authorizes adding the

@@ -6,6 +6,7 @@ param(
     [ValidateSet("v1", "v2")]
     [string]$CandidateVersion = "v2",
     [string]$VerifyResult,
+    [string]$ArtifactRoot,
     [switch]$ValidateOnly
 )
 
@@ -39,12 +40,18 @@ try {
         default { "EXP2-EXP3" }
     }
     $output = "benchmarks/results/PERSON-FIDELITY-${label}_$stamp.json"
+    $artifactRootArgument = if ($ArtifactRoot) {
+        $ArtifactRoot
+    } else {
+        "benchmarks/generated/person_fidelity_mechanisms/$stamp"
+    }
     uv run --locked python benchmarks/run_person_fidelity_mechanism_experiments.py `
         --experiment $Experiment --candidate-version $CandidateVersion `
-        --trials $Trials --output $output
+        --trials $Trials --output $output --artifact-root $artifactRootArgument
     if ($LASTEXITCODE -ne 0) { throw "mechanism experiment failed" }
 
-    Write-Host "Raw native experiment evidence written to $output"
+    Write-Host "Native experiment result written to $output"
+    Write-Host "Complete raw artifact journal written to $artifactRootArgument"
     Write-Host "Review and commit the result before promoting either candidate."
 }
 finally {

@@ -95,9 +95,18 @@ is incomplete.
 
 ## Candidate and decision rule
 
-The exact production and candidate prompts, raw outputs, fixture hash, model,
-revision, per-trial results, and report hash are captured by
+Every new run captures the exact production and candidate prompts, quarantined
+evidence payloads and references, schemas, token limits, model identity, raw outputs
+or transport errors, validated stage results, benchmark evaluations, fixture hash,
+revision, and final disposition in a separate hash-linked interaction chain for each
+trial. A content-addressed `run_manifest.json` inventories every raw artifact byte,
+and the compact result records the manifest hash. Both are written by
 [`run_person_fidelity_mechanism_experiments.py`](../../benchmarks/run_person_fidelity_mechanism_experiments.py).
+
+The retained 2026-09-21 v1 and v2 compact results predate this correction. They
+contain prompts, raw outputs, parsed outputs, errors, and verdicts, but do not
+contain independent per-invocation chains. That missing causal evidence cannot be
+reconstructed honestly after the runs; only a rerun can create it.
 
 Promotion requires all of the following:
 
@@ -106,7 +115,7 @@ Promotion requires all of the following:
 3. no production-contract pass regresses;
 4. the result comes from a clean committed revision using the configured reference
    Ollama model; and
-5. the exact raw result is preserved; and
+5. the exact raw result and its complete verified artifact manifest are preserved; and
 6. a human review confirms that every `memory_deficit` identifies the missing
    remembered semantics rather than returning a vague request for "more context."
 

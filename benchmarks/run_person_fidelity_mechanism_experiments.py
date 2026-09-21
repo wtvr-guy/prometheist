@@ -8,15 +8,20 @@ verdicts are persisted so rejected mechanisms remain reproducible.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 import hashlib
 import json
+import os
 from pathlib import Path
+from pathlib import PurePosixPath
 import platform
 import subprocess
 import sys
 from typing import Any, Literal
+from uuid import UUID, uuid5
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, ConfigDict
@@ -26,12 +31,18 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from jit_agent import artifact_journal  # noqa: E402
+from jit_agent.interaction_contracts import DurableInteraction  # noqa: E402
 from jit_agent.llm import OllamaClient, _quarantined_evidence  # noqa: E402
 from jit_agent.percept_response_runtime import (  # noqa: E402
     MemorySufficiencyDecision,
+    PerceptStage,
     _RESPONSE_POLICY_PROMPT,
 )
-from jit_agent.percept_response_worker import _USER_PROMPT_COMPOSER  # noqa: E402
+from jit_agent.percept_response_worker import (  # noqa: E402
+    UserPromptLLM,
+    _USER_PROMPT_COMPOSER,
+)
 from jit_agent.response_policy import (  # noqa: E402
     ResponsePolicy,
     explicit_prior_assistant_reference,
@@ -42,9 +53,11 @@ FIXTURE_PATH_V1 = ROOT / "benchmarks" / "person_fidelity_mechanism_experiments_v
 FIXTURE_PATH_V2 = ROOT / "benchmarks" / "person_fidelity_mechanism_experiments_v2.json"
 FIXTURE_PATH = FIXTURE_PATH_V2
 RESULT_DIR = ROOT / "benchmarks" / "results"
+GENERATED_DIR = ROOT / "benchmarks" / "generated" / "person_fidelity_mechanisms"
 EXPERIMENT_VERSION_V1 = "person-fidelity-mechanism-contracts-v1"
 EXPERIMENT_VERSION_V2 = "person-fidelity-mechanism-contracts-v2"
 EXPERIMENT_VERSION = EXPERIMENT_VERSION_V2
+_MECHANISM_ARTIFACT_NAMESPACE = UUID("2892d906-9d92-5a66-8606-272f5dc633e4")
 
 
 COMPOSER_CANDIDATE_PROMPT_V1 = """\
@@ -286,6 +299,175 @@ class MechanismFixture(BaseModel):
     source_policy_cases: list[dict[str, Any]]
 
 
+@dataclass(frozen=True)
+class AttemptArtifactContext:
+    interaction: DurableInteraction
+    claim_id: UUID
+    stage: PerceptStage
+    artifact_root: Path
+    artifact_directory: str
+
+
+def _attempt_artifact_context(
+    *,
+    run_id: str,
+    run_artifact_root: Path,
+    experiment: str,
+    variant: str,
+    case: dict[str, Any],
+    trial: int,
+) -> AttemptArtifactContext:
+    identity = f"{run_id}:{experiment}:{variant}:{case['case_id']}:{trial}"
+    interaction_id = uuid5(_MECHANISM_ARTIFACT_NAMESPACE, identity)
+    conversation_id = uuid5(interaction_id, "conversation")
+    correlation_id = uuid5(interaction_id, "correlation")
+    stage = (
+        PerceptStage.COMPOSE_MEMORY
+        if experiment == "composer_sufficiency"
+        else PerceptStage.EVIDENCE_POLICY
+    )
+    relative = Path(experiment) / variant / str(case["case_id"]) / f"trial-{trial}"
+    interaction = DurableInteraction(
+        interaction_id=interaction_id,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        user_prompt_event_id=uuid5(interaction_id, "user-prompt-event"),
+        before_global_seq=1,
+        task_id=uuid5(interaction_id, "task"),
+        assignment_id=uuid5(interaction_id, "assignment"),
+        user_text=str(case["prompt"]),
+    )
+    return AttemptArtifactContext(
+        interaction=interaction,
+        claim_id=uuid5(interaction_id, "claim"),
+        stage=stage,
+        artifact_root=run_artifact_root / relative,
+        artifact_directory=relative.as_posix(),
+    )
+
+
+def _write_attempt_input(
+    context: AttemptArtifactContext,
+    *,
+    run_id: str,
+    experiment: str,
+    variant: str,
+    case: dict[str, Any],
+    trial: int,
+    prompt_sha256: str,
+    fixture_id: str,
+    fixture_version: str,
+    fixture_sha256: str,
+    revision: str,
+) -> None:
+    interaction = context.interaction
+    artifact_journal.write_interaction_artifact(
+        artifact_key="benchmark-case-input",
+        artifact_type="BENCHMARK_CASE_INPUT",
+        interaction_id=interaction.interaction_id,
+        conversation_id=interaction.conversation_id,
+        correlation_id=interaction.correlation_id,
+        task_id=interaction.task_id,
+        assignment_id=interaction.assignment_id,
+        stage=context.stage.value,
+        producer="person_fidelity_mechanism_experiment",
+        payload={
+            "run_id": run_id,
+            "experiment": experiment,
+            "variant": variant,
+            "trial": trial,
+            "case": case,
+            "prompt_sha256": prompt_sha256,
+            "fixture_id": fixture_id,
+            "fixture_version": fixture_version,
+            "fixture_sha256": fixture_sha256,
+            "revision": revision,
+        },
+    )
+
+
+def _write_attempt_outcome(
+    context: AttemptArtifactContext,
+    *,
+    output: dict[str, Any] | None,
+    raw_output: str | None,
+    error: str | None,
+    expected: dict[str, Any],
+    matched: bool,
+    execution_path: str,
+) -> dict[str, Any]:
+    interaction = context.interaction
+    if output is not None:
+        artifact_journal.write_stage_result_artifact(
+            interaction_id=interaction.interaction_id,
+            conversation_id=interaction.conversation_id,
+            correlation_id=interaction.correlation_id,
+            task_id=interaction.task_id,
+            assignment_id=interaction.assignment_id,
+            stage=context.stage.value,
+            output=output,
+            output_refs=(),
+        )
+    else:
+        artifact_journal.write_stage_error_artifact(
+            interaction_id=interaction.interaction_id,
+            conversation_id=interaction.conversation_id,
+            correlation_id=interaction.correlation_id,
+            task_id=interaction.task_id,
+            assignment_id=interaction.assignment_id,
+            stage=context.stage.value,
+            claim_id=context.claim_id,
+            error_type="BENCHMARK_ATTEMPT_FAILED",
+            message=error or "attempt produced no validated output",
+        )
+    artifact_journal.write_interaction_artifact(
+        artifact_key="benchmark-evaluation",
+        artifact_type="BENCHMARK_EVALUATION",
+        interaction_id=interaction.interaction_id,
+        conversation_id=interaction.conversation_id,
+        correlation_id=interaction.correlation_id,
+        task_id=interaction.task_id,
+        assignment_id=interaction.assignment_id,
+        stage=context.stage.value,
+        producer="person_fidelity_mechanism_experiment",
+        payload={
+            "output": output,
+            "raw_output": raw_output,
+            "error": error,
+            "expected": expected,
+            "matched_expected": matched,
+            "execution_path": execution_path,
+        },
+    )
+    artifact_journal.write_final_disposition_artifact(
+        interaction_id=interaction.interaction_id,
+        conversation_id=interaction.conversation_id,
+        correlation_id=interaction.correlation_id,
+        task_id=interaction.task_id,
+        assignment_id=interaction.assignment_id,
+        response_required=False,
+        response_text=None,
+        last_completed_stage=context.stage.value,
+    )
+    verification = artifact_journal.verify_interaction_chain(interaction.interaction_id)
+    artifacts = artifact_journal.interaction_artifacts(interaction.interaction_id)
+    if not verification["valid"] or not verification["complete"]:
+        raise RuntimeError(
+            f"incomplete benchmark artifact chain: {interaction.interaction_id}: "
+            f"{verification['errors']}"
+        )
+    counts = Counter(str(item["artifact_type"]) for item in artifacts)
+    return {
+        "interaction_id": str(interaction.interaction_id),
+        "artifact_directory": context.artifact_directory,
+        "artifact_count": len(artifacts),
+        "artifact_type_counts": dict(sorted(counts.items())),
+        "chain_valid": True,
+        "chain_complete": True,
+        "terminal_artifact_hash": artifacts[-1]["artifact_hash"],
+    }
+
+
 def _sha256_bytes(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
@@ -364,6 +546,23 @@ def _format_evidence(items: list[dict[str, str]]) -> str:
     return _quarantined_evidence(rendered)
 
 
+def _artifact_client(
+    template: OllamaClient,
+    context: AttemptArtifactContext,
+    *,
+    evidence_refs: tuple[str, ...],
+) -> UserPromptLLM:
+    client = UserPromptLLM(
+        base_url=template.base_url,
+        model=template.model,
+        interaction=context.interaction,
+        stage=context.stage,
+        claim_id=context.claim_id,
+    )
+    client._set_artifact_evidence_refs(evidence_refs)
+    return client
+
+
 def _composer_call(
     client: OllamaClient,
     *,
@@ -436,14 +635,50 @@ def _run_composer_variant(
     variant: Literal["baseline", "candidate"],
     trials: int,
     candidate_prompt: str = COMPOSER_CANDIDATE_PROMPT,
+    artifact_run: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     contract = _USER_PROMPT_COMPOSER if variant == "baseline" else candidate_prompt
     results = []
     for case in cases:
         attempts = []
         for trial in range(1, trials + 1):
+            context = None
+            attempt_client = client
+            prior_artifact_root = os.environ.get("PROMETHEIST_ARTIFACT_ROOT")
+            if artifact_run is not None:
+                context = _attempt_artifact_context(
+                    run_id=artifact_run["run_id"],
+                    run_artifact_root=artifact_run["artifact_root"],
+                    experiment="composer_sufficiency",
+                    variant=variant,
+                    case=case,
+                    trial=trial,
+                )
+                if context.artifact_root.exists() and any(context.artifact_root.iterdir()):
+                    raise RuntimeError(
+                        f"attempt artifact directory is not empty: {context.artifact_root}"
+                    )
+                os.environ["PROMETHEIST_ARTIFACT_ROOT"] = str(context.artifact_root)
+                _write_attempt_input(
+                    context,
+                    run_id=artifact_run["run_id"],
+                    experiment="composer_sufficiency",
+                    variant=variant,
+                    case=case,
+                    trial=trial,
+                    prompt_sha256=_sha256_text(contract),
+                    fixture_id=artifact_run["fixture_id"],
+                    fixture_version=artifact_run["fixture_version"],
+                    fixture_sha256=artifact_run["fixture_sha256"],
+                    revision=artifact_run["revision"],
+                )
+                refs = tuple(
+                    f"fixture:{artifact_run['fixture_version']}:{case['case_id']}:evidence:{index}"
+                    for index, _item in enumerate(case["evidence"])
+                )
+                attempt_client = _artifact_client(client, context, evidence_refs=refs)
             output, raw, error = _composer_call(
-                client,
+                attempt_client,
                 prompt_contract=contract,
                 case=case,
             )
@@ -451,6 +686,21 @@ def _run_composer_variant(
                 output is not None
                 and output["sufficient"] is case["expected_sufficient"]
             )
+            receipt = None
+            if context is not None:
+                receipt = _write_attempt_outcome(
+                    context,
+                    output=output,
+                    raw_output=raw,
+                    error=error,
+                    expected={"sufficient": case["expected_sufficient"]},
+                    matched=matched,
+                    execution_path="MODEL_CLASSIFICATION",
+                )
+                if prior_artifact_root is None:
+                    os.environ.pop("PROMETHEIST_ARTIFACT_ROOT", None)
+                else:
+                    os.environ["PROMETHEIST_ARTIFACT_ROOT"] = prior_artifact_root
             attempts.append(
                 {
                     "trial": trial,
@@ -458,6 +708,7 @@ def _run_composer_variant(
                     "raw_output": raw,
                     "error": error,
                     "matched_expected": matched,
+                    "artifact_journal": receipt,
                 }
             )
         results.append(
@@ -493,6 +744,7 @@ def _run_source_policy_variant(
     variant: Literal["baseline", "candidate"],
     trials: int,
     candidate_prompt: str = SOURCE_POLICY_CANDIDATE_PROMPT,
+    artifact_run: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if variant == "baseline":
         contract = _RESPONSE_POLICY_PROMPT
@@ -504,6 +756,38 @@ def _run_source_policy_variant(
     for case in cases:
         attempts = []
         for trial in range(1, trials + 1):
+            context = None
+            attempt_client = client
+            prior_artifact_root = os.environ.get("PROMETHEIST_ARTIFACT_ROOT")
+            if artifact_run is not None:
+                context = _attempt_artifact_context(
+                    run_id=artifact_run["run_id"],
+                    run_artifact_root=artifact_run["artifact_root"],
+                    experiment="historical_source_policy",
+                    variant=variant,
+                    case=case,
+                    trial=trial,
+                )
+                if context.artifact_root.exists() and any(context.artifact_root.iterdir()):
+                    raise RuntimeError(
+                        f"attempt artifact directory is not empty: {context.artifact_root}"
+                    )
+                os.environ["PROMETHEIST_ARTIFACT_ROOT"] = str(context.artifact_root)
+                _write_attempt_input(
+                    context,
+                    run_id=artifact_run["run_id"],
+                    experiment="historical_source_policy",
+                    variant=variant,
+                    case=case,
+                    trial=trial,
+                    prompt_sha256=_sha256_text(contract),
+                    fixture_id=artifact_run["fixture_id"],
+                    fixture_version=artifact_run["fixture_version"],
+                    fixture_sha256=artifact_run["fixture_sha256"],
+                    revision=artifact_run["revision"],
+                )
+                if not explicit_prior_assistant_reference(case["prompt"]):
+                    attempt_client = _artifact_client(client, context, evidence_refs=())
             if explicit_prior_assistant_reference(case["prompt"]):
                 output = {
                     "evidence_scope": "MIXED_CONVERSATION",
@@ -515,7 +799,7 @@ def _run_source_policy_variant(
                 execution_path = "DETERMINISTIC_PRIOR_ASSISTANT_REFERENCE"
             else:
                 output, raw, error = _source_policy_call(
-                    client,
+                    attempt_client,
                     prompt_contract=contract,
                     schema=schema,
                     case=case,
@@ -526,6 +810,24 @@ def _run_source_policy_variant(
                 and output["evidence_scope"] == case["expected_scope"]
                 and output["surface_mode"] == "NATURAL_LANGUAGE"
             )
+            receipt = None
+            if context is not None:
+                receipt = _write_attempt_outcome(
+                    context,
+                    output=output,
+                    raw_output=raw,
+                    error=error,
+                    expected={
+                        "evidence_scope": case["expected_scope"],
+                        "surface_mode": "NATURAL_LANGUAGE",
+                    },
+                    matched=matched,
+                    execution_path=execution_path,
+                )
+                if prior_artifact_root is None:
+                    os.environ.pop("PROMETHEIST_ARTIFACT_ROOT", None)
+                else:
+                    os.environ["PROMETHEIST_ARTIFACT_ROOT"] = prior_artifact_root
             attempts.append(
                 {
                     "trial": trial,
@@ -534,6 +836,7 @@ def _run_source_policy_variant(
                     "error": error,
                     "execution_path": execution_path,
                     "matched_expected": matched,
+                    "artifact_journal": receipt,
                 }
             )
         results.append(
@@ -606,12 +909,152 @@ def _promotion_verdict(
     }
 
 
+def _display_path(path: Path) -> str:
+    resolved = path.resolve()
+    try:
+        return resolved.relative_to(ROOT.resolve()).as_posix()
+    except ValueError:
+        return str(resolved)
+
+
+def _resolve_recorded_path(value: str) -> Path:
+    path = Path(value)
+    return path if path.is_absolute() else ROOT / path
+
+
+def _write_json_exclusive(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    encoded = (
+        json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+    ).encode("utf-8")
+    with path.open("xb") as handle:
+        handle.write(encoded)
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _artifact_file_inventory(run_artifact_root: Path) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    for path in sorted(run_artifact_root.rglob("*")):
+        if path.is_symlink():
+            raise RuntimeError(f"benchmark artifact roots must not contain symlinks: {path}")
+        if not path.is_file() or path.name == "run_manifest.json":
+            continue
+        if path.suffix.casefold() != ".json":
+            raise RuntimeError(f"unexpected non-JSON benchmark artifact: {path}")
+        raw = path.read_bytes()
+        document = json.loads(raw)
+        if not isinstance(document, dict):
+            raise RuntimeError(f"benchmark artifact is not a JSON object: {path}")
+        entries.append(
+            {
+                "relative_path": path.relative_to(run_artifact_root).as_posix(),
+                "sha256": _sha256_bytes(raw),
+                "size_bytes": len(raw),
+                "artifact_type": document.get("artifact_type"),
+                "artifact_id": document.get("artifact_id"),
+                "artifact_hash": document.get("artifact_hash"),
+                "interaction_id": document.get("interaction_id"),
+                "journal_sequence": document.get("journal_sequence"),
+                "stage": document.get("stage"),
+            }
+        )
+    return entries
+
+
+def _attempt_records(report: dict[str, Any]) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for experiment_name, experiment in report["experiments"].items():
+        for variant_name in ("baseline", "candidate"):
+            for case in experiment[variant_name]["cases"]:
+                for attempt in case["attempts"]:
+                    receipt = attempt.get("artifact_journal")
+                    if not isinstance(receipt, dict):
+                        raise RuntimeError("artifact-backed run produced an attempt without a receipt")
+                    records.append(
+                        {
+                            "experiment": experiment_name,
+                            "variant": variant_name,
+                            "case_id": case["case_id"],
+                            "trial": attempt["trial"],
+                            **receipt,
+                        }
+                    )
+    return records
+
+
+def _build_run_manifest(
+    *,
+    report: dict[str, Any],
+    result_path: Path,
+    run_artifact_root: Path,
+) -> dict[str, Any]:
+    files = _artifact_file_inventory(run_artifact_root)
+    attempts = _attempt_records(report)
+    discovered_interactions = {
+        str(entry["interaction_id"])
+        for entry in files
+        if entry.get("interaction_id") is not None
+    }
+    expected_interactions = {str(item["interaction_id"]) for item in attempts}
+    if discovered_interactions != expected_interactions:
+        raise RuntimeError("artifact inventory and benchmark attempt interactions differ")
+    counts = Counter(str(item["artifact_type"]) for item in files)
+    return {
+        "schema_version": 1,
+        "artifact_type": "PERSON_FIDELITY_MECHANISM_RUN_MANIFEST",
+        "run_id": report["run_id"],
+        "experiment_version": report["experiment_version"],
+        "fixture_id": report["fixture_id"],
+        "fixture_version": report["fixture_version"],
+        "fixture_sha256": report["fixture_sha256"],
+        "captured_at": report["captured_at"],
+        "revision": report["revision"],
+        "privacy_classification": "PUBLIC_SYNTHETIC_FIXTURE",
+        "retention_policy": "PERMANENT_APPEND_ONLY",
+        "training_status": "UNREVIEWED_RAW_EVIDENCE",
+        "result_artifact": _display_path(result_path),
+        "artifact_root": _display_path(run_artifact_root),
+        "manifest_scope": "Every JSON file below artifact_root except this manifest.",
+        "file_count": len(files),
+        "total_bytes": sum(int(item["size_bytes"]) for item in files),
+        "artifact_type_counts": dict(sorted(counts.items())),
+        "attempt_receipts": attempts,
+        "files": files,
+    }
+
+
+def _manifest_receipt(manifest_path: Path, manifest: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "status": "CAPTURED_AND_INVENTORIED",
+        "path": _display_path(manifest_path),
+        "sha256": _sha256_file(manifest_path),
+        "size_bytes": manifest_path.stat().st_size,
+        "raw_artifact_root": _display_path(manifest_path.parent),
+        "raw_artifact_file_count": manifest["file_count"],
+        "raw_artifact_total_bytes": manifest["total_bytes"],
+        "privacy_classification": manifest["privacy_classification"],
+        "retention_policy": manifest["retention_policy"],
+        "training_status": manifest["training_status"],
+    }
+
+
 def run_experiments(
     *,
     experiment: Literal["composer", "source-policy", "all"],
     trials: int,
     require_clean: bool,
     candidate_version: Literal["v1", "v2"] = "v2",
+    run_id: str | None = None,
+    run_artifact_root: Path | None = None,
 ) -> dict[str, Any]:
     if trials < 1:
         raise ValueError("trials must be positive")
@@ -619,6 +1062,18 @@ def run_experiments(
     fixture, fixture_sha256 = load_fixture(fixture_path)
     revision = _git_revision(require_clean=require_clean)
     client = OllamaClient()
+    captured_at = datetime.now(timezone.utc)
+    resolved_run_id = run_id or captured_at.strftime("%Y%m%dT%H%M%SZ")
+    artifact_run = None
+    if run_artifact_root is not None:
+        artifact_run = {
+            "run_id": resolved_run_id,
+            "artifact_root": run_artifact_root,
+            "fixture_id": fixture.fixture_id,
+            "fixture_version": fixture.fixture_version,
+            "fixture_sha256": fixture_sha256,
+            "revision": revision,
+        }
     composer_candidate_prompt = COMPOSER_CANDIDATE_PROMPTS[candidate_version]
     source_policy_candidate_prompt = SOURCE_POLICY_CANDIDATE_PROMPTS[candidate_version]
     experiments: dict[str, Any] = {}
@@ -628,6 +1083,7 @@ def run_experiments(
             fixture.composer_cases,
             variant="baseline",
             trials=trials,
+            artifact_run=artifact_run,
         )
         candidate = _run_composer_variant(
             client,
@@ -635,6 +1091,7 @@ def run_experiments(
             variant="candidate",
             trials=trials,
             candidate_prompt=composer_candidate_prompt,
+            artifact_run=artifact_run,
         )
         experiments["composer_sufficiency"] = {
             "experiment_id": "PERSON-FIDELITY-EXP2-COMPOSER-SUFFICIENCY",
@@ -653,6 +1110,7 @@ def run_experiments(
             fixture.source_policy_cases,
             variant="baseline",
             trials=trials,
+            artifact_run=artifact_run,
         )
         candidate = _run_source_policy_variant(
             client,
@@ -660,6 +1118,7 @@ def run_experiments(
             variant="candidate",
             trials=trials,
             candidate_prompt=source_policy_candidate_prompt,
+            artifact_run=artifact_run,
         )
         experiments["historical_source_policy"] = {
             "experiment_id": "PERSON-FIDELITY-EXP3-HISTORICAL-SOURCE-POLICY",
@@ -675,12 +1134,15 @@ def run_experiments(
         }
 
     report: dict[str, Any] = {
-        "schema_version": 1 if candidate_version == "v1" else 2,
+        "schema_version": 3 if run_artifact_root is not None else (
+            1 if candidate_version == "v1" else 2
+        ),
+        "run_id": resolved_run_id,
         "experiment_version": (
             EXPERIMENT_VERSION_V1 if candidate_version == "v1" else EXPERIMENT_VERSION_V2
         ),
         "candidate_version": candidate_version,
-        "captured_at": datetime.now(timezone.utc).isoformat(),
+        "captured_at": captured_at.isoformat(),
         "revision": revision,
         "fixture_id": fixture.fixture_id,
         "fixture_version": fixture.fixture_version,
@@ -694,8 +1156,6 @@ def run_experiments(
         "production_changed": False,
         "experiments": experiments,
     }
-    canonical = json.dumps(report, sort_keys=True, separators=(",", ":")).encode()
-    report["report_sha256"] = _sha256_bytes(canonical)
     return report
 
 
@@ -755,11 +1215,163 @@ def verify_result(path: Path) -> dict[str, Any]:
             source["candidate"]["prompt_sha256"]
             == _sha256_text(source_policy_candidate_prompt)
         )
+    artifact_verification: dict[str, Any] | None = None
+    if report.get("artifact_evidence") is not None:
+        try:
+            artifact_verification = _verify_result_artifacts(path, report)
+            checks["artifact_evidence_valid"] = True
+        except Exception as exc:
+            checks["artifact_evidence_valid"] = False
+            artifact_verification = {"error": f"{type(exc).__name__}: {exc}"}
     return {
         "valid": all(checks.values()),
         "checks": checks,
         "candidate_version": candidate_version,
         "legacy_fixture_eol_accepted": legacy_fixture_eol_accepted,
+        "artifact_verification": artifact_verification,
+    }
+
+
+def _verify_result_artifacts(
+    result_path: Path,
+    report_without_hash: dict[str, Any],
+) -> dict[str, Any]:
+    receipt = report_without_hash.get("artifact_evidence")
+    if not isinstance(receipt, dict):
+        raise RuntimeError("result has no artifact evidence receipt")
+    manifest_path = _resolve_recorded_path(str(receipt.get("path", ""))).resolve()
+    if not manifest_path.is_file():
+        raise RuntimeError(f"artifact manifest does not exist: {manifest_path}")
+    if _sha256_file(manifest_path) != receipt.get("sha256"):
+        raise RuntimeError("artifact manifest SHA-256 does not match result receipt")
+    if manifest_path.stat().st_size != receipt.get("size_bytes"):
+        raise RuntimeError("artifact manifest size does not match result receipt")
+    manifest = json.loads(manifest_path.read_bytes())
+    if manifest.get("artifact_type") != "PERSON_FIDELITY_MECHANISM_RUN_MANIFEST":
+        raise RuntimeError("unexpected mechanism artifact manifest type")
+    for key in (
+        "run_id",
+        "experiment_version",
+        "fixture_id",
+        "fixture_version",
+        "fixture_sha256",
+        "revision",
+    ):
+        if manifest.get(key) != report_without_hash.get(key):
+            raise RuntimeError(f"artifact manifest {key} does not match result")
+    root = manifest_path.parent.resolve()
+    if _resolve_recorded_path(str(manifest["artifact_root"])).resolve() != root:
+        raise RuntimeError("artifact manifest points to a different artifact root")
+    if _resolve_recorded_path(str(manifest["result_artifact"])).resolve() != result_path.resolve():
+        raise RuntimeError("artifact manifest points to a different result artifact")
+    entries = manifest.get("files")
+    if not isinstance(entries, list):
+        raise RuntimeError("artifact manifest files must be a list")
+    expected_paths: set[str] = set()
+    for entry in entries:
+        relative_text = str(entry.get("relative_path", ""))
+        relative = PurePosixPath(relative_text)
+        if relative.is_absolute() or not relative.parts or ".." in relative.parts:
+            raise RuntimeError(f"unsafe artifact manifest path: {relative_text!r}")
+        if relative_text in expected_paths:
+            raise RuntimeError(f"duplicate artifact manifest path: {relative_text}")
+        expected_paths.add(relative_text)
+        target = root.joinpath(*relative.parts).resolve()
+        if not target.is_relative_to(root) or not target.is_file():
+            raise RuntimeError(f"manifested artifact does not exist: {relative_text}")
+        if target.stat().st_size != entry.get("size_bytes"):
+            raise RuntimeError(f"artifact size mismatch: {relative_text}")
+        if _sha256_file(target) != entry.get("sha256"):
+            raise RuntimeError(f"artifact SHA-256 mismatch: {relative_text}")
+    actual_paths = {
+        item.relative_to(root).as_posix()
+        for item in root.rglob("*")
+        if item.is_file() and item != manifest_path
+    }
+    if actual_paths != expected_paths:
+        raise RuntimeError("artifact manifest file set differs from disk")
+    if manifest.get("file_count") != len(entries):
+        raise RuntimeError("artifact manifest file count differs from inventory")
+    total_bytes = sum(int(item["size_bytes"]) for item in entries)
+    if manifest.get("total_bytes") != total_bytes:
+        raise RuntimeError("artifact manifest byte count differs from inventory")
+    observed_type_counts = dict(
+        sorted(Counter(str(item.get("artifact_type")) for item in entries).items())
+    )
+    if manifest.get("artifact_type_counts") != observed_type_counts:
+        raise RuntimeError("artifact manifest type counts differ from inventory")
+    if receipt.get("raw_artifact_file_count") != len(entries):
+        raise RuntimeError("result artifact file count differs from manifest")
+    if receipt.get("raw_artifact_total_bytes") != total_bytes:
+        raise RuntimeError("result artifact byte count differs from manifest")
+    for key in ("privacy_classification", "retention_policy", "training_status"):
+        if receipt.get(key) != manifest.get(key):
+            raise RuntimeError(f"result {key} differs from manifest")
+    attempts = _attempt_records(report_without_hash)
+    if attempts != manifest.get("attempt_receipts"):
+        raise RuntimeError("result attempt receipts differ from manifest")
+    prior_root = os.environ.get("PROMETHEIST_ARTIFACT_ROOT")
+    model_attempts = 0
+    deterministic_attempts = 0
+    try:
+        for attempt in attempts:
+            attempt_root = root.joinpath(*PurePosixPath(attempt["artifact_directory"]).parts)
+            os.environ["PROMETHEIST_ARTIFACT_ROOT"] = str(attempt_root)
+            interaction_id = UUID(str(attempt["interaction_id"]))
+            verification = artifact_journal.verify_interaction_chain(interaction_id)
+            artifacts = artifact_journal.interaction_artifacts(interaction_id)
+            if not verification["valid"] or not verification["complete"]:
+                raise RuntimeError(f"invalid or incomplete interaction: {interaction_id}")
+            if len(artifacts) != attempt["artifact_count"]:
+                raise RuntimeError(f"artifact count changed: {interaction_id}")
+            type_counts = dict(
+                sorted(Counter(str(item["artifact_type"]) for item in artifacts).items())
+            )
+            if type_counts != attempt["artifact_type_counts"]:
+                raise RuntimeError(f"artifact type counts changed: {interaction_id}")
+            if artifacts[-1]["artifact_hash"] != attempt["terminal_artifact_hash"]:
+                raise RuntimeError(f"terminal artifact changed: {interaction_id}")
+            for required_type in (
+                "BENCHMARK_CASE_INPUT",
+                "BENCHMARK_EVALUATION",
+                "FINAL_DISPOSITION",
+            ):
+                if type_counts.get(required_type) != 1:
+                    raise RuntimeError(
+                        f"interaction has invalid {required_type} count: {interaction_id}"
+                    )
+            if type_counts.get("STAGE_RESULT", 0) + type_counts.get("STAGE_ERROR", 0) != 1:
+                raise RuntimeError(
+                    f"interaction lacks one terminal stage outcome: {interaction_id}"
+                )
+            invocation_count = sum(
+                item.get("artifact_type") == "LLM_INVOCATION" for item in artifacts
+            )
+            evaluation = next(
+                item for item in artifacts if item.get("artifact_type") == "BENCHMARK_EVALUATION"
+            )
+            if evaluation["payload"]["execution_path"] == "MODEL_CLASSIFICATION":
+                model_attempts += 1
+                if invocation_count < 1:
+                    raise RuntimeError(f"model attempt has no invocation artifact: {interaction_id}")
+            else:
+                deterministic_attempts += 1
+                if invocation_count != 0:
+                    raise RuntimeError(
+                        f"deterministic attempt unexpectedly invoked model: {interaction_id}"
+                    )
+    finally:
+        if prior_root is None:
+            os.environ.pop("PROMETHEIST_ARTIFACT_ROOT", None)
+        else:
+            os.environ["PROMETHEIST_ARTIFACT_ROOT"] = prior_root
+    return {
+        "status": "VALID_COMPLETE",
+        "manifest_path": str(manifest_path),
+        "artifact_file_count": len(entries),
+        "verified_interaction_count": len(attempts),
+        "model_attempt_count": model_attempts,
+        "deterministic_attempt_count": deterministic_attempts,
     }
 
 
@@ -788,6 +1400,11 @@ def main() -> None:
         default="v2",
     )
     parser.add_argument("--output", type=Path)
+    parser.add_argument(
+        "--artifact-root",
+        type=Path,
+        help="empty directory for complete per-attempt immutable artifact chains",
+    )
     parser.add_argument("--validate-only", action="store_true")
     parser.add_argument("--verify-result", type=Path)
     parser.add_argument(
@@ -824,16 +1441,51 @@ def main() -> None:
         )
         return
 
+    captured_at = datetime.now(timezone.utc)
+    run_id = captured_at.strftime("%Y%m%dT%H%M%SZ")
+    output = args.output or _default_output(args.experiment)
+    run_artifact_root = (
+        args.artifact_root or GENERATED_DIR / run_id
+    ).resolve()
+    if run_artifact_root.exists() and any(run_artifact_root.iterdir()):
+        raise SystemExit(f"artifact root must be empty: {run_artifact_root}")
+    if output.exists():
+        raise SystemExit(f"result artifact already exists: {output}")
+    if output.resolve().is_relative_to(run_artifact_root):
+        raise SystemExit("result artifact must be outside the raw artifact root")
     report = run_experiments(
         experiment=args.experiment,
         trials=args.trials,
         require_clean=not args.allow_dirty,
         candidate_version=args.candidate_version,
+        run_id=run_id,
+        run_artifact_root=run_artifact_root,
     )
-    output = args.output or _default_output(args.experiment)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps({"output": str(output), "report_sha256": report["report_sha256"]}, indent=2))
+    manifest_path = run_artifact_root / "run_manifest.json"
+    manifest = _build_run_manifest(
+        report=report,
+        result_path=output,
+        run_artifact_root=run_artifact_root,
+    )
+    _write_json_exclusive(manifest_path, manifest)
+    report["artifact_evidence"] = _manifest_receipt(manifest_path, manifest)
+    canonical = json.dumps(report, sort_keys=True, separators=(",", ":")).encode()
+    report["report_sha256"] = _sha256_bytes(canonical)
+    _write_json_exclusive(output, report)
+    verification = verify_result(output)
+    if not verification["valid"]:
+        raise RuntimeError(f"written benchmark evidence failed verification: {verification}")
+    print(
+        json.dumps(
+            {
+                "output": str(output),
+                "report_sha256": report["report_sha256"],
+                "artifact_manifest": str(manifest_path),
+                "artifact_verification": verification["artifact_verification"],
+            },
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

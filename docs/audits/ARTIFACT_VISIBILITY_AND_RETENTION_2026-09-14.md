@@ -36,6 +36,11 @@ prove that a shared directory was the complete artifact set for the run.
 - Made each future person-fidelity run write `run_manifest.json`, containing a
   SHA-256 and byte length for every raw JSON artifact plus per-probe interaction
   chain receipts.
+- Extended the same requirement to the PostgreSQL-independent Composer and source-
+  policy mechanism runners: every trial now records its case input, exact LLM
+  invocation and retry envelopes, stage result or error, evaluation, and final
+  disposition. Deterministic paths retain the same chain without inventing an LLM
+  invocation.
 - Linked each schema-v2 compact result to that manifest by SHA-256.
 - Added offline verification of the result receipt, exact manifested file set,
   every file digest, canonical event record/commit pairs, complete interaction

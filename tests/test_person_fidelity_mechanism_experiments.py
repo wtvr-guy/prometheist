@@ -159,3 +159,143 @@ def test_v2_fixture_hash_is_lf_canonical():
 
     assert b"\r\n" not in raw
     assert fixture_hash == mechanism._sha256_bytes(raw)
+
+
+def test_deterministic_attempt_writes_complete_chain_without_fake_llm_invocation(
+    tmp_path,
+):
+    fixture, fixture_hash = mechanism.load_fixture()
+    case = next(
+        item for item in fixture.source_policy_cases if item["case_id"] == "sp-005-prior-assistant"
+    )
+    artifact_root = tmp_path / "artifacts"
+    artifact_run = {
+        "run_id": "test-run",
+        "artifact_root": artifact_root,
+        "fixture_id": fixture.fixture_id,
+        "fixture_version": fixture.fixture_version,
+        "fixture_sha256": fixture_hash,
+        "revision": "test-revision",
+    }
+
+    result = mechanism._run_source_policy_variant(
+        object(),
+        [case],
+        variant="baseline",
+        trials=1,
+        artifact_run=artifact_run,
+    )
+
+    receipt = result["cases"][0]["attempts"][0]["artifact_journal"]
+    assert receipt["chain_valid"] is True
+    assert receipt["chain_complete"] is True
+    assert receipt["artifact_type_counts"] == {
+        "BENCHMARK_CASE_INPUT": 1,
+        "BENCHMARK_EVALUATION": 1,
+        "FINAL_DISPOSITION": 1,
+        "STAGE_RESULT": 1,
+    }
+
+
+def test_model_attempt_journals_exact_llm_invocation(tmp_path, monkeypatch):
+    fixture, fixture_hash = mechanism.load_fixture()
+    case = fixture.composer_cases[0]
+    artifact_run = {
+        "run_id": "model-test-run",
+        "artifact_root": tmp_path / "artifacts",
+        "fixture_id": fixture.fixture_id,
+        "fixture_version": fixture.fixture_version,
+        "fixture_sha256": fixture_hash,
+        "revision": "test-revision",
+    }
+
+    monkeypatch.setattr(
+        mechanism.OllamaClient,
+        "_structured_with_evidence",
+        lambda *args, **kwargs: json.dumps(
+            {"sufficient": case["expected_sufficient"], "memory_deficit": None}
+        ),
+    )
+    result = mechanism._run_composer_variant(
+        mechanism.OllamaClient(),
+        [case],
+        variant="baseline",
+        trials=1,
+        artifact_run=artifact_run,
+    )
+
+    receipt = result["cases"][0]["attempts"][0]["artifact_journal"]
+    assert receipt["artifact_type_counts"]["LLM_INVOCATION"] == 1
+    invocation_path = next(
+        path
+        for path in (tmp_path / "artifacts").rglob("*.json")
+        if json.loads(path.read_text(encoding="utf-8"))["artifact_type"]
+        == "LLM_INVOCATION"
+    )
+    payload = json.loads(invocation_path.read_text(encoding="utf-8"))["payload"]
+    assert payload["system_prompt"] == mechanism._USER_PROMPT_COMPOSER
+    assert payload["user_prompt"].endswith(case["prompt"])
+    assert payload["output"] is not None
+    assert payload["evidence_prompt"] is not None
+
+
+def test_artifact_manifest_verification_detects_raw_artifact_mutation(tmp_path):
+    fixture, fixture_hash = mechanism.load_fixture()
+    case = next(
+        item for item in fixture.source_policy_cases if item["case_id"] == "sp-005-prior-assistant"
+    )
+    artifact_root = tmp_path / "raw"
+    artifact_run = {
+        "run_id": "manifest-test-run",
+        "artifact_root": artifact_root,
+        "fixture_id": fixture.fixture_id,
+        "fixture_version": fixture.fixture_version,
+        "fixture_sha256": fixture_hash,
+        "revision": "test-revision",
+    }
+    baseline = mechanism._run_source_policy_variant(
+        object(), [case], variant="baseline", trials=1, artifact_run=artifact_run
+    )
+    candidate = mechanism._run_source_policy_variant(
+        object(), [case], variant="candidate", trials=1, artifact_run=artifact_run
+    )
+    report = {
+        "schema_version": 3,
+        "run_id": "manifest-test-run",
+        "experiment_version": mechanism.EXPERIMENT_VERSION_V2,
+        "candidate_version": "v2",
+        "captured_at": "2026-09-21T00:00:00+00:00",
+        "revision": "test-revision",
+        "fixture_id": fixture.fixture_id,
+        "fixture_version": fixture.fixture_version,
+        "fixture_sha256": fixture_hash,
+        "fixture_hash_normalization": "LF_CANONICAL",
+        "experiments": {
+            "historical_source_policy": {
+                "baseline": baseline,
+                "candidate": candidate,
+            }
+        },
+    }
+    result_path = tmp_path / "result.json"
+    manifest_path = artifact_root / "run_manifest.json"
+    manifest = mechanism._build_run_manifest(
+        report=report,
+        result_path=result_path,
+        run_artifact_root=artifact_root,
+    )
+    mechanism._write_json_exclusive(manifest_path, manifest)
+    report["artifact_evidence"] = mechanism._manifest_receipt(manifest_path, manifest)
+    report["report_sha256"] = mechanism._sha256_bytes(
+        json.dumps(report, sort_keys=True, separators=(",", ":")).encode()
+    )
+    mechanism._write_json_exclusive(result_path, report)
+
+    assert mechanism.verify_result(result_path)["valid"] is True
+    raw_artifact = next(
+        path for path in artifact_root.rglob("*.json") if path != manifest_path
+    )
+    raw_artifact.write_bytes(raw_artifact.read_bytes() + b" ")
+    verification = mechanism.verify_result(result_path)
+    assert verification["valid"] is False
+    assert verification["checks"]["artifact_evidence_valid"] is False
