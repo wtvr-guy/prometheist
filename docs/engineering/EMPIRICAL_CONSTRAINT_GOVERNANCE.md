@@ -11,6 +11,16 @@ Prometheist treats architectural mechanisms as falsifiable claims.
 
 Negative results are retained. A failure mode discovered during development becomes part of the permanent experimental record and, where practical, a frozen regression scenario before recalibration or replacement.
 
+Retaining a negative result means retaining enough executable evidence to reproduce
+it. Rejected production mechanisms must not remain on the production path, but their
+exact experimental implementations, frozen inputs, environment/revision metadata,
+raw machine-readable outputs, decision rule, and verdict remain in a clearly marked
+non-production experiment location. Prose summaries and aggregate tables do not
+substitute for candidate source code or raw results. If older exploratory code was
+not preserved, the record must say that exact reproduction is impossible and label
+any later reconstruction as a new version rather than silently equating it with the
+lost implementation.
+
 New infrastructure, retrieval mechanisms, models, orchestration layers, optimization solvers, heuristic policy, or other complexity must earn its place by repairing a frozen measured failure or materially improving a declared objective without violating harder invariants. “It is standard,” “it might help,” or “the current tests pass” is not sufficient evidence.
 
 ## Rule

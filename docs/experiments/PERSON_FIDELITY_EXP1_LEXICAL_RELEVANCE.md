@@ -48,6 +48,28 @@ lost, the long multi-constraint decision prompt and the characteristic-expressio
 prompt delivering nothing, and the open-world unknown probe admitting unrelated
 records. The failures are properties of the mechanism, not of Mara's fixture.
 
+## Reproducibility repair
+
+The exploratory candidate implementations used for the first analysis were not
+committed. Their prose definitions and aggregate measurements survive, but their
+exact source bytes cannot be recovered retroactively. That was an evidence-retention
+mistake: a rejected production mechanism should leave production, while the exact
+experimental implementation must remain reproducible.
+
+[`benchmarks/person_fidelity_exp1_lexical_candidates.py`](../../benchmarks/person_fidelity_exp1_lexical_candidates.py)
+now permanently implements versioned representatives of every recorded scoring
+family and emits the machine-readable
+[`PERSON-FIDELITY-EXP1-LEXICAL-RELEVANCE.json`](../../benchmarks/results/PERSON-FIDELITY-EXP1-LEXICAL-RELEVANCE.json).
+The code, formulas, per-probe packets, cutoff controls, fixture digests, and report
+hash are retained. The reconstructed BM25 representative produces 5/10 rather than
+the ephemeral implementation's recorded 6/10; this discrepancy is preserved rather
+than hidden. Both results support the same rejection because the gains come with
+packet-saturating noise and do not meet the frozen decision rule.
+
+This repair establishes the rule for all later experiments: candidate code and raw
+machine-readable results remain in the repository even when production adoption is
+rejected.
+
 ## Candidates tested
 
 All at the unchanged 0.15 cutoff, six-item budget, and 0.78 lexical weight.
@@ -61,6 +83,11 @@ All at the unchanged 0.15 cutoff, six-item budget, and 0.78 lexical weight.
 | 4 | BM25, Robertson IDF with pivoted length | 6/10 | no |
 | 5 | general-language saliency tier (α = 0…0.5) | 6/10 | no |
 | 6 | damped query-mass normalization (p = 0.5) | 5/10 | no |
+
+The table above is the original historical measurement. The permanent v1
+reconstruction records 2, 2, 3, 6, 5, 6, and 5 probes respectively; consult its
+JSON artifact for exact per-probe admissions rather than treating either aggregate
+table as a substitute for raw evidence.
 
 ## Why each was rejected
 
@@ -176,8 +203,5 @@ uv run --locked python benchmarks/replay_person_fidelity_retrieval.py --summary
 uv run --locked python benchmarks/replay_person_fidelity_retrieval.py --holdout --summary
 uv run --locked python benchmarks/replay_person_fidelity_retrieval.py `
   --compare-result benchmarks/results/PERSON-FIDELITY-001_2026-09-16_215839.json
+uv run --locked python benchmarks/person_fidelity_exp1_lexical_candidates.py --summary
 ```
-
-The rejected candidate implementations were exploratory and are deliberately not
-retained in the repository; the table above records what each one was, and the
-replay harness reproduces the null baseline they were measured against.

@@ -19,6 +19,20 @@ mechanism was selected. It mirrors the baseline's evidence structure while
 sharing none of its content, so a candidate repair can be tested for transfer
 rather than for fitting the ten probes that motivated it.
 
+[`PERSON_FIDELITY_EXP1_LEXICAL_RELEVANCE.md`](PERSON_FIDELITY_EXP1_LEXICAL_RELEVANCE.md)
+records the rejected lexical-scoring families, cutoff controls, and the permanent
+reproducibility repair for that negative result.
+
+[`PERSON_FIDELITY_EXP2_COMPOSER_SUFFICIENCY.md`](PERSON_FIDELITY_EXP2_COMPOSER_SUFFICIENCY.md)
+freezes the controlled complete/partial/empty/irrelevant/contradictory packet cases
+for the person-dependent memory-sufficiency contract. The candidate remains
+non-production until native reference-model evidence satisfies its decision rule.
+
+[`PERSON_FIDELITY_EXP3_HISTORICAL_SOURCE_POLICY.md`](PERSON_FIDELITY_EXP3_HISTORICAL_SOURCE_POLICY.md)
+freezes the source-policy cases for self-report plus observed person history. Its
+`PERSON_HISTORY` scope and allowlist are proposals, not current production behavior,
+until separately accepted by native evidence.
+
 ## Adaptive Memory Attention / Composer branch (PR #22)
 
 The records under [`history/pr22/`](history/pr22/) explain the sequence that replaced

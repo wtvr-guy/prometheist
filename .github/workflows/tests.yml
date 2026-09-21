@@ -55,6 +55,7 @@ jobs:
           uv run ruff check .
           uv run python scripts/audit_constraints.py --fail-unregistered
           uv run python benchmarks/run_person_fidelity_baseline.py --validate-only
+          uv run python benchmarks/run_person_fidelity_mechanism_experiments.py --validate-only
 
       - name: Verify retained person-fidelity artifacts
         run: >-

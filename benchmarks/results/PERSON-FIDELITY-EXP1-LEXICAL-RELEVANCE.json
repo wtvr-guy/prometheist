@@ -1,0 +1,2301 @@
+{
+  "baseline_candidates": [
+    {
+      "candidate_id": "uniform_query_coverage",
+      "cutoff": 0.15,
+      "description": "Current uniform unique-query-token coverage.",
+      "formula": "|Q \u2229 D| / |Q|",
+      "noise_admitted": 3,
+      "probes": [
+        {
+          "delivered_fixture_ids": [
+            "pf-e002"
+          ],
+          "missing_required": [
+            "pf-e001"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q001",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e003"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q002",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005"
+          ],
+          "missing_required": [
+            "pf-e006"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q003",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e010",
+            "pf-e008"
+          ],
+          "missing_required": [
+            "pf-e009"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q004",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e011"
+          ],
+          "noise_fixture_ids": [
+            "pf-e004"
+          ],
+          "probe_id": "pf-q005",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e002",
+            "pf-e007",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q006",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e014",
+            "pf-e015"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q007",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e016",
+            "pf-e017"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q008",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e018"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q009",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q010",
+          "retrieval_contract_met": false
+        }
+      ],
+      "retrieval_contract_met_count": 2,
+      "total_admitted": 13,
+      "unknown_probe_clean": false
+    },
+    {
+      "candidate_id": "ledger_idf_coverage",
+      "cutoff": 0.15,
+      "description": "Positive ledger-IDF weighted query-token coverage.",
+      "formula": "\u03a3 IDF(Q \u2229 D) / \u03a3 IDF(Q)",
+      "noise_admitted": 3,
+      "probes": [
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e001",
+            "pf-e002"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q001",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e003"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q002",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005"
+          ],
+          "missing_required": [
+            "pf-e006"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q003",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e010",
+            "pf-e008"
+          ],
+          "missing_required": [
+            "pf-e009"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q004",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e011"
+          ],
+          "noise_fixture_ids": [
+            "pf-e004"
+          ],
+          "probe_id": "pf-q005",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e002",
+            "pf-e007",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q006",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e014",
+            "pf-e015"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q007",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e016",
+            "pf-e017"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q008",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e018"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q009",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q010",
+          "retrieval_contract_met": false
+        }
+      ],
+      "retrieval_contract_met_count": 2,
+      "total_admitted": 12,
+      "unknown_probe_clean": false
+    },
+    {
+      "candidate_id": "idf_cosine",
+      "cutoff": 0.15,
+      "description": "Binary TF-IDF cosine with query and event normalization.",
+      "formula": "\u03a3 IDF(t)^2 / (||Q|| \u00d7 ||D||)",
+      "noise_admitted": 0,
+      "probes": [
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e001",
+            "pf-e002"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q001",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e003"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q002",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e005",
+            "pf-e006",
+            "pf-e007"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q003",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e008",
+            "pf-e010"
+          ],
+          "missing_required": [
+            "pf-e009"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q004",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e011"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q005",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e002",
+            "pf-e007",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q006",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e014",
+            "pf-e015"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q007",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e016",
+            "pf-e017"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q008",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e018"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q009",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q010",
+          "retrieval_contract_met": true
+        }
+      ],
+      "retrieval_contract_met_count": 3,
+      "total_admitted": 7,
+      "unknown_probe_clean": true
+    },
+    {
+      "candidate_id": "saturated_matched_mass",
+      "cutoff": 0.15,
+      "description": "Absolute matched-IDF mass with monotone saturation.",
+      "formula": "1 - exp(-\u03a3 IDF(Q \u2229 D))",
+      "noise_admitted": 32,
+      "probes": [
+        {
+          "delivered_fixture_ids": [
+            "pf-e002",
+            "pf-e006",
+            "pf-e003",
+            "pf-e001"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e003",
+            "pf-e006"
+          ],
+          "probe_id": "pf-q001",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e008",
+            "pf-e015",
+            "pf-e003",
+            "pf-e019",
+            "pf-e013"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e008",
+            "pf-e013",
+            "pf-e015",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q002",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005",
+            "pf-e017",
+            "pf-e010",
+            "pf-e004",
+            "pf-e014"
+          ],
+          "missing_required": [
+            "pf-e006"
+          ],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e010",
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q003",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e010",
+            "pf-e008"
+          ],
+          "missing_required": [
+            "pf-e009"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q004",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e011",
+            "pf-e016",
+            "pf-e012",
+            "pf-e001",
+            "pf-e019"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e004",
+            "pf-e012",
+            "pf-e016",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q005",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005",
+            "pf-e009",
+            "pf-e013",
+            "pf-e012",
+            "pf-e001"
+          ],
+          "missing_required": [
+            "pf-e002"
+          ],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e005",
+            "pf-e009"
+          ],
+          "probe_id": "pf-q006",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e015",
+            "pf-e001",
+            "pf-e006",
+            "pf-e016",
+            "pf-e003",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e003",
+            "pf-e006",
+            "pf-e016"
+          ],
+          "probe_id": "pf-q007",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e016",
+            "pf-e017",
+            "pf-e002",
+            "pf-e009",
+            "pf-e015",
+            "pf-e008"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e002",
+            "pf-e008",
+            "pf-e009",
+            "pf-e015"
+          ],
+          "probe_id": "pf-q008",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e018",
+            "pf-e004",
+            "pf-e012",
+            "pf-e013",
+            "pf-e007"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e007",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "probe_id": "pf-q009",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q010",
+          "retrieval_contract_met": false
+        }
+      ],
+      "retrieval_contract_met_count": 6,
+      "total_admitted": 50,
+      "unknown_probe_clean": false
+    },
+    {
+      "candidate_id": "bm25",
+      "cutoff": 0.15,
+      "description": "Robertson-IDF BM25 with pivoted event-length normalization.",
+      "formula": "BM25(k1=1.2,b=0.75) / (1 + BM25)",
+      "noise_admitted": 33,
+      "probes": [
+        {
+          "delivered_fixture_ids": [
+            "pf-e002",
+            "pf-e003",
+            "pf-e006",
+            "pf-e001"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e003",
+            "pf-e006"
+          ],
+          "probe_id": "pf-q001",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e008",
+            "pf-e015",
+            "pf-e003",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e008",
+            "pf-e015",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q002",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005",
+            "pf-e017",
+            "pf-e010",
+            "pf-e013",
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e006"
+          ],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e010",
+            "pf-e013",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q003",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e010",
+            "pf-e008"
+          ],
+          "missing_required": [
+            "pf-e009"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q004",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e011",
+            "pf-e016",
+            "pf-e012",
+            "pf-e001",
+            "pf-e018"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e004",
+            "pf-e012",
+            "pf-e016",
+            "pf-e018"
+          ],
+          "probe_id": "pf-q005",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005",
+            "pf-e012",
+            "pf-e009",
+            "pf-e013",
+            "pf-e001"
+          ],
+          "missing_required": [
+            "pf-e002"
+          ],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e005",
+            "pf-e009"
+          ],
+          "probe_id": "pf-q006",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e015",
+            "pf-e006",
+            "pf-e001",
+            "pf-e016",
+            "pf-e009",
+            "pf-e003"
+          ],
+          "missing_required": [
+            "pf-e014"
+          ],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e003",
+            "pf-e006",
+            "pf-e009",
+            "pf-e016"
+          ],
+          "probe_id": "pf-q007",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e016",
+            "pf-e017",
+            "pf-e002",
+            "pf-e009",
+            "pf-e015",
+            "pf-e008"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e002",
+            "pf-e008",
+            "pf-e009",
+            "pf-e015"
+          ],
+          "probe_id": "pf-q008",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e018",
+            "pf-e004",
+            "pf-e012",
+            "pf-e013",
+            "pf-e007"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e007",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "probe_id": "pf-q009",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q010",
+          "retrieval_contract_met": false
+        }
+      ],
+      "retrieval_contract_met_count": 5,
+      "total_admitted": 50,
+      "unknown_probe_clean": false
+    },
+    {
+      "candidate_id": "general_saliency_damped_p05",
+      "cutoff": 0.15,
+      "description": "Frozen general-English low-saliency tier plus damped query mass.",
+      "formula": "matched weighted mass / query weighted mass^0.5; low tier=0.2",
+      "noise_admitted": 25,
+      "probes": [
+        {
+          "delivered_fixture_ids": [
+            "pf-e002",
+            "pf-e006",
+            "pf-e001",
+            "pf-e003"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e003",
+            "pf-e006"
+          ],
+          "probe_id": "pf-q001",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e015",
+            "pf-e003"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e015"
+          ],
+          "probe_id": "pf-q002",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005",
+            "pf-e014",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "missing_required": [
+            "pf-e006"
+          ],
+          "noise_fixture_ids": [
+            "pf-e012",
+            "pf-e013",
+            "pf-e014"
+          ],
+          "probe_id": "pf-q003",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e010",
+            "pf-e008"
+          ],
+          "missing_required": [
+            "pf-e009"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q004",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e011",
+            "pf-e016",
+            "pf-e001"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e004",
+            "pf-e016"
+          ],
+          "probe_id": "pf-q005",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e012",
+            "pf-e001",
+            "pf-e009",
+            "pf-e005",
+            "pf-e013"
+          ],
+          "missing_required": [
+            "pf-e002"
+          ],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e005",
+            "pf-e009"
+          ],
+          "probe_id": "pf-q006",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e016",
+            "pf-e001",
+            "pf-e015",
+            "pf-e006",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e006",
+            "pf-e016"
+          ],
+          "probe_id": "pf-q007",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e016",
+            "pf-e015",
+            "pf-e002",
+            "pf-e009",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e002",
+            "pf-e009",
+            "pf-e014",
+            "pf-e015"
+          ],
+          "probe_id": "pf-q008",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e018",
+            "pf-e004",
+            "pf-e013",
+            "pf-e012",
+            "pf-e007"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e007",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "probe_id": "pf-q009",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q010",
+          "retrieval_contract_met": false
+        }
+      ],
+      "retrieval_contract_met_count": 6,
+      "total_admitted": 43,
+      "unknown_probe_clean": false
+    },
+    {
+      "candidate_id": "damped_query_mass_p05",
+      "cutoff": 0.15,
+      "description": "Uniform matched-token mass with damped query-length normalization.",
+      "formula": "|Q \u2229 D| / |Q|^0.5",
+      "noise_admitted": 34,
+      "probes": [
+        {
+          "delivered_fixture_ids": [
+            "pf-e002",
+            "pf-e006",
+            "pf-e001",
+            "pf-e003"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e003",
+            "pf-e006"
+          ],
+          "probe_id": "pf-q001",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e019",
+            "pf-e003",
+            "pf-e018",
+            "pf-e008",
+            "pf-e015"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e008",
+            "pf-e015",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q002",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005",
+            "pf-e017",
+            "pf-e004",
+            "pf-e014",
+            "pf-e010"
+          ],
+          "missing_required": [
+            "pf-e006"
+          ],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e010",
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q003",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e010",
+            "pf-e008"
+          ],
+          "missing_required": [
+            "pf-e009"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q004",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e011",
+            "pf-e019",
+            "pf-e001",
+            "pf-e018",
+            "pf-e012"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e004",
+            "pf-e012",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q005",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e013",
+            "pf-e001",
+            "pf-e012",
+            "pf-e004",
+            "pf-e009"
+          ],
+          "missing_required": [
+            "pf-e002"
+          ],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e004",
+            "pf-e009"
+          ],
+          "probe_id": "pf-q006",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e001",
+            "pf-e018",
+            "pf-e003",
+            "pf-e016",
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e014",
+            "pf-e015"
+          ],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e003",
+            "pf-e004",
+            "pf-e016",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q007",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e016",
+            "pf-e015",
+            "pf-e002",
+            "pf-e009",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e002",
+            "pf-e009",
+            "pf-e014",
+            "pf-e015"
+          ],
+          "probe_id": "pf-q008",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e018",
+            "pf-e004",
+            "pf-e013",
+            "pf-e012",
+            "pf-e007"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e007",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "probe_id": "pf-q009",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q010",
+          "retrieval_contract_met": false
+        }
+      ],
+      "retrieval_contract_met_count": 5,
+      "total_admitted": 50,
+      "unknown_probe_clean": false
+    }
+  ],
+  "conclusions": [
+    "Pure lexical overlap cannot retrieve required zero-overlap evidence.",
+    "Higher admission volume does not by itself establish better discrimination.",
+    "No tested candidate satisfies the frozen promotion rule."
+  ],
+  "cutoff_controls": [
+    {
+      "candidate_id": "uniform_query_coverage",
+      "cutoff": 0.15,
+      "description": "Current uniform unique-query-token coverage.",
+      "formula": "|Q \u2229 D| / |Q|",
+      "noise_admitted": 3,
+      "probes": [
+        {
+          "delivered_fixture_ids": [
+            "pf-e002"
+          ],
+          "missing_required": [
+            "pf-e001"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q001",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e003"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q002",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005"
+          ],
+          "missing_required": [
+            "pf-e006"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q003",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e010",
+            "pf-e008"
+          ],
+          "missing_required": [
+            "pf-e009"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q004",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e011"
+          ],
+          "noise_fixture_ids": [
+            "pf-e004"
+          ],
+          "probe_id": "pf-q005",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e002",
+            "pf-e007",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q006",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e014",
+            "pf-e015"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q007",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e016",
+            "pf-e017"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q008",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e018"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q009",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q010",
+          "retrieval_contract_met": false
+        }
+      ],
+      "retrieval_contract_met_count": 2,
+      "total_admitted": 13,
+      "unknown_probe_clean": false
+    },
+    {
+      "candidate_id": "uniform_query_coverage",
+      "cutoff": 0.07,
+      "description": "Current uniform unique-query-token coverage.",
+      "formula": "|Q \u2229 D| / |Q|",
+      "noise_admitted": 15,
+      "probes": [
+        {
+          "delivered_fixture_ids": [
+            "pf-e002",
+            "pf-e006",
+            "pf-e001",
+            "pf-e003"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e003",
+            "pf-e006"
+          ],
+          "probe_id": "pf-q001",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e003"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q002",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005",
+            "pf-e017",
+            "pf-e004",
+            "pf-e014",
+            "pf-e010"
+          ],
+          "missing_required": [
+            "pf-e006"
+          ],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e010",
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q003",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e010",
+            "pf-e008"
+          ],
+          "missing_required": [
+            "pf-e009"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q004",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e011"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e004"
+          ],
+          "probe_id": "pf-q005",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007"
+          ],
+          "missing_required": [
+            "pf-e002",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q006",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e014",
+            "pf-e015"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q007",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e016",
+            "pf-e017",
+            "pf-e015",
+            "pf-e002",
+            "pf-e009"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e002",
+            "pf-e009",
+            "pf-e015"
+          ],
+          "probe_id": "pf-q008",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e018",
+            "pf-e004",
+            "pf-e013",
+            "pf-e012"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "probe_id": "pf-q009",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q010",
+          "retrieval_contract_met": false
+        }
+      ],
+      "retrieval_contract_met_count": 4,
+      "total_admitted": 28,
+      "unknown_probe_clean": false
+    },
+    {
+      "candidate_id": "uniform_query_coverage",
+      "cutoff": 0.03,
+      "description": "Current uniform unique-query-token coverage.",
+      "formula": "|Q \u2229 D| / |Q|",
+      "noise_admitted": 34,
+      "probes": [
+        {
+          "delivered_fixture_ids": [
+            "pf-e002",
+            "pf-e006",
+            "pf-e001",
+            "pf-e003"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e003",
+            "pf-e006"
+          ],
+          "probe_id": "pf-q001",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e019",
+            "pf-e003",
+            "pf-e018",
+            "pf-e008",
+            "pf-e015"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e008",
+            "pf-e015",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q002",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005",
+            "pf-e017",
+            "pf-e004",
+            "pf-e014",
+            "pf-e010"
+          ],
+          "missing_required": [
+            "pf-e006"
+          ],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e010",
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q003",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e010",
+            "pf-e008"
+          ],
+          "missing_required": [
+            "pf-e009"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q004",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e011",
+            "pf-e019",
+            "pf-e001",
+            "pf-e018",
+            "pf-e012"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e004",
+            "pf-e012",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q005",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e013",
+            "pf-e001",
+            "pf-e012",
+            "pf-e004",
+            "pf-e009"
+          ],
+          "missing_required": [
+            "pf-e002"
+          ],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e004",
+            "pf-e009"
+          ],
+          "probe_id": "pf-q006",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e001",
+            "pf-e018",
+            "pf-e003",
+            "pf-e016",
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e014",
+            "pf-e015"
+          ],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e003",
+            "pf-e004",
+            "pf-e016",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q007",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e016",
+            "pf-e017",
+            "pf-e015",
+            "pf-e002",
+            "pf-e009",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e002",
+            "pf-e009",
+            "pf-e014",
+            "pf-e015"
+          ],
+          "probe_id": "pf-q008",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e018",
+            "pf-e004",
+            "pf-e013",
+            "pf-e012",
+            "pf-e007"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e007",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "probe_id": "pf-q009",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q010",
+          "retrieval_contract_met": false
+        }
+      ],
+      "retrieval_contract_met_count": 5,
+      "total_admitted": 50,
+      "unknown_probe_clean": false
+    },
+    {
+      "candidate_id": "uniform_query_coverage",
+      "cutoff": 0.02,
+      "description": "Current uniform unique-query-token coverage.",
+      "formula": "|Q \u2229 D| / |Q|",
+      "noise_admitted": 34,
+      "probes": [
+        {
+          "delivered_fixture_ids": [
+            "pf-e002",
+            "pf-e006",
+            "pf-e001",
+            "pf-e003"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e003",
+            "pf-e006"
+          ],
+          "probe_id": "pf-q001",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e019",
+            "pf-e003",
+            "pf-e018",
+            "pf-e008",
+            "pf-e015"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e008",
+            "pf-e015",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q002",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005",
+            "pf-e017",
+            "pf-e004",
+            "pf-e014",
+            "pf-e010"
+          ],
+          "missing_required": [
+            "pf-e006"
+          ],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e010",
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q003",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e010",
+            "pf-e008"
+          ],
+          "missing_required": [
+            "pf-e009"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q004",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e011",
+            "pf-e019",
+            "pf-e001",
+            "pf-e018",
+            "pf-e012"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e004",
+            "pf-e012",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q005",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e013",
+            "pf-e001",
+            "pf-e012",
+            "pf-e004",
+            "pf-e009"
+          ],
+          "missing_required": [
+            "pf-e002"
+          ],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e004",
+            "pf-e009"
+          ],
+          "probe_id": "pf-q006",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e001",
+            "pf-e018",
+            "pf-e003",
+            "pf-e016",
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e014",
+            "pf-e015"
+          ],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e003",
+            "pf-e004",
+            "pf-e016",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q007",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e016",
+            "pf-e017",
+            "pf-e015",
+            "pf-e002",
+            "pf-e009",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e002",
+            "pf-e009",
+            "pf-e014",
+            "pf-e015"
+          ],
+          "probe_id": "pf-q008",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e018",
+            "pf-e004",
+            "pf-e013",
+            "pf-e012",
+            "pf-e007"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e007",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "probe_id": "pf-q009",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q010",
+          "retrieval_contract_met": false
+        }
+      ],
+      "retrieval_contract_met_count": 5,
+      "total_admitted": 50,
+      "unknown_probe_clean": false
+    }
+  ],
+  "damped_controls": [
+    {
+      "candidate_id": "damped_query_mass_p07",
+      "cutoff": 0.15,
+      "description": "Uniform damped query mass control.",
+      "formula": "|Q \u2229 D| / |Q|^0.7",
+      "noise_admitted": 15,
+      "probes": [
+        {
+          "delivered_fixture_ids": [
+            "pf-e002",
+            "pf-e006",
+            "pf-e001",
+            "pf-e003"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e003",
+            "pf-e006"
+          ],
+          "probe_id": "pf-q001",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e003"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q002",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005",
+            "pf-e017",
+            "pf-e004",
+            "pf-e014",
+            "pf-e010"
+          ],
+          "missing_required": [
+            "pf-e006"
+          ],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e010",
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q003",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e010",
+            "pf-e008"
+          ],
+          "missing_required": [
+            "pf-e009"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q004",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e011"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e004"
+          ],
+          "probe_id": "pf-q005",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007"
+          ],
+          "missing_required": [
+            "pf-e002",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q006",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [],
+          "missing_required": [
+            "pf-e014",
+            "pf-e015"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q007",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e016",
+            "pf-e015",
+            "pf-e002",
+            "pf-e009"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e002",
+            "pf-e009",
+            "pf-e015"
+          ],
+          "probe_id": "pf-q008",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e018",
+            "pf-e004",
+            "pf-e013",
+            "pf-e012"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "probe_id": "pf-q009",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q010",
+          "retrieval_contract_met": false
+        }
+      ],
+      "retrieval_contract_met_count": 4,
+      "total_admitted": 28,
+      "unknown_probe_clean": false
+    },
+    {
+      "candidate_id": "damped_query_mass_p05",
+      "cutoff": 0.15,
+      "description": "Uniform damped query mass control.",
+      "formula": "|Q \u2229 D| / |Q|^0.5",
+      "noise_admitted": 34,
+      "probes": [
+        {
+          "delivered_fixture_ids": [
+            "pf-e002",
+            "pf-e006",
+            "pf-e001",
+            "pf-e003"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e003",
+            "pf-e006"
+          ],
+          "probe_id": "pf-q001",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e019",
+            "pf-e003",
+            "pf-e018",
+            "pf-e008",
+            "pf-e015"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e008",
+            "pf-e015",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q002",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e005",
+            "pf-e017",
+            "pf-e004",
+            "pf-e014",
+            "pf-e010"
+          ],
+          "missing_required": [
+            "pf-e006"
+          ],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e010",
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q003",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e010",
+            "pf-e008"
+          ],
+          "missing_required": [
+            "pf-e009"
+          ],
+          "noise_fixture_ids": [],
+          "probe_id": "pf-q004",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e004",
+            "pf-e011",
+            "pf-e019",
+            "pf-e001",
+            "pf-e018",
+            "pf-e012"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e004",
+            "pf-e012",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q005",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e007",
+            "pf-e013",
+            "pf-e001",
+            "pf-e012",
+            "pf-e004",
+            "pf-e009"
+          ],
+          "missing_required": [
+            "pf-e002"
+          ],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e004",
+            "pf-e009"
+          ],
+          "probe_id": "pf-q006",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e001",
+            "pf-e018",
+            "pf-e003",
+            "pf-e016",
+            "pf-e004"
+          ],
+          "missing_required": [
+            "pf-e014",
+            "pf-e015"
+          ],
+          "noise_fixture_ids": [
+            "pf-e001",
+            "pf-e003",
+            "pf-e004",
+            "pf-e016",
+            "pf-e018",
+            "pf-e019"
+          ],
+          "probe_id": "pf-q007",
+          "retrieval_contract_met": false
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e016",
+            "pf-e015",
+            "pf-e002",
+            "pf-e009",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e002",
+            "pf-e009",
+            "pf-e014",
+            "pf-e015"
+          ],
+          "probe_id": "pf-q008",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e019",
+            "pf-e018",
+            "pf-e004",
+            "pf-e013",
+            "pf-e012",
+            "pf-e007"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e004",
+            "pf-e007",
+            "pf-e012",
+            "pf-e013"
+          ],
+          "probe_id": "pf-q009",
+          "retrieval_contract_met": true
+        },
+        {
+          "delivered_fixture_ids": [
+            "pf-e017",
+            "pf-e014"
+          ],
+          "missing_required": [],
+          "noise_fixture_ids": [
+            "pf-e014",
+            "pf-e017"
+          ],
+          "probe_id": "pf-q010",
+          "retrieval_contract_met": false
+        }
+      ],
+      "retrieval_contract_met_count": 5,
+      "total_admitted": 50,
+      "unknown_probe_clean": false
+    }
+  ],
+  "experiment_id": "PERSON-FIDELITY-EXP1-LEXICAL-RELEVANCE",
+  "experiment_version": "person-fidelity-exp1-lexical-candidates-v1",
+  "fixed_policy": {
+    "lexical_weight": 0.78,
+    "minimum_score": 0.15,
+    "packet_limit": 6
+  },
+  "fixtures": {
+    "PERSON-FIDELITY-001": "bcb1fb2812f3cb3e8cbaf64cb3b8161dbf087a1c9a7eefb55bcd629ffc21e6d9",
+    "PERSON-FIDELITY-002-HOLDOUT": "b54ec140641ac3bbe5ff25ff3c475a48124fc893dda5f1dc5255b17d6b8ca2b2"
+  },
+  "holdout_null": {
+    "candidate_id": "uniform_query_coverage",
+    "cutoff": 0.15,
+    "description": "Current uniform unique-query-token coverage.",
+    "formula": "|Q \u2229 D| / |Q|",
+    "noise_admitted": 10,
+    "probes": [
+      {
+        "delivered_fixture_ids": [
+          "hf-e011",
+          "hf-e002"
+        ],
+        "missing_required": [
+          "hf-e001"
+        ],
+        "noise_fixture_ids": [
+          "hf-e011"
+        ],
+        "probe_id": "hf-q001",
+        "retrieval_contract_met": false
+      },
+      {
+        "delivered_fixture_ids": [
+          "hf-e004"
+        ],
+        "missing_required": [
+          "hf-e003"
+        ],
+        "noise_fixture_ids": [],
+        "probe_id": "hf-q002",
+        "retrieval_contract_met": false
+      },
+      {
+        "delivered_fixture_ids": [
+          "hf-e007"
+        ],
+        "missing_required": [
+          "hf-e005",
+          "hf-e006"
+        ],
+        "noise_fixture_ids": [],
+        "probe_id": "hf-q003",
+        "retrieval_contract_met": false
+      },
+      {
+        "delivered_fixture_ids": [
+          "hf-e014",
+          "hf-e010"
+        ],
+        "missing_required": [
+          "hf-e008",
+          "hf-e009"
+        ],
+        "noise_fixture_ids": [
+          "hf-e014"
+        ],
+        "probe_id": "hf-q004",
+        "retrieval_contract_met": false
+      },
+      {
+        "delivered_fixture_ids": [
+          "hf-e007",
+          "hf-e004"
+        ],
+        "missing_required": [
+          "hf-e011"
+        ],
+        "noise_fixture_ids": [
+          "hf-e004",
+          "hf-e007"
+        ],
+        "probe_id": "hf-q005",
+        "retrieval_contract_met": false
+      },
+      {
+        "delivered_fixture_ids": [
+          "hf-e013"
+        ],
+        "missing_required": [
+          "hf-e002",
+          "hf-e007",
+          "hf-e012"
+        ],
+        "noise_fixture_ids": [],
+        "probe_id": "hf-q006",
+        "retrieval_contract_met": false
+      },
+      {
+        "delivered_fixture_ids": [],
+        "missing_required": [
+          "hf-e014",
+          "hf-e015"
+        ],
+        "noise_fixture_ids": [],
+        "probe_id": "hf-q007",
+        "retrieval_contract_met": false
+      },
+      {
+        "delivered_fixture_ids": [
+          "hf-e016",
+          "hf-e017"
+        ],
+        "missing_required": [],
+        "noise_fixture_ids": [],
+        "probe_id": "hf-q008",
+        "retrieval_contract_met": true
+      },
+      {
+        "delivered_fixture_ids": [
+          "hf-e019",
+          "hf-e018"
+        ],
+        "missing_required": [],
+        "noise_fixture_ids": [],
+        "probe_id": "hf-q009",
+        "retrieval_contract_met": true
+      },
+      {
+        "delivered_fixture_ids": [
+          "hf-e017",
+          "hf-e001",
+          "hf-e014",
+          "hf-e005",
+          "hf-e007",
+          "hf-e008"
+        ],
+        "missing_required": [],
+        "noise_fixture_ids": [
+          "hf-e001",
+          "hf-e005",
+          "hf-e007",
+          "hf-e008",
+          "hf-e014",
+          "hf-e017"
+        ],
+        "probe_id": "hf-q010",
+        "retrieval_contract_met": false
+      }
+    ],
+    "retrieval_contract_met_count": 2,
+    "total_admitted": 19,
+    "unknown_probe_clean": false
+  },
+  "production_changed": false,
+  "reconstruction_recorded_on": "2026-09-21",
+  "report_sha256": "ec3f1fc497456630d0ccdbd9dc43371359525858f54ef85a64b2c2266f589508",
+  "schema_version": 1,
+  "status": "REJECTED_INSUFFICIENT_DISCRIMINATION"
+}

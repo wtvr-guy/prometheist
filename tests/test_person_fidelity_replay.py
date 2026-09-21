@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from benchmarks import replay_person_fidelity_retrieval as replay
+from benchmarks import person_fidelity_exp1_lexical_candidates as exp1
 from jit_agent.memory_kernel import MemoryEvent
 from jit_agent.person_fidelity_benchmark import load_person_fidelity_corpus
 from jit_agent.response_policy import HistoricalEvidenceScope
@@ -116,3 +117,39 @@ def test_replay_is_deterministic(baseline):
     second = replay.replay_corpus(baseline)
 
     assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
+
+
+def test_rejected_exp1_candidates_remain_reproducible(baseline):
+    results = {
+        candidate.candidate_id: exp1.evaluate_candidate(baseline, candidate)
+        for candidate in exp1.CANDIDATES
+    }
+
+    assert results["uniform_query_coverage"]["retrieval_contract_met_count"] == 2
+    assert results["ledger_idf_coverage"]["retrieval_contract_met_count"] == 2
+    assert results["idf_cosine"]["retrieval_contract_met_count"] == 3
+    assert results["saturated_matched_mass"]["retrieval_contract_met_count"] == 6
+    assert results["bm25"]["retrieval_contract_met_count"] == 5
+    assert results["general_saliency_damped_p05"]["retrieval_contract_met_count"] == 6
+    assert results["damped_query_mass_p05"]["retrieval_contract_met_count"] == 5
+
+    # The better headline counts are purchased by much higher irrelevant
+    # admission, while cosine merely trades one failure family for another.
+    assert results["idf_cosine"]["unknown_probe_clean"] is True
+    for candidate_id in (
+        "saturated_matched_mass",
+        "bm25",
+        "general_saliency_damped_p05",
+        "damped_query_mass_p05",
+    ):
+        assert results[candidate_id]["noise_admitted"] >= 25
+
+
+def test_exp1_machine_readable_report_is_deterministic():
+    first = exp1.build_report()
+    second = exp1.build_report()
+
+    assert first == second
+    assert first["status"] == "REJECTED_INSUFFICIENT_DISCRIMINATION"
+    assert first["production_changed"] is False
+    assert len(first["report_sha256"]) == 64
