@@ -31,6 +31,14 @@ class _FakeHTTPClient:
         return _FakeResponse(next(self._payloads))
 
 
+class _SnapshotHTTPClient:
+    def __init__(self, payloads: dict[str, dict]) -> None:
+        self._payloads = payloads
+
+    def get(self, path: str) -> _FakeResponse:
+        return _FakeResponse(self._payloads[path])
+
+
 def _packet() -> MemoryPacket:
     return MemoryPacket(
         memory_request_id=uuid4(),
@@ -75,6 +83,44 @@ def _generate_payload() -> dict:
         "done_reason": "stop",
         "eval_count": 12,
     }
+
+
+def test_runtime_snapshot_captures_ollama_version_model_digest_and_loaded_record():
+    model = "qwen3:4b-instruct-2507-q4_K_M"
+    client = UserPromptLLM(base_url="http://ollama.test", model=model)
+    client._client = _SnapshotHTTPClient(
+        {
+            "/api/version": {"version": "0.12.3"},
+            "/api/tags": {
+                "models": [
+                    {
+                        "name": model,
+                        "model": model,
+                        "digest": "d" * 64,
+                        "details": {"quantization_level": "Q4_K_M"},
+                    }
+                ]
+            },
+            "/api/ps": {
+                "models": [
+                    {
+                        "name": model,
+                        "model": model,
+                        "digest": "d" * 64,
+                        "size_vram": 3_000_000_000,
+                    }
+                ]
+            },
+        }
+    )
+
+    snapshot = client.runtime_snapshot()
+
+    assert snapshot["status"] == "COMPLETE"
+    assert snapshot["ollama_version"] == "0.12.3"
+    assert snapshot["model"]["digest"] == "d" * 64
+    assert snapshot["running_model"]["size_vram"] == 3_000_000_000
+    assert snapshot["errors"] == []
 
 
 def test_qwen3_structured_call_appends_latest_no_think_soft_switch():

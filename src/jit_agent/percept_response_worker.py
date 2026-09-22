@@ -12,6 +12,7 @@ model worker was given rather than inferring it from downstream behavior.
 from __future__ import annotations
 
 from enum import Enum
+import hashlib
 from itertools import count
 import json
 import os
@@ -272,6 +273,8 @@ class UserPromptLLM(PerceptLLM):
         self._artifact_claim_id = claim_id
         self._artifact_invocations = count()
         self._artifact_evidence_refs: tuple[str, ...] = ()
+        self._artifact_invocation_records: dict[int, dict[str, Any]] = {}
+        self._pending_validation: tuple[int, str] | None = None
 
     def _require_stage_specialization(self, kind: str) -> None:
         """Fail closed if one guarded process attempts another specialist's role."""
@@ -299,6 +302,8 @@ class UserPromptLLM(PerceptLLM):
         max_tokens: int,
     ) -> str:
         self._require_stage_specialization(kind)
+        if self._pending_validation is not None:
+            raise RuntimeError("prior LLM invocation has no persisted validation outcome")
         invocation_index = next(self._artifact_invocations)
         try:
             output = super()._structured(
@@ -309,7 +314,14 @@ class UserPromptLLM(PerceptLLM):
                 max_tokens,
             )
         except Exception as exc:
-            self._journal_llm_invocation(
+            transport_diagnostics = self._consume_invocation_diagnostics()
+            validation_status = (
+                "TRANSPORT_ERROR"
+                if not isinstance(transport_diagnostics, dict)
+                or transport_diagnostics.get("transport_error_type") is not None
+                else "INVALID"
+            )
+            invocation = self._journal_llm_invocation(
                 invocation_index=invocation_index,
                 kind=kind,
                 system=system,
@@ -319,9 +331,19 @@ class UserPromptLLM(PerceptLLM):
                 output=None,
                 error=exc,
                 evidence=None,
+                transport_diagnostics=transport_diagnostics,
+            )
+            self._journal_llm_validation(
+                invocation_index=invocation_index,
+                kind=kind,
+                invocation=invocation,
+                raw_output=None,
+                parsed_output=None,
+                error=exc,
+                status=validation_status,
             )
             raise
-        self._journal_llm_invocation(
+        invocation = self._journal_llm_invocation(
             invocation_index=invocation_index,
             kind=kind,
             system=system,
@@ -331,7 +353,10 @@ class UserPromptLLM(PerceptLLM):
             output=output,
             error=None,
             evidence=None,
+            transport_diagnostics=self._consume_invocation_diagnostics(),
         )
+        if invocation is not None:
+            self._pending_validation = (invocation_index, kind)
         return output
 
     def _structured_with_evidence(
@@ -344,6 +369,8 @@ class UserPromptLLM(PerceptLLM):
         max_tokens: int,
     ) -> str:
         self._require_stage_specialization(kind)
+        if self._pending_validation is not None:
+            raise RuntimeError("prior LLM invocation has no persisted validation outcome")
         invocation_index = next(self._artifact_invocations)
         try:
             output = super()._structured_with_evidence(
@@ -355,7 +382,14 @@ class UserPromptLLM(PerceptLLM):
                 max_tokens,
             )
         except Exception as exc:
-            self._journal_llm_invocation(
+            transport_diagnostics = self._consume_invocation_diagnostics()
+            validation_status = (
+                "TRANSPORT_ERROR"
+                if not isinstance(transport_diagnostics, dict)
+                or transport_diagnostics.get("transport_error_type") is not None
+                else "INVALID"
+            )
+            invocation = self._journal_llm_invocation(
                 invocation_index=invocation_index,
                 kind=kind,
                 system=system,
@@ -365,9 +399,19 @@ class UserPromptLLM(PerceptLLM):
                 output=None,
                 error=exc,
                 evidence=evidence,
+                transport_diagnostics=transport_diagnostics,
+            )
+            self._journal_llm_validation(
+                invocation_index=invocation_index,
+                kind=kind,
+                invocation=invocation,
+                raw_output=None,
+                parsed_output=None,
+                error=exc,
+                status=validation_status,
             )
             raise
-        self._journal_llm_invocation(
+        invocation = self._journal_llm_invocation(
             invocation_index=invocation_index,
             kind=kind,
             system=system,
@@ -377,7 +421,10 @@ class UserPromptLLM(PerceptLLM):
             output=output,
             error=None,
             evidence=evidence,
+            transport_diagnostics=self._consume_invocation_diagnostics(),
         )
+        if invocation is not None:
+            self._pending_validation = (invocation_index, kind)
         return output
 
     def _journal_llm_invocation(
@@ -392,13 +439,14 @@ class UserPromptLLM(PerceptLLM):
         output: str | None,
         error: Exception | None,
         evidence: str | None,
-    ) -> None:
+        transport_diagnostics: dict[str, Any] | None,
+    ) -> dict[str, Any] | None:
         interaction = self._artifact_interaction
         stage = self._artifact_stage
         claim_id = self._artifact_claim_id
         if interaction is None or stage is None or claim_id is None:
-            return
-        llm_artifact_store.write_llm_invocation(
+            return None
+        artifact = llm_artifact_store.write_llm_invocation(
             interaction_id=interaction.interaction_id,
             conversation_id=interaction.conversation_id,
             correlation_id=interaction.correlation_id,
@@ -423,7 +471,78 @@ class UserPromptLLM(PerceptLLM):
                 _evidence_transport_layout(self.model) if evidence is not None else None
             ),
             evidence_refs=self._artifact_evidence_refs,
+            transport_diagnostics=transport_diagnostics,
         )
+        self._artifact_invocation_records[invocation_index] = artifact
+        return artifact
+
+    def _journal_llm_validation(
+        self,
+        *,
+        invocation_index: int,
+        kind: str,
+        invocation: dict[str, Any] | None,
+        raw_output: str | None,
+        parsed_output: Any,
+        error: Exception | None,
+        status: str,
+    ) -> None:
+        interaction = self._artifact_interaction
+        stage = self._artifact_stage
+        claim_id = self._artifact_claim_id
+        if interaction is None or stage is None or claim_id is None or invocation is None:
+            return
+        llm_artifact_store.write_llm_validation(
+            interaction_id=interaction.interaction_id,
+            conversation_id=interaction.conversation_id,
+            correlation_id=interaction.correlation_id,
+            task_id=interaction.task_id,
+            assignment_id=interaction.assignment_id,
+            stage=stage.value,
+            claim_id=claim_id,
+            invocation_index=invocation_index,
+            kind=kind,
+            invocation_artifact_id=str(invocation["artifact_id"]),
+            invocation_artifact_hash=str(invocation["artifact_hash"]),
+            status=status,
+            raw_output_sha256=(
+                hashlib.sha256(raw_output.encode("utf-8")).hexdigest()
+                if raw_output is not None
+                else None
+            ),
+            parsed_output=parsed_output,
+            error_type=type(error).__name__ if error is not None else None,
+            error_message=str(error) if error is not None else None,
+        )
+
+    def _record_validation_outcome(
+        self,
+        *,
+        kind: str,
+        raw_output: str | None,
+        parsed_output: Any,
+        error: Exception | None,
+        status: str,
+    ) -> None:
+        pending = self._pending_validation
+        if pending is None:
+            return
+        invocation_index, expected_kind = pending
+        if kind != expected_kind:
+            raise RuntimeError(
+                f"validation kind {kind} does not match pending invocation {expected_kind}"
+            )
+        invocation = self._artifact_invocation_records[invocation_index]
+        self._journal_llm_validation(
+            invocation_index=invocation_index,
+            kind=kind,
+            invocation=invocation,
+            raw_output=raw_output,
+            parsed_output=parsed_output,
+            error=error,
+            status=status,
+        )
+        self._pending_validation = None
 
     def decide_disposition(
         self,
@@ -456,6 +575,13 @@ class UserPromptLLM(PerceptLLM):
             f"[Current user prompt]\n{percept}\n\n"
             f"[Executable capability catalog]\n{catalog_text}"
         )
+
+        def validate_selection(content: str) -> UserPromptWorkSelection:
+            selection = UserPromptWorkSelection.model_validate_json(content)
+            if any(index >= len(capability_catalog) for index in selection.capability_indices):
+                raise ValueError("pre-cognitive worker selected an unavailable capability")
+            return selection
+
         last_error: ValueError | None = None
         for token_cap in (48, 96):
             try:
@@ -467,9 +593,11 @@ class UserPromptLLM(PerceptLLM):
                     UserPromptWorkSelection.model_json_schema(),
                     token_cap,
                 )
-                selection = UserPromptWorkSelection.model_validate_json(content)
-                if any(index >= len(capability_catalog) for index in selection.capability_indices):
-                    raise ValueError("pre-cognitive worker selected an unavailable capability")
+                selection = self._validated_model_output(
+                    kind="PRECOGNITIVE_USER_PROMPT_WORK",
+                    raw_output=content,
+                    validator=lambda: validate_selection(content),
+                )
                 return PreCognitiveDisposition(
                     response_required=True,
                     capability_indices=selection.capability_indices,
@@ -501,8 +629,13 @@ class UserPromptLLM(PerceptLLM):
                     MemorySufficiencyDecision.model_json_schema(),
                     token_cap,
                 )
-                normalized = _normalize_memory_sufficiency_content(content)
-                return MemorySufficiencyDecision.model_validate_json(normalized)
+                return self._validated_model_output(
+                    kind="V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+                    raw_output=content,
+                    validator=lambda: MemorySufficiencyDecision.model_validate_json(
+                        _normalize_memory_sufficiency_content(content)
+                    ),
+                )
             except (ValueError, json.JSONDecodeError) as exc:
                 last_error = exc
         raise ValueError(f"v2 Composer decision failed to validate: {last_error}")

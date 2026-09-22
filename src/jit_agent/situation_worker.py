@@ -15,7 +15,13 @@ from jit_agent.model_evidence_budget import configured_model_evidence_budget, va
 from jit_agent.models import MemoryPacket
 from jit_agent.percept_response_runtime import ResponseMemoryPackage, _compose_memory_package
 from jit_agent.percept_response_worker import UserPromptLLM
-from jit_agent.percept_triage import TriageDecision, TaskClass, deterministic_triage, semantic_triage
+from jit_agent.percept_triage import (
+    TRIAGE_PROMPT,
+    TriageDecision,
+    TaskClass,
+    deterministic_triage,
+    validate_triage,
+)
 from jit_agent.response_policy import HistoricalEvidenceScope, ResponsePolicy, ResponseSurfaceMode, source_types_for_scope
 from jit_agent.situation_runtime import SITUATION_PROTOCOL, SituationStage, SituationTask
 from jit_agent.worker_protocol import deterministic_worker_step_id
@@ -40,10 +46,23 @@ class SituationLLM(UserPromptLLM):
             raise RuntimeError(f"{stage} cannot invoke LLM role {kind}")
 
     def triage(self, policy, evidence: str) -> TriageDecision:
-        return semantic_triage(policy, evidence, lambda system, data, schema: self._structured_with_evidence(
-            "PERCEPT_TRIAGE", system, "Classify the operational need under the application policy.",
-            _quarantined_evidence(data), schema, TRIAGE_MAX_TOKENS,
-        ))
+        if not policy.semantic_triage:
+            raise ValueError("semantic triage is not enabled")
+        system = TRIAGE_PROMPT + "\nApplication policy:\n" + policy.model_dump_json()
+        current = "Classify the operational need under the application policy."
+        raw = self._structured_with_evidence(
+            "PERCEPT_TRIAGE",
+            system,
+            current,
+            _quarantined_evidence(evidence),
+            TriageDecision.model_json_schema(),
+            TRIAGE_MAX_TOKENS,
+        )
+        return self._validated_model_output(
+            kind="PERCEPT_TRIAGE",
+            raw_output=raw,
+            validator=lambda: validate_triage(TriageDecision.model_validate_json(raw), policy),
+        )
 
 
 def _assignment_id(task: SituationTask) -> UUID:
