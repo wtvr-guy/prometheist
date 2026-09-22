@@ -53,7 +53,9 @@ FIXTURE_PATH_V1 = ROOT / "benchmarks" / "person_fidelity_mechanism_experiments_v
 FIXTURE_PATH_V2 = ROOT / "benchmarks" / "person_fidelity_mechanism_experiments_v2.json"
 FIXTURE_PATH = FIXTURE_PATH_V2
 RESULT_DIR = ROOT / "benchmarks" / "results"
-GENERATED_DIR = ROOT / "benchmarks" / "generated" / "person_fidelity_mechanisms"
+# Keep this deliberately short. Interaction UUIDs and atomic-write suffixes consume
+# substantial path budget on Windows, especially under OneDrive checkouts.
+GENERATED_DIR = ROOT / "benchmarks" / "generated" / "pfmx"
 EXPERIMENT_VERSION_V1 = "person-fidelity-mechanism-contracts-v1"
 EXPERIMENT_VERSION_V2 = "person-fidelity-mechanism-contracts-v2"
 EXPERIMENT_VERSION = EXPERIMENT_VERSION_V2
@@ -326,7 +328,10 @@ def _attempt_artifact_context(
         if experiment == "composer_sufficiency"
         else PerceptStage.EVIDENCE_POLICY
     )
-    relative = Path(experiment) / variant / str(case["case_id"]) / f"trial-{trial}"
+    # Descriptive identity remains in BENCHMARK_CASE_INPUT and the run manifest.
+    # The directory is a compact content-derived locator so ordinary Windows
+    # checkouts remain below the traditional 260-character path boundary.
+    relative = Path(f"a-{_sha256_text(identity)[:16]}")
     interaction = DurableInteraction(
         interaction_id=interaction_id,
         conversation_id=conversation_id,

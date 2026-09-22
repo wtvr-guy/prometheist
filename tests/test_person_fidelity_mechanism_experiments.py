@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path, PureWindowsPath
 
 from benchmarks import person_fidelity_exp1_lexical_candidates as exp1
 from benchmarks import run_person_fidelity_mechanism_experiments as mechanism
@@ -299,3 +300,37 @@ def test_artifact_manifest_verification_detects_raw_artifact_mutation(tmp_path):
     verification = mechanism.verify_result(result_path)
     assert verification["valid"] is False
     assert verification["checks"]["artifact_evidence_valid"] is False
+
+
+def test_attempt_artifact_paths_fit_windows_path_budget():
+    fixture, _fixture_hash = mechanism.load_fixture()
+    case = fixture.composer_cases[0]
+    contexts = [
+        mechanism._attempt_artifact_context(
+            run_id="20260921T215914Z",
+            run_artifact_root=Path("unused"),
+            experiment="composer_sufficiency",
+            variant=variant,
+            case=case,
+            trial=trial,
+        )
+        for variant in ("baseline", "candidate")
+        for trial in range(1, 4)
+    ]
+
+    directories = {context.artifact_directory for context in contexts}
+    assert len(directories) == 6
+    assert all(directory.startswith("a-") for directory in directories)
+    assert all("/" not in directory and "\\" not in directory for directory in directories)
+
+    representative_root = PureWindowsPath(
+        r"C:\Users\gy0d8\OneDrive\Documents\jit_agent_prototype"
+    ) / "benchmarks" / "generated" / "pfmx" / "2026-09-21_215914"
+    longest_atomic_target = (
+        representative_root
+        / contexts[0].artifact_directory
+        / "interactions"
+        / "d9166ac6-e9d7-51c1-a3ff-87865dd3e642"
+        / ".000001-a1e92c0267b25b97b6c524ed59ce8f0c.json.4294967295.tmp"
+    )
+    assert len(str(longest_atomic_target)) < 240

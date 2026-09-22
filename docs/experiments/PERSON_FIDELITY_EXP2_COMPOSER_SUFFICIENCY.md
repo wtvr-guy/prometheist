@@ -100,7 +100,9 @@ evidence payloads and references, schemas, token limits, model identity, raw out
 or transport errors, validated stage results, benchmark evaluations, fixture hash,
 revision, and final disposition in a separate hash-linked interaction chain for each
 trial. A content-addressed `run_manifest.json` inventories every raw artifact byte,
-and the compact result records the manifest hash. Both are written by
+and the compact result records the manifest hash. Compact content-derived attempt
+directory names preserve Windows path budget; the manifest and case-input artifact
+retain the complete experiment, variant, case, and trial identity. Both are written by
 [`run_person_fidelity_mechanism_experiments.py`](../../benchmarks/run_person_fidelity_mechanism_experiments.py).
 
 The retained 2026-09-21 v1 and v2 compact results predate this correction. They
