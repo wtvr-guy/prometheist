@@ -1,0 +1,39 @@
+{
+  "artifact_hash": "5262ba1524d3466ceef2a20f5dfb1a5a687c644268c2801be4aa53d5d7dd1cb7",
+  "artifact_id": "85c5ba3b-9beb-5203-bd64-99c834af693d",
+  "artifact_key": "benchmark-case-input",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_CASE_INPUT",
+  "assignment_id": "1ff47d47-1297-5f12-9660-99b28a3e513d",
+  "conversation_id": "7b88b093-fc4f-59c6-aa7d-2e80514345b6",
+  "correlation_id": "f08c8a3b-267b-5cf6-861a-8f2a11eda1dc",
+  "created_at": "2026-09-22T05:35:19.668754+00:00",
+  "interaction_id": "e0f23460-439c-5aa3-8aaa-5d23a12ce0bb",
+  "journal_sequence": 1,
+  "payload": {
+    "case": {
+      "case_id": "cs-009-legitimate-unknown",
+      "class": "PERSONAL_UNKNOWN_REQUIRES_EXHAUSTED_RECALL",
+      "deficit_review_oracle": "The missing evidence is the teacher's identity; deeper bounded recall must be exhausted before the responder treats the fact as unknown.",
+      "evaluation_group": "V1_RETEST",
+      "evidence": [],
+      "expected_sufficient": false,
+      "prompt": "What was the name of my fifth-grade teacher?"
+    },
+    "experiment": "composer_sufficiency",
+    "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+    "fixture_sha256": "23efb302a2cc6e6376d2cfa3b388b0affbf9b378ef7fecfd4f31e6e743ab922f",
+    "fixture_version": "person-fidelity-mechanism-experiments-v2",
+    "prompt_sha256": "13f45bd0fb35d85c3c6157e3134d944b73dcbf3ef24069b5b5bb391ac6154c97",
+    "revision": "e373ac0b6b5d6773fe4aef4a5aae0cf40f5d2363",
+    "run_id": "20260922T053255Z",
+    "trial": 1,
+    "variant": "baseline"
+  },
+  "payload_hash": "9bac2968fc19b38acbbe0afcc76dedeeba184cc7a6b3e9dbd35475e8920dd3bd",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "e1e5f5b1-896a-579f-bb5a-dd046a0527f8"
+}

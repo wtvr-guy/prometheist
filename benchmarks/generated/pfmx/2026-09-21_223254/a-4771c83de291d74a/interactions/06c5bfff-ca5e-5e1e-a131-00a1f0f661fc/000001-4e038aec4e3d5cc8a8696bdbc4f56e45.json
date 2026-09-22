@@ -1,0 +1,47 @@
+{
+  "artifact_hash": "fc8eb9cf81bd7e27700da3b4b7b8b366b0aad9671f9fdf3031b0d7b6b8f5fe55",
+  "artifact_id": "4e038aec-4e3d-5cc8-a869-6bdbc4f56e45",
+  "artifact_key": "benchmark-case-input",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_CASE_INPUT",
+  "assignment_id": "42862d60-5a5d-56c3-97d5-318c8812cb39",
+  "conversation_id": "1992f3d9-e0c8-57cd-a330-5fba149844f0",
+  "correlation_id": "423d511d-e537-5d4a-8b4b-bcf0eb58cd35",
+  "created_at": "2026-09-22T05:42:08.238281+00:00",
+  "interaction_id": "06c5bfff-ca5e-5e1e-a131-00a1f0f661fc",
+  "journal_sequence": 1,
+  "payload": {
+    "case": {
+      "case_id": "cs2-016-complete-pattern",
+      "class": "COMPLETE_CONTEXTUAL_CONTRADICTION",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "evidence": [
+        {
+          "content": "I see myself as spontaneous and usually say that I dislike planning trips.",
+          "role": "USER_PROMPT"
+        },
+        {
+          "content": "Before three international trips, Rowan built detailed checklists, contingency routes, and day-by-day reservations weeks ahead.",
+          "role": "SYSTEM_EVENT"
+        }
+      ],
+      "expected_sufficient": true,
+      "prompt": "Reconcile my claim that I improvise travel plans with how I actually prepare for high-stakes trips."
+    },
+    "experiment": "composer_sufficiency",
+    "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+    "fixture_sha256": "23efb302a2cc6e6376d2cfa3b388b0affbf9b378ef7fecfd4f31e6e743ab922f",
+    "fixture_version": "person-fidelity-mechanism-experiments-v2",
+    "prompt_sha256": "b8257b365c6d6ea8358fa59d02590051075b752c4582433bb5e61d0c36d7ca05",
+    "revision": "e373ac0b6b5d6773fe4aef4a5aae0cf40f5d2363",
+    "run_id": "20260922T053255Z",
+    "trial": 2,
+    "variant": "candidate"
+  },
+  "payload_hash": "77b4a2a418ddd7dd7109cdc2253c7b9dcc3726d968f89b9ff1d4a26f588cdd5b",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "078ccdbb-c13e-56a8-873e-52d32445f50f"
+}

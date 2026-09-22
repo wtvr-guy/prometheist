@@ -1,0 +1,44 @@
+{
+  "artifact_hash": "ef073342d2513b98a5d7e3276829cc2466f15d632903aa5f436e69bb4f1376b5",
+  "artifact_id": "4d53470e-72b9-53a8-b5cd-19d1a427a708",
+  "artifact_key": "benchmark-case-input",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_CASE_INPUT",
+  "assignment_id": "d5d72594-fa2d-55ce-a9e1-ff436ac69d5d",
+  "conversation_id": "c6fde7d7-72c2-5439-967a-db7be89809b1",
+  "correlation_id": "45bb1a57-efa2-5e77-b632-38c7b14b9095",
+  "created_at": "2026-09-22T05:41:51.059936+00:00",
+  "interaction_id": "e56ff37b-ef80-5f36-b646-b32dc2c4a5d3",
+  "journal_sequence": 1,
+  "payload": {
+    "case": {
+      "case_id": "cs2-015-one-sided-pattern",
+      "class": "MISSING_CONTEXTUAL_BEHAVIOR",
+      "deficit_review_oracle": "The missing evidence is observed preparation behavior for high-stakes trips, which is required to compare conduct with the self-description.",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "evidence": [
+        {
+          "content": "I see myself as spontaneous and usually say that I dislike planning trips.",
+          "role": "USER_PROMPT"
+        }
+      ],
+      "expected_sufficient": false,
+      "prompt": "Reconcile my claim that I improvise travel plans with how I actually prepare for high-stakes trips."
+    },
+    "experiment": "composer_sufficiency",
+    "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+    "fixture_sha256": "23efb302a2cc6e6376d2cfa3b388b0affbf9b378ef7fecfd4f31e6e743ab922f",
+    "fixture_version": "person-fidelity-mechanism-experiments-v2",
+    "prompt_sha256": "b8257b365c6d6ea8358fa59d02590051075b752c4582433bb5e61d0c36d7ca05",
+    "revision": "e373ac0b6b5d6773fe4aef4a5aae0cf40f5d2363",
+    "run_id": "20260922T053255Z",
+    "trial": 2,
+    "variant": "candidate"
+  },
+  "payload_hash": "a32b7bbb6f97ea58b45a5678cd4dbae6158fb4e5cc1dc24744ecea38af2fef5a",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "ecaf681c-9864-591b-a338-89e402b2a9c6"
+}

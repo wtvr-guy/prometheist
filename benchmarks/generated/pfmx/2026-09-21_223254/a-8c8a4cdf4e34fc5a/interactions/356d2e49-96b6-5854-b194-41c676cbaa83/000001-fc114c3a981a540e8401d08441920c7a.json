@@ -1,0 +1,44 @@
+{
+  "artifact_hash": "733223fb23bb481d3a803d4e83f013d81f7955f8ec36491df986b30689204907",
+  "artifact_id": "fc114c3a-981a-540e-8401-d08441920c7a",
+  "artifact_key": "benchmark-case-input",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_CASE_INPUT",
+  "assignment_id": "ca6e9f9b-afbd-5b44-bf03-3fdc3c6985ce",
+  "conversation_id": "2c1eb2fc-8ff3-514b-aacc-f7b5d8860a43",
+  "correlation_id": "1928bd29-3aeb-5545-9d2a-86d0335f161a",
+  "created_at": "2026-09-22T05:39:30.885591+00:00",
+  "interaction_id": "356d2e49-96b6-5854-b194-41c676cbaa83",
+  "journal_sequence": 1,
+  "payload": {
+    "case": {
+      "case_id": "cs-008-one-sided-contradiction",
+      "class": "MISSING_OBSERVED_BEHAVIOR",
+      "deficit_review_oracle": "The missing evidence is observed behavior during delays, which is required to reconcile the self-description.",
+      "evaluation_group": "V1_RETEST",
+      "evidence": [
+        {
+          "content": "I think of myself as patient when plans run late.",
+          "role": "USER_PROMPT"
+        }
+      ],
+      "expected_sufficient": false,
+      "prompt": "Am I patient under delays? Reconcile how I describe myself with how I actually behave."
+    },
+    "experiment": "composer_sufficiency",
+    "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+    "fixture_sha256": "23efb302a2cc6e6376d2cfa3b388b0affbf9b378ef7fecfd4f31e6e743ab922f",
+    "fixture_version": "person-fidelity-mechanism-experiments-v2",
+    "prompt_sha256": "b8257b365c6d6ea8358fa59d02590051075b752c4582433bb5e61d0c36d7ca05",
+    "revision": "e373ac0b6b5d6773fe4aef4a5aae0cf40f5d2363",
+    "run_id": "20260922T053255Z",
+    "trial": 1,
+    "variant": "candidate"
+  },
+  "payload_hash": "6797cd1c4e6ead9c36819b06289db3a19e833d97fe657bbb2132263d3f7f3c8d",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "f8f8d2b1-f818-5e11-ae4a-8c3b60f8aeab"
+}

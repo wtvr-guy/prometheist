@@ -1,0 +1,32 @@
+{
+  "artifact_hash": "c685a05d610da97fee4431e0bc698f601ef0fa71f36951f449035c943a76b2b6",
+  "artifact_id": "cdd8fae5-f2b6-5b97-abe5-32c55d0e80b2",
+  "artifact_key": "benchmark-evaluation",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_EVALUATION",
+  "assignment_id": "04706f18-55ef-5579-ba3c-27586b24c48e",
+  "conversation_id": "b56e082f-f62f-5390-88a5-26aac832845c",
+  "correlation_id": "ad5a5636-6d8a-5f60-8154-dc1274c24c58",
+  "created_at": "2026-09-22T05:36:05.321777+00:00",
+  "interaction_id": "dcb0dc03-9e06-5695-aba3-4bd1fd0e634f",
+  "journal_sequence": 4,
+  "payload": {
+    "error": null,
+    "execution_path": "MODEL_CLASSIFICATION",
+    "expected": {
+      "sufficient": true
+    },
+    "matched_expected": true,
+    "output": {
+      "memory_deficit": null,
+      "sufficient": true
+    },
+    "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}"
+  },
+  "payload_hash": "49f75b0d413e43d4467aa07bec04a7a102549c2c11f0db55a71f568e2c20c77b",
+  "previous_artifact_hash": "5f71d477abf8ebbe8c8cccb62d494a59431a6fbf5d7ecd1af77b81804c6526fa",
+  "previous_artifact_id": "c68e14bc-e26c-5ca6-a407-4993b719001b",
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "5ff2dd4a-5f01-58f5-8768-f266f216e874"
+}

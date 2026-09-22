@@ -1,0 +1,32 @@
+{
+  "artifact_hash": "153dce6116125cee1b008530ffc019425e017863ddceb28120f0f835812dfe88",
+  "artifact_id": "740686ee-1490-5de7-891b-ef58a70aeb49",
+  "artifact_key": "benchmark-evaluation",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_EVALUATION",
+  "assignment_id": "7733d655-f86f-5c45-8e3c-9e094c1faf45",
+  "conversation_id": "0e9ccbf2-7f9d-5ce8-a0fe-2f42a0a5f8bc",
+  "correlation_id": "da414ef5-cdd5-522d-a514-d043983a857d",
+  "created_at": "2026-09-22T05:42:27.031217+00:00",
+  "interaction_id": "78d34e21-6fbb-5a01-8de5-1e8198ce66d9",
+  "journal_sequence": 4,
+  "payload": {
+    "error": null,
+    "execution_path": "MODEL_CLASSIFICATION",
+    "expected": {
+      "sufficient": false
+    },
+    "matched_expected": true,
+    "output": {
+      "memory_deficit": "personal coping behavior under stress, specifically whether the user typically calls a friend or isolates themselves when badly stressed",
+      "sufficient": false
+    },
+    "raw_output": "{ \"sufficient\": false, \"memory_deficit\": \"personal coping behavior under stress, specifically whether the user typically calls a friend or isolates themselves when badly stressed\" }"
+  },
+  "payload_hash": "936b4bff2576a3a925306c15598c123dbbf03843b1a8239dd6cacd29073f6b86",
+  "previous_artifact_hash": "dc644b98171849a16d6c9ad6989a4901a02e962ba6c178f2ce51282e3ec89c95",
+  "previous_artifact_id": "dbe8f8f9-4a0b-52fc-a9a7-325f874621b1",
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "1d128a54-3a5b-5905-9baa-21975e44a61e"
+}

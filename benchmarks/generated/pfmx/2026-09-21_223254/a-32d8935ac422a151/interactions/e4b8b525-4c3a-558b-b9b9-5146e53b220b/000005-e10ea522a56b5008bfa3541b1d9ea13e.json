@@ -1,0 +1,59 @@
+{
+  "artifact_hash": "a5191274506a9235b0bc867ea9e99569733adbb212f9e2c704a3c15f2f6ad2ef",
+  "artifact_id": "e10ea522-a56b-5008-bfa3-541b1d9ea13e",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "c106a0b3-c3f1-5617-a91b-5b8925cb76c7",
+  "conversation_id": "637cb308-59d1-5926-a95a-0d399a6d7b97",
+  "correlation_id": "540a18cd-6091-5a30-9bb3-ff00a9c6d585",
+  "created_at": "2026-09-22T05:39:16.736387+00:00",
+  "interaction_id": "e4b8b525-4c3a-558b-b9b9-5146e53b220b",
+  "journal_sequence": 5,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "e2c3b7d51aa6d1d3856cf6cdcbcb16c3a53d0b20a60fd54b9959aadb2a23f343",
+        "artifact_id": "817963ba-4345-57b7-a790-d9e2dfc9abd6",
+        "artifact_key": "benchmark-case-input",
+        "artifact_type": "BENCHMARK_CASE_INPUT",
+        "journal_sequence": 1,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "707c1e3a4f6f355d4892bb9fcdab0043943a85f4656a728a8f7469ca3c386856",
+        "artifact_id": "0a2a72d7-ccdb-5685-8e01-b64a533ccd9e",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:17ec06e0-bac3-5289-b621-d920ef1601af:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 2,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "27f69b318881c084934b3e5bb54fcd8ca66d9cfc41b69903abe16c18be7c7791",
+        "artifact_id": "f675d0ab-afaa-5439-a97b-83ecb9088644",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 3,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "82cbaaf191f923bf130a0e1ec3475c2d9cf14e9d37a7ad4a10326e19a4c30522",
+        "artifact_id": "145dc8ee-1def-56ff-994c-394678bf50ed",
+        "artifact_key": "benchmark-evaluation",
+        "artifact_type": "BENCHMARK_EVALUATION",
+        "journal_sequence": 4,
+        "stage": "V2_COMPOSE_MEMORY"
+      }
+    ],
+    "last_completed_stage": "V2_COMPOSE_MEMORY",
+    "response_required": false,
+    "response_text": null,
+    "status": "COMPLETED"
+  },
+  "payload_hash": "9b9d1bb8dcc3eb84fc18b5c42cc2cc061a79de321284683e1cac2aabc83b33ed",
+  "previous_artifact_hash": "82cbaaf191f923bf130a0e1ec3475c2d9cf14e9d37a7ad4a10326e19a4c30522",
+  "previous_artifact_id": "145dc8ee-1def-56ff-994c-394678bf50ed",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "5047fdcc-b223-592d-b62f-1f5b118bc544"
+}

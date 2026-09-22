@@ -1,0 +1,32 @@
+{
+  "artifact_hash": "e3815c92b4f0d3532f1fd508e303e26cb0ba7726b366af3078a5fdc0245c1ca3",
+  "artifact_id": "39f86e28-6abc-5c6a-8f48-31666679ec30",
+  "artifact_key": "benchmark-evaluation",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_EVALUATION",
+  "assignment_id": "ae709bed-38f9-5fff-9612-10cd3bfb7b06",
+  "conversation_id": "9743ab15-3958-578b-a127-7925ea9f0015",
+  "correlation_id": "2c314f19-3d92-5edc-b215-ea0627656493",
+  "created_at": "2026-09-22T05:42:33.029372+00:00",
+  "interaction_id": "c4724f13-ee15-50c5-a749-45759d571510",
+  "journal_sequence": 4,
+  "payload": {
+    "error": null,
+    "execution_path": "MODEL_CLASSIFICATION",
+    "expected": {
+      "sufficient": false
+    },
+    "matched_expected": true,
+    "output": {
+      "memory_deficit": "personal coping behavior under conditions of severe stress",
+      "sufficient": false
+    },
+    "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal coping behavior under conditions of severe stress\"\n}"
+  },
+  "payload_hash": "5449ca33cd3b22819402c04b8999e8ffd1659b8e62aaff38082f03881e68cd80",
+  "previous_artifact_hash": "baeb4e3ffb4e886102e0a04e6ab990a52bb98ec687e8afb0befd8c3a1640a8f5",
+  "previous_artifact_id": "be0be0b3-f98b-5eb3-9bab-2008d89bb0df",
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "2af9a732-557f-5385-b5c4-94d6d99c19cb"
+}

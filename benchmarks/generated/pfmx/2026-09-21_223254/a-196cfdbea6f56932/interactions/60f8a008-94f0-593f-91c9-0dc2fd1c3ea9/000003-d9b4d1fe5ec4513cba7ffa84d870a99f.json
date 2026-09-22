@@ -1,0 +1,26 @@
+{
+  "artifact_hash": "2df37a220f11b3f416f3e5b45fce29abf9ac1d8422784e29c0127241e6c15b8f",
+  "artifact_id": "d9b4d1fe-5ec4-513c-ba7f-fa84d870a99f",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "fc44e75b-902f-5f10-8903-4c777974edd9",
+  "conversation_id": "4b5d0765-e8bd-566f-896d-111cce7aec74",
+  "correlation_id": "ce353cc5-f276-5114-a5ba-3c112b27c3f2",
+  "created_at": "2026-09-22T05:41:21.376389+00:00",
+  "interaction_id": "60f8a008-94f0-593f-91c9-0dc2fd1c3ea9",
+  "journal_sequence": 3,
+  "payload": {
+    "output": {
+      "memory_deficit": "personal preference or behavior regarding sensitive performance reviews in café settings, such as whether I would hold such a review in an open café or a private room, or the conditions under which I might prefer one setting over another",
+      "sufficient": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "66656debe64357d5b9106d692127223e423e4ce1e8d3bdb77add08fee31b5d34",
+  "previous_artifact_hash": "aa5f6ab5f97545b9d10ea1283ee242a6e45d75b171d2f162c33cc76b346034b7",
+  "previous_artifact_id": "8a22eb7e-1826-546d-9a38-111556d7f410",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "b8fe198d-4b06-507e-90bf-d2dcb2a35aee"
+}

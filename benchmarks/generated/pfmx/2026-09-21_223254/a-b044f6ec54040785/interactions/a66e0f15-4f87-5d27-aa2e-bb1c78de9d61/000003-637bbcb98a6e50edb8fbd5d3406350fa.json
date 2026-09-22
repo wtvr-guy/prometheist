@@ -1,0 +1,26 @@
+{
+  "artifact_hash": "8522b50800803e9f3e33be702cdf09dc3c66432aebe79ea1383a86b5b5e620c2",
+  "artifact_id": "637bbcb9-8a6e-50ed-b8fb-d5d3406350fa",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "d5a7aef6-e600-5be9-a20e-d830c4703dd3",
+  "conversation_id": "bab152f5-d481-5548-a77b-a975789cfad2",
+  "correlation_id": "122bc987-e021-56d5-a0b6-2b3993498aa5",
+  "created_at": "2026-09-22T05:38:23.151963+00:00",
+  "interaction_id": "a66e0f15-4f87-5d27-aa2e-bb1c78de9d61",
+  "journal_sequence": 3,
+  "payload": {
+    "output": {
+      "memory_deficit": "personal preference or behavior regarding workspace choice during difficult writing tasks, especially in relation to the energy of seeing other people at work",
+      "sufficient": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "7bcee1da8c767e2548469c0782d7bc91f1398b85677b107b5b872a3eb0d93e91",
+  "previous_artifact_hash": "9886ed861371c118090238f3acb63c5289fbbe9e3ea68644fb6bf612ee52063d",
+  "previous_artifact_id": "dbff9fdd-6004-5332-b15a-1970cf7b4035",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "f141f613-15c2-5c92-8e32-de9dd537cf4c"
+}

@@ -1,0 +1,26 @@
+{
+  "artifact_hash": "31eeb2c2ab989d79c32631b4ed5cfc7763aaf2d9ba69ed95f294504f027082f6",
+  "artifact_id": "3ea4d471-badd-5555-bd22-1649120ad194",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "deb116d1-d4ec-58b6-98a6-ec728e4a8200",
+  "conversation_id": "4827221b-9a2e-53a9-9486-6f08dc096c61",
+  "correlation_id": "35c902ee-55c9-51f8-8f0e-8274cd2737ea",
+  "created_at": "2026-09-22T05:36:57.461203+00:00",
+  "interaction_id": "cfe57fc1-6ebb-5df3-b6ce-53c4b489ee61",
+  "journal_sequence": 3,
+  "payload": {
+    "output": {
+      "memory_deficit": null,
+      "sufficient": true
+    },
+    "output_refs": []
+  },
+  "payload_hash": "19bb0143091ec3da84bc6b0ce4b49aca7e5a00b0f6601eed91b237ac52d6a658",
+  "previous_artifact_hash": "34a31e5fff8b2fa05211c0798b6782c3b2827c2c0ff94b375500e1b6c76adbc7",
+  "previous_artifact_id": "484bd59c-e269-566f-8df4-38aeded8920c",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "7607dce8-af5e-5ffc-a91b-6bb797320b71"
+}

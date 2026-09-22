@@ -1,0 +1,38 @@
+{
+  "artifact_hash": "3e0f7fc63c55bc2b1a57770807f169431f2385c0cf86d8d29f35d152ef830db0",
+  "artifact_id": "dce20c9e-18e8-598e-9c6b-15b261974401",
+  "artifact_key": "benchmark-case-input",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_CASE_INPUT",
+  "assignment_id": "2bcabeec-b9d4-5dc5-a61c-f649c3a4b386",
+  "conversation_id": "c4df6502-25ed-5182-bebe-63cd77085b37",
+  "correlation_id": "28d8182c-511d-5563-9db7-4df0c97d50fc",
+  "created_at": "2026-09-22T05:37:21.197882+00:00",
+  "interaction_id": "a23b1f71-db98-5d50-9b25-c1cfe6450958",
+  "journal_sequence": 1,
+  "payload": {
+    "case": {
+      "case_id": "cs-001-general-knowledge",
+      "class": "HISTORY_UNNECESSARY",
+      "evaluation_group": "V1_RETEST",
+      "evidence": [],
+      "expected_sufficient": true,
+      "prompt": "What is two plus two?"
+    },
+    "experiment": "composer_sufficiency",
+    "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+    "fixture_sha256": "23efb302a2cc6e6376d2cfa3b388b0affbf9b378ef7fecfd4f31e6e743ab922f",
+    "fixture_version": "person-fidelity-mechanism-experiments-v2",
+    "prompt_sha256": "b8257b365c6d6ea8358fa59d02590051075b752c4582433bb5e61d0c36d7ca05",
+    "revision": "e373ac0b6b5d6773fe4aef4a5aae0cf40f5d2363",
+    "run_id": "20260922T053255Z",
+    "trial": 1,
+    "variant": "candidate"
+  },
+  "payload_hash": "81c9b7194f7ef19ab01ef5bb858922227e86fbd67040d77cdfbea68d0c0ff4c9",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "062d483f-4459-5b0c-9d19-38fc543b2769"
+}

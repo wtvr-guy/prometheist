@@ -1,0 +1,32 @@
+{
+  "artifact_hash": "c064bce322c78f67f2c209cf1973fffeb4dc540c1e5a7506fb652d3c83badabe",
+  "artifact_id": "35e15db9-416c-5e2c-9390-b9d51a75b4b2",
+  "artifact_key": "benchmark-evaluation",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_EVALUATION",
+  "assignment_id": "fc44e75b-902f-5f10-8903-4c777974edd9",
+  "conversation_id": "4b5d0765-e8bd-566f-896d-111cce7aec74",
+  "correlation_id": "ce353cc5-f276-5114-a5ba-3c112b27c3f2",
+  "created_at": "2026-09-22T05:41:21.394099+00:00",
+  "interaction_id": "60f8a008-94f0-593f-91c9-0dc2fd1c3ea9",
+  "journal_sequence": 4,
+  "payload": {
+    "error": null,
+    "execution_path": "MODEL_CLASSIFICATION",
+    "expected": {
+      "sufficient": false
+    },
+    "matched_expected": true,
+    "output": {
+      "memory_deficit": "personal preference or behavior regarding sensitive performance reviews in café settings, such as whether I would hold such a review in an open café or a private room, or the conditions under which I might prefer one setting over another",
+      "sufficient": false
+    },
+    "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding sensitive performance reviews in café settings, such as whether I would hold such a review in an open café or a private room, or the conditions under which I might prefer one setting over another\"\n}"
+  },
+  "payload_hash": "75782f37ac18818dc8dd295b1360d2da3396725506ec6b1f4e4d7a65efdb18a9",
+  "previous_artifact_hash": "2df37a220f11b3f416f3e5b45fce29abf9ac1d8422784e29c0127241e6c15b8f",
+  "previous_artifact_id": "d9b4d1fe-5ec4-513c-ba7f-fa84d870a99f",
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "b8fe198d-4b06-507e-90bf-d2dcb2a35aee"
+}

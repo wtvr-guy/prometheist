@@ -1,0 +1,32 @@
+{
+  "artifact_hash": "694cceb974e5607d960ea72df629085ba813bbc0463443c4ecd1abf856c40fa8",
+  "artifact_id": "25eb5eec-bd86-55d6-a62b-698bfad0f36e",
+  "artifact_key": "benchmark-evaluation",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_EVALUATION",
+  "assignment_id": "5502f7ce-fea0-5f6a-9087-7fab50c85c30",
+  "conversation_id": "b904d8d7-e5e1-594f-9ad1-e724e0444230",
+  "correlation_id": "3675764d-7d7a-5d98-8a65-c2982812129d",
+  "created_at": "2026-09-22T05:35:34.402598+00:00",
+  "interaction_id": "0562870a-c538-5b9a-bb6f-b852ae51db29",
+  "journal_sequence": 4,
+  "payload": {
+    "error": null,
+    "execution_path": "MODEL_CLASSIFICATION",
+    "expected": {
+      "sufficient": false
+    },
+    "matched_expected": true,
+    "output": {
+      "memory_deficit": "The name of the user's fifth-grade teacher",
+      "sufficient": false
+    },
+    "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The name of the user's fifth-grade teacher\"\n}"
+  },
+  "payload_hash": "1c9f93732bd516e9f51c4e623e1ddeba264e3f9216fbe6af249c087122c5529b",
+  "previous_artifact_hash": "52b1bd449d9f0ec7148c92cf5567278fc42a6578815963a3f2fef9a6c0b8d3d4",
+  "previous_artifact_id": "e88d270a-fd24-5c41-9cc7-402f7ccc4f15",
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "0ab4d2b2-6b12-5939-b0f1-8807372eeb4f"
+}

@@ -1,0 +1,44 @@
+{
+  "artifact_hash": "858b157d16023af7de95c44365d183bd0f9f128fbabf0bc4944992ea6e40c69d",
+  "artifact_id": "fb23ec77-3b2b-5a28-ad67-0a46e244d0d8",
+  "artifact_key": "benchmark-case-input",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_CASE_INPUT",
+  "assignment_id": "fc44e75b-902f-5f10-8903-4c777974edd9",
+  "conversation_id": "4b5d0765-e8bd-566f-896d-111cce7aec74",
+  "correlation_id": "ce353cc5-f276-5114-a5ba-3c112b27c3f2",
+  "created_at": "2026-09-22T05:41:08.067795+00:00",
+  "interaction_id": "60f8a008-94f0-593f-91c9-0dc2fd1c3ea9",
+  "journal_sequence": 1,
+  "payload": {
+    "case": {
+      "case_id": "cs2-014-context-partial",
+      "class": "CONTEXT_ADJACENT_NONDIAGNOSTIC",
+      "deficit_review_oracle": "The missing evidence is the person's preference or conduct for confidential personnel conversations; a routine-work setting does not settle a privacy-sensitive choice.",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "evidence": [
+        {
+          "content": "I enjoy doing routine paperwork in lively cafés.",
+          "role": "USER_PROMPT"
+        }
+      ],
+      "expected_sufficient": false,
+      "prompt": "Based on my history, would I probably hold a sensitive performance review in an open café or a private room?"
+    },
+    "experiment": "composer_sufficiency",
+    "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+    "fixture_sha256": "23efb302a2cc6e6376d2cfa3b388b0affbf9b378ef7fecfd4f31e6e743ab922f",
+    "fixture_version": "person-fidelity-mechanism-experiments-v2",
+    "prompt_sha256": "b8257b365c6d6ea8358fa59d02590051075b752c4582433bb5e61d0c36d7ca05",
+    "revision": "e373ac0b6b5d6773fe4aef4a5aae0cf40f5d2363",
+    "run_id": "20260922T053255Z",
+    "trial": 1,
+    "variant": "candidate"
+  },
+  "payload_hash": "eb8156ac0ffce5ffaba847f5e1a8936b2f70ce5f514297c6a862a67203015402",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "b8fe198d-4b06-507e-90bf-d2dcb2a35aee"
+}

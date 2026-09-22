@@ -1,0 +1,32 @@
+{
+  "artifact_hash": "188c93490d84b8568b95065283d8816b2fdd3976e1cd4b85874b2418d2a60e34",
+  "artifact_id": "a400086e-4eaa-5380-b948-9cd7b9dde1c1",
+  "artifact_key": "benchmark-evaluation",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_EVALUATION",
+  "assignment_id": "3fa0e0a6-704b-5d38-912e-9edf8f1c6c0c",
+  "conversation_id": "4cad8db3-2b4d-56ee-b151-2a4e35edf687",
+  "correlation_id": "9bda58b1-dfd6-5a3c-8267-6b8e775ab5ff",
+  "created_at": "2026-09-22T05:37:11.526027+00:00",
+  "interaction_id": "d18f0a80-056c-59b6-992c-ca2e6762747c",
+  "journal_sequence": 4,
+  "payload": {
+    "error": null,
+    "execution_path": "MODEL_CLASSIFICATION",
+    "expected": {
+      "sufficient": false
+    },
+    "matched_expected": true,
+    "output": {
+      "memory_deficit": "user's usual coping mechanisms under stress",
+      "sufficient": false
+    },
+    "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"user's usual coping mechanisms under stress\"\n}"
+  },
+  "payload_hash": "d925503325c25841e94436c30ac3c7edfcc14b9116bf25a14e363a194c3cfd2d",
+  "previous_artifact_hash": "ac380aa5a6a09e0884c8a72a747371c2135569f289b1715005949ff1c1afcd04",
+  "previous_artifact_id": "6a1b6a4d-a5ef-5184-ba6f-a13051bc742e",
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "de2ab9c1-d46d-5af5-a995-9a33540d234e"
+}

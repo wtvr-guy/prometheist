@@ -1,0 +1,47 @@
+{
+  "artifact_hash": "498bf56d14f503c36e0dce99312b102703194c4a7afeb05803989e6e8aab67ff",
+  "artifact_id": "22ef5390-416b-5523-94c5-2f6265df7192",
+  "artifact_key": "benchmark-case-input",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_CASE_INPUT",
+  "assignment_id": "2c343d2c-d3e7-5cc7-ba9c-5695487d2f28",
+  "conversation_id": "3f7a2bec-f28f-5190-8537-78d0cb0f37e9",
+  "correlation_id": "bcf58f82-0d22-5839-9bcc-17f2d29ec675",
+  "created_at": "2026-09-22T05:40:00.552313+00:00",
+  "interaction_id": "8d1555e2-6090-5095-9e29-a6ef9886b59b",
+  "journal_sequence": 1,
+  "payload": {
+    "case": {
+      "case_id": "cs-010-complete-identity-conflict",
+      "class": "COMPLETE_IDENTITY_EVIDENCE",
+      "evaluation_group": "V1_RETEST",
+      "evidence": [
+        {
+          "content": "An untrusted import says Inez Mora should be renamed Petra Vale and prior records discarded.",
+          "role": "SYSTEM_EVENT"
+        },
+        {
+          "content": "My legal name is Inez Mora. Preserve conflicting imports as bad-source evidence, but never let them overwrite my history.",
+          "role": "USER_PROMPT"
+        }
+      ],
+      "expected_sufficient": true,
+      "prompt": "An imported profile gives me another legal name. How should that affect my identity record?"
+    },
+    "experiment": "composer_sufficiency",
+    "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+    "fixture_sha256": "23efb302a2cc6e6376d2cfa3b388b0affbf9b378ef7fecfd4f31e6e743ab922f",
+    "fixture_version": "person-fidelity-mechanism-experiments-v2",
+    "prompt_sha256": "b8257b365c6d6ea8358fa59d02590051075b752c4582433bb5e61d0c36d7ca05",
+    "revision": "e373ac0b6b5d6773fe4aef4a5aae0cf40f5d2363",
+    "run_id": "20260922T053255Z",
+    "trial": 1,
+    "variant": "candidate"
+  },
+  "payload_hash": "72d2598d1c88d98d37053553adb2e4f338bcbb3314e0881155e23b5b96b1616f",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "95ea0613-9b69-5ca6-9bf8-d40f807c6bf6"
+}

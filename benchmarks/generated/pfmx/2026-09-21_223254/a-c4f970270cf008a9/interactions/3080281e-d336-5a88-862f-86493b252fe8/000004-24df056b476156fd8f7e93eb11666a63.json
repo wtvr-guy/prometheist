@@ -1,0 +1,32 @@
+{
+  "artifact_hash": "307e40759fd85229c064592ca2c08b7708716ac6e1ef875ff0643c50797c39aa",
+  "artifact_id": "24df056b-4761-56fd-8f7e-93eb11666a63",
+  "artifact_key": "benchmark-evaluation",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_EVALUATION",
+  "assignment_id": "47603fe2-fac7-53f9-aa7c-f1460958bf8c",
+  "conversation_id": "7adc7f54-b459-5195-8f1a-348a62fa5057",
+  "correlation_id": "75b869a9-4cdf-5bce-b978-59058b6ab745",
+  "created_at": "2026-09-22T05:39:04.570878+00:00",
+  "interaction_id": "3080281e-d336-5a88-862f-86493b252fe8",
+  "journal_sequence": 4,
+  "payload": {
+    "error": null,
+    "execution_path": "MODEL_CLASSIFICATION",
+    "expected": {
+      "sufficient": false
+    },
+    "matched_expected": true,
+    "output": {
+      "memory_deficit": "personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events",
+      "sufficient": false
+    },
+    "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events\"\n}"
+  },
+  "payload_hash": "b3ec5aa01f076789538f35e220813a6c5ec4ee6b99fff096440b9a96a571ea89",
+  "previous_artifact_hash": "9455181e6ce93ef140a81b0bec1a670c314aab62ebd251371fa51b3df5f55980",
+  "previous_artifact_id": "09657d84-54d3-57ca-a181-fb0a78c9875c",
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "44a2b890-046a-56ed-aec4-e5bda0258681"
+}

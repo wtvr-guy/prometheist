@@ -1,0 +1,44 @@
+{
+  "artifact_hash": "85bb66b8bb61a3828f6cf61b15359649a2b66ce7b344ba360045e8a6157b927c",
+  "artifact_id": "25efe41f-76a1-53c0-85de-ece11b3f8137",
+  "artifact_key": "benchmark-case-input",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_CASE_INPUT",
+  "assignment_id": "be1824b6-943c-5e22-8815-9fb6adadaee5",
+  "conversation_id": "3b33e787-b95e-595a-964d-bee3bf98ace6",
+  "correlation_id": "15ce17fa-60c1-56f9-9f29-1d62607623ea",
+  "created_at": "2026-09-22T05:33:55.218010+00:00",
+  "interaction_id": "4e05e44b-f58c-599e-82ba-8b3d2eaad16a",
+  "journal_sequence": 1,
+  "payload": {
+    "case": {
+      "case_id": "cs-004-partial-person-evidence",
+      "class": "PARTIAL_PERSON_EVIDENCE",
+      "deficit_review_oracle": "The missing evidence is the person's difficult-writing preference or behavior under concentration demands; enjoying social energy alone does not settle the choice.",
+      "evaluation_group": "V1_RETEST",
+      "evidence": [
+        {
+          "content": "I enjoy the energy of seeing other people at work.",
+          "role": "USER_PROMPT"
+        }
+      ],
+      "expected_sufficient": false,
+      "prompt": "Based on my history, would I probably choose a private office or a busy shared room for difficult writing?"
+    },
+    "experiment": "composer_sufficiency",
+    "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+    "fixture_sha256": "23efb302a2cc6e6376d2cfa3b388b0affbf9b378ef7fecfd4f31e6e743ab922f",
+    "fixture_version": "person-fidelity-mechanism-experiments-v2",
+    "prompt_sha256": "13f45bd0fb35d85c3c6157e3134d944b73dcbf3ef24069b5b5bb391ac6154c97",
+    "revision": "e373ac0b6b5d6773fe4aef4a5aae0cf40f5d2363",
+    "run_id": "20260922T053255Z",
+    "trial": 3,
+    "variant": "baseline"
+  },
+  "payload_hash": "1d373fc7043be1dd3a1d14b2a297a07e2bbdfa46bba6c7516cd7f313779efe07",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "5a7e0997-e5f4-5888-8eca-67074ab472f3"
+}

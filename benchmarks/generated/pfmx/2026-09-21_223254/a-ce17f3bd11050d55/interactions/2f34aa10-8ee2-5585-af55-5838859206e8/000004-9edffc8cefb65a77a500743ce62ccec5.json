@@ -1,0 +1,32 @@
+{
+  "artifact_hash": "cb6bc90eba8833564e8c139f5877c6f9b182341080e8968f6a098ef1ab92e5c5",
+  "artifact_id": "9edffc8c-efb6-5a77-a500-743ce62ccec5",
+  "artifact_key": "benchmark-evaluation",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_EVALUATION",
+  "assignment_id": "e3672cff-9406-5ca2-9285-b13a8b4decb9",
+  "conversation_id": "744eeb0e-f670-55e4-a10a-dbef0a67aa3b",
+  "correlation_id": "8ed181ce-5fb1-555c-a19e-ff67e16557b4",
+  "created_at": "2026-09-22T05:38:56.874736+00:00",
+  "interaction_id": "2f34aa10-8ee2-5585-af55-5838859206e8",
+  "journal_sequence": 4,
+  "payload": {
+    "error": null,
+    "execution_path": "MODEL_CLASSIFICATION",
+    "expected": {
+      "sufficient": false
+    },
+    "matched_expected": true,
+    "output": {
+      "memory_deficit": "personal values and decision history related to the two unfamiliar jobs being compared",
+      "sufficient": false
+    },
+    "raw_output": "{ \"sufficient\": false, \"memory_deficit\": \"personal values and decision history related to the two unfamiliar jobs being compared\" }"
+  },
+  "payload_hash": "3bcaa4335cd6af5b920bf064b6dc815b025d9775d1c3cdda46bfbfab8a28f0d2",
+  "previous_artifact_hash": "4d7cf53238fd1be3b720f013085fb7543e635d1a3729f53433bf1cd44b6194b8",
+  "previous_artifact_id": "d1edbb04-f4ed-5f69-bad0-0124762d3e0c",
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "33c18604-4cb0-5db5-ae12-ceed6f09aacd"
+}

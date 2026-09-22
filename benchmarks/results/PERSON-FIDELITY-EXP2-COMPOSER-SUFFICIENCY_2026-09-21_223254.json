@@ -1,0 +1,3012 @@
+{
+  "artifact_evidence": {
+    "path": "benchmarks/generated/pfmx/2026-09-21_223254/run_manifest.json",
+    "privacy_classification": "PUBLIC_SYNTHETIC_FIXTURE",
+    "raw_artifact_file_count": 511,
+    "raw_artifact_root": "benchmarks/generated/pfmx/2026-09-21_223254",
+    "raw_artifact_total_bytes": 1248498,
+    "retention_policy": "PERMANENT_APPEND_ONLY",
+    "sha256": "b531e7de3fe171b05b70d3ef0284c5d8e64ab8e13b9922e4ad9c4a78b49ea899",
+    "size_bytes": 365507,
+    "status": "CAPTURED_AND_INVENTORIED",
+    "training_status": "UNREVIEWED_RAW_EVIDENCE"
+  },
+  "base_url": "http://localhost:11434",
+  "candidate_version": "v2",
+  "captured_at": "2026-09-22T05:32:55.814038+00:00",
+  "experiment_version": "person-fidelity-mechanism-contracts-v2",
+  "experiments": {
+    "composer_sufficiency": {
+      "baseline": {
+        "case_count": 17,
+        "cases": [
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-12421b7b8b463bd0",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "41415c60-638c-5720-811c-0318c9d19227",
+                  "terminal_artifact_hash": "443ec72d91a207a09dfae92871a73fd06c47dbaf2909ed8e88309f86a1f6fd6e"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-234bfd3c6186027d",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "2c621b42-2c7f-56b5-b365-e3a5817ff9bd",
+                  "terminal_artifact_hash": "7b6654ba6628ffd01d30eccaec1b48f9e784eeadb40786615f6c8ed583362732"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-8c2145866f8d371e",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "bb1eba64-1ea0-5006-bf25-a7082977d6da",
+                  "terminal_artifact_hash": "2a90b7bd837d68a82df8c932ceb5edd674a0f7e3e03e0996709c41448492940b"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-001-general-knowledge",
+            "class": "HISTORY_UNNECESSARY",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-1e53b084a687b031",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "31e7a767-2846-5275-a2aa-7fd9e8c7d835",
+                  "terminal_artifact_hash": "7189bc2263f1966fed50c85c24dff38751ae6f809cb9b72ba24cbc7b4ba08572"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-ec3ac8eb00593b33",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "79d593f5-3b9c-5b17-a9c9-82ddfac2c395",
+                  "terminal_artifact_hash": "e619827f7bde59371b5bb75a27951ceb38e88004146e16547f51bae3f70e60ac"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-a9914ce80919489a",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "71085c0b-3275-5bc8-8264-5ec3c0344ec4",
+                  "terminal_artifact_hash": "6c87c4c9a655c366f3aa435e95a46a0899d90505060026bed58e104ad6b2773c"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-002-current-evidence",
+            "class": "CURRENT_PROMPT_SUFFICIENT",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-8d40bea355462bfc",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "b4102704-7fd3-5c0c-be64-31f3be7610fa",
+                  "terminal_artifact_hash": "63f6cce97dd54e0cf218face0919395d5e0c5695552706270bbc44fa43dbf73c"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-0f1005932f174e7a",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "ebda12d2-c2f5-56f4-a695-d65824343cfa",
+                  "terminal_artifact_hash": "683794b1a674179ce527ac6c51047e1860c60ea3398dd19e003b3aa4ea7d0c97"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-c70500e11a0a923e",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "f0cf0f8d-d7fd-5e18-91ba-347d09a6cf8a",
+                  "terminal_artifact_hash": "47d0175ff493dfb4f541ceb11717ff2dbfc4bf29fae6dd0aec948bb801468beb"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-003-complete-person-evidence",
+            "class": "COMPLETE_PERSON_EVIDENCE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-5f93d7e17b5bca5a",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "fb1f5f28-ea6e-57f6-b386-21f4b45d07f9",
+                  "terminal_artifact_hash": "cd80798f658b708d26407c5e2927dd033f2228dd71c3e3d89d7de9305665ee81"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-e1c0135631b85aa3",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "f113c1f9-357b-5a99-b07b-8cb669c60945",
+                  "terminal_artifact_hash": "1b269a5085114ed406c1c1446d74c4a88c5d574aad1403f575dc90fcc049b381"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-9c0cfbcc1e5b9434",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "4e05e44b-f58c-599e-82ba-8b3d2eaad16a",
+                  "terminal_artifact_hash": "b610e92307cd1e8725ad320e762f7732c3601bb98433b8805d5289f6779ae387"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-004-partial-person-evidence",
+            "class": "PARTIAL_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's difficult-writing preference or behavior under concentration demands; enjoying social energy alone does not settle the choice.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-23bae83400325190",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "6ad52c91-4363-5523-9491-69893b9adb24",
+                  "terminal_artifact_hash": "d9fe329ea07629efc09e26bc45e54fd717ff086e52c9ff08b88075d8aade2317"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-ad7bb2163191e2af",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "3d8d0a42-9f2d-5852-a5b4-c3f3561cdbb3",
+                  "terminal_artifact_hash": "c6c3f9ce97a411cfe17ceddd48c80adaa16705ec85a0f4a1505c00fc0ecf1dd7"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-71c1c484d13771f5",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "87ed75d6-7831-540e-bbb7-6f01b1029536",
+                  "terminal_artifact_hash": "82e19ce5c07bf4928af2833be48ca7fcce447fb6a8a7c92855589a21e05ee801"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-005-empty-person-decision",
+            "class": "EMPTY_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's values and prior decision patterns for the job tradeoff.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 6,
+                  "artifact_directory": "a-d4fef90449af1a49",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 2,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "07af440a-26cd-5087-a103-ccaded05d317",
+                  "terminal_artifact_hash": "fea301b4584d25473a90d6c949605da9aa4c76634347ea197d570cbfd838da69"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-069cc5b34534b625",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "8f2a406e-2f8a-5a9b-b376-9d5ed8295332",
+                  "terminal_artifact_hash": "bf637453bf3b817441d15ad8c049e987eadd8d8fb408a8f69e6af966300f1493"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-b1e84cecd28891b5",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "9fb4d8d1-d37b-5136-b4df-01bec86da0c7",
+                  "terminal_artifact_hash": "f15b65b900dd2e8d1f7a17270178e48a5357decec3356c70bda2de34f924ce52"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The current user prompt does not provide any information about preferences regarding public surprise celebrations or emotional responses to being the target of such events. There is no historical evidence in the provided memory that connects the user's bicycle characteristics (steel frame, green saddle) to their preferences for public surprise celebrations. The current prompt is independent of any prior user statements or emotional states related to public events.\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-006-irrelevant-person-evidence",
+            "class": "IRRELEVANT_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's preference about being the target of public surprise celebrations.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-b8f8dbb29733a064",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "d7e09668-02ae-570c-9269-8f4b0cfbcf80",
+                  "terminal_artifact_hash": "738a95cc3e96f1943bca39c6633a221c3520e3849ce9d0eb3ad224ff73d741cf"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-2c5bfe3024714a50",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "60ef8994-5e6a-5887-9a99-9144b460e043",
+                  "terminal_artifact_hash": "6d33c6ba0c1108ae0f5aaa3855c7aaa23e33dcf2d464776bfee92a66fd74e02a"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-d1b8cdbe3bee1ab3",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "c5a1bb74-462f-530f-a08f-9746c90ce08f",
+                  "terminal_artifact_hash": "bb2e9e43e29f0ca6968431a078241096301ee87b4340a8b815f1c7ee5b178b3d"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-007-complete-contradiction",
+            "class": "COMPLETE_CONTRADICTORY_EVIDENCE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-5a078e7c0793b990",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "95acb81c-3474-50b4-b986-f9ebf3a7369c",
+                  "terminal_artifact_hash": "0dab044dc798094ee91073e988c8e90f68be6ac4fe36154444c94a774a2442f3"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-55c753f8afca8bcb",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "7567774b-8ce8-5ff2-a8a8-495ecdcf82e4",
+                  "terminal_artifact_hash": "943ac32037c3b3dcaa7d38f4d2950775a4af2bafc412d1233582bac0b0c297e6"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-6ff98831ae212124",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "56bf7efd-3bd2-5acb-9869-f753af91981d",
+                  "terminal_artifact_hash": "e7455b08c29d6f77664bdf659342f8702c470619e83bbdfac2e19db63dc80120"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-008-one-sided-contradiction",
+            "class": "MISSING_OBSERVED_BEHAVIOR",
+            "deficit_review_oracle": "The missing evidence is observed behavior during delays, which is required to reconcile the self-description.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-32a64fa1bb204e27",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "e0f23460-439c-5aa3-8aaa-5d23a12ce0bb",
+                  "terminal_artifact_hash": "48003aef86f32594d90a438a1950041551940950435da28453b3b3586c03c277"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The name of the user's fifth-grade teacher\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-dd1e1fe48bfbe688",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "8d82b2f2-e2ef-5767-8563-7d13d1007e77",
+                  "terminal_artifact_hash": "a6f2430ecaa6bdf32300c3946f7e95cff5767eea6ff31fa28e46c1bfc0915363"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The name of the user's fifth-grade teacher\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-b520438dbd0ebd23",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "0562870a-c538-5b9a-bb6f-b852ae51db29",
+                  "terminal_artifact_hash": "78bdff6a9a640bf0017142dd567278e8b1ca1fe1bfb6326b5ed3332780de3c48"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "The name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"The name of the user's fifth-grade teacher\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-009-legitimate-unknown",
+            "class": "PERSONAL_UNKNOWN_REQUIRES_EXHAUSTED_RECALL",
+            "deficit_review_oracle": "The missing evidence is the teacher's identity; deeper bounded recall must be exhausted before the responder treats the fact as unknown.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-c6e81f380a094baa",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "cb5f81bd-c292-5b5c-a840-021a74a15ece",
+                  "terminal_artifact_hash": "60991c5cb01fcacb0879bcad092ccd951a0679eb8a6966dd10ff90ce49cb2918"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-024820aa0546c548",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "ecc9bc20-dd91-5abf-8293-8721d2a341b0",
+                  "terminal_artifact_hash": "01e8b5e595da25b8120e778a0ca16cfb4a8f23ed2ebce993a47e370cfa6fd8af"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-c7181b400b3dca18",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "cb88dd36-be89-58c4-a575-f2a10bd4a4ac",
+                  "terminal_artifact_hash": "c441005f3ac99501feaaa0be9cef91ddd9dd2d6d602eb479ec221bd64be1a028"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-010-complete-identity-conflict",
+            "class": "COMPLETE_IDENTITY_EVIDENCE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-e94d445622cd12e5",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "a1f02e40-b251-5dd7-b9ba-e8978cb0ae4b",
+                  "terminal_artifact_hash": "5dd390de60b0cd2e522fe04e0f5d2774e7f4d0b98b506dd29c3ed6903ab27266"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-e30d7352ea6e9b2a",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "b7a75e90-496f-59f6-86fb-99df84bc5d2c",
+                  "terminal_artifact_hash": "38cf90b1d14f7420d0587b543f7bb8e0255b06c35bb3f0029d655ddffb25f704"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-4bde57f355394309",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "1e9196cf-9885-5225-9fd3-2fe2f544845d",
+                  "terminal_artifact_hash": "daa5d39d116be942a70cb9fd2a67f6568b274ff849c78937e2f439b54697ae47"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-011-current-correction",
+            "class": "CURRENT_PROMPT_OVERRIDES_HISTORY",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-d7bad0f45ebd06ed",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "dcb0dc03-9e06-5695-aba3-4bd1fd0e634f",
+                  "terminal_artifact_hash": "5aca2608be3696d7831e0d4fce0b4f68f98894556e1a164760e41e14bbc85122"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-5601a75c4e76385f",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "dcddb45a-1458-5737-a340-70eb227a588b",
+                  "terminal_artifact_hash": "772fc02ad7b2616b9fc2783717c8f0d718d877ec1dde36c48748ac8ee8de0db4"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-ce834e56fcf6abc0",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "39fa1341-da14-5c47-ac5d-79500b90fa62",
+                  "terminal_artifact_hash": "eaa054d2362376aa38e09dbba11b4bff63f76bc743f95bdb8d1e420fdeb9d279"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-012-current-personal-fact",
+            "class": "CURRENT_PROMPT_PERSONAL_FACT",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-7ba2ec0330a654d8",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "a42c20f9-934e-56b2-a557-f58eb6520e67",
+                  "terminal_artifact_hash": "04cf70e225ff77d671d4d6b5bed7a2440441ba793211943345c8ad5320ad2598"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-b3e16e6d802d1836",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "d3f32b1c-7f18-5a5b-acbd-212c6c6d7974",
+                  "terminal_artifact_hash": "b23ef4e72fa503bb171f67c31d66fda66fa2de860403ebe1d3c99efd3a670113"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-e0e8cf51cb1b73b9",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "e90e4227-e1a7-5687-89ba-34cdfe22a272",
+                  "terminal_artifact_hash": "2253d14b466d69356fcea2aa1c173299a87a5f373c7431f361f54aa6e33834ff"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-013-context-complete",
+            "class": "CONTEXT_DIAGNOSTIC_COMPLETE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-314629ae60777d03",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "b696f55c-1355-5432-861c-62ab8ccf7c4d",
+                  "terminal_artifact_hash": "f85184eb1d9d505a29e82b2f10986e5c2b0a0386bc48a5396cd46e8ce9f7e96a"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-f1401d309bf9f4df",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "fb9a9b6e-6fc1-5c7e-84ca-e92b34138a10",
+                  "terminal_artifact_hash": "9128f373eb79d11d5170f6f589c7eec57d723f1c89b9b1aa15cf6c8df19b4ebe"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-e130854de2b900f6",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "42c19344-9eb1-5782-8ffd-2960435ab317",
+                  "terminal_artifact_hash": "1c52a6ec1c67a9848040f69e1ba3d82e33e300e27c0b37c52cff7b46af7d403c"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-014-context-partial",
+            "class": "CONTEXT_ADJACENT_NONDIAGNOSTIC",
+            "deficit_review_oracle": "The missing evidence is the person's preference or conduct for confidential personnel conversations; a routine-work setting does not settle a privacy-sensitive choice.",
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-ca67e54b4ae3a21d",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "6633cdf2-d10e-521b-a9ba-b4c3a60817a1",
+                  "terminal_artifact_hash": "eb6fde4a6597892db3646171ccb0b4c2160e0e28ca2f271336014d1fe15dd03d"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-74dae0ed27576d79",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "4185211e-ad09-5f70-afa9-807672c95f36",
+                  "terminal_artifact_hash": "3f04fa1cc1595e207b59d516a8a7051ab338fe8f556292cbef28a721c0bcf628"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-da1ad36d3ad42e93",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "7aa9cb06-a477-5167-8c63-208f3401aecd",
+                  "terminal_artifact_hash": "6021e5ff42a36ead7f100d94d64d92709110b74461e97dd55d734e8708d4a52c"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-015-one-sided-pattern",
+            "class": "MISSING_CONTEXTUAL_BEHAVIOR",
+            "deficit_review_oracle": "The missing evidence is observed preparation behavior for high-stakes trips, which is required to compare conduct with the self-description.",
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-b4479bec12d90bd7",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "cfe57fc1-6ebb-5df3-b6ce-53c4b489ee61",
+                  "terminal_artifact_hash": "cb012f2d3a5bac735af788e0a5b89aebe4695c97259335bd63be055fef2a009c"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-09e8f489c0ab59fe",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "3cc91b4e-e0c3-5da9-b3c0-4cbb4697274b",
+                  "terminal_artifact_hash": "b5a4d6eadb66875fd5120dd77d025ccaa4f860f4ede77373358071b17b6bf0f9"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": null\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-1f135f162a0063cf",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "a30eb7fc-16b4-5d21-a67f-2dfe7183bb72",
+                  "terminal_artifact_hash": "d746d27983f869326858917ca7e85eaaa17ec288403cb22fe556fc731fcb3e30"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": null\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-016-complete-pattern",
+            "class": "COMPLETE_CONTEXTUAL_CONTRADICTION",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-54043bb8540dd51b",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "d18f0a80-056c-59b6-992c-ca2e6762747c",
+                  "terminal_artifact_hash": "6d73bdcf169acafaac67705a7a9fcddde0fa54691e611bddfde445c17091327b"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "user's usual coping mechanisms under stress",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"user's usual coping mechanisms under stress\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-0918bfbe7f9ae897",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "f79fdf4d-3586-5858-8dae-088115a520c7",
+                  "terminal_artifact_hash": "c2901c2bb04982c0060b5bc234ebb2dbd62bbb674fc4163f0d90d03e29a09118"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "user's usual coping mechanisms under stress",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"user's usual coping mechanisms under stress\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-b5855670388d0eb0",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "15ce8bbd-cebf-54cb-b6b3-41d015082d5f",
+                  "terminal_artifact_hash": "cc4a84f2bd3326b47199a95394f63fed90b3901361c72ef0b6b218f46c75089c"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "user's usual coping mechanisms under stress",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"user's usual coping mechanisms under stress\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-017-empty-coping-prediction",
+            "class": "EMPTY_CONTEXTUAL_PREDICTION",
+            "deficit_review_oracle": "The missing evidence is the person's prior coping preferences or observed behavior under serious stress.",
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          }
+        ],
+        "correct_case_count": 12,
+        "evaluation_groups": {
+          "V1_RETEST": {
+            "case_count": 10,
+            "correct_case_count": 7
+          },
+          "V2_PROSPECTIVE_HOLDOUT": {
+            "case_count": 7,
+            "correct_case_count": 5
+          }
+        },
+        "prompt_sha256": "13f45bd0fb35d85c3c6157e3134d944b73dcbf3ef24069b5b5bb391ac6154c97",
+        "variant": "baseline"
+      },
+      "candidate": {
+        "case_count": 17,
+        "cases": [
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-2fc2a39b31c6c74d",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "a23b1f71-db98-5d50-9b25-c1cfe6450958",
+                  "terminal_artifact_hash": "60491c58aa021143ff98c39187d759763d2b665628f3e5c8a1dc875046987208"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-7f16face77c54ba4",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "1c871d94-1b05-57bb-bde0-a15da65c7731",
+                  "terminal_artifact_hash": "16d181ba51b72fe0f3423e15d4ecde2a85f144256554fd1544ddc723e4ebdd8c"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-74cc1f4ee1df5fb7",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "c516c6a7-cd1d-590e-b965-f56dc4c18e22",
+                  "terminal_artifact_hash": "d224642f422a5c526078ffed52a19685e4f2f53b63d2b0c42c1bf85558c511ab"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-001-general-knowledge",
+            "class": "HISTORY_UNNECESSARY",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-a977e8aee6f8603b",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "c51f2b88-2822-5e13-8650-3c21e733613e",
+                  "terminal_artifact_hash": "0fd5c6a4202a26fb6b87f76ea7cc05c3aa1a50854ba23f4c521cd18de519a58e"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-08ddc2534a376a90",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "a9a858c1-5537-5fd7-9cc9-f26e4f9ad31a",
+                  "terminal_artifact_hash": "031ecb8756ab4541a436a0be27eb3ef43b5dc8f8d33011c7bb3eb3ff047a233e"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-dd384071a5217536",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "934dc5af-de0d-5f82-b96c-f2fa2e847371",
+                  "terminal_artifact_hash": "d1f586fa39685f264751f22244e121ca213386a0b826b8b538891d4747d300e9"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-002-current-evidence",
+            "class": "CURRENT_PROMPT_SUFFICIENT",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-10b82845f680add5",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "3d487a43-9082-585d-a84a-02b514875076",
+                  "terminal_artifact_hash": "be51a01bfb67b64f4c665122736e6f1ed55b4a13235795a9f5120667af5ce3a3"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-05bd2349fb824d3f",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "6d039021-a7f4-5e59-a321-16e4bb19d1be",
+                  "terminal_artifact_hash": "f4b56881e83b458ce701e7a8e963f1989954532f6f9eb66ebe62590e2b30b8ab"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-a4f914285b59fc7b",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "29785380-7d58-51d8-9f3d-148b1d1cb3ee",
+                  "terminal_artifact_hash": "9c1832419c5bc0e27afaa54041fa1f7a7e35fde7c8a0af2e2872c7dc5a3a450f"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-003-complete-person-evidence",
+            "class": "COMPLETE_PERSON_EVIDENCE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-b044f6ec54040785",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "a66e0f15-4f87-5d27-aa2e-bb1c78de9d61",
+                  "terminal_artifact_hash": "3f7156c7e9d70f6ffb2e6024411d0d0e4b58db9c6259ee084ba063822588e54f"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding workspace choice during difficult writing tasks, especially in relation to the energy of seeing other people at work",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding workspace choice during difficult writing tasks, especially in relation to the energy of seeing other people at work\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-1ddffacc80dabe5a",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "9ba2ee85-68a2-5d45-81ee-3a140cbafebd",
+                  "terminal_artifact_hash": "ce7cdb6af0681440e55db3fbbc7b1bfa29c8c541c2b3a7a2597d6c5a01d0c2c1"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "a personal preference or behavior related to choosing between a private office and a shared room when working on difficult writing tasks, or evidence of how my enjoyment of seeing other people at work influences decision-making in such contexts",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"a personal preference or behavior related to choosing between a private office and a shared room when working on difficult writing tasks, or evidence of how my enjoyment of seeing other people at work influences decision-making in such contexts\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-aaaeb50dcd807b6e",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "f82e98e1-2380-5e2a-9c31-e46f9ea93ea1",
+                  "terminal_artifact_hash": "2b83334afc1042ac9ca7d86acb8e5a1a3c89b18c6cd27bd554ee8b07732ce3a8"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "a personal preference or behavior related to choosing between a private office and a shared room when working on difficult writing tasks, or evidence of how my enjoyment of seeing other people at work influences decision-making in such contexts",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"a personal preference or behavior related to choosing between a private office and a shared room when working on difficult writing tasks, or evidence of how my enjoyment of seeing other people at work influences decision-making in such contexts\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-004-partial-person-evidence",
+            "class": "PARTIAL_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's difficult-writing preference or behavior under concentration demands; enjoying social energy alone does not settle the choice.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-3c68e3016cc1cfbd",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "cc9d62b9-54eb-5d86-9da0-48ade2f9ec73",
+                  "terminal_artifact_hash": "e6baf9d0df4b2df460f7cb36a7cc996f97d9d1dd13935102af61b4e71a1f4984"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal values and decision history related to the two unfamiliar jobs being compared",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal values and decision history related to the two unfamiliar jobs being compared\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-e31f48d35f427e7d",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "bf5d2434-f06f-505c-aa85-a14df4064d90",
+                  "terminal_artifact_hash": "4cd4c8d13fce033c2ec0e38440249015116943a954bd62409972a5b74e922024"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal values and decision history related to the two unfamiliar jobs being compared",
+                  "sufficient": false
+                },
+                "raw_output": "{ \"sufficient\": false, \"memory_deficit\": \"personal values and decision history related to the two unfamiliar jobs being compared\" }",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-ce17f3bd11050d55",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "2f34aa10-8ee2-5585-af55-5838859206e8",
+                  "terminal_artifact_hash": "7fc047ce1952c23e7a0a8d799dbcc1d17d412153e97e818afbdf9d7fa82e506a"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal values and decision history related to the two unfamiliar jobs being compared",
+                  "sufficient": false
+                },
+                "raw_output": "{ \"sufficient\": false, \"memory_deficit\": \"personal values and decision history related to the two unfamiliar jobs being compared\" }",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-005-empty-person-decision",
+            "class": "EMPTY_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's values and prior decision patterns for the job tradeoff.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-c4f970270cf008a9",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "3080281e-d336-5a88-862f-86493b252fe8",
+                  "terminal_artifact_hash": "92c9bd4de0d7e94c1bde4168c51fc1c1bf39312ee2610ba69b37a7688cb37b0a"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-cfe4a3a3b1513977",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "a6d21491-3a35-5b9b-9b05-9db6f17f4815",
+                  "terminal_artifact_hash": "e9083a17f024c28f5ccc693a7a7aa52c811a1beac95667767cf997b54c83e431"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-32d8935ac422a151",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "e4b8b525-4c3a-558b-b9b9-5146e53b220b",
+                  "terminal_artifact_hash": "a5191274506a9235b0bc867ea9e99569733adbb212f9e2c704a3c15f2f6ad2ef"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding public surprise celebrations, or any related emotional or behavioral response to such events\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-006-irrelevant-person-evidence",
+            "class": "IRRELEVANT_PERSON_EVIDENCE",
+            "deficit_review_oracle": "The missing evidence is the person's preference about being the target of public surprise celebrations.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-b70bccd176835e7e",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "51ad8425-5caf-5cdc-afed-543fda9e99e1",
+                  "terminal_artifact_hash": "21a204dd05a09dedd7761f9d365c9e9f01cc31cc7ae3aa4df7a297388eb0e878"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-e0fba664c11e50b8",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "472f9a98-74b3-5a00-aca3-db259a788c5e",
+                  "terminal_artifact_hash": "ea9f28eaa1668609b160f5cdc4478f73d23b818bf28501ac8373960c25dd1dc4"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-f98f4575cab10bcd",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "02240f34-83a5-5a1b-9c74-4ef78bee9a19",
+                  "terminal_artifact_hash": "60889601a486d3b319c08f8c37c537a00dd8f9a2cacc494c6539cb4eed48dd13"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-007-complete-contradiction",
+            "class": "COMPLETE_CONTRADICTORY_EVIDENCE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-8c8a4cdf4e34fc5a",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "356d2e49-96b6-5854-b194-41c676cbaa83",
+                  "terminal_artifact_hash": "d0497db89df11c62114454550a3bff36b8ac0e7f04c1593daec7db8edb44789a"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-a84742bce530eddc",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "96f09c6a-0ce9-578c-bfb6-e85431b29812",
+                  "terminal_artifact_hash": "47d5e24d81fbb1dcae800b51ce82b3c965b65f523e9fd70fbcc8766489e50414"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-19321140c399b4e2",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "b5016e8d-6b19-5700-92f2-4de18a968a57",
+                  "terminal_artifact_hash": "156cdc3e62642ac98946962f0179e57eec030d2997a166506459dab319674238"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-008-one-sided-contradiction",
+            "class": "MISSING_OBSERVED_BEHAVIOR",
+            "deficit_review_oracle": "The missing evidence is observed behavior during delays, which is required to reconcile the self-description.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-650a38f59aa44e86",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "5aaf95d6-cbbe-5682-b855-4f1f6984f221",
+                  "terminal_artifact_hash": "685ddb17f668ebbe7e8f644d0334a6b7b4bc2720216d2ddc2e4c2383725d4e95"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "the name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"the name of the user's fifth-grade teacher\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-86e1887182f9bbd1",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "135e207b-d489-59ed-a46d-6811fde6d89e",
+                  "terminal_artifact_hash": "d08faa9c11a7d0ea5d0e1a70147a53e4d793247d1f3900f61a59b30699b979d1"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "the name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"the name of the user's fifth-grade teacher\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-f864d531c1dfc330",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "9fd28d38-dc2e-521b-a162-9810f20ad7be",
+                  "terminal_artifact_hash": "88e360e782d52b43dfd679a6a72ef2e5132209c74facb837560f940247bd4fec"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "the name of the user's fifth-grade teacher",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"the name of the user's fifth-grade teacher\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-009-legitimate-unknown",
+            "class": "PERSONAL_UNKNOWN_REQUIRES_EXHAUSTED_RECALL",
+            "deficit_review_oracle": "The missing evidence is the teacher's identity; deeper bounded recall must be exhausted before the responder treats the fact as unknown.",
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-5fdf7c8958b218b8",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "8d1555e2-6090-5095-9e29-a6ef9886b59b",
+                  "terminal_artifact_hash": "9644b6290b400d52142a290ab81c99719a0824949270dd74af12dcf98a4ced7c"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-e52d6170abd6f5cb",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "30f08895-0e49-566c-94ab-237b533e0f6b",
+                  "terminal_artifact_hash": "270169b28621e387581245cd56bcceb55ca675e5257d9a1128d0137c7a342af1"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-2e554d2ae7c24669",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "aba34c57-0ade-5079-ac84-4401f29871cc",
+                  "terminal_artifact_hash": "4741b53f8ce3527ef79d8ad07df23cf93e5f3105b2620926ca69f9add438a91a"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs-010-complete-identity-conflict",
+            "class": "COMPLETE_IDENTITY_EVIDENCE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V1_RETEST",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-aaf993e0c19c4b07",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "83a216e5-acc5-5c33-842d-ba515ffc68e1",
+                  "terminal_artifact_hash": "4252fae4305ba0982848f487342f9556f69f1ab03bfcd35f76e3639d094520e0"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-92580c81c9f8b504",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "a8bbdffe-613a-5b10-9b45-2446413a6163",
+                  "terminal_artifact_hash": "fc82fa18764323044ce33636ea25958fb0d506f7a1e904d1a56412f6bce83aae"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-609595078b1b0ab0",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "a26bccaf-2b28-530b-bb39-3303e6d4977e",
+                  "terminal_artifact_hash": "7195d81096084b1a87a4c1001fef2d7cdfbeb987aced94ef39905de6c7e0b0b6"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-011-current-correction",
+            "class": "CURRENT_PROMPT_OVERRIDES_HISTORY",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-6996b6a9bf9f53cf",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "4e9d583a-5546-5bd0-ae68-aa8c0492afb1",
+                  "terminal_artifact_hash": "15b456bfb49d8f231588d6d1a9f2573dd37137056625c19d0e523e2ff812ba15"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": "personal allergy information specific to walnuts",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal allergy information specific to walnuts\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-dfd6c75b962421cb",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "5c459d3f-726b-5a02-b254-8cde962add04",
+                  "terminal_artifact_hash": "ef6343afadc67768e4c97e276f405675770aa2287b9b399bcc8142e73c3e4b77"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": "personal allergy information about walnuts",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal allergy information about walnuts\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-785f679e80deff64",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "a2036292-cff0-5b64-8d12-ec9107eed63c",
+                  "terminal_artifact_hash": "b56e1f724f81731415420e80dea48c46e525cbc2133fd567436f2e343b0d6a37"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": "personal allergy information about walnuts",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal allergy information about walnuts\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-012-current-personal-fact",
+            "class": "CURRENT_PROMPT_PERSONAL_FACT",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-643a45591e5f8378",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "a1826f6c-8a4e-509d-9822-e8f3afafae73",
+                  "terminal_artifact_hash": "999800f5907e7eca05c4e4ccd54e6d38a217eafebb71ee70ac426de3fed52e2f"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-05515e147933af67",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "39eaf92d-b042-5f39-b879-25a0f65e881a",
+                  "terminal_artifact_hash": "29ce910c37cb5d3fb40ec3d08299566c75a11e30df3c88e076aef9a2d96f8079"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-e663c05c5e075607",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "1a4181f2-2477-56a1-ba1b-8fe643347142",
+                  "terminal_artifact_hash": "e4a028e411223eaf5291ac75a8e17129ef982cd277a25848e55034dae18e82d1"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-013-context-complete",
+            "class": "CONTEXT_DIAGNOSTIC_COMPLETE",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-196cfdbea6f56932",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "60f8a008-94f0-593f-91c9-0dc2fd1c3ea9",
+                  "terminal_artifact_hash": "933cfba7fd87a767ade3d04af58e20c92785f94fbc0269d44bde94050016ee02"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding sensitive performance reviews in café settings, such as whether I would hold such a review in an open café or a private room, or the conditions under which I might prefer one setting over another",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding sensitive performance reviews in café settings, such as whether I would hold such a review in an open café or a private room, or the conditions under which I might prefer one setting over another\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-d5ac49a59f229a81",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "fd4b4aae-c981-53c5-8d5d-e7d4e8dee8d7",
+                  "terminal_artifact_hash": "cc5c5827d739ddc4cd5cfca412d0fe0edecb86732260cf3040c319db936cc070"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding sensitive performance reviews in café settings, such as whether I would hold such a review in an open café or a private room, or the conditions under which I might prefer one setting over another",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding sensitive performance reviews in café settings, such as whether I would hold such a review in an open café or a private room, or the conditions under which I might prefer one setting over another\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-cdbb2b5d82039732",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "986d0edf-f14f-5420-bcc0-1945ff025e91",
+                  "terminal_artifact_hash": "ba858a62a7b7212d26de23b00b74dcdae0a7d14f0af80bcfa010c5fd7e57b221"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal preference or behavior regarding sensitive performance reviews in café settings, such as whether I would hold such a review in an open café or a private room, or the conditions under which I might prefer one setting over another",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal preference or behavior regarding sensitive performance reviews in café settings, such as whether I would hold such a review in an open café or a private room, or the conditions under which I might prefer one setting over another\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-014-context-partial",
+            "class": "CONTEXT_ADJACENT_NONDIAGNOSTIC",
+            "deficit_review_oracle": "The missing evidence is the person's preference or conduct for confidential personnel conversations; a routine-work setting does not settle a privacy-sensitive choice.",
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": false,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-064309bb7a8482f2",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "0e94c5a5-a4e0-574f-abf8-6fb19dc25910",
+                  "terminal_artifact_hash": "bbd294961ac9b5ee23a81762ea1fa957fff3017bee93546e3a6e2f7ce0bb7670"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-cdfa08082ff6edbc",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "e56ff37b-ef80-5f36-b646-b32dc2c4a5d3",
+                  "terminal_artifact_hash": "9047ced07d96471c1e1190d9bb18d7b994bc9be720baa05a64aeee4128ef3881"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-a27aeff45d7845b0",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "8b8cfb52-f05d-5198-9747-2ad2a9bcdf0c",
+                  "terminal_artifact_hash": "734c47db3b3578a38b6790a46d5c8bc03f740a6492b79d3f67d497a68a51d2a7"
+                },
+                "error": null,
+                "matched_expected": false,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-015-one-sided-pattern",
+            "class": "MISSING_CONTEXTUAL_BEHAVIOR",
+            "deficit_review_oracle": "The missing evidence is observed preparation behavior for high-stakes trips, which is required to compare conduct with the self-description.",
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-9bfa30b57dcab000",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "57d8adc1-60f2-5fa7-991a-6dab5e9aff4e",
+                  "terminal_artifact_hash": "0bd344a3776ff4368a4ce50ee4c34e1834a0a3225765ba14af1d867b430ca641"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-4771c83de291d74a",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "06c5bfff-ca5e-5e1e-a131-00a1f0f661fc",
+                  "terminal_artifact_hash": "a81cbbee3d05eced2cbb2cd3ab20b1db43223f538ffe66ff7eb82c22f9f197b3"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-98900d11eccca23e",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "b6451935-ae10-5ebf-8b54-ff498e357499",
+                  "terminal_artifact_hash": "2c9939789481cfd76bebebbbd06997e56a7befb3283c5ba4064ce0c6a268196f"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": null,
+                  "sufficient": true
+                },
+                "raw_output": "{\n  \"sufficient\": true,\n  \"memory_deficit\": \"\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-016-complete-pattern",
+            "class": "COMPLETE_CONTEXTUAL_CONTRADICTION",
+            "deficit_review_oracle": null,
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": true,
+            "human_deficit_review": "NOT_APPLICABLE"
+          },
+          {
+            "all_trials_matched": true,
+            "attempts": [
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-e7097d1a8bdd2067",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "78d34e21-6fbb-5a01-8de5-1e8198ce66d9",
+                  "terminal_artifact_hash": "5baa44c1db9c7633763310bb12586ea4e80103ee6543b2137bfd861796814266"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal coping behavior under stress, specifically whether the user typically calls a friend or isolates themselves when badly stressed",
+                  "sufficient": false
+                },
+                "raw_output": "{ \"sufficient\": false, \"memory_deficit\": \"personal coping behavior under stress, specifically whether the user typically calls a friend or isolates themselves when badly stressed\" }",
+                "trial": 1
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-476131b30a9cacbc",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "c4724f13-ee15-50c5-a749-45759d571510",
+                  "terminal_artifact_hash": "fc4ce376dc88b50d32125fc875608c1abec3a3c35d33730c8b08aaf1826532e3"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal coping behavior under conditions of severe stress",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal coping behavior under conditions of severe stress\"\n}",
+                "trial": 2
+              },
+              {
+                "artifact_journal": {
+                  "artifact_count": 5,
+                  "artifact_directory": "a-ec99454781cd811f",
+                  "artifact_type_counts": {
+                    "BENCHMARK_CASE_INPUT": 1,
+                    "BENCHMARK_EVALUATION": 1,
+                    "FINAL_DISPOSITION": 1,
+                    "LLM_INVOCATION": 1,
+                    "STAGE_RESULT": 1
+                  },
+                  "chain_complete": true,
+                  "chain_valid": true,
+                  "interaction_id": "42e8e7f5-1062-5d38-b277-55a07b89600e",
+                  "terminal_artifact_hash": "39e037a47069357eac709c74f809b86360e845db3a810da5b13845c70aafe40c"
+                },
+                "error": null,
+                "matched_expected": true,
+                "output": {
+                  "memory_deficit": "personal coping behavior under conditions of severe stress",
+                  "sufficient": false
+                },
+                "raw_output": "{\n  \"sufficient\": false,\n  \"memory_deficit\": \"personal coping behavior under conditions of severe stress\"\n}",
+                "trial": 3
+              }
+            ],
+            "case_id": "cs2-017-empty-coping-prediction",
+            "class": "EMPTY_CONTEXTUAL_PREDICTION",
+            "deficit_review_oracle": "The missing evidence is the person's prior coping preferences or observed behavior under serious stress.",
+            "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+            "expected_sufficient": false,
+            "human_deficit_review": "PENDING"
+          }
+        ],
+        "correct_case_count": 14,
+        "evaluation_groups": {
+          "V1_RETEST": {
+            "case_count": 10,
+            "correct_case_count": 9
+          },
+          "V2_PROSPECTIVE_HOLDOUT": {
+            "case_count": 7,
+            "correct_case_count": 5
+          }
+        },
+        "prompt_sha256": "b8257b365c6d6ea8358fa59d02590051075b752c4582433bb5e61d0c36d7ca05",
+        "variant": "candidate"
+      },
+      "changed_mechanism": "memory-sufficiency semantic contract only",
+      "experiment_id": "PERSON-FIDELITY-EXP2-COMPOSER-SUFFICIENCY",
+      "promotion": {
+        "accepted_for_production_promotion": false,
+        "decision_rule": "Candidate must pass every frozen case on every trial, improve at least one baseline failure, and regress no baseline pass. Composer deficits also require human semantic review before production promotion.",
+        "human_review_required": true,
+        "improved_case_ids": [
+          "cs-004-partial-person-evidence",
+          "cs-005-empty-person-decision",
+          "cs2-014-context-partial"
+        ],
+        "mechanical_gate_passed": false,
+        "regressed_case_ids": [
+          "cs2-012-current-personal-fact"
+        ],
+        "verdict": "REJECT_OR_REVISE"
+      }
+    }
+  },
+  "fixture_hash_normalization": "LF_CANONICAL",
+  "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+  "fixture_sha256": "23efb302a2cc6e6376d2cfa3b388b0affbf9b378ef7fecfd4f31e6e743ab922f",
+  "fixture_version": "person-fidelity-mechanism-experiments-v2",
+  "model": "qwen3:4b-instruct-2507-q4_K_M",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "production_changed": false,
+  "python": "3.12.10",
+  "report_sha256": "d5e2a02dec8449fbf4f9dcb90d2bda43a38d711e1aeec2a1e8ba486f355621b8",
+  "revision": "e373ac0b6b5d6773fe4aef4a5aae0cf40f5d2363",
+  "run_id": "20260922T053255Z",
+  "schema_version": 3,
+  "trials_per_case": 3
+}

@@ -1,0 +1,44 @@
+{
+  "artifact_hash": "a6df28f0c253ea4bedce40f23752da56dd07603c2b822d5075673e407410ffcb",
+  "artifact_id": "2d4d92fb-f4e1-54c4-b5ea-d8cf3c2da6e6",
+  "artifact_key": "benchmark-case-input",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_CASE_INPUT",
+  "assignment_id": "47603fe2-fac7-53f9-aa7c-f1460958bf8c",
+  "conversation_id": "7adc7f54-b459-5195-8f1a-348a62fa5057",
+  "correlation_id": "75b869a9-4cdf-5bce-b978-59058b6ab745",
+  "created_at": "2026-09-22T05:38:56.904615+00:00",
+  "interaction_id": "3080281e-d336-5a88-862f-86493b252fe8",
+  "journal_sequence": 1,
+  "payload": {
+    "case": {
+      "case_id": "cs-006-irrelevant-person-evidence",
+      "class": "IRRELEVANT_PERSON_EVIDENCE",
+      "deficit_review_oracle": "The missing evidence is the person's preference about being the target of public surprise celebrations.",
+      "evaluation_group": "V1_RETEST",
+      "evidence": [
+        {
+          "content": "My bicycle has a steel frame and a green saddle.",
+          "role": "USER_PROMPT"
+        }
+      ],
+      "expected_sufficient": false,
+      "prompt": "Do I like being the target of public surprise celebrations?"
+    },
+    "experiment": "composer_sufficiency",
+    "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+    "fixture_sha256": "23efb302a2cc6e6376d2cfa3b388b0affbf9b378ef7fecfd4f31e6e743ab922f",
+    "fixture_version": "person-fidelity-mechanism-experiments-v2",
+    "prompt_sha256": "b8257b365c6d6ea8358fa59d02590051075b752c4582433bb5e61d0c36d7ca05",
+    "revision": "e373ac0b6b5d6773fe4aef4a5aae0cf40f5d2363",
+    "run_id": "20260922T053255Z",
+    "trial": 1,
+    "variant": "candidate"
+  },
+  "payload_hash": "60608b5641de831e32fd6bf41a558bf251d2530ebce71a04e99af56f299e690d",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "44a2b890-046a-56ed-aec4-e5bda0258681"
+}

@@ -1,0 +1,26 @@
+{
+  "artifact_hash": "efb0346004ec534ea788d5b96e04705dc931fb60c39c8aa632cbf7d479f169a6",
+  "artifact_id": "feffec1d-60be-53d6-a0b9-f80458aae36b",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "94145dbf-13a3-546b-8a53-6893259ec60b",
+  "conversation_id": "b3ad48fb-b46f-531c-9bcb-7bd09ba44c2b",
+  "correlation_id": "1da029c2-6f32-54ff-a79b-efc70681f074",
+  "created_at": "2026-09-22T05:40:49.649428+00:00",
+  "interaction_id": "a2036292-cff0-5b64-8d12-ec9107eed63c",
+  "journal_sequence": 3,
+  "payload": {
+    "output": {
+      "memory_deficit": "personal allergy information about walnuts",
+      "sufficient": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "cc71d0eb30d50fbecd4f647aa570969958cdeb7d87bebd6bea3b7b2dd04d142f",
+  "previous_artifact_hash": "ebe8bda7ad638961ffbea355622edbfb7c87eccc6937b291001ac3b992002fdb",
+  "previous_artifact_id": "f418d7d9-3fbb-521c-99f2-dcfcccf6427f",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "bd96be57-bfef-5689-9f8e-51b1e79b6195"
+}

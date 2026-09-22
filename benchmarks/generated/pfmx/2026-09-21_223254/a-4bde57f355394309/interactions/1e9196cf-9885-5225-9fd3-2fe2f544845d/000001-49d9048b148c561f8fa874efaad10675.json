@@ -1,0 +1,43 @@
+{
+  "artifact_hash": "0d31bd923842cdade5d00dc9bd46cf0c67bf98bc2d9da548e3dd4a30f34021e5",
+  "artifact_id": "49d9048b-148c-561f-8fa8-74efaad10675",
+  "artifact_key": "benchmark-case-input",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_CASE_INPUT",
+  "assignment_id": "d84ed38a-c1e1-52bc-a31d-3518e0564da0",
+  "conversation_id": "e4c3faa0-29ac-5b3c-8935-9bcdc7daa64a",
+  "correlation_id": "9c231103-8800-5d1d-ab31-936f1d4cabfc",
+  "created_at": "2026-09-22T05:35:57.005157+00:00",
+  "interaction_id": "1e9196cf-9885-5225-9fd3-2fe2f544845d",
+  "journal_sequence": 1,
+  "payload": {
+    "case": {
+      "case_id": "cs2-011-current-correction",
+      "class": "CURRENT_PROMPT_OVERRIDES_HISTORY",
+      "evaluation_group": "V2_PROSPECTIVE_HOLDOUT",
+      "evidence": [
+        {
+          "content": "The reservation was originally scheduled for Wednesday.",
+          "role": "USER_PROMPT"
+        }
+      ],
+      "expected_sufficient": true,
+      "prompt": "The reservation was moved to Friday. What day did I just say it was moved to?"
+    },
+    "experiment": "composer_sufficiency",
+    "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+    "fixture_sha256": "23efb302a2cc6e6376d2cfa3b388b0affbf9b378ef7fecfd4f31e6e743ab922f",
+    "fixture_version": "person-fidelity-mechanism-experiments-v2",
+    "prompt_sha256": "13f45bd0fb35d85c3c6157e3134d944b73dcbf3ef24069b5b5bb391ac6154c97",
+    "revision": "e373ac0b6b5d6773fe4aef4a5aae0cf40f5d2363",
+    "run_id": "20260922T053255Z",
+    "trial": 3,
+    "variant": "baseline"
+  },
+  "payload_hash": "38d8a5f7fbb0e4b43f83610b02139b9e6ca9d0677f0f542a404dbe2e37f4ad5b",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "11687cbe-dcb1-5764-8940-763d9d835360"
+}

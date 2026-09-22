@@ -1,0 +1,26 @@
+{
+  "artifact_hash": "0cb745d0f5935a277910f934aec5d28986064bcecab4875d70eac5e4dbdd447e",
+  "artifact_id": "5c616df9-4899-5141-b0ca-bd740cb7868b",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "a3876b87-cb08-5ca7-be21-f96330bd71d2",
+  "conversation_id": "c7d91be6-72d0-57a2-930c-82cf3ed62aaa",
+  "correlation_id": "70d60156-8021-55a7-8ea8-fc5b7c4c7dd7",
+  "created_at": "2026-09-22T05:38:46.497456+00:00",
+  "interaction_id": "cc9d62b9-54eb-5d86-9da0-48ade2f9ec73",
+  "journal_sequence": 3,
+  "payload": {
+    "output": {
+      "memory_deficit": "personal values and decision history related to the two unfamiliar jobs being compared",
+      "sufficient": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "f5403578567f2117b785db18a93fe08371a5be12624469a64fc045d10e52d597",
+  "previous_artifact_hash": "cc849b1140ae8271f742ad1225f9dac54536cff65b87f0dcafdde8010e993398",
+  "previous_artifact_id": "683bb4a3-658c-561b-b3d3-1abd6129435b",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "c405bc9d-f605-546d-894a-373da43e8821"
+}

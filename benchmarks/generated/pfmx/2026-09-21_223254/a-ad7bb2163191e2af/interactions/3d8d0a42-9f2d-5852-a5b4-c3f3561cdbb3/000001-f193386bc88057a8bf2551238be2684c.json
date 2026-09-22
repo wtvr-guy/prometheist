@@ -1,0 +1,39 @@
+{
+  "artifact_hash": "66964c2c5ca869c36b492e22766c7609ab3009fdb93b9c244d6e9dfe8b7550fd",
+  "artifact_id": "f193386b-c880-57a8-bf25-51238be2684c",
+  "artifact_key": "benchmark-case-input",
+  "artifact_schema_version": 1,
+  "artifact_type": "BENCHMARK_CASE_INPUT",
+  "assignment_id": "75c66e63-5447-5152-a0b1-adf8a2641cf2",
+  "conversation_id": "0707444d-ac07-50ee-abc4-8ddc65384a76",
+  "correlation_id": "f703d26a-e7ab-50eb-9d2c-41b42e2d5667",
+  "created_at": "2026-09-22T05:34:04.166158+00:00",
+  "interaction_id": "3d8d0a42-9f2d-5852-a5b4-c3f3561cdbb3",
+  "journal_sequence": 1,
+  "payload": {
+    "case": {
+      "case_id": "cs-005-empty-person-decision",
+      "class": "EMPTY_PERSON_EVIDENCE",
+      "deficit_review_oracle": "The missing evidence is the person's values and prior decision patterns for the job tradeoff.",
+      "evaluation_group": "V1_RETEST",
+      "evidence": [],
+      "expected_sufficient": false,
+      "prompt": "Which of these two unfamiliar jobs would I choose, based on my values and decision history?"
+    },
+    "experiment": "composer_sufficiency",
+    "fixture_id": "PERSON-FIDELITY-MECHANISM-EXPERIMENTS-002",
+    "fixture_sha256": "23efb302a2cc6e6376d2cfa3b388b0affbf9b378ef7fecfd4f31e6e743ab922f",
+    "fixture_version": "person-fidelity-mechanism-experiments-v2",
+    "prompt_sha256": "13f45bd0fb35d85c3c6157e3134d944b73dcbf3ef24069b5b5bb391ac6154c97",
+    "revision": "e373ac0b6b5d6773fe4aef4a5aae0cf40f5d2363",
+    "run_id": "20260922T053255Z",
+    "trial": 2,
+    "variant": "baseline"
+  },
+  "payload_hash": "5199d8a48998480c68f350c11b09544950ff1d237b66e075dc8258523d17c91e",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "person_fidelity_mechanism_experiment",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "1a88fcf8-6365-52a4-9020-f206d2c21031"
+}
