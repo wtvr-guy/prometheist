@@ -43,7 +43,7 @@ try {
     $artifactRootArgument = if ($ArtifactRoot) {
         $ArtifactRoot
     } else {
-        "benchmarks/generated/person_fidelity_mechanisms/$stamp"
+        "benchmarks/generated/pfmx/$stamp"
     }
     uv run --locked python benchmarks/run_person_fidelity_mechanism_experiments.py `
         --experiment $Experiment --candidate-version $CandidateVersion `
