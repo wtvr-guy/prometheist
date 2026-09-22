@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
+import json
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -18,13 +20,21 @@ from jit_agent.response_policy import (
 
 class _FakeResponse:
     def __init__(self, content: str) -> None:
-        self._content = content
+        self._payload = {"message": {"content": content}}
+        self.content = json.dumps(
+            self._payload,
+            separators=(",", ":"),
+        ).encode("utf-8")
 
     def raise_for_status(self) -> None:
         return None
 
+    @property
+    def status_code(self) -> int:
+        return 200
+
     def json(self) -> dict:
-        return {"message": {"content": self._content}}
+        return self._payload
 
 
 class _FakeHTTPClient:
@@ -111,15 +121,43 @@ def test_response_policy_sees_only_current_then_exact_selector_sees_filtered_evi
     assert "[[VERBATIM_0]]" in selector_messages[1]["content"]
     assert "POISON-DEADBEEF" not in selector_messages[1]["content"]
     assert "POISON-DEADBEEF" not in selector_messages[2]["content"]
+    artifacts = artifact_journal.interaction_artifacts(interaction_id)
     invocation_artifacts = [
         artifact
-        for artifact in artifact_journal.interaction_artifacts(interaction_id)
+        for artifact in artifacts
         if artifact["artifact_type"] == "LLM_INVOCATION"
     ]
+    validation_artifacts = [
+        artifact
+        for artifact in artifacts
+        if artifact["artifact_type"] == "LLM_VALIDATION"
+    ]
     assert len(invocation_artifacts) == 1
+    assert len(validation_artifacts) == 1
     assert invocation_artifacts[0]["payload"]["evidence_refs"] == [
         f"event:{package.memory_packet.items[0].source_event_id}"
     ]
+    diagnostics = invocation_artifacts[0]["payload"]["transport_diagnostics"]
+    assert diagnostics["request_path"] == "/api/chat"
+    assert diagnostics["http_status_code"] == 200
+    assert diagnostics["request_body"] == client._client.calls[0][1]
+    assert diagnostics["response_envelope"] == {
+        "message": {
+            "content": '{"source_index":0,"verbatim_value":"[[VERBATIM_0]]"}'
+        }
+    }
+    expected_response = _FakeResponse(
+        '{"source_index":0,"verbatim_value":"[[VERBATIM_0]]"}'
+    ).content
+    assert diagnostics["response_body_bytes"] == len(expected_response)
+    assert diagnostics["response_body_sha256"] == hashlib.sha256(
+        expected_response
+    ).hexdigest()
+    assert diagnostics["elapsed_seconds"] >= 0
+    assert validation_artifacts[0]["payload"]["status"] == "VALID"
+    assert validation_artifacts[0]["payload"]["invocation_artifact_id"] == str(
+        invocation_artifacts[0]["artifact_id"]
+    )
 
 
 def test_qwen_raw_evidence_cannot_break_out_with_chat_control_tokens():

@@ -1,12 +1,15 @@
 """Stateless Ollama transport and evidence-formatting primitives."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
+import hashlib
 import json
 import logging
 import os
 import re
 import time
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 import httpx
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -29,6 +32,7 @@ _DEFAULT_RESPONSE_TEMPERATURE = 0.65
 _MIN_RESPONSE_TEMPERATURE = 0.0
 _MAX_RESPONSE_TEMPERATURE = 2.0
 _RESPONSE_KINDS = frozenset({"FINAL_RESPONSE_V2"})
+_ValidatedT = TypeVar("_ValidatedT")
 
 
 class OllamaStructuredOutputError(ValueError):
@@ -50,6 +54,26 @@ class _TextAnswer(BaseModel):
         if not normalized:
             raise ValueError("answer must not be blank")
         return normalized
+
+
+def _redact_hidden_thinking(value: Any) -> Any:
+    """Preserve the Ollama envelope without persisting hidden reasoning text."""
+
+    if isinstance(value, dict):
+        redacted: dict[str, Any] = {}
+        for key, item in value.items():
+            if key == "thinking" and isinstance(item, str):
+                redacted[key] = {
+                    "redacted": True,
+                    "utf8_bytes": len(item.encode("utf-8")),
+                    "sha256": hashlib.sha256(item.encode("utf-8")).hexdigest(),
+                }
+            else:
+                redacted[key] = _redact_hidden_thinking(item)
+        return redacted
+    if isinstance(value, list):
+        return [_redact_hidden_thinking(item) for item in value]
+    return value
 
 
 def configured_response_temperature() -> float:
@@ -308,6 +332,191 @@ class OllamaClient:
             timeout=300.0,
             trust_env=False,
         )
+        self._last_invocation_diagnostics: dict[str, Any] | None = None
+
+    def _perform_ollama_request(
+        self,
+        *,
+        kind: str,
+        request_path: str,
+        request_json: dict[str, Any],
+        transport: str,
+    ) -> dict[str, Any]:
+        """Execute one request while retaining its exact diagnostic envelope."""
+
+        started_at = datetime.now(timezone.utc).isoformat()
+        t0 = time.monotonic()
+        diagnostics: dict[str, Any] = {
+            "started_at": started_at,
+            "completed_at": None,
+            "request_path": request_path,
+            "transport": transport,
+            "request_body": request_json,
+            "response_envelope": None,
+            "response_body_bytes": None,
+            "response_body_sha256": None,
+            "http_status_code": None,
+            "elapsed_seconds": None,
+            "transport_error_type": None,
+            "transport_error_message": None,
+        }
+        try:
+            response = self._client.post(request_path, json=request_json)
+            diagnostics["http_status_code"] = getattr(response, "status_code", None)
+            response_content = getattr(response, "content", None)
+            if isinstance(response_content, bytes):
+                diagnostics["response_body_bytes"] = len(response_content)
+                diagnostics["response_body_sha256"] = hashlib.sha256(
+                    response_content
+                ).hexdigest()
+            body = response.json()
+            diagnostics["response_envelope"] = _redact_hidden_thinking(body)
+            response.raise_for_status()
+            if not isinstance(body, dict):
+                raise OllamaStructuredOutputError("Ollama response was not a JSON object")
+            return body
+        except Exception as exc:
+            diagnostics["transport_error_type"] = type(exc).__name__
+            diagnostics["transport_error_message"] = str(exc)
+            raise
+        finally:
+            elapsed = time.monotonic() - t0
+            diagnostics["completed_at"] = datetime.now(timezone.utc).isoformat()
+            diagnostics["elapsed_seconds"] = elapsed
+            self._last_invocation_diagnostics = diagnostics
+            response_envelope = diagnostics.get("response_envelope")
+            if isinstance(response_envelope, dict):
+                _log_call(kind, self.model, elapsed, response_envelope)
+
+    def _consume_invocation_diagnostics(self) -> dict[str, Any] | None:
+        diagnostics = self._last_invocation_diagnostics
+        self._last_invocation_diagnostics = None
+        return diagnostics
+
+    def _record_validation_outcome(
+        self,
+        *,
+        kind: str,
+        raw_output: str | None,
+        parsed_output: Any,
+        error: Exception | None,
+        status: str,
+    ) -> None:
+        """Artifact-aware subclasses persist validation; plain clients do nothing."""
+
+        del kind, raw_output, parsed_output, error, status
+
+    def _validated_model_output(
+        self,
+        *,
+        kind: str,
+        raw_output: str,
+        validator: Callable[[], _ValidatedT],
+    ) -> _ValidatedT:
+        try:
+            parsed = validator()
+        except Exception as exc:
+            self._record_validation_outcome(
+                kind=kind,
+                raw_output=raw_output,
+                parsed_output=None,
+                error=exc,
+                status="INVALID",
+            )
+            raise
+        self._record_validation_outcome(
+            kind=kind,
+            raw_output=raw_output,
+            parsed_output=(
+                parsed.model_dump(mode="json")
+                if isinstance(parsed, BaseModel)
+                else parsed
+            ),
+            error=None,
+            status="VALID",
+        )
+        return parsed
+
+    def runtime_snapshot(self) -> dict[str, Any]:
+        """Return version, immutable model identity, and loaded-model observations."""
+
+        payloads: dict[str, dict[str, Any]] = {}
+        errors: list[dict[str, str]] = []
+        for label, path in (
+            ("version", "/api/version"),
+            ("tags", "/api/tags"),
+            ("running", "/api/ps"),
+        ):
+            try:
+                response = self._client.get(path)
+                response.raise_for_status()
+                payload = response.json()
+                if not isinstance(payload, dict):
+                    raise OllamaStructuredOutputError(
+                        f"Ollama {path} response was not a JSON object"
+                    )
+                payloads[label] = payload
+            except Exception as exc:
+                errors.append(
+                    {
+                        "endpoint": path,
+                        "error_type": type(exc).__name__,
+                        "error_message": str(exc),
+                    }
+                )
+
+        def same_model(value: Any) -> bool:
+            if not isinstance(value, str):
+                return False
+            configured = self.model.casefold()
+            candidate = value.casefold()
+            return candidate == configured or (
+                candidate.removesuffix(":latest")
+                == configured.removesuffix(":latest")
+            )
+
+        models = payloads.get("tags", {}).get("models", [])
+        model_record = next(
+            (
+                item
+                for item in models
+                if isinstance(item, dict)
+                and (same_model(item.get("name")) or same_model(item.get("model")))
+            ),
+            None,
+        )
+        running_models = payloads.get("running", {}).get("models", [])
+        running_record = next(
+            (
+                item
+                for item in running_models
+                if isinstance(item, dict)
+                and (same_model(item.get("name")) or same_model(item.get("model")))
+            ),
+            None,
+        )
+        version = payloads.get("version", {}).get("version")
+        complete = (
+            isinstance(version, str)
+            and bool(version)
+            and isinstance(model_record, dict)
+            and isinstance(model_record.get("digest"), str)
+            and bool(model_record["digest"])
+        )
+        return {
+            "status": "COMPLETE" if complete else "INCOMPLETE",
+            "base_url": self.base_url,
+            "configured_model": self.model,
+            "ollama_version": version,
+            "model": _redact_hidden_thinking(model_record),
+            "running_model": _redact_hidden_thinking(running_record),
+            "available_model_names": [
+                str(item.get("name") or item.get("model"))
+                for item in models
+                if isinstance(item, dict)
+            ],
+            "errors": errors,
+        }
 
     def temperature_for_kind(self, kind: str) -> float:
         """Keep control workers deterministic while allowing expressive responses."""
@@ -324,7 +533,6 @@ class OllamaClient:
         schema: dict,
         max_tokens: int,
     ) -> str:
-        t0 = time.monotonic()
         temperature = self.temperature_for_kind(kind)
         if _is_qwen3_instruct(self.model):
             request_path = "/api/generate"
@@ -352,10 +560,12 @@ class OllamaClient:
                 "stream": False,
                 "options": {"num_predict": max_tokens, "temperature": temperature},
             }
-        response = self._client.post(request_path, json=request_json)
-        response.raise_for_status()
-        body = response.json()
-        _log_call(kind, self.model, time.monotonic() - t0, body)
+        body = self._perform_ollama_request(
+            kind=kind,
+            request_path=request_path,
+            request_json=request_json,
+            transport="raw-generate" if request_path == "/api/generate" else "chat",
+        )
 
         raw_thinking: Any = None
         if request_path == "/api/generate":
@@ -402,7 +612,11 @@ class OllamaClient:
                     _TextAnswer.model_json_schema(),
                     token_cap,
                 )
-                return _TextAnswer.model_validate_json(content).answer
+                return self._validated_model_output(
+                    kind=kind,
+                    raw_output=content,
+                    validator=lambda: _TextAnswer.model_validate_json(content).answer,
+                )
             except (ValidationError, ValueError) as exc:
                 last_error = exc
         raise ValueError(f"model answer failed to validate: {last_error}")
@@ -418,7 +632,6 @@ class OllamaClient:
     ) -> str:
         """Call Ollama with untrusted evidence isolated before current authority."""
 
-        t0 = time.monotonic()
         temperature = self.temperature_for_kind(kind)
         if _is_qwen3_instruct(self.model):
             request_path = "/api/generate"
@@ -451,11 +664,12 @@ class OllamaClient:
                 "stream": False,
                 "options": {"num_predict": max_tokens, "temperature": temperature},
             }
-
-        response = self._client.post(request_path, json=request_json)
-        response.raise_for_status()
-        body = response.json()
-        _log_call(kind, self.model, time.monotonic() - t0, body)
+        body = self._perform_ollama_request(
+            kind=kind,
+            request_path=request_path,
+            request_json=request_json,
+            transport=_evidence_transport_layout(self.model),
+        )
 
         raw_thinking: Any = None
         if request_path == "/api/generate":
@@ -513,7 +727,11 @@ class OllamaClient:
                     _TextAnswer.model_json_schema(),
                     token_cap,
                 )
-                return _TextAnswer.model_validate_json(content).answer
+                return self._validated_model_output(
+                    kind=kind,
+                    raw_output=content,
+                    validator=lambda: _TextAnswer.model_validate_json(content).answer,
+                )
             except (ValidationError, ValueError) as exc:
                 last_error = exc
         raise ValueError(f"model answer failed to validate: {last_error}")

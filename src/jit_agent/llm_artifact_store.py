@@ -32,6 +32,7 @@ def write_llm_invocation(
     evidence_prompt: str | None = None,
     transport_layout: str | None = None,
     evidence_refs: Iterable[str] = (),
+    transport_diagnostics: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Persist the exact request contract and resulting normalized model output."""
 
@@ -57,6 +58,8 @@ def write_llm_invocation(
         payload["evidence_prompt"] = evidence_prompt
     if transport_layout is not None:
         payload["transport_layout"] = transport_layout
+    if transport_diagnostics is not None:
+        payload["transport_diagnostics"] = transport_diagnostics
 
     return artifact_journal.write_interaction_artifact(
         artifact_key=(
@@ -71,4 +74,50 @@ def write_llm_invocation(
         stage=stage,
         producer="percept_response_v2/ollama",
         payload=payload,
+    )
+
+
+def write_llm_validation(
+    *,
+    interaction_id: UUID,
+    conversation_id: UUID,
+    correlation_id: UUID,
+    task_id: UUID,
+    assignment_id: UUID,
+    stage: str,
+    claim_id: UUID,
+    invocation_index: int,
+    kind: str,
+    invocation_artifact_id: str,
+    invocation_artifact_hash: str,
+    status: str,
+    raw_output_sha256: str | None,
+    parsed_output: Any,
+    error_type: str | None,
+    error_message: str | None,
+) -> dict[str, Any]:
+    """Persist the parse/schema outcome that accepted or rejected one invocation."""
+
+    return artifact_journal.write_interaction_artifact(
+        artifact_key=f"llm-validation:{stage}:{claim_id}:{invocation_index}:{kind}",
+        artifact_type="LLM_VALIDATION",
+        interaction_id=interaction_id,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        task_id=task_id,
+        assignment_id=assignment_id,
+        stage=stage,
+        producer="percept_response_v2/validation",
+        payload={
+            "claim_id": str(claim_id),
+            "invocation_index": invocation_index,
+            "kind": kind,
+            "invocation_artifact_id": invocation_artifact_id,
+            "invocation_artifact_hash": invocation_artifact_hash,
+            "status": status,
+            "raw_output_sha256": raw_output_sha256,
+            "parsed_output": parsed_output,
+            "error_type": error_type,
+            "error_message": error_message,
+        },
     )

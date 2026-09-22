@@ -128,6 +128,65 @@ def test_llm_invocation_artifact_preserves_exact_stateless_contract(tmp_path, mo
     assert artifact_journal.verify_interaction_chain(interaction_id)["valid"] is True
 
 
+def test_llm_validation_artifact_links_parse_outcome_to_invocation(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("PROMETHEIST_ARTIFACT_ROOT", str(tmp_path / "artifacts"))
+    interaction_id = uuid4()
+    conversation_id = uuid4()
+    correlation_id = uuid4()
+    task_id = uuid4()
+    assignment_id = uuid4()
+    claim_id = uuid4()
+    invocation = llm_artifact_store.write_llm_invocation(
+        interaction_id=interaction_id,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        task_id=task_id,
+        assignment_id=assignment_id,
+        stage="V2_COMPOSE_MEMORY",
+        claim_id=claim_id,
+        invocation_index=0,
+        kind="V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        model="qwen3:4b",
+        base_url="http://localhost:11434",
+        system_prompt="system",
+        user_prompt="user",
+        schema={"type": "object"},
+        max_tokens=96,
+        temperature=0.0,
+        output="not-json",
+        error_type=None,
+        error_message=None,
+    )
+
+    validation = llm_artifact_store.write_llm_validation(
+        interaction_id=interaction_id,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        task_id=task_id,
+        assignment_id=assignment_id,
+        stage="V2_COMPOSE_MEMORY",
+        claim_id=claim_id,
+        invocation_index=0,
+        kind="V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        invocation_artifact_id=str(invocation["artifact_id"]),
+        invocation_artifact_hash=str(invocation["artifact_hash"]),
+        status="INVALID",
+        raw_output_sha256="f" * 64,
+        parsed_output=None,
+        error_type="ValidationError",
+        error_message="invalid JSON",
+    )
+
+    assert validation["artifact_type"] == "LLM_VALIDATION"
+    assert validation["payload"]["invocation_artifact_id"] == invocation["artifact_id"]
+    assert validation["payload"]["invocation_artifact_hash"] == invocation["artifact_hash"]
+    assert validation["payload"]["status"] == "INVALID"
+    assert artifact_journal.verify_interaction_chain(interaction_id)["valid"] is True
+
+
 def test_llm_invocation_filename_is_bounded_independently_of_semantic_key(
     tmp_path,
     monkeypatch,
