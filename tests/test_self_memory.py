@@ -42,8 +42,11 @@ def conn():
         yield connection
 
 
+_BASE_TIME = datetime.now(timezone.utc) + timedelta(hours=1)
+
+
 def _at(minutes: int) -> datetime:
-    return datetime(2026, 1, 1, tzinfo=timezone.utc) + timedelta(minutes=minutes)
+    return _BASE_TIME + timedelta(minutes=minutes)
 
 
 def _event(
