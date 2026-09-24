@@ -110,7 +110,7 @@ one subject/property:
     status                 ACCEPTED | AMBIGUOUS | UNKNOWN
     candidate_assertion_ids
     selected_assertion_id  only for ACCEPTED
-    effective_at
+    support_observed_at
     resolution_policy
     resolved_at
     supersedes             prior resolution, never a conflicting assertion
