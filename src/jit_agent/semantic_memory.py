@@ -1,229 +1,593 @@
-"""Additive, provenance-linked, bi-temporal derived facts about durable subjects.
+"""Append-only semantic assertions, evidence, and belief resolutions.
 
-Canonical events remain the sole evidence of what was actually observed.
-``SemanticFact`` is a *derived* belief about the current value of one
-``(subject, property)`` pair -- e.g. a preference, a relationship, a role --
-distinct from the ``situations``/``expectations`` modules' structured
-observation tracking, which is scoped to one bounded, overlapping situation
-window rather than a durable cross-conversation belief.
+Canonical events remain the evidence of what was actually observed. Derived
+semantic memory deliberately separates three concerns that must not be
+collapsed:
 
-This intentionally follows patterns from external prior art rather than
-inventing new vocabulary, adapted to Prometheist's append-only constraints:
+* SemanticAssertion: a claim about one subject/property.
+* SemanticEvidence: one provenance-bearing observation supporting or opposing
+  an assertion.
+* SemanticResolution: Prometheist's current accepted/ambiguous/unknown
+  conclusion.
 
-- Graphiti (``getzep/graphiti``, ``graphiti_core/edges.py``) represents a
-  derived assertion as an ``EntityEdge`` with ``fact``, ``episodes``
-  (provenance), and a bi-temporal ``valid_at``/``invalid_at`` (real-world
-  validity) versus ``expired_at`` (when Graphiti itself learned the fact no
-  longer held) split. Graphiti is backed by a mutable graph database, so it
-  implements invalidation by updating the old edge's ``invalid_at``/
-  ``expired_at`` in place.  Prometheist's constitution forbids editing a
-  historical record (``LOSSLESS_PROGRESSIVE_MEMORY.md``), so this module
-  adapts the same bi-temporal idea without ever mutating an existing fact:
-  ``valid_from``/``asserted_at`` live on the *new* record, and the old
-  record's implicit end-of-validity is always the newer record's
-  ``valid_from`` -- discoverable via ``supersedes`` without rewriting
-  anything.  This mirrors the ``supersedes: UUID | None`` pattern already
-  used by ``situations.Situation`` and ``expectations.Expectation``.
-- Mem0 (``mem0ai/mem0``, ``mem0/memory/main.py``) moved its extraction
-  pipeline to an "additive" model: new candidate memories are always added,
-  and a separate step decides what to do about relationships to existing
-  memories, rather than having extraction itself silently rewrite or delete
-  history.  ``derive_semantic_fact`` mirrors that split: ``reconcile_fact``
-  is a pure, deterministic classification step, kept separate from the
-  (single) place that actually persists a new record.
-
-Unlike both Graphiti and Mem0, reconciliation here is fully deterministic
-(exact ``(subject, property)`` identity, not vector/LLM similarity), because
-the evidence this module consumes is already a structured ``Observation``
-(see ``percept_context.py``) rather than free text. Extraction of structured
-observations from free text remains a separate, LLM-backed concern for a
-future consolidation/reflection worker to own; this module only formalizes
-what happens once a candidate observation already exists.
+This separation prevents late historical evidence from becoming the current
+belief merely because it was written later, lets corroboration accumulate
+without duplicating claims, preserves contradictions, and supports true
+bi-temporal queries over real-world validity time and system knowledge time.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
+import json
 from uuid import UUID, uuid5
 
 import psycopg
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
-from jit_agent.cognitive_store import COGNITIVE_NAMESPACE, get_record, put_record, record_history
+from jit_agent.cognitive_store import (
+    COGNITIVE_NAMESPACE,
+    get_record,
+    list_records_with_prefix,
+    put_record,
+    record_history,
+    record_lock,
+)
 from jit_agent.percept_context import FrozenRecord, Reference, Scalar, aware
-from jit_agent.situations import SITUATION_WINDOW
 
-RECORD_KIND = "semantic_fact"
-
-
-class FactRelation(str, Enum):
-    """How a candidate observation relates to the current fact head, if any."""
-
-    INITIAL = "INITIAL"
-    """No prior fact exists for this ``(subject, property)``."""
-
-    CORROBORATES = "CORROBORATES"
-    """The candidate repeats the current fact's exact value; no new record."""
-
-    SUPERSEDES = "SUPERSEDES"
-    """The value changed and the candidate's evidence time is not earlier
-    than the current fact's ``valid_from``: an ordinary real-world update."""
-
-    CONTRADICTS = "CONTRADICTS"
-    """The value differs and the candidate's evidence time is earlier than
-    the current fact's ``valid_from``: two sources disagree about an
-    overlapping period. Both remain visible; neither is discarded."""
+ASSERTION_KIND = "semantic_assertion"
+EVIDENCE_KIND = "semantic_evidence"
+RESOLUTION_KIND = "semantic_resolution"
+RESOLUTION_POLICY = "latest-supported-observation/v2"
 
 
-class SemanticFact(FrozenRecord):
-    """One durable, provenance-linked belief about a subject/property value.
+class EvidenceRelation(str, Enum):
+    SUPPORTS = "SUPPORTS"
+    OPPOSES = "OPPOSES"
 
-    Never mutated once written. A changed belief is always a *new* record
-    whose ``supersedes`` points at the fact it replaces; the old record's
-    own fields are untouched, so the full history of what Prometheist
-    believed at any past moment remains exactly reconstructable.
-    """
 
-    fact_id: UUID
+class ResolutionStatus(str, Enum):
+    ACCEPTED = "ACCEPTED"
+    AMBIGUOUS = "AMBIGUOUS"
+    UNKNOWN = "UNKNOWN"
+
+
+def _aware_optional(value: datetime | None) -> datetime | None:
+    return aware(value) if value is not None else None
+
+
+class SemanticAssertion(FrozenRecord):
+    assertion_id: UUID
     subject: Reference
     property: Reference
     value: Scalar
     unit: Reference | None = None
-    confidence: float = Field(ge=0.0, le=1.0)
-    # Durable evidence identifiers this fact was derived from: the same
-    # percept-identifier evidence space as consolidation.py's existing
-    # ``support_percept_ids``, and playing the role Expectation.provenance
-    # and Situation.provenance already play for other derived records.
-    derived_from: tuple[UUID, ...] = Field(min_length=1, max_length=SITUATION_WINDOW)
-    derivation_method: Reference
-    valid_from: datetime
-    """When the evidence indicates this value became true (real-world time)."""
+    claim_valid_from: datetime | None = None
+    claim_valid_until: datetime | None = None
+    created_at: datetime
+
+    _created_aware = field_validator("created_at")(aware)
+    _validity_aware = field_validator("claim_valid_from", "claim_valid_until")(
+        _aware_optional
+    )
+
+    @model_validator(mode="after")
+    def validity_interval(self) -> "SemanticAssertion":
+        if (
+            self.claim_valid_from is not None
+            and self.claim_valid_until is not None
+            and self.claim_valid_until <= self.claim_valid_from
+        ):
+            raise ValueError("claim validity interval must be positive")
+        return self
+
+
+class SemanticEvidence(FrozenRecord):
+    evidence_id: UUID
+    assertion_id: UUID
+    subject: Reference
+    property: Reference
+    source_percept_id: UUID
+    relation: EvidenceRelation
+    observed_at: datetime
     asserted_at: datetime
-    """When Prometheist derived/recorded this belief (system time).
+    confidence: float = Field(ge=0.0, le=1.0)
+    derivation_method: Reference
 
-    Equal to ``valid_from`` for today's deterministic derivation path; a
-    future asynchronous reflection worker may derive a fact well after its
-    evidence occurred, at which point the two will genuinely diverge.
-    """
+    _aware = field_validator("observed_at", "asserted_at")(aware)
+
+    @model_validator(mode="after")
+    def temporal_order(self) -> "SemanticEvidence":
+        if self.asserted_at < self.observed_at:
+            raise ValueError("asserted_at cannot precede observed_at")
+        return self
+
+
+class SemanticResolution(FrozenRecord):
+    resolution_id: UUID
+    subject: Reference
+    property: Reference
+    status: ResolutionStatus
+    candidate_assertion_ids: tuple[UUID, ...] = ()
+    selected_assertion_id: UUID | None = None
+    effective_at: datetime | None = None
+    resolution_policy: Reference = RESOLUTION_POLICY
+    resolved_at: datetime
     supersedes: UUID | None = None
-    relation: FactRelation
 
-    _aware = field_validator("valid_from", "asserted_at")(aware)
+    _aware = field_validator("resolved_at")(aware)
+    _effective_aware = field_validator("effective_at")(_aware_optional)
+
+    @model_validator(mode="after")
+    def status_contract(self) -> "SemanticResolution":
+        if self.status is ResolutionStatus.ACCEPTED:
+            if self.selected_assertion_id is None:
+                raise ValueError("ACCEPTED resolution requires selected_assertion_id")
+            if self.selected_assertion_id not in self.candidate_assertion_ids:
+                raise ValueError("selected assertion must be a candidate")
+        elif self.selected_assertion_id is not None:
+            raise ValueError("only ACCEPTED resolutions may select an assertion")
+        return self
+
+
+class SemanticResolutionDecision(FrozenRecord):
+    subject: Reference
+    property: Reference
+    status: ResolutionStatus
+    candidate_assertion_ids: tuple[UUID, ...] = ()
+    selected_assertion_id: UUID | None = None
+    effective_at: datetime | None = None
+    valid_at: datetime
+    known_at: datetime
+    resolution_policy: Reference = RESOLUTION_POLICY
+
+    _aware = field_validator("valid_at", "known_at")(aware)
+    _effective_aware = field_validator("effective_at")(_aware_optional)
 
 
 @dataclass(frozen=True, slots=True)
-class FactDerivationResult:
-    fact: SemanticFact
-    """The current fact after reconciliation: either the pre-existing head
-    (``CORROBORATES``, ``created=False``) or the newly written one."""
-    created: bool
+class SemanticUpdateResult:
+    assertion: SemanticAssertion
+    evidence: SemanticEvidence
+    resolution: SemanticResolution
+    assertion_created: bool
+    evidence_created: bool
+    resolution_created: bool
 
 
-def semantic_fact_key(subject: str, property: str) -> str:
-    """Deterministic ``cognitive_store`` record key for one subject/property."""
-
-    return str(uuid5(COGNITIVE_NAMESPACE, f"semantic-fact:{subject}\x1f{property}"))
+def semantic_key(subject: str, property: str) -> str:
+    return str(uuid5(COGNITIVE_NAMESPACE, f"semantic:{subject}\x1f{property}"))
 
 
-def reconcile_fact(
-    *,
-    candidate_value: Scalar,
-    candidate_unit: str | None,
-    candidate_observed_at: datetime,
-    current: SemanticFact | None,
-) -> FactRelation:
-    """Pure, deterministic classification of a candidate against the current head."""
-
-    aware(candidate_observed_at)
-    if current is None:
-        return FactRelation.INITIAL
-    if (candidate_value, candidate_unit) == (current.value, current.unit):
-        return FactRelation.CORROBORATES
-    if candidate_observed_at >= current.valid_from:
-        return FactRelation.SUPERSEDES
-    return FactRelation.CONTRADICTS
+def _canonical_scalar(value: Scalar) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
 
-def current_semantic_fact(conn: psycopg.Connection, subject: str, property: str) -> SemanticFact | None:
-    data = get_record(conn, RECORD_KIND, semantic_fact_key(subject, property))
-    return SemanticFact.model_validate(data) if data is not None else None
-
-
-def semantic_fact_history(conn: psycopg.Connection, subject: str, property: str) -> tuple[SemanticFact, ...]:
-    """Every fact ever derived for one subject/property, oldest first."""
-
-    return tuple(
-        SemanticFact.model_validate(data)
-        for data in record_history(conn, RECORD_KIND, semantic_fact_key(subject, property))
-    )
-
-
-def semantic_fact_as_of(history: tuple[SemanticFact, ...], at: datetime) -> SemanticFact | None:
-    """The fact that was current at a past moment, from an already-loaded history.
-
-    Among facts whose ``valid_from`` is not after ``at``, the one with the
-    latest ``valid_from`` was in effect: any later fact necessarily
-    superseded whatever came before it, so no explicit chain walk is needed.
-    """
-
-    aware(at)
-    candidates = [fact for fact in history if fact.valid_from <= at]
-    if not candidates:
-        return None
-    return max(candidates, key=lambda fact: (fact.valid_from, str(fact.fact_id)))
-
-
-def derive_semantic_fact(
-    conn: psycopg.Connection,
+def assertion_id_for(
     *,
     subject: str,
     property: str,
     value: Scalar,
     unit: str | None = None,
-    confidence: float,
-    derived_from: tuple[UUID, ...],
+    claim_valid_from: datetime | None = None,
+    claim_valid_until: datetime | None = None,
+) -> UUID:
+    parts = (
+        subject,
+        property,
+        _canonical_scalar(value),
+        unit or "",
+        claim_valid_from.isoformat() if claim_valid_from else "",
+        claim_valid_until.isoformat() if claim_valid_until else "",
+    )
+    return uuid5(COGNITIVE_NAMESPACE, "semantic-assertion:" + "\x1f".join(parts))
+
+
+def _assertion_key(subject: str, property: str, assertion_id: UUID) -> str:
+    return f"{semantic_key(subject, property)}:{assertion_id}"
+
+
+def _evidence_key(subject: str, property: str, evidence_id: UUID) -> str:
+    return f"{semantic_key(subject, property)}:{evidence_id}"
+
+
+def _paged_kind(
+    conn: psycopg.Connection,
+    kind: str,
+    subject: str,
+    property: str,
+) -> list[dict]:
+    prefix = f"{semantic_key(subject, property)}:"
+    values: list[dict] = []
+    after_key = ""
+    while True:
+        page = list_records_with_prefix(
+            conn, kind, prefix, after_key=after_key
+        )
+        if not page:
+            return values
+        values.extend(data for _, data in page)
+        after_key = page[-1][0]
+
+
+def semantic_assertions(
+    conn: psycopg.Connection, subject: str, property: str
+) -> tuple[SemanticAssertion, ...]:
+    values = (
+        SemanticAssertion.model_validate(item)
+        for item in _paged_kind(conn, ASSERTION_KIND, subject, property)
+    )
+    return tuple(sorted(values, key=lambda item: (item.created_at, str(item.assertion_id))))
+
+
+def semantic_evidence(
+    conn: psycopg.Connection, subject: str, property: str
+) -> tuple[SemanticEvidence, ...]:
+    values = (
+        SemanticEvidence.model_validate(item)
+        for item in _paged_kind(conn, EVIDENCE_KIND, subject, property)
+    )
+    return tuple(sorted(values, key=lambda item: (item.asserted_at, str(item.evidence_id))))
+
+
+def current_semantic_resolution(
+    conn: psycopg.Connection, subject: str, property: str
+) -> SemanticResolution | None:
+    value = get_record(conn, RESOLUTION_KIND, semantic_key(subject, property))
+    return SemanticResolution.model_validate(value) if value is not None else None
+
+
+def semantic_resolution_history(
+    conn: psycopg.Connection, subject: str, property: str
+) -> tuple[SemanticResolution, ...]:
+    return tuple(
+        SemanticResolution.model_validate(item)
+        for item in record_history(conn, RESOLUTION_KIND, semantic_key(subject, property))
+    )
+
+
+def _assertion_effective_at(
+    assertion: SemanticAssertion,
+    evidence: SemanticEvidence,
+) -> datetime:
+    return assertion.claim_valid_from or evidence.observed_at
+
+
+def _applies_at(
+    assertion: SemanticAssertion,
+    evidence: SemanticEvidence,
+    *,
+    valid_at: datetime,
+) -> bool:
+    if assertion.claim_valid_from is not None:
+        if assertion.claim_valid_from > valid_at:
+            return False
+        if assertion.claim_valid_until is not None and valid_at >= assertion.claim_valid_until:
+            return False
+        return True
+    return evidence.observed_at <= valid_at
+
+
+def semantic_resolution_as_of(
+    conn: psycopg.Connection,
+    subject: str,
+    property: str,
+    *,
+    valid_at: datetime,
+    known_at: datetime,
+) -> SemanticResolutionDecision:
+    """Resolve under independent real-world and system-knowledge clocks.
+
+    This is intentionally a historical/forensic query. Normal current-memory
+    reads use the incrementally maintained SemanticResolution head and do not
+    scan lifetime evidence.
+    """
+
+    aware(valid_at)
+    aware(known_at)
+    assertions = {
+        item.assertion_id: item
+        for item in semantic_assertions(conn, subject, property)
+    }
+    candidates: list[tuple[datetime, SemanticAssertion]] = []
+    opposed: set[UUID] = set()
+
+    for item in semantic_evidence(conn, subject, property):
+        if item.asserted_at > known_at:
+            continue
+        assertion = assertions.get(item.assertion_id)
+        if assertion is None or not _applies_at(assertion, item, valid_at=valid_at):
+            continue
+        if item.relation is EvidenceRelation.OPPOSES:
+            opposed.add(item.assertion_id)
+            continue
+        candidates.append((_assertion_effective_at(assertion, item), assertion))
+
+    candidates = [item for item in candidates if item[1].assertion_id not in opposed]
+    if not candidates:
+        return SemanticResolutionDecision(
+            subject=subject,
+            property=property,
+            status=ResolutionStatus.UNKNOWN,
+            valid_at=valid_at,
+            known_at=known_at,
+        )
+
+    latest = max(item[0] for item in candidates)
+    latest_assertions = {
+        item.assertion_id: item
+        for effective_at, item in candidates
+        if effective_at == latest
+    }
+    ordered = tuple(sorted(latest_assertions.values(), key=lambda item: str(item.assertion_id)))
+    ids = tuple(item.assertion_id for item in ordered)
+    semantic_values = {(item.value, item.unit) for item in ordered}
+
+    if len(semantic_values) != 1:
+        return SemanticResolutionDecision(
+            subject=subject,
+            property=property,
+            status=ResolutionStatus.AMBIGUOUS,
+            candidate_assertion_ids=ids,
+            effective_at=latest,
+            valid_at=valid_at,
+            known_at=known_at,
+        )
+
+    selected = ordered[0]
+    return SemanticResolutionDecision(
+        subject=subject,
+        property=property,
+        status=ResolutionStatus.ACCEPTED,
+        candidate_assertion_ids=ids,
+        selected_assertion_id=selected.assertion_id,
+        effective_at=latest,
+        valid_at=valid_at,
+        known_at=known_at,
+    )
+
+
+def _advance_resolution(
+    current: SemanticResolution | None,
+    *,
+    assertion: SemanticAssertion,
+    evidence: SemanticEvidence,
+) -> tuple[ResolutionStatus, tuple[UUID, ...], UUID | None, datetime | None]:
+    effective_at = _assertion_effective_at(assertion, evidence)
+
+    if evidence.relation is EvidenceRelation.OPPOSES:
+        if current is None or assertion.assertion_id not in current.candidate_assertion_ids:
+            if current is None:
+                return ResolutionStatus.UNKNOWN, (), None, None
+            return (
+                current.status,
+                current.candidate_assertion_ids,
+                current.selected_assertion_id,
+                current.effective_at,
+            )
+        return (
+            ResolutionStatus.AMBIGUOUS,
+            current.candidate_assertion_ids,
+            None,
+            current.effective_at,
+        )
+
+    if current is None or current.effective_at is None or effective_at > current.effective_at:
+        return ResolutionStatus.ACCEPTED, (assertion.assertion_id,), assertion.assertion_id, effective_at
+
+    if effective_at < current.effective_at:
+        return (
+            current.status,
+            current.candidate_assertion_ids,
+            current.selected_assertion_id,
+            current.effective_at,
+        )
+
+    candidates = tuple(
+        sorted(
+            set((*current.candidate_assertion_ids, assertion.assertion_id)),
+            key=str,
+        )
+    )
+    if assertion.assertion_id in current.candidate_assertion_ids:
+        return (
+            current.status,
+            current.candidate_assertion_ids,
+            current.selected_assertion_id,
+            current.effective_at,
+        )
+
+    return ResolutionStatus.AMBIGUOUS, candidates, None, effective_at
+
+
+def _persist_resolution(
+    conn: psycopg.Connection,
+    *,
+    subject: str,
+    property: str,
+    status: ResolutionStatus,
+    candidates: tuple[UUID, ...],
+    selected: UUID | None,
+    effective_at: datetime | None,
+    resolved_at: datetime,
+    trigger_evidence_id: UUID,
+) -> tuple[SemanticResolution, bool]:
+    current = current_semantic_resolution(conn, subject, property)
+    state = (status, candidates, selected, effective_at)
+    if current is not None:
+        current_state = (
+            current.status,
+            current.candidate_assertion_ids,
+            current.selected_assertion_id,
+            current.effective_at,
+        )
+        if state == current_state:
+            return current, False
+
+    resolution_id = uuid5(
+        COGNITIVE_NAMESPACE,
+        (
+            f"semantic-resolution:{semantic_key(subject, property)}:"
+            f"{trigger_evidence_id}:{status.value}:"
+            f"{','.join(str(item) for item in candidates)}:{selected or ''}:"
+            f"{effective_at.isoformat() if effective_at else ''}"
+        ),
+    )
+    resolution = SemanticResolution(
+        resolution_id=resolution_id,
+        subject=subject,
+        property=property,
+        status=status,
+        candidate_assertion_ids=candidates,
+        selected_assertion_id=selected,
+        effective_at=effective_at,
+        resolved_at=resolved_at,
+        supersedes=current.resolution_id if current else None,
+    )
+    put_record(
+        conn,
+        RESOLUTION_KIND,
+        semantic_key(subject, property),
+        resolution.model_dump(mode="json"),
+        revision=str(resolution_id),
+    )
+    return resolution, True
+
+
+def record_semantic_evidence(
+    conn: psycopg.Connection,
+    *,
+    subject: str,
+    property: str,
+    value: Scalar,
+    source_percept_id: UUID,
     observed_at: datetime,
     asserted_at: datetime,
+    confidence: float,
     derivation_method: str,
-) -> FactDerivationResult:
-    """Reconcile one candidate observation against the current fact head.
-
-    Additive: a changed value always creates a new record rather than
-    editing the old one. A repeated value creates nothing and returns the
-    unchanged existing head (``created=False``), so callers cannot spam a
-    growing chain of identical facts merely by re-observing the same truth.
-    """
+    unit: str | None = None,
+    relation: EvidenceRelation = EvidenceRelation.SUPPORTS,
+    claim_valid_from: datetime | None = None,
+    claim_valid_until: datetime | None = None,
+) -> SemanticUpdateResult:
+    """Record one observation and advance current resolution atomically."""
 
     aware(observed_at)
     aware(asserted_at)
-    current = current_semantic_fact(conn, subject, property)
-    relation = reconcile_fact(
-        candidate_value=value, candidate_unit=unit, candidate_observed_at=observed_at, current=current,
-    )
-    if relation is FactRelation.CORROBORATES:
-        assert current is not None  # CORROBORATES is only returned when current exists.
-        return FactDerivationResult(fact=current, created=False)
+    _aware_optional(claim_valid_from)
+    _aware_optional(claim_valid_until)
+    if asserted_at < observed_at:
+        raise ValueError("asserted_at cannot precede observed_at")
 
-    fact_id = uuid5(
-        COGNITIVE_NAMESPACE,
-        f"semantic-fact:{subject}\x1f{property}\x1f{observed_at.isoformat()}\x1f{value!r}\x1f{unit}",
+    key = semantic_key(subject, property)
+    with record_lock(conn, f"semantic:{key}"):
+        assertion_id = assertion_id_for(
+            subject=subject,
+            property=property,
+            value=value,
+            unit=unit,
+            claim_valid_from=claim_valid_from,
+            claim_valid_until=claim_valid_until,
+        )
+        assertion_key = _assertion_key(subject, property, assertion_id)
+        stored_assertion = get_record(conn, ASSERTION_KIND, assertion_key)
+        assertion_created = stored_assertion is None
+        if stored_assertion is None:
+            assertion = SemanticAssertion(
+                assertion_id=assertion_id,
+                subject=subject,
+                property=property,
+                value=value,
+                unit=unit,
+                claim_valid_from=claim_valid_from,
+                claim_valid_until=claim_valid_until,
+                created_at=asserted_at,
+            )
+            put_record(
+                conn,
+                ASSERTION_KIND,
+                assertion_key,
+                assertion.model_dump(mode="json"),
+                revision="1",
+            )
+        else:
+            assertion = SemanticAssertion.model_validate(stored_assertion)
+
+        evidence_id = uuid5(
+            COGNITIVE_NAMESPACE,
+            (
+                f"semantic-evidence:{assertion_id}:{source_percept_id}:"
+                f"{relation.value}:{derivation_method}"
+            ),
+        )
+        evidence_key = _evidence_key(subject, property, evidence_id)
+        stored_evidence = get_record(conn, EVIDENCE_KIND, evidence_key)
+        evidence_created = stored_evidence is None
+        expected = SemanticEvidence(
+            evidence_id=evidence_id,
+            assertion_id=assertion_id,
+            subject=subject,
+            property=property,
+            source_percept_id=source_percept_id,
+            relation=relation,
+            observed_at=observed_at,
+            asserted_at=asserted_at,
+            confidence=confidence,
+            derivation_method=derivation_method,
+        )
+        if stored_evidence is None:
+            evidence = expected
+            put_record(
+                conn,
+                EVIDENCE_KIND,
+                evidence_key,
+                evidence.model_dump(mode="json"),
+                revision="1",
+            )
+        else:
+            evidence = SemanticEvidence.model_validate(stored_evidence)
+            if evidence != expected:
+                raise ValueError(
+                    f"conflicting immutable semantic evidence retry: {evidence_id}"
+                )
+
+        current = current_semantic_resolution(conn, subject, property)
+        status, candidates, selected, effective_at = _advance_resolution(
+            current,
+            assertion=assertion,
+            evidence=evidence,
+        )
+        resolution, resolution_created = _persist_resolution(
+            conn,
+            subject=subject,
+            property=property,
+            status=status,
+            candidates=candidates,
+            selected=selected,
+            effective_at=effective_at,
+            resolved_at=asserted_at,
+            trigger_evidence_id=evidence_id,
+        )
+        return SemanticUpdateResult(
+            assertion=assertion,
+            evidence=evidence,
+            resolution=resolution,
+            assertion_created=assertion_created,
+            evidence_created=evidence_created,
+            resolution_created=resolution_created,
+        )
+
+
+def selected_assertion(
+    conn: psycopg.Connection,
+    resolution: SemanticResolution | SemanticResolutionDecision,
+) -> SemanticAssertion | None:
+    if resolution.selected_assertion_id is None:
+        return None
+    for item in semantic_assertions(conn, resolution.subject, resolution.property):
+        if item.assertion_id == resolution.selected_assertion_id:
+            return item
+    raise ValueError(
+        f"resolution references missing assertion: {resolution.selected_assertion_id}"
     )
-    fact = SemanticFact(
-        fact_id=fact_id,
-        subject=subject,
-        property=property,
-        value=value,
-        unit=unit,
-        confidence=confidence,
-        derived_from=derived_from,
-        derivation_method=derivation_method,
-        valid_from=observed_at,
-        asserted_at=asserted_at,
-        supersedes=current.fact_id if current is not None else None,
-        relation=relation,
-    )
-    put_record(
-        conn, RECORD_KIND, semantic_fact_key(subject, property), fact.model_dump(mode="json"), revision=str(fact_id),
-    )
-    return FactDerivationResult(fact=fact, created=True)
