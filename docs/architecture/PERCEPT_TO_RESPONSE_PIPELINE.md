@@ -35,12 +35,16 @@ flowchart TD
     B --> C[Reference resolver]
     C --> D[Evidence policy specialist]
     D --> E[Bounded memory aperture]
+    D --> S[Bounded Working Self activation]
     E --> F[Work selection specialist]
     F --> G[Deterministic execution]
     E --> H[Memory-only Composer]
-    H --> I[Adaptive Recall]
+    S --> H
+    S -. routing hints .-> I[Adaptive Recall]
+    H --> I
     I --> H
     H --> J[Final responder]
+    S --> J
     G --> J
     J --> K[Durable persistence]
 ```
