@@ -33,7 +33,8 @@ def _record(
     *,
     value,
     observed,
-    asserted=None,
+    known=None,
+    resolved=None,
     subject="person:mike",
     property_name="preferred_drink",
     confidence=1.0,
@@ -50,7 +51,8 @@ def _record(
         confidence=confidence,
         source_id=source or uuid4(),
         observed_at=observed,
-        asserted_at=asserted or observed,
+        known_at=known or observed,
+        resolved_at=resolved or known or observed,
         derivation_method="test/v2",
         claim_valid_from=claim_valid_from,
         claim_valid_until=claim_valid_until,
@@ -116,7 +118,7 @@ def test_historical_backfill_does_not_replace_current_resolution(conn):
         conn,
         value="manager",
         observed=_at(10),
-        asserted=_at(120),
+        known=_at(120),
         subject="person:mike",
         property_name="job_title",
     )
@@ -133,7 +135,7 @@ def test_bitemporal_query_excludes_evidence_not_yet_known(conn):
         conn,
         value="manager",
         observed=_at(10),
-        asserted=_at(120),
+        known=_at(120),
         subject="person:mike",
         property_name="job_title",
     )
@@ -199,7 +201,7 @@ def test_later_corroboration_blocks_stale_conflicting_backfill(conn):
         conn,
         value="tea",
         observed=_at(10),
-        asserted=_at(30),
+        known=_at(30),
     )
 
     current = current_semantic_resolution(conn, "person:mike", "preferred_drink")
@@ -216,7 +218,7 @@ def test_opposition_older_than_latest_support_does_not_create_current_ambiguity(
         conn,
         value="latte",
         observed=_at(10),
-        asserted=_at(30),
+        known=_at(30),
         relation=EvidenceRelation.OPPOSES,
     )
 
@@ -245,7 +247,7 @@ def test_explicit_claim_validity_is_distinct_from_observation_time(conn):
         conn,
         value=True,
         observed=_at(100),
-        asserted=_at(100),
+        known=_at(100),
         property_name="vegetarian",
         claim_valid_from=_at(-1000),
     )
@@ -275,7 +277,7 @@ def test_expired_historical_claim_does_not_become_current(conn):
         conn,
         value="Seattle",
         observed=_at(100),
-        asserted=_at(100),
+        known=_at(100),
         property_name="city",
         claim_valid_from=_at(-1000),
         claim_valid_until=_at(-500),
@@ -393,7 +395,7 @@ def test_conflicting_retry_fails_closed(conn):
         conn,
         value="latte",
         observed=_at(0),
-        asserted=_at(10),
+        known=_at(10),
         source=source,
         confidence=0.9,
     )
@@ -403,7 +405,7 @@ def test_conflicting_retry_fails_closed(conn):
             conn,
             value="latte",
             observed=_at(0),
-            asserted=_at(10),
+            known=_at(10),
             source=source,
             confidence=0.2,
         )
