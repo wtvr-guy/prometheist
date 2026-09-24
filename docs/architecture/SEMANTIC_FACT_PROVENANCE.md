@@ -76,15 +76,19 @@ A SemanticEvidence record captures one exact support/opposition relationship:
     evidence_id
     assertion_id
     subject / property
-    source_percept_id
+    source_kind          PERCEPT | ACTION | EVENT
+    source_id
     relation             SUPPORTS | OPPOSES
     observed_at           when the source evidence describes/was observed
     asserted_at           when Prometheist learned/derived this evidence
     confidence            preserved source/derivation confidence
     derivation_method
 
-Evidence is append-only and individually provenance-linked. Corroboration does
-not duplicate the assertion; it adds another evidence record.
+Evidence is append-only and individually provenance-linked. The source can be
+a percept, action, or canonical event, so later reflection/consolidation workers
+can use the same representation without pretending their derived work was a
+direct percept. Corroboration does not duplicate the assertion; it adds another
+evidence record.
 
 There is no fixed-size derived_from tuple. A claim may accumulate arbitrary
 evidence over a lifetime. Normal processing remains bounded because evidence is
