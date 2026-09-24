@@ -195,13 +195,17 @@ def collect_consolidation_root_events(
         if data is None:
             raise RuntimeError(f"missing frozen situation input: {key}")
         situation = Situation.model_validate(data)
-        for state in situation.observed_state:
-            if state.source_event_id is None:
-                continue
-            event = event_store.get_event_by_id(conn, state.source_event_id)
+        root_ids = set(situation.provenance)
+        root_ids.update(
+            state.source_event_id
+            for state in situation.observed_state
+            if state.source_event_id is not None
+        )
+        for root_id in root_ids:
+            event = event_store.get_event_by_id(conn, root_id)
             if event is None:
                 raise RuntimeError(
-                    f"self reflection root event is missing: {state.source_event_id}"
+                    f"self reflection root event is missing: {root_id}"
                 )
             roots[event.event_id] = event
     return tuple(
@@ -300,9 +304,15 @@ def review_memory_packet(
         if evidence.relation is SelfEvidenceRelation.SUPPORTS
     ]
     focus = support_ids[:4]
+    if len(focus) >= 2:
+        recall_stage = jit_memory.AdaptiveRecallStage.RELATIONAL
+    elif len(focus) == 1:
+        recall_stage = jit_memory.AdaptiveRecallStage.FOCUSED
+    else:
+        recall_stage = jit_memory.AdaptiveRecallStage.BROAD
     need = jit_memory.build_memory_need(
         representation.statement,
-        focus_event_ids=focus,
+        focus_event_ids=focus if recall_stage is not jit_memory.AdaptiveRecallStage.BROAD else [],
         include_persisted_history=True,
         conversation_id=None,
         limit=MAX_REVIEW_EVIDENCE_ITEMS,
@@ -324,7 +334,7 @@ def review_memory_packet(
                 f"{before_global_seq}"
             ),
         ),
-        recall_stage=jit_memory.AdaptiveRecallStage.RELATIONAL,
+        recall_stage=recall_stage,
     )
 
 
