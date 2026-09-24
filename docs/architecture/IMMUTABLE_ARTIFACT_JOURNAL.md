@@ -2,7 +2,7 @@
 
 **Status:** constitutional architecture deep dive  
 **Constitutional authority:** implements Article 36 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).  
-**Applies to:** canonical events, percept-to-response stage boundaries, stateless LLM invocations, inspection, interruption recovery, and database reconstruction
+**Applies to:** canonical events, percept-to-response stage boundaries, stateless LLM invocations, content-addressed blob storage, inspection and human auditing, interruption recovery, and database reconstruction
 
 Prometheist maintains an independent immutable JSON artifact journal in addition to PostgreSQL. PostgreSQL remains the indexed operational store used for efficient retrieval, scheduling, and execution. It is not the only surviving representation of Prometheist's memory, cognition, or completed work.
 
@@ -359,7 +359,43 @@ uv run prometheist verify --interaction-id <uuid>
 
 This allows response diagnosis even when PostgreSQL or scheduler state is offline. In particular, `inspect` exposes the exact memory packet and exact final-responder LLM invocation that produced a suspicious answer.
 
-## 9. Storage policy
+`inspect`/`verify` print the raw artifact chain and machine-readable verification result. For a human-readable forensic timeline over the same data, use:
+
+```powershell
+uv run prometheist audit --latest
+```
+
+or:
+
+```powershell
+uv run prometheist audit --interaction-id <uuid>
+```
+
+See [Section 9](#9-content-addressed-blob-store) and [Section 11](#11-current-scope-and-future-hardening) for what `audit` renders and why it is not itself authoritative.
+
+## 9. Content-addressed blob store
+
+`blob_store.py` stores exact bytes once, addressed by their SHA-256 digest, beside the artifact journal at `<artifact root>/blobs/sha256/<first two hex chars>/<hex digest>`. A caller gets back a small OCI-style descriptor:
+
+```json
+{"mediaType": "application/json", "digest": "sha256:8f47c1...", "size": 18442}
+```
+
+The digest identifies the bytes; nothing about storage location or filename participates in identity. `put_blob` is idempotent — writing identical bytes twice is a no-op the second time — and fails closed (`BlobIntegrityError`) if a path already exists with different byte length than the content it is being asked to store, since two distinct byte strings must not legitimately share one SHA-256 digest. `get_blob` recomputes the digest on every read and raises `BlobIntegrityError` if stored bytes no longer match it.
+
+A journal artifact does not have to register its use of the blob store anywhere. Any artifact payload — present or future — can embed a descriptor of this exact shape anywhere in its structure, and `blob_store.iter_blob_descriptors` will discover it generically by walking the payload. The audit renderer (Section 8) uses this to report how many referenced blobs still verify, without every artifact producer needing a separate registration mechanism.
+
+Verify one blob independently of any interaction:
+
+```powershell
+uv run prometheist blob-verify --digest sha256:<hex>
+```
+
+Deduplication is scoped to one local artifact root (one installation), not globally across unrelated people/security domains. A shared global blob store would let two otherwise-isolated domains learn that they hold identical bytes merely by comparing digests. A future multi-tenant deployment should partition blob storage per security domain rather than widen this store, matching the per-root scoping the rest of the artifact journal already uses.
+
+As of this writing, no existing artifact producer (percept, stage result, LLM invocation, final disposition) externalizes its payload to the blob store; every field they write remains inline JSON, matching their existing hash-chained contract and historical fixtures. The blob store is available for new/large payloads — model generations, documents, audio, and similar exact byte-for-byte evidence — to adopt incrementally as they become live, consistent with the conservative migration posture in Section 11.
+
+## 10. Storage policy
 
 Artifact redundancy is intentional. Storage efficiency must not silently erase exact causal evidence or eliminate the independent recovery copy.
 
@@ -377,11 +413,11 @@ Current policy:
   revision, artifact hashes, and human-review status; preservation alone never marks a
   model output as a positive training example;
 - future cold-storage compression may transform old `.json` records to a content-preserving representation such as `.json.zst`, provided hashes/identity remain verifiable and the transformation is reversible;
-- large binary objects should eventually use content-addressed blob storage, with JSON artifacts referring to their hashes rather than embedding arbitrary binary payloads.
+- large binary objects should use the content-addressed blob store (Section 9), with JSON artifacts referring to their OCI-style descriptor rather than embedding arbitrary binary payloads.
 
 Explicit identity-governed erasure remains a separate stewardship/sovereignty operation and must not be confused with automatic compaction.
 
-## 10. Current scope and future hardening
+## 11. Current scope and future hardening
 
 The current implementation establishes independent durability for:
 
@@ -391,8 +427,10 @@ The current implementation establishes independent durability for:
 - stage result rehydration;
 - final disposition manifests;
 - event-store reconstruction;
-- interaction continuation after operational-state loss.
+- interaction continuation after operational-state loss;
+- content-addressed storage for large exact payloads (Section 9);
+- a deterministic human-readable audit renderer over the artifact chain (Section 8).
 
-Further hardening should extend the same boundary rule to additional long-running/non-conversational task families as they become live, journal exact external-effect request envelopes alongside their results, add content-addressed storage for large external artifacts, add bulk backup/restore commands, and test deliberate power-loss/fsync fault cases on the native deployment environment.
+Further hardening should extend the same boundary rule to additional long-running/non-conversational task families as they become live, journal exact external-effect request envelopes alongside their results, adopt blob-referenced payloads at the LLM invocation and event boundaries where they are currently large inline strings, add bulk backup/restore commands, and test deliberate power-loss/fsync fault cases on the native deployment environment.
 
 The principle is broader than the current implementation: **if a meaningful cognitive or operational boundary would matter for explanation, replay, recovery, or reconstruction, its exact durable artifact must not exist only inside a disposable process or a single database.**

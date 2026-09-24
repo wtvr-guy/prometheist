@@ -12,7 +12,7 @@ import sys
 import traceback
 import uuid
 
-from jit_agent import artifact_journal, artifact_recovery, db
+from jit_agent import artifact_journal, artifact_recovery, audit_report, blob_store, db
 from jit_agent.admission_diagnostics import (
     RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX,
     build_resource_admission_diagnostics,
@@ -115,6 +115,20 @@ def _run_verify(interaction_id: uuid.UUID | None, *, latest: bool) -> None:
     print(json.dumps(report, indent=2, sort_keys=True, default=str))
     if not report["valid"]:
         raise RuntimeError("artifact chain verification failed")
+
+
+def _run_audit(interaction_id: uuid.UUID | None, *, latest: bool) -> None:
+    """Print a deterministic human-readable timeline; a projection, not authoritative."""
+
+    resolved = _resolve_artifact_interaction_id(interaction_id, latest=latest)
+    print(audit_report.render_interaction_audit(resolved))
+
+
+def _run_blob_verify(digest: str) -> None:
+    valid = blob_store.verify_blob(digest)
+    print(json.dumps({"digest": digest, "valid": valid}, sort_keys=True))
+    if not valid:
+        raise RuntimeError(f"blob verification failed: {digest}")
 
 
 def _run_recover(interaction_id: uuid.UUID | None, *, latest: bool) -> None:
@@ -222,11 +236,20 @@ def main() -> None:
     parser.add_argument(
         "command",
         nargs="?",
-        choices=("chat", "inspect", "verify", "recover", "restore-events"),
+        choices=(
+            "chat",
+            "inspect",
+            "verify",
+            "audit",
+            "recover",
+            "restore-events",
+            "blob-verify",
+        ),
         default="chat",
         help=(
-            "Run chat (default), inspect/verify artifact chains, resume an incomplete "
-            "interaction, or restore canonical events from artifacts."
+            "Run chat (default), inspect/verify/audit artifact chains, resume an "
+            "incomplete interaction, restore canonical events from artifacts, or "
+            "verify one content-addressed blob."
         ),
     )
     parser.add_argument(
@@ -241,25 +264,34 @@ def main() -> None:
     parser.add_argument(
         "--interaction-id",
         type=uuid.UUID,
-        help="Specific artifact interaction id for inspect/verify/recover.",
+        help="Specific artifact interaction id for inspect/verify/audit/recover.",
     )
     parser.add_argument(
         "--conversation-id",
         type=uuid.UUID,
         help="Conversation id to use/resume for chat/--once.",
     )
+    parser.add_argument(
+        "--digest",
+        help="Content digest (sha256:<hex>) to check with blob-verify.",
+    )
     args = parser.parse_args()
 
-    if args.command in {"inspect", "verify", "recover", "restore-events"}:
+    if args.command in {"inspect", "verify", "audit", "recover", "restore-events"}:
         if args.once is not None:
             parser.error("--once is only valid with chat")
         if args.conversation_id is not None:
             parser.error("--conversation-id is only valid with chat")
+        if args.digest is not None:
+            parser.error("--digest is only valid with blob-verify")
         if args.command == "inspect":
             _run_inspect(args.interaction_id, latest=args.latest)
             return
         if args.command == "verify":
             _run_verify(args.interaction_id, latest=args.latest)
+            return
+        if args.command == "audit":
+            _run_audit(args.interaction_id, latest=args.latest)
             return
         if args.command == "recover":
             _run_recover(args.interaction_id, latest=args.latest)
@@ -269,8 +301,22 @@ def main() -> None:
         _run_restore_events()
         return
 
+    if args.command == "blob-verify":
+        if args.once is not None:
+            parser.error("--once is only valid with chat")
+        if args.conversation_id is not None:
+            parser.error("--conversation-id is only valid with chat")
+        if args.interaction_id is not None or args.latest:
+            parser.error("blob-verify takes --digest, not an interaction selector")
+        if args.digest is None:
+            parser.error("blob-verify requires --digest")
+        _run_blob_verify(args.digest)
+        return
+
     if args.interaction_id is not None or args.latest:
         parser.error("--interaction-id/--latest are not valid with chat")
+    if args.digest is not None:
+        parser.error("--digest is only valid with blob-verify")
     conversation_id = args.conversation_id or uuid.uuid4()
     if args.once is not None:
         with db.get_connection() as conn:

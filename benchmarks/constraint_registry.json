@@ -417,6 +417,15 @@
       },
       "benchmark_id": "SITUATION-PIPELINE-001",
       "status": "PROVISIONAL"
+    },
+    "artifact_journal_projection": {
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "SHA-256 digests are exactly 64 hexadecimal characters by construction of the fixed 256-bit hash output, so blob_store rejects any other length outright. The two-character shard prefix is a fixed content-addressed storage layout convention (mirroring the OCI/git loose-object sharding pattern) chosen for directory fan-out, not a quality tradeoff. The audit renderer's preview-text bound only constrains how many characters of an already-decided field appear on one human-readable timeline line in a non-authoritative projection; it does not gate, weight, or select any cognitive, retrieval, or safety decision, so no benchmark can discriminate among candidate values.",
+      "members": {
+        "src/jit_agent/audit_report.py::<module>::_PREVIEW_LIMIT": 96,
+        "src/jit_agent/blob_store.py::_split_digest::comparison": 64,
+        "src/jit_agent/blob_store.py::blob_path::slice_upper": 2
+      }
     }
   }
 }
