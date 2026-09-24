@@ -161,9 +161,12 @@ For ordinary point observations:
 - older backfilled observations remain evidence but do not roll the current
   resolution backward;
 - different assertions at the same effective time produce AMBIGUOUS;
-- opposition to the currently selected assertion produces AMBIGUOUS;
-- repeated support for an already accepted assertion adds evidence but does not
-  create a redundant resolution revision.
+- opposition at or after the latest accepted support produces AMBIGUOUS, while
+  stale opposition remains visible without rolling the conclusion backward;
+- repeated support for an already accepted assertion adds evidence and advances
+  the resolution's effective observation time when the support is newer. That
+  temporal advancement is a meaningful resolution revision because it prevents
+  later-arriving stale evidence from displacing newer corroborated state.
 
 Assertions with an explicit validity interval that does not include the current
 resolution time are retained for historical queries but do not become current.
