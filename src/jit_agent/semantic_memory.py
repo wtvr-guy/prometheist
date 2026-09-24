@@ -291,7 +291,7 @@ def semantic_resolution_as_of(
         for item in semantic_assertions(conn, subject, property)
     }
     candidates: list[tuple[datetime, SemanticAssertion]] = []
-    opposed: set[UUID] = set()
+    latest_opposition: dict[UUID, datetime] = {}
 
     for item in semantic_evidence(conn, subject, property):
         if item.asserted_at > known_at:
@@ -299,12 +299,14 @@ def semantic_resolution_as_of(
         assertion = assertions.get(item.assertion_id)
         if assertion is None or not _applies_at(assertion, item, valid_at=valid_at):
             continue
+        effective_at = _assertion_effective_at(assertion, item)
         if item.relation is EvidenceRelation.OPPOSES:
-            opposed.add(item.assertion_id)
+            prior = latest_opposition.get(item.assertion_id)
+            if prior is None or effective_at > prior:
+                latest_opposition[item.assertion_id] = effective_at
             continue
-        candidates.append((_assertion_effective_at(assertion, item), assertion))
+        candidates.append((effective_at, assertion))
 
-    candidates = [item for item in candidates if item[1].assertion_id not in opposed]
     if not candidates:
         return SemanticResolutionDecision(
             subject=subject,
@@ -323,8 +325,13 @@ def semantic_resolution_as_of(
     ordered = tuple(sorted(latest_assertions.values(), key=lambda item: str(item.assertion_id)))
     ids = tuple(item.assertion_id for item in ordered)
     semantic_values = {(item.value, item.unit) for item in ordered}
+    contested = any(
+        latest_opposition.get(item.assertion_id, latest) >= latest
+        for item in ordered
+        if item.assertion_id in latest_opposition
+    )
 
-    if len(semantic_values) != 1:
+    if len(semantic_values) != 1 or contested:
         return SemanticResolutionDecision(
             subject=subject,
             property=property,
