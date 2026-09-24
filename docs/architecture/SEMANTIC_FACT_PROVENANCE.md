@@ -187,8 +187,7 @@ Two runs over the same canonical observations must converge on the same
 assertions/evidence/current resolution regardless of how those observations are
 partitioned into pages.
 
-The consolidation action supplies its durable task creation time as asserted_at.
-This keeps system knowledge time truthful and deterministic across retries.
+Before derivation begins, the consolidation action durably freezes its exact input record keys and one asserted_at timestamp in a consolidation_input record. Retries therefore process the same evidence page under the same system-knowledge timestamp even if newer observations arrive later.
 
 ## Concurrency and replay
 
