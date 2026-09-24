@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
 from uuid import uuid4
 
 import pytest
@@ -83,6 +84,26 @@ def _natural_policy(
 
 def test_strip_thinking_preserves_plain_answer():
     assert _strip_thinking("final answer") == "final answer"
+
+
+def test_transport_envelope_redacts_hidden_thinking_but_preserves_diagnostics():
+    secret = "private reasoning that must not be persisted"
+
+    redacted = llm._redact_hidden_thinking(
+        {
+            "message": {"content": '{"answer":"ok"}', "thinking": secret},
+            "eval_count": 17,
+        }
+    )
+
+    assert redacted["message"]["content"] == '{"answer":"ok"}'
+    assert redacted["eval_count"] == 17
+    assert redacted["message"]["thinking"] == {
+        "redacted": True,
+        "utf8_bytes": len(secret.encode("utf-8")),
+        "sha256": hashlib.sha256(secret.encode("utf-8")).hexdigest(),
+    }
+    assert secret not in str(redacted)
 
 
 def test_strip_thinking_removes_complete_think_block():

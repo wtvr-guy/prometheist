@@ -1,8 +1,8 @@
 # Experiment 2 — Person-dependent memory sufficiency
 
-**Status:** v1 rejected/revise from native evidence; v2 candidate and prospective
-holdout frozen for a new native `qwen3:4b-instruct-2507-q4_K_M` run. Production
-behavior is unchanged.
+**Status:** v1 and v2 rejected/revise from native evidence. The decomposed v3
+candidate and a new prospective holdout are frozen for native
+`qwen3:4b-instruct-2507-q4_K_M` execution. Production behavior is unchanged.
 
 **Measured failure:** in the verified `PERSON-FIDELITY-001` native run, the
 user-prompt Composer returned `sufficient=true` on its first call for probes 1–9,
@@ -10,9 +10,11 @@ including a novel person-dependent decision with no personal evidence and a
 characteristic-expression task with no style evidence. Adaptive Recall therefore
 performed no work.
 
-**Changed mechanism:** the Composer's semantic sufficiency contract only. Retrieval,
-packet bounds, source policy, model, transport, output schema, final response, and
-Adaptive Recall remain fixed.
+**Changed mechanism:** v3 decomposes the experimental Composer decision into a
+current-evidence specialist and a historical-memory-completeness specialist. The
+application deterministically returns sufficient when history is unnecessary and
+otherwise invokes the second specialist. Retrieval, packet bounds, source policy,
+model, transport, final response, and Adaptive Recall remain fixed.
 
 ## Hypothesis
 
@@ -55,6 +57,38 @@ The result is directional evidence that the generic-answerability distinction he
 but the v1 wording overcorrects current evidence and does not reliably decompose a
 question into all material evidence requirements. It is not a production candidate.
 
+## v2 native result
+
+The latest exact retained v2 result is
+[`PERSON-FIDELITY-EXP2-COMPOSER-SUFFICIENCY_2026-09-21_223254.json`](../../benchmarks/results/PERSON-FIDELITY-EXP2-COMPOSER-SUFFICIENCY_2026-09-21_223254.json),
+with its permanent 511-file raw journal rooted at
+[`2026-09-21_223254`](../../benchmarks/generated/pfmx/2026-09-21_223254). It was
+collected at revision `e373ac0b` with three trials per case.
+
+| Measure | Production contract | v2 candidate |
+|---|---:|---:|
+| Cases passing every trial | 12/17 | 14/17 |
+| Frozen failures repaired | — | 3 |
+| Frozen passes regressed | — | 1 |
+
+The candidate repaired the context-adjacent partial cases
+`cs-004-partial-person-evidence`, `cs-005-empty-person-decision`, and
+`cs2-014-context-partial`. It failed both one-sided reconciliation controls,
+`cs-008-one-sided-contradiction` and `cs2-015-one-sided-pattern`, by returning
+`sufficient=true` on all six trials. It also regressed
+`cs2-012-current-personal-fact`: despite the prompt explicitly stating that walnuts
+trigger the user's allergy, all three trials demanded historical allergy evidence.
+
+Those results are deterministic semantic failures, not sampling noise. They show
+that adding more ordered instructions to the same small-model decision does not
+reliably preserve the current-evidence rule while also enforcing material-slot
+completeness. v2 is rejected.
+
+The raw v2 journal proved which prompt, evidence, output, and stage verdict were
+used. It did not independently record the parse/schema verdict for each retry or the
+backend's complete response metadata. That observability gap motivated the v3
+artifact additions below; missing v2 metadata is not reconstructed after the fact.
+
 ## Frozen controlled cases
 
 The original shared fixture
@@ -93,22 +127,44 @@ decision procedure. Its key falsifiable addition is that evidence must discrimin
 the requested context: a packet still compatible with materially different answers
 is incomplete.
 
+The v3 fixture
+[`person_fidelity_mechanism_experiments_v3.json`](../../benchmarks/person_fidelity_mechanism_experiments_v3.json)
+permanently retains all seventeen earlier cases and adds eight cases frozen before
+v3 native execution. The new holdout independently tests:
+
+- a current personal health fact and an ordinary general-knowledge question;
+- current constraints that supersede older preferences;
+- self-report without observed behavior and observed behavior without self-report;
+- the corresponding complete two-sided reconciliation; and
+- context-adjacent versus context-diagnostic evidence for serious criticism.
+
+The v3 candidate gives the first specialist no historical packet and asks only
+whether history is required. When it is, a separate fresh specialist receives the
+historical packet and asks only whether every material historical slot is filled.
+Neither specialist may perform the other's semantic decision. This is an
+experimental decomposition only; the production Composer remains unchanged pending
+native acceptance.
+
 ## Candidate and decision rule
 
 Every new run captures the exact production and candidate prompts, quarantined
-evidence payloads and references, schemas, token limits, model identity, raw outputs
-or transport errors, validated stage results, benchmark evaluations, fixture hash,
-revision, and final disposition in a separate hash-linked interaction chain for each
-trial. A content-addressed `run_manifest.json` inventories every raw artifact byte,
-and the compact result records the manifest hash. Compact content-derived attempt
-directory names preserve Windows path budget; the manifest and case-input artifact
-retain the complete experiment, variant, case, and trial identity. Both are written by
+evidence payloads and references, schemas, token limits, model identity and digest,
+exact Ollama request and response envelopes, HTTP/timing/token metadata, every
+parse/schema acceptance or rejection, raw outputs or transport errors, validated
+stage results, benchmark evaluations, host/runtime evidence, fixture hash, revision,
+and final disposition in a separate hash-linked interaction chain for each trial.
+Hidden reasoning text is not persisted verbatim; its byte length and SHA-256 remain
+in the redacted response envelope. A content-addressed `run_manifest.json`
+inventories every raw artifact byte, and the compact result records the manifest
+hash. Compact content-derived attempt directory names preserve Windows path budget;
+the manifest and case-input artifact retain the complete experiment, variant, case,
+and trial identity. Both are written by
 [`run_person_fidelity_mechanism_experiments.py`](../../benchmarks/run_person_fidelity_mechanism_experiments.py).
 
-The retained 2026-09-21 v1 and v2 compact results predate this correction. They
-contain prompts, raw outputs, parsed outputs, errors, and verdicts, but do not
-contain independent per-invocation chains. That missing causal evidence cannot be
-reconstructed honestly after the runs; only a rerun can create it.
+The earlier 2026-09-21 v1 and first v2 compact results predate per-attempt journals.
+The latest v2 run has complete invocation chains but predates explicit validation
+and backend diagnostic artifacts. Neither omission can be reconstructed honestly
+after execution; only a rerun can create the missing evidence.
 
 Promotion requires all of the following:
 
@@ -129,12 +185,12 @@ has improved end to end.
 
 ## Run
 
-Commit the v2 experimental harness first so the native result binds to immutable
-source, then run on the configured Windows/Ollama host. The script defaults to v2:
+Commit the v3 experimental harness first so the native result binds to immutable
+source, then run on the configured Windows/Ollama host. The script defaults to v3:
 
 ```powershell
 .\scripts\run_person_fidelity_mechanism_experiments.ps1 `
-  -Experiment composer -CandidateVersion v2 -Trials 3
+  -Experiment composer -CandidateVersion v3 -Trials 3
 ```
 
 Verify the resulting artifact independently:

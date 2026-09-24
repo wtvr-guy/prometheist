@@ -475,6 +475,13 @@ class PerceptLLM(OllamaClient):
             f"[Current percept]\n{percept}\n\n"
             f"[Executable capability catalog]\n{catalog_text}"
         )
+
+        def validate_decision(content: str) -> PreCognitiveDisposition:
+            decision = PreCognitiveDisposition.model_validate_json(content)
+            if any(index >= len(capability_catalog) for index in decision.capability_indices):
+                raise ValueError("pre-cognitive worker selected an unavailable capability")
+            return decision
+
         last_error: ValueError | None = None
         for token_cap in (48, 96):
             try:
@@ -486,10 +493,11 @@ class PerceptLLM(OllamaClient):
                     PreCognitiveDisposition.model_json_schema(),
                     token_cap,
                 )
-                decision = PreCognitiveDisposition.model_validate_json(content)
-                if any(index >= len(capability_catalog) for index in decision.capability_indices):
-                    raise ValueError("pre-cognitive worker selected an unavailable capability")
-                return decision
+                return self._validated_model_output(
+                    kind="PRECOGNITIVE_DISPOSITION",
+                    raw_output=content,
+                    validator=lambda: validate_decision(content),
+                )
             except ValueError as exc:
                 last_error = exc
         raise ValueError(f"pre-cognitive disposition failed to validate: {last_error}")
@@ -516,7 +524,11 @@ class PerceptLLM(OllamaClient):
                     MemorySufficiencyDecision.model_json_schema(),
                     token_cap,
                 )
-                return MemorySufficiencyDecision.model_validate_json(content)
+                return self._validated_model_output(
+                    kind="V2_MEMORY_SUFFICIENCY",
+                    raw_output=content,
+                    validator=lambda: MemorySufficiencyDecision.model_validate_json(content),
+                )
             except ValueError as exc:
                 last_error = exc
         raise ValueError(f"v2 Composer decision failed to validate: {last_error}")
@@ -530,6 +542,12 @@ class PerceptLLM(OllamaClient):
                 evidence_scope=HistoricalEvidenceScope.MIXED_CONVERSATION,
                 surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
             )
+
+        def validate_policy(content: str) -> ResponsePolicy:
+            policy = ResponsePolicy.model_validate_json(content)
+            validate_current_literal(percept, policy.insufficient_literal)
+            return policy.model_copy(update={"insufficient_literal": None})
+
         last_error: Exception | None = None
         for token_cap in _retry_token_caps(_base_text_max_tokens()):
             try:
@@ -541,9 +559,11 @@ class PerceptLLM(OllamaClient):
                     ResponsePolicy.model_json_schema(),
                     token_cap,
                 )
-                policy = ResponsePolicy.model_validate_json(content)
-                validate_current_literal(percept, policy.insufficient_literal)
-                return policy.model_copy(update={"insufficient_literal": None})
+                return self._validated_model_output(
+                    kind="V2_RESPONSE_POLICY",
+                    raw_output=content,
+                    validator=lambda: validate_policy(content),
+                )
             except (ValidationError, ValueError) as exc:
                 last_error = exc
         raise ValueError(f"response policy failed to validate: {last_error}")
@@ -562,8 +582,14 @@ class PerceptLLM(OllamaClient):
                     CurrentFallbackSelection.model_json_schema(),
                     token_cap,
                 )
-                selection = CurrentFallbackSelection.model_validate_json(content)
-                return validate_current_literal(percept, selection.verbatim_value)
+                return self._validated_model_output(
+                    kind="V2_CURRENT_FALLBACK_SELECTION",
+                    raw_output=content,
+                    validator=lambda: validate_current_literal(
+                        percept,
+                        CurrentFallbackSelection.model_validate_json(content).verbatim_value,
+                    ),
+                )
             except (ValidationError, ValueError):
                 continue
         return None
@@ -595,6 +621,19 @@ class PerceptLLM(OllamaClient):
             budget=configured_model_evidence_budget(),
         )
         last_error: Exception | None = None
+
+        def validate_selection(content: str) -> str:
+            selection = ExactSourceSelection.model_validate_json(content)
+            restored = selection.model_copy(
+                update={
+                    "verbatim_value": _restore_verbatim_literals(
+                        selection.verbatim_value,
+                        placeholder_to_literal,
+                    )
+                }
+            )
+            return validate_exact_source_selection(source_texts, restored)
+
         for token_cap in _retry_token_caps(_base_text_max_tokens()):
             try:
                 content = self._structured_with_evidence(
@@ -605,16 +644,11 @@ class PerceptLLM(OllamaClient):
                     ExactSourceSelection.model_json_schema(),
                     token_cap,
                 )
-                selection = ExactSourceSelection.model_validate_json(content)
-                restored = selection.model_copy(
-                    update={
-                        "verbatim_value": _restore_verbatim_literals(
-                            selection.verbatim_value,
-                            placeholder_to_literal,
-                        )
-                    }
+                return self._validated_model_output(
+                    kind="V2_EXACT_SOURCE_SELECTION",
+                    raw_output=content,
+                    validator=lambda: validate_selection(content),
                 )
-                return validate_exact_source_selection(source_texts, restored)
             except (ValidationError, ValueError) as exc:
                 last_error = exc
         raise ValueError(f"exact-source selection failed to validate: {last_error}")
@@ -646,6 +680,26 @@ class PerceptLLM(OllamaClient):
             budget=configured_model_evidence_budget(),
         )
         last_error: Exception | None = None
+
+        def validate_composition(content: str) -> str:
+            composition = ExactSourceComposition.model_validate_json(content)
+            restored = composition.model_copy(
+                update={
+                    "selections": [
+                        selection.model_copy(
+                            update={
+                                "verbatim_value": _restore_verbatim_literals(
+                                    selection.verbatim_value,
+                                    placeholder_to_literal,
+                                )
+                            }
+                        )
+                        for selection in composition.selections
+                    ]
+                }
+            )
+            return validate_exact_source_composition(percept, source_texts, restored)
+
         for token_cap in _retry_token_caps(_base_text_max_tokens()):
             try:
                 content = self._structured_with_evidence(
@@ -656,23 +710,11 @@ class PerceptLLM(OllamaClient):
                     ExactSourceComposition.model_json_schema(),
                     token_cap,
                 )
-                composition = ExactSourceComposition.model_validate_json(content)
-                restored = composition.model_copy(
-                    update={
-                        "selections": [
-                            selection.model_copy(
-                                update={
-                                    "verbatim_value": _restore_verbatim_literals(
-                                        selection.verbatim_value,
-                                        placeholder_to_literal,
-                                    )
-                                }
-                            )
-                            for selection in composition.selections
-                        ]
-                    }
+                return self._validated_model_output(
+                    kind="V2_EXACT_SOURCE_COMPOSITION",
+                    raw_output=content,
+                    validator=lambda: validate_composition(content),
                 )
-                return validate_exact_source_composition(percept, source_texts, restored)
             except (ValidationError, ValueError) as exc:
                 last_error = exc
         raise ValueError(f"exact-source composition failed to validate: {last_error}")

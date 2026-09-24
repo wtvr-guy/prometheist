@@ -3,8 +3,8 @@ param(
     [string]$Experiment = "composer",
     [ValidateRange(1, 20)]
     [int]$Trials = 3,
-    [ValidateSet("v1", "v2")]
-    [string]$CandidateVersion = "v2",
+    [ValidateSet("v1", "v2", "v3")]
+    [string]$CandidateVersion = "v3",
     [string]$VerifyResult,
     [string]$ArtifactRoot,
     [switch]$ValidateOnly

@@ -41,6 +41,10 @@ prove that a shared directory was the complete artifact set for the run.
   invocation and retry envelopes, stage result or error, evaluation, and final
   disposition. Deterministic paths retain the same chain without inventing an LLM
   invocation.
+- Added a one-to-one `LLM_VALIDATION` record for every model attempt so parse/schema
+  failures and retry reasons are explicit rather than inferred from the final result.
+- Added exact redacted Ollama request/response diagnostics and bound the run manifest
+  to host hardware, Ollama version, model digest, and loaded-model evidence.
 - Linked each schema-v2 compact result to that manifest by SHA-256.
 - Added offline verification of the result receipt, exact manifested file set,
   every file digest, canonical event record/commit pairs, complete interaction

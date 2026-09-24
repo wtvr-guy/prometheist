@@ -58,6 +58,12 @@ Git-visible and permanent. A native person-fidelity run writes a content-address
 manifest over every raw event and interaction artifact so the compact result under
 `benchmarks/results/` remains connected to the exact causal record.
 
+Current mechanism-run manifests also bind the host/runtime evidence used to interpret
+model behavior: operating-system and Python identity, CPU/RAM facts, discoverable
+NVIDIA GPU/driver/VRAM facts, Ollama version, configured model, immutable model
+digest, and the loaded-model record returned by Ollama. New artifact-backed runs fail
+closed if the Ollama version or configured model digest cannot be captured.
+
 The journal contains two classes of records:
 
 ```text
@@ -165,6 +171,7 @@ The interaction chain currently records:
 - each completed v2 architectural stage result;
 - stage errors;
 - each exact v2 stateless LLM invocation envelope;
+- one parse/schema validation artifact linked to every LLM invocation;
 - the exact current-only evidence policy and closed source allowlist as its own stage artifact;
 - the exact pre-cognitive aperture/disposition and execution plan as part of the work-triage stage artifact;
 - exact work/tool results as part of the work stage artifact;
@@ -203,7 +210,31 @@ Every LLM call made by the live v2 user-prompt worker is independently journaled
 - generation token cap;
 - effective generation temperature;
 - normalized constrained model output when the call succeeds;
-- exception type/message when the call fails.
+- exception type/message when the call fails;
+- exact backend request path and JSON body;
+- the HTTP status, elapsed wall time, transport error, and exact response-body byte
+  count/SHA-256 when present; and
+- the complete backend JSON response envelope, including token counts, durations,
+  completion reason, and model metadata returned by Ollama.
+
+Hidden-reasoning fields are never stored as plaintext. The response envelope keeps
+their location plus byte length and SHA-256 so truncation, unexpected thinking-mode
+activation, and cross-attempt identity remain diagnosable without turning private
+chain-of-thought into an artifact. User-visible constrained output remains exact.
+
+Every invocation is followed by a linked `LLM_VALIDATION` artifact. It records:
+
+- the invocation artifact ID and hash;
+- invocation index and semantic kind;
+- `VALID`, `INVALID`, or `TRANSPORT_ERROR` status;
+- the SHA-256 of the raw normalized output when present;
+- the exact parsed/validated object when accepted; and
+- the parser/schema/transport exception type and message when rejected.
+
+Retries therefore remain separate causal attempts. A malformed or truncated first
+response and a valid second response produce two invocation artifacts and two linked
+validation artifacts; the rejected attempt is not overwritten or inferable only from
+the later success.
 
 For natural response this includes the resolved Prometheist personality/identity
 system prompt. For response policy it proves that only current authority was
@@ -235,7 +266,9 @@ complete durable worker claim/result in PostgreSQL
 allow downstream stage
 ```
 
-LLM invocation artifacts are written during stage computation, before the stage-result artifact.
+LLM invocation and validation artifacts are written during stage computation, before
+the stage-result artifact. A successful invocation cannot be followed by another
+model call in the same worker until its validation outcome has been persisted.
 
 A stage is therefore recoverable if the process disappears after the artifact write but before the PostgreSQL worker result commits.
 
