@@ -1123,6 +1123,7 @@ def self_context_admission(
         and evidence_scope
         in {
             HistoricalEvidenceScope.DERIVED_INTERNAL,
+            HistoricalEvidenceScope.SELF_MODEL,
             HistoricalEvidenceScope.GENERAL_OR_CURRENT,
         }
     ):
