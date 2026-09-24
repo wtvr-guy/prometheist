@@ -101,6 +101,15 @@ relevant to the current request:
 
 The system remains the owner of ordering, identity, provenance, WorkingState, resource policy, and durable control state.
 
+The same current-only policy also governs derived self-memory admission. A
+`SELF_MODEL` scope means the user is asking for Prometheist's provenance-grounded
+person-model conclusion (for example a usual preference, trait pattern, value, or
+likely decision), rather than asking what the user explicitly said. For
+`USER_AUTHORED`, exact-source, tool, and other source-restricted requests,
+self-memory remains routing context only: its statements can seed Adaptive Recall,
+but they cannot substitute for the required canonical event role. See
+[SELF_MEMORY_SYSTEM.md](SELF_MEMORY_SYSTEM.md).
+
 Deterministic salience and model reasoning are intentionally separate. The salience layer may provide bounded advisory context to later model workers, but models do not gain policy authority over response requirements, reflex authorization, task identity, scheduling, or memory ordering by virtue of seeing the salience result.
 
 ## 5. The pre-cognitive work-triage specialist
