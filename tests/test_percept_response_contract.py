@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from types import SimpleNamespace
 
 import pytest
 
@@ -16,6 +17,7 @@ from jit_agent.models import MemoryNeed, MemoryPacket
 from jit_agent.percept_response_runtime import (
     MemorySufficiencyDecision,
     PreCognitiveDisposition,
+    _compose_memory_package,
     _effective_adaptive_stage,
     _external_capability_catalog,
 )
@@ -48,6 +50,49 @@ def test_composer_sufficient_contract_has_no_deficit() -> None:
 def test_composer_insufficient_contract_requires_semantic_deficit() -> None:
     with pytest.raises(ValueError):
         MemorySufficiencyDecision(sufficient=False, memory_deficit=None)
+
+
+def test_empty_self_model_packet_cannot_be_accepted_as_sufficient(monkeypatch) -> None:
+    packet = MemoryPacket(
+        memory_request_id=uuid.uuid4(),
+        need=MemoryNeed(query_text="Which option would I probably choose?"),
+        supported=False,
+        items=[],
+    )
+
+    class IncorrectlyPermissiveComposer:
+        def assess_memory_sufficiency(
+            self,
+            percept,
+            memory_packet,
+            self_context=None,
+            *,
+            person_history_required=False,
+        ):
+            del percept, memory_packet, self_context
+            assert person_history_required is True
+            return MemorySufficiencyDecision(
+                sufficient=True,
+                memory_deficit=None,
+            )
+
+    monkeypatch.setattr(
+        "jit_agent.percept_response_runtime._adaptive_recall",
+        lambda *args, **kwargs: packet,
+    )
+
+    package = _compose_memory_package(
+        None,
+        IncorrectlyPermissiveComposer(),
+        SimpleNamespace(user_text="Which option would I probably choose?"),
+        packet,
+        [],
+        person_history_required=True,
+    )
+
+    assert package.sufficient is False
+    assert package.adaptive_recall_rounds == 1
+    assert "history-dependent request" in package.unresolved_memory_deficit
 
 
 def test_legacy_memory_research_modes_are_not_pre_cognitive_capabilities() -> None:
