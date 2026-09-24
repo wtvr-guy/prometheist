@@ -9,6 +9,7 @@ the final state transition.
 """
 from __future__ import annotations
 
+from datetime import datetime
 from enum import Enum
 import json
 from uuid import UUID, uuid5
@@ -177,6 +178,26 @@ def _proposal_root_allowed(conn: psycopg.Connection, event) -> bool:
     return bool(policy and policy.get("self_model_evidence") is True)
 
 
+def _event_observed_at(event) -> datetime:
+    """Recover source-observation time without rewriting canonical insertion time."""
+
+    payload = event.payload if isinstance(event.payload, dict) else {}
+    percept = payload.get("percept")
+    if isinstance(percept, dict):
+        value = percept.get("observed_at")
+        if isinstance(value, str):
+            return datetime.fromisoformat(value)
+    fixture = payload.get("benchmark_fixture")
+    if isinstance(fixture, dict):
+        value = fixture.get("occurred_at")
+        if isinstance(value, str):
+            return datetime.fromisoformat(value)
+    value = payload.get("occurred_at")
+    if isinstance(value, str):
+        return datetime.fromisoformat(value)
+    return event.created_at
+
+
 def _event_content(event) -> str:
     text = event.payload.get("text")
     if isinstance(text, str) and text.strip():
@@ -238,7 +259,7 @@ def collect_consolidation_evidence(
                 event_id=event.event_id,
                 event_type=event.event_type,
                 source=event.source,
-                created_at=event.created_at.isoformat(),
+                created_at=_event_observed_at(event).isoformat(),
                 content=_event_content(event),
                 context_refs=tuple(sorted(contexts)),
             )
@@ -318,6 +339,7 @@ def materialize_proposal(
             relation=SelfEvidenceRelation.SUPPORTS,
             origin=SelfEvidenceOrigin.DIRECT,
             derivation_method=SELF_REFLECTION_POLICY,
+            observed_at=datetime.fromisoformat(root.created_at),
             known_at=event_store.get_event_by_id(conn, root.event_id).created_at,
             context_tags=root.context_refs,
         )
