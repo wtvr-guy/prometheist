@@ -53,7 +53,7 @@ class SourcePolicy(FrozenRecord):
 class TriageDecision(FrozenRecord):
     task_required: bool
     candidate_task_class: TaskClass | None
-    evidence_domains: tuple[HistoricalEvidenceScope, ...] = Field(max_length=7)
+    evidence_domains: tuple[HistoricalEvidenceScope, ...] = Field(max_length=8)
     urgency_class: UrgencyClass
 
     @model_validator(mode="after")
