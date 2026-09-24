@@ -75,6 +75,7 @@ current prompt + bounded aperture
   -> fresh current-only evidence-policy specialist
   -> durable source/surface policy
   -> bounded aperture filtered by that policy
+  -> bounded Working Self activation under the same evidence policy
   -> fresh pre-cognitive non-memory work-triage specialist
   -> deterministic external work execution
   -> fresh Composer memory-sufficiency judgment
