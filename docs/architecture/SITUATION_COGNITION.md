@@ -160,12 +160,17 @@ hidden consolidation call in a responder or user intake, no model memory rewrite
 and no claim of learned procedural skills or biological replay. These derived
 projections can be retrieved under the explicit `DERIVED_INTERNAL` evidence scope.
 
-Each page separately derives a durable `SemanticFact` per exact subject/property
-whose value is unambiguous within that page -- distinct from the disposable
-per-page projection above, which intentionally aggregates across every subject
-sharing a property. A changed value creates a new, non-destructive record rather
-than editing the old one; an ambiguous page (a subject's own evidence disagrees
-with itself) is left unresolved rather than guessed. See
+Semantic memory is deliberately independent of the storage page. Every unique
+structured observation contributes an immutable SemanticEvidence relationship to
+a content-addressed SemanticAssertion. The current subject/property conclusion is
+an append-only SemanticResolution with ACCEPTED, AMBIGUOUS, or UNKNOWN status.
+Stable evidence identities deduplicate overlapping situation snapshots.
+
+Page agreement is never a condition for admitting semantic evidence. Historical
+backfill remains available without rolling the current resolution backward, and
+equal-effective-time conflicts become explicit ambiguity rather than a UUID
+tie-break. Consolidation uses the durable task creation time as asserted_at while
+preserving each source observation's observed_at. See
 [`SEMANTIC_FACT_PROVENANCE.md`](SEMANTIC_FACT_PROVENANCE.md) and
 `uv run prometheist memory-fact --subject <ref> --property <ref>`.
 
