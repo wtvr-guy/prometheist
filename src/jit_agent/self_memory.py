@@ -468,7 +468,7 @@ def ensure_self_representation(
         )
         return expected
     stored = SelfRepresentation.model_validate(existing)
-    if stored != expected:
+    if stored.model_copy(update={"created_at": created_at}) != expected:
         raise ValueError(f"conflicting immutable self representation: {representation_id}")
     return stored
 
@@ -521,7 +521,8 @@ def record_self_evidence(
         COGNITIVE_NAMESPACE,
         (
             f"self-evidence:{representation.representation_id}:"
-            f"{root_event_id}:{relation.value}:{origin.value}:{derivation_method}"
+            f"{root_event_id}:{relation.value}:{origin.value}:{derivation_method}:"
+            f"{','.join(sorted(context_tags))}"
         ),
     )
     key = f"{representation.representation_id}:{evidence_id}"
@@ -1018,6 +1019,7 @@ def _search_self_candidates(
     *,
     entity_refs: tuple[str, ...],
     limit: int,
+    include_core_fallback: bool,
 ) -> tuple[SelfContextItem, ...]:
     """Sparse activation over current self heads without scanning lifetime history."""
 
@@ -1095,7 +1097,7 @@ def _search_self_candidates(
             )
 
     remaining = limit - len(candidates)
-    core_limit = min(MAX_CORE_SELF_ITEMS, remaining)
+    core_limit = min(MAX_CORE_SELF_ITEMS, remaining) if include_core_fallback else 0
     if core_limit:
         central_rows = conn.execute(
             """
@@ -1185,6 +1187,14 @@ def activate_self_context(
             query_text,
             entity_refs=entity_refs,
             limit=limit,
+            include_core_fallback=(
+                surface_mode is ResponseSurfaceMode.NATURAL_LANGUAGE
+                and evidence_scope
+                in {
+                    HistoricalEvidenceScope.SELF_MODEL,
+                    HistoricalEvidenceScope.DERIVED_INTERNAL,
+                }
+            ),
         ),
     )
 
