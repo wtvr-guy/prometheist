@@ -27,6 +27,7 @@ is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
 - [`architecture/SPECIALIST_WORKER_MODULARITY.md`](architecture/SPECIALIST_WORKER_MODULARITY.md) — one semantic responsibility per LLM worker, split criteria, runtime guards, and non-user percept triage boundary.
 - [`architecture/LOSSLESS_PROGRESSIVE_MEMORY.md`](architecture/LOSSLESS_PROGRESSIVE_MEMORY.md) — exact canonical evidence, replaceable derived structures, bounded recall, and memory-scaling constraints.
 - [`architecture/SEMANTIC_FACT_PROVENANCE.md`](architecture/SEMANTIC_FACT_PROVENANCE.md) — append-only semantic assertions, per-source evidence, bi-temporal queries, ambiguity, and current belief resolutions.
+- [`architecture/SELF_MEMORY_SYSTEM.md`](architecture/SELF_MEMORY_SYSTEM.md) — layered Working/Conceptual/relational/prospective/narrative self memory, canonical-root provenance, counterevidence review, prediction feedback, and response-path admission.
 - [`architecture/IMMUTABLE_ARTIFACT_JOURNAL.md`](architecture/IMMUTABLE_ARTIFACT_JOURNAL.md) — independent append-only artifacts, content-addressed blobs, human audit rendering, signed journal heads, interruption recovery, and database reconstruction.
 - [`architecture/SYSTEM_DETERMINISM.md`](architecture/SYSTEM_DETERMINISM.md) — replayable control authority and prohibition on race-based durable decisions.
 - [`architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md) — attention/resource separation, headroom, preemption, guarded launch, recovery, and effects.
