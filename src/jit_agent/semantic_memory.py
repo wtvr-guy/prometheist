@@ -71,9 +71,7 @@ class SemanticAssertion(FrozenRecord):
     unit: Reference | None = None
     claim_valid_from: datetime | None = None
     claim_valid_until: datetime | None = None
-    created_at: datetime
 
-    _created_aware = field_validator("created_at")(aware)
     _validity_aware = field_validator("claim_valid_from", "claim_valid_until")(
         _aware_optional
     )
@@ -98,16 +96,16 @@ class SemanticEvidence(FrozenRecord):
     source_id: UUID
     relation: EvidenceRelation
     observed_at: datetime
-    asserted_at: datetime
+    known_at: datetime
     confidence: float = Field(ge=0.0, le=1.0)
     derivation_method: Reference
 
-    _aware = field_validator("observed_at", "asserted_at")(aware)
+    _aware = field_validator("observed_at", "known_at")(aware)
 
     @model_validator(mode="after")
     def temporal_order(self) -> "SemanticEvidence":
-        if self.asserted_at < self.observed_at:
-            raise ValueError("asserted_at cannot precede observed_at")
+        if self.known_at < self.observed_at:
+            raise ValueError("known_at cannot precede observed_at")
         return self
 
 
@@ -225,7 +223,7 @@ def semantic_assertions(
         SemanticAssertion.model_validate(item)
         for item in _paged_kind(conn, ASSERTION_KIND, subject, property)
     )
-    return tuple(sorted(values, key=lambda item: (item.created_at, str(item.assertion_id))))
+    return tuple(sorted(values, key=lambda item: str(item.assertion_id)))
 
 
 def semantic_evidence(
@@ -235,7 +233,7 @@ def semantic_evidence(
         SemanticEvidence.model_validate(item)
         for item in _paged_kind(conn, EVIDENCE_KIND, subject, property)
     )
-    return tuple(sorted(values, key=lambda item: (item.asserted_at, str(item.evidence_id))))
+    return tuple(sorted(values, key=lambda item: (item.known_at, str(item.evidence_id))))
 
 
 def current_semantic_resolution(
@@ -304,7 +302,7 @@ def semantic_resolution_as_of(
     latest_opposition: dict[UUID, datetime] = {}
 
     for item in semantic_evidence(conn, subject, property):
-        if item.asserted_at > known_at:
+        if item.known_at > known_at:
             continue
         assertion = assertions.get(item.assertion_id)
         if assertion is None or not _applies_at(assertion, item, valid_at=valid_at):
@@ -540,8 +538,9 @@ def record_semantic_evidence(
     value: Scalar,
     source_id: UUID,
     observed_at: datetime,
+    known_at: datetime,
+    resolved_at: datetime,
     source_kind: EvidenceSourceKind = EvidenceSourceKind.PERCEPT,
-    asserted_at: datetime,
     confidence: float,
     derivation_method: str,
     unit: str | None = None,
@@ -552,11 +551,14 @@ def record_semantic_evidence(
     """Record one observation and advance current resolution atomically."""
 
     aware(observed_at)
-    aware(asserted_at)
+    aware(known_at)
+    aware(resolved_at)
     _aware_optional(claim_valid_from)
     _aware_optional(claim_valid_until)
-    if asserted_at < observed_at:
-        raise ValueError("asserted_at cannot precede observed_at")
+    if known_at < observed_at:
+        raise ValueError("known_at cannot precede observed_at")
+    if resolved_at < known_at:
+        raise ValueError("resolved_at cannot precede known_at")
 
     key = semantic_key(subject, property)
     with record_lock(conn, f"semantic:{key}"):
@@ -580,7 +582,6 @@ def record_semantic_evidence(
                 unit=unit,
                 claim_valid_from=claim_valid_from,
                 claim_valid_until=claim_valid_until,
-                created_at=asserted_at,
             )
             put_record(
                 conn,
@@ -611,7 +612,7 @@ def record_semantic_evidence(
             source_id=source_id,
             relation=relation,
             observed_at=observed_at,
-            asserted_at=asserted_at,
+            known_at=known_at,
             confidence=confidence,
             derivation_method=derivation_method,
         )
@@ -653,7 +654,7 @@ def record_semantic_evidence(
             current_assertion=current_assertion,
             assertion=assertion,
             evidence=evidence,
-            resolved_at=asserted_at,
+            resolved_at=resolved_at,
         )
         resolution, resolution_created = _persist_resolution(
             conn,
@@ -663,7 +664,7 @@ def record_semantic_evidence(
             candidates=candidates,
             selected=selected,
             support_observed_at=support_observed_at,
-            resolved_at=asserted_at,
+            resolved_at=resolved_at,
             trigger_evidence_id=evidence_id,
         )
         return SemanticUpdateResult(
