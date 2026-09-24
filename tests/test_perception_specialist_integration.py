@@ -18,6 +18,7 @@ from jit_agent.response_policy import (
     ResponsePolicy,
     ResponseSurfaceMode,
 )
+from jit_agent.self_memory import SelfContextAdmission, SelfContextPacket
 
 
 def _percept():
@@ -71,6 +72,17 @@ def test_work_triage_inherits_source_scope_and_salience_after_memory_activation(
 
     monkeypatch.setattr("jit_agent.percept_response_runtime._stage_result", stage_result)
     monkeypatch.setattr("jit_agent.percept_response_runtime.open_attention_aperture", aperture)
+    monkeypatch.setattr(
+        "jit_agent.percept_response_runtime.activate_self_context",
+        lambda *_args, **_kwargs: SelfContextPacket(
+            admission=SelfContextAdmission.ROUTING_ONLY,
+            items=(),
+        ),
+    )
+    monkeypatch.setattr(
+        "jit_agent.percept_response_runtime.persist_working_self",
+        lambda *_args, **_kwargs: None,
+    )
     interaction = SimpleNamespace(
         user_text=percept.normalized_text,
         conversation_id=percept.conversation_id,
