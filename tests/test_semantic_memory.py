@@ -47,7 +47,7 @@ def _record(
         property=property_name,
         value=value,
         confidence=confidence,
-        source_percept_id=source or uuid4(),
+        source_id=source or uuid4(),
         observed_at=observed,
         asserted_at=asserted or observed,
         derivation_method="test/v2",
