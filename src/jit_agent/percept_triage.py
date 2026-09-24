@@ -31,6 +31,7 @@ class SourcePolicy(FrozenRecord):
     response_required: bool = False
     natural_language_response: bool = False
     semantic_triage: bool = False
+    self_model_evidence: bool = False
     deterministic_task: TaskClass | None = None
     allowed_task_classes: tuple[TaskClass, ...] = (TaskClass.OBSERVE, TaskClass.RECONCILE)
     evidence_domains: tuple[HistoricalEvidenceScope, ...] = (HistoricalEvidenceScope.DERIVED_INTERNAL,)
