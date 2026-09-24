@@ -273,6 +273,36 @@ def test_opposing_evidence_makes_selected_assertion_ambiguous(conn):
     assert current.selected_assertion_id is None
 
 
+def test_later_support_can_resolve_older_opposition_in_history(conn):
+    _record(conn, value="latte", observed=_at(0))
+    _record(
+        conn,
+        value="latte",
+        observed=_at(5),
+        relation=EvidenceRelation.OPPOSES,
+    )
+    later = _record(conn, value="latte", observed=_at(10))
+
+    contested = semantic_resolution_as_of(
+        conn,
+        "person:mike",
+        "preferred_drink",
+        valid_at=_at(5),
+        known_at=_at(20),
+    )
+    restored = semantic_resolution_as_of(
+        conn,
+        "person:mike",
+        "preferred_drink",
+        valid_at=_at(15),
+        known_at=_at(20),
+    )
+
+    assert contested.status is ResolutionStatus.AMBIGUOUS
+    assert restored.status is ResolutionStatus.ACCEPTED
+    assert restored.selected_assertion_id == later.assertion.assertion_id
+
+
 def test_conflicting_retry_fails_closed(conn):
     source = uuid4()
     _record(
