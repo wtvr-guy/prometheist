@@ -37,7 +37,7 @@ Stage results reach the independent artifact journal before claim completion.
 Replacement workers rehydrate completed artifacts instead of repeating inference.
 The supervisor verifies each durable worker result against its independent stage
 artifact; a zero process exit code alone cannot complete a stage. Before marking
-the task completed, it checks all six handoffs and the canonical completion record,
+the task completed, it checks all eight handoffs and the canonical completion record,
 verifies the hash chain, and publishes a final-disposition manifest naming
 `SITUATION_PERSIST`. This includes silent, `LLM=null` situations. A failed manifest
 write leaves the task resumable. A crash after scheduler completion but before the
