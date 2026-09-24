@@ -11,7 +11,10 @@ from jit_agent.percept_response_worker import (
     UserPromptLLM,
     UserPromptWorkSelection,
 )
-from jit_agent.percept_response_runtime import _RESPONSE_POLICY_PROMPT
+from jit_agent.percept_response_runtime import (
+    _RESPONSE_POLICY_PROMPT,
+    _SELF_MODEL_COMPOSER_PROMPT,
+)
 from jit_agent.models import EventType, MemoryNeed, MemoryPacket
 from jit_agent.response_policy import (
     HistoricalEvidenceScope,
@@ -95,6 +98,41 @@ def test_user_prompt_composer_accepts_and_renders_typed_self_context(monkeypatch
     assert "What do I usually prefer?" in captured["current_user"]
     assert "[Derived self-memory]" in captured["evidence"]
     assert "The person usually prefers modular systems." in captured["evidence"]
+
+
+def test_self_model_composer_uses_historical_completeness_contract(
+    monkeypatch,
+) -> None:
+    llm = UserPromptLLM()
+    captured: dict[str, str] = {}
+
+    def fake_structured(kind, system, current_user, evidence, schema, max_tokens):
+        del current_user, evidence, schema, max_tokens
+        captured["kind"] = kind
+        captured["system"] = system
+        return (
+            '{"sufficient":false,'
+            '"memory_deficit":"observed behavior relevant to the preference"}'
+        )
+
+    monkeypatch.setattr(llm, "_structured_with_evidence", fake_structured)
+    packet = MemoryPacket(
+        memory_request_id=uuid4(),
+        need=MemoryNeed(query_text="What do I usually prefer?"),
+        supported=False,
+        items=[],
+    )
+
+    decision = llm.assess_memory_sufficiency(
+        "What do I usually prefer?",
+        packet,
+        person_history_required=True,
+    )
+
+    assert decision.sufficient is False
+    assert captured["kind"] == "V2_MEMORY_SUFFICIENCY_USER_PROMPT"
+    assert captured["system"] == _SELF_MODEL_COMPOSER_PROMPT
+    assert "every material slot is filled" in captured["system"]
 
 
 def test_response_policy_defaults_ordinary_questions_to_natural_language() -> None:
