@@ -216,8 +216,6 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
         )
         if decision.candidate_task_class is not TaskClass.CONSOLIDATE:
             return {"skipped": True, "candidates": []}
-        if llm is None:
-            raise RuntimeError("self-schema proposal requires its own guarded specialist")
 
         action_id = uuid5(task.task_id, "registered-action")
         projection = get_record(conn, "consolidation", str(action_id))
@@ -232,6 +230,8 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
                 "root_event_count": 0,
                 "derived_at": derived_at,
             }
+        if llm is None:
+            raise RuntimeError("self-schema proposal requires its own guarded specialist")
         candidates = []
         for batch in reflection_batches(evidence):
             proposal_batch = llm.propose_self_schemas(
@@ -264,8 +264,6 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
         )
         if decision.candidate_task_class is not TaskClass.CONSOLIDATE:
             return {"skipped": True, "reviews": []}
-        if llm is None:
-            raise RuntimeError("self-schema review requires its own guarded specialist")
 
         proposal_output = _output(
             conn,
@@ -275,6 +273,8 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
         )
         if proposal_output.get("skipped") or not proposal_output.get("candidates"):
             return {"skipped": True, "reviews": []}
+        if llm is None:
+            raise RuntimeError("self-schema review requires its own guarded specialist")
         reviews = []
         seen = set()
         for candidate in proposal_output.get("candidates", []):
