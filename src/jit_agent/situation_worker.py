@@ -22,17 +22,40 @@ from jit_agent.percept_triage import (
     deterministic_triage,
     validate_triage,
 )
-from jit_agent.response_policy import HistoricalEvidenceScope, ResponsePolicy, ResponseSurfaceMode, source_types_for_scope
+from jit_agent.response_policy import (
+    HistoricalEvidenceScope,
+    ResponsePolicy,
+    ResponseSurfaceMode,
+    source_types_for_scope,
+)
+from jit_agent.self_memory import get_self_representation
+from jit_agent.self_reflection import (
+    SELF_SCHEMA_PROPOSAL_PROMPT,
+    SELF_SCHEMA_REVIEW_PROMPT,
+    SelfSchemaProposalBatch,
+    SelfSchemaReview,
+    apply_review,
+    collect_consolidation_root_events,
+    materialize_proposal,
+    reflection_batches,
+    reflection_evidence_from_events,
+    render_reflection_evidence,
+    review_memory_packet,
+)
 from jit_agent.situation_runtime import SITUATION_PROTOCOL, SituationStage, SituationTask
 from jit_agent.worker_protocol import deterministic_worker_step_id
 from jit_agent.worker_store import complete_worker_claim, load_worker_claim_envelope, load_worker_result, release_worker_claim
 
 TRIAGE_MAX_TOKENS = 512
+SELF_PROPOSAL_MAX_TOKENS = 768
+SELF_REVIEW_MAX_TOKENS = 384
 SITUATION_MODEL_ITEMS = 8
 _ALLOWED_LLM_KINDS = {
     SituationStage.MEMORY: frozenset(),
     SituationStage.TRIAGE: frozenset({"PERCEPT_TRIAGE"}),
     SituationStage.EXECUTE: frozenset(),
+    SituationStage.SELF_PROPOSE: frozenset({"SELF_SCHEMA_PROPOSAL"}),
+    SituationStage.SELF_REVIEW: frozenset({"SELF_SCHEMA_REVIEW"}),
     SituationStage.COMPOSE: frozenset({"V2_MEMORY_SUFFICIENCY_USER_PROMPT"}),
     SituationStage.RESPOND: frozenset({"FINAL_RESPONSE_V2"}),
     SituationStage.PERSIST: frozenset(),
@@ -44,6 +67,42 @@ class SituationLLM(UserPromptLLM):
         stage = self._artifact_stage
         if not isinstance(stage, SituationStage) or kind not in _ALLOWED_LLM_KINDS[stage]:
             raise RuntimeError(f"{stage} cannot invoke LLM role {kind}")
+
+    def propose_self_schemas(self, evidence: str) -> SelfSchemaProposalBatch:
+        raw = self._structured_with_evidence(
+            "SELF_SCHEMA_PROPOSAL",
+            SELF_SCHEMA_PROPOSAL_PROMPT,
+            "Propose only self representations supported by the supplied evidence.",
+            _quarantined_evidence(evidence),
+            SelfSchemaProposalBatch.model_json_schema(),
+            SELF_PROPOSAL_MAX_TOKENS,
+        )
+        return self._validated_model_output(
+            kind="SELF_SCHEMA_PROPOSAL",
+            raw_output=raw,
+            validator=lambda: SelfSchemaProposalBatch.model_validate_json(raw),
+        )
+
+    def review_self_schema(
+        self,
+        *,
+        candidate: str,
+        evidence: str,
+    ) -> SelfSchemaReview:
+        payload = candidate + "\n\n" + evidence
+        raw = self._structured_with_evidence(
+            "SELF_SCHEMA_REVIEW",
+            SELF_SCHEMA_REVIEW_PROMPT,
+            "Review the supplied self representation against all supplied evidence.",
+            _quarantined_evidence(payload),
+            SelfSchemaReview.model_json_schema(),
+            SELF_REVIEW_MAX_TOKENS,
+        )
+        return self._validated_model_output(
+            kind="SELF_SCHEMA_REVIEW",
+            raw_output=raw,
+            validator=lambda: SelfSchemaReview.model_validate_json(raw),
+        )
 
     def triage(self, policy, evidence: str) -> TriageDecision:
         if not policy.semantic_triage:
@@ -151,6 +210,113 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
         observe_action_outcome(conn, action_id=action_id, receipt_event_id=receipt_id,
                                status="SUCCEEDED", observed_at=receipt.created_at)
         return saved
+    if stage is SituationStage.SELF_PROPOSE:
+        decision = TriageDecision.model_validate(
+            _output(conn, task, SituationStage.TRIAGE, scheduler_key)["decision"]
+        )
+        if decision.candidate_task_class is not TaskClass.CONSOLIDATE:
+            return {"skipped": True, "candidates": []}
+        if llm is None:
+            raise RuntimeError("self-schema proposal requires its own guarded specialist")
+
+        action_id = uuid5(task.task_id, "registered-action")
+        projection = get_record(conn, "consolidation", str(action_id))
+        if projection is None:
+            raise RuntimeError("self reflection requires completed semantic consolidation")
+        derived_at = projection["derived_at"]
+        events = collect_consolidation_root_events(conn, action_id)
+        evidence = reflection_evidence_from_events(events)
+        candidates = []
+        for batch in reflection_batches(evidence):
+            proposal_batch = llm.propose_self_schemas(
+                render_reflection_evidence(batch)
+            )
+            for proposal in proposal_batch.proposals:
+                representation, resolution = materialize_proposal(
+                    conn,
+                    proposal=proposal,
+                    evidence=batch,
+                    derived_at=__import__("datetime").datetime.fromisoformat(
+                        str(derived_at)
+                    ),
+                )
+                candidates.append(
+                    {
+                        "representation_id": str(representation.representation_id),
+                        "proposal": proposal.model_dump(mode="json"),
+                        "candidate_resolution_id": str(resolution.resolution_id),
+                    }
+                )
+        return {
+            "skipped": False,
+            "candidates": candidates,
+            "root_event_count": len(evidence),
+            "derived_at": derived_at,
+        }
+
+    if stage is SituationStage.SELF_REVIEW:
+        decision = TriageDecision.model_validate(
+            _output(conn, task, SituationStage.TRIAGE, scheduler_key)["decision"]
+        )
+        if decision.candidate_task_class is not TaskClass.CONSOLIDATE:
+            return {"skipped": True, "reviews": []}
+        if llm is None:
+            raise RuntimeError("self-schema review requires its own guarded specialist")
+
+        proposal_output = _output(
+            conn,
+            task,
+            SituationStage.SELF_PROPOSE,
+            scheduler_key,
+        )
+        reviews = []
+        seen = set()
+        for candidate in proposal_output.get("candidates", []):
+            representation_id = UUID(candidate["representation_id"])
+            if representation_id in seen:
+                continue
+            seen.add(representation_id)
+            representation = get_self_representation(conn, representation_id)
+            if representation is None:
+                raise RuntimeError(
+                    f"self proposal disappeared before review: {representation_id}"
+                )
+            packet = review_memory_packet(
+                conn,
+                representation=representation,
+                conversation_id=task.conversation_id,
+                correlation_id=task.correlation_id,
+                before_global_seq=task.before_global_seq,
+            )
+            evidence = format_authority_bound_memory_packet(packet)
+            validate_rendered_evidence(
+                (evidence,),
+                budget=configured_model_evidence_budget(),
+            )
+            llm._set_artifact_evidence_refs(
+                tuple(f"event:{item.source_event_id}" for item in packet.items)
+            )
+            review = llm.review_self_schema(
+                candidate=representation.model_dump_json(),
+                evidence=evidence,
+            )
+            resolution = apply_review(
+                conn,
+                representation=representation,
+                review=review,
+                review_packet=packet,
+                resolved_at=task.created_at,
+            )
+            reviews.append(
+                {
+                    "representation_id": str(representation_id),
+                    "review": review.model_dump(mode="json"),
+                    "resolution_id": str(resolution.resolution_id),
+                    "status": resolution.status.value,
+                }
+            )
+        return {"skipped": False, "reviews": reviews}
+
     if stage is SituationStage.COMPOSE:
         packet = MemoryPacket.model_validate(_output(conn, task, SituationStage.MEMORY, scheduler_key)["memory_packet"])
         if not task.policy.response_required or not task.policy.natural_language_response:
@@ -200,9 +366,42 @@ def execute_claimed_situation_step(conn, *, claim_id: UUID, worker_id: str, sche
         if recovered:
             output = recovered["output"]
         else:
-            uses_model = (stage is SituationStage.TRIAGE and deterministic_triage(task.percept, task.situation, task.policy) is None) or (
-                stage in {SituationStage.COMPOSE, SituationStage.RESPOND} and task.policy.response_required and task.policy.natural_language_response)
-            llm = llm_factory(interaction=task, stage=stage, claim_id=claim_id) if uses_model else None
+            self_reflection = False
+            if stage in {SituationStage.SELF_PROPOSE, SituationStage.SELF_REVIEW}:
+                triage_output = _output(
+                    conn,
+                    task,
+                    SituationStage.TRIAGE,
+                    scheduler_key,
+                )
+                triage_decision = TriageDecision.model_validate(
+                    triage_output["decision"]
+                )
+                self_reflection = (
+                    triage_decision.candidate_task_class is TaskClass.CONSOLIDATE
+                )
+            uses_model = (
+                (
+                    stage is SituationStage.TRIAGE
+                    and deterministic_triage(
+                        task.percept,
+                        task.situation,
+                        task.policy,
+                    )
+                    is None
+                )
+                or self_reflection
+                or (
+                    stage in {SituationStage.COMPOSE, SituationStage.RESPOND}
+                    and task.policy.response_required
+                    and task.policy.natural_language_response
+                )
+            )
+            llm = (
+                llm_factory(interaction=task, stage=stage, claim_id=claim_id)
+                if uses_model
+                else None
+            )
             output = execute_situation_stage(conn, task, stage, llm=llm, scheduler_key=scheduler_key)
             artifact_journal.write_stage_result_artifact(
                 interaction_id=task.task_id, conversation_id=task.conversation_id, correlation_id=task.correlation_id,
