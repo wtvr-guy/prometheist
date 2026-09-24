@@ -87,15 +87,12 @@ def list_records_with_prefix(
 
     if not 1 <= limit <= HEAD_PAGE_SIZE:
         raise ValueError("head page exceeds bounded read policy")
-    escaped = (
-        prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-    ) + "%"
     rows = conn.execute(
         """SELECT record_key, payload FROM cognitive_heads
-           WHERE record_kind = %s AND record_key LIKE %s ESCAPE '\\'
+           WHERE record_kind = %s AND starts_with(record_key, %s)
              AND record_key > %s
            ORDER BY record_key LIMIT %s""",
-        (kind, escaped, after_key, limit),
+        (kind, prefix, after_key, limit),
     ).fetchall()
     return [(str(row[0]), dict(row[1])) for row in rows]
 
