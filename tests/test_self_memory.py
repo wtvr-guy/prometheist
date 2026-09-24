@@ -370,6 +370,57 @@ def test_self_context_is_primary_only_when_policy_allows_derived_self(conn):
     assert exact.admission is SelfContextAdmission.ROUTING_ONLY
 
 
+def test_same_self_representation_can_be_relearned_later(conn):
+    first = ensure_self_representation(
+        conn,
+        subject=SELF_SUBJECT,
+        kind=SelfRepresentationKind.PREFERENCE,
+        perspective=SelfPerspective.AVOWED,
+        statement="I prefer modular systems.",
+        plasticity=PlasticityClass.MEDIUM,
+        created_at=_at(10),
+    )
+    later = ensure_self_representation(
+        conn,
+        subject=SELF_SUBJECT,
+        kind=SelfRepresentationKind.PREFERENCE,
+        perspective=SelfPerspective.AVOWED,
+        statement="I prefer modular systems.",
+        plasticity=PlasticityClass.MEDIUM,
+        created_at=_at(40),
+    )
+
+    assert later == first
+    assert later.created_at == _at(10)
+
+
+def test_general_current_questions_do_not_receive_unrelated_core_fallback(conn):
+    root = _event(conn, "I strongly prefer modular systems.")
+    representation = _representation(
+        conn,
+        statement="The person strongly prefers modular systems.",
+    )
+    _support(conn, representation, root)
+    resolve_self_representation(
+        conn,
+        representation_id=representation.representation_id,
+        requested_status=SelfResolutionStatus.ESTABLISHED,
+        identity_centrality=IdentityCentrality.CENTRAL,
+        counterevidence_checked=True,
+        resolved_at=_at(20),
+    )
+
+    packet = activate_self_context(
+        conn,
+        query_text="What is the capital of France?",
+        evidence_scope=HistoricalEvidenceScope.GENERAL_OR_CURRENT,
+        surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
+    )
+
+    assert packet.admission is SelfContextAdmission.PRIMARY_DERIVED_CONTEXT
+    assert packet.items == ()
+
+
 def test_working_self_persists_bounded_activation(conn):
     packet = activate_self_context(
         conn,
