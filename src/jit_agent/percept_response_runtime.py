@@ -307,9 +307,15 @@ establish the claim requested by the CURRENT message and how final output must
 be surfaced.
 
 Evidence scopes:
-- USER_AUTHORED: what the user previously said, named, preferred, required,
-  planned, reported, instructed, or established as their own history. Also
-  choose this when the current message explicitly requires USER_PROMPT evidence.
+- USER_AUTHORED: what the user explicitly said, named, reported, instructed, or
+  stated about themselves in prior USER_PROMPT evidence. Choose this for
+  questions about exact prior claims, wording, declarations, or self-reports.
+- SELF_MODEL: what Prometheist's accumulated person-model concludes about the
+  user's usual preferences, traits, values, roles, behavioral tendencies,
+  decision patterns, relationships, prospective identity, or narrative themes.
+  Choose this for inferential questions such as "what do I usually prefer?",
+  "what patterns do you see in me?", or "what would I likely choose?" when the
+  user is not asking for exact prior wording.
 - MODEL_OUTPUT: what Prometheist, the assistant, or another model previously said.
 - EXTERNAL_TOOL: what an external tool previously returned.
 - SYSTEM_RECORD: Prometheist runtime/system state or occurrences.
@@ -319,10 +325,13 @@ Evidence scopes:
 - GENERAL_OR_CURRENT: no particular historical source role is required; current
   message facts, general knowledge, or ordinary evidence can answer.
 
-Choose the narrowest role justified by the current request. A question about a
-user's preference, plan, instruction, statement, name, or personal history is
-USER_AUTHORED, never MODEL_OUTPUT merely because a model asserted it.
-Choose MIXED_CONVERSATION when the current message explicitly refers to what
+Choose the narrowest role justified by the current request. USER_AUTHORED is
+about attributable prior user statements; SELF_MODEL is about derived,
+provenance-grounded conclusions across experience. A question about a plan or
+aspiration is USER_AUTHORED when asking what the user said/planned, but
+SELF_MODEL when asking how that goal fits the person's enduring modeled
+identity. Choose MIXED_CONVERSATION when the current message explicitly refers
+to what
 the assistant just said, answered, recommended, ruled out, or asked, or asks
 to reconstruct a prior exchange involving both participants.
 
@@ -766,10 +775,17 @@ class PerceptLLM(OllamaClient):
         admitted_results = _admitted_capability_results(policy.evidence_scope, work_results)
         has_admitted_history = bool(admitted_packet and admitted_packet.items)
         has_admitted_result = bool(admitted_results)
+        has_admitted_self = bool(
+            package.self_context
+            and package.self_context.admission
+            is SelfContextAdmission.PRIMARY_DERIVED_CONTEXT
+            and package.self_context.items
+        )
         if (
             scope_requires_historical_support(policy.evidence_scope)
             and not has_admitted_history
             and not has_admitted_result
+            and not has_admitted_self
         ):
             return self._select_current_fallback_literal(percept) or (
                 _GENERIC_INSUFFICIENT_RESPONSE
