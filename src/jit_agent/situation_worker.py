@@ -36,10 +36,9 @@ from jit_agent.self_reflection import (
     SelfSchemaProposalBatch,
     SelfSchemaReview,
     apply_review,
-    collect_consolidation_root_events,
+    collect_consolidation_evidence,
     materialize_proposal,
     reflection_batches,
-    reflection_evidence_from_events,
     render_reflection_evidence,
     review_memory_packet,
 )
@@ -225,8 +224,7 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
         if projection is None:
             raise RuntimeError("self reflection requires completed semantic consolidation")
         derived_at = projection["derived_at"]
-        events = collect_consolidation_root_events(conn, action_id)
-        evidence = reflection_evidence_from_events(events)
+        evidence = collect_consolidation_evidence(conn, action_id)
         candidates = []
         for batch in reflection_batches(evidence):
             proposal_batch = llm.propose_self_schemas(
