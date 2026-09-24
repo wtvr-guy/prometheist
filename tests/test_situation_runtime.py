@@ -268,10 +268,7 @@ def test_consolidation_records_variation_as_evidence_instead_of_skipping_it(conn
     source = source_setup(conn)
     add_observation(conn, source, value=500, delivery_id="first")
     add_observation(conn, source, value=700, delivery_id="second")
-    asserted_at = datetime.now(timezone.utc)
-    projection = consolidate_page(
-        conn, action_id=uuid4(), asserted_at=asserted_at
-    )
+    projection = consolidate_page(conn, action_id=uuid4())
 
     assert projection["projections"][0]["variation_present"] is True
     assert len(projection["semantic_updates"]) == 2
@@ -286,11 +283,7 @@ def test_consolidation_keeps_subject_evidence_separate(conn):
     source = source_setup(conn)
     add_observation(conn, source, value=500, subject="worker:1", delivery_id="w1")
     add_observation(conn, source, value=900, subject="worker:2", delivery_id="w2")
-    projection = consolidate_page(
-        conn,
-        action_id=uuid4(),
-        asserted_at=datetime.now(timezone.utc),
-    )
+    projection = consolidate_page(conn, action_id=uuid4())
 
     subjects = {item["subject"] for item in projection["semantic_updates"]}
     assert subjects == {"worker:1", "worker:2"}
