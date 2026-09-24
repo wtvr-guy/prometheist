@@ -169,7 +169,8 @@ Stable evidence identities deduplicate overlapping situation snapshots.
 Page agreement is never a condition for admitting semantic evidence. Historical
 backfill remains available without rolling the current resolution backward, and
 equal-effective-time conflicts become explicit ambiguity rather than a UUID
-tie-break. Consolidation uses the durable task creation time as asserted_at while
+tie-break. Before deriving semantic memory, consolidation freezes the exact page
+keys and one asserted_at timestamp in a durable consolidation_input record while
 preserving each source observation's observed_at. See
 [`SEMANTIC_FACT_PROVENANCE.md`](SEMANTIC_FACT_PROVENANCE.md) and
 `uv run prometheist memory-fact --subject <ref> --property <ref>`.
