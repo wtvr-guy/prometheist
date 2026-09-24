@@ -133,13 +133,13 @@ def test_four_percepts_one_guarded_task_and_finite_action_feedback(conn, monkeyp
     from jit_agent import artifact_journal
     artifacts = artifact_journal.interaction_artifacts(ids[0])
     assert not any(value["artifact_type"] == "LLM_INVOCATION" for value in artifacts)
-    assert len([value for value in artifacts if value["artifact_type"] == "STAGE_RESULT"]) == 6
+    assert len([value for value in artifacts if value["artifact_type"] == "STAGE_RESULT"]) == 8
     verification = artifact_journal.verify_interaction_chain(ids[0])
     assert verification["valid"] and verification["complete"]
     final = verification["last_artifact"]["payload"]
     assert final["last_completed_stage"] == "SITUATION_PERSIST"
     assert final["response_required"] is False and final["response_text"] is None
-    assert len([item for item in final["artifact_chain"] if item["artifact_type"] == "STAGE_RESULT"]) == 6
+    assert len([item for item in final["artifact_chain"] if item["artifact_type"] == "STAGE_RESULT"]) == 8
 
 
 def test_clean_worker_exit_without_a_durable_result_does_not_complete_task(conn):
@@ -188,7 +188,7 @@ def test_situation_finalization_recovers_without_repeating_work(conn, monkeypatc
         run_situation_task(conn, task_id, probe=FixedProbe())
 
     before = artifact_journal.interaction_artifacts(task_id)
-    assert len([value for value in before if value["artifact_type"] == "STAGE_RESULT"]) == 6
+    assert len([value for value in before if value["artifact_type"] == "STAGE_RESULT"]) == 8
     assert len(list_records(conn, "action_execution")) == 1
     assert not list_records(conn, "situation_progress")
     if failure_boundary == "manifest":
