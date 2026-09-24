@@ -320,6 +320,11 @@ before its outcome is known. The later canonical outcome can be recorded as:
 - `CONTRADICTED`
 - `AMBIGUOUS`
 
+Every prediction records a `knowledge_cutoff_global_seq`: the highest canonical
+event sequence Prometheist was allowed to know when the prediction was made. An
+outcome event at or before that cutoff is rejected as retrospective leakage.
+This makes held-out evaluation mechanically distinct from post-hoc explanation.
+
 Confirmed and contradicted outcomes feed back into the representation as new
 canonical support/opposition evidence. A contradicted held-out prediction can
 therefore move an established schema to `CONTESTED`.
