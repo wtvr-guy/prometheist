@@ -365,6 +365,7 @@
       "rationale": "Closed ordinal domains, empty counters, positive pages, and enum cardinalities. These do not select salience cutoffs or execution authority.",
       "members": {
         "src/jit_agent/cognitive_store.py::list_records::comparison": 1,
+        "src/jit_agent/cognitive_store.py::list_records_with_prefix::comparison": 1,
         "src/jit_agent/percept_adapters.py::preserve_media::size": 0,
         "src/jit_agent/percept_context.py::PerceptContext::threat.le": 3,
         "src/jit_agent/percept_context.py::PerceptContext::opportunity.le": 3,
