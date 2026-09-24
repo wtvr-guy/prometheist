@@ -75,6 +75,7 @@ def test_corroboration_accumulates_evidence_without_duplicate_assertion(conn):
     assert first.assertion.assertion_id == second.assertion.assertion_id
     assert second.assertion_created is False
     assert second.evidence_created is True
+    assert second.resolution_created is False
     assert len(semantic_assertions(conn, "person:mike", "preferred_drink")) == 1
     evidence = semantic_evidence(conn, "person:mike", "preferred_drink")
     assert len(evidence) == 2
