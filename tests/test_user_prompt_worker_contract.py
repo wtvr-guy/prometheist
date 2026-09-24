@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from uuid import uuid4
 
 import pytest
 
@@ -11,11 +12,21 @@ from jit_agent.percept_response_worker import (
     UserPromptWorkSelection,
 )
 from jit_agent.percept_response_runtime import _RESPONSE_POLICY_PROMPT
-from jit_agent.models import EventType
+from jit_agent.models import EventType, MemoryNeed, MemoryPacket
 from jit_agent.response_policy import (
     HistoricalEvidenceScope,
     ResponseSurfaceMode,
     source_types_for_scope,
+)
+from jit_agent.self_memory import (
+    IdentityCentrality,
+    SelfContextAdmission,
+    SelfContextItem,
+    SelfContextPacket,
+    SelfEvidenceMetrics,
+    SelfPerspective,
+    SelfRepresentationKind,
+    SelfResolutionStatus,
 )
 
 
@@ -30,6 +41,60 @@ def test_composer_treats_current_prompt_as_direct_evidence() -> None:
     assert "current user prompt is itself direct current evidence" in normalized
     assert "do not require" in normalized
     assert "historical memory" in normalized
+
+
+def test_user_prompt_composer_accepts_and_renders_typed_self_context(monkeypatch) -> None:
+    llm = UserPromptLLM()
+    captured: dict[str, str] = {}
+
+    def fake_structured(kind, system, current_user, evidence, schema, max_tokens):
+        del system, schema, max_tokens
+        captured["kind"] = kind
+        captured["current_user"] = current_user
+        captured["evidence"] = evidence
+        return '{"sufficient":true,"memory_deficit":null}'
+
+    monkeypatch.setattr(llm, "_structured_with_evidence", fake_structured)
+
+    packet = MemoryPacket(
+        memory_request_id=uuid4(),
+        need=MemoryNeed(query_text="What do I usually prefer?"),
+        supported=False,
+        items=[],
+    )
+    self_context = SelfContextPacket(
+        admission=SelfContextAdmission.PRIMARY_DERIVED_CONTEXT,
+        items=(
+            SelfContextItem(
+                representation_id=uuid4(),
+                kind=SelfRepresentationKind.PREFERENCE,
+                perspective=SelfPerspective.INFERRED,
+                statement="The person usually prefers modular systems.",
+                status=SelfResolutionStatus.ESTABLISHED,
+                identity_centrality=IdentityCentrality.MODERATE,
+                metrics=SelfEvidenceMetrics(
+                    support_root_count=3,
+                    opposition_root_count=0,
+                    source_type_count=1,
+                    source_count=1,
+                    context_count=2,
+                ),
+                support_event_types=(EventType.USER_PROMPT,),
+            ),
+        ),
+    )
+
+    decision = llm.assess_memory_sufficiency(
+        "What do I usually prefer?",
+        packet,
+        self_context,
+    )
+
+    assert decision.sufficient is True
+    assert captured["kind"] == "V2_MEMORY_SUFFICIENCY_USER_PROMPT"
+    assert "What do I usually prefer?" in captured["current_user"]
+    assert "[Derived self-memory]" in captured["evidence"]
+    assert "The person usually prefers modular systems." in captured["evidence"]
 
 
 def test_response_policy_defaults_ordinary_questions_to_natural_language() -> None:
