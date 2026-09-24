@@ -152,6 +152,26 @@ schema never outranks its canonical evidence.
 """
 
 
+def _proposal_root_allowed(conn: psycopg.Connection, event) -> bool:
+    """Only explicit user evidence or opted-in non-user sensors may seed identity."""
+
+    if event.event_type is EventType.USER_PROMPT:
+        return True
+    if event.event_type is not EventType.PERCEPT_OBSERVATION:
+        return False
+    percept = event.payload.get("percept")
+    if not isinstance(percept, dict):
+        return False
+    source = percept.get("source")
+    if not isinstance(source, dict):
+        return False
+    source_id = source.get("source_id")
+    if not isinstance(source_id, str):
+        return False
+    policy = get_record(conn, "source_policy", source_id)
+    return bool(policy and policy.get("self_model_evidence") is True)
+
+
 def _event_content(event) -> str:
     text = event.payload.get("text")
     if isinstance(text, str) and text.strip():
@@ -198,7 +218,10 @@ def collect_consolidation_evidence(
                 raise RuntimeError(
                     f"self reflection root event is missing: {root_id}"
                 )
-            if not self_evidence_root_allowed(event.event_type):
+            if (
+                not self_evidence_root_allowed(event.event_type)
+                or not _proposal_root_allowed(conn, event)
+            ):
                 continue
             stored = roots.setdefault(event.event_id, (event, set()))
             stored[1].add(context_ref)
