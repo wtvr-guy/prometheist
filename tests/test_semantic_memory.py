@@ -354,7 +354,8 @@ def test_semantic_evidence_can_reference_an_action(conn):
         source_id=action_id,
         source_kind=EvidenceSourceKind.ACTION,
         observed_at=_at(0),
-        asserted_at=_at(5),
+        known_at=_at(5),
+        resolved_at=_at(5),
         confidence=0.8,
         derivation_method="reflection/v1",
     )
