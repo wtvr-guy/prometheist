@@ -23,6 +23,8 @@ from jit_agent.percept_context import FrozenRecord, Reference
 from jit_agent.self_memory import (
     FutureOrientation,
     IdentityCentrality,
+    MAX_SELF_CONTEXT_TAGS,
+    MAX_SELF_STATEMENT_CHARS,
     SelfEvidenceOrigin,
     SelfEvidenceRelation,
     SelfPerspective,
@@ -44,6 +46,9 @@ from jit_agent.situations import Situation
 MAX_REFLECTION_EVIDENCE_ITEMS = 12
 MAX_SELF_PROPOSALS_PER_BATCH = 8
 MAX_REVIEW_EVIDENCE_ITEMS = 10
+MAX_REVIEW_RATIONALE_CHARS = 1024
+MAX_REVIEW_FOCUS_ROOTS = 4
+MIN_RELATIONAL_REVIEW_ROOTS = 2
 SELF_REFLECTION_POLICY = "self-reflection/v1"
 
 
@@ -60,20 +65,20 @@ class ReflectionEvidence(FrozenRecord):
     source: Reference
     created_at: str
     content: str
-    context_refs: tuple[Reference, ...] = Field(default=(), max_length=8)
+    context_refs: tuple[Reference, ...] = Field(default=(), max_length=MAX_SELF_CONTEXT_TAGS)
 
 
 class SelfSchemaProposal(FrozenRecord):
     kind: SelfRepresentationKind
     perspective: SelfPerspective
-    statement: str = Field(min_length=1, max_length=2048)
+    statement: str = Field(min_length=1, max_length=MAX_SELF_STATEMENT_CHARS)
     identity_centrality: IdentityCentrality
-    context_tags: tuple[Reference, ...] = Field(default=(), max_length=8)
+    context_tags: tuple[Reference, ...] = Field(default=(), max_length=MAX_SELF_CONTEXT_TAGS)
     relationship_ref: Reference | None = None
     future_orientation: FutureOrientation | None = None
     procedure_ref: Reference | None = None
     embodiment_ref: Reference | None = None
-    support_indices: tuple[int, ...] = Field(min_length=1, max_length=12)
+    support_indices: tuple[int, ...] = Field(min_length=1, max_length=MAX_REFLECTION_EVIDENCE_ITEMS)
 
     @model_validator(mode="after")
     def proposal_contract(self) -> "SelfSchemaProposal":
@@ -91,8 +96,8 @@ class SelfSchemaProposalBatch(FrozenRecord):
 
 class SelfSchemaReview(FrozenRecord):
     verdict: SelfReviewVerdict
-    opposition_indices: tuple[int, ...] = Field(default=(), max_length=10)
-    rationale: str = Field(min_length=1, max_length=1024)
+    opposition_indices: tuple[int, ...] = Field(default=(), max_length=MAX_REVIEW_EVIDENCE_ITEMS)
+    rationale: str = Field(min_length=1, max_length=MAX_REVIEW_RATIONALE_CHARS)
 
     @model_validator(mode="after")
     def unique_indices(self) -> "SelfSchemaReview":
@@ -340,8 +345,8 @@ def review_memory_packet(
         for evidence in self_evidence(conn, representation.representation_id)
         if evidence.relation is SelfEvidenceRelation.SUPPORTS
     ]
-    focus = support_ids[:4]
-    if len(focus) >= 2:
+    focus = support_ids[:MAX_REVIEW_FOCUS_ROOTS]
+    if len(focus) >= MIN_RELATIONAL_REVIEW_ROOTS:
         recall_stage = jit_memory.AdaptiveRecallStage.RELATIONAL
     elif len(focus) == 1:
         recall_stage = jit_memory.AdaptiveRecallStage.FOCUSED
