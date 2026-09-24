@@ -37,6 +37,7 @@ from jit_agent.self_memory import (
     record_self_evidence,
     resolve_self_representation,
     self_evidence,
+    self_evidence_root_allowed,
 )
 from jit_agent.situations import Situation
 
@@ -197,6 +198,8 @@ def collect_consolidation_evidence(
                 raise RuntimeError(
                     f"self reflection root event is missing: {root_id}"
                 )
+            if not self_evidence_root_allowed(event.event_type):
+                continue
             stored = roots.setdefault(event.event_id, (event, set()))
             stored[1].add(context_ref)
 
