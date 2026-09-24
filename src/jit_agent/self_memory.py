@@ -238,9 +238,9 @@ class SelfEvidenceMetrics(FrozenRecord):
     source_type_count: int = Field(ge=0)
     source_count: int = Field(ge=0)
     context_count: int = Field(ge=0)
-    prediction_confirmed_count: int = Field(default=0, ge=0)
-    prediction_contradicted_count: int = Field(default=0, ge=0)
-    prediction_ambiguous_count: int = Field(default=0, ge=0)
+    prediction_confirmed_count: int = Field(default_factory=int, ge=0)
+    prediction_contradicted_count: int = Field(default_factory=int, ge=0)
+    prediction_ambiguous_count: int = Field(default_factory=int, ge=0)
     first_support_at: datetime | None = None
     last_support_at: datetime | None = None
 
@@ -1096,7 +1096,7 @@ def _search_self_candidates(
 
     remaining = limit - len(candidates)
     core_limit = min(MAX_CORE_SELF_ITEMS, remaining)
-    if core_limit > 0:
+    if core_limit:
         central_rows = conn.execute(
             """
             SELECT r.payload, s.payload
