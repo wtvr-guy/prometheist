@@ -208,6 +208,9 @@ class SelfEvidenceMetrics(FrozenRecord):
     source_type_count: int = Field(ge=0)
     source_count: int = Field(ge=0)
     context_count: int = Field(ge=0)
+    prediction_confirmed_count: int = Field(default=0, ge=0)
+    prediction_contradicted_count: int = Field(default=0, ge=0)
+    prediction_ambiguous_count: int = Field(default=0, ge=0)
     first_support_at: datetime | None = None
     last_support_at: datetime | None = None
 
@@ -572,12 +575,22 @@ def _evidence_metrics(
         if item.relation is SelfEvidenceRelation.SUPPORTS
     }
     support_times = [item.observed_at for item in support.values()]
+    predictions = self_predictions(conn, representation_id)
     return SelfEvidenceMetrics(
         support_root_count=len(support),
         opposition_root_count=len(opposition),
         source_type_count=len({event.event_type for event in support_events}),
         source_count=len({event.source for event in support_events}),
         context_count=len(contexts),
+        prediction_confirmed_count=sum(
+            item.outcome is PredictionOutcome.CONFIRMED for item in predictions
+        ),
+        prediction_contradicted_count=sum(
+            item.outcome is PredictionOutcome.CONTRADICTED for item in predictions
+        ),
+        prediction_ambiguous_count=sum(
+            item.outcome is PredictionOutcome.AMBIGUOUS for item in predictions
+        ),
         first_support_at=min(support_times) if support_times else None,
         last_support_at=max(support_times) if support_times else None,
     )
@@ -820,12 +833,13 @@ def record_self_prediction(
         context_tags=context_tags,
         created_at=created_at,
     )
-    existing = get_record(conn, SELF_PREDICTION_KIND, str(prediction_id))
+    key = f"{representation_id}:{prediction_id}"
+    existing = get_record(conn, SELF_PREDICTION_KIND, key)
     if existing is None:
         put_record(
             conn,
             SELF_PREDICTION_KIND,
-            str(prediction_id),
+            key,
             prediction.model_dump(mode="json"),
             revision="open",
         )
@@ -833,19 +847,41 @@ def record_self_prediction(
     return SelfPrediction.model_validate(existing)
 
 
+def self_predictions(
+    conn: psycopg.Connection,
+    representation_id: UUID,
+) -> tuple[SelfPrediction, ...]:
+    prefix = f"{representation_id}:"
+    rows = conn.execute(
+        """
+        SELECT payload
+        FROM cognitive_heads
+        WHERE record_kind = %s
+          AND starts_with(record_key, %s)
+        ORDER BY record_key
+        """,
+        (SELF_PREDICTION_KIND, prefix),
+    ).fetchall()
+    return tuple(SelfPrediction.model_validate(dict(row[0])) for row in rows)
+
+
 def resolve_self_prediction(
     conn: psycopg.Connection,
     *,
+    representation_id: UUID,
     prediction_id: UUID,
     outcome: PredictionOutcome,
     outcome_event_id: UUID,
     resolved_at: datetime,
 ) -> SelfPrediction:
-    _root_event(conn, outcome_event_id)
-    current_data = get_record(conn, SELF_PREDICTION_KIND, str(prediction_id))
+    root = _root_event(conn, outcome_event_id)
+    key = f"{representation_id}:{prediction_id}"
+    current_data = get_record(conn, SELF_PREDICTION_KIND, key)
     if current_data is None:
         raise KeyError(prediction_id)
     current = SelfPrediction.model_validate(current_data)
+    if current.representation_id != representation_id:
+        raise ValueError("prediction belongs to another self representation")
     if current.outcome is not None:
         if (
             current.outcome is outcome
@@ -863,10 +899,41 @@ def resolve_self_prediction(
     put_record(
         conn,
         SELF_PREDICTION_KIND,
-        str(prediction_id),
+        key,
         resolved.model_dump(mode="json"),
         revision=f"outcome:{outcome_event_id}",
     )
+
+    representation = get_self_representation(conn, representation_id)
+    resolution = current_self_resolution(conn, representation_id)
+    if representation is None or resolution is None:
+        raise RuntimeError("prediction refers to unresolved self representation")
+    if outcome is PredictionOutcome.CONFIRMED:
+        relation = SelfEvidenceRelation.SUPPORTS
+    elif outcome is PredictionOutcome.CONTRADICTED:
+        relation = SelfEvidenceRelation.OPPOSES
+    else:
+        relation = None
+    if relation is not None:
+        record_self_evidence(
+            conn,
+            representation=representation,
+            root_event_id=outcome_event_id,
+            relation=relation,
+            origin=SelfEvidenceOrigin.PREDICTION_OUTCOME,
+            derivation_method="self-prediction/v1",
+            observed_at=root.created_at,
+            known_at=root.created_at,
+            context_tags=current.context_tags,
+        )
+        resolve_self_representation(
+            conn,
+            representation_id=representation_id,
+            requested_status=resolution.status,
+            identity_centrality=resolution.identity_centrality,
+            counterevidence_checked=resolution.counterevidence_checked,
+            resolved_at=resolved_at,
+        )
     return resolved
 
 
