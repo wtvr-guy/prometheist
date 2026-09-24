@@ -84,6 +84,7 @@ def test_work_triage_inherits_source_scope_and_salience_after_memory_activation(
         lambda *_args, **_kwargs: None,
     )
     interaction = SimpleNamespace(
+        interaction_id=uuid4(),
         user_text=percept.normalized_text,
         conversation_id=percept.conversation_id,
         correlation_id=percept.correlation_id,
