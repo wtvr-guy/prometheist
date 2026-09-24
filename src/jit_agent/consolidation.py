@@ -8,6 +8,7 @@ from uuid import UUID
 
 import psycopg
 
+from jit_agent import event_store
 from jit_agent.cognitive_store import get_record, list_records, put_record
 from jit_agent.percept_context import FrozenRecord, aware
 from jit_agent.percept_intake import ingest_percept, install_source_policy
@@ -23,7 +24,7 @@ def _record_page_semantic_evidence(
     conn: psycopg.Connection,
     by_percept: dict,
     *,
-    asserted_at: datetime,
+    derived_at: datetime,
 ) -> list[dict]:
     """Persist each unique observation as evidence, independent of page shape.
 
@@ -45,6 +46,17 @@ def _record_page_semantic_evidence(
         ),
     ):
         observation = state.observation
+        if state.source_event_id is not None:
+            source_event = event_store.get_event_by_id(conn, state.source_event_id)
+            if source_event is None:
+                raise RuntimeError(
+                    f"semantic evidence source event is missing: {state.source_event_id}"
+                )
+            known_at = source_event.created_at
+        else:
+            # Compatibility for pre-v2 derived situation snapshots. New
+            # ObservedState records always retain source_event_id.
+            known_at = derived_at
         result = record_semantic_evidence(
             conn,
             subject=observation.subject,
@@ -54,7 +66,8 @@ def _record_page_semantic_evidence(
             confidence=observation.confidence,
             source_id=state.percept_id,
             observed_at=state.observed_at,
-            asserted_at=asserted_at,
+            known_at=known_at,
+            resolved_at=derived_at,
             derivation_method=DERIVATION_METHOD,
         )
         updates.append(
@@ -74,7 +87,7 @@ def _load_or_create_consolidation_input(
     action_id: UUID,
     after_key: str,
 ) -> tuple[list[tuple[str, dict]], datetime, str | None]:
-    """Freeze one action's exact input page and semantic assertion time.
+    """Freeze one action's exact input page and derivation time.
 
     A retry must never read a moving page after partially publishing semantic
     evidence. The input record is therefore durable before derivation begins.
@@ -87,7 +100,7 @@ def _load_or_create_consolidation_input(
         payload = {
             "after_key": after_key,
             "record_keys": [key for key, _ in rows],
-            "asserted_at": datetime.now(timezone.utc).isoformat(),
+            "derived_at": datetime.now(timezone.utc).isoformat(),
             "next_cursor": rows[-1][0] if rows else None,
         }
         put_record(
@@ -101,8 +114,8 @@ def _load_or_create_consolidation_input(
     elif existing.get("after_key", "") != after_key:
         raise ValueError("consolidation action replayed with a different cursor")
 
-    asserted_at = datetime.fromisoformat(str(existing["asserted_at"]))
-    aware(asserted_at)
+    derived_at = datetime.fromisoformat(str(existing["derived_at"]))
+    aware(derived_at)
     rows: list[tuple[str, dict]] = []
     for key in existing.get("record_keys", []):
         data = get_record(conn, "situation_ingest", str(key))
@@ -111,7 +124,7 @@ def _load_or_create_consolidation_input(
                 f"frozen consolidation input is missing situation_ingest record: {key}"
             )
         rows.append((str(key), data))
-    return rows, asserted_at, existing.get("next_cursor")
+    return rows, derived_at, existing.get("next_cursor")
 
 
 def consolidate_page(
@@ -122,7 +135,7 @@ def consolidate_page(
 ) -> dict:
     """Process one frozen bounded page without making the page epistemic."""
 
-    snapshots, asserted_at, next_cursor = _load_or_create_consolidation_input(
+    snapshots, derived_at, next_cursor = _load_or_create_consolidation_input(
         conn,
         action_id=action_id,
         after_key=after_key,
@@ -176,7 +189,7 @@ def consolidate_page(
     semantic_updates = _record_page_semantic_evidence(
         conn,
         {index: state for index, state in enumerate(unique_states.values())},
-        asserted_at=asserted_at,
+        derived_at=derived_at,
     )
     result = {
         "projections": projections,
@@ -186,7 +199,7 @@ def consolidate_page(
         "next_cursor": next_cursor,
         "canonical_records_modified": False,
         "semantic_updates": semantic_updates,
-        "asserted_at": asserted_at.isoformat(),
+        "derived_at": derived_at.isoformat(),
     }
     put_record(conn, "consolidation", str(action_id), result, revision="2")
     return result
