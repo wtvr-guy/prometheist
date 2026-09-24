@@ -376,6 +376,19 @@ def _advance_resolution(
             current.effective_at,
         )
 
+    if (
+        evidence.relation is EvidenceRelation.SUPPORTS
+        and current is not None
+        and current.status is ResolutionStatus.ACCEPTED
+        and current.selected_assertion_id == assertion.assertion_id
+    ):
+        return (
+            current.status,
+            current.candidate_assertion_ids,
+            current.selected_assertion_id,
+            current.effective_at,
+        )
+
     if evidence.relation is EvidenceRelation.OPPOSES:
         if current is None or assertion.assertion_id not in current.candidate_assertion_ids:
             if current is None:
