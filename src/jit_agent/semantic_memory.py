@@ -118,13 +118,13 @@ class SemanticResolution(FrozenRecord):
     status: ResolutionStatus
     candidate_assertion_ids: tuple[UUID, ...] = ()
     selected_assertion_id: UUID | None = None
-    effective_at: datetime | None = None
+    support_observed_at: datetime | None = None
     resolution_policy: Reference = RESOLUTION_POLICY
     resolved_at: datetime
     supersedes: UUID | None = None
 
     _aware = field_validator("resolved_at")(aware)
-    _effective_aware = field_validator("effective_at")(_aware_optional)
+    _support_observed_aware = field_validator("support_observed_at")(_aware_optional)
 
     @model_validator(mode="after")
     def status_contract(self) -> "SemanticResolution":
@@ -144,13 +144,13 @@ class SemanticResolutionDecision(FrozenRecord):
     status: ResolutionStatus
     candidate_assertion_ids: tuple[UUID, ...] = ()
     selected_assertion_id: UUID | None = None
-    effective_at: datetime | None = None
+    support_observed_at: datetime | None = None
     valid_at: datetime
     known_at: datetime
     resolution_policy: Reference = RESOLUTION_POLICY
 
     _aware = field_validator("valid_at", "known_at")(aware)
-    _effective_aware = field_validator("effective_at")(_aware_optional)
+    _support_observed_aware = field_validator("support_observed_at")(_aware_optional)
 
 
 @dataclass(frozen=True, slots=True)
@@ -254,11 +254,14 @@ def semantic_resolution_history(
     )
 
 
-def _assertion_effective_at(
-    assertion: SemanticAssertion,
-    evidence: SemanticEvidence,
-) -> datetime:
-    return assertion.claim_valid_from or evidence.observed_at
+def _support_observed_at(evidence: SemanticEvidence) -> datetime:
+    """Observation-time ordering for competing evidence.
+
+    Claim validity answers whether an assertion applies at a represented
+    real-world time. It must never double as evidence-recency ordering.
+    """
+
+    return evidence.observed_at
 
 
 def _applies_at(
@@ -306,13 +309,13 @@ def semantic_resolution_as_of(
         assertion = assertions.get(item.assertion_id)
         if assertion is None or not _applies_at(assertion, item, valid_at=valid_at):
             continue
-        effective_at = _assertion_effective_at(assertion, item)
+        support_observed_at = _support_observed_at(item)
         if item.relation is EvidenceRelation.OPPOSES:
             prior = latest_opposition.get(item.assertion_id)
-            if prior is None or effective_at > prior:
-                latest_opposition[item.assertion_id] = effective_at
+            if prior is None or support_observed_at > prior:
+                latest_opposition[item.assertion_id] = support_observed_at
             continue
-        candidates.append((effective_at, assertion))
+        candidates.append((support_observed_at, assertion))
 
     if not candidates:
         return SemanticResolutionDecision(
@@ -326,8 +329,8 @@ def semantic_resolution_as_of(
     latest = max(item[0] for item in candidates)
     latest_assertions = {
         item.assertion_id: item
-        for effective_at, item in candidates
-        if effective_at == latest
+        for support_observed_at, item in candidates
+        if support_observed_at == latest
     }
     ordered = tuple(sorted(latest_assertions.values(), key=lambda item: str(item.assertion_id)))
     ids = tuple(item.assertion_id for item in ordered)
@@ -344,7 +347,7 @@ def semantic_resolution_as_of(
             property=property,
             status=ResolutionStatus.AMBIGUOUS,
             candidate_assertion_ids=ids,
-            effective_at=latest,
+            support_observed_at=latest,
             valid_at=valid_at,
             known_at=known_at,
         )
@@ -356,7 +359,7 @@ def semantic_resolution_as_of(
         status=ResolutionStatus.ACCEPTED,
         candidate_assertion_ids=ids,
         selected_assertion_id=selected.assertion_id,
-        effective_at=latest,
+        support_observed_at=latest,
         valid_at=valid_at,
         known_at=known_at,
     )
@@ -370,7 +373,7 @@ def _advance_resolution(
     evidence: SemanticEvidence,
     resolved_at: datetime,
 ) -> tuple[ResolutionStatus, tuple[UUID, ...], UUID | None, datetime | None]:
-    effective_at = _assertion_effective_at(assertion, evidence)
+    support_observed_at = _support_observed_at(evidence)
 
     if assertion.claim_valid_from is not None and assertion.claim_valid_from > resolved_at:
         if current is None:
@@ -379,7 +382,7 @@ def _advance_resolution(
             current.status,
             current.candidate_assertion_ids,
             current.selected_assertion_id,
-            current.effective_at,
+            current.support_observed_at,
         )
     if assertion.claim_valid_until is not None and resolved_at >= assertion.claim_valid_until:
         if current is None:
@@ -388,7 +391,7 @@ def _advance_resolution(
             current.status,
             current.candidate_assertion_ids,
             current.selected_assertion_id,
-            current.effective_at,
+            current.support_observed_at,
         )
 
     if (
@@ -397,18 +400,18 @@ def _advance_resolution(
         and current.status is ResolutionStatus.ACCEPTED
         and current.selected_assertion_id == assertion.assertion_id
     ):
-        if current.effective_at is None or effective_at > current.effective_at:
+        if current.support_observed_at is None or support_observed_at > current.support_observed_at:
             return (
                 current.status,
                 current.candidate_assertion_ids,
                 current.selected_assertion_id,
-                effective_at,
+                support_observed_at,
             )
         return (
             current.status,
             current.candidate_assertion_ids,
             current.selected_assertion_id,
-            current.effective_at,
+            current.support_observed_at,
         )
 
     if evidence.relation is EvidenceRelation.OPPOSES:
@@ -419,31 +422,31 @@ def _advance_resolution(
                 current.status,
                 current.candidate_assertion_ids,
                 current.selected_assertion_id,
-                current.effective_at,
+                current.support_observed_at,
             )
-        if current.effective_at is not None and effective_at < current.effective_at:
+        if current.support_observed_at is not None and support_observed_at < current.support_observed_at:
             return (
                 current.status,
                 current.candidate_assertion_ids,
                 current.selected_assertion_id,
-                current.effective_at,
+                current.support_observed_at,
             )
         return (
             ResolutionStatus.AMBIGUOUS,
             current.candidate_assertion_ids,
             None,
-            effective_at,
+            support_observed_at,
         )
 
-    if current is None or current.effective_at is None or effective_at > current.effective_at:
-        return ResolutionStatus.ACCEPTED, (assertion.assertion_id,), assertion.assertion_id, effective_at
+    if current is None or current.support_observed_at is None or support_observed_at > current.support_observed_at:
+        return ResolutionStatus.ACCEPTED, (assertion.assertion_id,), assertion.assertion_id, support_observed_at
 
-    if effective_at < current.effective_at:
+    if support_observed_at < current.support_observed_at:
         return (
             current.status,
             current.candidate_assertion_ids,
             current.selected_assertion_id,
-            current.effective_at,
+            current.support_observed_at,
         )
 
     candidates = tuple(
@@ -462,17 +465,17 @@ def _advance_resolution(
             ResolutionStatus.ACCEPTED,
             candidates,
             current.selected_assertion_id,
-            current.effective_at,
+            current.support_observed_at,
         )
     if assertion.assertion_id in current.candidate_assertion_ids:
         return (
             current.status,
             current.candidate_assertion_ids,
             current.selected_assertion_id,
-            current.effective_at,
+            current.support_observed_at,
         )
 
-    return ResolutionStatus.AMBIGUOUS, candidates, None, effective_at
+    return ResolutionStatus.AMBIGUOUS, candidates, None, support_observed_at
 
 
 def _persist_resolution(
@@ -483,18 +486,18 @@ def _persist_resolution(
     status: ResolutionStatus,
     candidates: tuple[UUID, ...],
     selected: UUID | None,
-    effective_at: datetime | None,
+    support_observed_at: datetime | None,
     resolved_at: datetime,
     trigger_evidence_id: UUID,
 ) -> tuple[SemanticResolution, bool]:
     current = current_semantic_resolution(conn, subject, property)
-    state = (status, candidates, selected, effective_at)
+    state = (status, candidates, selected, support_observed_at)
     if current is not None:
         current_state = (
             current.status,
             current.candidate_assertion_ids,
             current.selected_assertion_id,
-            current.effective_at,
+            current.support_observed_at,
         )
         if state == current_state:
             return current, False
@@ -505,7 +508,7 @@ def _persist_resolution(
             f"semantic-resolution:{semantic_key(subject, property)}:"
             f"{trigger_evidence_id}:{status.value}:"
             f"{','.join(str(item) for item in candidates)}:{selected or ''}:"
-            f"{effective_at.isoformat() if effective_at else ''}"
+            f"{support_observed_at.isoformat() if support_observed_at else ''}"
         ),
     )
     resolution = SemanticResolution(
@@ -515,7 +518,7 @@ def _persist_resolution(
         status=status,
         candidate_assertion_ids=candidates,
         selected_assertion_id=selected,
-        effective_at=effective_at,
+        support_observed_at=support_observed_at,
         resolved_at=resolved_at,
         supersedes=current.resolution_id if current else None,
     )
@@ -645,7 +648,7 @@ def record_semantic_evidence(
                     "semantic resolution references a missing selected assertion"
                 )
             current_assertion = SemanticAssertion.model_validate(current_data)
-        status, candidates, selected, effective_at = _advance_resolution(
+        status, candidates, selected, support_observed_at = _advance_resolution(
             current,
             current_assertion=current_assertion,
             assertion=assertion,
@@ -659,7 +662,7 @@ def record_semantic_evidence(
             status=status,
             candidates=candidates,
             selected=selected,
-            effective_at=effective_at,
+            support_observed_at=support_observed_at,
             resolved_at=asserted_at,
             trigger_evidence_id=evidence_id,
         )
