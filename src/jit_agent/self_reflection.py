@@ -9,7 +9,6 @@ the final state transition.
 """
 from __future__ import annotations
 
-from collections.abc import Iterable
 from enum import Enum
 import json
 from uuid import UUID, uuid5
@@ -19,12 +18,11 @@ from pydantic import Field, model_validator
 
 from jit_agent import event_store, jit_memory
 from jit_agent.cognitive_store import COGNITIVE_NAMESPACE, get_record
-from jit_agent.models import Event, EventType, MemoryPacket
+from jit_agent.models import EventType, MemoryPacket
 from jit_agent.percept_context import FrozenRecord, Reference
 from jit_agent.self_memory import (
     FutureOrientation,
     IdentityCentrality,
-    PlasticityClass,
     SelfEvidenceOrigin,
     SelfEvidenceRelation,
     SelfPerspective,
@@ -34,6 +32,7 @@ from jit_agent.self_memory import (
     SelfResolution,
     SelfResolutionStatus,
     current_self_resolution,
+    default_plasticity,
     ensure_self_representation,
     record_self_evidence,
     resolve_self_representation,
@@ -60,13 +59,13 @@ class ReflectionEvidence(FrozenRecord):
     source: Reference
     created_at: str
     content: str
+    context_refs: tuple[Reference, ...] = Field(default=(), max_length=8)
 
 
 class SelfSchemaProposal(FrozenRecord):
     kind: SelfRepresentationKind
     perspective: SelfPerspective
     statement: str = Field(min_length=1, max_length=2048)
-    plasticity: PlasticityClass
     identity_centrality: IdentityCentrality
     context_tags: tuple[Reference, ...] = Field(default=(), max_length=8)
     relationship_ref: Reference | None = None
@@ -124,10 +123,9 @@ that appear to guide tradeoffs, not ordinary likes. Traits and behavioral
 tendencies should be context-qualified when evidence is context-dependent.
 Narrative hypotheses are interpretations, never canonical facts.
 
-Choose plasticity by representation type: current/temporary state FAST, ordinary
-preferences/roles MEDIUM, generalized traits/values/decision policies SLOW, and
-deep identity/narrative structures VERY_SLOW unless the evidence clearly
-represents an abrupt explicit identity change.
+Learning timescale is application-owned. Do not propose or choose a plasticity
+class. context_tags describe the semantic scope of the representation; they do
+not count as independent evidence or prove cross-context breadth.
 
 identity_centrality means how central the representation appears to the person's
 self-organization, not how true it is. Be conservative.
@@ -153,7 +151,7 @@ schema never outranks its canonical evidence.
 """
 
 
-def _event_content(event: Event) -> str:
+def _event_content(event) -> str:
     text = event.payload.get("text")
     if isinstance(text, str) and text.strip():
         return text
@@ -165,36 +163,28 @@ def _event_content(event: Event) -> str:
     )
 
 
-def reflection_evidence_from_events(
-    events: Iterable[Event],
-) -> tuple[ReflectionEvidence, ...]:
-    return tuple(
-        ReflectionEvidence(
-            event_id=event.event_id,
-            event_type=event.event_type,
-            source=event.source,
-            created_at=event.created_at.isoformat(),
-            content=_event_content(event),
-        )
-        for event in events
-    )
-
-
-def collect_consolidation_root_events(
+def collect_consolidation_evidence(
     conn: psycopg.Connection,
     consolidation_id: UUID,
-) -> tuple[Event, ...]:
-    """Recover exact canonical roots from the frozen consolidation input."""
+) -> tuple[ReflectionEvidence, ...]:
+    """Recover canonical roots plus application-derived source contexts.
+
+    Context breadth is computed from durable situation identity, never from
+    model-proposed context tags. A candidate can describe its semantic scope,
+    but it cannot manufacture evidence that it generalized across situations.
+    """
 
     input_data = get_record(conn, "consolidation_input", str(consolidation_id))
     if input_data is None:
         raise KeyError(consolidation_id)
-    roots: dict[UUID, Event] = {}
+
+    roots: dict[UUID, tuple[object, set[str]]] = {}
     for key in input_data.get("record_keys", []):
         data = get_record(conn, "situation_ingest", str(key))
         if data is None:
             raise RuntimeError(f"missing frozen situation input: {key}")
         situation = Situation.model_validate(data)
+        context_ref = f"situation:{situation.situation_id}"
         root_ids = set(situation.provenance)
         root_ids.update(
             state.source_event_id
@@ -207,9 +197,29 @@ def collect_consolidation_root_events(
                 raise RuntimeError(
                     f"self reflection root event is missing: {root_id}"
                 )
-            roots[event.event_id] = event
+            stored = roots.setdefault(event.event_id, (event, set()))
+            stored[1].add(context_ref)
+
+    values = []
+    for event, contexts in roots.values():
+        values.append(
+            ReflectionEvidence(
+                event_id=event.event_id,
+                event_type=event.event_type,
+                source=event.source,
+                created_at=event.created_at.isoformat(),
+                content=_event_content(event),
+                context_refs=tuple(sorted(contexts)),
+            )
+        )
     return tuple(
-        sorted(roots.values(), key=lambda item: (item.global_seq, str(item.event_id)))
+        sorted(
+            values,
+            key=lambda item: (
+                event_store.get_event_by_id(conn, item.event_id).global_seq,
+                str(item.event_id),
+            ),
+        )
     )
 
 
@@ -235,6 +245,7 @@ def render_reflection_evidence(
                     f"event_type={item.event_type.value}",
                     f"source={item.source}",
                     f"created_at={item.created_at}",
+                    "context_refs=" + ",".join(item.context_refs),
                     f"content={item.content}",
                 )
             )
@@ -259,7 +270,7 @@ def materialize_proposal(
         kind=proposal.kind,
         perspective=proposal.perspective,
         statement=proposal.statement,
-        plasticity=proposal.plasticity,
+        plasticity=default_plasticity(proposal.kind),
         created_at=derived_at,
         context_tags=proposal.context_tags,
         relationship_ref=proposal.relationship_ref,
@@ -277,7 +288,7 @@ def materialize_proposal(
             origin=SelfEvidenceOrigin.DIRECT,
             derivation_method=SELF_REFLECTION_POLICY,
             known_at=event_store.get_event_by_id(conn, root.event_id).created_at,
-            context_tags=proposal.context_tags,
+            context_tags=root.context_refs,
         )
     resolution = resolve_self_representation(
         conn,
@@ -316,6 +327,12 @@ def review_memory_packet(
         include_persisted_history=True,
         conversation_id=None,
         limit=MAX_REVIEW_EVIDENCE_ITEMS,
+        source_types=[
+            EventType.USER_PROMPT,
+            EventType.TOOL_RESULT,
+            EventType.PERCEPT_OBSERVATION,
+            EventType.SYSTEM_EVENT,
+        ],
     )
     return jit_memory.request_memory(
         conn,
