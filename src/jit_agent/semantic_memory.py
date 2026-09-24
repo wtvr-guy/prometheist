@@ -353,8 +353,28 @@ def _advance_resolution(
     *,
     assertion: SemanticAssertion,
     evidence: SemanticEvidence,
+    resolved_at: datetime,
 ) -> tuple[ResolutionStatus, tuple[UUID, ...], UUID | None, datetime | None]:
     effective_at = _assertion_effective_at(assertion, evidence)
+
+    if assertion.claim_valid_from is not None and assertion.claim_valid_from > resolved_at:
+        if current is None:
+            return ResolutionStatus.UNKNOWN, (), None, None
+        return (
+            current.status,
+            current.candidate_assertion_ids,
+            current.selected_assertion_id,
+            current.effective_at,
+        )
+    if assertion.claim_valid_until is not None and resolved_at >= assertion.claim_valid_until:
+        if current is None:
+            return ResolutionStatus.UNKNOWN, (), None, None
+        return (
+            current.status,
+            current.candidate_assertion_ids,
+            current.selected_assertion_id,
+            current.effective_at,
+        )
 
     if evidence.relation is EvidenceRelation.OPPOSES:
         if current is None or assertion.assertion_id not in current.candidate_assertion_ids:
@@ -557,6 +577,7 @@ def record_semantic_evidence(
             current,
             assertion=assertion,
             evidence=evidence,
+            resolved_at=asserted_at,
         )
         resolution, resolution_created = _persist_resolution(
             conn,
