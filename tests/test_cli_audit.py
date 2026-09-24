@@ -156,7 +156,7 @@ def test_memory_fact_command_prints_resolution_assertions_and_evidence(
             property="preferred_drink",
             value="latte",
             confidence=0.8,
-            source_percept_id=uuid4(),
+            source_id=uuid4(),
             observed_at=now,
             asserted_at=now,
             derivation_method="test/v2",
