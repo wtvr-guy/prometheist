@@ -158,7 +158,8 @@ def test_memory_fact_command_prints_resolution_assertions_and_evidence(
             confidence=0.8,
             source_id=uuid4(),
             observed_at=now,
-            asserted_at=now,
+            known_at=now,
+            resolved_at=now,
             derivation_method="test/v2",
         )
     monkeypatch.setattr(
