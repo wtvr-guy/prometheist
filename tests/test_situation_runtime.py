@@ -279,6 +279,24 @@ def test_consolidation_records_variation_as_evidence_instead_of_skipping_it(conn
     assert assertion is not None and assertion.value == 700
 
 
+def test_consolidation_retry_reuses_frozen_input_page(conn):
+    source = source_setup(conn)
+    add_observation(conn, source, value=500, delivery_id="first")
+    action_id = uuid4()
+
+    first = consolidate_page(conn, action_id=action_id)
+    assert len(first["semantic_updates"]) == 1
+
+    add_observation(conn, source, value=700, delivery_id="arrived-after-freeze")
+    retried = consolidate_page(conn, action_id=action_id)
+
+    assert retried == first
+    assert len(semantic_evidence(conn, "worker:1", "memory")) == 1
+    resolution = current_semantic_resolution(conn, "worker:1", "memory")
+    assertion = selected_assertion(conn, resolution)
+    assert assertion is not None and assertion.value == 500
+
+
 def test_consolidation_keeps_subject_evidence_separate(conn):
     source = source_setup(conn)
     add_observation(conn, source, value=500, subject="worker:1", delivery_id="w1")
