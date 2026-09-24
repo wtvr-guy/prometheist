@@ -12,7 +12,15 @@ import sys
 import traceback
 import uuid
 
-from jit_agent import artifact_journal, artifact_recovery, audit_report, blob_store, db
+from jit_agent import (
+    artifact_journal,
+    artifact_recovery,
+    audit_report,
+    blob_store,
+    db,
+    journal_signing,
+    semantic_memory,
+)
 from jit_agent.admission_diagnostics import (
     RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX,
     build_resource_admission_diagnostics,
@@ -124,11 +132,41 @@ def _run_audit(interaction_id: uuid.UUID | None, *, latest: bool) -> None:
     print(audit_report.render_interaction_audit(resolved))
 
 
+def _run_sign(interaction_id: uuid.UUID | None, *, latest: bool) -> None:
+    """Sign an already-finalized interaction's journal head. Opt-in; not automatic."""
+
+    resolved = _resolve_artifact_interaction_id(interaction_id, latest=latest)
+    anchor = journal_signing.sign_journal_head(resolved)
+    print(json.dumps(anchor, indent=2, sort_keys=True))
+
+
+def _run_verify_signature(interaction_id: uuid.UUID | None, *, latest: bool) -> None:
+    resolved = _resolve_artifact_interaction_id(interaction_id, latest=latest)
+    report = journal_signing.verify_signed_journal_head(resolved)
+    print(json.dumps(report, indent=2, sort_keys=True))
+    if not report["valid"]:
+        raise RuntimeError("journal signature verification failed")
+
+
 def _run_blob_verify(digest: str) -> None:
     valid = blob_store.verify_blob(digest)
     print(json.dumps({"digest": digest, "valid": valid}, sort_keys=True))
     if not valid:
         raise RuntimeError(f"blob verification failed: {digest}")
+
+
+def _run_memory_fact(subject: str, property_name: str) -> None:
+    """Print the durable belief history for one subject/property, oldest first."""
+
+    with db.get_connection() as conn:
+        history = semantic_memory.semantic_fact_history(conn, subject, property_name)
+    payload = {
+        "subject": subject,
+        "property": property_name,
+        "current": history[-1].model_dump(mode="json") if history else None,
+        "history": [fact.model_dump(mode="json") for fact in history],
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True, default=str))
 
 
 def _run_recover(interaction_id: uuid.UUID | None, *, latest: bool) -> None:
@@ -244,12 +282,17 @@ def main() -> None:
             "recover",
             "restore-events",
             "blob-verify",
+            "memory-fact",
+            "sign",
+            "verify-signature",
         ),
         default="chat",
         help=(
             "Run chat (default), inspect/verify/audit artifact chains, resume an "
-            "incomplete interaction, restore canonical events from artifacts, or "
-            "verify one content-addressed blob."
+            "incomplete interaction, restore canonical events from artifacts, "
+            "verify one content-addressed blob, show one subject/property's "
+            "durable belief history, or sign/verify-signature a finalized "
+            "journal head."
         ),
     )
     parser.add_argument(
@@ -264,7 +307,7 @@ def main() -> None:
     parser.add_argument(
         "--interaction-id",
         type=uuid.UUID,
-        help="Specific artifact interaction id for inspect/verify/audit/recover.",
+        help="Specific artifact interaction id for inspect/verify/audit/recover/sign/verify-signature.",
     )
     parser.add_argument(
         "--conversation-id",
@@ -275,15 +318,26 @@ def main() -> None:
         "--digest",
         help="Content digest (sha256:<hex>) to check with blob-verify.",
     )
+    parser.add_argument(
+        "--subject",
+        help="Subject reference to look up with memory-fact, e.g. 'person:mike'.",
+    )
+    parser.add_argument(
+        "--property",
+        dest="property_name",
+        help="Property reference to look up with memory-fact, e.g. 'preferred_drink'.",
+    )
     args = parser.parse_args()
 
-    if args.command in {"inspect", "verify", "audit", "recover", "restore-events"}:
+    if args.command in {"inspect", "verify", "audit", "recover", "restore-events", "sign", "verify-signature"}:
         if args.once is not None:
             parser.error("--once is only valid with chat")
         if args.conversation_id is not None:
             parser.error("--conversation-id is only valid with chat")
         if args.digest is not None:
             parser.error("--digest is only valid with blob-verify")
+        if args.subject is not None or args.property_name is not None:
+            parser.error("--subject/--property are only valid with memory-fact")
         if args.command == "inspect":
             _run_inspect(args.interaction_id, latest=args.latest)
             return
@@ -295,6 +349,12 @@ def main() -> None:
             return
         if args.command == "recover":
             _run_recover(args.interaction_id, latest=args.latest)
+            return
+        if args.command == "sign":
+            _run_sign(args.interaction_id, latest=args.latest)
+            return
+        if args.command == "verify-signature":
+            _run_verify_signature(args.interaction_id, latest=args.latest)
             return
         if args.interaction_id is not None or args.latest:
             parser.error("restore-events takes no interaction selector")
@@ -308,15 +368,33 @@ def main() -> None:
             parser.error("--conversation-id is only valid with chat")
         if args.interaction_id is not None or args.latest:
             parser.error("blob-verify takes --digest, not an interaction selector")
+        if args.subject is not None or args.property_name is not None:
+            parser.error("--subject/--property are only valid with memory-fact")
         if args.digest is None:
             parser.error("blob-verify requires --digest")
         _run_blob_verify(args.digest)
+        return
+
+    if args.command == "memory-fact":
+        if args.once is not None:
+            parser.error("--once is only valid with chat")
+        if args.conversation_id is not None:
+            parser.error("--conversation-id is only valid with chat")
+        if args.interaction_id is not None or args.latest:
+            parser.error("memory-fact takes --subject/--property, not an interaction selector")
+        if args.digest is not None:
+            parser.error("--digest is only valid with blob-verify")
+        if args.subject is None or args.property_name is None:
+            parser.error("memory-fact requires --subject and --property")
+        _run_memory_fact(args.subject, args.property_name)
         return
 
     if args.interaction_id is not None or args.latest:
         parser.error("--interaction-id/--latest are not valid with chat")
     if args.digest is not None:
         parser.error("--digest is only valid with blob-verify")
+    if args.subject is not None or args.property_name is not None:
+        parser.error("--subject/--property are only valid with memory-fact")
     conversation_id = args.conversation_id or uuid.uuid4()
     if args.once is not None:
         with db.get_connection() as conn:

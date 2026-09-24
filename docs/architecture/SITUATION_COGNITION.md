@@ -160,6 +160,15 @@ hidden consolidation call in a responder or user intake, no model memory rewrite
 and no claim of learned procedural skills or biological replay. These derived
 projections can be retrieved under the explicit `DERIVED_INTERNAL` evidence scope.
 
+Each page separately derives a durable `SemanticFact` per exact subject/property
+whose value is unambiguous within that page -- distinct from the disposable
+per-page projection above, which intentionally aggregates across every subject
+sharing a property. A changed value creates a new, non-destructive record rather
+than editing the old one; an ambiguous page (a subject's own evidence disagrees
+with itself) is left unresolved rather than guessed. See
+[`SEMANTIC_FACT_PROVENANCE.md`](SEMANTIC_FACT_PROVENANCE.md) and
+`uv run prometheist memory-fact --subject <ref> --property <ref>`.
+
 ## Local operation
 
 Apply the repository schema through the normal initialization workflow first.

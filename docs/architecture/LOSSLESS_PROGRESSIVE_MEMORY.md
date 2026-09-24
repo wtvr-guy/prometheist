@@ -4,7 +4,7 @@
 
 **Constitutional status:** primary architecture authority for Articles 9, 10, 11, 23, and 24 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md). This document explains those constitutional rules in depth and is subordinate to the Constitution where wording conflicts.
 
-This document freezes the memory-scaling constraints that future Prometheist milestones must preserve. It supplements `COGNITIVE_ARCHITECTURE.md`, `MEMORY_KERNEL.md`, and `ASSOCIATIVE_MEMORY.md` and supersedes any older wording that would permit an already-admitted durable memory to be replaced by a summary, abstraction, embedding, aggregation, or other lossy derivative.
+This document freezes the memory-scaling constraints that future Prometheist milestones must preserve. It supplements `COGNITIVE_ARCHITECTURE.md`, `MEMORY_KERNEL.md`, and `ASSOCIATIVE_MEMORY.md` and supersedes any older wording that would permit an already-admitted durable memory to be replaced by a summary, abstraction, embedding, aggregation, or other lossy derivative. [`SEMANTIC_FACT_PROVENANCE.md`](SEMANTIC_FACT_PROVENANCE.md) implements the append-only, non-destructive supersession model this document requires for one concrete kind of derived structure: a durable belief about a subject/property value.
 
 ## Core rule
 
@@ -75,7 +75,7 @@ original canonical event
 new provenance-bearing event
 ```
 
-This preserves both current understanding and historical reconstructability: the system can distinguish “what is now believed/supported” from “what was actually present in the record when an earlier decision was made.”
+This preserves both current understanding and historical reconstructability: the system can distinguish “what is now believed/supported” from “what was actually present in the record when an earlier decision was made.” [`SEMANTIC_FACT_PROVENANCE.md`](SEMANTIC_FACT_PROVENANCE.md) implements exactly this relation for durable subject/property beliefs: a changed value is always a new `SemanticFact` whose `supersedes` field points at the one it replaces, and a value that disagrees with an *earlier* validity window is recorded as `CONTRADICTS` rather than silently discarded.
 
 Explicit identity-governed erasure, if implemented, is a separate governance path and must define its audit/integrity semantics explicitly. It is not an ordinary correction mechanism.
 

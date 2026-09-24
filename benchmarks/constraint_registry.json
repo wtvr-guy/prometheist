@@ -420,11 +420,12 @@
     },
     "artifact_journal_projection": {
       "classification": "STRUCTURAL_INVARIANT",
-      "rationale": "SHA-256 digests are exactly 64 hexadecimal characters by construction of the fixed 256-bit hash output, so blob_store rejects any other length outright. The two-character shard prefix is a fixed content-addressed storage layout convention (mirroring the OCI/git loose-object sharding pattern) chosen for directory fan-out, not a quality tradeoff. The audit renderer's preview-text bound only constrains how many characters of an already-decided field appear on one human-readable timeline line in a non-authoritative projection; it does not gate, weight, or select any cognitive, retrieval, or safety decision, so no benchmark can discriminate among candidate values.",
+      "rationale": "SHA-256 digests are exactly 64 hexadecimal characters by construction of the fixed 256-bit hash output, so blob_store rejects any other length outright. The two-character shard prefix is a fixed content-addressed storage layout convention (mirroring the OCI/git loose-object sharding pattern) chosen for directory fan-out, not a quality tradeoff. The audit renderer's preview-text bound only constrains how many characters of an already-decided field appear on one human-readable timeline line in a non-authoritative projection; it does not gate, weight, or select any cognitive, retrieval, or safety decision, so no benchmark can discriminate among candidate values. journal_signing's 16-hex-character key id is a truncated SHA-256 fingerprint used only as a human-readable lookup/display label for a local keypair; the actual cryptographic verification always uses the full untruncated public key bytes, so the truncation length is a display/representation choice with no bearing on signature correctness or forgeability.",
       "members": {
         "src/jit_agent/audit_report.py::<module>::_PREVIEW_LIMIT": 96,
         "src/jit_agent/blob_store.py::_split_digest::comparison": 64,
-        "src/jit_agent/blob_store.py::blob_path::slice_upper": 2
+        "src/jit_agent/blob_store.py::blob_path::slice_upper": 2,
+        "src/jit_agent/journal_signing.py::key_id_for_public_bytes::slice_upper": 16
       }
     }
   }

@@ -70,6 +70,25 @@ def list_records(
     return [(str(row[0]), dict(row[1])) for row in rows]
 
 
+def record_history(conn: psycopg.Connection, kind: str, key: str) -> list[dict[str, Any]]:
+    """Every revision ever written for one exact (kind, key), oldest first.
+
+    ``get_record``/``list_records`` read the rebuildable ``cognitive_heads``
+    index, which exposes only the current revision. A superseded revision is
+    never deleted; it remains reconstructable directly from canonical
+    ``events``. This is an intentionally exceptional forensic/audit read
+    scoped to one exact key, not the ordinary bounded per-percept recall path.
+    """
+    rows = conn.execute(
+        """SELECT payload FROM events
+           WHERE source = 'cognitive_runtime' AND payload->>'kind' = 'COGNITIVE_RECORD'
+             AND payload->>'record_kind' = %s AND payload->>'record_key' = %s
+           ORDER BY global_seq ASC""",
+        (kind, key),
+    ).fetchall()
+    return [dict(row[0]["data"]) for row in rows]
+
+
 def rebuild_heads(conn: psycopg.Connection) -> None:
     """Explicit offline recovery only; ordinary cognition never scans history."""
     with record_lock(conn, "rebuild-heads"):

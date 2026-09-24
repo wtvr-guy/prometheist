@@ -2,7 +2,7 @@
 
 **Status:** constitutional architecture deep dive  
 **Constitutional authority:** implements Article 36 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).  
-**Applies to:** canonical events, percept-to-response stage boundaries, stateless LLM invocations, content-addressed blob storage, inspection and human auditing, interruption recovery, and database reconstruction
+**Applies to:** canonical events, percept-to-response stage boundaries, stateless LLM invocations, content-addressed blob storage, inspection and human auditing, signed journal heads, interruption recovery, and database reconstruction
 
 Prometheist maintains an independent immutable JSON artifact journal in addition to PostgreSQL. PostgreSQL remains the indexed operational store used for efficient retrieval, scheduling, and execution. It is not the only surviving representation of Prometheist's memory, cognition, or completed work.
 
@@ -371,7 +371,7 @@ or:
 uv run prometheist audit --interaction-id <uuid>
 ```
 
-See [Section 9](#9-content-addressed-blob-store) and [Section 11](#11-current-scope-and-future-hardening) for what `audit` renders and why it is not itself authoritative.
+See [Section 9](#9-content-addressed-blob-store) and [Section 12](#12-current-scope-and-future-hardening) for what `audit` renders and why it is not itself authoritative.
 
 ## 9. Content-addressed blob store
 
@@ -393,9 +393,28 @@ uv run prometheist blob-verify --digest sha256:<hex>
 
 Deduplication is scoped to one local artifact root (one installation), not globally across unrelated people/security domains. A shared global blob store would let two otherwise-isolated domains learn that they hold identical bytes merely by comparing digests. A future multi-tenant deployment should partition blob storage per security domain rather than widen this store, matching the per-root scoping the rest of the artifact journal already uses.
 
-As of this writing, no existing artifact producer (percept, stage result, LLM invocation, final disposition) externalizes its payload to the blob store; every field they write remains inline JSON, matching their existing hash-chained contract and historical fixtures. The blob store is available for new/large payloads — model generations, documents, audio, and similar exact byte-for-byte evidence — to adopt incrementally as they become live, consistent with the conservative migration posture in Section 11.
+As of this writing, no existing artifact producer (percept, stage result, LLM invocation, final disposition) externalizes its payload to the blob store; every field they write remains inline JSON, matching their existing hash-chained contract and historical fixtures. The blob store is available for new/large payloads — model generations, documents, audio, and similar exact byte-for-byte evidence — to adopt incrementally as they become live, consistent with the conservative migration posture in Section 12.
 
-## 10. Storage policy
+## 10. Signed journal heads
+
+Hash chaining alone (Sections 2-3) makes ordinary local corruption or truncation *detectable*, but it cannot defend against one actor with full filesystem access rewriting an interaction's artifacts **and** recomputing every downstream hash so the rewritten chain stays perfectly self-consistent. That is exactly the failure mode a purely local hash-chain-plus-sidecar design (e.g. SuperLocalMemory's audit chain) cannot rule out: the sidecar anchor lives in the same trust domain as the data it attests.
+
+`journal_signing.py` adds one additional, independent, and strictly optional trust primitive: an Ed25519 digital signature over a *finalized* interaction's current journal head.
+
+```powershell
+uv run prometheist sign --interaction-id <uuid>
+uv run prometheist verify-signature --interaction-id <uuid>
+```
+
+`sign` fails closed unless the interaction's artifact chain is both internally valid and already carries a `FINAL_DISPOSITION` artifact — a signature must never assert integrity or completeness the journal itself cannot already demonstrate. It generates a local Ed25519 keypair on first use (`<artifact root>/keys/<key_id>.private` / `.public`; the key id is a truncated SHA-256 fingerprint of the public key, used only as a lookup label) and writes a small signed anchor to `<artifact root>/anchors/<interaction_id>.json` containing the interaction id, current journal head hash, record count, timestamp, signing key id, and the signature itself.
+
+`verify-signature` recomputes the same canonical bytes and checks the signature using **only the public key** — it never reads or needs the private key, so a copy of the anchor plus the public key file can be handed to a separate machine, an independent remote store, or a human reviewer, and verified there without any trust in the current state of the local artifact root. It also re-verifies the interaction's live artifact chain and re-derives its current head hash, so a chain that was rewritten (even a "sophisticated" rewrite that keeps every internal hash link self-consistent) after signing is caught as soon as its recomputed head no longer matches what was originally signed.
+
+Signing is deliberately **not** wired into the live percept-response or situation pipelines. It is an explicit, opt-in operation over an already-finalized interaction, consistent with the principle that "the signature/remote anchor is not necessary for basic crash recovery; it is an audit-strengthening layer." An operator or external script may run `sign` on a schedule (e.g. after each finalized interaction, or in a nightly sweep) without any change to the pipeline that produced the interaction.
+
+This remains **tamper-evident, not tamper-proof**: a local actor who controls the signing key at the moment of signing can still sign a false statement. What it defends against is a *later* rewrite of already-signed history being passed off as the original — the same distinction the original research draws between local hash chaining and an externally verifiable anchor.
+
+## 11. Storage policy
 
 Artifact redundancy is intentional. Storage efficiency must not silently erase exact causal evidence or eliminate the independent recovery copy.
 
@@ -413,11 +432,12 @@ Current policy:
   revision, artifact hashes, and human-review status; preservation alone never marks a
   model output as a positive training example;
 - future cold-storage compression may transform old `.json` records to a content-preserving representation such as `.json.zst`, provided hashes/identity remain verifiable and the transformation is reversible;
-- large binary objects should use the content-addressed blob store (Section 9), with JSON artifacts referring to their OCI-style descriptor rather than embedding arbitrary binary payloads.
+- large binary objects should use the content-addressed blob store (Section 9), with JSON artifacts referring to their OCI-style descriptor rather than embedding arbitrary binary payloads;
+- a locally generated Ed25519 signing key (Section 10) is not itself backed up or escrowed by this implementation; losing it does not lose any journal data, only the ability to produce *new* signatures under that key id, and previously-published anchors remain independently verifiable with the already-exported public key.
 
 Explicit identity-governed erasure remains a separate stewardship/sovereignty operation and must not be confused with automatic compaction.
 
-## 11. Current scope and future hardening
+## 12. Current scope and future hardening
 
 The current implementation establishes independent durability for:
 
@@ -429,8 +449,9 @@ The current implementation establishes independent durability for:
 - event-store reconstruction;
 - interaction continuation after operational-state loss;
 - content-addressed storage for large exact payloads (Section 9);
-- a deterministic human-readable audit renderer over the artifact chain (Section 8).
+- a deterministic human-readable audit renderer over the artifact chain (Section 8);
+- opt-in Ed25519 signing and independent public-key verification of finalized journal heads (Section 10).
 
-Further hardening should extend the same boundary rule to additional long-running/non-conversational task families as they become live, journal exact external-effect request envelopes alongside their results, adopt blob-referenced payloads at the LLM invocation and event boundaries where they are currently large inline strings, add bulk backup/restore commands, and test deliberate power-loss/fsync fault cases on the native deployment environment.
+Further hardening should extend the same boundary rule to additional long-running/non-conversational task families as they become live, journal exact external-effect request envelopes alongside their results, adopt blob-referenced payloads at the LLM invocation and event boundaries where they are currently large inline strings, add bulk backup/restore commands, replicate signed anchors (and ideally the blobs/journals they cover) to a remote object store in a genuinely separate trust/IAM domain, and test deliberate power-loss/fsync fault cases on the native deployment environment.
 
 The principle is broader than the current implementation: **if a meaningful cognitive or operational boundary would matter for explanation, replay, recovery, or reconstruction, its exact durable artifact must not exist only inside a disposable process or a single database.**

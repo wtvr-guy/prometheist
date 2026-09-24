@@ -9,13 +9,14 @@ from jit_agent.action_outcomes import issue_action, observe_action_outcome
 from jit_agent.attention_observation import HostResourceMetrics
 from jit_agent.attention_store import load_scheduler
 from jit_agent.cognitive_store import get_record, list_records, put_record, rebuild_heads
-from jit_agent.consolidation import ConsolidationSchedule, emit_due_consolidations, schedule_consolidation
+from jit_agent.consolidation import ConsolidationSchedule, consolidate_page, emit_due_consolidations, schedule_consolidation
 from jit_agent.expectations import Expectation
 from jit_agent.models import EventType
 from jit_agent.percept_context import Observation, PerceptContext
 from jit_agent.percept_intake import ingest_percept, install_source_policy
 from jit_agent.perception import PerceptKind, PerceptModality, PerceptSource
 from jit_agent.percept_triage import SourcePolicy
+from jit_agent.semantic_memory import current_semantic_fact
 from jit_agent.situation_runtime import drain_situations, submit_situation_page, run_situation_task
 from jit_agent.situations import register_expectation
 
@@ -41,11 +42,11 @@ def source_setup(conn):
     return source
 
 
-def add_observation(conn, source, property_name="memory", value=300, expected=None, delivery_id=None):
+def add_observation(conn, source, property_name="memory", value=300, expected=None, delivery_id=None, subject="worker:1"):
     return ingest_percept(conn, source=source, observation={property_name: value}, observed_at=datetime.now(timezone.utc),
                           delivery_id=delivery_id or str(uuid4()), context=PerceptContext(
-                              entity_refs=("worker:1",), expectation_refs=(expected,) if expected else (),
-                              observations=(Observation(subject="worker:1", property=property_name, value=value),)))
+                              entity_refs=(subject,), expectation_refs=(expected,) if expected else (),
+                              observations=(Observation(subject=subject, property=property_name, value=value),)))
 
 
 def register_memory_expectation(conn):
@@ -254,6 +255,34 @@ def test_scheduled_consolidation_executes_separately_and_preserves_sources(conn)
     assert projections[0][1]["projections"][0]["observed_values"][0]["support_percept_ids"]
     for event_id, payload in original:
         assert event_store.get_event_by_id(conn, event_id).payload == payload
+    facts = projections[0][1]["semantic_facts"]
+    assert facts == [{"subject": "worker:1", "property": "memory", "fact_id": facts[0]["fact_id"], "relation": "INITIAL"}]
+    fact = current_semantic_fact(conn, "worker:1", "memory")
+    assert fact is not None and fact.value == 500 and str(fact.fact_id) == facts[0]["fact_id"]
+
+
+def test_consolidation_skips_semantic_fact_when_one_subject_is_ambiguous_within_a_page(conn):
+    source = source_setup(conn)
+    add_observation(conn, source, value=500, delivery_id="first")
+    add_observation(conn, source, value=700, delivery_id="second")
+    projection = consolidate_page(conn, action_id=uuid4())
+    assert projection["projections"][0]["variation_present"] is True
+    assert projection["semantic_facts"] == []
+    assert current_semantic_fact(conn, "worker:1", "memory") is None
+
+
+def test_consolidation_derives_separate_semantic_facts_per_subject(conn):
+    source = source_setup(conn)
+    add_observation(conn, source, value=500, subject="worker:1", delivery_id="w1")
+    add_observation(conn, source, value=900, subject="worker:2", delivery_id="w2")
+    projection = consolidate_page(conn, action_id=uuid4())
+    facts_by_subject = {fact["subject"]: fact for fact in projection["semantic_facts"]}
+    assert set(facts_by_subject) == {"worker:1", "worker:2"}
+    assert current_semantic_fact(conn, "worker:1", "memory").value == 500
+    assert current_semantic_fact(conn, "worker:2", "memory").value == 900
+    # Each subject's provenance stays exact to its own evidence; never merged.
+    assert len(current_semantic_fact(conn, "worker:1", "memory").derived_from) == 1
+    assert len(current_semantic_fact(conn, "worker:2", "memory").derived_from) == 1
 
 
 def test_forged_action_success_receipt_fails_closed(conn):
