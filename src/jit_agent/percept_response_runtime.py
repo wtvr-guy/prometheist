@@ -900,7 +900,11 @@ class PerceptLLM(OllamaClient):
             budget=budget,
         )
         refs = list(_memory_evidence_refs(admitted_packet))
-        if package.self_context is not None:
+        if (
+            package.self_context is not None
+            and package.self_context.admission
+            is SelfContextAdmission.PRIMARY_DERIVED_CONTEXT
+        ):
             refs.extend(
                 f"self:{item.representation_id}"
                 for item in package.self_context.items
