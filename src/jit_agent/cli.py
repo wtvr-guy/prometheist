@@ -156,15 +156,36 @@ def _run_blob_verify(digest: str) -> None:
 
 
 def _run_memory_fact(subject: str, property_name: str) -> None:
-    """Print the durable belief history for one subject/property, oldest first."""
+    """Print assertions, evidence, and resolution for one subject/property."""
 
     with db.get_connection() as conn:
-        history = semantic_memory.semantic_fact_history(conn, subject, property_name)
+        assertions = semantic_memory.semantic_assertions(conn, subject, property_name)
+        evidence = semantic_memory.semantic_evidence(conn, subject, property_name)
+        resolution = semantic_memory.current_semantic_resolution(
+            conn, subject, property_name
+        )
+        resolution_history = semantic_memory.semantic_resolution_history(
+            conn, subject, property_name
+        )
+        selected = (
+            semantic_memory.selected_assertion(conn, resolution)
+            if resolution is not None
+            else None
+        )
     payload = {
         "subject": subject,
         "property": property_name,
-        "current": history[-1].model_dump(mode="json") if history else None,
-        "history": [fact.model_dump(mode="json") for fact in history],
+        "current_resolution": (
+            resolution.model_dump(mode="json") if resolution else None
+        ),
+        "selected_assertion": (
+            selected.model_dump(mode="json") if selected else None
+        ),
+        "assertions": [item.model_dump(mode="json") for item in assertions],
+        "evidence": [item.model_dump(mode="json") for item in evidence],
+        "resolution_history": [
+            item.model_dump(mode="json") for item in resolution_history
+        ],
     }
     print(json.dumps(payload, indent=2, sort_keys=True, default=str))
 
