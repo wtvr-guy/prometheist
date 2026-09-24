@@ -397,6 +397,13 @@ def _advance_resolution(
         and current.status is ResolutionStatus.ACCEPTED
         and current.selected_assertion_id == assertion.assertion_id
     ):
+        if current.effective_at is None or effective_at > current.effective_at:
+            return (
+                current.status,
+                current.candidate_assertion_ids,
+                current.selected_assertion_id,
+                effective_at,
+            )
         return (
             current.status,
             current.candidate_assertion_ids,
@@ -414,11 +421,18 @@ def _advance_resolution(
                 current.selected_assertion_id,
                 current.effective_at,
             )
+        if current.effective_at is not None and effective_at < current.effective_at:
+            return (
+                current.status,
+                current.candidate_assertion_ids,
+                current.selected_assertion_id,
+                current.effective_at,
+            )
         return (
             ResolutionStatus.AMBIGUOUS,
             current.candidate_assertion_ids,
             None,
-            current.effective_at,
+            effective_at,
         )
 
     if current is None or current.effective_at is None or effective_at > current.effective_at:
