@@ -16,7 +16,11 @@ from jit_agent.percept_context import Observation, PerceptContext
 from jit_agent.percept_intake import ingest_percept, install_source_policy
 from jit_agent.perception import PerceptKind, PerceptModality, PerceptSource
 from jit_agent.percept_triage import SourcePolicy
-from jit_agent.semantic_memory import (\n    current_semantic_resolution,\n    selected_assertion,\n    semantic_evidence,\n)
+from jit_agent.semantic_memory import (
+    current_semantic_resolution,
+    selected_assertion,
+    semantic_evidence,
+)
 from jit_agent.situation_runtime import drain_situations, submit_situation_page, run_situation_task
 from jit_agent.situations import register_expectation
 
