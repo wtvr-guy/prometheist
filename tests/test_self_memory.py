@@ -315,6 +315,46 @@ def test_prediction_contradiction_challenges_established_schema(conn):
     )
 
 
+def test_prediction_rejects_outcome_that_was_already_known(conn):
+    root_a = _event(conn, "I usually preserve reversibility.")
+    root_b = _event(conn, "I kept a fallback in another project.")
+    representation = _representation(
+        conn,
+        kind=SelfRepresentationKind.DECISION_POLICY,
+        perspective=SelfPerspective.INFERRED,
+        statement="The person tends to preserve reversibility.",
+        plasticity=PlasticityClass.SLOW,
+    )
+    _support(conn, representation, root_a, context_tags=("software",))
+    _support(conn, representation, root_b, context_tags=("planning",))
+    resolve_self_representation(
+        conn,
+        representation_id=representation.representation_id,
+        requested_status=SelfResolutionStatus.ESTABLISHED,
+        identity_centrality=IdentityCentrality.CENTRAL,
+        counterevidence_checked=True,
+        resolved_at=_at(20),
+    )
+
+    already_known = _event(conn, "I chose the irreversible shortcut.")
+    prediction = record_self_prediction(
+        conn,
+        representation_id=representation.representation_id,
+        statement="The next comparable choice will preserve reversibility.",
+        created_at=_at(30),
+    )
+
+    with pytest.raises(ValueError, match="knowledge cutoff"):
+        resolve_self_prediction(
+            conn,
+            representation_id=representation.representation_id,
+            prediction_id=prediction.prediction_id,
+            outcome=PredictionOutcome.CONTRADICTED,
+            outcome_event_id=already_known.event_id,
+            resolved_at=_at(40),
+        )
+
+
 def test_prospective_self_is_distinct_from_current_self(conn):
     representation = _representation(
         conn,
