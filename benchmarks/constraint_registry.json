@@ -372,7 +372,7 @@
         "src/jit_agent/percept_context.py::PerceptContext::integrity.le": 3,
         "src/jit_agent/percept_context.py::PerceptContext::uncertainty.le": 3,
         "src/jit_agent/percept_triage.py::SourcePolicy::modalities.max_length": 10,
-        "src/jit_agent/percept_triage.py::TriageDecision::evidence_domains.max_length": 7,
+        "src/jit_agent/percept_triage.py::TriageDecision::evidence_domains.max_length": 8,
         "src/jit_agent/perception.py::SalienceSignals::prediction_error_score.default": 0,
         "src/jit_agent/perception.py::SalienceSignals::prediction_error_score.le": 3,
         "src/jit_agent/perception.py::SalienceSignals::task_relevance_score.default": 0,
