@@ -1,6 +1,7 @@
 """One claimed situation stage per fresh process, with exact artifact handoffs."""
 from __future__ import annotations
 
+from datetime import datetime
 import json
 import os
 from uuid import UUID, uuid5
@@ -236,9 +237,7 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
                     conn,
                     proposal=proposal,
                     evidence=batch,
-                    derived_at=__import__("datetime").datetime.fromisoformat(
-                        str(derived_at)
-                    ),
+                    derived_at=datetime.fromisoformat(str(derived_at)),
                 )
                 candidates.append(
                     {
@@ -305,7 +304,9 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
                 representation=representation,
                 review=review,
                 review_packet=packet,
-                resolved_at=task.created_at,
+                resolved_at=datetime.fromisoformat(
+                    str(proposal_output["derived_at"])
+                ),
             )
             reviews.append(
                 {
