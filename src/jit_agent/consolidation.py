@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from uuid import UUID
 
@@ -13,7 +13,7 @@ from jit_agent.percept_context import FrozenRecord, aware
 from jit_agent.percept_intake import ingest_percept, install_source_policy
 from jit_agent.perception import PerceptKind, PerceptModality, PerceptSource
 from jit_agent.percept_triage import SourcePolicy, TaskClass
-from jit_agent.semantic_memory import record_semantic_evidence
+from jit_agent.semantic_memory import current_semantic_resolution, record_semantic_evidence
 from jit_agent.situations import Situation
 
 DERIVATION_METHOD = "consolidation/v2"
@@ -63,32 +63,70 @@ def _record_page_semantic_evidence(
                 "property": observation.property,
                 "assertion_id": str(result.assertion.assertion_id),
                 "evidence_id": str(result.evidence.evidence_id),
-                "assertion_created": result.assertion_created,
-                "evidence_created": result.evidence_created,
-                "resolution_id": str(result.resolution.resolution_id),
-                "resolution_status": result.resolution.status.value,
-                "selected_assertion_id": (
-                    str(result.resolution.selected_assertion_id)
-                    if result.resolution.selected_assertion_id
-                    else None
-                ),
-                "resolution_created": result.resolution_created,
             }
         )
     return updates
+
+
+def _load_or_create_consolidation_input(
+    conn: psycopg.Connection,
+    *,
+    action_id: UUID,
+    after_key: str,
+) -> tuple[list[tuple[str, dict]], datetime, str | None]:
+    """Freeze one action's exact input page and semantic assertion time.
+
+    A retry must never read a moving page after partially publishing semantic
+    evidence. The input record is therefore durable before derivation begins.
+    """
+
+    input_key = str(action_id)
+    existing = get_record(conn, "consolidation_input", input_key)
+    if existing is None:
+        rows = list_records(conn, "situation_ingest", after_key=after_key)
+        payload = {
+            "after_key": after_key,
+            "record_keys": [key for key, _ in rows],
+            "asserted_at": datetime.now(timezone.utc).isoformat(),
+            "next_cursor": rows[-1][0] if rows else None,
+        }
+        put_record(
+            conn,
+            "consolidation_input",
+            input_key,
+            payload,
+            revision="1",
+        )
+        existing = payload
+    elif existing.get("after_key", "") != after_key:
+        raise ValueError("consolidation action replayed with a different cursor")
+
+    asserted_at = datetime.fromisoformat(str(existing["asserted_at"]))
+    aware(asserted_at)
+    rows: list[tuple[str, dict]] = []
+    for key in existing.get("record_keys", []):
+        data = get_record(conn, "situation_ingest", str(key))
+        if data is None:
+            raise RuntimeError(
+                f"frozen consolidation input is missing situation_ingest record: {key}"
+            )
+        rows.append((str(key), data))
+    return rows, asserted_at, existing.get("next_cursor")
 
 
 def consolidate_page(
     conn: psycopg.Connection,
     *,
     action_id: UUID,
-    asserted_at: datetime,
     after_key: str = "",
 ) -> dict:
-    """Process one bounded storage page without making the page epistemic."""
+    """Process one frozen bounded page without making the page epistemic."""
 
-    aware(asserted_at)
-    snapshots = list_records(conn, "situation_ingest", after_key=after_key)
+    snapshots, asserted_at, next_cursor = _load_or_create_consolidation_input(
+        conn,
+        action_id=action_id,
+        after_key=after_key,
+    )
     groups = defaultdict(dict)
     unique_states = {}
 
@@ -140,14 +178,34 @@ def consolidate_page(
         {index: state for index, state in enumerate(unique_states.values())},
         asserted_at=asserted_at,
     )
+    affected = sorted(
+        {
+            (state.observation.subject, state.observation.property)
+            for state in unique_states.values()
+        }
+    )
+    semantic_resolutions = []
+    for subject, property_name in affected:
+        resolution = current_semantic_resolution(conn, subject, property_name)
+        semantic_resolutions.append(
+            {
+                "subject": subject,
+                "property": property_name,
+                "resolution": (
+                    resolution.model_dump(mode="json") if resolution else None
+                ),
+            }
+        )
     result = {
         "projections": projections,
         "source_snapshot_ids": [
             data["snapshot_id"] for _, data in snapshots
         ],
-        "next_cursor": snapshots[-1][0] if snapshots else None,
+        "next_cursor": next_cursor,
         "canonical_records_modified": False,
         "semantic_updates": semantic_updates,
+        "semantic_resolutions": semantic_resolutions,
+        "asserted_at": asserted_at.isoformat(),
     }
     put_record(conn, "consolidation", str(action_id), result, revision="2")
     return result
