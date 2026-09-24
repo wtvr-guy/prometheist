@@ -331,8 +331,7 @@ provenance-grounded conclusions across experience. A question about a plan or
 aspiration is USER_AUTHORED when asking what the user said/planned, but
 SELF_MODEL when asking how that goal fits the person's enduring modeled
 identity. Choose MIXED_CONVERSATION when the current message explicitly refers
-to what
-the assistant just said, answered, recommended, ruled out, or asked, or asks
+to what the assistant just said, answered, recommended, ruled out, or asked, or asks
 to reconstruct a prior exchange involving both participants.
 
 Surface modes:
