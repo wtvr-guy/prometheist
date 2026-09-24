@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-import re
 from typing import Annotated
 from uuid import UUID, uuid5
 
@@ -37,6 +36,7 @@ SELF_PREDICTION_KIND = "self_prediction"
 WORKING_SELF_KIND = "working_self"
 
 SELF_MEMORY_POLICY = "self-memory/v1"
+SELF_SUBJECT = "self"
 MAX_SELF_CONTEXT_ITEMS = 8
 MAX_SELF_CONTEXT_TAGS = 8
 MAX_SELF_STATEMENT_CHARS = 2048
