@@ -87,6 +87,33 @@ class IdentityCentrality(str, Enum):
     CENTRAL = "CENTRAL"
 
 
+def default_plasticity(kind: SelfRepresentationKind) -> PlasticityClass:
+    """Application-owned learning timescale for each self-representation class."""
+
+    if kind is SelfRepresentationKind.EMBODIMENT_STATE:
+        return PlasticityClass.FAST
+    if kind in {
+        SelfRepresentationKind.ROLE,
+        SelfRepresentationKind.PREFERENCE,
+        SelfRepresentationKind.SELF_CONCEPT,
+        SelfRepresentationKind.PROSPECTIVE_SELF,
+        SelfRepresentationKind.RELATIONAL_SCHEMA,
+        SelfRepresentationKind.PROCEDURAL_SELF,
+    }:
+        return PlasticityClass.MEDIUM
+    if kind in {
+        SelfRepresentationKind.VALUE,
+        SelfRepresentationKind.TRAIT,
+        SelfRepresentationKind.BEHAVIORAL_TENDENCY,
+        SelfRepresentationKind.DECISION_POLICY,
+        SelfRepresentationKind.WORLDVIEW,
+    }:
+        return PlasticityClass.SLOW
+    if kind is SelfRepresentationKind.NARRATIVE_HYPOTHESIS:
+        return PlasticityClass.VERY_SLOW
+    raise ValueError(f"unsupported self representation kind: {kind.value}")
+
+
 class SelfResolutionStatus(str, Enum):
     CANDIDATE = "CANDIDATE"
     ESTABLISHED = "ESTABLISHED"
