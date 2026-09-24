@@ -144,17 +144,35 @@ def test_digest_rejected_with_chat_command(tmp_path, monkeypatch) -> None:
         cli.main()
 
 
-def test_memory_fact_command_prints_current_and_history(tmp_path, monkeypatch, capsys) -> None:
+def test_memory_fact_command_prints_resolution_assertions_and_evidence(
+    tmp_path, monkeypatch, capsys
+) -> None:
     monkeypatch.setenv("PROMETHEIST_ARTIFACT_ROOT", str(tmp_path / "artifacts"))
     now = datetime.now(timezone.utc)
     with db.get_connection() as conn:
-        semantic_memory.derive_semantic_fact(
-            conn, subject="person:mike", property="preferred_drink", value="latte", confidence=0.8,
-            derived_from=(uuid4(),), observed_at=now, asserted_at=now, derivation_method="test/v1",
+        semantic_memory.record_semantic_evidence(
+            conn,
+            subject="person:mike",
+            property="preferred_drink",
+            value="latte",
+            confidence=0.8,
+            source_id=uuid4(),
+            observed_at=now,
+            known_at=now,
+            resolved_at=now,
+            derivation_method="test/v2",
         )
     monkeypatch.setattr(
-        sys, "argv",
-        ["prometheist", "memory-fact", "--subject", "person:mike", "--property", "preferred_drink"],
+        sys,
+        "argv",
+        [
+            "prometheist",
+            "memory-fact",
+            "--subject",
+            "person:mike",
+            "--property",
+            "preferred_drink",
+        ],
     )
 
     cli.main()
@@ -162,23 +180,37 @@ def test_memory_fact_command_prints_current_and_history(tmp_path, monkeypatch, c
     out = capsys.readouterr().out
     assert '"subject": "person:mike"' in out
     assert '"value": "latte"' in out
-    assert '"relation": "INITIAL"' in out
+    assert '"current_resolution"' in out
+    assert '"selected_assertion"' in out
+    assert '"evidence"' in out
+    assert '"status": "ACCEPTED"' in out
 
 
-def test_memory_fact_command_reports_no_history_for_unknown_subject(
+def test_memory_fact_command_reports_empty_semantic_state_for_unknown_subject(
     tmp_path, monkeypatch, capsys
 ) -> None:
     monkeypatch.setenv("PROMETHEIST_ARTIFACT_ROOT", str(tmp_path / "artifacts"))
     monkeypatch.setattr(
-        sys, "argv",
-        ["prometheist", "memory-fact", "--subject", "person:unknown", "--property", "anything"],
+        sys,
+        "argv",
+        [
+            "prometheist",
+            "memory-fact",
+            "--subject",
+            "person:unknown",
+            "--property",
+            "anything",
+        ],
     )
 
     cli.main()
 
     out = capsys.readouterr().out
-    assert '"current": null' in out
-    assert '"history": []' in out
+    assert '"current_resolution": null' in out
+    assert '"selected_assertion": null' in out
+    assert '"assertions": []' in out
+    assert '"evidence": []' in out
+    assert '"resolution_history": []' in out
 
 
 def test_memory_fact_requires_subject_and_property(tmp_path, monkeypatch) -> None:

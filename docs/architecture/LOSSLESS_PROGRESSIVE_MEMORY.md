@@ -75,7 +75,7 @@ original canonical event
 new provenance-bearing event
 ```
 
-This preserves both current understanding and historical reconstructability: the system can distinguish “what is now believed/supported” from “what was actually present in the record when an earlier decision was made.” [`SEMANTIC_FACT_PROVENANCE.md`](SEMANTIC_FACT_PROVENANCE.md) implements exactly this relation for durable subject/property beliefs: a changed value is always a new `SemanticFact` whose `supersedes` field points at the one it replaces, and a value that disagrees with an *earlier* validity window is recorded as `CONTRADICTS` rather than silently discarded.
+This preserves both current understanding and historical reconstructability: the system can distinguish “what is now believed/supported” from “what was actually present in the record when an earlier decision was made.” [`SEMANTIC_FACT_PROVENANCE.md`](SEMANTIC_FACT_PROVENANCE.md) implements this with separate immutable SemanticAssertion, SemanticEvidence, and SemanticResolution records. Assertions never overwrite one another; evidence accumulates exact provenance; and only resolution records supersede prior resolution records. Historical backfill, ambiguity, and bi-temporal knowledge reconstruction therefore remain explicit rather than being encoded as destructive fact replacement.
 
 Explicit identity-governed erasure, if implemented, is a separate governance path and must define its audit/integrity semantics explicitly. It is not an ordinary correction mechanism.
 
