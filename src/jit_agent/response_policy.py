@@ -34,6 +34,7 @@ class HistoricalEvidenceScope(str, Enum):
     EXTERNAL_TOOL = "EXTERNAL_TOOL"
     SYSTEM_RECORD = "SYSTEM_RECORD"
     DERIVED_INTERNAL = "DERIVED_INTERNAL"
+    SELF_MODEL = "SELF_MODEL"
     MIXED_CONVERSATION = "MIXED_CONVERSATION"
     GENERAL_OR_CURRENT = "GENERAL_OR_CURRENT"
 
@@ -138,6 +139,15 @@ _DERIVED_INTERNAL_TYPES = frozenset(
         EventType.CAPABILITY_RESULT,
     }
 )
+_SELF_MODEL_SUPPORT_TYPES = frozenset(
+    {
+        EventType.USER_PROMPT,
+        EventType.TOOL_RESULT,
+        EventType.PERCEPT_OBSERVATION,
+        EventType.SYSTEM_EVENT,
+    }
+)
+
 _GENERAL_OR_CURRENT_TYPES = frozenset(
     {
         EventType.USER_PROMPT,
@@ -160,6 +170,8 @@ def allowed_event_types(scope: HistoricalEvidenceScope) -> frozenset[EventType]:
         return _SYSTEM_RECORD_TYPES
     if scope is HistoricalEvidenceScope.DERIVED_INTERNAL:
         return _DERIVED_INTERNAL_TYPES
+    if scope is HistoricalEvidenceScope.SELF_MODEL:
+        return _SELF_MODEL_SUPPORT_TYPES
     if scope is HistoricalEvidenceScope.MIXED_CONVERSATION:
         return frozenset({EventType.USER_PROMPT}) | _MODEL_OUTPUT_TYPES
     if scope is HistoricalEvidenceScope.GENERAL_OR_CURRENT:
