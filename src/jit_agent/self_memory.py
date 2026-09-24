@@ -41,6 +41,8 @@ MAX_SELF_CONTEXT_ITEMS = 8
 MAX_CORE_SELF_ITEMS = 2
 MAX_SELF_CONTEXT_TAGS = 8
 MAX_SELF_STATEMENT_CHARS = 2048
+MAX_WORKING_SELF_REFS = 16
+MIN_SELF_CONTEXT_ITEMS = 1
 MIN_GENERALIZED_SUPPORT_ROOTS = 2
 MIN_SLOW_SCHEMA_CONTEXTS = 2
 
@@ -343,8 +345,8 @@ class WorkingSelf(FrozenRecord):
     interaction_id: UUID
     query_text: SelfStatement
     active_self: SelfContextPacket
-    goal_refs: tuple[Reference, ...] = Field(default=(), max_length=16)
-    entity_refs: tuple[Reference, ...] = Field(default=(), max_length=16)
+    goal_refs: tuple[Reference, ...] = Field(default=(), max_length=MAX_WORKING_SELF_REFS)
+    entity_refs: tuple[Reference, ...] = Field(default=(), max_length=MAX_WORKING_SELF_REFS)
     activated_at: datetime
 
     _activated_aware = field_validator("activated_at")(aware)
@@ -685,7 +687,7 @@ def resolve_self_representation(
                 )
             if metrics.opposition_root_count:
                 status = SelfResolutionStatus.CONTESTED
-            elif metrics.support_root_count == 0:
+            elif not metrics.support_root_count:
                 raise ValueError("self representation has no canonical support roots")
             elif (
                 representation.kind in _GENERALIZED_KINDS
@@ -1174,7 +1176,7 @@ def activate_self_context(
     entity_refs: tuple[str, ...] = (),
     limit: int = MAX_SELF_CONTEXT_ITEMS,
 ) -> SelfContextPacket:
-    if not 1 <= limit <= MAX_SELF_CONTEXT_ITEMS:
+    if not MIN_SELF_CONTEXT_ITEMS <= limit <= MAX_SELF_CONTEXT_ITEMS:
         raise ValueError("self-context limit exceeds bounded policy")
     return SelfContextPacket(
         admission=self_context_admission(evidence_scope, surface_mode),
