@@ -5,13 +5,15 @@ import pytest
 
 from jit_agent import db
 from jit_agent.semantic_memory import (
-    FactRelation,
-    current_semantic_fact,
-    derive_semantic_fact,
-    reconcile_fact,
-    semantic_fact_as_of,
-    semantic_fact_history,
-    semantic_fact_key,
+    EvidenceRelation,
+    ResolutionStatus,
+    current_semantic_resolution,
+    record_semantic_evidence,
+    selected_assertion,
+    semantic_assertions,
+    semantic_evidence,
+    semantic_resolution_as_of,
+    semantic_resolution_history,
 )
 
 
@@ -25,151 +27,296 @@ def _at(offset_minutes: int) -> datetime:
     return datetime(2026, 1, 1, tzinfo=timezone.utc) + timedelta(minutes=offset_minutes)
 
 
-# --- reconcile_fact: pure, deterministic classification -------------------
-
-
-def test_reconcile_fact_is_initial_with_no_current_fact():
-    relation = reconcile_fact(
-        candidate_value="latte", candidate_unit=None, candidate_observed_at=_at(0), current=None,
-    )
-    assert relation is FactRelation.INITIAL
-
-
-def test_reconcile_fact_corroborates_identical_value(conn):
-    result = derive_semantic_fact(
-        conn, subject="person:mike", property="preferred_drink", value="latte", confidence=0.9,
-        derived_from=(uuid4(),), observed_at=_at(0), asserted_at=_at(0), derivation_method="test/v1",
-    )
-    relation = reconcile_fact(
-        candidate_value="latte", candidate_unit=None, candidate_observed_at=_at(5), current=result.fact,
-    )
-    assert relation is FactRelation.CORROBORATES
-
-
-def test_reconcile_fact_supersedes_when_value_changes_later():
-    relation = reconcile_fact(
-        candidate_value="espresso", candidate_unit=None, candidate_observed_at=_at(10),
-        current=_fact(value="latte", valid_from=_at(0)),
-    )
-    assert relation is FactRelation.SUPERSEDES
-
-
-def test_reconcile_fact_contradicts_when_value_differs_earlier():
-    relation = reconcile_fact(
-        candidate_value="espresso", candidate_unit=None, candidate_observed_at=_at(-10),
-        current=_fact(value="latte", valid_from=_at(0)),
-    )
-    assert relation is FactRelation.CONTRADICTS
-
-
-def _fact(*, value, valid_from):
-    from jit_agent.semantic_memory import SemanticFact
-
-    return SemanticFact(
-        fact_id=uuid4(), subject="person:mike", property="preferred_drink", value=value, unit=None,
-        confidence=1.0, derived_from=(uuid4(),), derivation_method="test/v1",
-        valid_from=valid_from, asserted_at=valid_from, supersedes=None, relation=FactRelation.INITIAL,
+def _record(
+    conn,
+    *,
+    value,
+    observed,
+    asserted=None,
+    subject="person:mike",
+    property_name="preferred_drink",
+    confidence=1.0,
+    source=None,
+    claim_valid_from=None,
+    claim_valid_until=None,
+    relation=EvidenceRelation.SUPPORTS,
+):
+    return record_semantic_evidence(
+        conn,
+        subject=subject,
+        property=property_name,
+        value=value,
+        confidence=confidence,
+        source_percept_id=source or uuid4(),
+        observed_at=observed,
+        asserted_at=asserted or observed,
+        derivation_method="test/v2",
+        claim_valid_from=claim_valid_from,
+        claim_valid_until=claim_valid_until,
+        relation=relation,
     )
 
 
-# --- semantic_fact_as_of: pure history lookup -----------------------------
+def test_initial_observation_creates_assertion_evidence_and_resolution(conn):
+    result = _record(conn, value="latte", observed=_at(0))
+
+    assert result.assertion_created is True
+    assert result.evidence_created is True
+    assert result.resolution_created is True
+    assert result.resolution.status is ResolutionStatus.ACCEPTED
+    assert result.resolution.selected_assertion_id == result.assertion.assertion_id
+    assert selected_assertion(conn, result.resolution) == result.assertion
 
 
-def test_semantic_fact_as_of_returns_none_before_any_evidence():
-    history = (_fact(value="latte", valid_from=_at(10)),)
-    assert semantic_fact_as_of(history, _at(0)) is None
+def test_corroboration_accumulates_evidence_without_duplicate_assertion(conn):
+    first = _record(conn, value="latte", observed=_at(0), confidence=0.9)
+    second = _record(conn, value="latte", observed=_at(10), confidence=0.4)
+
+    assert first.assertion.assertion_id == second.assertion.assertion_id
+    assert second.assertion_created is False
+    assert second.evidence_created is True
+    assert len(semantic_assertions(conn, "person:mike", "preferred_drink")) == 1
+    evidence = semantic_evidence(conn, "person:mike", "preferred_drink")
+    assert len(evidence) == 2
+    assert {item.confidence for item in evidence} == {0.9, 0.4}
+    assert current_semantic_resolution(
+        conn, "person:mike", "preferred_drink"
+    ).selected_assertion_id == first.assertion.assertion_id
 
 
-def test_semantic_fact_as_of_returns_the_fact_in_effect_at_a_past_moment():
-    early = _fact(value="latte", valid_from=_at(0))
-    later = _fact(value="espresso", valid_from=_at(20))
-    history = (early, later)
-    assert semantic_fact_as_of(history, _at(10)) == early
-    assert semantic_fact_as_of(history, _at(20)) == later
-    assert semantic_fact_as_of(history, _at(100)) == later
+def test_later_observation_represents_temporal_change_not_contradiction(conn):
+    early = _record(conn, value="latte", observed=_at(0))
+    later = _record(conn, value="espresso", observed=_at(60))
 
-
-# --- derive_semantic_fact: additive, non-destructive persistence ---------
-
-
-def test_derive_semantic_fact_creates_an_initial_fact(conn):
-    source_event = uuid4()
-    result = derive_semantic_fact(
-        conn, subject="person:mike", property="preferred_drink", value="latte", confidence=0.8,
-        derived_from=(source_event,), observed_at=_at(0), asserted_at=_at(0),
-        derivation_method="consolidation/v1",
-    )
-    assert result.created is True
-    assert result.fact.relation is FactRelation.INITIAL
-    assert result.fact.supersedes is None
-    assert result.fact.derived_from == (source_event,)
-    assert current_semantic_fact(conn, "person:mike", "preferred_drink") == result.fact
-
-
-def test_derive_semantic_fact_is_additive_for_repeated_evidence(conn):
-    first = derive_semantic_fact(
-        conn, subject="person:mike", property="preferred_drink", value="latte", confidence=0.8,
-        derived_from=(uuid4(),), observed_at=_at(0), asserted_at=_at(0), derivation_method="test/v1",
-    )
-    second = derive_semantic_fact(
-        conn, subject="person:mike", property="preferred_drink", value="latte", confidence=0.95,
-        derived_from=(uuid4(),), observed_at=_at(30), asserted_at=_at(30), derivation_method="test/v1",
-    )
-    assert second.created is False
-    assert second.fact == first.fact
-    assert len(semantic_fact_history(conn, "person:mike", "preferred_drink")) == 1
-
-
-def test_derive_semantic_fact_supersedes_without_mutating_the_old_record(conn):
-    original = derive_semantic_fact(
-        conn, subject="person:mike", property="preferred_drink", value="latte", confidence=0.8,
-        derived_from=(uuid4(),), observed_at=_at(0), asserted_at=_at(0), derivation_method="test/v1",
-    )
-    events_before = conn.execute("SELECT event_id, payload FROM events ORDER BY global_seq").fetchall()
-
-    changed = derive_semantic_fact(
-        conn, subject="person:mike", property="preferred_drink", value="espresso", confidence=0.9,
-        derived_from=(uuid4(),), observed_at=_at(60), asserted_at=_at(60), derivation_method="test/v1",
+    current = current_semantic_resolution(conn, "person:mike", "preferred_drink")
+    assert current.status is ResolutionStatus.ACCEPTED
+    assert current.selected_assertion_id == later.assertion.assertion_id
+    history = semantic_resolution_history(conn, "person:mike", "preferred_drink")
+    assert len(history) == 2
+    assert history[-1].supersedes == history[-2].resolution_id
+    assert early.assertion in semantic_assertions(
+        conn, "person:mike", "preferred_drink"
     )
 
-    assert changed.created is True
-    assert changed.fact.relation is FactRelation.SUPERSEDES
-    assert changed.fact.supersedes == original.fact.fact_id
-    # The old record's own canonical event bytes are completely untouched.
-    events_after = conn.execute("SELECT event_id, payload FROM events ORDER BY global_seq").fetchall()
-    assert events_after[: len(events_before)] == events_before
 
-    history = semantic_fact_history(conn, "person:mike", "preferred_drink")
-    assert history == (original.fact, changed.fact)
-    assert current_semantic_fact(conn, "person:mike", "preferred_drink") == changed.fact
-    assert semantic_fact_as_of(history, _at(30)) == original.fact
-    assert semantic_fact_as_of(history, _at(90)) == changed.fact
-
-
-def test_derive_semantic_fact_contradicts_without_discarding_either_fact(conn):
-    current = derive_semantic_fact(
-        conn, subject="person:mike", property="job_title", value="engineer", confidence=0.9,
-        derived_from=(uuid4(),), observed_at=_at(100), asserted_at=_at(100), derivation_method="test/v1",
+def test_historical_backfill_does_not_replace_current_resolution(conn):
+    current = _record(
+        conn,
+        value="engineer",
+        observed=_at(100),
+        subject="person:mike",
+        property_name="job_title",
     )
-    backfilled = derive_semantic_fact(
-        conn, subject="person:mike", property="job_title", value="manager", confidence=0.6,
-        derived_from=(uuid4(),), observed_at=_at(10), asserted_at=_at(100), derivation_method="test/v1",
+    backfill = _record(
+        conn,
+        value="manager",
+        observed=_at(10),
+        asserted=_at(120),
+        subject="person:mike",
+        property_name="job_title",
     )
-    assert backfilled.created is True
-    assert backfilled.fact.relation is FactRelation.CONTRADICTS
-    assert backfilled.fact.supersedes == current.fact.fact_id
-    history = semantic_fact_history(conn, "person:mike", "job_title")
-    assert set(history) == {current.fact, backfilled.fact}
-    # Neither belief silently vanished; both remain forensically visible.
-    assert current.fact in history and backfilled.fact in history
+
+    resolution = current_semantic_resolution(conn, "person:mike", "job_title")
+    assert resolution.selected_assertion_id == current.assertion.assertion_id
+    assert backfill.resolution_created is False
+    assert len(semantic_assertions(conn, "person:mike", "job_title")) == 2
+    assert len(semantic_evidence(conn, "person:mike", "job_title")) == 2
 
 
-def test_semantic_fact_key_is_deterministic_and_distinguishes_property():
-    assert semantic_fact_key("person:mike", "preferred_drink") == semantic_fact_key("person:mike", "preferred_drink")
-    assert semantic_fact_key("person:mike", "preferred_drink") != semantic_fact_key("person:mike", "job_title")
-    assert semantic_fact_key("person:mike", "preferred_drink") != semantic_fact_key("person:jane", "preferred_drink")
+def test_bitemporal_query_excludes_evidence_not_yet_known(conn):
+    _record(
+        conn,
+        value="manager",
+        observed=_at(10),
+        asserted=_at(120),
+        subject="person:mike",
+        property_name="job_title",
+    )
+
+    before_learning = semantic_resolution_as_of(
+        conn,
+        "person:mike",
+        "job_title",
+        valid_at=_at(20),
+        known_at=_at(100),
+    )
+    after_learning = semantic_resolution_as_of(
+        conn,
+        "person:mike",
+        "job_title",
+        valid_at=_at(20),
+        known_at=_at(130),
+    )
+
+    assert before_learning.status is ResolutionStatus.UNKNOWN
+    assert after_learning.status is ResolutionStatus.ACCEPTED
 
 
-def test_semantic_fact_history_is_empty_for_unknown_subject(conn):
-    assert semantic_fact_history(conn, "person:unknown", "preferred_drink") == ()
-    assert current_semantic_fact(conn, "person:unknown", "preferred_drink") is None
+def test_bitemporal_query_reconstructs_different_real_world_times(conn):
+    manager = _record(
+        conn,
+        value="manager",
+        observed=_at(10),
+        subject="person:mike",
+        property_name="job_title",
+    )
+    engineer = _record(
+        conn,
+        value="engineer",
+        observed=_at(100),
+        subject="person:mike",
+        property_name="job_title",
+    )
+
+    early = semantic_resolution_as_of(
+        conn,
+        "person:mike",
+        "job_title",
+        valid_at=_at(20),
+        known_at=_at(150),
+    )
+    late = semantic_resolution_as_of(
+        conn,
+        "person:mike",
+        "job_title",
+        valid_at=_at(120),
+        known_at=_at(150),
+    )
+
+    assert early.selected_assertion_id == manager.assertion.assertion_id
+    assert late.selected_assertion_id == engineer.assertion.assertion_id
+
+
+def test_equal_time_conflict_is_ambiguous_not_uuid_tie_break(conn):
+    first = _record(conn, value="latte", observed=_at(0))
+    second = _record(conn, value="tea", observed=_at(0))
+
+    current = current_semantic_resolution(conn, "person:mike", "preferred_drink")
+    assert current.status is ResolutionStatus.AMBIGUOUS
+    assert current.selected_assertion_id is None
+    assert set(current.candidate_assertion_ids) == {
+        first.assertion.assertion_id,
+        second.assertion.assertion_id,
+    }
+
+
+def test_explicit_claim_validity_is_distinct_from_observation_time(conn):
+    assertion = _record(
+        conn,
+        value=True,
+        observed=_at(100),
+        asserted=_at(100),
+        property_name="vegetarian",
+        claim_valid_from=_at(-1000),
+    )
+
+    before_learning = semantic_resolution_as_of(
+        conn,
+        "person:mike",
+        "vegetarian",
+        valid_at=_at(-500),
+        known_at=_at(50),
+    )
+    after_learning = semantic_resolution_as_of(
+        conn,
+        "person:mike",
+        "vegetarian",
+        valid_at=_at(-500),
+        known_at=_at(120),
+    )
+
+    assert assertion.assertion.claim_valid_from == _at(-1000)
+    assert before_learning.status is ResolutionStatus.UNKNOWN
+    assert after_learning.selected_assertion_id == assertion.assertion.assertion_id
+
+
+def test_expired_historical_claim_does_not_become_current(conn):
+    historical = _record(
+        conn,
+        value="Seattle",
+        observed=_at(100),
+        asserted=_at(100),
+        property_name="city",
+        claim_valid_from=_at(-1000),
+        claim_valid_until=_at(-500),
+    )
+
+    current = current_semantic_resolution(conn, "person:mike", "city")
+    assert current.status is ResolutionStatus.UNKNOWN
+    assert current.selected_assertion_id is None
+
+    past = semantic_resolution_as_of(
+        conn,
+        "person:mike",
+        "city",
+        valid_at=_at(-750),
+        known_at=_at(120),
+    )
+    assert past.selected_assertion_id == historical.assertion.assertion_id
+
+
+def test_opposing_evidence_makes_selected_assertion_ambiguous(conn):
+    source = uuid4()
+    initial = _record(conn, value="latte", observed=_at(0), source=source)
+    opposed = _record(
+        conn,
+        value="latte",
+        observed=_at(5),
+        source=uuid4(),
+        relation=EvidenceRelation.OPPOSES,
+    )
+
+    assert initial.assertion.assertion_id == opposed.assertion.assertion_id
+    current = current_semantic_resolution(conn, "person:mike", "preferred_drink")
+    assert current.status is ResolutionStatus.AMBIGUOUS
+    assert current.selected_assertion_id is None
+
+
+def test_conflicting_retry_fails_closed(conn):
+    source = uuid4()
+    _record(
+        conn,
+        value="latte",
+        observed=_at(0),
+        asserted=_at(10),
+        source=source,
+        confidence=0.9,
+    )
+
+    with pytest.raises(ValueError, match="conflicting immutable semantic evidence retry"):
+        _record(
+            conn,
+            value="latte",
+            observed=_at(0),
+            asserted=_at(10),
+            source=source,
+            confidence=0.2,
+        )
+
+
+def test_evidence_history_is_not_capped_by_old_situation_window(conn):
+    for index in range(65):
+        _record(
+            conn,
+            value="latte",
+            observed=_at(index),
+            source=uuid4(),
+        )
+
+    assert len(semantic_assertions(conn, "person:mike", "preferred_drink")) == 1
+    assert len(semantic_evidence(conn, "person:mike", "preferred_drink")) == 65
+
+
+def test_resolution_history_remains_append_only(conn):
+    first = _record(conn, value="latte", observed=_at(0))
+    history_before = semantic_resolution_history(
+        conn, "person:mike", "preferred_drink"
+    )
+    second = _record(conn, value="espresso", observed=_at(30))
+    history_after = semantic_resolution_history(
+        conn, "person:mike", "preferred_drink"
+    )
+
+    assert history_after[: len(history_before)] == history_before
+    assert history_after[-1].supersedes == first.resolution.resolution_id
+    assert history_after[-1].resolution_id == second.resolution.resolution_id
