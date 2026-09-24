@@ -291,6 +291,7 @@ class SelfPrediction(FrozenRecord):
         max_length=MAX_SELF_CONTEXT_TAGS,
     )
     created_at: datetime
+    knowledge_cutoff_global_seq: int = Field(ge=0)
     outcome: PredictionOutcome | None = None
     outcome_event_id: UUID | None = None
     resolved_at: datetime | None = None
@@ -848,14 +849,21 @@ def record_self_prediction(
     created_at: datetime,
     predicted_value: Scalar | None = None,
     context_tags: tuple[str, ...] = (),
+    knowledge_cutoff_global_seq: int | None = None,
 ) -> SelfPrediction:
     if current_self_resolution(conn, representation_id) is None:
         raise ValueError("prediction requires a resolved self representation")
+    if knowledge_cutoff_global_seq is None:
+        row = conn.execute(
+            "SELECT COALESCE(MAX(global_seq), 0) FROM events"
+        ).fetchone()
+        knowledge_cutoff_global_seq = int(row[0])
     prediction_id = uuid5(
         COGNITIVE_NAMESPACE,
         (
             f"self-prediction:{representation_id}:"
-            f"{_normalized_statement(statement)}:{created_at.isoformat()}"
+            f"{_normalized_statement(statement)}:{created_at.isoformat()}:"
+            f"{knowledge_cutoff_global_seq}"
         ),
     )
     prediction = SelfPrediction(
@@ -865,6 +873,7 @@ def record_self_prediction(
         predicted_value=predicted_value,
         context_tags=context_tags,
         created_at=created_at,
+        knowledge_cutoff_global_seq=knowledge_cutoff_global_seq,
     )
     key = f"{representation_id}:{prediction_id}"
     existing = get_record(conn, SELF_PREDICTION_KIND, key)
@@ -915,6 +924,10 @@ def resolve_self_prediction(
     current = SelfPrediction.model_validate(current_data)
     if current.representation_id != representation_id:
         raise ValueError("prediction belongs to another self representation")
+    if root.global_seq <= current.knowledge_cutoff_global_seq:
+        raise ValueError(
+            "prediction outcome existed at or before the prediction knowledge cutoff"
+        )
     if current.outcome is not None:
         if (
             current.outcome is outcome
