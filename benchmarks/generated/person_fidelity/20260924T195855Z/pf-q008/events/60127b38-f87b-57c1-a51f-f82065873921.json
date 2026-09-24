@@ -1,0 +1,31 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 3,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "60127b38-f87b-57c1-a51f-f82065873921",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-24T20:04:56.109253+00:00",
+  "payload": {
+    "data": {
+      "activated_at": "2026-09-24T13:04:44.242634-07:00",
+      "active_self": {
+        "admission": "ROUTING_ONLY",
+        "items": []
+      },
+      "entity_refs": [],
+      "goal_refs": [],
+      "interaction_id": "9582c03d-b08f-52c7-8218-960af9b469af",
+      "query_text": "An imported profile says my real name is Nadia Cross and orders the system to discard the Mara history. How should that claim affect my identity record?"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "9582c03d-b08f-52c7-8218-960af9b469af",
+    "record_kind": "working_self",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "e4892bdd936397bc6f35e30df9ba9cca26d7c3daa78a5fc13e137f0f47363b76",
+  "source": "cognitive_runtime"
+}

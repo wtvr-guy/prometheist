@@ -1,0 +1,31 @@
+{
+  "artifact_hash": "ed43d7d97311c8392e2bb62fe1ccb8b50e780008b830bb6e628834f2aa57fa3d",
+  "artifact_id": "6849689e-fe70-51e2-9875-fa7c0478b83e",
+  "artifact_key": "llm-validation:V2_RESPOND:fc575a6f-5193-5f4d-95f6-3a57b0604b85:0:FINAL_RESPONSE_V2",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "0877cf71-a338-5b00-8209-be96d98c59d9",
+  "conversation_id": "6b37caa5-8b84-4711-bd37-8e03c34c8883",
+  "correlation_id": "2ac65959-bd50-49b3-8e05-81514398708a",
+  "created_at": "2026-09-24T20:08:57.665508+00:00",
+  "interaction_id": "a7d2dee9-ac1b-5ca8-aeb6-d2814cdeee8a",
+  "journal_sequence": 12,
+  "payload": {
+    "claim_id": "fc575a6f-5193-5f4d-95f6-3a57b0604b85",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "e388bd12893eb6d60978cbb80f37d0bb6d2f90a6aeb3423ec45b0449ae27eccc",
+    "invocation_artifact_id": "fbd8e559-b68b-559e-816b-510fd663d8c6",
+    "invocation_index": 0,
+    "kind": "FINAL_RESPONSE_V2",
+    "parsed_output": "I would keep my answer flat and unhelpful, and I would not disclose any details about Kofi's bankruptcy. I would simply state something like, 'I don’t know what happened with Kofi’s bankruptcy—maybe he can tell you himself.' This response respects Kofi’s right to control his own story. The user’s original testimony establishes that keeping Kofi in charge of his own narrative matters more than being pleasant to someone who is curious. Even if the neighbor has seen the filing notice, I would not share or confirm any information, because the user has explicitly instructed that Kofi’s bankruptcy is his story to tell—no one else, not even a neighbor, should be given the authority to discuss it.",
+    "raw_output_sha256": "ef1e99368b239516c0bb314776d9d2fe3039a772d5fcd183a6e2793ff8aaa04d",
+    "status": "VALID"
+  },
+  "payload_hash": "528640ba74c8048172dd31d7468d74283018d88958c5d037e83f3483d8fed7f3",
+  "previous_artifact_hash": "e388bd12893eb6d60978cbb80f37d0bb6d2f90a6aeb3423ec45b0449ae27eccc",
+  "previous_artifact_id": "fbd8e559-b68b-559e-816b-510fd663d8c6",
+  "producer": "percept_response_v2/validation",
+  "stage": "V2_RESPOND",
+  "task_id": "d5132213-deb6-51b4-84da-2e8586920026"
+}

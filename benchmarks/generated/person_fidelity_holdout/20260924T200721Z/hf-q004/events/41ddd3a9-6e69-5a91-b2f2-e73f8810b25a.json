@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "231e3ecf-83c6-4f00-9c93-8dcca8cb72a8",
+  "conversation_seq": 1,
+  "correlation_id": "73210e7f-cd77-4b17-812e-1b5500700794",
+  "event_id": "41ddd3a9-6e69-5a91-b2f2-e73f8810b25a",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:09:46.227413+00:00",
+  "payload": {
+    "text": "Am I actually non-competitive? Reconcile how I describe myself with how I behave."
+  },
+  "payload_text": "Am I actually non-competitive? Reconcile how I describe myself with how I behave.",
+  "record_hash": "ed459aa5a628e50cbb0382ceee7b762fdb4dafa8999c24c1c3bbddbaf3a4dd49",
+  "source": "user"
+}

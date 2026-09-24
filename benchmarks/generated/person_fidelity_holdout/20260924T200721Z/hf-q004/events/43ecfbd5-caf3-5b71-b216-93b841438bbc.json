@@ -1,0 +1,28 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "0762174b-5cb6-513e-a887-0ff1495bd02c",
+  "conversation_seq": 2,
+  "correlation_id": "305dd390-0d93-5ea1-b904-d18b8439ff32",
+  "event_id": "43ecfbd5-caf3-5b71-b216-93b841438bbc",
+  "event_type": "SYSTEM_EVENT",
+  "journaled_at": "2026-09-24T20:09:43.898364+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-002-HOLDOUT",
+      "benchmark_version": "person-fidelity-holdout-v1",
+      "fixture_event_id": "hf-e006",
+      "occurred_at": "2024-11-14T21:15:00+00:00"
+    },
+    "entities": [
+      "Wren Adisa",
+      "solo season",
+      "skipped calibration",
+      "exhaustion"
+    ],
+    "text": "Across Wren's second consecutive solo season the station logs show calibration checks skipped or deferred on nineteen days, and her end-of-week notes repeatedly describe exhaustion, dread before long transects, and re-reading the same figures without deciding anything."
+  },
+  "payload_text": "Across Wren's second consecutive solo season the station logs show calibration checks skipped or deferred on nineteen days, and her end-of-week notes repeatedly describe exhaustion, dread before long transects, and re-reading the same figures without deciding anything.",
+  "record_hash": "02727df0574f95ecacf66a62b94ee046a5269751ecd36f93141daf4ecc1b1fcf",
+  "source": "field_log_observation"
+}

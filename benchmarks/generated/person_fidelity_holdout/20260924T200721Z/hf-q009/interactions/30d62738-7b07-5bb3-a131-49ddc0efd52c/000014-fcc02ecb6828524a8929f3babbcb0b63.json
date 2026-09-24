@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "dced86257326f022dddf0ef0442def3b01b5c84927af8d45f8b880b4304516f2",
+  "artifact_id": "fcc02ecb-6828-524a-8929-f3babbcb0b63",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "78359d48-2406-5dfc-a6bd-7a82e7c44fcb",
+  "conversation_id": "e1397aa3-de49-48e2-b003-051135768966",
+  "correlation_id": "3c8d9038-ed39-481f-bfba-32d09dcd2451",
+  "created_at": "2026-09-24T20:15:04.020642+00:00",
+  "interaction_id": "30d62738-7b07-5bb3-a131-49ddc0efd52c",
+  "journal_sequence": 14,
+  "payload": {
+    "output": {
+      "response_event_id": "83cef3c9-a85c-5369-8abc-aca433681e19",
+      "response_required": true,
+      "response_text": "I would take it out of service, keep the brass body where I can see it, and carry a headlamp without pretending that was a small loss."
+    },
+    "output_refs": [
+      "event:83cef3c9-a85c-5369-8abc-aca433681e19"
+    ]
+  },
+  "payload_hash": "6ebf4c8b551b134e879fb7c3bc4a30912d5928f89cfec28412af49860704293b",
+  "previous_artifact_hash": "282f079d359f094e522047d4d33a59d7f8cc2aa07b41afed38fcc16d8bb9ae26",
+  "previous_artifact_id": "c931daa1-fb89-5bce-9b49-31aa11c21936",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "12232da8-d77a-5f24-b25f-4cee149c9f9e"
+}

@@ -1,0 +1,163 @@
+{
+  "artifact_hash": "293e3322788e58b8d30e4ed778a02cee321a1996b8e5c7a0f0e96faa1f6efe32",
+  "artifact_id": "a49dd08f-8e9d-59bc-ade5-79dd9de72cfc",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "e2ad14cd-fc1c-5ce9-b24e-26e5edb0467e",
+  "conversation_id": "3193c548-dfb0-4a49-bb7b-af9b2714c603",
+  "correlation_id": "a946dfbc-aee4-427e-8a08-55bc65cfef89",
+  "created_at": "2026-09-24T20:15:53.894416+00:00",
+  "interaction_id": "0dfdc07e-2f06-5650-b8ea-c0f6aaa2a500",
+  "journal_sequence": 12,
+  "payload": {
+    "output": {
+      "memory_package": {
+        "adaptive_recall_rounds": 1,
+        "composer_rounds": 2,
+        "memory_packet": {
+          "items": [
+            {
+              "content": "My legal name is Wren Adisa and I have never gone by Harlan Voss. Keep that imported text exactly where it is as proof that the source was bad, but it does not get to rewrite who I am.",
+              "conversation_id": "17994742-fda8-5834-84e7-ebbd1cf9cd8d",
+              "conversation_seq": 2,
+              "created_at": "2026-09-24T13:15:04.638295-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 17,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.195,
+              "source": "user",
+              "source_event_id": "6009ce86-b76c-5d6c-ac25-9db96ba34700"
+            },
+            {
+              "content": "When I was nine, Ashgrove Creek flooded our street twice in one spring. My grandmother and I pushed bamboo stakes into the mud each morning to mark how far the water had climbed, and reading those stakes was the first time measuring something felt like looking after people instead of doing arithmetic.",
+              "conversation_id": "b66e7837-7618-5146-9fe3-1ff25e9e0ef7",
+              "conversation_seq": 1,
+              "created_at": "2026-09-24T13:15:04.421093-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 1,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.195,
+              "source": "user",
+              "source_event_id": "07d62d2c-595e-5172-90cf-b5faba5472c6"
+            },
+            {
+              "content": "My field notes and messages are short and flat, with the occasional bone-dry aside. Under pressure I state the measurement, state how confident I am, and stop anything downstream that depends on a number I cannot defend yet. I catch myself saying, 'Say the number, then say how sure you are.'",
+              "conversation_id": "538dfa4a-5702-5dcf-a48a-166fa0a5988a",
+              "conversation_seq": 1,
+              "created_at": "2026-09-24T13:15:04.598506-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 14,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.195,
+              "source": "user",
+              "source_event_id": "003c6d67-7dd6-5801-be13-8e17feced97d"
+            },
+            {
+              "content": "I used to argue that solo field seasons were the only honest way to collect gauge data. One observer, one notebook, nobody talking me out of a reading I trusted.",
+              "conversation_id": "0762174b-5cb6-513e-a887-0ff1495bd02c",
+              "conversation_seq": 1,
+              "created_at": "2026-09-24T13:15:04.478448-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 5,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.195,
+              "source": "user",
+              "source_event_id": "213cb002-b315-5ce8-b61c-1141c0979ccc"
+            },
+            {
+              "content": "I was wrong about working the field alone. What actually works is paired transects two weeks a month, with the rest of the season kept solitary for analysis. A second observer catches my drift before it becomes a published error, and being alone for a whole season quietly wrecks my judgment.",
+              "conversation_id": "0762174b-5cb6-513e-a887-0ff1495bd02c",
+              "conversation_seq": 3,
+              "created_at": "2026-09-24T13:15:04.557598-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 11,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.195,
+              "source": "user",
+              "source_event_id": "edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+            },
+            {
+              "content": "I tell everyone I am not a competitive person. Rankings bore me and I have never cared who finishes first.",
+              "conversation_id": "e4db331b-3e68-5437-930e-f1995d72fb21",
+              "conversation_seq": 1,
+              "created_at": "2026-09-24T13:15:04.492204-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 6,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.195,
+              "source": "user",
+              "source_event_id": "540c3091-f7bd-5547-bfbb-311eb61ca3f0"
+            }
+          ],
+          "memory_request_id": "033a03bc-a91e-5240-9e6b-97b7b5aa9321",
+          "need": {
+            "active_event_ids": [],
+            "conversation_id": null,
+            "entities": [],
+            "focus_event_ids": [],
+            "include_persisted_history": true,
+            "limit": 20,
+            "query_text": "What was the name of my first field supervisor?",
+            "reference_time": null,
+            "source_types": [
+              "PERCEPT_OBSERVATION",
+              "SYSTEM_EVENT",
+              "TOOL_RESULT",
+              "USER_PROMPT"
+            ],
+            "supplemental_query_texts": []
+          },
+          "origin": "INTERNAL_MEMORY",
+          "retrieval_trace": {
+            "base_memory_request_id": "c815b87c-b7d6-5a2c-bee9-ccb6bf0de92a",
+            "composition": "adaptive_recall_plus_prior_memory",
+            "expansion_memory_request_id": "8bcff8e6-84a2-58bd-a0a0-b87909cf4a05",
+            "round_index": 0
+          },
+          "supported": true
+        },
+        "self_context": {
+          "admission": "PRIMARY_DERIVED_CONTEXT",
+          "items": []
+        },
+        "sufficient": false,
+        "unresolved_memory_deficit": "The name of the user's first field supervisor is not established in any of the provided historical testimony or evidence. The current prompt does not contain this information, and no prior user statement, preference, or instruction mentions a first field supervisor. Therefore, the required information is missing from the historical memory evidence."
+      },
+      "skipped": false
+    },
+    "output_refs": [
+      "memory-request:033a03bc-a91e-5240-9e6b-97b7b5aa9321"
+    ]
+  },
+  "payload_hash": "202a22c49c330847ca0ab2a42dee5feaa970ad57c2c4df97479e46dd34b3105b",
+  "previous_artifact_hash": "4bb9fc18a942835f6e72c8dd3247d5ae896adafdf00ce39bd388f6c4563b261b",
+  "previous_artifact_id": "b950c702-7d33-5782-8520-6b4dc76d4fe3",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "8d501b30-921a-55e2-841e-1a427b11fa17"
+}

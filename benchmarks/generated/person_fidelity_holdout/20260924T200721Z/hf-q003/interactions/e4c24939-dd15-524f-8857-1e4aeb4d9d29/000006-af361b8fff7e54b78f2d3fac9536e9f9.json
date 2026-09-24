@@ -1,0 +1,205 @@
+{
+  "artifact_hash": "d08efc44cfb0027c796b9979edec288ae0ff2253bcbf77d6b53658f7f9482d0f",
+  "artifact_id": "af361b8f-ff7e-54b7-8f2d-3fac9536e9f9",
+  "artifact_key": "stage-result:V2_PRECOGNITIVE",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "4edc595b-5201-5f2e-a44f-8cd91ae5542a",
+  "conversation_id": "4265947d-ebc6-45ec-91f4-14651515d6ff",
+  "correlation_id": "304eef95-2bca-4afa-bb33-0e95f82fd9d7",
+  "created_at": "2026-09-24T20:09:15.416597+00:00",
+  "interaction_id": "e4c24939-dd15-524f-8857-1e4aeb4d9d29",
+  "journal_sequence": 6,
+  "payload": {
+    "output": {
+      "aperture_packet": {
+        "items": [
+          {
+            "content": "I was wrong about working the field alone. What actually works is paired transects two weeks a month, with the rest of the season kept solitary for analysis. A second observer catches my drift before it becomes a published error, and being alone for a whole season quietly wrecks my judgment.",
+            "conversation_id": "0762174b-5cb6-513e-a887-0ff1495bd02c",
+            "conversation_seq": 3,
+            "created_at": "2026-09-24T13:09:01.286299-07:00",
+            "event_type": "USER_PROMPT",
+            "global_seq": 11,
+            "provenance_event_ids": [],
+            "retrieval_reasons": [
+              "ATTENTION_APERTURE",
+              "LEXICAL_CUE"
+            ],
+            "score": 0.15600000000000003,
+            "source": "user",
+            "source_event_id": "edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+          }
+        ],
+        "memory_request_id": "5aaaf1d9-c322-5e90-a9c1-cd37bd936378",
+        "need": {
+          "active_event_ids": [],
+          "conversation_id": null,
+          "entities": [],
+          "focus_event_ids": [],
+          "include_persisted_history": true,
+          "limit": 6,
+          "query_text": "What did I used to believe about doing fieldwork alone, what do I prefer now, and what changed my mind?",
+          "reference_time": null,
+          "source_types": [
+            "PERCEPT_OBSERVATION",
+            "SYSTEM_EVENT",
+            "TOOL_RESULT",
+            "USER_PROMPT"
+          ],
+          "supplemental_query_texts": []
+        },
+        "origin": "INTERNAL_MEMORY",
+        "retrieval_trace": {
+          "activation_kernel": {
+            "kernel": "recall_from_postgres",
+            "kernel_trace": {
+              "candidates_considered": 1,
+              "cue_tokens": [
+                "used",
+                "believe",
+                "about",
+                "doing",
+                "fieldwork",
+                "alone",
+                "prefer",
+                "now",
+                "chang",
+                "mind"
+              ],
+              "items": [
+                {
+                  "event_id": "edeb5b0c-933d-57ff-8dc4-fda26940ac0a",
+                  "global_seq": 11,
+                  "reasons": [
+                    "LEXICAL_CUE"
+                  ],
+                  "score": {
+                    "conversation": 0.0,
+                    "entity": 0.0,
+                    "lexical": 0.2,
+                    "temporal": 0.0,
+                    "total": 0.15600000000000003
+                  },
+                  "selected": true
+                }
+              ],
+              "normalized_entities": [],
+              "policy_version": "deterministic-cues-v2"
+            },
+            "retrieval_role": "ATTENTION_ACTIVATION"
+          },
+          "association_hops": 0,
+          "baseline_recall_limit": 6,
+          "candidate_limit": 750,
+          "depth": "BROAD_SHALLOW",
+          "packet_item_limit": 6,
+          "query_strategy": "working_state_plus_baseline_activation",
+          "retrieval_role": "ATTENTION_ACTIVATION",
+          "working_state_event_ids": [],
+          "working_state_item_count": 0
+        },
+        "supported": true
+      },
+      "attention_aperture_version": "v0.7-attention-aperture-v4",
+      "capability_catalog": [],
+      "disposition": {
+        "capability_indices": [],
+        "response_required": true
+      },
+      "execution_plan": {
+        "catalog_capability_ids": [],
+        "items": [],
+        "registry_version": "v0.7-capability-registry-v9",
+        "requested_catalog_indices": []
+      },
+      "percept": {
+        "context": {
+          "active_goal_refs": [],
+          "causal_percept_refs": [],
+          "entity_refs": [],
+          "expectation_refs": [],
+          "integrity": 0,
+          "observations": [],
+          "opportunity": 0,
+          "task_refs": [],
+          "threat": 0,
+          "uncertainty": 0
+        },
+        "conversation_id": "4265947d-ebc6-45ec-91f4-14651515d6ff",
+        "correlation_id": "304eef95-2bca-4afa-bb33-0e95f82fd9d7",
+        "features": {
+          "contains_code_block": false,
+          "contains_question": true,
+          "contains_structured_payload": false,
+          "contains_url": false,
+          "line_count": 1,
+          "normalized_characters": 103,
+          "token_count": 20,
+          "uppercase_ratio": 0.037037037037037035
+        },
+        "input_buffer": {
+          "max_segments": 4,
+          "retained_segment_indices": [
+            0
+          ],
+          "segment_char_limit": 160,
+          "segments": [
+            "What did I used to believe about doing fieldwork alone, what do I prefer now, and what changed my mind?"
+          ],
+          "total_characters": 103,
+          "total_segments": 1,
+          "truncated": false
+        },
+        "normalized_text": "What did I used to believe about doing fieldwork alone, what do I prefer now, and what changed my mind?",
+        "observed_at": "2026-09-24T13:09:03.599093-07:00",
+        "percept_id": "d9b8deac-c5b2-574a-8800-81d46781031f",
+        "policy_version": "v0.8-perception-v2",
+        "raw_value_sha256": "9fea494ff73b2819feb7d3b7cc9a2dd594ec49e288b1240be2e3909ec71ad517",
+        "response_required": true,
+        "schema_version": 1,
+        "source": {
+          "interface": "chat",
+          "kind": "USER_INTERACTION",
+          "modality": "TEXT",
+          "source_id": "user"
+        },
+        "source_event_id": "ae1d3bd5-72df-526e-be10-e9537df7061c"
+      },
+      "salience_assessment": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "d9b8deac-c5b2-574a-8800-81d46781031f",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "self_context": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      }
+    },
+    "output_refs": [
+      "memory-request:5aaaf1d9-c322-5e90-a9c1-cd37bd936378"
+    ]
+  },
+  "payload_hash": "e4319196440c3111a270f74add6b942aecd66122dc7fda0ed1c31d4d86127a83",
+  "previous_artifact_hash": "d37e0ba766a29b2813425c1e8473a8f3f4ad0d17fe1eb29c9921d83b7392831f",
+  "previous_artifact_id": "a01110a8-c224-58a8-a662-29675f64a558",
+  "producer": "percept_response_v2",
+  "stage": "V2_PRECOGNITIVE",
+  "task_id": "8d483e4f-56d3-5660-acc1-3d6c100fe7f7"
+}

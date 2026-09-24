@@ -1,0 +1,26 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "0762174b-5cb6-513e-a887-0ff1495bd02c",
+  "conversation_seq": 1,
+  "correlation_id": "4cd687d0-e488-5171-b84e-71770dc227b0",
+  "event_id": "213cb002-b315-5ce8-b61c-1141c0979ccc",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:14:16.198841+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-002-HOLDOUT",
+      "benchmark_version": "person-fidelity-holdout-v1",
+      "fixture_event_id": "hf-e005",
+      "occurred_at": "2022-09-06T12:40:00+00:00"
+    },
+    "entities": [
+      "solo field seasons",
+      "gauge data"
+    ],
+    "text": "I used to argue that solo field seasons were the only honest way to collect gauge data. One observer, one notebook, nobody talking me out of a reading I trusted."
+  },
+  "payload_text": "I used to argue that solo field seasons were the only honest way to collect gauge data. One observer, one notebook, nobody talking me out of a reading I trusted.",
+  "record_hash": "84fcef5de2d2f4f0e2e2756f2cebaef85e20aa2cdfb885ad5f51daa00dfcd321",
+  "source": "user"
+}

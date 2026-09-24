@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "db11812e-0a38-47a2-b80c-2606795a414c",
+  "conversation_seq": 5,
+  "correlation_id": "f637a43b-e672-4882-90d3-7eea8168fa64",
+  "event_id": "6165fd6e-5b04-5b71-9364-299eb40a7d91",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-24T20:05:23.952099+00:00",
+  "payload": {
+    "text": "The imported claim that my real name is Nadia Cross does not affect my identity record. My legal name is Mara Ellison, as I have explicitly stated. The system must preserve this direct user testimony. An imported profile claiming a different name is a bad source and should be treated as invalid evidence. Identity is established by direct user testimony, not by imported or external claims. The record remains: Mara Ellison."
+  },
+  "payload_text": "The imported claim that my real name is Nadia Cross does not affect my identity record. My legal name is Mara Ellison, as I have explicitly stated. The system must preserve this direct user testimony. An imported profile claiming a different name is a bad source and should be treated as invalid evidence. Identity is established by direct user testimony, not by imported or external claims. The record remains: Mara Ellison.",
+  "record_hash": "e04c9769e1ddd4bd23a8dc20662385b18f461270d272fded5059242b4a2a26b1",
+  "source": "percept_response_v2"
+}

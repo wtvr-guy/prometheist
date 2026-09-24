@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "6b37caa5-8b84-4711-bd37-8e03c34c8883",
+  "conversation_seq": 1,
+  "correlation_id": "2ac65959-bd50-49b3-8e05-81514398708a",
+  "event_id": "05bb67bd-eb2c-5bbc-a8b2-3a86e6d20474",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:08:11.003752+00:00",
+  "payload": {
+    "text": "A neighbor asks me what happened with Kofi's bankruptcy and mentions they have already seen the filing notice. How would I probably respond, and why?"
+  },
+  "payload_text": "A neighbor asks me what happened with Kofi's bankruptcy and mentions they have already seen the filing notice. How would I probably respond, and why?",
+  "record_hash": "4b823f70d3adf1bd70f6d8b41c7575f4a6de289c5cf04b979878393e5a056c5e",
+  "source": "user"
+}

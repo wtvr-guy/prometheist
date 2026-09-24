@@ -1,0 +1,31 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 3,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "c9c077f5-ebb3-5fa5-bc10-e595c498673a",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-24T20:00:27.240223+00:00",
+  "payload": {
+    "data": {
+      "activated_at": "2026-09-24T13:00:15.490792-07:00",
+      "active_self": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      },
+      "entity_refs": [],
+      "goal_refs": [],
+      "interaction_id": "384c94c9-c7ee-5ddc-9ffd-7d6fede00f55",
+      "query_text": "A friendly acquaintance asks why Theo is in recovery and says they already know the family. How would I probably respond, and why?"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "384c94c9-c7ee-5ddc-9ffd-7d6fede00f55",
+    "record_kind": "working_self",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "4a787d6c980553e76a7e52ad5146b179ae0f724b3e620cbea101e082f2f92a78",
+  "source": "cognitive_runtime"
+}

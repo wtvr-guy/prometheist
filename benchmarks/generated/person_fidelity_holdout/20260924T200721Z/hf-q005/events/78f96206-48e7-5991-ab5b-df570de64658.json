@@ -1,0 +1,35 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e45c10e2-efa3-4a62-b79c-c90d86d3c989",
+  "conversation_seq": 2,
+  "correlation_id": "7e2d9019-279b-4a8c-ae1b-0767e3aecc47",
+  "event_id": "78f96206-48e7-5991-ab5b-df570de64658",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-24T20:11:04.634085+00:00",
+  "payload": {
+    "memory_request_id": "2e8c1a36-2e5e-50b5-99b1-ed3d6cde248b",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 6,
+      "query_text": "Do I like being recognized for my work? Give me the answer I would call accurate instead of a yes or no profile field.",
+      "reference_time": null,
+      "source_types": [
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT",
+        "TOOL_RESULT",
+        "USER_PROMPT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "ATTENTION_ACTIVATION"
+  },
+  "payload_text": "Do I like being recognized for my work? Give me the answer I would call accurate instead of a yes or no profile field.",
+  "record_hash": "7a0912a627d50ad9bc2d4faf24450ec07417b529d88a715b2847af4044d4ad22",
+  "source": "attention-aperture:v0.7-attention-aperture-v4/task:b3859900-2a78-5464-8252-684e33fd31ee"
+}

@@ -1,0 +1,27 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "94cb3eee-59ac-5d97-8520-d019b892c774",
+  "conversation_seq": 1,
+  "correlation_id": "1b91bc27-1e26-52da-9114-9f59a9c92be2",
+  "event_id": "09054c37-f597-55b9-8e65-34b149e8df9c",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:09:43.925906+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-002-HOLDOUT",
+      "benchmark_version": "person-fidelity-holdout-v1",
+      "fixture_event_id": "hf-e012",
+      "occurred_at": "2025-02-27T16:55:00+00:00"
+    },
+    "entities": [
+      "field-gear loan",
+      "eighteen months of expenses",
+      "publishing freedom"
+    ],
+    "text": "Pay matters enormously to me until the field-gear loan is cleared and I am holding eighteen months of expenses. Past that line, who I answer to, whether I can publish, and whether the work is honest matter more than another raise."
+  },
+  "payload_text": "Pay matters enormously to me until the field-gear loan is cleared and I am holding eighteen months of expenses. Past that line, who I answer to, whether I can publish, and whether the work is honest matter more than another raise.",
+  "record_hash": "d38c1948d524145016dd0804588452c649b40b8889a67db857c529c0fe99d2d9",
+  "source": "user"
+}

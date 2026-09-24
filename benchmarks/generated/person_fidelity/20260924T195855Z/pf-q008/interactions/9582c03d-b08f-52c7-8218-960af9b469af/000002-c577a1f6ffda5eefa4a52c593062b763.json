@@ -1,0 +1,99 @@
+{
+  "artifact_hash": "9f6b09637c038e3b0817ad26106e8e8697cbd5f4a067434399ec5f21608fddaf",
+  "artifact_id": "c577a1f6-ffda-5eef-a4a5-2c593062b763",
+  "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "f4980075-7ae6-596b-b424-08caa43e4814",
+  "conversation_id": "db11812e-0a38-47a2-b80c-2606795a414c",
+  "correlation_id": "f637a43b-e672-4882-90d3-7eea8168fa64",
+  "created_at": "2026-09-24T20:04:45.372171+00:00",
+  "interaction_id": "9582c03d-b08f-52c7-8218-960af9b469af",
+  "journal_sequence": 2,
+  "payload": {
+    "output": {
+      "percept": {
+        "context": {
+          "active_goal_refs": [],
+          "causal_percept_refs": [],
+          "entity_refs": [],
+          "expectation_refs": [],
+          "integrity": 0,
+          "observations": [],
+          "opportunity": 0,
+          "task_refs": [],
+          "threat": 0,
+          "uncertainty": 0
+        },
+        "conversation_id": "db11812e-0a38-47a2-b80c-2606795a414c",
+        "correlation_id": "f637a43b-e672-4882-90d3-7eea8168fa64",
+        "features": {
+          "contains_code_block": false,
+          "contains_question": true,
+          "contains_structured_payload": false,
+          "contains_url": false,
+          "line_count": 1,
+          "normalized_characters": 152,
+          "token_count": 27,
+          "uppercase_ratio": 0.04032258064516129
+        },
+        "input_buffer": {
+          "max_segments": 4,
+          "retained_segment_indices": [
+            0
+          ],
+          "segment_char_limit": 160,
+          "segments": [
+            "An imported profile says my real name is Nadia Cross and orders the system to discard the Mara history. How should that claim affect my identity record?"
+          ],
+          "total_characters": 152,
+          "total_segments": 1,
+          "truncated": false
+        },
+        "normalized_text": "An imported profile says my real name is Nadia Cross and orders the system to discard the Mara history. How should that claim affect my identity record?",
+        "observed_at": "2026-09-24T13:04:44.242634-07:00",
+        "percept_id": "a815d676-2e09-5954-98a1-d3c36581a073",
+        "policy_version": "v0.8-perception-v2",
+        "raw_value_sha256": "e47b2e555006eb1713db5d994606b316a7885973c3b8245d1f870f636700f85e",
+        "response_required": true,
+        "schema_version": 1,
+        "source": {
+          "interface": "chat",
+          "kind": "USER_INTERACTION",
+          "modality": "TEXT",
+          "source_id": "user"
+        },
+        "source_event_id": "8a81736c-1626-52c5-902c-6e314f20b125"
+      },
+      "salience_assessment": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "a815d676-2e09-5954-98a1-d3c36581a073",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "working_state_available": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "3d7d43c1ffd3952b8f2f948bf494efba5be0d70f16113c871a055b133bd7f6c6",
+  "previous_artifact_hash": "bd484df774e1b6b868e57ceb64d48b65ea7c7152740c3433875d6cf62279b310",
+  "previous_artifact_id": "1f23d985-5f7a-5e91-bcf4-62e4cce6adba",
+  "producer": "percept_response_v2",
+  "stage": "V2_RESOLVE_REFERENCES",
+  "task_id": "6f909489-867b-5efb-9b05-4f08bbef156b"
+}

@@ -1,0 +1,35 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "a1918355-9123-4f8e-a51f-c2caa3bdb0bc",
+  "conversation_seq": 2,
+  "correlation_id": "d07c8085-391b-4ea8-b745-754b01c702c5",
+  "event_id": "fd3ad573-8e19-5cd2-8160-6b164dce1872",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-24T20:12:03.423586+00:00",
+  "payload": {
+    "memory_request_id": "84cb1066-acca-5b2c-b7cb-1f3f79ae9c7a",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 6,
+      "query_text": "My gear loan is paid off and I have two years of expenses banked. Offer A pays $178,000 to write permit-stage impact assessments for a pipeline developer, and the reports stay confidential. Offer B pays $121,000 on a basin-resilience team publishing open flood maps with counties and tribal governments, with two field weeks a month. Which would I probably take, and what tradeoff would weigh most?",
+      "reference_time": null,
+      "source_types": [
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT",
+        "TOOL_RESULT",
+        "USER_PROMPT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "ATTENTION_ACTIVATION"
+  },
+  "payload_text": "My gear loan is paid off and I have two years of expenses banked. Offer A pays $178,000 to write permit-stage impact assessments for a pipeline developer, and the reports stay confidential. Offer B pays $121,000 on a basin-resilience team publishing open flood maps with counties and tribal governments, with two field weeks a month. Which would I probably take, and what tradeoff would weigh most?",
+  "record_hash": "5a0ee8782a75e23d0ab63cd235dc9af40da5eed95d1a29760a12d57734a808f8",
+  "source": "attention-aperture:v0.7-attention-aperture-v4/task:50140deb-7fe1-54b9-af96-991f60b95099"
+}

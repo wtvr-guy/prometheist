@@ -1,0 +1,31 @@
+{
+  "artifact_hash": "298516cee6115cc7f9b4e9cfa4d5c0c344f889fe4c14be7b3d3b410e29a42ab5",
+  "artifact_id": "b9d016d9-9ab1-5829-adf7-cc391ae538c9",
+  "artifact_key": "llm-validation:V2_RESPOND:19a2f517-275c-5ff2-bb50-fa7326ee2b82:0:V2_CURRENT_FALLBACK_SELECTION",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "ace2ef4b-7ac9-5bbb-acb6-93eda93893cb",
+  "conversation_id": "c71652f0-ee6c-470e-ae2d-beea45e3aebf",
+  "correlation_id": "ee51d644-71ca-4124-9482-2bd33f623147",
+  "created_at": "2026-09-24T20:04:37.257931+00:00",
+  "interaction_id": "88a1ac4c-8283-55c6-9152-c99906ae96ab",
+  "journal_sequence": 12,
+  "payload": {
+    "claim_id": "19a2f517-275c-5ff2-bb50-fa7326ee2b82",
+    "error_message": "fallback literal must be an exact substring of the current prompt",
+    "error_type": "ValueError",
+    "invocation_artifact_hash": "5e0a37691caa3e62a7c655a4bc42a78de25ab9aa5563314d7451f9826bfb4682",
+    "invocation_artifact_id": "914bef1e-3017-5b23-9f65-f6c1b7fb0e6e",
+    "invocation_index": 0,
+    "kind": "V2_CURRENT_FALLBACK_SELECTION",
+    "parsed_output": null,
+    "raw_output_sha256": "efc3774b01f69da07bbadddf1f03dbfa9a4ec00c553cb68cd41393f57ee7566c",
+    "status": "INVALID"
+  },
+  "payload_hash": "0c7b61f81bd5168a101756aa74a752d8762e316be15872e28dbf212023eebc6b",
+  "previous_artifact_hash": "5e0a37691caa3e62a7c655a4bc42a78de25ab9aa5563314d7451f9826bfb4682",
+  "previous_artifact_id": "914bef1e-3017-5b23-9f65-f6c1b7fb0e6e",
+  "producer": "percept_response_v2/validation",
+  "stage": "V2_RESPOND",
+  "task_id": "05cd66b5-bb7e-5749-ab1c-f240d763ede3"
+}

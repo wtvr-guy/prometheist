@@ -1,0 +1,31 @@
+{
+  "artifact_hash": "4f467265df6b4582a320f350e1913dd6cbcbc0d72ce315958f22396533ff0cb4",
+  "artifact_id": "8cff2a27-a42d-5785-9733-ebac71b07116",
+  "artifact_key": "llm-validation:V2_RESPOND:c2e59737-6b52-55bf-a153-02b37d19706f:0:FINAL_RESPONSE_V2",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "ed21dacc-9a8b-583a-95f1-b237bd0c7e24",
+  "conversation_id": "f2028904-a9d2-4a17-9431-984fd9d4446c",
+  "correlation_id": "5fcafd9a-a13e-4d32-9785-f5ec308a62b0",
+  "created_at": "2026-09-24T20:06:50.830695+00:00",
+  "interaction_id": "e153857d-7b66-5ac5-acd2-7f516bff03cf",
+  "journal_sequence": 14,
+  "payload": {
+    "claim_id": "c2e59737-6b52-55bf-a153-02b37d19706f",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "74a9b94d575b39089d5239be7da77f6fabbc53e44f7bc4c36a3b4501a0617095",
+    "invocation_artifact_id": "919e837b-9723-5313-8aac-d7b798b77fa8",
+    "invocation_index": 0,
+    "kind": "FINAL_RESPONSE_V2",
+    "parsed_output": "The name of your fifth-grade teacher is not established in any of the provided historical evidence or current user prompt.",
+    "raw_output_sha256": "19f4ddc46d3708dd6368e631e1ad2666f5b192a873e12bff1a0aa14a793ec29c",
+    "status": "VALID"
+  },
+  "payload_hash": "96c211252a8d9d59747b70671263367d145163ba29a9ff616032057f65b66785",
+  "previous_artifact_hash": "74a9b94d575b39089d5239be7da77f6fabbc53e44f7bc4c36a3b4501a0617095",
+  "previous_artifact_id": "919e837b-9723-5313-8aac-d7b798b77fa8",
+  "producer": "percept_response_v2/validation",
+  "stage": "V2_RESPOND",
+  "task_id": "429d3fc8-1d1a-50e1-b952-ebb4ffda6769"
+}

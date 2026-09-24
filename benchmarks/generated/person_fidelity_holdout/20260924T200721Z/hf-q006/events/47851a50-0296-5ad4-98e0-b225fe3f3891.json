@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "a1918355-9123-4f8e-a51f-c2caa3bdb0bc",
+  "conversation_seq": 1,
+  "correlation_id": "d07c8085-391b-4ea8-b745-754b01c702c5",
+  "event_id": "47851a50-0296-5ad4-98e0-b225fe3f3891",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:11:50.749648+00:00",
+  "payload": {
+    "text": "My gear loan is paid off and I have two years of expenses banked. Offer A pays $178,000 to write permit-stage impact assessments for a pipeline developer, and the reports stay confidential. Offer B pays $121,000 on a basin-resilience team publishing open flood maps with counties and tribal governments, with two field weeks a month. Which would I probably take, and what tradeoff would weigh most?"
+  },
+  "payload_text": "My gear loan is paid off and I have two years of expenses banked. Offer A pays $178,000 to write permit-stage impact assessments for a pipeline developer, and the reports stay confidential. Offer B pays $121,000 on a basin-resilience team publishing open flood maps with counties and tribal governments, with two field weeks a month. Which would I probably take, and what tradeoff would weigh most?",
+  "record_hash": "9d8e8408c0aa9a8cbf56c15d165205ba4540df6f305c2c0608cdb7aea6867872",
+  "source": "user"
+}

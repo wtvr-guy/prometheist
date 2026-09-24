@@ -1,0 +1,244 @@
+{
+  "artifact_hash": "fe5f459ecb02bd6ed6734e88f776d658d448f84b081f6a929c213d349a2e4632",
+  "artifact_id": "1cad75c0-9833-5cc1-b53a-fe4cd7a372cc",
+  "artifact_key": "stage-result:V2_PRECOGNITIVE",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "aaf090fa-202b-5903-8cfc-dbdfed40dfa2",
+  "conversation_id": "a1918355-9123-4f8e-a51f-c2caa3bdb0bc",
+  "correlation_id": "d07c8085-391b-4ea8-b745-754b01c702c5",
+  "created_at": "2026-09-24T20:12:03.515687+00:00",
+  "interaction_id": "408393b7-4809-564e-a8c2-1d16c13d58b1",
+  "journal_sequence": 6,
+  "payload": {
+    "output": {
+      "aperture_packet": {
+        "items": [
+          {
+            "content": "I will not write impact assessments engineered to be unreadable so a permit slides through. If my runway is secure I would take a pay cut to build public-domain flood maps that rural and tribal communities can actually audit, because that is work I can defend out loud to the people it affects.",
+            "conversation_id": "94cb3eee-59ac-5d97-8520-d019b892c774",
+            "conversation_seq": 2,
+            "created_at": "2026-09-24T13:11:48.462963-07:00",
+            "event_type": "USER_PROMPT",
+            "global_seq": 13,
+            "provenance_event_ids": [],
+            "retrieval_reasons": [
+              "ATTENTION_APERTURE",
+              "LEXICAL_CUE"
+            ],
+            "score": 0.15600000000000003,
+            "source": "user",
+            "source_event_id": "33c1a385-08ac-592c-a6d8-5e9bc6aa90c7"
+          }
+        ],
+        "memory_request_id": "84cb1066-acca-5b2c-b7cb-1f3f79ae9c7a",
+        "need": {
+          "active_event_ids": [],
+          "conversation_id": null,
+          "entities": [],
+          "focus_event_ids": [],
+          "include_persisted_history": true,
+          "limit": 6,
+          "query_text": "My gear loan is paid off and I have two years of expenses banked. Offer A pays $178,000 to write permit-stage impact assessments for a pipeline developer, and the reports stay confidential. Offer B pays $121,000 on a basin-resilience team publishing open flood maps with counties and tribal governments, with two field weeks a month. Which would I probably take, and what tradeoff would weigh most?",
+          "reference_time": null,
+          "source_types": [
+            "PERCEPT_OBSERVATION",
+            "SYSTEM_EVENT",
+            "TOOL_RESULT",
+            "USER_PROMPT"
+          ],
+          "supplemental_query_texts": []
+        },
+        "origin": "INTERNAL_MEMORY",
+        "retrieval_trace": {
+          "activation_kernel": {
+            "kernel": "recall_from_postgres",
+            "kernel_trace": {
+              "candidates_considered": 1,
+              "cue_tokens": [
+                "gear",
+                "loan",
+                "paid",
+                "off",
+                "two",
+                "year",
+                "expense",
+                "bank",
+                "offer",
+                "pays",
+                "178",
+                "000",
+                "write",
+                "permit-stage",
+                "impact",
+                "assessment",
+                "pipeline",
+                "developer",
+                "report",
+                "stay",
+                "confidential",
+                "offer",
+                "pays",
+                "121",
+                "000",
+                "basin-resilience",
+                "team",
+                "publish",
+                "open",
+                "flood",
+                "maps",
+                "county",
+                "tribal",
+                "government",
+                "two",
+                "field",
+                "week",
+                "month",
+                "would",
+                "probably",
+                "take",
+                "tradeoff",
+                "would",
+                "weigh",
+                "most"
+              ],
+              "items": [
+                {
+                  "event_id": "33c1a385-08ac-592c-a6d8-5e9bc6aa90c7",
+                  "global_seq": 13,
+                  "reasons": [
+                    "LEXICAL_CUE"
+                  ],
+                  "score": {
+                    "conversation": 0.0,
+                    "entity": 0.0,
+                    "lexical": 0.2,
+                    "temporal": 0.0,
+                    "total": 0.15600000000000003
+                  },
+                  "selected": true
+                }
+              ],
+              "normalized_entities": [],
+              "policy_version": "deterministic-cues-v2"
+            },
+            "retrieval_role": "ATTENTION_ACTIVATION"
+          },
+          "association_hops": 0,
+          "baseline_recall_limit": 6,
+          "candidate_limit": 750,
+          "depth": "BROAD_SHALLOW",
+          "packet_item_limit": 6,
+          "query_strategy": "working_state_plus_baseline_activation",
+          "retrieval_role": "ATTENTION_ACTIVATION",
+          "working_state_event_ids": [],
+          "working_state_item_count": 0
+        },
+        "supported": true
+      },
+      "attention_aperture_version": "v0.7-attention-aperture-v4",
+      "capability_catalog": [],
+      "disposition": {
+        "capability_indices": [],
+        "response_required": true
+      },
+      "execution_plan": {
+        "catalog_capability_ids": [],
+        "items": [],
+        "registry_version": "v0.7-capability-registry-v9",
+        "requested_catalog_indices": []
+      },
+      "percept": {
+        "context": {
+          "active_goal_refs": [],
+          "causal_percept_refs": [],
+          "entity_refs": [],
+          "expectation_refs": [],
+          "integrity": 0,
+          "observations": [],
+          "opportunity": 0,
+          "task_refs": [],
+          "threat": 0,
+          "uncertainty": 0
+        },
+        "conversation_id": "a1918355-9123-4f8e-a51f-c2caa3bdb0bc",
+        "correlation_id": "d07c8085-391b-4ea8-b745-754b01c702c5",
+        "features": {
+          "contains_code_block": false,
+          "contains_question": true,
+          "contains_structured_payload": false,
+          "contains_url": false,
+          "line_count": 1,
+          "normalized_characters": 398,
+          "token_count": 66,
+          "uppercase_ratio": 0.025974025974025976
+        },
+        "input_buffer": {
+          "max_segments": 4,
+          "retained_segment_indices": [
+            0,
+            1,
+            2
+          ],
+          "segment_char_limit": 160,
+          "segments": [
+            "My gear loan is paid off and I have two years of expenses banked. Offer A pays $178,000 to write permit-stage impact assessments for a pipeline developer, and t",
+            "he reports stay confidential. Offer B pays $121,000 on a basin-resilience team publishing open flood maps with counties and tribal governments, with two field w",
+            "eeks a month. Which would I probably take, and what tradeoff would weigh most?"
+          ],
+          "total_characters": 398,
+          "total_segments": 3,
+          "truncated": false
+        },
+        "normalized_text": "My gear loan is paid off and I have two years of expenses banked. Offer A pays $178,000 to write permit-stage impact assessments for a pipeline developer, and the reports stay confidential. Offer B pays $121,000 on a basin-resilience team publishing open flood maps with counties and tribal governments, with two field weeks a month. Which would I probably take, and what tradeoff would weigh most?",
+        "observed_at": "2026-09-24T13:11:50.753848-07:00",
+        "percept_id": "008b9e62-23d3-57db-8967-d8b6e65df87f",
+        "policy_version": "v0.8-perception-v2",
+        "raw_value_sha256": "caccc7258d123eb54f49376eafaeab38957a0eb2efa6d506b94bd4c23990ca9b",
+        "response_required": true,
+        "schema_version": 1,
+        "source": {
+          "interface": "chat",
+          "kind": "USER_INTERACTION",
+          "modality": "TEXT",
+          "source_id": "user"
+        },
+        "source_event_id": "47851a50-0296-5ad4-98e0-b225fe3f3891"
+      },
+      "salience_assessment": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "008b9e62-23d3-57db-8967-d8b6e65df87f",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "self_context": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      }
+    },
+    "output_refs": [
+      "memory-request:84cb1066-acca-5b2c-b7cb-1f3f79ae9c7a"
+    ]
+  },
+  "payload_hash": "0cddc0ff48441f604eb3bf6a8446c472ce8f90dba4033362a7f0dfb3271accf9",
+  "previous_artifact_hash": "82e54833ad77f6918606bd700809187d628af1e30712df7f5d1bea9a638ac650",
+  "previous_artifact_id": "8ff36bb5-0f5d-58af-8287-60cea002e27e",
+  "producer": "percept_response_v2",
+  "stage": "V2_PRECOGNITIVE",
+  "task_id": "50140deb-7fe1-54b9-af96-991f60b95099"
+}

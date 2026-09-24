@@ -1,0 +1,34 @@
+{
+  "artifact_hash": "cf95be19a1941a9f4239eec15d4d7d3758ee79a231c26f4a60c6731fbd5bf8f4",
+  "artifact_id": "dd427870-4b81-598b-aa85-c9d13350525a",
+  "artifact_key": "llm-validation:V2_COMPOSE_MEMORY:102e6a85-52b4-50f5-9188-dbfca7d4d91a:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "1d4ed538-9ba4-586f-b603-6072b54e4ecf",
+  "conversation_id": "56c01cc9-c873-4a4e-99a3-713b89ec5e51",
+  "correlation_id": "379828df-bb8e-4be1-98b6-b8f85ac9fba8",
+  "created_at": "2026-09-24T20:01:19.241767+00:00",
+  "interaction_id": "00722263-7d7d-52f4-a10b-0213ea695c39",
+  "journal_sequence": 9,
+  "payload": {
+    "claim_id": "102e6a85-52b4-50f5-9188-dbfca7d4d91a",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "24834b0ec3a3a7e0ff33605a648b05b0aaa3bde6d9ab4d8ccb9c842905183523",
+    "invocation_artifact_id": "4eb33f9b-a1c1-52f0-8c8c-4ae7d4580eb7",
+    "invocation_index": 0,
+    "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+    "parsed_output": {
+      "memory_deficit": null,
+      "sufficient": true
+    },
+    "raw_output_sha256": "0dd44b6490906d6a359aaee66cba3f96cc6066dc6b2cd5142d47f31d22eb038f",
+    "status": "VALID"
+  },
+  "payload_hash": "edef6b13621c8e087fd75e76863bcc601033fb693ac744e3b4ed5b8ebca7677d",
+  "previous_artifact_hash": "24834b0ec3a3a7e0ff33605a648b05b0aaa3bde6d9ab4d8ccb9c842905183523",
+  "previous_artifact_id": "4eb33f9b-a1c1-52f0-8c8c-4ae7d4580eb7",
+  "producer": "percept_response_v2/validation",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "4e1a1ed0-c743-5843-9e0a-9b0d73983330"
+}

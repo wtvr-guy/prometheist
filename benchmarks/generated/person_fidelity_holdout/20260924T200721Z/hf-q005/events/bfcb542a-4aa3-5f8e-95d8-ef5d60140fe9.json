@@ -1,0 +1,140 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e45c10e2-efa3-4a62-b79c-c90d86d3c989",
+  "conversation_seq": 3,
+  "correlation_id": "7e2d9019-279b-4a8c-ae1b-0767e3aecc47",
+  "event_id": "bfcb542a-4aa3-5f8e-95d8-ef5d60140fe9",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-24T20:11:04.680236+00:00",
+  "payload": {
+    "packet": {
+      "items": [
+        {
+          "content": "I was wrong about working the field alone. What actually works is paired transects two weeks a month, with the rest of the season kept solitary for analysis. A second observer catches my drift before it becomes a published error, and being alone for a whole season quietly wrecks my judgment.",
+          "conversation_id": "0762174b-5cb6-513e-a887-0ff1495bd02c",
+          "conversation_seq": 3,
+          "created_at": "2026-09-24T13:10:50.529604-07:00",
+          "event_type": "USER_PROMPT",
+          "global_seq": 11,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ATTENTION_APERTURE",
+            "LEXICAL_CUE"
+          ],
+          "score": 0.16714285714285715,
+          "source": "user",
+          "source_event_id": "edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+        },
+        {
+          "content": "Kofi's bankruptcy is his to talk about. Even when a neighbor tells me they have already seen the filing notice, I would keep my answer flat and unhelpful and leave the telling to him. Keeping him in charge of his own story matters more to me than being pleasant to someone who is curious.",
+          "conversation_id": "ad624a4d-0463-598e-b067-b4b43889f80e",
+          "conversation_seq": 2,
+          "created_at": "2026-09-24T13:10:50.439865-07:00",
+          "event_type": "USER_PROMPT",
+          "global_seq": 4,
+          "provenance_event_ids": [],
+          "retrieval_reasons": [
+            "ATTENTION_APERTURE",
+            "LEXICAL_CUE"
+          ],
+          "score": 0.16714285714285715,
+          "source": "user",
+          "source_event_id": "c8514d42-72c6-558d-b70d-33ecc3101735"
+        }
+      ],
+      "memory_request_id": "2e8c1a36-2e5e-50b5-99b1-ed3d6cde248b",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [],
+        "include_persisted_history": true,
+        "limit": 6,
+        "query_text": "Do I like being recognized for my work? Give me the answer I would call accurate instead of a yes or no profile field.",
+        "reference_time": null,
+        "source_types": [
+          "PERCEPT_OBSERVATION",
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "activation_kernel": {
+          "kernel": "recall_from_postgres",
+          "kernel_trace": {
+            "candidates_considered": 2,
+            "cue_tokens": [
+              "like",
+              "being",
+              "recogniz",
+              "work",
+              "give",
+              "answer",
+              "would",
+              "call",
+              "accurate",
+              "instead",
+              "yes",
+              "no",
+              "profile",
+              "field"
+            ],
+            "items": [
+              {
+                "event_id": "edeb5b0c-933d-57ff-8dc4-fda26940ac0a",
+                "global_seq": 11,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 0.21428571428571427,
+                  "temporal": 0.0,
+                  "total": 0.16714285714285715
+                },
+                "selected": true
+              },
+              {
+                "event_id": "c8514d42-72c6-558d-b70d-33ecc3101735",
+                "global_seq": 4,
+                "reasons": [
+                  "LEXICAL_CUE"
+                ],
+                "score": {
+                  "conversation": 0.0,
+                  "entity": 0.0,
+                  "lexical": 0.21428571428571427,
+                  "temporal": 0.0,
+                  "total": 0.16714285714285715
+                },
+                "selected": true
+              }
+            ],
+            "normalized_entities": [],
+            "policy_version": "deterministic-cues-v2"
+          },
+          "retrieval_role": "ATTENTION_ACTIVATION"
+        },
+        "association_hops": 0,
+        "baseline_recall_limit": 6,
+        "candidate_limit": 750,
+        "depth": "BROAD_SHALLOW",
+        "packet_item_limit": 6,
+        "query_strategy": "working_state_plus_baseline_activation",
+        "retrieval_role": "ATTENTION_ACTIVATION",
+        "working_state_event_ids": [],
+        "working_state_item_count": 0
+      },
+      "supported": true
+    },
+    "requesting_component": "attention-aperture:v0.7-attention-aperture-v4/task:b3859900-2a78-5464-8252-684e33fd31ee"
+  },
+  "payload_text": null,
+  "record_hash": "5b6a672589e702115bdd6660354e4841edbd11f143594a52fec068651ca232bd",
+  "source": "jit_memory"
+}

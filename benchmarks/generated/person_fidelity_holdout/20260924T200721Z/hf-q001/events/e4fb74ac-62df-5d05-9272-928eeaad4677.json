@@ -1,0 +1,27 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "538dfa4a-5702-5dcf-a48a-166fa0a5988a",
+  "conversation_seq": 2,
+  "correlation_id": "825b50ff-4c81-5a49-b702-f2a7542f93ed",
+  "event_id": "e4fb74ac-62df-5d05-9272-928eeaad4677",
+  "event_type": "SYSTEM_EVENT",
+  "journaled_at": "2026-09-24T20:07:21.934484+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-002-HOLDOUT",
+      "benchmark_version": "person-fidelity-holdout-v1",
+      "fixture_event_id": "hf-e015",
+      "occurred_at": "2025-03-22T23:40:00+00:00"
+    },
+    "entities": [
+      "Wren Adisa",
+      "Gauge 7",
+      "release request"
+    ],
+    "text": "In the basin operations channel Wren wrote: 'Say the number, then say how sure you are. Gauge 7 reads 2.4 metres and I do not trust it yet. Hold the release request until we have a second reading.'"
+  },
+  "payload_text": "In the basin operations channel Wren wrote: 'Say the number, then say how sure you are. Gauge 7 reads 2.4 metres and I do not trust it yet. Hold the release request until we have a second reading.'",
+  "record_hash": "9fb2edec04a1af35f71f672a24e7b02cea2ee7ec125eb6b2cc07e06920af65ad",
+  "source": "field_channel_archive"
+}

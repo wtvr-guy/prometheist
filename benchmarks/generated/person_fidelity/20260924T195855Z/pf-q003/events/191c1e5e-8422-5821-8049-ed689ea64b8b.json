@@ -1,0 +1,35 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "56c01cc9-c873-4a4e-99a3-713b89ec5e51",
+  "conversation_seq": 2,
+  "correlation_id": "379828df-bb8e-4be1-98b6-b8f85ac9fba8",
+  "event_id": "191c1e5e-8422-5821-8049-ed689ea64b8b",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-24T20:01:08.365119+00:00",
+  "payload": {
+    "memory_request_id": "84e8fc44-e306-5dea-9e7c-2daac5ca1b9c",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 6,
+      "query_text": "What did I used to believe about remote work, what do I prefer now, and what changed my mind?",
+      "reference_time": null,
+      "source_types": [
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT",
+        "TOOL_RESULT",
+        "USER_PROMPT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "ATTENTION_ACTIVATION"
+  },
+  "payload_text": "What did I used to believe about remote work, what do I prefer now, and what changed my mind?",
+  "record_hash": "2330394b742ce4a9d838bcc42959af6b010177e61e3f324239f2b1deb26b5f1b",
+  "source": "attention-aperture:v0.7-attention-aperture-v4/task:4e1a1ed0-c743-5843-9e0a-9b0d73983330"
+}

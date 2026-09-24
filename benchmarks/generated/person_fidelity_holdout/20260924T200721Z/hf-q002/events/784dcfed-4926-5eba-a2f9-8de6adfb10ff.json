@@ -1,0 +1,31 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 3,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "784dcfed-4926-5eba-a2f9-8de6adfb10ff",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-24T20:08:22.846485+00:00",
+  "payload": {
+    "data": {
+      "activated_at": "2026-09-24T13:08:11.008539-07:00",
+      "active_self": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      },
+      "entity_refs": [],
+      "goal_refs": [],
+      "interaction_id": "a7d2dee9-ac1b-5ca8-aeb6-d2814cdeee8a",
+      "query_text": "A neighbor asks me what happened with Kofi's bankruptcy and mentions they have already seen the filing notice. How would I probably respond, and why?"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "a7d2dee9-ac1b-5ca8-aeb6-d2814cdeee8a",
+    "record_kind": "working_self",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "8f9e179699a5faafff09d5cdd467d32a0a7038e0e6282f34f6e9b53625f5568a",
+  "source": "cognitive_runtime"
+}

@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "699f6a9f-457c-4a87-b33c-bc703926029a",
+  "conversation_seq": 5,
+  "correlation_id": "e7d50692-c998-4412-8427-d62f73a4eca8",
+  "event_id": "e0e108fe-c645-5787-b8b5-2a1aab13a17c",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-24T20:00:12.629311+00:00",
+  "payload": {
+    "text": "I became an electrical engineer because of a radio weekend experience. That event left me with a design principle: important systems should fail gracefully and remain understandable when everything around them is going wrong."
+  },
+  "payload_text": "I became an electrical engineer because of a radio weekend experience. That event left me with a design principle: important systems should fail gracefully and remain understandable when everything around them is going wrong.",
+  "record_hash": "52205ea1faf90b1c0d431c76237df9d897bfbd10919d8cf59b80b240c32f25b6",
+  "source": "percept_response_v2"
+}

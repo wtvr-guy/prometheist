@@ -1,0 +1,27 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "92d0f7ce-e93d-58bd-b2a2-f81585a261ca",
+  "conversation_seq": 2,
+  "correlation_id": "e68efd89-b168-514a-af77-271ab9343efa",
+  "event_id": "6aebe9b4-31e2-5267-927a-23aacaef297f",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:14:16.372211+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-002-HOLDOUT",
+      "benchmark_version": "person-fidelity-holdout-v1",
+      "fixture_event_id": "hf-e019",
+      "occurred_at": "2025-06-05T19:22:00+00:00"
+    },
+    "entities": [
+      "brass kerosene lantern",
+      "fuel leak",
+      "physical safety"
+    ],
+    "text": "Sentiment never gets to outrank somebody's lungs or skin. If that lantern started leaking fuel or venting fumes in a way no honest repair could fix, I would take it out of service, keep the brass body where I can see it, and carry a headlamp without pretending that was a small loss."
+  },
+  "payload_text": "Sentiment never gets to outrank somebody's lungs or skin. If that lantern started leaking fuel or venting fumes in a way no honest repair could fix, I would take it out of service, keep the brass body where I can see it, and carry a headlamp without pretending that was a small loss.",
+  "record_hash": "20ce343c0140f53cde15efa48ca5534322ebec7c15356401468a5082fad9ccd5",
+  "source": "user"
+}

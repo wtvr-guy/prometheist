@@ -1,0 +1,31 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 3,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "1c64952f-0000-58e0-87ad-bcfeb76579b9",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-24T20:12:03.495331+00:00",
+  "payload": {
+    "data": {
+      "activated_at": "2026-09-24T13:11:50.753848-07:00",
+      "active_self": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      },
+      "entity_refs": [],
+      "goal_refs": [],
+      "interaction_id": "408393b7-4809-564e-a8c2-1d16c13d58b1",
+      "query_text": "My gear loan is paid off and I have two years of expenses banked. Offer A pays $178,000 to write permit-stage impact assessments for a pipeline developer, and the reports stay confidential. Offer B pays $121,000 on a basin-resilience team publishing open flood maps with counties and tribal governments, with two field weeks a month. Which would I probably take, and what tradeoff would weigh most?"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "408393b7-4809-564e-a8c2-1d16c13d58b1",
+    "record_kind": "working_self",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "695c379db3e44970c8b6fc4740f1b361bd72d770e1f7fddb2c3fd59b73a20a2a",
+  "source": "cognitive_runtime"
+}

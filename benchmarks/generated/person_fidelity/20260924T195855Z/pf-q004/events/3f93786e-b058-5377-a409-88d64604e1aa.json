@@ -1,0 +1,31 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 3,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "3f93786e-b058-5377-a409-88d64604e1aa",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-24T20:01:57.365294+00:00",
+  "payload": {
+    "data": {
+      "activated_at": "2026-09-24T13:01:45.793531-07:00",
+      "active_self": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      },
+      "entity_refs": [],
+      "goal_refs": [],
+      "interaction_id": "5d28df0f-0533-566d-9895-04254a0b9b37",
+      "query_text": "Am I really spontaneous? Reconcile how I describe myself with how I actually make decisions."
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "5d28df0f-0533-566d-9895-04254a0b9b37",
+    "record_kind": "working_self",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "6d3882866ad828d74ceb0aaf3cbf19a0a83bbca25f50a6ce3b4b28ea6139f632",
+  "source": "cognitive_runtime"
+}

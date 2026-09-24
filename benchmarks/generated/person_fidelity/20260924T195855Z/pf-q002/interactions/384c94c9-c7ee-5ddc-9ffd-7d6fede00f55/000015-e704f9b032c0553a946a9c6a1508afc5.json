@@ -1,0 +1,139 @@
+{
+  "artifact_hash": "589430a4ee8dabed8c024b07f4f1563851461e60420acbb644ccd30856280461",
+  "artifact_id": "e704f9b0-32c0-553a-946a-9c6a1508afc5",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "27b8d0e1-a05b-5f0f-a32d-d2acc9cb9316",
+  "conversation_id": "a8604af8-cfb1-4a9d-b498-a1b41a79887a",
+  "correlation_id": "4ed74a5a-fd1f-4cc8-9df6-10e7a643caa1",
+  "created_at": "2026-09-24T20:00:53.989207+00:00",
+  "interaction_id": "384c94c9-c7ee-5ddc-9ffd-7d6fede00f55",
+  "journal_sequence": 15,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "edf89b799289ce33a77b0ea678b887c41979a2bf645a6971d2a61fe95e935e16",
+        "artifact_id": "a76cc8fd-0dbe-583a-85dc-5e40bbc79376",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "ad86661f62e4a18e71ce4a126d889ff540ed199946536cf4808141aa5f0cc0c4",
+        "artifact_id": "ecd7cf02-0808-52c4-8576-fcafda580c8b",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "d8ece2fe8000748a4c30b67a574c031aa4fbdf1b87cb43424d33462c651b7307",
+        "artifact_id": "f2198c4f-ab8e-5548-9774-e146d23409fa",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:bcef399c-d881-528e-8687-74409d88cfd1:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "a9be6e5ec53858fcad56c0f4ce08efcad31214dd191a93e98d8c6a75a4a376c2",
+        "artifact_id": "971697ac-40fb-5b24-86a2-782a476dcb2a",
+        "artifact_key": "llm-validation:V2_EVIDENCE_POLICY:bcef399c-d881-528e-8687-74409d88cfd1:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "66c378e3346248c903fbc608d4f0c4d4c7b416dd28b78f903e256c3d81ce7981",
+        "artifact_id": "00fb9616-a633-5e15-9a41-b12968bc2d80",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "823beb99b766736e7f64838ef8d97ecfeb0795f9fee7f0a96aa194a31e184e36",
+        "artifact_id": "35429604-e070-5f9e-bafa-63526fcb38a1",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "58aa42d482c8d596304bc8c23af0d587a1990f88f9b5bf50e1ac65f1b58c62a1",
+        "artifact_id": "3b9d22b8-861d-5981-aa73-fdab33ebb793",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 7,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "c2b89dfaa41c5e4e635aa763564db78ea317a8fb956c4ede76ebe5f9fd726e63",
+        "artifact_id": "06e3cbcc-1a8c-5fb8-b176-682a9fd6290c",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:d131b1bf-7e9b-5c47-b00d-b120231b93c5:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "8a11a18b1018efa4ca6a3085172073806200f7c512a6a5f2a47e7c818fe0b603",
+        "artifact_id": "694b33ab-30bc-53ba-8cc8-0a06c31b383e",
+        "artifact_key": "llm-validation:V2_COMPOSE_MEMORY:d131b1bf-7e9b-5c47-b00d-b120231b93c5:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 9,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "8c0f0040c85741565de976f173d2489c0749db4e4ad5862384a2c6dc4bd5c675",
+        "artifact_id": "0d598853-1526-507c-9f75-3b839bbecf71",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "9b5a75d19733e54cd82523ce9ae9559b7ef278480592daa48441d72ee88d2148",
+        "artifact_id": "04b9abf3-9b5f-5eb3-aa78-fb7d8917efb2",
+        "artifact_key": "llm-invocation:V2_RESPOND:db17dff7-50a0-5436-be32-ef4a07a15834:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 11,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "5e60d2d764a9864844ac185b47fa93dfc171516ac2645442499cca7990c8279b",
+        "artifact_id": "8d9fd5c1-682b-5ce9-91a0-4f0c12d80d0b",
+        "artifact_key": "llm-validation:V2_RESPOND:db17dff7-50a0-5436-be32-ef4a07a15834:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 12,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "f8ce6efa759f6a8e359c8275e5774187b5514c8ccc10e96987c79ef9c9a89b5c",
+        "artifact_id": "a81ac022-539b-5cbe-b4c7-e8414664ee59",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 13,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "98d5f49f2f8ae89ed667f91f49cb24ad68251fb2d696a2b71542e3b0b66aa722",
+        "artifact_id": "68622136-d4f3-5b01-83cc-dd0158f4b4b4",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 14,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "I would respond with a vague, respectful acknowledgment—such as, 'Theo’s journey is personal, and he’s decided what to share.'—because protecting Theo’s control over his own story is paramount. Even if the acquaintance claims they already know, the response upholds his privacy and autonomy. This aligns with the principle that personal recovery is a private matter, and disclosure should only happen with Theo’s consent.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "94580639f71465625aff6353ffce174dbe48a02e054f545b3725a9d19a848efe",
+  "previous_artifact_hash": "98d5f49f2f8ae89ed667f91f49cb24ad68251fb2d696a2b71542e3b0b66aa722",
+  "previous_artifact_id": "68622136-d4f3-5b01-83cc-dd0158f4b4b4",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "9b329aac-ac8b-514f-8709-6dc2df017403"
+}

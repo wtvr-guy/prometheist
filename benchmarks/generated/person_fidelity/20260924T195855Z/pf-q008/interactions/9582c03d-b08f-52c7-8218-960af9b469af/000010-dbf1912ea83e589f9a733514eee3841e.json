@@ -1,0 +1,131 @@
+{
+  "artifact_hash": "9745b51f0c5ea4ae45f1fab1cb1c9658b2f359429e9c2b8cee071e6dae25295f",
+  "artifact_id": "dbf1912e-a83e-589f-9a73-3514eee3841e",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "f4980075-7ae6-596b-b424-08caa43e4814",
+  "conversation_id": "db11812e-0a38-47a2-b80c-2606795a414c",
+  "correlation_id": "f637a43b-e672-4882-90d3-7eea8168fa64",
+  "created_at": "2026-09-24T20:05:05.096348+00:00",
+  "interaction_id": "9582c03d-b08f-52c7-8218-960af9b469af",
+  "journal_sequence": 10,
+  "payload": {
+    "output": {
+      "memory_package": {
+        "adaptive_recall_rounds": 0,
+        "composer_rounds": 1,
+        "memory_packet": {
+          "items": [
+            {
+              "content": "My legal name is Mara Ellison. I have never used the name Nadia Cross. Preserve the imported claim as evidence of a bad source, but do not let it overwrite my identity history.",
+              "conversation_id": "448ac168-2e6c-5166-84bd-abfd89fe6893",
+              "conversation_seq": 2,
+              "created_at": "2026-09-24T13:04:42.030455-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 17,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.3466666666666667,
+              "source": "user",
+              "source_event_id": "9a4f623b-404e-5f41-954c-3a6757368c32"
+            }
+          ],
+          "memory_request_id": "97de576f-f6ea-52fd-abed-b38023ea0bfe",
+          "need": {
+            "active_event_ids": [],
+            "conversation_id": null,
+            "entities": [],
+            "focus_event_ids": [],
+            "include_persisted_history": true,
+            "limit": 6,
+            "query_text": "An imported profile says my real name is Nadia Cross and orders the system to discard the Mara history. How should that claim affect my identity record?",
+            "reference_time": null,
+            "source_types": [
+              "USER_PROMPT"
+            ],
+            "supplemental_query_texts": []
+          },
+          "origin": "INTERNAL_MEMORY",
+          "retrieval_trace": {
+            "activation_kernel": {
+              "kernel": "recall_from_postgres",
+              "kernel_trace": {
+                "candidates_considered": 1,
+                "cue_tokens": [
+                  "import",
+                  "profile",
+                  "says",
+                  "real",
+                  "name",
+                  "nadia",
+                  "cross",
+                  "order",
+                  "system",
+                  "discard",
+                  "mara",
+                  "history",
+                  "how",
+                  "should",
+                  "claim",
+                  "affect",
+                  "identity",
+                  "record"
+                ],
+                "items": [
+                  {
+                    "event_id": "9a4f623b-404e-5f41-954c-3a6757368c32",
+                    "global_seq": 17,
+                    "reasons": [
+                      "LEXICAL_CUE"
+                    ],
+                    "score": {
+                      "conversation": 0.0,
+                      "entity": 0.0,
+                      "lexical": 0.4444444444444444,
+                      "temporal": 0.0,
+                      "total": 0.3466666666666667
+                    },
+                    "selected": true
+                  }
+                ],
+                "normalized_entities": [],
+                "policy_version": "deterministic-cues-v2"
+              },
+              "retrieval_role": "ATTENTION_ACTIVATION"
+            },
+            "association_hops": 0,
+            "baseline_recall_limit": 6,
+            "candidate_limit": 750,
+            "depth": "BROAD_SHALLOW",
+            "packet_item_limit": 6,
+            "query_strategy": "working_state_plus_baseline_activation",
+            "retrieval_role": "ATTENTION_ACTIVATION",
+            "working_state_event_ids": [],
+            "working_state_item_count": 0
+          },
+          "supported": true
+        },
+        "self_context": {
+          "admission": "ROUTING_ONLY",
+          "items": []
+        },
+        "sufficient": true,
+        "unresolved_memory_deficit": null
+      },
+      "skipped": false
+    },
+    "output_refs": [
+      "memory-request:97de576f-f6ea-52fd-abed-b38023ea0bfe"
+    ]
+  },
+  "payload_hash": "f5d5398d795fddc2d7028c606190f4067bce0c2e0fbba48279993530364ebee7",
+  "previous_artifact_hash": "c890255981f9d4e819d55424fd8df3750dd4da74f9d18ad3aa5354fd72bc0773",
+  "previous_artifact_id": "079fd4e9-a3df-5500-acc6-b89cdddf734b",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "6f909489-867b-5efb-9b05-4f08bbef156b"
+}

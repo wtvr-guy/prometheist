@@ -1,0 +1,139 @@
+{
+  "artifact_hash": "fe246def8c392c2667c3d7197a545ed053e714ed3ad3e2497f7298391c51a847",
+  "artifact_id": "e116b0a6-2c31-5f6b-810d-e1beb8e6c423",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "92b5ff9d-a771-5ca1-85ff-07872124efb9",
+  "conversation_id": "9b5d1fa3-cefb-4500-a263-3a3b59c1e556",
+  "correlation_id": "800a6d4a-2c11-459d-8676-4c0657ba2009",
+  "created_at": "2026-09-24T20:02:34.178379+00:00",
+  "interaction_id": "5d28df0f-0533-566d-9895-04254a0b9b37",
+  "journal_sequence": 15,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "e6328bcded449686c6fa3185f602468a88bb0185443bca8c3dc2e277b3d701e7",
+        "artifact_id": "b4e407e1-6003-5ef9-8e73-6b6025b999b2",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "d502b88c9af3170f264233c0216609d99259db0798693b3cff8721ca76344af7",
+        "artifact_id": "2e8f5255-b046-5183-986e-3da36f39b29e",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "f2ca607d083a0708b3a030f86b04f11d1de72d6aff94a93573b91c4149226956",
+        "artifact_id": "bfcbfd23-e3a2-56cd-b7bf-82b9ca50f927",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:120f9c50-a8bc-5534-883d-d0a12c7ed678:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "8b30540fb542b0d10ecfe02e3d58519b4a4eb06f1665ccca42f5fb5052848ad0",
+        "artifact_id": "653570d3-9c24-5af9-8bda-4d163e2d6606",
+        "artifact_key": "llm-validation:V2_EVIDENCE_POLICY:120f9c50-a8bc-5534-883d-d0a12c7ed678:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "e6054343fdd50ebf143cb8da977303c64bf7a8c2503192d1d61bd0b092c91f43",
+        "artifact_id": "6a0a616e-cfac-5c33-b1fd-843f781f1aac",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "7cde519bcc00768cbc34267ef70ca7e529faefd3e53786b484eebf64933c4269",
+        "artifact_id": "155bafae-77d4-5fce-b1cb-fcb41f9a6386",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "80d051f148d37fea02c227a29baba24821757961120447b801a2300f2127938d",
+        "artifact_id": "e9f9e9ac-d6ac-5182-b6fe-295520ac5a1f",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 7,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "e36867914194825814f6c8ce9d2db881ca48eead57e7c2480464fd587fffd016",
+        "artifact_id": "dd4b6c87-3dba-5ea3-8fe9-cc9e1a7fd97d",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:7924c534-dd5a-53a2-a2d0-e8fb7a4e9087:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "48a91a0805f4001acbb44a13c377305b3f9d977acade77d875d34adeec6e2c54",
+        "artifact_id": "57b41b6a-65a5-5716-b79f-66b18f69f104",
+        "artifact_key": "llm-validation:V2_COMPOSE_MEMORY:7924c534-dd5a-53a2-a2d0-e8fb7a4e9087:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 9,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "8dd3ebf10c686f4c1c58b8f0bc2c3c6c4ce3feecdda96fe55d308eadf54a4bdb",
+        "artifact_id": "005ef75e-dbdf-582a-a8a8-09862378316e",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "8924f47c2eb9e1e55533589e9fa6f4c9090cdbb7ac3e20c561ed0efe80b7823c",
+        "artifact_id": "05465855-2463-5560-b33d-32238199de57",
+        "artifact_key": "llm-invocation:V2_RESPOND:3f000272-4b1f-52aa-bb4f-9c394d03e4b8:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 11,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "0c8c977de833d1c8a59ade653f5594d6712f439f3637a6ddd96ce2ebc10ddeea",
+        "artifact_id": "73990fbf-d5d8-5313-b5c7-709629376345",
+        "artifact_key": "llm-validation:V2_RESPOND:3f000272-4b1f-52aa-bb4f-9c394d03e4b8:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 12,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "e1d4260d043705acf5e64199bc3dd475363cca2a6eec43780c5edb86ec4576c2",
+        "artifact_id": "06789d68-afc7-5aa2-9820-3cbaeb20380f",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 13,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "6c2ea842f5a071af7e9d11a9e8e2157f7bb3354d10fab682b6aedc91cdd20b7e",
+        "artifact_id": "ac5f74c5-36e0-5fed-bf66-8cffb1f31b92",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 14,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "You describe yourself as spontaneous, but your actual decision-making behavior shows a nuanced balance. You are spontaneous in low-stakes, free-form situations—like a free Saturday—where flexibility and immediate response feel natural. However, when it comes to significant or irreversible commitments, you apply structure: you create checklists, compare options, and sleep on decisions. This reveals that your spontaneity is not blind or unreflective—it's context-aware. You trust your gut in the moment, but you also anchor yourself in rational evaluation when the stakes are high. So yes, you are spontaneous—but only in ways that are intentional and adaptive. Your self-description reflects a consistent identity: you are spontaneous, yet grounded in thoughtful judgment when it matters.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "ee5d554e8f1eead65102a6a1ec31654c7cb83ea77c5809a5e2899616c309b4cb",
+  "previous_artifact_hash": "6c2ea842f5a071af7e9d11a9e8e2157f7bb3354d10fab682b6aedc91cdd20b7e",
+  "previous_artifact_id": "ac5f74c5-36e0-5fed-bf66-8cffb1f31b92",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "7acf7e2d-7cc7-545b-a070-362b431f299a"
+}

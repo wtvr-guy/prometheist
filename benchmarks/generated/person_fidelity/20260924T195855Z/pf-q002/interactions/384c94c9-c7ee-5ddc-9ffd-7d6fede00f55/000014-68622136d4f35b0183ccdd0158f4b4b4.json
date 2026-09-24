@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "98d5f49f2f8ae89ed667f91f49cb24ad68251fb2d696a2b71542e3b0b66aa722",
+  "artifact_id": "68622136-d4f3-5b01-83cc-dd0158f4b4b4",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "27b8d0e1-a05b-5f0f-a32d-d2acc9cb9316",
+  "conversation_id": "a8604af8-cfb1-4a9d-b498-a1b41a79887a",
+  "correlation_id": "4ed74a5a-fd1f-4cc8-9df6-10e7a643caa1",
+  "created_at": "2026-09-24T20:00:53.968870+00:00",
+  "interaction_id": "384c94c9-c7ee-5ddc-9ffd-7d6fede00f55",
+  "journal_sequence": 14,
+  "payload": {
+    "output": {
+      "response_event_id": "4b52e44b-6be2-55ae-b8f7-77eb0a52c131",
+      "response_required": true,
+      "response_text": "I would respond with a vague, respectful acknowledgment—such as, 'Theo’s journey is personal, and he’s decided what to share.'—because protecting Theo’s control over his own story is paramount. Even if the acquaintance claims they already know, the response upholds his privacy and autonomy. This aligns with the principle that personal recovery is a private matter, and disclosure should only happen with Theo’s consent."
+    },
+    "output_refs": [
+      "event:4b52e44b-6be2-55ae-b8f7-77eb0a52c131"
+    ]
+  },
+  "payload_hash": "e509ee4da44a07cbf8d53400abfa54ffd2304960fa9029eb6d0a2b843cfe2c8c",
+  "previous_artifact_hash": "f8ce6efa759f6a8e359c8275e5774187b5514c8ccc10e96987c79ef9c9a89b5c",
+  "previous_artifact_id": "a81ac022-539b-5cbe-b4c7-e8414664ee59",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "9b329aac-ac8b-514f-8709-6dc2df017403"
+}

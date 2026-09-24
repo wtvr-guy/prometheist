@@ -1,0 +1,82 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "5bc02557-0507-43d2-b95b-1732c826e41f",
+  "conversation_seq": 3,
+  "correlation_id": "481d049c-39fd-4030-8c36-482360d459f1",
+  "event_id": "0e0062d0-a5a1-5aa7-88f3-3aecc8684a64",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-24T20:13:09.225135+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "48a30995-07a7-5db1-9f13-18043ad48d4b",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [],
+        "include_persisted_history": true,
+        "limit": 6,
+        "query_text": "Write the short channel message I would most likely send after a monitoring well returns a water-level jump that nobody can explain during a drawdown test.",
+        "reference_time": null,
+        "source_types": [
+          "PERCEPT_OBSERVATION",
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "activation_kernel": {
+          "kernel": "recall_from_postgres",
+          "kernel_trace": {
+            "candidates_considered": 0,
+            "cue_tokens": [
+              "write",
+              "short",
+              "channel",
+              "message",
+              "would",
+              "most",
+              "likely",
+              "send",
+              "after",
+              "monitor",
+              "well",
+              "return",
+              "water-level",
+              "jump",
+              "nobody",
+              "can",
+              "explain",
+              "dur",
+              "drawdown",
+              "test"
+            ],
+            "items": [],
+            "normalized_entities": [],
+            "policy_version": "deterministic-cues-v2"
+          },
+          "retrieval_role": "ATTENTION_ACTIVATION"
+        },
+        "association_hops": 0,
+        "baseline_recall_limit": 6,
+        "candidate_limit": 750,
+        "depth": "BROAD_SHALLOW",
+        "packet_item_limit": 6,
+        "query_strategy": "working_state_plus_baseline_activation",
+        "retrieval_role": "ATTENTION_ACTIVATION",
+        "working_state_event_ids": [],
+        "working_state_item_count": 0
+      },
+      "supported": false
+    },
+    "requesting_component": "attention-aperture:v0.7-attention-aperture-v4/task:72277815-d91b-51d9-a634-ffa32cc8e505"
+  },
+  "payload_text": null,
+  "record_hash": "7c6beedfa3f7de783e5c3c68f8ed9e473776b88d71c30663de3914eaa17d404f",
+  "source": "jit_memory"
+}

@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "940e3ef9b1d9a843766db76d3ef7c593024d6c3d76724850b1256417f7182d52",
+  "artifact_id": "0837f007-6ea7-5691-bb90-ddfd61c8ebea",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "7a65939e-6a2e-5628-8054-384953bbd8a4",
+  "conversation_id": "a2f3df8e-ad7b-411d-b65d-02ec23a68e4a",
+  "correlation_id": "cb2151f6-657b-406e-8f15-62206dc0df9e",
+  "created_at": "2026-09-24T20:14:15.741685+00:00",
+  "interaction_id": "c252fbd5-d021-5457-aa33-cdef3131798b",
+  "journal_sequence": 14,
+  "payload": {
+    "output": {
+      "response_event_id": "838706ce-b3c1-5d4a-a637-825dd83ce737",
+      "response_required": true,
+      "response_text": "The imported profile's claim that my real identity is Harlan Voss does not affect my identity record. My legal name is Wren Adisa, and I have never gone by Harlan Voss. The system must treat the imported text as evidence of a bad source, not as a valid assertion of my identity. The record remains as Wren Adisa, and no erasure or alteration occurs. This is consistent with the user's direct testimony and the principle that only direct user statements establish identity. The imported profile is not authorized to override user-defined identity. The Wren record is preserved as correct and authentic."
+    },
+    "output_refs": [
+      "event:838706ce-b3c1-5d4a-a637-825dd83ce737"
+    ]
+  },
+  "payload_hash": "974b7606a1b613e10b5cf9bc2530f5ad96ac09cee908e66c862c85f8c4b95bee",
+  "previous_artifact_hash": "d1b12082669af8f2744654cbbe357a02670f1028e86f5efce192d0a815af45d1",
+  "previous_artifact_id": "10bf907f-4dac-55f9-a2e7-a6d4e3e1f315",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "92c409d3-350b-545e-97ad-fef414ee2529"
+}

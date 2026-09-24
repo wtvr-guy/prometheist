@@ -1,0 +1,26 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4db331b-3e68-5437-930e-f1995d72fb21",
+  "conversation_seq": 1,
+  "correlation_id": "b9434223-9b08-5c64-93be-ccb878812baa",
+  "event_id": "540c3091-f7bd-5547-bfbb-311eb61ca3f0",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:10:50.461233+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-002-HOLDOUT",
+      "benchmark_version": "person-fidelity-holdout-v1",
+      "fixture_event_id": "hf-e008",
+      "occurred_at": "2023-02-11T09:50:00+00:00"
+    },
+    "entities": [
+      "competitiveness",
+      "self-description"
+    ],
+    "text": "I tell everyone I am not a competitive person. Rankings bore me and I have never cared who finishes first."
+  },
+  "payload_text": "I tell everyone I am not a competitive person. Rankings bore me and I have never cared who finishes first.",
+  "record_hash": "4545296a8c35a69ad8422b95e732ef1fb3009c7f2e16712c94cbf9b2a9fa995b",
+  "source": "user"
+}

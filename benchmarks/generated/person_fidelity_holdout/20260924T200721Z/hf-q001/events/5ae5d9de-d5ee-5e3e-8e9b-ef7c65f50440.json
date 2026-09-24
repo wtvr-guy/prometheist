@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "c769c0c6-0d2e-487d-a09b-a2125197275f",
+  "conversation_seq": 1,
+  "correlation_id": "d652fef8-d936-4a54-b88c-a384eec99a79",
+  "event_id": "5ae5d9de-d5ee-5e3e-8e9b-ef7c65f50440",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:07:24.290187+00:00",
+  "payload": {
+    "text": "Why did I go into wetland hydrology, and what rule did that childhood experience leave me with?"
+  },
+  "payload_text": "Why did I go into wetland hydrology, and what rule did that childhood experience leave me with?",
+  "record_hash": "b3c74145a5e7ddca7f32d1c8c9afc60cd80803fbe8684130375c9e0c2dabc765",
+  "source": "user"
+}

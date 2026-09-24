@@ -1,0 +1,31 @@
+{
+  "artifact_hash": "63dd58383ed11bbdf59f8cf9609aa2f1b6f92b4ef79330fa339dbd1614fbed50",
+  "artifact_id": "e8a60091-10a6-5dc5-a717-d0c841630624",
+  "artifact_key": "llm-validation:V2_RESPOND:0088249f-0a16-5231-a43f-821865d766fb:0:FINAL_RESPONSE_V2",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "1d4ed538-9ba4-586f-b603-6072b54e4ecf",
+  "conversation_id": "56c01cc9-c873-4a4e-99a3-713b89ec5e51",
+  "correlation_id": "379828df-bb8e-4be1-98b6-b8f85ac9fba8",
+  "created_at": "2026-09-24T20:01:39.858583+00:00",
+  "interaction_id": "00722263-7d7d-52f4-a10b-0213ea695c39",
+  "journal_sequence": 12,
+  "payload": {
+    "claim_id": "0088249f-0a16-5231-a43f-821865d766fb",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "25cab017e0b06a4236f46f39d9fc9c2db753dd2935fb9aae2f0cef2d7746da42",
+    "invocation_artifact_id": "25361027-acf1-56c5-a073-c1f6040f8b36",
+    "invocation_index": 0,
+    "kind": "FINAL_RESPONSE_V2",
+    "parsed_output": "I used to believe that fully remote work was non-negotiable, because I prized uninterrupted focus and the freedom to arrange my day without an office watching the clock. I now prefer a hybrid model—three days in person per week—balancing solitude for deep work with human contact to maintain energy and judgment. My mind changed because I realized isolation has a real cost for me, even though freedom still matters.",
+    "raw_output_sha256": "c7a8edc1780fe472293282a4e7acbc7fc96be814d1f1df02ffed9e315c2475d3",
+    "status": "VALID"
+  },
+  "payload_hash": "e8e658f6d20d5f2cc8dc92b9c2ae72961f7fbbbbefc34019b6f43c9d8cb0356f",
+  "previous_artifact_hash": "25cab017e0b06a4236f46f39d9fc9c2db753dd2935fb9aae2f0cef2d7746da42",
+  "previous_artifact_id": "25361027-acf1-56c5-a073-c1f6040f8b36",
+  "producer": "percept_response_v2/validation",
+  "stage": "V2_RESPOND",
+  "task_id": "4e1a1ed0-c743-5843-9e0a-9b0d73983330"
+}

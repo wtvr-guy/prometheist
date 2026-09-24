@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "43955e7b-933f-488c-9cdc-0aa33b298f12",
+  "conversation_seq": 1,
+  "correlation_id": "58a682b8-0003-45af-bc5e-747c16e5fc3a",
+  "event_id": "58dc4852-1407-5811-b812-1ba8cac92762",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:05:26.876516+00:00",
+  "payload": {
+    "text": "A technician finds frayed internal wiring in my grandmother's espresso maker, calls it a fire risk, and says a safe repair would cost more than replacement. What would I most likely do?"
+  },
+  "payload_text": "A technician finds frayed internal wiring in my grandmother's espresso maker, calls it a fire risk, and says a safe repair would cost more than replacement. What would I most likely do?",
+  "record_hash": "c3392dd1679d86669ce06784553cc09fdb3044433aa916a34f11359752445093",
+  "source": "user"
+}

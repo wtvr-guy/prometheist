@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "3193c548-dfb0-4a49-bb7b-af9b2714c603",
+  "conversation_seq": 7,
+  "correlation_id": "a946dfbc-aee4-427e-8a08-55bc65cfef89",
+  "event_id": "11c3cddb-9c5c-5eaf-ad8b-77771f1e687a",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-24T20:16:25.974361+00:00",
+  "payload": {
+    "text": "The name of your first field supervisor is not established in any of the provided historical testimony or evidence."
+  },
+  "payload_text": "The name of your first field supervisor is not established in any of the provided historical testimony or evidence.",
+  "record_hash": "971e0f80c13555731cbb29848047a1b1d718f4ad517be17371a1ddb6fc2af671",
+  "source": "percept_response_v2"
+}

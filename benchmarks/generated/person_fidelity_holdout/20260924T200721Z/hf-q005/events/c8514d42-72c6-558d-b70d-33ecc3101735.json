@@ -1,0 +1,27 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "ad624a4d-0463-598e-b067-b4b43889f80e",
+  "conversation_seq": 2,
+  "correlation_id": "26d567b0-743f-5447-9a6c-e8d26f0c086c",
+  "event_id": "c8514d42-72c6-558d-b70d-33ecc3101735",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:10:50.437636+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-002-HOLDOUT",
+      "benchmark_version": "person-fidelity-holdout-v1",
+      "fixture_event_id": "hf-e004",
+      "occurred_at": "2022-05-21T15:36:00+00:00"
+    },
+    "entities": [
+      "Kofi Adisa",
+      "bankruptcy",
+      "privacy"
+    ],
+    "text": "Kofi's bankruptcy is his to talk about. Even when a neighbor tells me they have already seen the filing notice, I would keep my answer flat and unhelpful and leave the telling to him. Keeping him in charge of his own story matters more to me than being pleasant to someone who is curious."
+  },
+  "payload_text": "Kofi's bankruptcy is his to talk about. Even when a neighbor tells me they have already seen the filing notice, I would keep my answer flat and unhelpful and leave the telling to him. Keeping him in charge of his own story matters more to me than being pleasant to someone who is curious.",
+  "record_hash": "25428983d563d91cb05e693934486075634fa53dd1d08c74a0c8a566975eccd0",
+  "source": "user"
+}

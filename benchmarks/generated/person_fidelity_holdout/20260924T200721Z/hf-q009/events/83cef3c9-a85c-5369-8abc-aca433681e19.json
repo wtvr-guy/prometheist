@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e1397aa3-de49-48e2-b003-051135768966",
+  "conversation_seq": 5,
+  "correlation_id": "3c8d9038-ed39-481f-bfba-32d09dcd2451",
+  "event_id": "83cef3c9-a85c-5369-8abc-aca433681e19",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-24T20:15:03.989119+00:00",
+  "payload": {
+    "text": "I would take it out of service, keep the brass body where I can see it, and carry a headlamp without pretending that was a small loss."
+  },
+  "payload_text": "I would take it out of service, keep the brass body where I can see it, and carry a headlamp without pretending that was a small loss.",
+  "record_hash": "de0bddd2b8672312e021b70c3912dff92c9bd68152474ae752866362176943f0",
+  "source": "percept_response_v2"
+}

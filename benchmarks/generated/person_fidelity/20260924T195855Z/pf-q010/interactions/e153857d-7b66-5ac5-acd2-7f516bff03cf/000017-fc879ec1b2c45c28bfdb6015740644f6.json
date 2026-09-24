@@ -1,0 +1,155 @@
+{
+  "artifact_hash": "f0f830e3a6c2b78f40e297594172620fc46f248dd2d2506021daf8e1f32d5c4d",
+  "artifact_id": "fc879ec1-b2c4-5c28-bfdb-6015740644f6",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "ed21dacc-9a8b-583a-95f1-b237bd0c7e24",
+  "conversation_id": "f2028904-a9d2-4a17-9431-984fd9d4446c",
+  "correlation_id": "5fcafd9a-a13e-4d32-9785-f5ec308a62b0",
+  "created_at": "2026-09-24T20:06:53.965043+00:00",
+  "interaction_id": "e153857d-7b66-5ac5-acd2-7f516bff03cf",
+  "journal_sequence": 17,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "81a18508b52b78820c6b6ae3bf7f82e19ca8ba68e6add9a68665118664caaa45",
+        "artifact_id": "0fa69498-17d3-5b8d-bd3b-b475ba66c316",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "95f08a50bbabe5025c08b62aae9dd2df47e6921cc1062e8630687f095fbcb3bc",
+        "artifact_id": "b0b02f5c-d2dc-5043-8811-0a8acf00477e",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "6bd5e8e1ab1546e328533b936213372171ca12f5052555707654e0aa9393b0b4",
+        "artifact_id": "7055cf82-909a-534a-954e-4ef342f7f431",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:be8090f2-a9b6-524c-aa7f-19e5c62e5dd3:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "e010b1740c8c5b884fd2105f9d2d02b1413a54001c21f1472039792313367aec",
+        "artifact_id": "5452d943-c88c-57ef-9119-d9ad4a865ad3",
+        "artifact_key": "llm-validation:V2_EVIDENCE_POLICY:be8090f2-a9b6-524c-aa7f-19e5c62e5dd3:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "86693fe144525ec4f88821330e27a3fbb60da87f272dbda6ba08645b2f6f0660",
+        "artifact_id": "bcbddd5f-b76a-57d0-8ef5-7edc2563002a",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "e0a161e6380ad1cba9f465680fd71552b5b967db5ca526f180130d320620d408",
+        "artifact_id": "f8928c4f-a82d-577a-a563-2c402c617388",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "45b48172996308838ff953978f94aeb57bda0abacbeae2d31ed29168d0581f62",
+        "artifact_id": "9336d42c-77e2-5b1e-a78e-d53d18cf4501",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 7,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "65eddaee5867f138b84a2b9edc299016fdbbab665eb1f2b8072ac9c0d34b6143",
+        "artifact_id": "17630012-f077-53b8-93cf-6266e22937f9",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:829ec867-2cc9-5fa6-96ed-2cdace7a94f9:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "1345e47f792eb1d0f1094ab2c1ea2dae3dd3a732665d9c973bbaadbe70254ce1",
+        "artifact_id": "8d7db201-f037-5324-9be1-de6fcf0a06f1",
+        "artifact_key": "llm-validation:V2_COMPOSE_MEMORY:829ec867-2cc9-5fa6-96ed-2cdace7a94f9:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 9,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "71c6473e3007b67ffad37b57a48b98b70b58c1a6c126e3d8a56489f8c100767e",
+        "artifact_id": "b5810d12-da43-5904-a2e1-d3d3d4825e6c",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:829ec867-2cc9-5fa6-96ed-2cdace7a94f9:1:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 10,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "bf8fdffc9e2556dea2bb0e6b21027c39227835216e8931a71e2abbb81e9886bd",
+        "artifact_id": "6d09400e-e471-57ac-bf1c-4574c3c780c5",
+        "artifact_key": "llm-validation:V2_COMPOSE_MEMORY:829ec867-2cc9-5fa6-96ed-2cdace7a94f9:1:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 11,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "b1a7ee067309338c9768490fd86f96ef7c39719ee6c13fba66cff1f5dafe89d7",
+        "artifact_id": "9fc8d5e0-d827-51c5-9d26-14b605b1121d",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 12,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "74a9b94d575b39089d5239be7da77f6fabbc53e44f7bc4c36a3b4501a0617095",
+        "artifact_id": "919e837b-9723-5313-8aac-d7b798b77fa8",
+        "artifact_key": "llm-invocation:V2_RESPOND:c2e59737-6b52-55bf-a153-02b37d19706f:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 13,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "4f467265df6b4582a320f350e1913dd6cbcbc0d72ce315958f22396533ff0cb4",
+        "artifact_id": "8cff2a27-a42d-5785-9733-ebac71b07116",
+        "artifact_key": "llm-validation:V2_RESPOND:c2e59737-6b52-55bf-a153-02b37d19706f:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 14,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "a8761ea7bbb48d854c73eb7362b9f69cbcf268118438625939f69a260a831e5b",
+        "artifact_id": "fab80e1c-dd71-5289-80da-de1a8aab79b9",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 15,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "0c39a6daeef2ce1dff3b29c3c1a17f24eec2df9c3a3dbfef9cc1da6201a10e5a",
+        "artifact_id": "d27e216b-5339-5bc7-864a-04e17152cfb6",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 16,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "The name of your fifth-grade teacher is not established in any of the provided historical evidence or current user prompt.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "040926bb660fc7b5f3710d52a24d8f2805e0b441ca39553ec19c99a14f57831b",
+  "previous_artifact_hash": "0c39a6daeef2ce1dff3b29c3c1a17f24eec2df9c3a3dbfef9cc1da6201a10e5a",
+  "previous_artifact_id": "d27e216b-5339-5bc7-864a-04e17152cfb6",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "429d3fc8-1d1a-50e1-b952-ebb4ffda6769"
+}

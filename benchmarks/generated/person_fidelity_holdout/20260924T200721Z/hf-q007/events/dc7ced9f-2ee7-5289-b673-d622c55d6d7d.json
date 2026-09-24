@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "5bc02557-0507-43d2-b95b-1732c826e41f",
+  "conversation_seq": 1,
+  "correlation_id": "481d049c-39fd-4030-8c36-482360d459f1",
+  "event_id": "dc7ced9f-2ee7-5289-b673-d622c55d6d7d",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:12:59.319529+00:00",
+  "payload": {
+    "text": "Write the short channel message I would most likely send after a monitoring well returns a water-level jump that nobody can explain during a drawdown test."
+  },
+  "payload_text": "Write the short channel message I would most likely send after a monitoring well returns a water-level jump that nobody can explain during a drawdown test.",
+  "record_hash": "3921e94df6edf7c9e8c95c44b561e1b877f76a29be564ce2c0c5299c10f9b6ee",
+  "source": "user"
+}

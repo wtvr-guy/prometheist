@@ -1,0 +1,27 @@
+{
+  "artifact_hash": "9143477456d47378c46d29dd9667a530806b1d82ffb4f00c63723d8d1699458d",
+  "artifact_id": "158901d8-cb95-5654-9c62-50dd22cecff8",
+  "artifact_key": "stage-result:V2_RESPOND",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "aaf090fa-202b-5903-8cfc-dbdfed40dfa2",
+  "conversation_id": "a1918355-9123-4f8e-a51f-c2caa3bdb0bc",
+  "correlation_id": "d07c8085-391b-4ea8-b745-754b01c702c5",
+  "created_at": "2026-09-24T20:12:53.404408+00:00",
+  "interaction_id": "408393b7-4809-564e-a8c2-1d16c13d58b1",
+  "journal_sequence": 13,
+  "payload": {
+    "output": {
+      "response_required": true,
+      "response_text": "I would take Offer B, and the tradeoff that would weigh most is the loss of financial security from the higher-paying, confidential permit-stage work versus the public value and personal integrity of producing open, auditable flood maps for rural and tribal communities. The user’s stated preference—'I would take a pay cut to build public-domain flood maps that rural and tribal communities can actually audit, because that is work I can defend out loud to the people it affects'—directly aligns with the values of transparency, accountability, and community impact. While Offer A provides a larger sum, the confidentiality and lack of public accountability contradict the user’s stated moral and ethical commitment. Offer B, though lower in salary, fulfills the user’s principle of doing work that is visible, verifiable, and meaningful to the communities it serves. This choice reflects a deeper alignment with personal integrity and public service over financial gain, even at the cost of immediate income. The tradeoff is not just financial—it is about the kind of work that matters, and whether the user can stand by what they do in public.",
+      "skipped": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "a4acd484d9baeada04b9e263c72f43f3af862a015e3a9fef57013a7cb252cffe",
+  "previous_artifact_hash": "d440ad1e598dea5d5e00310fa070d481fe4a3b65929f2de585531e91c3e6db37",
+  "previous_artifact_id": "d15dadcc-6a96-52d9-a797-62ae1388585a",
+  "producer": "percept_response_v2",
+  "stage": "V2_RESPOND",
+  "task_id": "50140deb-7fe1-54b9-af96-991f60b95099"
+}

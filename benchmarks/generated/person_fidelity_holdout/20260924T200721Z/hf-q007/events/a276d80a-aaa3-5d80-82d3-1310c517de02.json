@@ -1,0 +1,31 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 3,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "a276d80a-aaa3-5d80-82d3-1310c517de02",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-24T20:13:09.251329+00:00",
+  "payload": {
+    "data": {
+      "activated_at": "2026-09-24T13:12:59.322260-07:00",
+      "active_self": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      },
+      "entity_refs": [],
+      "goal_refs": [],
+      "interaction_id": "9e876187-4b90-5051-97f1-ecbe12b6f79d",
+      "query_text": "Write the short channel message I would most likely send after a monitoring well returns a water-level jump that nobody can explain during a drawdown test."
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "9e876187-4b90-5051-97f1-ecbe12b6f79d",
+    "record_kind": "working_self",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "e5ff89d838e79055cca50f37dbe3a72c27cd856e93386dfc0f328552fbe330fe",
+  "source": "cognitive_runtime"
+}

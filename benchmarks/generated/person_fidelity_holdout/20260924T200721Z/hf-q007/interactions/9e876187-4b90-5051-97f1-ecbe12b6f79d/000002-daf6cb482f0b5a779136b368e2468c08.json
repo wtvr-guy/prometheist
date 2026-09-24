@@ -1,0 +1,99 @@
+{
+  "artifact_hash": "c46f92747cb76358ae3cc2e1e3bf2569c23afd49e5d3b6485eeb7abff67e80a0",
+  "artifact_id": "daf6cb48-2f0b-5a77-9136-b368e2468c08",
+  "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "63c330f5-473f-5e6e-aae8-f23611f08b91",
+  "conversation_id": "5bc02557-0507-43d2-b95b-1732c826e41f",
+  "correlation_id": "481d049c-39fd-4030-8c36-482360d459f1",
+  "created_at": "2026-09-24T20:13:00.491642+00:00",
+  "interaction_id": "9e876187-4b90-5051-97f1-ecbe12b6f79d",
+  "journal_sequence": 2,
+  "payload": {
+    "output": {
+      "percept": {
+        "context": {
+          "active_goal_refs": [],
+          "causal_percept_refs": [],
+          "entity_refs": [],
+          "expectation_refs": [],
+          "integrity": 0,
+          "observations": [],
+          "opportunity": 0,
+          "task_refs": [],
+          "threat": 0,
+          "uncertainty": 0
+        },
+        "conversation_id": "5bc02557-0507-43d2-b95b-1732c826e41f",
+        "correlation_id": "481d049c-39fd-4030-8c36-482360d459f1",
+        "features": {
+          "contains_code_block": false,
+          "contains_question": false,
+          "contains_structured_payload": false,
+          "contains_url": false,
+          "line_count": 1,
+          "normalized_characters": 155,
+          "token_count": 26,
+          "uppercase_ratio": 0.015625
+        },
+        "input_buffer": {
+          "max_segments": 4,
+          "retained_segment_indices": [
+            0
+          ],
+          "segment_char_limit": 160,
+          "segments": [
+            "Write the short channel message I would most likely send after a monitoring well returns a water-level jump that nobody can explain during a drawdown test."
+          ],
+          "total_characters": 155,
+          "total_segments": 1,
+          "truncated": false
+        },
+        "normalized_text": "Write the short channel message I would most likely send after a monitoring well returns a water-level jump that nobody can explain during a drawdown test.",
+        "observed_at": "2026-09-24T13:12:59.322260-07:00",
+        "percept_id": "895e96bd-a60c-5885-b0b0-27e89612d266",
+        "policy_version": "v0.8-perception-v2",
+        "raw_value_sha256": "58e6b97faab48516b182849d9cc0ba091ffdda48abc71710fb7d6ee7c3b4cd97",
+        "response_required": true,
+        "schema_version": 1,
+        "source": {
+          "interface": "chat",
+          "kind": "USER_INTERACTION",
+          "modality": "TEXT",
+          "source_id": "user"
+        },
+        "source_event_id": "dc7ced9f-2ee7-5289-b673-d622c55d6d7d"
+      },
+      "salience_assessment": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "895e96bd-a60c-5885-b0b0-27e89612d266",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "working_state_available": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "6f6dbbcc65317b53c74f4ce7242f2c04f51fed385806e13f262b9003a04298fd",
+  "previous_artifact_hash": "9c27dd6b9c608efc679b9e6dcbeca0c2ca557acae08c3a4da6f5a954f41abdaf",
+  "previous_artifact_id": "253a1cff-8498-575f-9c6f-6d780db98248",
+  "producer": "percept_response_v2",
+  "stage": "V2_RESOLVE_REFERENCES",
+  "task_id": "72277815-d91b-51d9-a634-ffa32cc8e505"
+}

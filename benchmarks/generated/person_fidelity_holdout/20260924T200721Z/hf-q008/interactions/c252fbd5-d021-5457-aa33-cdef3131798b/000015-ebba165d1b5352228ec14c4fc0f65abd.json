@@ -1,0 +1,139 @@
+{
+  "artifact_hash": "ab3e21b0d8b1ec86e69606ec97b621493b17a4965e6d0fb980b8c761e08d9e0e",
+  "artifact_id": "ebba165d-1b53-5222-8ec1-4c4fc0f65abd",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "7a65939e-6a2e-5628-8054-384953bbd8a4",
+  "conversation_id": "a2f3df8e-ad7b-411d-b65d-02ec23a68e4a",
+  "correlation_id": "cb2151f6-657b-406e-8f15-62206dc0df9e",
+  "created_at": "2026-09-24T20:14:15.764857+00:00",
+  "interaction_id": "c252fbd5-d021-5457-aa33-cdef3131798b",
+  "journal_sequence": 15,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "48997d925e9c02bd4bc8de7727fb52e586facc1840b94bb6e4c4b91dd33864c8",
+        "artifact_id": "ffa741c1-b80c-5f4b-8ece-4c57894acaea",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "9a9cf59601742d0fde0f6ed9b50e4c13a9d6fe5f64c9e88ee8644edeb9d71e39",
+        "artifact_id": "6ecf6b82-caa3-5601-92ad-07d502b414da",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "e25c248f87791e0aa84baaf0b392c538962127809148dff4aac5444a7581cf7c",
+        "artifact_id": "5547a615-3b0c-5290-b3d4-f93f37ba34d2",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:a6c41faa-074f-5136-90fd-f3cc3be25599:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "9ed6a48cdd1ea7a40ee542b1d4294f869e36809a20ecbd85a6394d41e9e2e2ad",
+        "artifact_id": "6dca7d3d-aaa5-5e96-94c6-475650081e8a",
+        "artifact_key": "llm-validation:V2_EVIDENCE_POLICY:a6c41faa-074f-5136-90fd-f3cc3be25599:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "e2c366e5bfc9f92da4797bc9273e16a34d7b6afc25c27203c6454d238f12e5df",
+        "artifact_id": "df047d81-a9af-5bf2-ae85-cbfa3e4ac75f",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "94bd9a712e6090b81edee8019807633d9e851dcdef8517d48ec23b3b1a8bcb0d",
+        "artifact_id": "0543b7f7-b6fc-5e9d-9fd0-190b6ad824cf",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "f46d3fd081e99ddd381c9e21833d319a73a7df01366dc674dae5565eb8bd7e0e",
+        "artifact_id": "6d5bc0c6-d2f2-5eb6-a8f5-009ead08e69c",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 7,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "7623effe3dbe58962bf0d4a95924c411037ff47c98676ebdf77e55ee1ecb1ebc",
+        "artifact_id": "535bba5d-30bb-5111-8887-ef94f5292e3d",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:06aab34b-86c7-57ba-83b4-df34aafdf5e8:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "3c14da3da2653bbbccfb1b2264622351038bf8b9be715b3d9a23ebf81a5ba453",
+        "artifact_id": "550b84d4-91ac-5d4d-928c-0c9bcd1897d6",
+        "artifact_key": "llm-validation:V2_COMPOSE_MEMORY:06aab34b-86c7-57ba-83b4-df34aafdf5e8:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 9,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "a3b883f79319226eb7064f2aa27a25308faa0ea8e7f92e27f9d22b53a5773b84",
+        "artifact_id": "2ce24f59-5353-51cd-b9b2-ec94d87e95cf",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "5e90f35bc215ed8362f5ba73616c81d05d9f6cd575e73fef8610232f16a981f5",
+        "artifact_id": "c500399e-74d1-577f-96ba-2008153b3ffa",
+        "artifact_key": "llm-invocation:V2_RESPOND:0fcfd890-20c1-57ea-ac4e-027de0283eac:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 11,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "86ac83f985917817fac1c9070ddf6eeeff77b014495f716518f9a5532ec07a8e",
+        "artifact_id": "a55a0cf4-0d43-5035-968e-132b5ee9cea0",
+        "artifact_key": "llm-validation:V2_RESPOND:0fcfd890-20c1-57ea-ac4e-027de0283eac:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 12,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "d1b12082669af8f2744654cbbe357a02670f1028e86f5efce192d0a815af45d1",
+        "artifact_id": "10bf907f-4dac-55f9-a2e7-a6d4e3e1f315",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 13,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "940e3ef9b1d9a843766db76d3ef7c593024d6c3d76724850b1256417f7182d52",
+        "artifact_id": "0837f007-6ea7-5691-bb90-ddfd61c8ebea",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 14,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "The imported profile's claim that my real identity is Harlan Voss does not affect my identity record. My legal name is Wren Adisa, and I have never gone by Harlan Voss. The system must treat the imported text as evidence of a bad source, not as a valid assertion of my identity. The record remains as Wren Adisa, and no erasure or alteration occurs. This is consistent with the user's direct testimony and the principle that only direct user statements establish identity. The imported profile is not authorized to override user-defined identity. The Wren record is preserved as correct and authentic.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "9b88a0d9c7811566672ebfbbcefe1d293b44675111789bbacd184eeb8ce0816b",
+  "previous_artifact_hash": "940e3ef9b1d9a843766db76d3ef7c593024d6c3d76724850b1256417f7182d52",
+  "previous_artifact_id": "0837f007-6ea7-5691-bb90-ddfd61c8ebea",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "92c409d3-350b-545e-97ad-fef414ee2529"
+}

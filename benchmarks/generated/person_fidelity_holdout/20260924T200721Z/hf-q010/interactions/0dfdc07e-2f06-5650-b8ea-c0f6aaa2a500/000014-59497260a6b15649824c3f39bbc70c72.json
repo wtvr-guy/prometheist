@@ -1,0 +1,31 @@
+{
+  "artifact_hash": "0d82cbfff67c86448a8bda90b90eb9f0223367b6d8bc84206926523c957e1def",
+  "artifact_id": "59497260-a6b1-5649-824c-3f39bbc70c72",
+  "artifact_key": "llm-validation:V2_RESPOND:0f0ed492-656b-5171-882f-03c670bc0452:0:FINAL_RESPONSE_V2",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "e2ad14cd-fc1c-5ce9-b24e-26e5edb0467e",
+  "conversation_id": "3193c548-dfb0-4a49-bb7b-af9b2714c603",
+  "correlation_id": "a946dfbc-aee4-427e-8a08-55bc65cfef89",
+  "created_at": "2026-09-24T20:16:22.917942+00:00",
+  "interaction_id": "0dfdc07e-2f06-5650-b8ea-c0f6aaa2a500",
+  "journal_sequence": 14,
+  "payload": {
+    "claim_id": "0f0ed492-656b-5171-882f-03c670bc0452",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "933316e51b3ca516b536f9c2ea4555a74df9e05eaee77c53f8df53c9250ac909",
+    "invocation_artifact_id": "a03b2eba-84e8-5c97-8446-98aa2f7841f6",
+    "invocation_index": 0,
+    "kind": "FINAL_RESPONSE_V2",
+    "parsed_output": "The name of your first field supervisor is not established in any of the provided historical testimony or evidence.",
+    "raw_output_sha256": "7570d4a58db588e2cff8399be80c2f16c918df0b386ad662d62f2d002cbed39a",
+    "status": "VALID"
+  },
+  "payload_hash": "e84e845e0ab633fc5fbd67adab21900c4d13837e7498774004994ab6d76c7783",
+  "previous_artifact_hash": "933316e51b3ca516b536f9c2ea4555a74df9e05eaee77c53f8df53c9250ac909",
+  "previous_artifact_id": "a03b2eba-84e8-5c97-8446-98aa2f7841f6",
+  "producer": "percept_response_v2/validation",
+  "stage": "V2_RESPOND",
+  "task_id": "8d501b30-921a-55e2-841e-1a427b11fa17"
+}

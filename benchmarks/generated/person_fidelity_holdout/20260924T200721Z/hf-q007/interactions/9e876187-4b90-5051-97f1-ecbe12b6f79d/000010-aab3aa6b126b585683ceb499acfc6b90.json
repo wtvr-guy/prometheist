@@ -1,0 +1,103 @@
+{
+  "artifact_hash": "a3973c210239ffdeeae0fc4cb88651b1fe09848673d5498189c7a48e4dace4da",
+  "artifact_id": "aab3aa6b-126b-5856-83ce-b499acfc6b90",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "63c330f5-473f-5e6e-aae8-f23611f08b91",
+  "conversation_id": "5bc02557-0507-43d2-b95b-1732c826e41f",
+  "correlation_id": "481d049c-39fd-4030-8c36-482360d459f1",
+  "created_at": "2026-09-24T20:13:16.314568+00:00",
+  "interaction_id": "9e876187-4b90-5051-97f1-ecbe12b6f79d",
+  "journal_sequence": 10,
+  "payload": {
+    "output": {
+      "memory_package": {
+        "adaptive_recall_rounds": 0,
+        "composer_rounds": 1,
+        "memory_packet": {
+          "items": [],
+          "memory_request_id": "48a30995-07a7-5db1-9f13-18043ad48d4b",
+          "need": {
+            "active_event_ids": [],
+            "conversation_id": null,
+            "entities": [],
+            "focus_event_ids": [],
+            "include_persisted_history": true,
+            "limit": 6,
+            "query_text": "Write the short channel message I would most likely send after a monitoring well returns a water-level jump that nobody can explain during a drawdown test.",
+            "reference_time": null,
+            "source_types": [
+              "PERCEPT_OBSERVATION",
+              "SYSTEM_EVENT",
+              "TOOL_RESULT",
+              "USER_PROMPT"
+            ],
+            "supplemental_query_texts": []
+          },
+          "origin": "INTERNAL_MEMORY",
+          "retrieval_trace": {
+            "activation_kernel": {
+              "kernel": "recall_from_postgres",
+              "kernel_trace": {
+                "candidates_considered": 0,
+                "cue_tokens": [
+                  "write",
+                  "short",
+                  "channel",
+                  "message",
+                  "would",
+                  "most",
+                  "likely",
+                  "send",
+                  "after",
+                  "monitor",
+                  "well",
+                  "return",
+                  "water-level",
+                  "jump",
+                  "nobody",
+                  "can",
+                  "explain",
+                  "dur",
+                  "drawdown",
+                  "test"
+                ],
+                "items": [],
+                "normalized_entities": [],
+                "policy_version": "deterministic-cues-v2"
+              },
+              "retrieval_role": "ATTENTION_ACTIVATION"
+            },
+            "association_hops": 0,
+            "baseline_recall_limit": 6,
+            "candidate_limit": 750,
+            "depth": "BROAD_SHALLOW",
+            "packet_item_limit": 6,
+            "query_strategy": "working_state_plus_baseline_activation",
+            "retrieval_role": "ATTENTION_ACTIVATION",
+            "working_state_event_ids": [],
+            "working_state_item_count": 0
+          },
+          "supported": false
+        },
+        "self_context": {
+          "admission": "PRIMARY_DERIVED_CONTEXT",
+          "items": []
+        },
+        "sufficient": true,
+        "unresolved_memory_deficit": null
+      },
+      "skipped": false
+    },
+    "output_refs": [
+      "memory-request:48a30995-07a7-5db1-9f13-18043ad48d4b"
+    ]
+  },
+  "payload_hash": "b6a58a4c560de21416398eb98c5da6b8d9810357c1e16a3cab0a6334f9a332ea",
+  "previous_artifact_hash": "327c1e95f18021331bde5ab43b96180be19a4abc54c765f0357574c2623ad7e1",
+  "previous_artifact_id": "880a8ff2-33f6-5358-9df9-19a01ebe2a57",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "72277815-d91b-51d9-a634-ffa32cc8e505"
+}

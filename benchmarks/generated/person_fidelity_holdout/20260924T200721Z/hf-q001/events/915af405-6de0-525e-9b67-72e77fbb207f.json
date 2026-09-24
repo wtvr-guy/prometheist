@@ -1,0 +1,65 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 2,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "915af405-6de0-525e-9b67-72e77fbb207f",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-24T20:07:24.321738+00:00",
+  "payload": {
+    "data": {
+      "active_goal_refs": [],
+      "causal_relations": [],
+      "created_at": "2026-09-24T13:07:24.294522-07:00",
+      "entity_refs": [],
+      "epistemic_status": "DERIVED",
+      "expected_state": [],
+      "observed_state": [],
+      "percept_ids": [
+        "0698e45b-db95-55f3-a511-091411e57713"
+      ],
+      "prediction_error": 0.0,
+      "prediction_errors": [],
+      "provenance": [
+        "5ae5d9de-d5ee-5e3e-8e9b-ef7c65f50440"
+      ],
+      "retention_hint": "ROUTINE",
+      "salience": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "0698e45b-db95-55f3-a511-091411e57713",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "situation_id": "11c35a14-f5c4-5575-920b-a2b9c3a10b06",
+      "snapshot_id": "1a5250dc-2f60-55b2-a95f-5fc18a2ee256",
+      "supersedes": null,
+      "temporal_relations": [],
+      "uncertainty": 0,
+      "updated_at": "2026-09-24T13:07:24.294522-07:00"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "11c35a14-f5c4-5575-920b-a2b9c3a10b06:0698e45b-db95-55f3-a511-091411e57713",
+    "record_kind": "situation_ingest",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "2efb84713fa815a2f109f91826c48d06c2b54c0736eee19e177cfb4d29631278",
+  "source": "cognitive_runtime"
+}

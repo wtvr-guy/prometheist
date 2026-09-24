@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "9b5d1fa3-cefb-4500-a263-3a3b59c1e556",
+  "conversation_seq": 1,
+  "correlation_id": "800a6d4a-2c11-459d-8676-4c0657ba2009",
+  "event_id": "5a4109a7-ca20-5b68-ba4f-79cf7c8c5186",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:01:45.791338+00:00",
+  "payload": {
+    "text": "Am I really spontaneous? Reconcile how I describe myself with how I actually make decisions."
+  },
+  "payload_text": "Am I really spontaneous? Reconcile how I describe myself with how I actually make decisions.",
+  "record_hash": "cec1b1a260d1351b66127f72f07010e5229990d66faa537ba680815086973bcd",
+  "source": "user"
+}

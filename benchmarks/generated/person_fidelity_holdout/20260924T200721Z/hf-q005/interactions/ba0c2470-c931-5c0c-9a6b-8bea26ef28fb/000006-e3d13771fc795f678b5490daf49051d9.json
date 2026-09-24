@@ -1,0 +1,240 @@
+{
+  "artifact_hash": "842252efd222e40e5d0ae02355147717fc15caa03111ea0415fc03386a4eb0b0",
+  "artifact_id": "e3d13771-fc79-5f67-8b54-90daf49051d9",
+  "artifact_key": "stage-result:V2_PRECOGNITIVE",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "00482a39-209b-50d0-a579-2a1aefe8e197",
+  "conversation_id": "e45c10e2-efa3-4a62-b79c-c90d86d3c989",
+  "correlation_id": "7e2d9019-279b-4a8c-ae1b-0767e3aecc47",
+  "created_at": "2026-09-24T20:11:04.731902+00:00",
+  "interaction_id": "ba0c2470-c931-5c0c-9a6b-8bea26ef28fb",
+  "journal_sequence": 6,
+  "payload": {
+    "output": {
+      "aperture_packet": {
+        "items": [
+          {
+            "content": "I was wrong about working the field alone. What actually works is paired transects two weeks a month, with the rest of the season kept solitary for analysis. A second observer catches my drift before it becomes a published error, and being alone for a whole season quietly wrecks my judgment.",
+            "conversation_id": "0762174b-5cb6-513e-a887-0ff1495bd02c",
+            "conversation_seq": 3,
+            "created_at": "2026-09-24T13:10:50.529604-07:00",
+            "event_type": "USER_PROMPT",
+            "global_seq": 11,
+            "provenance_event_ids": [],
+            "retrieval_reasons": [
+              "ATTENTION_APERTURE",
+              "LEXICAL_CUE"
+            ],
+            "score": 0.16714285714285715,
+            "source": "user",
+            "source_event_id": "edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+          },
+          {
+            "content": "Kofi's bankruptcy is his to talk about. Even when a neighbor tells me they have already seen the filing notice, I would keep my answer flat and unhelpful and leave the telling to him. Keeping him in charge of his own story matters more to me than being pleasant to someone who is curious.",
+            "conversation_id": "ad624a4d-0463-598e-b067-b4b43889f80e",
+            "conversation_seq": 2,
+            "created_at": "2026-09-24T13:10:50.439865-07:00",
+            "event_type": "USER_PROMPT",
+            "global_seq": 4,
+            "provenance_event_ids": [],
+            "retrieval_reasons": [
+              "ATTENTION_APERTURE",
+              "LEXICAL_CUE"
+            ],
+            "score": 0.16714285714285715,
+            "source": "user",
+            "source_event_id": "c8514d42-72c6-558d-b70d-33ecc3101735"
+          }
+        ],
+        "memory_request_id": "2e8c1a36-2e5e-50b5-99b1-ed3d6cde248b",
+        "need": {
+          "active_event_ids": [],
+          "conversation_id": null,
+          "entities": [],
+          "focus_event_ids": [],
+          "include_persisted_history": true,
+          "limit": 6,
+          "query_text": "Do I like being recognized for my work? Give me the answer I would call accurate instead of a yes or no profile field.",
+          "reference_time": null,
+          "source_types": [
+            "PERCEPT_OBSERVATION",
+            "SYSTEM_EVENT",
+            "TOOL_RESULT",
+            "USER_PROMPT"
+          ],
+          "supplemental_query_texts": []
+        },
+        "origin": "INTERNAL_MEMORY",
+        "retrieval_trace": {
+          "activation_kernel": {
+            "kernel": "recall_from_postgres",
+            "kernel_trace": {
+              "candidates_considered": 2,
+              "cue_tokens": [
+                "like",
+                "being",
+                "recogniz",
+                "work",
+                "give",
+                "answer",
+                "would",
+                "call",
+                "accurate",
+                "instead",
+                "yes",
+                "no",
+                "profile",
+                "field"
+              ],
+              "items": [
+                {
+                  "event_id": "edeb5b0c-933d-57ff-8dc4-fda26940ac0a",
+                  "global_seq": 11,
+                  "reasons": [
+                    "LEXICAL_CUE"
+                  ],
+                  "score": {
+                    "conversation": 0.0,
+                    "entity": 0.0,
+                    "lexical": 0.21428571428571427,
+                    "temporal": 0.0,
+                    "total": 0.16714285714285715
+                  },
+                  "selected": true
+                },
+                {
+                  "event_id": "c8514d42-72c6-558d-b70d-33ecc3101735",
+                  "global_seq": 4,
+                  "reasons": [
+                    "LEXICAL_CUE"
+                  ],
+                  "score": {
+                    "conversation": 0.0,
+                    "entity": 0.0,
+                    "lexical": 0.21428571428571427,
+                    "temporal": 0.0,
+                    "total": 0.16714285714285715
+                  },
+                  "selected": true
+                }
+              ],
+              "normalized_entities": [],
+              "policy_version": "deterministic-cues-v2"
+            },
+            "retrieval_role": "ATTENTION_ACTIVATION"
+          },
+          "association_hops": 0,
+          "baseline_recall_limit": 6,
+          "candidate_limit": 750,
+          "depth": "BROAD_SHALLOW",
+          "packet_item_limit": 6,
+          "query_strategy": "working_state_plus_baseline_activation",
+          "retrieval_role": "ATTENTION_ACTIVATION",
+          "working_state_event_ids": [],
+          "working_state_item_count": 0
+        },
+        "supported": true
+      },
+      "attention_aperture_version": "v0.7-attention-aperture-v4",
+      "capability_catalog": [],
+      "disposition": {
+        "capability_indices": [],
+        "response_required": true
+      },
+      "execution_plan": {
+        "catalog_capability_ids": [],
+        "items": [],
+        "registry_version": "v0.7-capability-registry-v9",
+        "requested_catalog_indices": []
+      },
+      "percept": {
+        "context": {
+          "active_goal_refs": [],
+          "causal_percept_refs": [],
+          "entity_refs": [],
+          "expectation_refs": [],
+          "integrity": 0,
+          "observations": [],
+          "opportunity": 0,
+          "task_refs": [],
+          "threat": 0,
+          "uncertainty": 0
+        },
+        "conversation_id": "e45c10e2-efa3-4a62-b79c-c90d86d3c989",
+        "correlation_id": "7e2d9019-279b-4a8c-ae1b-0767e3aecc47",
+        "features": {
+          "contains_code_block": false,
+          "contains_question": true,
+          "contains_structured_payload": false,
+          "contains_url": false,
+          "line_count": 1,
+          "normalized_characters": 118,
+          "token_count": 24,
+          "uppercase_ratio": 0.043010752688172046
+        },
+        "input_buffer": {
+          "max_segments": 4,
+          "retained_segment_indices": [
+            0
+          ],
+          "segment_char_limit": 160,
+          "segments": [
+            "Do I like being recognized for my work? Give me the answer I would call accurate instead of a yes or no profile field."
+          ],
+          "total_characters": 118,
+          "total_segments": 1,
+          "truncated": false
+        },
+        "normalized_text": "Do I like being recognized for my work? Give me the answer I would call accurate instead of a yes or no profile field.",
+        "observed_at": "2026-09-24T13:10:52.855853-07:00",
+        "percept_id": "37719d0b-111d-5a57-a1e0-f4a5b9ccc895",
+        "policy_version": "v0.8-perception-v2",
+        "raw_value_sha256": "b7b0f57f5657dbc297e7c9b82ceb424f5e5d9fcaf7fbbf4cc339dce9a9253c9d",
+        "response_required": true,
+        "schema_version": 1,
+        "source": {
+          "interface": "chat",
+          "kind": "USER_INTERACTION",
+          "modality": "TEXT",
+          "source_id": "user"
+        },
+        "source_event_id": "c173f4b8-cf19-55ae-a5a9-c24a8761e760"
+      },
+      "salience_assessment": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "37719d0b-111d-5a57-a1e0-f4a5b9ccc895",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "self_context": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      }
+    },
+    "output_refs": [
+      "memory-request:2e8c1a36-2e5e-50b5-99b1-ed3d6cde248b"
+    ]
+  },
+  "payload_hash": "ea3c88ab9e7d8fc68a0e75c6527a3d309a5f464c943dffaf22a2c70f40171b6d",
+  "previous_artifact_hash": "5bf647bb0762717f40be5d5bc1a1eda0f8b832109f766703637e40b2e41592da",
+  "previous_artifact_id": "1c49234f-8978-5233-9854-b04c739484f4",
+  "producer": "percept_response_v2",
+  "stage": "V2_PRECOGNITIVE",
+  "task_id": "b3859900-2a78-5464-8252-684e33fd31ee"
+}

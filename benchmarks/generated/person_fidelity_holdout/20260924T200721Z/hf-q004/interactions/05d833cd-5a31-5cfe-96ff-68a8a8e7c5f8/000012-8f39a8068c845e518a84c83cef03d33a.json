@@ -1,0 +1,31 @@
+{
+  "artifact_hash": "093c355de08858563488ce1121ca5fe73a6b8213d963c57faf8bb201e165042b",
+  "artifact_id": "8f39a806-8c84-5e51-8a84-c83cef03d33a",
+  "artifact_key": "llm-validation:V2_RESPOND:bcd46f7f-59c6-5747-ba47-797a4e0875e1:0:FINAL_RESPONSE_V2",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "11ac76a0-53bb-5455-a293-cafbb43e6125",
+  "conversation_id": "231e3ecf-83c6-4f00-9c93-8dcca8cb72a8",
+  "correlation_id": "73210e7f-cd77-4b17-812e-1b5500700794",
+  "created_at": "2026-09-24T20:10:46.923701+00:00",
+  "interaction_id": "05d833cd-5a31-5cfe-96ff-68a8a8e7c5f8",
+  "journal_sequence": 12,
+  "payload": {
+    "claim_id": "bcd46f7f-59c6-5747-ba47-797a4e0875e1",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "7efb954948a4be6f0f7da96d2d1d969cbfba843adf5e29c935bcd7466f6a37ee",
+    "invocation_artifact_id": "65d2d2a3-efea-5b9e-8559-deaad90a7252",
+    "invocation_index": 0,
+    "kind": "FINAL_RESPONSE_V2",
+    "parsed_output": "No, you are not actually non-competitive. You describe yourself as not wanting to beat your friends and as being willing to hand them credit—this reflects a social, interpersonal form of humility. However, your behavior reveals a strong internal standard of quality and accountability: you are ruthless with your own past performance and with work you know is sloppy. This shows a deep commitment to personal excellence, which is a form of competition—though it is not directed at others, it is still competitive in nature. You do not compete with others in a social sense, but you do compete with your own past self and with the quality of your own work. This is a distinct and valid kind of competitiveness. So, while you may not be competitive in the traditional, interpersonal sense, you are deeply competitive in the domain of personal integrity and performance. Your behavior is consistent with a disciplined, self-critical, and high-standard internal compass—this is not non-competitiveness; it is a form of quiet, principled competition.",
+    "raw_output_sha256": "b742d0440efd01d994f96d6ece31cbf54650d98d9d1293a1785051421ef586f9",
+    "status": "VALID"
+  },
+  "payload_hash": "9839eafaddaf644fe3fb6620c1c8e8864fa76c8ab9338e5de5479f9c13d11906",
+  "previous_artifact_hash": "7efb954948a4be6f0f7da96d2d1d969cbfba843adf5e29c935bcd7466f6a37ee",
+  "previous_artifact_id": "65d2d2a3-efea-5b9e-8559-deaad90a7252",
+  "producer": "percept_response_v2/validation",
+  "stage": "V2_RESPOND",
+  "task_id": "e32b36e6-154f-5262-bfef-928f8787e584"
+}

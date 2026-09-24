@@ -1,0 +1,35 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "5bc02557-0507-43d2-b95b-1732c826e41f",
+  "conversation_seq": 2,
+  "correlation_id": "481d049c-39fd-4030-8c36-482360d459f1",
+  "event_id": "b76a938e-db3f-50c9-aaa7-33c1d09bfa72",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-24T20:13:09.181675+00:00",
+  "payload": {
+    "memory_request_id": "48a30995-07a7-5db1-9f13-18043ad48d4b",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 6,
+      "query_text": "Write the short channel message I would most likely send after a monitoring well returns a water-level jump that nobody can explain during a drawdown test.",
+      "reference_time": null,
+      "source_types": [
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT",
+        "TOOL_RESULT",
+        "USER_PROMPT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "ATTENTION_ACTIVATION"
+  },
+  "payload_text": "Write the short channel message I would most likely send after a monitoring well returns a water-level jump that nobody can explain during a drawdown test.",
+  "record_hash": "3932f7b0724396fc32335d1cb7c9461966055028d9c4b42e52eda90d0cdcb564",
+  "source": "attention-aperture:v0.7-attention-aperture-v4/task:72277815-d91b-51d9-a634-ffa32cc8e505"
+}

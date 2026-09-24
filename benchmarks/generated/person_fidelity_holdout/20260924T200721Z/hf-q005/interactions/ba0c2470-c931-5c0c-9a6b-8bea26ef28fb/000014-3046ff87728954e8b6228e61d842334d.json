@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "e2de1723e845058cc554e23bf1a8868ab038ecc4aac877f33c9838ffa3356954",
+  "artifact_id": "3046ff87-7289-54e8-b622-8e61d842334d",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "00482a39-209b-50d0-a579-2a1aefe8e197",
+  "conversation_id": "e45c10e2-efa3-4a62-b79c-c90d86d3c989",
+  "correlation_id": "7e2d9019-279b-4a8c-ae1b-0767e3aecc47",
+  "created_at": "2026-09-24T20:11:47.904439+00:00",
+  "interaction_id": "ba0c2470-c931-5c0c-9a6b-8bea26ef28fb",
+  "journal_sequence": 14,
+  "payload": {
+    "output": {
+      "response_event_id": "b4ce6cbb-beda-58bc-bd35-d876456924b5",
+      "response_required": true,
+      "response_text": "I do not derive satisfaction from being recognized for my work. Recognition feels like an external validation that doesn't align with how I experience my own progress or responsibility. I value the integrity of my own process—like the quiet judgment I lose when I work alone for long stretches—more than public acknowledgment. When others ask about my efforts, I keep my response flat, not because I’m dismissive, but because I believe the truth belongs to the person who lived it. That’s why I let Kofi speak for himself, even when others have seen the filing notice. It’s not about politeness—it’s about ownership. I don’t want to be seen as a success story. I want to be seen as someone who carries the weight of their own decisions, even when they go unnoticed."
+    },
+    "output_refs": [
+      "event:b4ce6cbb-beda-58bc-bd35-d876456924b5"
+    ]
+  },
+  "payload_hash": "ecfbbcab3a436b1e729e074adcd2e086a47a9f24205e8714ad0e8c46186b3b00",
+  "previous_artifact_hash": "450145950303de72c1e3f5299ddf1980d40638834e305c8543fe827c189cc9ab",
+  "previous_artifact_id": "25188f5b-c0f2-5630-a07c-da553a24b844",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "b3859900-2a78-5464-8252-684e33fd31ee"
+}

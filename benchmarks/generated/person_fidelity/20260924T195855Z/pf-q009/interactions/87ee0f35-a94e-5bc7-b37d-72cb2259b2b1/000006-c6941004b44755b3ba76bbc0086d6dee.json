@@ -1,0 +1,250 @@
+{
+  "artifact_hash": "18250c864e3b21940850d362870267077bdadf6e65690495aefd4622eb8c3c79",
+  "artifact_id": "c6941004-b447-55b3-ba76-bbc0086d6dee",
+  "artifact_key": "stage-result:V2_PRECOGNITIVE",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "d4b0aeb6-0bed-525c-90bd-e58f323db386",
+  "conversation_id": "43955e7b-933f-488c-9cdc-0aa33b298f12",
+  "correlation_id": "58a682b8-0003-45af-bc5e-747c16e5fc3a",
+  "created_at": "2026-09-24T20:05:37.802500+00:00",
+  "interaction_id": "87ee0f35-a94e-5bc7-b37d-72cb2259b2b1",
+  "journal_sequence": 6,
+  "payload": {
+    "output": {
+      "aperture_packet": {
+        "items": [
+          {
+            "content": "Sentiment does not outrank physical safety. If that espresso maker became a fire risk that could not be repaired responsibly, I would retire it from use and preserve a safe component or display it instead.",
+            "conversation_id": "6e82fbc5-ab73-524c-a313-94840dea527f",
+            "conversation_seq": 2,
+            "created_at": "2026-09-24T13:05:24.661934-07:00",
+            "event_type": "USER_PROMPT",
+            "global_seq": 19,
+            "provenance_event_ids": [],
+            "retrieval_reasons": [
+              "ATTENTION_APERTURE",
+              "LEXICAL_CUE"
+            ],
+            "score": 0.26,
+            "source": "user",
+            "source_event_id": "a022ab98-5366-51e2-8938-f0fa93dbfccc"
+          },
+          {
+            "content": "I keep repairing my grandmother's copper espresso maker even when a replacement would be cheaper. The morning ritual reminds me of her kitchen, so its value to me is not captured by the resale price.",
+            "conversation_id": "6e82fbc5-ab73-524c-a313-94840dea527f",
+            "conversation_seq": 1,
+            "created_at": "2026-09-24T13:05:24.649663-07:00",
+            "event_type": "USER_PROMPT",
+            "global_seq": 18,
+            "provenance_event_ids": [],
+            "retrieval_reasons": [
+              "ATTENTION_APERTURE",
+              "LEXICAL_CUE"
+            ],
+            "score": 0.22285714285714286,
+            "source": "user",
+            "source_event_id": "e16fd5e1-5dd2-5754-a932-46288921471d"
+          }
+        ],
+        "memory_request_id": "9689163b-abcb-545e-8409-e5c8b3a9114d",
+        "need": {
+          "active_event_ids": [],
+          "conversation_id": null,
+          "entities": [],
+          "focus_event_ids": [],
+          "include_persisted_history": true,
+          "limit": 6,
+          "query_text": "A technician finds frayed internal wiring in my grandmother's espresso maker, calls it a fire risk, and says a safe repair would cost more than replacement. What would I most likely do?",
+          "reference_time": null,
+          "source_types": [
+            "PERCEPT_OBSERVATION",
+            "SYSTEM_EVENT",
+            "TOOL_RESULT",
+            "USER_PROMPT"
+          ],
+          "supplemental_query_texts": []
+        },
+        "origin": "INTERNAL_MEMORY",
+        "retrieval_trace": {
+          "activation_kernel": {
+            "kernel": "recall_from_postgres",
+            "kernel_trace": {
+              "candidates_considered": 2,
+              "cue_tokens": [
+                "technician",
+                "find",
+                "fray",
+                "internal",
+                "wir",
+                "grandmother",
+                "espresso",
+                "maker",
+                "call",
+                "fire",
+                "risk",
+                "says",
+                "safe",
+                "repair",
+                "would",
+                "cost",
+                "more",
+                "than",
+                "replacement",
+                "would",
+                "most",
+                "likely"
+              ],
+              "items": [
+                {
+                  "event_id": "a022ab98-5366-51e2-8938-f0fa93dbfccc",
+                  "global_seq": 19,
+                  "reasons": [
+                    "LEXICAL_CUE"
+                  ],
+                  "score": {
+                    "conversation": 0.0,
+                    "entity": 0.0,
+                    "lexical": 0.3333333333333333,
+                    "temporal": 0.0,
+                    "total": 0.26
+                  },
+                  "selected": true
+                },
+                {
+                  "event_id": "e16fd5e1-5dd2-5754-a932-46288921471d",
+                  "global_seq": 18,
+                  "reasons": [
+                    "LEXICAL_CUE"
+                  ],
+                  "score": {
+                    "conversation": 0.0,
+                    "entity": 0.0,
+                    "lexical": 0.2857142857142857,
+                    "temporal": 0.0,
+                    "total": 0.22285714285714286
+                  },
+                  "selected": true
+                }
+              ],
+              "normalized_entities": [],
+              "policy_version": "deterministic-cues-v2"
+            },
+            "retrieval_role": "ATTENTION_ACTIVATION"
+          },
+          "association_hops": 0,
+          "baseline_recall_limit": 6,
+          "candidate_limit": 750,
+          "depth": "BROAD_SHALLOW",
+          "packet_item_limit": 6,
+          "query_strategy": "working_state_plus_baseline_activation",
+          "retrieval_role": "ATTENTION_ACTIVATION",
+          "working_state_event_ids": [],
+          "working_state_item_count": 0
+        },
+        "supported": true
+      },
+      "attention_aperture_version": "v0.7-attention-aperture-v4",
+      "capability_catalog": [],
+      "disposition": {
+        "capability_indices": [],
+        "response_required": true
+      },
+      "execution_plan": {
+        "catalog_capability_ids": [],
+        "items": [],
+        "registry_version": "v0.7-capability-registry-v9",
+        "requested_catalog_indices": []
+      },
+      "percept": {
+        "context": {
+          "active_goal_refs": [],
+          "causal_percept_refs": [],
+          "entity_refs": [],
+          "expectation_refs": [],
+          "integrity": 0,
+          "observations": [],
+          "opportunity": 0,
+          "task_refs": [],
+          "threat": 0,
+          "uncertainty": 0
+        },
+        "conversation_id": "43955e7b-933f-488c-9cdc-0aa33b298f12",
+        "correlation_id": "58a682b8-0003-45af-bc5e-747c16e5fc3a",
+        "features": {
+          "contains_code_block": false,
+          "contains_question": true,
+          "contains_structured_payload": false,
+          "contains_url": false,
+          "line_count": 1,
+          "normalized_characters": 185,
+          "token_count": 32,
+          "uppercase_ratio": 0.020134228187919462
+        },
+        "input_buffer": {
+          "max_segments": 4,
+          "retained_segment_indices": [
+            0,
+            1
+          ],
+          "segment_char_limit": 160,
+          "segments": [
+            "A technician finds frayed internal wiring in my grandmother's espresso maker, calls it a fire risk, and says a safe repair would cost more than replacement. Wha",
+            "t would I most likely do?"
+          ],
+          "total_characters": 185,
+          "total_segments": 2,
+          "truncated": false
+        },
+        "normalized_text": "A technician finds frayed internal wiring in my grandmother's espresso maker, calls it a fire risk, and says a safe repair would cost more than replacement. What would I most likely do?",
+        "observed_at": "2026-09-24T13:05:26.880984-07:00",
+        "percept_id": "637bc219-95cc-56dc-88e4-c2e9d47938aa",
+        "policy_version": "v0.8-perception-v2",
+        "raw_value_sha256": "898fbe6e32fa5e61b7bec4ecff5649421a34a14995477c086a7a1b4a5c5bf4d6",
+        "response_required": true,
+        "schema_version": 1,
+        "source": {
+          "interface": "chat",
+          "kind": "USER_INTERACTION",
+          "modality": "TEXT",
+          "source_id": "user"
+        },
+        "source_event_id": "58dc4852-1407-5811-b812-1ba8cac92762"
+      },
+      "salience_assessment": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "637bc219-95cc-56dc-88e4-c2e9d47938aa",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "self_context": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      }
+    },
+    "output_refs": [
+      "memory-request:9689163b-abcb-545e-8409-e5c8b3a9114d"
+    ]
+  },
+  "payload_hash": "fb3540c2a1d399166c18dc7319bab8fecd743ed266add7e762a634598fcd2bfd",
+  "previous_artifact_hash": "2f2c2f22489ff46c1f2c1dd1a91056d835a0ef92c56140e7f07fe58869e86cc9",
+  "previous_artifact_id": "37902a47-8dec-55ef-a5ac-9601de4e15e7",
+  "producer": "percept_response_v2",
+  "stage": "V2_PRECOGNITIVE",
+  "task_id": "c4c06bf4-7ec7-557b-b5c1-06e334dda951"
+}

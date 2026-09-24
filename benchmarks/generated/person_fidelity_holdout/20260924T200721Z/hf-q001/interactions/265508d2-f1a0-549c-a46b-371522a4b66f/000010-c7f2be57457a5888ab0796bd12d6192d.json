@@ -1,0 +1,155 @@
+{
+  "artifact_hash": "dead63aaf6e933fc39fe1f9a008be68abc25e881a1a6dfc93ef78741c1bbda71",
+  "artifact_id": "c7f2be57-457a-5888-ab07-96bd12d6192d",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "8e5bc317-522e-5ec3-beb5-7facea25e641",
+  "conversation_id": "c769c0c6-0d2e-487d-a09b-a2125197275f",
+  "correlation_id": "d652fef8-d936-4a54-b88c-a384eec99a79",
+  "created_at": "2026-09-24T20:07:45.509165+00:00",
+  "interaction_id": "265508d2-f1a0-549c-a46b-371522a4b66f",
+  "journal_sequence": 10,
+  "payload": {
+    "output": {
+      "memory_package": {
+        "adaptive_recall_rounds": 0,
+        "composer_rounds": 1,
+        "memory_packet": {
+          "items": [
+            {
+              "content": "Being thanked from a stage makes me want to leave the building. Standing there while a room claps turns me into a mascot for work a whole crew did. A note somebody actually wrote by hand lands completely differently, and I will happily spend a whole ceremony naming other people's contributions out loud.",
+              "conversation_id": "a578edfa-1a88-5403-8fed-a98ed0f985da",
+              "conversation_seq": 1,
+              "created_at": "2026-09-24T13:07:21.849062-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 9,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.195,
+              "source": "user",
+              "source_event_id": "bdaaf785-e299-55f5-ac0d-675b7165cd40"
+            },
+            {
+              "content": "Those flood springs are why I became a wetland hydrologist. They also left me with a rule I will not bend: a forecast nobody outside the room can question is worse than no forecast, so what I publish has to stay legible and revisable by the people living downstream.",
+              "conversation_id": "b66e7837-7618-5146-9fe3-1ff25e9e0ef7",
+              "conversation_seq": 2,
+              "created_at": "2026-09-24T13:07:21.743789-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 2,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.195,
+              "source": "user",
+              "source_event_id": "9596d158-b527-55cb-a0ba-a204b91e0386"
+            }
+          ],
+          "memory_request_id": "99647920-b7c3-5439-9d60-82ab30810226",
+          "need": {
+            "active_event_ids": [],
+            "conversation_id": null,
+            "entities": [],
+            "focus_event_ids": [],
+            "include_persisted_history": true,
+            "limit": 6,
+            "query_text": "Why did I go into wetland hydrology, and what rule did that childhood experience leave me with?",
+            "reference_time": null,
+            "source_types": [
+              "PERCEPT_OBSERVATION",
+              "SYSTEM_EVENT",
+              "TOOL_RESULT",
+              "USER_PROMPT"
+            ],
+            "supplemental_query_texts": []
+          },
+          "origin": "INTERNAL_MEMORY",
+          "retrieval_trace": {
+            "activation_kernel": {
+              "kernel": "recall_from_postgres",
+              "kernel_trace": {
+                "candidates_considered": 2,
+                "cue_tokens": [
+                  "go",
+                  "into",
+                  "wetland",
+                  "hydrology",
+                  "rule",
+                  "childhood",
+                  "experience",
+                  "leave"
+                ],
+                "items": [
+                  {
+                    "event_id": "bdaaf785-e299-55f5-ac0d-675b7165cd40",
+                    "global_seq": 9,
+                    "reasons": [
+                      "LEXICAL_CUE"
+                    ],
+                    "score": {
+                      "conversation": 0.0,
+                      "entity": 0.0,
+                      "lexical": 0.25,
+                      "temporal": 0.0,
+                      "total": 0.195
+                    },
+                    "selected": true
+                  },
+                  {
+                    "event_id": "9596d158-b527-55cb-a0ba-a204b91e0386",
+                    "global_seq": 2,
+                    "reasons": [
+                      "LEXICAL_CUE"
+                    ],
+                    "score": {
+                      "conversation": 0.0,
+                      "entity": 0.0,
+                      "lexical": 0.25,
+                      "temporal": 0.0,
+                      "total": 0.195
+                    },
+                    "selected": true
+                  }
+                ],
+                "normalized_entities": [],
+                "policy_version": "deterministic-cues-v2"
+              },
+              "retrieval_role": "ATTENTION_ACTIVATION"
+            },
+            "association_hops": 0,
+            "baseline_recall_limit": 6,
+            "candidate_limit": 750,
+            "depth": "BROAD_SHALLOW",
+            "packet_item_limit": 6,
+            "query_strategy": "working_state_plus_baseline_activation",
+            "retrieval_role": "ATTENTION_ACTIVATION",
+            "working_state_event_ids": [],
+            "working_state_item_count": 0
+          },
+          "supported": true
+        },
+        "self_context": {
+          "admission": "PRIMARY_DERIVED_CONTEXT",
+          "items": []
+        },
+        "sufficient": true,
+        "unresolved_memory_deficit": null
+      },
+      "skipped": false
+    },
+    "output_refs": [
+      "memory-request:99647920-b7c3-5439-9d60-82ab30810226"
+    ]
+  },
+  "payload_hash": "d4022ef5dae6430c790b3f2ef465329c50593a2a5b51a70ffd6d723cab32525c",
+  "previous_artifact_hash": "ec379410c28d149caa4d3117cd1493f6ccb1ffa751cda39b4fae3c24eb937b29",
+  "previous_artifact_id": "f862c6fb-e6ac-51ed-b9f4-f91d09e84207",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "c2d22a70-5d86-52ec-bed1-5381a8f1e377"
+}

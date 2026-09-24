@@ -1,0 +1,34 @@
+{
+  "artifact_hash": "bf8fdffc9e2556dea2bb0e6b21027c39227835216e8931a71e2abbb81e9886bd",
+  "artifact_id": "6d09400e-e471-57ac-bf1c-4574c3c780c5",
+  "artifact_key": "llm-validation:V2_COMPOSE_MEMORY:829ec867-2cc9-5fa6-96ed-2cdace7a94f9:1:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "ed21dacc-9a8b-583a-95f1-b237bd0c7e24",
+  "conversation_id": "f2028904-a9d2-4a17-9431-984fd9d4446c",
+  "correlation_id": "5fcafd9a-a13e-4d32-9785-f5ec308a62b0",
+  "created_at": "2026-09-24T20:06:35.445742+00:00",
+  "interaction_id": "e153857d-7b66-5ac5-acd2-7f516bff03cf",
+  "journal_sequence": 11,
+  "payload": {
+    "claim_id": "829ec867-2cc9-5fa6-96ed-2cdace7a94f9",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "71c6473e3007b67ffad37b57a48b98b70b58c1a6c126e3d8a56489f8c100767e",
+    "invocation_artifact_id": "b5810d12-da43-5904-a2e1-d3d3d4825e6c",
+    "invocation_index": 1,
+    "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+    "parsed_output": {
+      "memory_deficit": "The name of the user's fifth-grade teacher is not established in any of the provided historical evidence or current user prompt.",
+      "sufficient": false
+    },
+    "raw_output_sha256": "82bf4cedddea72095748b2bc572c66487390f1b8f1e781788eba3120f952930e",
+    "status": "VALID"
+  },
+  "payload_hash": "373c6965755467eeb06a807a2089a954fcac3e240649f34622e395741c1e3a62",
+  "previous_artifact_hash": "71c6473e3007b67ffad37b57a48b98b70b58c1a6c126e3d8a56489f8c100767e",
+  "previous_artifact_id": "b5810d12-da43-5904-a2e1-d3d3d4825e6c",
+  "producer": "percept_response_v2/validation",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "429d3fc8-1d1a-50e1-b952-ebb4ffda6769"
+}

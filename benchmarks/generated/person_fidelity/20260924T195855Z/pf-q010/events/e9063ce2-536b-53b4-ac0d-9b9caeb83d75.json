@@ -1,0 +1,65 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 1,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "e9063ce2-536b-53b4-ac0d-9b9caeb83d75",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-24T20:06:08.883273+00:00",
+  "payload": {
+    "data": {
+      "active_goal_refs": [],
+      "causal_relations": [],
+      "created_at": "2026-09-24T13:06:08.872442-07:00",
+      "entity_refs": [],
+      "epistemic_status": "DERIVED",
+      "expected_state": [],
+      "observed_state": [],
+      "percept_ids": [
+        "0e6dcbf0-609c-5f42-97ef-9e9cfe12897c"
+      ],
+      "prediction_error": 0.0,
+      "prediction_errors": [],
+      "provenance": [
+        "99c16867-7ca6-5202-b76b-271417d40195"
+      ],
+      "retention_hint": "ROUTINE",
+      "salience": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "0e6dcbf0-609c-5f42-97ef-9e9cfe12897c",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "situation_id": "828e2cfd-b008-5450-b5d0-f479d8e412f2",
+      "snapshot_id": "429618b9-81d1-5a79-afd1-d1892c185396",
+      "supersedes": null,
+      "temporal_relations": [],
+      "uncertainty": 0,
+      "updated_at": "2026-09-24T13:06:08.872442-07:00"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "828e2cfd-b008-5450-b5d0-f479d8e412f2",
+    "record_kind": "situation",
+    "revision": "429618b9-81d1-5a79-afd1-d1892c185396"
+  },
+  "payload_text": null,
+  "record_hash": "6c0f0a309ff196e825b8d9882bd47da4d6a12e184accc93a1bfb9575ea3421f3",
+  "source": "cognitive_runtime"
+}

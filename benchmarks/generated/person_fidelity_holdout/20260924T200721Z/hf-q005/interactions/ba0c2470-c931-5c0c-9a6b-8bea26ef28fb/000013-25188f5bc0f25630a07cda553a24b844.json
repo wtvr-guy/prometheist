@@ -1,0 +1,27 @@
+{
+  "artifact_hash": "450145950303de72c1e3f5299ddf1980d40638834e305c8543fe827c189cc9ab",
+  "artifact_id": "25188f5b-c0f2-5630-a07c-da553a24b844",
+  "artifact_key": "stage-result:V2_RESPOND",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "00482a39-209b-50d0-a579-2a1aefe8e197",
+  "conversation_id": "e45c10e2-efa3-4a62-b79c-c90d86d3c989",
+  "correlation_id": "7e2d9019-279b-4a8c-ae1b-0767e3aecc47",
+  "created_at": "2026-09-24T20:11:44.842130+00:00",
+  "interaction_id": "ba0c2470-c931-5c0c-9a6b-8bea26ef28fb",
+  "journal_sequence": 13,
+  "payload": {
+    "output": {
+      "response_required": true,
+      "response_text": "I do not derive satisfaction from being recognized for my work. Recognition feels like an external validation that doesn't align with how I experience my own progress or responsibility. I value the integrity of my own process—like the quiet judgment I lose when I work alone for long stretches—more than public acknowledgment. When others ask about my efforts, I keep my response flat, not because I’m dismissive, but because I believe the truth belongs to the person who lived it. That’s why I let Kofi speak for himself, even when others have seen the filing notice. It’s not about politeness—it’s about ownership. I don’t want to be seen as a success story. I want to be seen as someone who carries the weight of their own decisions, even when they go unnoticed.",
+      "skipped": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "17ba1fd87e56a8ee1577155b87bd51f3c462e0d3fcf71d2561ad90a313e726d1",
+  "previous_artifact_hash": "647dd056043127131fd66845250ff60d41818c397e8d01d3098f55c0ae894db0",
+  "previous_artifact_id": "019fa3de-b2cc-5db3-b6ca-04d222e7f719",
+  "producer": "percept_response_v2",
+  "stage": "V2_RESPOND",
+  "task_id": "b3859900-2a78-5464-8252-684e33fd31ee"
+}

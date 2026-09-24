@@ -1,0 +1,31 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 3,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "8a72c5af-9bf5-59d1-940d-1018c749b957",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-24T19:59:25.519845+00:00",
+  "payload": {
+    "data": {
+      "activated_at": "2026-09-24T12:58:58.498882-07:00",
+      "active_self": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      },
+      "entity_refs": [],
+      "goal_refs": [],
+      "interaction_id": "d913291e-3592-52ae-904a-950118f7e250",
+      "query_text": "Why did I become an electrical engineer, and what design principle did that childhood experience leave me with?"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "d913291e-3592-52ae-904a-950118f7e250",
+    "record_kind": "working_self",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "a83fe9e0c9a6629a7353821f4a9e93dbc765975ba1d52abf9bb7e5f3a25299dc",
+  "source": "cognitive_runtime"
+}

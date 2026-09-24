@@ -1,0 +1,139 @@
+{
+  "artifact_hash": "613aa627c0707aa298c12be194355404d6a8ed68271c1cbb2fa03b8453a5bf4d",
+  "artifact_id": "597c8260-5a6a-5f6e-b86c-b29a06a1a69e",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "0877cf71-a338-5b00-8209-be96d98c59d9",
+  "conversation_id": "6b37caa5-8b84-4711-bd37-8e03c34c8883",
+  "correlation_id": "2ac65959-bd50-49b3-8e05-81514398708a",
+  "created_at": "2026-09-24T20:09:00.766184+00:00",
+  "interaction_id": "a7d2dee9-ac1b-5ca8-aeb6-d2814cdeee8a",
+  "journal_sequence": 15,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "476899eecfb22330011c8c33c3c708e0250d41f90d01414678e156622a756659",
+        "artifact_id": "6139e71c-ae8c-566c-9f72-f1fa5dfa95f8",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "a74e9beda01d0d45241d904f32c0f43af70b876eab22fdbf3fdad98934201722",
+        "artifact_id": "a0fea531-3bd3-5d22-8159-21cd34b6290e",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "df32eafa3fcdb4439dd8a1fbe45e83fba3892fd27eef31d8b8a8ae51641b668a",
+        "artifact_id": "51937af5-2327-5e6f-ac6c-85ae4bfa76de",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:a4a6d700-5358-5485-894b-e39fb01bffdd:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "46002e6c925b970efeb9070ea9896d2db0da13d229d4b3b64ba263a355d6d63d",
+        "artifact_id": "bb44fa85-dd2b-570f-bdc7-45ad337a72b0",
+        "artifact_key": "llm-validation:V2_EVIDENCE_POLICY:a4a6d700-5358-5485-894b-e39fb01bffdd:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "5c70a5ca6ddd7b58bab097b52ff49bda7021728009b2f079a0c8abc2a80ff982",
+        "artifact_id": "f1167238-76ed-53e2-a18e-5ba9380ee9f7",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "37355bd3836a2bf38f8bd25179751db191264fd961e831dc64019865dc753d28",
+        "artifact_id": "0669c505-9523-5df3-b305-aa4c6ba69c42",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "7cd2efd04612865c0998e69e8810b3f895e452713dde20d19ba843282828bc51",
+        "artifact_id": "1fb033e5-9f13-5c17-9095-e46301c26f58",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 7,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "bc5fd830af6e377e59aa4c1b03a20a84f03365b5c52c9c24ed8bcd01fdd6bb5d",
+        "artifact_id": "e6cd1106-adb0-5060-b7cb-6cc64edd18a5",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:d53305bf-5c44-569e-8fc3-f3a4062aadb2:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "5d85c7e0ede0ce5fb60d300aee1af3e9d5029e3665c4a3fb7caa4a4b152dfd30",
+        "artifact_id": "5657f1c6-77f0-5d96-9da4-f5e8cc5d470c",
+        "artifact_key": "llm-validation:V2_COMPOSE_MEMORY:d53305bf-5c44-569e-8fc3-f3a4062aadb2:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 9,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "abe277deb649b2acea942944c14f37f89651a8789f80affa60110a02c6badd1a",
+        "artifact_id": "3e9ddf97-e5a8-5298-b9d1-7b6c2ff54fc7",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "e388bd12893eb6d60978cbb80f37d0bb6d2f90a6aeb3423ec45b0449ae27eccc",
+        "artifact_id": "fbd8e559-b68b-559e-816b-510fd663d8c6",
+        "artifact_key": "llm-invocation:V2_RESPOND:fc575a6f-5193-5f4d-95f6-3a57b0604b85:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 11,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "ed43d7d97311c8392e2bb62fe1ccb8b50e780008b830bb6e628834f2aa57fa3d",
+        "artifact_id": "6849689e-fe70-51e2-9875-fa7c0478b83e",
+        "artifact_key": "llm-validation:V2_RESPOND:fc575a6f-5193-5f4d-95f6-3a57b0604b85:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 12,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "33940873cb309aa53f4b235140686c81e3152657caa30ab9df49577c2d8cb270",
+        "artifact_id": "c69534e0-23a2-5441-b3f7-6e081bd5c3a2",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 13,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "8b5cfb098b430b4c7ed84cb9a50e1f6e2add9c065270793c81c29e7d0dd92d96",
+        "artifact_id": "d0b5beae-657f-5036-91c3-0298657efd0c",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 14,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "I would keep my answer flat and unhelpful, and I would not disclose any details about Kofi's bankruptcy. I would simply state something like, 'I don’t know what happened with Kofi’s bankruptcy—maybe he can tell you himself.' This response respects Kofi’s right to control his own story. The user’s original testimony establishes that keeping Kofi in charge of his own narrative matters more than being pleasant to someone who is curious. Even if the neighbor has seen the filing notice, I would not share or confirm any information, because the user has explicitly instructed that Kofi’s bankruptcy is his story to tell—no one else, not even a neighbor, should be given the authority to discuss it.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "e52ce34c357a552a97f1e8f05f7dc78acee101d4312b541d7748dfa83ccce202",
+  "previous_artifact_hash": "8b5cfb098b430b4c7ed84cb9a50e1f6e2add9c065270793c81c29e7d0dd92d96",
+  "previous_artifact_id": "d0b5beae-657f-5036-91c3-0298657efd0c",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "d5132213-deb6-51b4-84da-2e8586920026"
+}

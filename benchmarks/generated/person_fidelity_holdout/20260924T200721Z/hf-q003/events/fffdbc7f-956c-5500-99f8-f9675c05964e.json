@@ -1,0 +1,35 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "4265947d-ebc6-45ec-91f4-14651515d6ff",
+  "conversation_seq": 2,
+  "correlation_id": "304eef95-2bca-4afa-bb33-0e95f82fd9d7",
+  "event_id": "fffdbc7f-956c-5500-99f8-f9675c05964e",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-24T20:09:15.328100+00:00",
+  "payload": {
+    "memory_request_id": "5aaaf1d9-c322-5e90-a9c1-cd37bd936378",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 6,
+      "query_text": "What did I used to believe about doing fieldwork alone, what do I prefer now, and what changed my mind?",
+      "reference_time": null,
+      "source_types": [
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT",
+        "TOOL_RESULT",
+        "USER_PROMPT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "ATTENTION_ACTIVATION"
+  },
+  "payload_text": "What did I used to believe about doing fieldwork alone, what do I prefer now, and what changed my mind?",
+  "record_hash": "279d517ae771129fd593d4d64c61ccf3050714c0e17194d470c0dd7af9ecc600",
+  "source": "attention-aperture:v0.7-attention-aperture-v4/task:8d483e4f-56d3-5660-acc1-3d6c100fe7f7"
+}

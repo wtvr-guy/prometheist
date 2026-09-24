@@ -1,0 +1,139 @@
+{
+  "artifact_hash": "59341c654e6ce071a8efb94b70c5dfb170ec1cab3d91c4838f68085b66236f9b",
+  "artifact_id": "8c9d267e-f5a2-5084-b12b-b63becc3c0f7",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "11ac76a0-53bb-5455-a293-cafbb43e6125",
+  "conversation_id": "231e3ecf-83c6-4f00-9c93-8dcca8cb72a8",
+  "correlation_id": "73210e7f-cd77-4b17-812e-1b5500700794",
+  "created_at": "2026-09-24T20:10:50.022258+00:00",
+  "interaction_id": "05d833cd-5a31-5cfe-96ff-68a8a8e7c5f8",
+  "journal_sequence": 15,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "0d897dc66fe0c22e0ad55a2a687e063250a811194d39b896e23e9a82774696de",
+        "artifact_id": "386e5aab-c944-57fa-a9f6-c5fbfc2ab957",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "0605af6d0bedd6633a73c8d7cff4c3e743e047073b059c6aa2478cd9785bc655",
+        "artifact_id": "9e3fd0ee-f163-554c-9fbc-31fcf23ee931",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "23ce9e37a7ba034563e6c093038c7da43abcb944517bdc126a04134d78bd19cf",
+        "artifact_id": "22295db3-5944-5f66-b2f2-69beb10124d4",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:a1c3ff0f-2efe-52ac-949d-854fccefbfa3:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "b4802e73b396b49cea0f160fa1a5598410919ff041a32a32641ee022c10a70b1",
+        "artifact_id": "f67dfaa9-0e29-5349-b50c-9bedb5de22ed",
+        "artifact_key": "llm-validation:V2_EVIDENCE_POLICY:a1c3ff0f-2efe-52ac-949d-854fccefbfa3:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "24144d32533da6b8bd463efd7065809b6c7fb531c002646d080ca1e74dc0d277",
+        "artifact_id": "5beec4a0-14d0-5839-ac90-126442ff5961",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "21f4ec02d4b0dee9d0566369247b9752933eed8bb9712e06819dc02b017b33f6",
+        "artifact_id": "473658d4-443a-5b88-8ba6-c56d9a25ac3c",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "5b653473ec1042a8a49657209a983f2d1de4d6c99b64dee2e16ebb9080f44af1",
+        "artifact_id": "641a9b53-1cb1-58bd-9f6e-9af3518c4417",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 7,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "3411627fc2befc5ff628f0bd84ec019ed77bf48c5aeaa72cb4957deace3da929",
+        "artifact_id": "6227205a-2661-5ebd-a3ce-0522472ec90c",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:77640302-76a8-533e-b25e-94ab3c9e5c43:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "e62207e7438027d9dcef421cf536807db12589a9cfa9f512a3471f48b349186f",
+        "artifact_id": "dbf74cf4-b05b-5faf-bfbc-341f44adb0f5",
+        "artifact_key": "llm-validation:V2_COMPOSE_MEMORY:77640302-76a8-533e-b25e-94ab3c9e5c43:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 9,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "016bf93504956414e491ac17fb9536a14313c906f31eeeb6e45ef3c65c284e69",
+        "artifact_id": "b81ef4d6-c36d-56e1-b6de-6aa667866372",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "7efb954948a4be6f0f7da96d2d1d969cbfba843adf5e29c935bcd7466f6a37ee",
+        "artifact_id": "65d2d2a3-efea-5b9e-8559-deaad90a7252",
+        "artifact_key": "llm-invocation:V2_RESPOND:bcd46f7f-59c6-5747-ba47-797a4e0875e1:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 11,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "093c355de08858563488ce1121ca5fe73a6b8213d963c57faf8bb201e165042b",
+        "artifact_id": "8f39a806-8c84-5e51-8a84-c83cef03d33a",
+        "artifact_key": "llm-validation:V2_RESPOND:bcd46f7f-59c6-5747-ba47-797a4e0875e1:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 12,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "9335c06fe70f594254f64caf6cc70d38b8e97fd143eb50579233740799280fc7",
+        "artifact_id": "f4ff98a0-89c5-5e51-b732-7742efacbe53",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 13,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "b64d8fe19ca8633ce5cdb9adaed235372f76c99495259dc61c3fa511d5bc1342",
+        "artifact_id": "0abb226a-1e93-55f3-863b-0564a6c5ef9f",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 14,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "No, you are not actually non-competitive. You describe yourself as not wanting to beat your friends and as being willing to hand them credit—this reflects a social, interpersonal form of humility. However, your behavior reveals a strong internal standard of quality and accountability: you are ruthless with your own past performance and with work you know is sloppy. This shows a deep commitment to personal excellence, which is a form of competition—though it is not directed at others, it is still competitive in nature. You do not compete with others in a social sense, but you do compete with your own past self and with the quality of your own work. This is a distinct and valid kind of competitiveness. So, while you may not be competitive in the traditional, interpersonal sense, you are deeply competitive in the domain of personal integrity and performance. Your behavior is consistent with a disciplined, self-critical, and high-standard internal compass—this is not non-competitiveness; it is a form of quiet, principled competition.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "cc912bcc3ecf0a230c3fa144cd3e68976ceede08213398ba255198a8ad9ebe22",
+  "previous_artifact_hash": "b64d8fe19ca8633ce5cdb9adaed235372f76c99495259dc61c3fa511d5bc1342",
+  "previous_artifact_id": "0abb226a-1e93-55f3-863b-0564a6c5ef9f",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "e32b36e6-154f-5262-bfef-928f8787e584"
+}

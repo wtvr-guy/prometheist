@@ -1,0 +1,97 @@
+{
+  "artifact_hash": "476899eecfb22330011c8c33c3c708e0250d41f90d01414678e156622a756659",
+  "artifact_id": "6139e71c-ae8c-566c-9f72-f1fa5dfa95f8",
+  "artifact_key": "percept",
+  "artifact_schema_version": 1,
+  "artifact_type": "PERCEPT",
+  "assignment_id": null,
+  "conversation_id": "6b37caa5-8b84-4711-bd37-8e03c34c8883",
+  "correlation_id": "2ac65959-bd50-49b3-8e05-81514398708a",
+  "created_at": "2026-09-24T20:08:12.161648+00:00",
+  "interaction_id": "a7d2dee9-ac1b-5ca8-aeb6-d2814cdeee8a",
+  "journal_sequence": 1,
+  "payload": {
+    "normalized_percept": {
+      "context": {
+        "active_goal_refs": [],
+        "causal_percept_refs": [],
+        "entity_refs": [],
+        "expectation_refs": [],
+        "integrity": 0,
+        "observations": [],
+        "opportunity": 0,
+        "task_refs": [],
+        "threat": 0,
+        "uncertainty": 0
+      },
+      "conversation_id": "6b37caa5-8b84-4711-bd37-8e03c34c8883",
+      "correlation_id": "2ac65959-bd50-49b3-8e05-81514398708a",
+      "features": {
+        "contains_code_block": false,
+        "contains_question": true,
+        "contains_structured_payload": false,
+        "contains_url": false,
+        "line_count": 1,
+        "normalized_characters": 149,
+        "token_count": 25,
+        "uppercase_ratio": 0.03305785123966942
+      },
+      "input_buffer": {
+        "max_segments": 4,
+        "retained_segment_indices": [
+          0
+        ],
+        "segment_char_limit": 160,
+        "segments": [
+          "A neighbor asks me what happened with Kofi's bankruptcy and mentions they have already seen the filing notice. How would I probably respond, and why?"
+        ],
+        "total_characters": 149,
+        "total_segments": 1,
+        "truncated": false
+      },
+      "normalized_text": "A neighbor asks me what happened with Kofi's bankruptcy and mentions they have already seen the filing notice. How would I probably respond, and why?",
+      "observed_at": "2026-09-24T13:08:11.008539-07:00",
+      "percept_id": "bb1e2470-4ee0-5911-90f9-1ae35a82c508",
+      "policy_version": "v0.8-perception-v2",
+      "raw_value_sha256": "f17e726a91c63dd2e9eccc306dee0f09535d32ccf4a8acf1a67e06995dadb192",
+      "response_required": true,
+      "schema_version": 1,
+      "source": {
+        "interface": "chat",
+        "kind": "USER_INTERACTION",
+        "modality": "TEXT",
+        "source_id": "user"
+      },
+      "source_event_id": "05bb67bd-eb2c-5bbc-a8b2-3a86e6d20474"
+    },
+    "salience_assessment": {
+      "advisory_classification": null,
+      "advisory_only": true,
+      "disposition": "DELIBERATE",
+      "percept_id": "bb1e2470-4ee0-5911-90f9-1ae35a82c508",
+      "policy_version": "v0.8-salience-v2",
+      "preauthorized_reflexes": [],
+      "schema_version": 1,
+      "signals": {
+        "anomaly_score": 0,
+        "goal_relevance_score": 2,
+        "novelty_score": 1,
+        "opportunity_score": 0,
+        "prediction_error_score": 0,
+        "system_integrity_score": 0,
+        "task_relevance_score": 0,
+        "threat_score": 0,
+        "uncertainty_score": 0
+      },
+      "trigger_terms": []
+    },
+    "user_prompt_event_id": "05bb67bd-eb2c-5bbc-a8b2-3a86e6d20474",
+    "user_text": "A neighbor asks me what happened with Kofi's bankruptcy and mentions they have already seen the filing notice. How would I probably respond, and why?"
+  },
+  "payload_hash": "a90602bfd30111e1a03f9d9948f13fac299ee1e5616c35e11500e072802a4ead",
+  "previous_artifact_hash": null,
+  "previous_artifact_id": null,
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "d5132213-deb6-51b4-84da-2e8586920026"
+}

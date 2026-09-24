@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "b64d8fe19ca8633ce5cdb9adaed235372f76c99495259dc61c3fa511d5bc1342",
+  "artifact_id": "0abb226a-1e93-55f3-863b-0564a6c5ef9f",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "11ac76a0-53bb-5455-a293-cafbb43e6125",
+  "conversation_id": "231e3ecf-83c6-4f00-9c93-8dcca8cb72a8",
+  "correlation_id": "73210e7f-cd77-4b17-812e-1b5500700794",
+  "created_at": "2026-09-24T20:10:49.990126+00:00",
+  "interaction_id": "05d833cd-5a31-5cfe-96ff-68a8a8e7c5f8",
+  "journal_sequence": 14,
+  "payload": {
+    "output": {
+      "response_event_id": "1d759a71-8f54-5cbc-9026-631239d15b3c",
+      "response_required": true,
+      "response_text": "No, you are not actually non-competitive. You describe yourself as not wanting to beat your friends and as being willing to hand them credit—this reflects a social, interpersonal form of humility. However, your behavior reveals a strong internal standard of quality and accountability: you are ruthless with your own past performance and with work you know is sloppy. This shows a deep commitment to personal excellence, which is a form of competition—though it is not directed at others, it is still competitive in nature. You do not compete with others in a social sense, but you do compete with your own past self and with the quality of your own work. This is a distinct and valid kind of competitiveness. So, while you may not be competitive in the traditional, interpersonal sense, you are deeply competitive in the domain of personal integrity and performance. Your behavior is consistent with a disciplined, self-critical, and high-standard internal compass—this is not non-competitiveness; it is a form of quiet, principled competition."
+    },
+    "output_refs": [
+      "event:1d759a71-8f54-5cbc-9026-631239d15b3c"
+    ]
+  },
+  "payload_hash": "a7aa76ac93e12be6b723b98c57f2ffb9f3d1fb08b533582ab24682d5eef260e5",
+  "previous_artifact_hash": "9335c06fe70f594254f64caf6cc70d38b8e97fd143eb50579233740799280fc7",
+  "previous_artifact_id": "f4ff98a0-89c5-5e51-b732-7742efacbe53",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "e32b36e6-154f-5262-bfef-928f8787e584"
+}

@@ -1,0 +1,82 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "c71652f0-ee6c-470e-ae2d-beea45e3aebf",
+  "conversation_seq": 3,
+  "correlation_id": "ee51d644-71ca-4124-9482-2bd33f623147",
+  "event_id": "ab4849fa-e216-573d-afbe-026b44a10960",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-24T20:04:24.108069+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "58c9fd7a-9ae3-57dc-881c-08e1b6bdd8da",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [],
+        "include_persisted_history": true,
+        "limit": 6,
+        "query_text": "Write the short project message I would most likely send after a production power board reports an unexplained voltage spike during final hardware testing.",
+        "reference_time": null,
+        "source_types": [
+          "PERCEPT_OBSERVATION",
+          "SYSTEM_EVENT",
+          "TOOL_RESULT",
+          "USER_PROMPT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "activation_kernel": {
+          "kernel": "recall_from_postgres",
+          "kernel_trace": {
+            "candidates_considered": 0,
+            "cue_tokens": [
+              "write",
+              "short",
+              "project",
+              "message",
+              "would",
+              "most",
+              "likely",
+              "send",
+              "after",
+              "production",
+              "power",
+              "board",
+              "report",
+              "unexplain",
+              "voltage",
+              "spike",
+              "dur",
+              "final",
+              "hardware",
+              "test"
+            ],
+            "items": [],
+            "normalized_entities": [],
+            "policy_version": "deterministic-cues-v2"
+          },
+          "retrieval_role": "ATTENTION_ACTIVATION"
+        },
+        "association_hops": 0,
+        "baseline_recall_limit": 6,
+        "candidate_limit": 750,
+        "depth": "BROAD_SHALLOW",
+        "packet_item_limit": 6,
+        "query_strategy": "working_state_plus_baseline_activation",
+        "retrieval_role": "ATTENTION_ACTIVATION",
+        "working_state_event_ids": [],
+        "working_state_item_count": 0
+      },
+      "supported": false
+    },
+    "requesting_component": "attention-aperture:v0.7-attention-aperture-v4/task:05cd66b5-bb7e-5749-ab1c-f240d763ede3"
+  },
+  "payload_text": null,
+  "record_hash": "31c83046be260bc21e0c1c5d40826bc1ea7ce029df9dbf3020cdcd271365b294",
+  "source": "jit_memory"
+}

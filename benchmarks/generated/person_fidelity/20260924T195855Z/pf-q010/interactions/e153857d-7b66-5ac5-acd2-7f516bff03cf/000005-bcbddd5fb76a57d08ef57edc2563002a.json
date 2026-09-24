@@ -1,0 +1,36 @@
+{
+  "artifact_hash": "86693fe144525ec4f88821330e27a3fbb60da87f272dbda6ba08645b2f6f0660",
+  "artifact_id": "bcbddd5f-b76a-57d0-8ef5-7edc2563002a",
+  "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "ed21dacc-9a8b-583a-95f1-b237bd0c7e24",
+  "conversation_id": "f2028904-a9d2-4a17-9431-984fd9d4446c",
+  "correlation_id": "5fcafd9a-a13e-4d32-9785-f5ec308a62b0",
+  "created_at": "2026-09-24T20:06:15.590584+00:00",
+  "interaction_id": "e153857d-7b66-5ac5-acd2-7f516bff03cf",
+  "journal_sequence": 5,
+  "payload": {
+    "output": {
+      "response_policy": {
+        "evidence_scope": "SELF_MODEL",
+        "insufficient_literal": null,
+        "surface_mode": "NATURAL_LANGUAGE"
+      },
+      "response_policy_version": "response-source-authority-v6",
+      "response_source_types": [
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT",
+        "TOOL_RESULT",
+        "USER_PROMPT"
+      ]
+    },
+    "output_refs": []
+  },
+  "payload_hash": "a10d68219c5c58c20df3bcd5316bcbe97df7c19e2965c323d1efb9fafda4ce23",
+  "previous_artifact_hash": "e010b1740c8c5b884fd2105f9d2d02b1413a54001c21f1472039792313367aec",
+  "previous_artifact_id": "5452d943-c88c-57ef-9119-d9ad4a865ad3",
+  "producer": "percept_response_v2",
+  "stage": "V2_EVIDENCE_POLICY",
+  "task_id": "429d3fc8-1d1a-50e1-b952-ebb4ffda6769"
+}

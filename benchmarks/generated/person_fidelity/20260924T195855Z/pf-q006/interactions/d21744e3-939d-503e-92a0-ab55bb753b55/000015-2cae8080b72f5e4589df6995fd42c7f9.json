@@ -1,0 +1,27 @@
+{
+  "artifact_hash": "285a93068bb7c8eb1e1b0964535d7b20479babf8429f25b791c17eba56ab58de",
+  "artifact_id": "2cae8080-b72f-5e45-89df-6995fd42c7f9",
+  "artifact_key": "stage-result:V2_RESPOND",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "93793e41-5cc8-584a-9e18-51bc3fde4944",
+  "conversation_id": "86cf840b-9f77-472a-b748-025744f69bb7",
+  "correlation_id": "beccf94d-0dc4-4020-a55d-ef2d43b54819",
+  "created_at": "2026-09-24T20:04:08.234937+00:00",
+  "interaction_id": "d21744e3-939d-503e-92a0-ab55bb753b55",
+  "journal_sequence": 15,
+  "payload": {
+    "output": {
+      "response_required": true,
+      "response_text": "Persisted evidence is insufficient.",
+      "skipped": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "03707bb5f4ce03a88cce6836927abeaf2696f92e41c9378c462b48341c365bfc",
+  "previous_artifact_hash": "df5473c167ae8c8d22a0e07d3f90d08c163b2d82723cc32e78cb76489a31eb4c",
+  "previous_artifact_id": "4c33e6e6-80fb-5a5a-8f32-740f708b3e0d",
+  "producer": "percept_response_v2",
+  "stage": "V2_RESPOND",
+  "task_id": "18746552-057e-55a1-a850-5fbeda58baac"
+}

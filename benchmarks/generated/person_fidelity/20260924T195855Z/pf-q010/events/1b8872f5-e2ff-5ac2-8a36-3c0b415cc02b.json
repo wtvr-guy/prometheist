@@ -1,0 +1,31 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 3,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "1b8872f5-e2ff-5ac2-8a36-3c0b415cc02b",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-24T20:06:18.691683+00:00",
+  "payload": {
+    "data": {
+      "activated_at": "2026-09-24T13:06:08.872442-07:00",
+      "active_self": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      },
+      "entity_refs": [],
+      "goal_refs": [],
+      "interaction_id": "e153857d-7b66-5ac5-acd2-7f516bff03cf",
+      "query_text": "What was the name of my fifth-grade teacher?"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "e153857d-7b66-5ac5-acd2-7f516bff03cf",
+    "record_kind": "working_self",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "e6deb84f01fd82c78f5e58cf2f49eb1086fde8ebe502db81e885f32fd80961b5",
+  "source": "cognitive_runtime"
+}

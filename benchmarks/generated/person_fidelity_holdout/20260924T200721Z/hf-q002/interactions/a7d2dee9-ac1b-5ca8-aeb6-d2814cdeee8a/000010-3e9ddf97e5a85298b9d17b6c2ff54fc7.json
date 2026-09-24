@@ -1,0 +1,130 @@
+{
+  "artifact_hash": "abe277deb649b2acea942944c14f37f89651a8789f80affa60110a02c6badd1a",
+  "artifact_id": "3e9ddf97-e5a8-5298-b9d1-7b6c2ff54fc7",
+  "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "0877cf71-a338-5b00-8209-be96d98c59d9",
+  "conversation_id": "6b37caa5-8b84-4711-bd37-8e03c34c8883",
+  "correlation_id": "2ac65959-bd50-49b3-8e05-81514398708a",
+  "created_at": "2026-09-24T20:08:31.984471+00:00",
+  "interaction_id": "a7d2dee9-ac1b-5ca8-aeb6-d2814cdeee8a",
+  "journal_sequence": 10,
+  "payload": {
+    "output": {
+      "memory_package": {
+        "adaptive_recall_rounds": 0,
+        "composer_rounds": 1,
+        "memory_packet": {
+          "items": [
+            {
+              "content": "Kofi's bankruptcy is his to talk about. Even when a neighbor tells me they have already seen the filing notice, I would keep my answer flat and unhelpful and leave the telling to him. Keeping him in charge of his own story matters more to me than being pleasant to someone who is curious.",
+              "conversation_id": "ad624a4d-0463-598e-b067-b4b43889f80e",
+              "conversation_seq": 2,
+              "created_at": "2026-09-24T13:08:08.590817-07:00",
+              "event_type": "USER_PROMPT",
+              "global_seq": 4,
+              "provenance_event_ids": [],
+              "retrieval_reasons": [
+                "ATTENTION_APERTURE",
+                "LEXICAL_CUE"
+              ],
+              "score": 0.44571428571428573,
+              "source": "user",
+              "source_event_id": "c8514d42-72c6-558d-b70d-33ecc3101735"
+            }
+          ],
+          "memory_request_id": "6a46a5b2-0f1f-564b-80a3-7ac8a39d249a",
+          "need": {
+            "active_event_ids": [],
+            "conversation_id": null,
+            "entities": [],
+            "focus_event_ids": [],
+            "include_persisted_history": true,
+            "limit": 6,
+            "query_text": "A neighbor asks me what happened with Kofi's bankruptcy and mentions they have already seen the filing notice. How would I probably respond, and why?",
+            "reference_time": null,
+            "source_types": [
+              "PERCEPT_OBSERVATION",
+              "SYSTEM_EVENT",
+              "TOOL_RESULT",
+              "USER_PROMPT"
+            ],
+            "supplemental_query_texts": []
+          },
+          "origin": "INTERNAL_MEMORY",
+          "retrieval_trace": {
+            "activation_kernel": {
+              "kernel": "recall_from_postgres",
+              "kernel_trace": {
+                "candidates_considered": 1,
+                "cue_tokens": [
+                  "neighbor",
+                  "asks",
+                  "happen",
+                  "kofi",
+                  "bankruptcy",
+                  "mention",
+                  "already",
+                  "seen",
+                  "fil",
+                  "notice",
+                  "how",
+                  "would",
+                  "probably",
+                  "respond"
+                ],
+                "items": [
+                  {
+                    "event_id": "c8514d42-72c6-558d-b70d-33ecc3101735",
+                    "global_seq": 4,
+                    "reasons": [
+                      "LEXICAL_CUE"
+                    ],
+                    "score": {
+                      "conversation": 0.0,
+                      "entity": 0.0,
+                      "lexical": 0.5714285714285714,
+                      "temporal": 0.0,
+                      "total": 0.44571428571428573
+                    },
+                    "selected": true
+                  }
+                ],
+                "normalized_entities": [],
+                "policy_version": "deterministic-cues-v2"
+              },
+              "retrieval_role": "ATTENTION_ACTIVATION"
+            },
+            "association_hops": 0,
+            "baseline_recall_limit": 6,
+            "candidate_limit": 750,
+            "depth": "BROAD_SHALLOW",
+            "packet_item_limit": 6,
+            "query_strategy": "working_state_plus_baseline_activation",
+            "retrieval_role": "ATTENTION_ACTIVATION",
+            "working_state_event_ids": [],
+            "working_state_item_count": 0
+          },
+          "supported": true
+        },
+        "self_context": {
+          "admission": "PRIMARY_DERIVED_CONTEXT",
+          "items": []
+        },
+        "sufficient": true,
+        "unresolved_memory_deficit": null
+      },
+      "skipped": false
+    },
+    "output_refs": [
+      "memory-request:6a46a5b2-0f1f-564b-80a3-7ac8a39d249a"
+    ]
+  },
+  "payload_hash": "5145ef65a2b9b7676241fbf6f6d963b14b914905921139abd6e35b183ceb1be4",
+  "previous_artifact_hash": "5d85c7e0ede0ce5fb60d300aee1af3e9d5029e3665c4a3fb7caa4a4b152dfd30",
+  "previous_artifact_id": "5657f1c6-77f0-5d96-9da4-f5e8cc5d470c",
+  "producer": "percept_response_v2",
+  "stage": "V2_COMPOSE_MEMORY",
+  "task_id": "d5132213-deb6-51b4-84da-2e8586920026"
+}

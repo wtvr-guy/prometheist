@@ -1,0 +1,27 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "92d0f7ce-e93d-58bd-b2a2-f81585a261ca",
+  "conversation_seq": 1,
+  "correlation_id": "029128c1-eb93-59cb-9e52-90c5f14eca05",
+  "event_id": "047c822d-c490-5025-8331-15b5f9a70d38",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:12:57.104606+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-002-HOLDOUT",
+      "benchmark_version": "person-fidelity-holdout-v1",
+      "fixture_event_id": "hf-e018",
+      "occurred_at": "2025-06-05T19:15:00+00:00"
+    },
+    "entities": [
+      "grandmother",
+      "brass kerosene lantern",
+      "night transects"
+    ],
+    "text": "I keep re-wicking my grandmother's brass kerosene lantern for night transects even though a headlamp is cheaper and brighter. Lighting it is how the night survey starts, and it smells like her back porch, so what it is worth to me has nothing to do with what it would sell for."
+  },
+  "payload_text": "I keep re-wicking my grandmother's brass kerosene lantern for night transects even though a headlamp is cheaper and brighter. Lighting it is how the night survey starts, and it smells like her back porch, so what it is worth to me has nothing to do with what it would sell for.",
+  "record_hash": "1eb5d0276a01c2455b69d356fe57775eeb4693dec1f229c9c12f5316f3870a96",
+  "source": "user"
+}

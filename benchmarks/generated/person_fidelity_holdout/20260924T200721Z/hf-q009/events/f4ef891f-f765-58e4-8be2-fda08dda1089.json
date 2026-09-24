@@ -1,0 +1,31 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 3,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "f4ef891f-f765-58e4-8be2-fda08dda1089",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-24T20:14:30.683818+00:00",
+  "payload": {
+    "data": {
+      "activated_at": "2026-09-24T13:14:18.590616-07:00",
+      "active_self": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      },
+      "entity_refs": [],
+      "goal_refs": [],
+      "interaction_id": "30d62738-7b07-5bb3-a131-49ddc0efd52c",
+      "query_text": "A repair shop says my grandmother's lantern has a cracked fount that seeps fuel, calls it a burn hazard, and says a sound repair costs more than the lantern is worth. What would I most likely do?"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "30d62738-7b07-5bb3-a131-49ddc0efd52c",
+    "record_kind": "working_self",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "635cdd34efccd517dc28c92511a2fd7bb61993a69a86b0d72a955271b045e89d",
+  "source": "cognitive_runtime"
+}

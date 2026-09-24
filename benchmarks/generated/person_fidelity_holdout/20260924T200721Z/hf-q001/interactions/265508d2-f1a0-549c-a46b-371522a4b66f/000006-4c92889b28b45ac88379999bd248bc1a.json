@@ -1,0 +1,234 @@
+{
+  "artifact_hash": "28178fbf3922aff33330401a2e57b33cc9f4d7f941ccb699bfaf870abdf724b6",
+  "artifact_id": "4c92889b-28b4-5ac8-8379-999bd248bc1a",
+  "artifact_key": "stage-result:V2_PRECOGNITIVE",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "8e5bc317-522e-5ec3-beb5-7facea25e641",
+  "conversation_id": "c769c0c6-0d2e-487d-a09b-a2125197275f",
+  "correlation_id": "d652fef8-d936-4a54-b88c-a384eec99a79",
+  "created_at": "2026-09-24T20:07:36.160746+00:00",
+  "interaction_id": "265508d2-f1a0-549c-a46b-371522a4b66f",
+  "journal_sequence": 6,
+  "payload": {
+    "output": {
+      "aperture_packet": {
+        "items": [
+          {
+            "content": "Being thanked from a stage makes me want to leave the building. Standing there while a room claps turns me into a mascot for work a whole crew did. A note somebody actually wrote by hand lands completely differently, and I will happily spend a whole ceremony naming other people's contributions out loud.",
+            "conversation_id": "a578edfa-1a88-5403-8fed-a98ed0f985da",
+            "conversation_seq": 1,
+            "created_at": "2026-09-24T13:07:21.849062-07:00",
+            "event_type": "USER_PROMPT",
+            "global_seq": 9,
+            "provenance_event_ids": [],
+            "retrieval_reasons": [
+              "ATTENTION_APERTURE",
+              "LEXICAL_CUE"
+            ],
+            "score": 0.195,
+            "source": "user",
+            "source_event_id": "bdaaf785-e299-55f5-ac0d-675b7165cd40"
+          },
+          {
+            "content": "Those flood springs are why I became a wetland hydrologist. They also left me with a rule I will not bend: a forecast nobody outside the room can question is worse than no forecast, so what I publish has to stay legible and revisable by the people living downstream.",
+            "conversation_id": "b66e7837-7618-5146-9fe3-1ff25e9e0ef7",
+            "conversation_seq": 2,
+            "created_at": "2026-09-24T13:07:21.743789-07:00",
+            "event_type": "USER_PROMPT",
+            "global_seq": 2,
+            "provenance_event_ids": [],
+            "retrieval_reasons": [
+              "ATTENTION_APERTURE",
+              "LEXICAL_CUE"
+            ],
+            "score": 0.195,
+            "source": "user",
+            "source_event_id": "9596d158-b527-55cb-a0ba-a204b91e0386"
+          }
+        ],
+        "memory_request_id": "99647920-b7c3-5439-9d60-82ab30810226",
+        "need": {
+          "active_event_ids": [],
+          "conversation_id": null,
+          "entities": [],
+          "focus_event_ids": [],
+          "include_persisted_history": true,
+          "limit": 6,
+          "query_text": "Why did I go into wetland hydrology, and what rule did that childhood experience leave me with?",
+          "reference_time": null,
+          "source_types": [
+            "PERCEPT_OBSERVATION",
+            "SYSTEM_EVENT",
+            "TOOL_RESULT",
+            "USER_PROMPT"
+          ],
+          "supplemental_query_texts": []
+        },
+        "origin": "INTERNAL_MEMORY",
+        "retrieval_trace": {
+          "activation_kernel": {
+            "kernel": "recall_from_postgres",
+            "kernel_trace": {
+              "candidates_considered": 2,
+              "cue_tokens": [
+                "go",
+                "into",
+                "wetland",
+                "hydrology",
+                "rule",
+                "childhood",
+                "experience",
+                "leave"
+              ],
+              "items": [
+                {
+                  "event_id": "bdaaf785-e299-55f5-ac0d-675b7165cd40",
+                  "global_seq": 9,
+                  "reasons": [
+                    "LEXICAL_CUE"
+                  ],
+                  "score": {
+                    "conversation": 0.0,
+                    "entity": 0.0,
+                    "lexical": 0.25,
+                    "temporal": 0.0,
+                    "total": 0.195
+                  },
+                  "selected": true
+                },
+                {
+                  "event_id": "9596d158-b527-55cb-a0ba-a204b91e0386",
+                  "global_seq": 2,
+                  "reasons": [
+                    "LEXICAL_CUE"
+                  ],
+                  "score": {
+                    "conversation": 0.0,
+                    "entity": 0.0,
+                    "lexical": 0.25,
+                    "temporal": 0.0,
+                    "total": 0.195
+                  },
+                  "selected": true
+                }
+              ],
+              "normalized_entities": [],
+              "policy_version": "deterministic-cues-v2"
+            },
+            "retrieval_role": "ATTENTION_ACTIVATION"
+          },
+          "association_hops": 0,
+          "baseline_recall_limit": 6,
+          "candidate_limit": 750,
+          "depth": "BROAD_SHALLOW",
+          "packet_item_limit": 6,
+          "query_strategy": "working_state_plus_baseline_activation",
+          "retrieval_role": "ATTENTION_ACTIVATION",
+          "working_state_event_ids": [],
+          "working_state_item_count": 0
+        },
+        "supported": true
+      },
+      "attention_aperture_version": "v0.7-attention-aperture-v4",
+      "capability_catalog": [],
+      "disposition": {
+        "capability_indices": [],
+        "response_required": true
+      },
+      "execution_plan": {
+        "catalog_capability_ids": [],
+        "items": [],
+        "registry_version": "v0.7-capability-registry-v9",
+        "requested_catalog_indices": []
+      },
+      "percept": {
+        "context": {
+          "active_goal_refs": [],
+          "causal_percept_refs": [],
+          "entity_refs": [],
+          "expectation_refs": [],
+          "integrity": 0,
+          "observations": [],
+          "opportunity": 0,
+          "task_refs": [],
+          "threat": 0,
+          "uncertainty": 0
+        },
+        "conversation_id": "c769c0c6-0d2e-487d-a09b-a2125197275f",
+        "correlation_id": "d652fef8-d936-4a54-b88c-a384eec99a79",
+        "features": {
+          "contains_code_block": false,
+          "contains_question": true,
+          "contains_structured_payload": false,
+          "contains_url": false,
+          "line_count": 1,
+          "normalized_characters": 95,
+          "token_count": 17,
+          "uppercase_ratio": 0.025974025974025976
+        },
+        "input_buffer": {
+          "max_segments": 4,
+          "retained_segment_indices": [
+            0
+          ],
+          "segment_char_limit": 160,
+          "segments": [
+            "Why did I go into wetland hydrology, and what rule did that childhood experience leave me with?"
+          ],
+          "total_characters": 95,
+          "total_segments": 1,
+          "truncated": false
+        },
+        "normalized_text": "Why did I go into wetland hydrology, and what rule did that childhood experience leave me with?",
+        "observed_at": "2026-09-24T13:07:24.294522-07:00",
+        "percept_id": "0698e45b-db95-55f3-a511-091411e57713",
+        "policy_version": "v0.8-perception-v2",
+        "raw_value_sha256": "ba5032d16784102ed3e156185e4a745fa2a870358ab682c71d4ab40fc9fcd286",
+        "response_required": true,
+        "schema_version": 1,
+        "source": {
+          "interface": "chat",
+          "kind": "USER_INTERACTION",
+          "modality": "TEXT",
+          "source_id": "user"
+        },
+        "source_event_id": "5ae5d9de-d5ee-5e3e-8e9b-ef7c65f50440"
+      },
+      "salience_assessment": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "0698e45b-db95-55f3-a511-091411e57713",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "self_context": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      }
+    },
+    "output_refs": [
+      "memory-request:99647920-b7c3-5439-9d60-82ab30810226"
+    ]
+  },
+  "payload_hash": "7e1ebd6914ee947da12c6262ebe09c1e7c1e853339ac3d0d10d93c470d29d29b",
+  "previous_artifact_hash": "7fd463e13b9f505c0c2af191c851b73ea90200f0fe1166ba0f33395e4d6b78e5",
+  "previous_artifact_id": "58c179a9-077e-5c9b-a7e6-9e5a4e55dd1f",
+  "producer": "percept_response_v2",
+  "stage": "V2_PRECOGNITIVE",
+  "task_id": "c2d22a70-5d86-52ec-bed1-5381a8f1e377"
+}

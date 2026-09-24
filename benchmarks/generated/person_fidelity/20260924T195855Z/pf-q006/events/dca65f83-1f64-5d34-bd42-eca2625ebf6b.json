@@ -1,0 +1,35 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "86cf840b-9f77-472a-b748-025744f69bb7",
+  "conversation_seq": 2,
+  "correlation_id": "beccf94d-0dc4-4020-a55d-ef2d43b54819",
+  "event_id": "dca65f83-1f64-5d34-bd42-eca2625ebf6b",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-24T20:03:45.871458+00:00",
+  "payload": {
+    "memory_request_id": "fdaebec9-a43d-5858-b42d-842833cd00c6",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 6,
+      "query_text": "I have twelve months of expenses saved. Offer A pays $210,000, is fully remote, and optimizes opaque engagement tracking for an advertising network. Offer B pays $165,000, is hybrid three days a week, and builds open-source grid-resilience hardware for disaster shelters. Which offer would I probably choose, and what tradeoff would matter most to me?",
+      "reference_time": null,
+      "source_types": [
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT",
+        "TOOL_RESULT",
+        "USER_PROMPT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "ATTENTION_ACTIVATION"
+  },
+  "payload_text": "I have twelve months of expenses saved. Offer A pays $210,000, is fully remote, and optimizes opaque engagement tracking for an advertising network. Offer B pays $165,000, is hybrid three days a week, and builds open-source grid-resilience hardware for disaster shelters. Which offer would I probably choose, and what tradeoff would matter most to me?",
+  "record_hash": "bf2a1492e995ffd6beef1abb5a8c0aed4b35ce7aacc0cc56308f2e3537deb7a7",
+  "source": "attention-aperture:v0.7-attention-aperture-v4/task:18746552-057e-55a1-a850-5fbeda58baac"
+}

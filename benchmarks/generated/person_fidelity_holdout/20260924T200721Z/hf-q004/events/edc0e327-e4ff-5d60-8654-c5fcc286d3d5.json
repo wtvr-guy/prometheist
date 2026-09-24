@@ -1,0 +1,27 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4db331b-3e68-5437-930e-f1995d72fb21",
+  "conversation_seq": 2,
+  "correlation_id": "d1ddf45b-694e-58ab-81cd-4fa4c9a13926",
+  "event_id": "edc0e327-e4ff-5d60-8654-c5fcc286d3d5",
+  "event_type": "SYSTEM_EVENT",
+  "journaled_at": "2026-09-24T20:09:43.862681+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-002-HOLDOUT",
+      "benchmark_version": "person-fidelity-holdout-v1",
+      "fixture_event_id": "hf-e009",
+      "occurred_at": "2024-06-02T20:45:00+00:00"
+    },
+    "entities": [
+      "Wren Adisa",
+      "volunteer standings",
+      "transect totals"
+    ],
+    "text": "During the county stream-survey drive, Wren opened the volunteer standings page forty-one times in nine days, recalculated her own transect totals against her previous year twice, and submitted a correction raising her earlier count after the drive had already closed."
+  },
+  "payload_text": "During the county stream-survey drive, Wren opened the volunteer standings page forty-one times in nine days, recalculated her own transect totals against her previous year twice, and submitted a correction raising her earlier count after the drive had already closed.",
+  "record_hash": "c942c886cf4a632cbe1e78b84af4819586706a7e625cc0a77bbe06d6644899be",
+  "source": "volunteer_portal_observation"
+}

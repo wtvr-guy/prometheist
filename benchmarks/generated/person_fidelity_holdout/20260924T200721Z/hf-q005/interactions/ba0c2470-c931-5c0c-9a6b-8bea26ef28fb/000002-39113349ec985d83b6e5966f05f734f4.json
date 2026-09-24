@@ -1,0 +1,99 @@
+{
+  "artifact_hash": "ca2b135039433e3a851dd78766aa54918a05c422287e504dbae1ced85d23cedf",
+  "artifact_id": "39113349-ec98-5d83-b6e5-966f05f734f4",
+  "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "00482a39-209b-50d0-a579-2a1aefe8e197",
+  "conversation_id": "e45c10e2-efa3-4a62-b79c-c90d86d3c989",
+  "correlation_id": "7e2d9019-279b-4a8c-ae1b-0767e3aecc47",
+  "created_at": "2026-09-24T20:10:54.082039+00:00",
+  "interaction_id": "ba0c2470-c931-5c0c-9a6b-8bea26ef28fb",
+  "journal_sequence": 2,
+  "payload": {
+    "output": {
+      "percept": {
+        "context": {
+          "active_goal_refs": [],
+          "causal_percept_refs": [],
+          "entity_refs": [],
+          "expectation_refs": [],
+          "integrity": 0,
+          "observations": [],
+          "opportunity": 0,
+          "task_refs": [],
+          "threat": 0,
+          "uncertainty": 0
+        },
+        "conversation_id": "e45c10e2-efa3-4a62-b79c-c90d86d3c989",
+        "correlation_id": "7e2d9019-279b-4a8c-ae1b-0767e3aecc47",
+        "features": {
+          "contains_code_block": false,
+          "contains_question": true,
+          "contains_structured_payload": false,
+          "contains_url": false,
+          "line_count": 1,
+          "normalized_characters": 118,
+          "token_count": 24,
+          "uppercase_ratio": 0.043010752688172046
+        },
+        "input_buffer": {
+          "max_segments": 4,
+          "retained_segment_indices": [
+            0
+          ],
+          "segment_char_limit": 160,
+          "segments": [
+            "Do I like being recognized for my work? Give me the answer I would call accurate instead of a yes or no profile field."
+          ],
+          "total_characters": 118,
+          "total_segments": 1,
+          "truncated": false
+        },
+        "normalized_text": "Do I like being recognized for my work? Give me the answer I would call accurate instead of a yes or no profile field.",
+        "observed_at": "2026-09-24T13:10:52.855853-07:00",
+        "percept_id": "37719d0b-111d-5a57-a1e0-f4a5b9ccc895",
+        "policy_version": "v0.8-perception-v2",
+        "raw_value_sha256": "b7b0f57f5657dbc297e7c9b82ceb424f5e5d9fcaf7fbbf4cc339dce9a9253c9d",
+        "response_required": true,
+        "schema_version": 1,
+        "source": {
+          "interface": "chat",
+          "kind": "USER_INTERACTION",
+          "modality": "TEXT",
+          "source_id": "user"
+        },
+        "source_event_id": "c173f4b8-cf19-55ae-a5a9-c24a8761e760"
+      },
+      "salience_assessment": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "37719d0b-111d-5a57-a1e0-f4a5b9ccc895",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "working_state_available": false
+    },
+    "output_refs": []
+  },
+  "payload_hash": "af8c04e2d98b7d825f59ef09c91077e6ac16e2009425c091da96dbb3d064f287",
+  "previous_artifact_hash": "3952a3e9b964f971c28c1f22330b480e5cf4c76ccaa26167dea3fd1ea4957f5c",
+  "previous_artifact_id": "cc100f9e-249d-5b30-bcf9-64c785f53069",
+  "producer": "percept_response_v2",
+  "stage": "V2_RESOLVE_REFERENCES",
+  "task_id": "b3859900-2a78-5464-8252-684e33fd31ee"
+}

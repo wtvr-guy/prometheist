@@ -1,0 +1,27 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "538dfa4a-5702-5dcf-a48a-166fa0a5988a",
+  "conversation_seq": 1,
+  "correlation_id": "c0411670-9661-561a-98b2-03f8ac8d2b55",
+  "event_id": "003c6d67-7dd6-5801-be13-8e17feced97d",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-24T20:10:50.566877+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-002-HOLDOUT",
+      "benchmark_version": "person-fidelity-holdout-v1",
+      "fixture_event_id": "hf-e014",
+      "occurred_at": "2025-03-14T13:25:00+00:00"
+    },
+    "entities": [
+      "communication style",
+      "dry humor",
+      "say the number then say how sure you are"
+    ],
+    "text": "My field notes and messages are short and flat, with the occasional bone-dry aside. Under pressure I state the measurement, state how confident I am, and stop anything downstream that depends on a number I cannot defend yet. I catch myself saying, 'Say the number, then say how sure you are.'"
+  },
+  "payload_text": "My field notes and messages are short and flat, with the occasional bone-dry aside. Under pressure I state the measurement, state how confident I am, and stop anything downstream that depends on a number I cannot defend yet. I catch myself saying, 'Say the number, then say how sure you are.'",
+  "record_hash": "334138cc3f85b41471d4e89f730d8a1a2f548d0d4888f92c01b2d93fba0ae312",
+  "source": "user"
+}

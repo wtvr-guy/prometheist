@@ -1,0 +1,155 @@
+{
+  "artifact_hash": "eb6f08ebc423a4ae876a5159e8047144b3b51ffac9f8073c2c6468093d2819b4",
+  "artifact_id": "237bd2c4-6603-5d6a-ba35-c72b17e4811f",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "ace2ef4b-7ac9-5bbb-acb6-93eda93893cb",
+  "conversation_id": "c71652f0-ee6c-470e-ae2d-beea45e3aebf",
+  "correlation_id": "ee51d644-71ca-4124-9482-2bd33f623147",
+  "created_at": "2026-09-24T20:04:41.458719+00:00",
+  "interaction_id": "88a1ac4c-8283-55c6-9152-c99906ae96ab",
+  "journal_sequence": 17,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "ef35fe3d925e1c4e6487915358b91f1f1a8175424f42624fbfb4ac2cbd61a402",
+        "artifact_id": "74236e62-ecd4-5802-b446-136c4c24f694",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "15dfad8fe11920d839f5ef24ca858c8016acebbfd7fb074fbd5505f987c7573c",
+        "artifact_id": "978b5429-8112-574e-b8c3-25b4c552c88d",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "750dd0825ab0951b6c49fabb94e7c0796890b324e9d5563d319e09f092939fcd",
+        "artifact_id": "9516c522-a727-52f0-821a-eb51b3909cf4",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:ad55e957-bf8e-5414-a09a-09d83955697a:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "3fd56597db99f1a6e4a5546038c7185a7aba783e3e41e9e5efbd617a3fe52c9f",
+        "artifact_id": "0ecede91-75cd-5394-ba4e-9500b669fec0",
+        "artifact_key": "llm-validation:V2_EVIDENCE_POLICY:ad55e957-bf8e-5414-a09a-09d83955697a:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "a1fff10ab773adc75c5c19a5a31560322d1e3faf23d7664cc8498c841e653ad9",
+        "artifact_id": "90966495-fc2d-5637-8f3d-fb1171b53da4",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "c1796882b810aca940979d584769f686fdb921bd46a696bcbfe1b47891f90165",
+        "artifact_id": "f580f6a0-5c1b-5e9f-8d4e-af73039a968d",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "561efc78d4abc67eca8606a6de63b4fcfd7df7f94808324212e8fc985bb05298",
+        "artifact_id": "93a5e75f-fd8c-50f4-a0c5-e09f01b328be",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 7,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "003d992f3d924bc5aa678d559b34ad53f7d7ada169f64fdc15c5b53de81a68fb",
+        "artifact_id": "3c30f614-05b5-5ef6-b20c-2ec66fd3b2b5",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:bb9e47f9-8769-593f-bcb1-590b3de6feef:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "2a666b68fe8804cbce122dbad6a5413a5d1adce11662f9db57ae238e634a945f",
+        "artifact_id": "cad3f049-8974-5ee9-9394-d7ba6c48f110",
+        "artifact_key": "llm-validation:V2_COMPOSE_MEMORY:bb9e47f9-8769-593f-bcb1-590b3de6feef:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 9,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "6cde63a0cc27f89331e654f39d60299357f44a43a03713c305969b4ad8c058a5",
+        "artifact_id": "1151a631-6394-5582-b478-b9e0735c9e2c",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "5e0a37691caa3e62a7c655a4bc42a78de25ab9aa5563314d7451f9826bfb4682",
+        "artifact_id": "914bef1e-3017-5b23-9f65-f6c1b7fb0e6e",
+        "artifact_key": "llm-invocation:V2_RESPOND:19a2f517-275c-5ff2-bb50-fa7326ee2b82:0:V2_CURRENT_FALLBACK_SELECTION",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 11,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "298516cee6115cc7f9b4e9cfa4d5c0c344f889fe4c14be7b3d3b410e29a42ab5",
+        "artifact_id": "b9d016d9-9ab1-5829-adf7-cc391ae538c9",
+        "artifact_key": "llm-validation:V2_RESPOND:19a2f517-275c-5ff2-bb50-fa7326ee2b82:0:V2_CURRENT_FALLBACK_SELECTION",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 12,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "7856194ca9e71164c569c57f40bc3e3bc4368735f607b1ffe57499694ee4752b",
+        "artifact_id": "78a23d6a-e6a6-587b-9d10-6634fe761fba",
+        "artifact_key": "llm-invocation:V2_RESPOND:19a2f517-275c-5ff2-bb50-fa7326ee2b82:1:V2_CURRENT_FALLBACK_SELECTION",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 13,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "f5617862ad762562ad43e6cf5a6c2661f8e2f70a17ea11c50c2f9a3aa19e7519",
+        "artifact_id": "dcbbd7c8-e4c5-5eec-9027-19b896b7c9fb",
+        "artifact_key": "llm-validation:V2_RESPOND:19a2f517-275c-5ff2-bb50-fa7326ee2b82:1:V2_CURRENT_FALLBACK_SELECTION",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 14,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "929e971bd8be40c4f60769909c5092c2c7817a68e28bb0c83014f0702e60a85b",
+        "artifact_id": "cce79bc8-64da-5b6b-9970-ef85b90d263c",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 15,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "d0ebafec03610e64ad438d01beb1ff8ef75ad2e3f4c508bb11cdfc0c5a16eaf5",
+        "artifact_id": "03d5d51f-09bf-5fe8-95a9-e636954dc26a",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 16,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "Persisted evidence is insufficient.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "ab03eed5af2596c68f71697cd6514cefd751871979cff11979ecf7f7e46972f1",
+  "previous_artifact_hash": "d0ebafec03610e64ad438d01beb1ff8ef75ad2e3f4c508bb11cdfc0c5a16eaf5",
+  "previous_artifact_id": "03d5d51f-09bf-5fe8-95a9-e636954dc26a",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "05cd66b5-bb7e-5749-ab1c-f240d763ede3"
+}

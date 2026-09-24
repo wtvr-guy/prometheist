@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "86cf840b-9f77-472a-b748-025744f69bb7",
+  "conversation_seq": 5,
+  "correlation_id": "beccf94d-0dc4-4020-a55d-ef2d43b54819",
+  "event_id": "eee81083-6b38-5c43-bc90-f066c5657460",
+  "event_type": "INTERACTION_RESPONSE",
+  "journaled_at": "2026-09-24T20:04:11.285148+00:00",
+  "payload": {
+    "text": "Persisted evidence is insufficient."
+  },
+  "payload_text": "Persisted evidence is insufficient.",
+  "record_hash": "b25c5d8dea0930129ead4144d67419774f9905adb7e9cf61952174b2197fa94b",
+  "source": "percept_response_v2"
+}

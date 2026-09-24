@@ -1,0 +1,29 @@
+{
+  "artifact_hash": "6c2ea842f5a071af7e9d11a9e8e2157f7bb3354d10fab682b6aedc91cdd20b7e",
+  "artifact_id": "ac5f74c5-36e0-5fed-bf66-8cffb1f31b92",
+  "artifact_key": "stage-result:V2_PERSIST_RESULT",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "92b5ff9d-a771-5ca1-85ff-07872124efb9",
+  "conversation_id": "9b5d1fa3-cefb-4500-a263-3a3b59c1e556",
+  "correlation_id": "800a6d4a-2c11-459d-8676-4c0657ba2009",
+  "created_at": "2026-09-24T20:02:34.162559+00:00",
+  "interaction_id": "5d28df0f-0533-566d-9895-04254a0b9b37",
+  "journal_sequence": 14,
+  "payload": {
+    "output": {
+      "response_event_id": "76768eff-e957-5348-b4f6-0f6f29cccb1d",
+      "response_required": true,
+      "response_text": "You describe yourself as spontaneous, but your actual decision-making behavior shows a nuanced balance. You are spontaneous in low-stakes, free-form situations—like a free Saturday—where flexibility and immediate response feel natural. However, when it comes to significant or irreversible commitments, you apply structure: you create checklists, compare options, and sleep on decisions. This reveals that your spontaneity is not blind or unreflective—it's context-aware. You trust your gut in the moment, but you also anchor yourself in rational evaluation when the stakes are high. So yes, you are spontaneous—but only in ways that are intentional and adaptive. Your self-description reflects a consistent identity: you are spontaneous, yet grounded in thoughtful judgment when it matters."
+    },
+    "output_refs": [
+      "event:76768eff-e957-5348-b4f6-0f6f29cccb1d"
+    ]
+  },
+  "payload_hash": "85dc51e8c74ff430dbca913ff0bef7956acb9ad42d9107253714f2a68e0024fa",
+  "previous_artifact_hash": "e1d4260d043705acf5e64199bc3dd475363cca2a6eec43780c5edb86ec4576c2",
+  "previous_artifact_id": "06789d68-afc7-5aa2-9820-3cbaeb20380f",
+  "producer": "percept_response_v2",
+  "stage": "V2_PERSIST_RESULT",
+  "task_id": "7acf7e2d-7cc7-545b-a070-362b431f299a"
+}

@@ -1,0 +1,31 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 3,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "2f21a193-8a0d-5e4a-9f6c-9b6358a2aa57",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-24T20:03:45.938470+00:00",
+  "payload": {
+    "data": {
+      "activated_at": "2026-09-24T13:03:33.214519-07:00",
+      "active_self": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      },
+      "entity_refs": [],
+      "goal_refs": [],
+      "interaction_id": "d21744e3-939d-503e-92a0-ab55bb753b55",
+      "query_text": "I have twelve months of expenses saved. Offer A pays $210,000, is fully remote, and optimizes opaque engagement tracking for an advertising network. Offer B pays $165,000, is hybrid three days a week, and builds open-source grid-resilience hardware for disaster shelters. Which offer would I probably choose, and what tradeoff would matter most to me?"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "d21744e3-939d-503e-92a0-ab55bb753b55",
+    "record_kind": "working_self",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "5807acb7b50a4854a41edee38303ecaeb835f33454f0b8f386f1a20f70dcfb1c",
+  "source": "cognitive_runtime"
+}

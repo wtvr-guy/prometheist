@@ -1,0 +1,139 @@
+{
+  "artifact_hash": "2ed3c709eb3dbfb1bdce8371b900af49becd4c13c00577f6be292dff787bb64e",
+  "artifact_id": "27f8faea-fc7b-5d4f-9de1-562b2984342d",
+  "artifact_key": "final-disposition",
+  "artifact_schema_version": 1,
+  "artifact_type": "FINAL_DISPOSITION",
+  "assignment_id": "00482a39-209b-50d0-a579-2a1aefe8e197",
+  "conversation_id": "e45c10e2-efa3-4a62-b79c-c90d86d3c989",
+  "correlation_id": "7e2d9019-279b-4a8c-ae1b-0767e3aecc47",
+  "created_at": "2026-09-24T20:11:47.913773+00:00",
+  "interaction_id": "ba0c2470-c931-5c0c-9a6b-8bea26ef28fb",
+  "journal_sequence": 15,
+  "payload": {
+    "artifact_chain": [
+      {
+        "artifact_hash": "3952a3e9b964f971c28c1f22330b480e5cf4c76ccaa26167dea3fd1ea4957f5c",
+        "artifact_id": "cc100f9e-249d-5b30-bcf9-64c785f53069",
+        "artifact_key": "percept",
+        "artifact_type": "PERCEPT",
+        "journal_sequence": 1,
+        "stage": null
+      },
+      {
+        "artifact_hash": "ca2b135039433e3a851dd78766aa54918a05c422287e504dbae1ced85d23cedf",
+        "artifact_id": "39113349-ec98-5d83-b6e5-966f05f734f4",
+        "artifact_key": "stage-result:V2_RESOLVE_REFERENCES",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 2,
+        "stage": "V2_RESOLVE_REFERENCES"
+      },
+      {
+        "artifact_hash": "6c286c8e8b95da6448a8bb2f711bf133a4509e190b219e978db0d672eb6e28d6",
+        "artifact_id": "7af3eedc-144c-5b4d-9139-83466ea79d69",
+        "artifact_key": "llm-invocation:V2_EVIDENCE_POLICY:0f4492f2-e7d9-59b7-804c-4de627749e20:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 3,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "0913393064b484863d33e65ba7d82c4f876fce29ad906bd3a7c3d9920c45c7e6",
+        "artifact_id": "93bade53-0a38-5854-8a48-fe428c72d90d",
+        "artifact_key": "llm-validation:V2_EVIDENCE_POLICY:0f4492f2-e7d9-59b7-804c-4de627749e20:0:V2_RESPONSE_POLICY",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 4,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "5bf647bb0762717f40be5d5bc1a1eda0f8b832109f766703637e40b2e41592da",
+        "artifact_id": "1c49234f-8978-5233-9854-b04c739484f4",
+        "artifact_key": "stage-result:V2_EVIDENCE_POLICY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 5,
+        "stage": "V2_EVIDENCE_POLICY"
+      },
+      {
+        "artifact_hash": "842252efd222e40e5d0ae02355147717fc15caa03111ea0415fc03386a4eb0b0",
+        "artifact_id": "e3d13771-fc79-5f67-8b54-90daf49051d9",
+        "artifact_key": "stage-result:V2_PRECOGNITIVE",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 6,
+        "stage": "V2_PRECOGNITIVE"
+      },
+      {
+        "artifact_hash": "ab5b8b0c22b760faf2b253cea248b3def9f7b662134ae6c72f2a7a6e2433f12c",
+        "artifact_id": "a39abace-9bd0-554b-a4af-43f83430622b",
+        "artifact_key": "stage-result:V2_EXECUTE_WORK",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 7,
+        "stage": "V2_EXECUTE_WORK"
+      },
+      {
+        "artifact_hash": "0beebf24f4b1c1a0db7a61d7740579f5d45c9bffcd3412afb941143b5125ae3a",
+        "artifact_id": "a6fd428b-5837-57ed-815f-fdc7e0a57968",
+        "artifact_key": "llm-invocation:V2_COMPOSE_MEMORY:32dacfb6-c932-50b7-b3b5-a6a0d7d1ab89:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 8,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "ba3c0e2a85c9eaeb9928d08e51c74724fd476303cbaf58a3817d038af5d7aa55",
+        "artifact_id": "b36dfb40-b36b-5fea-a48a-7cdaaa45aa05",
+        "artifact_key": "llm-validation:V2_COMPOSE_MEMORY:32dacfb6-c932-50b7-b3b5-a6a0d7d1ab89:0:V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 9,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "07e9132a86080ff3e1b0b894ed3a8e6847fb61db4687ba58b356fc8360005a1d",
+        "artifact_id": "4f14bc03-4a4f-548d-b7ba-a841a65c54d0",
+        "artifact_key": "stage-result:V2_COMPOSE_MEMORY",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 10,
+        "stage": "V2_COMPOSE_MEMORY"
+      },
+      {
+        "artifact_hash": "7813f1a1a5dff450aa22eea0d5314e90b30c188e47dc6e7f814b23e14bc06c5d",
+        "artifact_id": "02b9d93a-aea7-59dd-9f2b-ea601283074c",
+        "artifact_key": "llm-invocation:V2_RESPOND:0cd55ffb-55d6-5e7a-91b1-771af76cd004:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_INVOCATION",
+        "journal_sequence": 11,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "647dd056043127131fd66845250ff60d41818c397e8d01d3098f55c0ae894db0",
+        "artifact_id": "019fa3de-b2cc-5db3-b6ca-04d222e7f719",
+        "artifact_key": "llm-validation:V2_RESPOND:0cd55ffb-55d6-5e7a-91b1-771af76cd004:0:FINAL_RESPONSE_V2",
+        "artifact_type": "LLM_VALIDATION",
+        "journal_sequence": 12,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "450145950303de72c1e3f5299ddf1980d40638834e305c8543fe827c189cc9ab",
+        "artifact_id": "25188f5b-c0f2-5630-a07c-da553a24b844",
+        "artifact_key": "stage-result:V2_RESPOND",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 13,
+        "stage": "V2_RESPOND"
+      },
+      {
+        "artifact_hash": "e2de1723e845058cc554e23bf1a8868ab038ecc4aac877f33c9838ffa3356954",
+        "artifact_id": "3046ff87-7289-54e8-b622-8e61d842334d",
+        "artifact_key": "stage-result:V2_PERSIST_RESULT",
+        "artifact_type": "STAGE_RESULT",
+        "journal_sequence": 14,
+        "stage": "V2_PERSIST_RESULT"
+      }
+    ],
+    "last_completed_stage": "V2_PERSIST_RESULT",
+    "response_required": true,
+    "response_text": "I do not derive satisfaction from being recognized for my work. Recognition feels like an external validation that doesn't align with how I experience my own progress or responsibility. I value the integrity of my own process—like the quiet judgment I lose when I work alone for long stretches—more than public acknowledgment. When others ask about my efforts, I keep my response flat, not because I’m dismissive, but because I believe the truth belongs to the person who lived it. That’s why I let Kofi speak for himself, even when others have seen the filing notice. It’s not about politeness—it’s about ownership. I don’t want to be seen as a success story. I want to be seen as someone who carries the weight of their own decisions, even when they go unnoticed.",
+    "status": "COMPLETED"
+  },
+  "payload_hash": "3bdf108ce0256ec95e62d018cdcf0bd44fa4e747d346df682403e97425fc2c28",
+  "previous_artifact_hash": "e2de1723e845058cc554e23bf1a8868ab038ecc4aac877f33c9838ffa3356954",
+  "previous_artifact_id": "3046ff87-7289-54e8-b622-8e61d842334d",
+  "producer": "percept_response_v2",
+  "stage": null,
+  "task_id": "b3859900-2a78-5464-8252-684e33fd31ee"
+}
