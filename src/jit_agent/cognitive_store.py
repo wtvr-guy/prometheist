@@ -70,6 +70,36 @@ def list_records(
     return [(str(row[0]), dict(row[1])) for row in rows]
 
 
+def list_records_with_prefix(
+    conn: psycopg.Connection,
+    kind: str,
+    prefix: str,
+    *,
+    after_key: str = "",
+    limit: int = HEAD_PAGE_SIZE,
+) -> list[tuple[str, dict[str, Any]]]:
+    """Read one bounded page of current records whose keys share an exact prefix.
+
+    This is an indexing primitive, not an epistemic boundary. Callers that need
+    the complete state for one tightly scoped semantic key must continue paging
+    until exhaustion rather than interpreting a storage page as evidence scope.
+    """
+
+    if not 1 <= limit <= HEAD_PAGE_SIZE:
+        raise ValueError("head page exceeds bounded read policy")
+    escaped = (
+        prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    ) + "%"
+    rows = conn.execute(
+        """SELECT record_key, payload FROM cognitive_heads
+           WHERE record_kind = %s AND record_key LIKE %s ESCAPE '\\'
+             AND record_key > %s
+           ORDER BY record_key LIMIT %s""",
+        (kind, escaped, after_key, limit),
+    ).fetchall()
+    return [(str(row[0]), dict(row[1])) for row in rows]
+
+
 def record_history(conn: psycopg.Connection, kind: str, key: str) -> list[dict[str, Any]]:
     """Every revision ever written for one exact (kind, key), oldest first.
 
