@@ -47,6 +47,12 @@ class EvidenceRelation(str, Enum):
     OPPOSES = "OPPOSES"
 
 
+class EvidenceSourceKind(str, Enum):
+    PERCEPT = "PERCEPT"
+    ACTION = "ACTION"
+    EVENT = "EVENT"
+
+
 class ResolutionStatus(str, Enum):
     ACCEPTED = "ACCEPTED"
     AMBIGUOUS = "AMBIGUOUS"
@@ -88,7 +94,8 @@ class SemanticEvidence(FrozenRecord):
     assertion_id: UUID
     subject: Reference
     property: Reference
-    source_percept_id: UUID
+    source_kind: EvidenceSourceKind
+    source_id: UUID
     relation: EvidenceRelation
     observed_at: datetime
     asserted_at: datetime
@@ -501,8 +508,9 @@ def record_semantic_evidence(
     subject: str,
     property: str,
     value: Scalar,
-    source_percept_id: UUID,
+    source_id: UUID,
     observed_at: datetime,
+    source_kind: EvidenceSourceKind = EvidenceSourceKind.PERCEPT,
     asserted_at: datetime,
     confidence: float,
     derivation_method: str,
@@ -557,7 +565,7 @@ def record_semantic_evidence(
         evidence_id = uuid5(
             COGNITIVE_NAMESPACE,
             (
-                f"semantic-evidence:{assertion_id}:{source_percept_id}:"
+                f"semantic-evidence:{assertion_id}:{source_kind.value}:{source_id}:"
                 f"{relation.value}:{derivation_method}"
             ),
         )
@@ -569,7 +577,8 @@ def record_semantic_evidence(
             assertion_id=assertion_id,
             subject=subject,
             property=property,
-            source_percept_id=source_percept_id,
+            source_kind=source_kind,
+            source_id=source_id,
             relation=relation,
             observed_at=observed_at,
             asserted_at=asserted_at,
