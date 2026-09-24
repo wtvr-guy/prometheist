@@ -438,6 +438,14 @@ def ensure_self_representation(
     return stored
 
 
+def get_self_representation(
+    conn: psycopg.Connection,
+    representation_id: UUID,
+) -> SelfRepresentation | None:
+    value = get_record(conn, SELF_REPRESENTATION_KIND, str(representation_id))
+    return SelfRepresentation.model_validate(value) if value is not None else None
+
+
 def _root_event(conn: psycopg.Connection, root_event_id: UUID):
     event = event_store.get_event_by_id(conn, root_event_id)
     if event is None:
