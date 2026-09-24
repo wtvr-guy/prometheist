@@ -378,6 +378,10 @@ _GENERALIZED_KINDS = frozenset(
 )
 
 
+def self_evidence_root_allowed(event_type: EventType) -> bool:
+    return event_type in _SELF_EVIDENCE_ROOT_TYPES
+
+
 def _normalized_statement(value: str) -> str:
     return " ".join(value.split()).casefold()
 
