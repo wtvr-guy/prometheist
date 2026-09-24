@@ -161,6 +161,14 @@ Prior assistant/model outputs, retrieval results, memory packets, derived
 representations, and working-state records cannot independently establish who
 the person is.
 
+Automatic reflection is stricter than the generic evidence API. User-authored
+`USER_PROMPT` roots are eligible by default. A non-user
+`PERCEPT_OBSERVATION` can seed identity learning only when the locally installed
+`SourcePolicy.self_model_evidence` flag is explicitly true. The default is false,
+so ordinary telemetry, scheduler observations, and unrelated sensors do not train
+the person model merely because they were consolidated. External/system evidence
+can still be attached through explicit provenance-aware application paths.
+
 Direct avowed, aspirational, and normative self representations additionally
 require `USER_PROMPT` roots when used as supporting evidence.
 
