@@ -117,7 +117,11 @@
         "src/jit_agent/ollama_runtime.py::OllamaClaimHostResourceProbe.__init__::last_memory_credit_mib": 0,
         "src/jit_agent/ollama_runtime.py::OllamaClaimHostResourceProbe.__init__::last_memory_debit_mib": 0,
         "src/jit_agent/ollama_runtime.py::OllamaClaimHostResourceProbe.capture::last_memory_debit_mib": 0,
-        "src/jit_agent/ollama_runtime.py::OllamaClaimHostResourceProbe.capture::comparison": 0
+        "src/jit_agent/ollama_runtime.py::OllamaClaimHostResourceProbe.capture::comparison": 0,
+        "src/jit_agent/self_memory.py::SelfEvidenceMetrics::prediction_confirmed_count.default": 0,
+        "src/jit_agent/self_memory.py::SelfEvidenceMetrics::prediction_contradicted_count.default": 0,
+        "src/jit_agent/self_memory.py::SelfEvidenceMetrics::prediction_ambiguous_count.default": 0,
+        "src/jit_agent/self_memory.py::_search_self_candidates::comparison": 0
       }
     },
     "external": {
