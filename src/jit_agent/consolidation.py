@@ -52,7 +52,7 @@ def _record_page_semantic_evidence(
             value=observation.value,
             unit=observation.unit,
             confidence=observation.confidence,
-            source_percept_id=state.percept_id,
+            source_id=state.percept_id,
             observed_at=state.observed_at,
             asserted_at=asserted_at,
             derivation_method=DERIVATION_METHOD,
