@@ -225,6 +225,13 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
             raise RuntimeError("self reflection requires completed semantic consolidation")
         derived_at = projection["derived_at"]
         evidence = collect_consolidation_evidence(conn, action_id)
+        if not evidence:
+            return {
+                "skipped": True,
+                "candidates": [],
+                "root_event_count": 0,
+                "derived_at": derived_at,
+            }
         candidates = []
         for batch in reflection_batches(evidence):
             proposal_batch = llm.propose_self_schemas(
@@ -266,6 +273,8 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
             SituationStage.SELF_PROPOSE,
             scheduler_key,
         )
+        if proposal_output.get("skipped") or not proposal_output.get("candidates"):
+            return {"skipped": True, "reviews": []}
         reviews = []
         seen = set()
         for candidate in proposal_output.get("candidates", []):
@@ -376,9 +385,22 @@ def execute_claimed_situation_step(conn, *, claim_id: UUID, worker_id: str, sche
                 triage_decision = TriageDecision.model_validate(
                     triage_output["decision"]
                 )
-                self_reflection = (
-                    triage_decision.candidate_task_class is TaskClass.CONSOLIDATE
-                )
+                if triage_decision.candidate_task_class is TaskClass.CONSOLIDATE:
+                    if stage is SituationStage.SELF_PROPOSE:
+                        action_id = uuid5(task.task_id, "registered-action")
+                        self_reflection = bool(
+                            collect_consolidation_evidence(conn, action_id)
+                        )
+                    else:
+                        proposal_output = _output(
+                            conn,
+                            task,
+                            SituationStage.SELF_PROPOSE,
+                            scheduler_key,
+                        )
+                        self_reflection = bool(
+                            proposal_output.get("candidates")
+                        )
             uses_model = (
                 (
                     stage is SituationStage.TRIAGE
