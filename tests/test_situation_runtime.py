@@ -16,7 +16,7 @@ from jit_agent.percept_context import Observation, PerceptContext
 from jit_agent.percept_intake import ingest_percept, install_source_policy
 from jit_agent.perception import PerceptKind, PerceptModality, PerceptSource
 from jit_agent.percept_triage import SourcePolicy
-from jit_agent.semantic_memory import current_semantic_fact
+from jit_agent.semantic_memory import (\n    current_semantic_resolution,\n    selected_assertion,\n    semantic_evidence,\n)
 from jit_agent.situation_runtime import drain_situations, submit_situation_page, run_situation_task
 from jit_agent.situations import register_expectation
 
@@ -253,36 +253,57 @@ def test_scheduled_consolidation_executes_separately_and_preserves_sources(conn)
     assert len(projections) == 1
     assert projections[0][1]["canonical_records_modified"] is False
     assert projections[0][1]["projections"][0]["observed_values"][0]["support_percept_ids"]
+    assert len(projections[0][1]["semantic_updates"]) == 1
     for event_id, payload in original:
         assert event_store.get_event_by_id(conn, event_id).payload == payload
-    facts = projections[0][1]["semantic_facts"]
-    assert facts == [{"subject": "worker:1", "property": "memory", "fact_id": facts[0]["fact_id"], "relation": "INITIAL"}]
-    fact = current_semantic_fact(conn, "worker:1", "memory")
-    assert fact is not None and fact.value == 500 and str(fact.fact_id) == facts[0]["fact_id"]
+
+    resolution = current_semantic_resolution(conn, "worker:1", "memory")
+    assertion = selected_assertion(conn, resolution)
+    assert resolution is not None
+    assert assertion is not None and assertion.value == 500
+    assert len(semantic_evidence(conn, "worker:1", "memory")) == 1
 
 
-def test_consolidation_skips_semantic_fact_when_one_subject_is_ambiguous_within_a_page(conn):
+def test_consolidation_records_variation_as_evidence_instead_of_skipping_it(conn):
     source = source_setup(conn)
     add_observation(conn, source, value=500, delivery_id="first")
     add_observation(conn, source, value=700, delivery_id="second")
-    projection = consolidate_page(conn, action_id=uuid4())
+    asserted_at = datetime.now(timezone.utc)
+    projection = consolidate_page(
+        conn, action_id=uuid4(), asserted_at=asserted_at
+    )
+
     assert projection["projections"][0]["variation_present"] is True
-    assert projection["semantic_facts"] == []
-    assert current_semantic_fact(conn, "worker:1", "memory") is None
+    assert len(projection["semantic_updates"]) == 2
+    assert len(semantic_evidence(conn, "worker:1", "memory")) == 2
+    resolution = current_semantic_resolution(conn, "worker:1", "memory")
+    assert resolution is not None
+    assertion = selected_assertion(conn, resolution)
+    assert assertion is not None and assertion.value == 700
 
 
-def test_consolidation_derives_separate_semantic_facts_per_subject(conn):
+def test_consolidation_keeps_subject_evidence_separate(conn):
     source = source_setup(conn)
     add_observation(conn, source, value=500, subject="worker:1", delivery_id="w1")
     add_observation(conn, source, value=900, subject="worker:2", delivery_id="w2")
-    projection = consolidate_page(conn, action_id=uuid4())
-    facts_by_subject = {fact["subject"]: fact for fact in projection["semantic_facts"]}
-    assert set(facts_by_subject) == {"worker:1", "worker:2"}
-    assert current_semantic_fact(conn, "worker:1", "memory").value == 500
-    assert current_semantic_fact(conn, "worker:2", "memory").value == 900
-    # Each subject's provenance stays exact to its own evidence; never merged.
-    assert len(current_semantic_fact(conn, "worker:1", "memory").derived_from) == 1
-    assert len(current_semantic_fact(conn, "worker:2", "memory").derived_from) == 1
+    projection = consolidate_page(
+        conn,
+        action_id=uuid4(),
+        asserted_at=datetime.now(timezone.utc),
+    )
+
+    subjects = {item["subject"] for item in projection["semantic_updates"]}
+    assert subjects == {"worker:1", "worker:2"}
+    one = selected_assertion(
+        conn, current_semantic_resolution(conn, "worker:1", "memory")
+    )
+    two = selected_assertion(
+        conn, current_semantic_resolution(conn, "worker:2", "memory")
+    )
+    assert one is not None and one.value == 500
+    assert two is not None and two.value == 900
+    assert len(semantic_evidence(conn, "worker:1", "memory")) == 1
+    assert len(semantic_evidence(conn, "worker:2", "memory")) == 1
 
 
 def test_forged_action_success_receipt_fails_closed(conn):
