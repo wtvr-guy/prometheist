@@ -79,7 +79,7 @@ def test_corroboration_accumulates_evidence_without_duplicate_assertion(conn):
     # The conclusion is unchanged, but the resolution advances its effective
     # observation time so a later-arriving stale contradiction cannot displace it.
     assert second.resolution_created is True
-    assert second.resolution.effective_at == _at(10)
+    assert second.resolution.support_observed_at == _at(10)
     assert len(semantic_assertions(conn, "person:mike", "preferred_drink")) == 1
     evidence = semantic_evidence(conn, "person:mike", "preferred_drink")
     assert len(evidence) == 2
@@ -205,7 +205,7 @@ def test_later_corroboration_blocks_stale_conflicting_backfill(conn):
     current = current_semantic_resolution(conn, "person:mike", "preferred_drink")
     assert current.status is ResolutionStatus.ACCEPTED
     assert current.selected_assertion_id == initial.assertion.assertion_id
-    assert current.effective_at == corroborated.evidence.observed_at
+    assert current.support_observed_at == corroborated.evidence.observed_at
     assert stale_conflict.resolution_created is False
 
 
@@ -223,7 +223,7 @@ def test_opposition_older_than_latest_support_does_not_create_current_ambiguity(
     current = current_semantic_resolution(conn, "person:mike", "preferred_drink")
     assert current.status is ResolutionStatus.ACCEPTED
     assert current.selected_assertion_id == accepted.assertion.assertion_id
-    assert current.effective_at == _at(20)
+    assert current.support_observed_at == _at(20)
     assert stale_opposition.resolution_created is False
 
 
