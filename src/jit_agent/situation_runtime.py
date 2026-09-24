@@ -30,7 +30,7 @@ from jit_agent.worker_protocol import deterministic_worker_step_id, WorkerEffect
 from jit_agent.worker_runtime import GuardedWorkerLauncher
 from jit_agent.worker_store import register_worker_step, load_worker_result
 
-SITUATION_PROTOCOL = "v0.8-situation-v1"
+SITUATION_PROTOCOL = "v0.8-situation-v2"
 SITUATION_WORKER_LEASE_SECONDS = 600
 SITUATION_WORKER_TIMEOUT_SECONDS = 660
 
@@ -39,6 +39,8 @@ class SituationStage(str, Enum):
     MEMORY = "SITUATION_MEMORY"
     TRIAGE = "SITUATION_TRIAGE"
     EXECUTE = "SITUATION_EXECUTE"
+    SELF_PROPOSE = "SITUATION_SELF_PROPOSE"
+    SELF_REVIEW = "SITUATION_SELF_REVIEW"
     COMPOSE = "SITUATION_COMPOSE_MEMORY"
     RESPOND = "SITUATION_RESPOND"
     PERSIST = "SITUATION_PERSIST"
@@ -147,7 +149,18 @@ def submit_situation_page(conn: psycopg.Connection, *, probe=None, policy=None,
                                      created_at=datetime.now(timezone.utc))
                 put_record(conn, "situation_task", str(task_id), task.model_dump(mode="json"), revision="submitted")
             triage = deterministic_triage(percept, situation, source_policy)
-            requires_model = triage is None or (source_policy.response_required and source_policy.natural_language_response)
+            requires_model = (
+                triage is None
+                or (
+                    triage is not None
+                    and triage.candidate_task_class is not None
+                    and triage.candidate_task_class.value == "CONSOLIDATE"
+                )
+                or (
+                    source_policy.response_required
+                    and source_policy.natural_language_response
+                )
+            )
             if task_id not in scheduler.tasks:
                 scheduler.submit(AttentionTask(
                     task_id=task_id, task_key=f"situation:{situation.snapshot_id}", created_seq=allocate_created_seq(conn),
