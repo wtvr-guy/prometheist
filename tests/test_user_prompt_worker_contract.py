@@ -37,12 +37,23 @@ def test_response_policy_defaults_ordinary_questions_to_natural_language() -> No
     assert "natural_language is the default for ordinary questions" in normalized
     assert "only when the current user explicitly requires exact raw output" in normalized
     assert "a request to answer naturally" in normalized
+    assert "self_model" in normalized
+    assert "what do i usually prefer?" in normalized
 
 
 @pytest.mark.parametrize(
     ("scope", "expected_types"),
     [
         (HistoricalEvidenceScope.USER_AUTHORED, {EventType.USER_PROMPT}),
+        (
+            HistoricalEvidenceScope.SELF_MODEL,
+            {
+                EventType.USER_PROMPT,
+                EventType.TOOL_RESULT,
+                EventType.PERCEPT_OBSERVATION,
+                EventType.SYSTEM_EVENT,
+            },
+        ),
         (
             HistoricalEvidenceScope.MODEL_OUTPUT,
             {
@@ -106,6 +117,7 @@ def test_response_scope_maps_to_exact_retrieval_event_roles(scope, expected_type
     ("prompt", "scope"),
     [
         ("What constraint did I give you?", HistoricalEvidenceScope.USER_AUTHORED),
+        ("What do I usually prefer?", HistoricalEvidenceScope.SELF_MODEL),
         ("Quote the assistant's prior response verbatim.", HistoricalEvidenceScope.MODEL_OUTPUT),
         ("Summarize our prior conversation.", HistoricalEvidenceScope.MIXED_CONVERSATION),
         ("What is the current status?", HistoricalEvidenceScope.GENERAL_OR_CURRENT),
