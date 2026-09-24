@@ -38,6 +38,7 @@ WORKING_SELF_KIND = "working_self"
 SELF_MEMORY_POLICY = "self-memory/v1"
 SELF_SUBJECT = "self"
 MAX_SELF_CONTEXT_ITEMS = 8
+MAX_CORE_SELF_ITEMS = 2
 MAX_SELF_CONTEXT_TAGS = 8
 MAX_SELF_STATEMENT_CHARS = 2048
 MIN_GENERALIZED_SUPPORT_ROOTS = 2
@@ -1089,7 +1090,9 @@ def _search_self_candidates(
                 resolution,
             )
 
-    if len(candidates) < limit:
+    remaining = limit - len(candidates)
+    core_limit = min(MAX_CORE_SELF_ITEMS, remaining)
+    if core_limit > 0:
         central_rows = conn.execute(
             """
             SELECT r.payload, s.payload
@@ -1111,9 +1114,10 @@ def _search_self_candidates(
             (
                 SELF_RESOLUTION_KIND,
                 SELF_REPRESENTATION_KIND,
-                limit,
+                core_limit + len(candidates),
             ),
         ).fetchall()
+        added = 0
         for representation_data, resolution_data in central_rows:
             representation = SelfRepresentation.model_validate(
                 dict(representation_data)
@@ -1126,7 +1130,8 @@ def _search_self_candidates(
                 representation,
                 resolution,
             )
-            if len(candidates) == limit:
+            added += 1
+            if added == core_limit:
                 break
 
     ordered = sorted(
