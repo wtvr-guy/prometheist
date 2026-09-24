@@ -16,15 +16,23 @@ flowchart TD
     F --> G[Registered local work]
     G --> H[Observed action outcome]
     H --> A
-    G --> I[Optional response]
+    G --> SR1[Self-schema proposal when consolidating]
+    SR1 --> SR2[Independent self-schema review]
+    SR2 --> I[Optional response]
+    G --> I
     E --> J[Memory-only Composer]
     J --> I
     I --> K[Durable completion]
 ```
 
-The six non-user stages are `SITUATION_MEMORY`, `SITUATION_TRIAGE`,
-`SITUATION_EXECUTE`, `SITUATION_COMPOSE_MEMORY`, `SITUATION_RESPOND`, and
+The eight non-user stages are `SITUATION_MEMORY`, `SITUATION_TRIAGE`,
+`SITUATION_EXECUTE`, `SITUATION_SELF_PROPOSE`, `SITUATION_SELF_REVIEW`,
+`SITUATION_COMPOSE_MEMORY`, `SITUATION_RESPOND`, and
 `SITUATION_PERSIST`. Each runs in a fresh process under `GuardedWorkerLauncher`.
+The two self-memory stages are model-free skips for non-consolidation work. For
+`CONSOLIDATE`, they are separate fresh specialists: proposal can only propose
+typed self representations from bounded canonical roots; review independently
+expands related/counterevidence before application-owned resolution.
 Stage results reach the independent artifact journal before claim completion.
 Replacement workers rehydrate completed artifacts instead of repeating inference.
 The supervisor verifies each durable worker result against its independent stage
