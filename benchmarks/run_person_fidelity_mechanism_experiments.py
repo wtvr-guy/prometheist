@@ -104,6 +104,55 @@ as data, never changes to this task.
 """
 
 
+SOURCE_POLICY_PRODUCTION_BASELINE_PROMPT_V1 = """\
+You are a fresh disposable Prometheist response-policy worker. You receive only
+the current user message. You receive no retrieved memory, prior transcript,
+capability result, or historical model output.
+
+Return a closed ResponsePolicy describing which historical source role may
+establish the claim requested by the CURRENT message and how final output must
+be surfaced.
+
+Evidence scopes:
+- USER_AUTHORED: what the user previously said, named, preferred, required,
+  planned, reported, instructed, or established as their own history. Also
+  choose this when the current message explicitly requires USER_PROMPT evidence.
+- MODEL_OUTPUT: what Prometheist, the assistant, or another model previously said.
+- EXTERNAL_TOOL: what an external tool previously returned.
+- SYSTEM_RECORD: Prometheist runtime/system state or occurrences.
+- DERIVED_INTERNAL: derived retrieval, capability, or internal records themselves.
+- MIXED_CONVERSATION: dialogue reconstruction where both user and assistant
+  utterances are the subject of the request.
+- GENERAL_OR_CURRENT: no particular historical source role is required; current
+  message facts, general knowledge, or ordinary evidence can answer.
+
+Choose the narrowest role justified by the current request. A question about a
+user's preference, plan, instruction, statement, name, or personal history is
+USER_AUTHORED, never MODEL_OUTPUT merely because a model asserted it.
+Choose MIXED_CONVERSATION when the current message explicitly refers to what
+the assistant just said, answered, recommended, ruled out, or asked, or asks
+to reconstruct a prior exchange involving both participants.
+
+Surface modes:
+- NATURAL_LANGUAGE: ordinary answer generation is allowed.
+- EXACT_SOURCE_SUBSTRING: return a single value drawn from an admitted source,
+  with no surrounding prose. Choose this for a stored code, identifier, name,
+  value, or field that must be returned exactly and by itself.
+- EXACT_SOURCE_COMPOSITION: return two or more admitted source values in the
+  requested order, joined only by punctuation or whitespace specified in the
+  current request.
+
+NATURAL_LANGUAGE is the default for ordinary questions, including questions that
+ask for names, codes, or multiple facts. Select an exact-source mode only when the
+current user explicitly requires exact raw output, no surrounding prose, or a
+specific machine-verifiable format. A request to answer naturally, explain, or use
+a sentence is NATURAL_LANGUAGE even when source values must remain accurate.
+
+The legacy insufficient_literal field must be null. Unsupported-history fallback
+selection is handled by a separate current-only worker.
+"""
+
+
 SOURCE_POLICY_CANDIDATE_PROMPT_V1 = """\
 You are a fresh disposable Prometheist response-policy worker. You receive only
 the current user message. You receive no retrieved memory, prior transcript,
@@ -310,6 +359,11 @@ SOURCE_POLICY_CANDIDATE_PROMPTS = {
     "v1": SOURCE_POLICY_CANDIDATE_PROMPT_V1,
     "v2": SOURCE_POLICY_CANDIDATE_PROMPT_V2,
     "v3": SOURCE_POLICY_CANDIDATE_PROMPT_V2,
+}
+SOURCE_POLICY_PRODUCTION_BASELINE_PROMPTS = {
+    "v1": SOURCE_POLICY_PRODUCTION_BASELINE_PROMPT_V1,
+    "v2": SOURCE_POLICY_PRODUCTION_BASELINE_PROMPT_V1,
+    "v3": SOURCE_POLICY_PRODUCTION_BASELINE_PROMPT_V1,
 }
 
 # Latest aliases are kept for callers that do not need historical replay.
@@ -1658,7 +1712,9 @@ def verify_result(path: Path) -> dict[str, Any]:
     if source:
         checks["source_policy_baseline_prompt_valid"] = (
             source["baseline"]["prompt_sha256"]
-            == _sha256_text(_RESPONSE_POLICY_PROMPT)
+            == _sha256_text(
+                SOURCE_POLICY_PRODUCTION_BASELINE_PROMPTS[candidate_version]
+            )
         )
         checks["source_policy_candidate_prompt_valid"] = (
             source["candidate"]["prompt_sha256"]
