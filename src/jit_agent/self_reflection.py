@@ -30,11 +30,14 @@ from jit_agent.self_memory import (
     SelfPerspective,
     SelfRepresentation,
     SelfRepresentationKind,
+    SELF_SUBJECT,
     SelfResolution,
     SelfResolutionStatus,
+    current_self_resolution,
     ensure_self_representation,
     record_self_evidence,
     resolve_self_representation,
+    self_evidence,
 )
 from jit_agent.situations import Situation
 
@@ -238,7 +241,6 @@ def render_reflection_evidence(
 def materialize_proposal(
     conn: psycopg.Connection,
     *,
-    subject: str,
     proposal: SelfSchemaProposal,
     evidence: tuple[ReflectionEvidence, ...],
     derived_at,
@@ -249,7 +251,7 @@ def materialize_proposal(
 
     representation = ensure_self_representation(
         conn,
-        subject=subject,
+        subject=SELF_SUBJECT,
         kind=proposal.kind,
         perspective=proposal.perspective,
         statement=proposal.statement,
@@ -294,10 +296,7 @@ def review_memory_packet(
 ) -> MemoryPacket:
     support_ids = [
         evidence.root_event_id
-        for evidence in __import__(
-            "jit_agent.self_memory",
-            fromlist=["self_evidence"],
-        ).self_evidence(conn, representation.representation_id)
+        for evidence in self_evidence(conn, representation.representation_id)
         if evidence.relation is SelfEvidenceRelation.SUPPORTS
     ]
     focus = support_ids[:4]
@@ -362,10 +361,7 @@ def apply_review(
         SelfReviewVerdict.REJECT: SelfResolutionStatus.REJECTED,
         SelfReviewVerdict.KEEP_CANDIDATE: SelfResolutionStatus.CANDIDATE,
     }[review.verdict]
-    current = __import__(
-        "jit_agent.self_memory",
-        fromlist=["current_self_resolution"],
-    ).current_self_resolution(conn, representation.representation_id)
+    current = current_self_resolution(conn, representation.representation_id)
     if current is None:
         raise RuntimeError("self review candidate has no prior resolution")
     return resolve_self_representation(
