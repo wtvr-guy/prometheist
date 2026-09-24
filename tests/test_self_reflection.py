@@ -8,6 +8,7 @@ from jit_agent.cognitive_store import list_records, put_record
 from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 from jit_agent.perception import normalize_user_interaction_percept
 from jit_agent.self_memory import (
+    FutureOrientation,
     IdentityCentrality,
     PlasticityClass,
     SELF_SUBJECT,
@@ -16,6 +17,7 @@ from jit_agent.self_memory import (
     SelfResolutionStatus,
     current_self_resolution,
     default_plasticity,
+    resolve_self_representation,
     self_evidence,
 )
 from jit_agent.self_reflection import (
@@ -152,10 +154,7 @@ def test_materialization_uses_application_contexts_for_breadth(conn):
     assert resolution is not None
     assert resolution.status is SelfResolutionStatus.CANDIDATE
 
-    established = __import__(
-        "jit_agent.self_memory",
-        fromlist=["resolve_self_representation"],
-    ).resolve_self_representation(
+    established = resolve_self_representation(
         conn,
         representation_id=representation.representation_id,
         requested_status=SelfResolutionStatus.ESTABLISHED,
@@ -267,7 +266,7 @@ def test_materialized_self_subject_is_fixed(conn):
         perspective=SelfPerspective.ASPIRATIONAL,
         statement="I want to become an AI engineer.",
         identity_centrality=IdentityCentrality.CENTRAL,
-        future_orientation="DESIRED",
+        future_orientation=FutureOrientation.DESIRED,
         support_indices=(0,),
     )
     evidence = (
