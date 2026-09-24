@@ -1002,14 +1002,22 @@ def _compose_memory_package(
         and self_context.admission is SelfContextAdmission.PRIMARY_DERIVED_CONTEXT
         else None
     )
+    def assess(current_packet: MemoryPacket) -> MemorySufficiencyDecision:
+        if composer_self_context is None:
+            return llm.assess_memory_sufficiency(
+                interaction.user_text,
+                current_packet,
+            )
+        return llm.assess_memory_sufficiency(
+            interaction.user_text,
+            current_packet,
+            composer_self_context,
+        )
+
     decisions: list[MemorySufficiencyDecision] = []
     expansions: list[MemoryPacket] = []
     for round_index, _stage in enumerate(_ADAPTIVE_RECALL_STAGES):
-        decision = llm.assess_memory_sufficiency(
-            interaction.user_text,
-            packet,
-            composer_self_context,
-        )
+        decision = assess(packet)
         decisions.append(decision)
         if decision.sufficient:
             return ResponseMemoryPackage(
@@ -1034,11 +1042,7 @@ def _compose_memory_package(
         if no_progress:
             break
 
-    final_decision = llm.assess_memory_sufficiency(
-            interaction.user_text,
-            packet,
-            composer_self_context,
-        )
+    final_decision = assess(packet)
     decisions.append(final_decision)
     return ResponseMemoryPackage(
         memory_packet=packet,
@@ -1313,7 +1317,10 @@ def _execute_stage(
             activated_at=(
                 interaction.percept.observed_at
                 if interaction.percept is not None
-                else datetime.now().astimezone()
+                else event_store.get_event_by_id(
+                    conn,
+                    interaction.user_prompt_event_id,
+                ).created_at
             ),
             goal_refs=goal_refs,
             entity_refs=entity_refs,
