@@ -20,6 +20,7 @@ class ObservedState(FrozenRecord):
     observation: Observation
     percept_id: UUID
     observed_at: datetime
+    source_event_id: UUID | None = None
 
 
 class SituationRelation(FrozenRecord):
@@ -85,7 +86,10 @@ def form_situation(
             continue  # Late evidence remains canonical; it cannot replace a newer observation.
         states.pop(property_key, None)
         states[property_key] = ObservedState(
-            observation=observation, percept_id=percept.percept_id, observed_at=percept.observed_at,
+            observation=observation,
+            percept_id=percept.percept_id,
+            observed_at=percept.observed_at,
+            source_event_id=percept.source_event_id,
         )
         errors.pop(property_key, None)
         # Choose the latest declared expectation for a property; confidence is
