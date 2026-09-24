@@ -13,7 +13,7 @@ from jit_agent.percept_context import FrozenRecord, aware
 from jit_agent.percept_intake import ingest_percept, install_source_policy
 from jit_agent.perception import PerceptKind, PerceptModality, PerceptSource
 from jit_agent.percept_triage import SourcePolicy, TaskClass
-from jit_agent.semantic_memory import current_semantic_resolution, record_semantic_evidence
+from jit_agent.semantic_memory import record_semantic_evidence
 from jit_agent.situations import Situation
 
 DERIVATION_METHOD = "consolidation/v2"
@@ -135,7 +135,7 @@ def consolidate_page(
         for state in situation.observed_state:
             observation = state.observation
             grouping_key = (observation.property, observation.unit)
-            groups[grouping_key][state.percept_id] = state
+            groups[grouping_key][(state.percept_id, observation.subject)] = state
             unique_states[
                 (state.percept_id, observation.subject, observation.property)
             ] = state
@@ -178,24 +178,6 @@ def consolidate_page(
         {index: state for index, state in enumerate(unique_states.values())},
         asserted_at=asserted_at,
     )
-    affected = sorted(
-        {
-            (state.observation.subject, state.observation.property)
-            for state in unique_states.values()
-        }
-    )
-    semantic_resolutions = []
-    for subject, property_name in affected:
-        resolution = current_semantic_resolution(conn, subject, property_name)
-        semantic_resolutions.append(
-            {
-                "subject": subject,
-                "property": property_name,
-                "resolution": (
-                    resolution.model_dump(mode="json") if resolution else None
-                ),
-            }
-        )
     result = {
         "projections": projections,
         "source_snapshot_ids": [
@@ -204,7 +186,6 @@ def consolidate_page(
         "next_cursor": next_cursor,
         "canonical_records_modified": False,
         "semantic_updates": semantic_updates,
-        "semantic_resolutions": semantic_resolutions,
         "asserted_at": asserted_at.isoformat(),
     }
     put_record(conn, "consolidation", str(action_id), result, revision="2")
