@@ -76,7 +76,10 @@ def test_corroboration_accumulates_evidence_without_duplicate_assertion(conn):
     assert first.assertion.assertion_id == second.assertion.assertion_id
     assert second.assertion_created is False
     assert second.evidence_created is True
-    assert second.resolution_created is False
+    # The conclusion is unchanged, but the resolution advances its effective
+    # observation time so a later-arriving stale contradiction cannot displace it.
+    assert second.resolution_created is True
+    assert second.resolution.effective_at == _at(10)
     assert len(semantic_assertions(conn, "person:mike", "preferred_drink")) == 1
     evidence = semantic_evidence(conn, "person:mike", "preferred_drink")
     assert len(evidence) == 2
@@ -187,6 +190,41 @@ def test_bitemporal_query_reconstructs_different_real_world_times(conn):
 
     assert early.selected_assertion_id == manager.assertion.assertion_id
     assert late.selected_assertion_id == engineer.assertion.assertion_id
+
+
+def test_later_corroboration_blocks_stale_conflicting_backfill(conn):
+    initial = _record(conn, value="latte", observed=_at(0))
+    corroborated = _record(conn, value="latte", observed=_at(20))
+    stale_conflict = _record(
+        conn,
+        value="tea",
+        observed=_at(10),
+        asserted=_at(30),
+    )
+
+    current = current_semantic_resolution(conn, "person:mike", "preferred_drink")
+    assert current.status is ResolutionStatus.ACCEPTED
+    assert current.selected_assertion_id == initial.assertion.assertion_id
+    assert current.effective_at == corroborated.evidence.observed_at
+    assert stale_conflict.resolution_created is False
+
+
+def test_opposition_older_than_latest_support_does_not_create_current_ambiguity(conn):
+    accepted = _record(conn, value="latte", observed=_at(0))
+    _record(conn, value="latte", observed=_at(20))
+    stale_opposition = _record(
+        conn,
+        value="latte",
+        observed=_at(10),
+        asserted=_at(30),
+        relation=EvidenceRelation.OPPOSES,
+    )
+
+    current = current_semantic_resolution(conn, "person:mike", "preferred_drink")
+    assert current.status is ResolutionStatus.ACCEPTED
+    assert current.selected_assertion_id == accepted.assertion.assertion_id
+    assert current.effective_at == _at(20)
+    assert stale_opposition.resolution_created is False
 
 
 def test_equal_time_conflict_is_ambiguous_not_uuid_tie_break(conn):
