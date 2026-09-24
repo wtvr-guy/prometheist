@@ -350,14 +350,12 @@ class WorkingSelf(FrozenRecord):
     _activated_aware = field_validator("activated_at")(aware)
 
 
-_NON_EVIDENTIARY_ROOT_TYPES = frozenset(
+_SELF_EVIDENCE_ROOT_TYPES = frozenset(
     {
-        EventType.MEMORY_REQUEST,
-        EventType.MEMORY_PACKET,
-        EventType.RETRIEVAL_REQUEST,
-        EventType.RETRIEVAL_RESULT,
-        EventType.INTERACTION_WORKING_STATE,
-        EventType.DERIVED_REPRESENTATION,
+        EventType.USER_PROMPT,
+        EventType.TOOL_RESULT,
+        EventType.PERCEPT_OBSERVATION,
+        EventType.SYSTEM_EVENT,
     }
 )
 
@@ -481,7 +479,7 @@ def _root_event(conn: psycopg.Connection, root_event_id: UUID):
     event = event_store.get_event_by_id(conn, root_event_id)
     if event is None:
         raise ValueError(f"self evidence root event does not exist: {root_event_id}")
-    if event.event_type in _NON_EVIDENTIARY_ROOT_TYPES:
+    if event.event_type not in _SELF_EVIDENCE_ROOT_TYPES:
         raise ValueError(
             f"event type cannot serve as independent self evidence: {event.event_type.value}"
         )
