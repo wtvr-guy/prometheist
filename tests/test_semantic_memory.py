@@ -6,6 +6,7 @@ import pytest
 from jit_agent import db
 from jit_agent.semantic_memory import (
     EvidenceRelation,
+    EvidenceSourceKind,
     ResolutionStatus,
     current_semantic_resolution,
     record_semantic_evidence,
@@ -301,6 +302,51 @@ def test_later_support_can_resolve_older_opposition_in_history(conn):
     assert contested.status is ResolutionStatus.AMBIGUOUS
     assert restored.status is ResolutionStatus.ACCEPTED
     assert restored.selected_assertion_id == later.assertion.assertion_id
+
+
+def test_semantic_evidence_can_reference_an_action(conn):
+    action_id = uuid4()
+    result = record_semantic_evidence(
+        conn,
+        subject="person:mike",
+        property="planning_style",
+        value="checklists",
+        source_id=action_id,
+        source_kind=EvidenceSourceKind.ACTION,
+        observed_at=_at(0),
+        asserted_at=_at(5),
+        confidence=0.8,
+        derivation_method="reflection/v1",
+    )
+
+    assert result.evidence.source_kind is EvidenceSourceKind.ACTION
+    assert result.evidence.source_id == action_id
+
+
+def test_equal_time_equivalent_assertions_do_not_create_false_ambiguity(conn):
+    first = _record(
+        conn,
+        value=True,
+        observed=_at(0),
+        property_name="vegetarian",
+        claim_valid_from=_at(-100),
+    )
+    second = _record(
+        conn,
+        value=True,
+        observed=_at(0),
+        property_name="vegetarian",
+        claim_valid_from=_at(-100),
+        claim_valid_until=_at(1000),
+    )
+
+    resolution = current_semantic_resolution(conn, "person:mike", "vegetarian")
+    assert resolution.status is ResolutionStatus.ACCEPTED
+    assert resolution.selected_assertion_id == first.assertion.assertion_id
+    assert set(resolution.candidate_assertion_ids) == {
+        first.assertion.assertion_id,
+        second.assertion.assertion_id,
+    }
 
 
 def test_conflicting_retry_fails_closed(conn):
