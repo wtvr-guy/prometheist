@@ -133,7 +133,7 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
         if saved is None:
             if task_class is TaskClass.CONSOLIDATE:
                 cursor = json.loads(task.percept.normalized_text).get("after_key", "")
-                projection = get_record(conn, "consolidation", str(action_id)) or consolidate_page(conn, action_id=action_id, after_key=cursor)
+                projection = get_record(conn, "consolidation", str(action_id)) or consolidate_page(conn, action_id=action_id, asserted_at=task.created_at, after_key=cursor)
                 result_data = {"consolidation_id": str(action_id), "projection_count": len(projection["projections"]),
                                "next_cursor": projection["next_cursor"], "canonical_records_modified": False}
             else:
