@@ -365,6 +365,7 @@ def semantic_resolution_as_of(
 def _advance_resolution(
     current: SemanticResolution | None,
     *,
+    current_assertion: SemanticAssertion | None,
     assertion: SemanticAssertion,
     evidence: SemanticEvidence,
     resolved_at: datetime,
@@ -437,6 +438,18 @@ def _advance_resolution(
             key=str,
         )
     )
+    if (
+        current.status is ResolutionStatus.ACCEPTED
+        and current_assertion is not None
+        and (current_assertion.value, current_assertion.unit)
+        == (assertion.value, assertion.unit)
+    ):
+        return (
+            ResolutionStatus.ACCEPTED,
+            candidates,
+            current.selected_assertion_id,
+            current.effective_at,
+        )
     if assertion.assertion_id in current.candidate_assertion_ids:
         return (
             current.status,
@@ -602,8 +615,25 @@ def record_semantic_evidence(
                 )
 
         current = current_semantic_resolution(conn, subject, property)
+        current_assertion = None
+        if current is not None and current.selected_assertion_id is not None:
+            current_data = get_record(
+                conn,
+                ASSERTION_KIND,
+                _assertion_key(
+                    subject,
+                    property,
+                    current.selected_assertion_id,
+                ),
+            )
+            if current_data is None:
+                raise ValueError(
+                    "semantic resolution references a missing selected assertion"
+                )
+            current_assertion = SemanticAssertion.model_validate(current_data)
         status, candidates, selected, effective_at = _advance_resolution(
             current,
+            current_assertion=current_assertion,
             assertion=assertion,
             evidence=evidence,
             resolved_at=asserted_at,
