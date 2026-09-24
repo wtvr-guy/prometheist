@@ -80,7 +80,7 @@ A SemanticEvidence record captures one exact support/opposition relationship:
     source_id
     relation             SUPPORTS | OPPOSES
     observed_at           when the source evidence describes/was observed
-    asserted_at           when Prometheist learned/derived this evidence
+    known_at              when Prometheist admitted/learned this evidence
     confidence            preserved source/derivation confidence
     derivation_method
 
@@ -123,15 +123,22 @@ Resolution history is itself append-only. supersedes means only that one
 resolution replaced a prior resolution as Prometheist's current derived
 conclusion. It is not used to label contradictory assertions.
 
-## Two clocks
+## Temporal coordinates
 
-Semantic memory distinguishes:
+Semantic memory keeps distinct temporal roles instead of collapsing them:
 
-- **valid/effective time** — when a claim applies in the represented world; and
-- **knowledge/assertion time** — when Prometheist had the evidence.
+- **claim validity** — optional claim_valid_from / claim_valid_until interval
+  describing when an assertion applies in the represented world;
+- **observation time** — evidence observed_at, used to order competing
+  observations without pretending that observation automatically defines the
+  assertion's full validity interval;
+- **knowledge time** — evidence known_at, when Prometheist actually admitted or
+  learned that evidence; and
+- **resolution time** — resolution resolved_at, when the semantic resolver
+  formed that derived conclusion.
 
-semantic_resolution_as_of(valid_at=..., known_at=...) answers the genuine
-bi-temporal question:
+semantic_resolution_as_of(valid_at=..., known_at=...) answers the bi-temporal
+historical query over represented-world validity and system knowledge:
 
 > Given only evidence Prometheist had learned by known_at, what could it
 > conclude about the subject/property at real-world time valid_at?
@@ -194,7 +201,12 @@ Two runs over the same canonical observations must converge on the same
 assertions/evidence/current resolution regardless of how those observations are
 partitioned into pages.
 
-Before derivation begins, the consolidation action durably freezes its exact input record keys and one asserted_at timestamp in a consolidation_input record. Retries therefore process the same evidence page under the same system-knowledge timestamp even if newer observations arrive later.
+Before derivation begins, the consolidation action durably freezes its exact
+input record keys and one derived_at timestamp in a consolidation_input record.
+Each source event's durable created_at supplies evidence known_at, while
+derived_at supplies resolution time. Retries therefore process the same evidence
+page under the same resolution timestamp even if newer observations arrive
+later.
 
 ## Concurrency and replay
 
