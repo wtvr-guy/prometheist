@@ -162,11 +162,18 @@ Its responsibility is to determine whether the memory context available for a re
 
 It is **not** a general evidence synthesizer, a second pre-cognitive executive, a tool-result interpreter, or the final response generator.
 
-The Composer receives the current user prompt plus the current memory evidence. The
-memory is a separate quarantined evidence message followed by the current prompt; it
+The Composer receives the current user prompt plus the current canonical memory
+evidence. When response policy permits first-class derived self context, it also
+receives a separately typed/rendered `SelfContextPacket`. That packet is explicitly
+marked as revisable derived person-model state, not a quotation or independent
+canonical source. For routing-only scopes the Composer never receives self context as
+evidence.
+
+Memory is a separate quarantined evidence message followed by the current prompt; it
 is not concatenated into the prompt's instruction channel. The Composer determines
-whether activated/retrieved persistent memory is sufficient for a separate responder
-to answer accurately.
+whether the admitted memory context is sufficient for a separate responder to answer
+accurately. It does not decide whether any self schema is true; that remains the
+Self-Memory System's resolution responsibility.
 
 ### 7.1 If memory is sufficient
 
