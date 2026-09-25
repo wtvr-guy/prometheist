@@ -22,6 +22,10 @@ from jit_agent.attention_resources import ProcessResourceEstimate, ResourceEstim
 from jit_agent.attention_store import DEFAULT_SCHEDULER_KEY, allocate_created_seq, load_scheduler, save_scheduler
 from jit_agent.cognitive_store import get_record, list_records, put_record, record_lock
 from jit_agent.native_policy import native_resource_safety_policy
+from jit_agent.ollama_runtime import (
+    OllamaClaimHostResourceProbe,
+    OllamaRuntimeProbe,
+)
 from jit_agent.percept_context import FrozenRecord
 from jit_agent.perception import Percept
 from jit_agent.percept_triage import SourcePolicy, deterministic_triage, UrgencyClass
@@ -97,8 +101,14 @@ def situation_rank(candidate: dict) -> tuple:
             situation.created_at, str(situation.situation_id))
 
 
-def submit_situation_page(conn: psycopg.Connection, *, probe=None, policy=None,
-                          scheduler_key: str = DEFAULT_SCHEDULER_KEY) -> list[UUID]:
+def submit_situation_page(
+    conn: psycopg.Connection,
+    *,
+    probe=None,
+    policy=None,
+    ollama_runtime_probe: OllamaRuntimeProbe | None = None,
+    scheduler_key: str = DEFAULT_SCHEDULER_KEY,
+) -> list[UUID]:
     """Rank one cursor page, coalesce each situation, then use normal admission.
 
     A running task keeps its immutable snapshot; later percepts become the next
@@ -106,6 +116,8 @@ def submit_situation_page(conn: psycopg.Connection, *, probe=None, policy=None,
     the bounded candidate scan. Attention Fabric owns priority and resources.
     """
     safety = policy or native_resource_safety_policy()
+    runtime_probe = ollama_runtime_probe or OllamaRuntimeProbe()
+    runtime_state = None
     submitted = []
     with record_lock(conn, f"situation-dispatch:{scheduler_key}"):
         cursor = get_record(conn, "candidate_cursor", scheduler_key) or {"after_key": "", "revision": 0}
@@ -161,6 +173,18 @@ def submit_situation_page(conn: psycopg.Connection, *, probe=None, policy=None,
                     and source_policy.natural_language_response
                 )
             )
+            if requires_model and runtime_state is None:
+                runtime_state = runtime_probe.capture()
+            scheduled_memory_mib = (
+                runtime_state.incremental_process_memory_mib(safety)
+                if requires_model and runtime_state is not None
+                else safety.default_process_memory_mib
+            )
+            residency_label = (
+                runtime_state.residency_label
+                if requires_model and runtime_state is not None
+                else "no-model-required"
+            )
             if task_id not in scheduler.tasks:
                 scheduler.submit(AttentionTask(
                     task_id=task_id, task_key=f"situation:{situation.snapshot_id}", created_seq=allocate_created_seq(conn),
@@ -171,11 +195,29 @@ def submit_situation_page(conn: psycopg.Connection, *, probe=None, policy=None,
                         required_capabilities=[stage.capability for stage in SituationStage],
                         process_resource_estimate=ProcessResourceEstimate(
                             cpu_units=safety.default_process_cpu_units,
-                            memory_mib=safety.default_llm_process_memory_mib if requires_model else safety.default_process_memory_mib,
-                            llm_slots=int(requires_model), source=ResourceEstimateSource.CONSERVATIVE_DEFAULT,
-                            basis=f"{SITUATION_PROTOCOL}: bounded situation worker; model_required={requires_model}",
+                            memory_mib=scheduled_memory_mib,
+                            llm_slots=int(requires_model),
+                            source=ResourceEstimateSource.CONSERVATIVE_DEFAULT,
+                            basis=(
+                                f"{SITUATION_PROTOCOL}: bounded situation worker; "
+                                f"model_required={requires_model}; "
+                                f"Ollama admission state={residency_label}"
+                            ),
                         ),
-                    ), resumable_state={"situation_task_id": str(task_id), "snapshot_id": str(situation.snapshot_id)},
+                    ),
+                    resumable_state={
+                        "situation_task_id": str(task_id),
+                        "snapshot_id": str(situation.snapshot_id),
+                        "resource_admission": {
+                            "requires_model": requires_model,
+                            "memory_mib": scheduled_memory_mib,
+                            "ollama_runtime_state": (
+                                runtime_state.model_dump(mode="json")
+                                if requires_model and runtime_state is not None
+                                else None
+                            ),
+                        },
+                    },
                 ))
             submitted.append(task_id)
             put_record(conn, "situation_active", f"{scheduler_key}:{key}", {"task_id": str(task_id)}, revision=str(task_id))
@@ -187,8 +229,16 @@ def submit_situation_page(conn: psycopg.Connection, *, probe=None, policy=None,
     return submitted
 
 
-def run_situation_task(conn: psycopg.Connection, task_id: UUID, *, probe=None, policy=None,
-                       scheduler_key: str = DEFAULT_SCHEDULER_KEY, launcher=None) -> dict | None:
+def run_situation_task(
+    conn: psycopg.Connection,
+    task_id: UUID,
+    *,
+    probe=None,
+    policy=None,
+    ollama_runtime_probe: OllamaRuntimeProbe | None = None,
+    scheduler_key: str = DEFAULT_SCHEDULER_KEY,
+    launcher=None,
+) -> dict | None:
     data = get_record(conn, "situation_task", str(task_id))
     if data is None:
         raise KeyError(task_id)
@@ -208,7 +258,36 @@ def run_situation_task(conn: psycopg.Connection, task_id: UUID, *, probe=None, p
     task = task.model_copy(update={"assignment_id": assignments[0].assignment_id})
     assignment_id = assignments[0].assignment_id
     put_record(conn, "situation_task", str(task_id), task.model_dump(mode="json"), revision=str(assignment_id))
-    launcher = launcher or GuardedWorkerLauncher(db.get_connection, probe=probe, policy=policy or native_resource_safety_policy(), scheduler_key=scheduler_key)
+    if launcher is None:
+        effective_policy = policy or native_resource_safety_policy()
+        physical_probe = probe
+        resource_admission = scheduler.tasks[task_id].resumable_state.get(
+            "resource_admission",
+            {},
+        )
+        scheduled_memory_mib = int(
+            resource_admission.get(
+                "memory_mib",
+                effective_policy.default_process_memory_mib,
+            )
+        )
+        requires_model = bool(resource_admission.get("requires_model", False))
+        claim_probe = (
+            OllamaClaimHostResourceProbe(
+                base_probe=physical_probe,
+                runtime_probe=ollama_runtime_probe or OllamaRuntimeProbe(),
+                policy=effective_policy,
+                scheduled_memory_mib=scheduled_memory_mib,
+            )
+            if requires_model
+            else physical_probe
+        )
+        launcher = GuardedWorkerLauncher(
+            db.get_connection,
+            probe=claim_probe,
+            policy=effective_policy,
+            scheduler_key=scheduler_key,
+        )
     for stage in SituationStage:
         step_id = deterministic_worker_step_id(assignment_id, stage.value)
         if load_worker_result(conn, step_id, scheduler_key=scheduler_key):
@@ -283,14 +362,39 @@ def _record_situation_progress(conn, task: SituationTask, *, scheduler_key: str)
                {"snapshot_id": str(task.situation.snapshot_id)}, revision=str(task.task_id))
 
 
-def drain_situations(conn: psycopg.Connection, *, probe=None, policy=None,
-                     scheduler_key: str = DEFAULT_SCHEDULER_KEY) -> list[dict]:
-    submitted = submit_situation_page(conn, probe=probe, policy=policy, scheduler_key=scheduler_key)
+def drain_situations(
+    conn: psycopg.Connection,
+    *,
+    probe=None,
+    policy=None,
+    ollama_runtime_probe: OllamaRuntimeProbe | None = None,
+    scheduler_key: str = DEFAULT_SCHEDULER_KEY,
+) -> list[dict]:
+    submitted = submit_situation_page(
+        conn,
+        probe=probe,
+        policy=policy,
+        ollama_runtime_probe=ollama_runtime_probe,
+        scheduler_key=scheduler_key,
+    )
     scheduler = load_scheduler(conn, scheduler_key=scheduler_key)
     task_ids = [value.task_id for value in scheduler.worker_visible_assignments()
                 if "situation_task_id" in scheduler.tasks[value.task_id].resumable_state]
     # Completed tasks no longer have worker assignments, but a candidate whose
     # progress write was interrupted still needs its bounded finalization retry.
     task_ids.extend(task_id for task_id in submitted if scheduler.tasks[task_id].status.value == "COMPLETED")
-    return [result for task_id in task_ids if (result := run_situation_task(
-        conn, task_id, probe=probe, policy=policy, scheduler_key=scheduler_key)) is not None]
+    return [
+        result
+        for task_id in task_ids
+        if (
+            result := run_situation_task(
+                conn,
+                task_id,
+                probe=probe,
+                policy=policy,
+                ollama_runtime_probe=ollama_runtime_probe,
+                scheduler_key=scheduler_key,
+            )
+        )
+        is not None
+    ]
