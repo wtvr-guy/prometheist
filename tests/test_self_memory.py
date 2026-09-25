@@ -179,6 +179,26 @@ def test_inferred_slow_value_requires_independent_cross_context_support(conn):
     assert established.metrics.context_count == 2
 
 
+def test_same_canonical_root_cannot_support_and_oppose_one_representation(conn):
+    root = _event(conn, "I prefer local-first systems.")
+    representation = _representation(conn)
+    _support(conn, representation, root)
+
+    with pytest.raises(
+        ValueError,
+        match="cannot both support and oppose",
+    ):
+        record_self_evidence(
+            conn,
+            representation=representation,
+            root_event_id=root.event_id,
+            relation=SelfEvidenceRelation.OPPOSES,
+            origin=SelfEvidenceOrigin.DIRECT,
+            derivation_method="test/v1",
+            known_at=root.created_at,
+        )
+
+
 def test_opposition_forces_established_schema_to_contested(conn):
     representation = _representation(
         conn,
