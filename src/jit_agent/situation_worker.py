@@ -40,6 +40,7 @@ from jit_agent.self_reflection import (
     materialize_proposal,
     reflection_batches,
     render_reflection_evidence,
+    render_candidate_support_evidence,
     review_memory_packet,
 )
 from jit_agent.situation_runtime import SITUATION_PROTOCOL, SituationStage, SituationTask
@@ -87,9 +88,17 @@ class SituationLLM(UserPromptLLM):
         self,
         *,
         candidate: str,
-        evidence: str,
+        support_evidence: str,
+        related_evidence: str,
     ) -> SelfSchemaReview:
-        payload = candidate + "\n\n" + evidence
+        payload = (
+            "[Candidate]\n"
+            + candidate
+            + "\n\n"
+            + support_evidence
+            + "\n\n[Related/counterevidence]\n"
+            + related_evidence
+        )
         raw = self._structured_with_evidence(
             "SELF_SCHEMA_REVIEW",
             SELF_SCHEMA_REVIEW_PROMPT,
@@ -294,17 +303,30 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
                 correlation_id=task.correlation_id,
                 before_global_seq=task.before_global_seq,
             )
-            evidence = format_authority_bound_memory_packet(packet)
+            support_evidence = render_candidate_support_evidence(
+                conn,
+                representation,
+            )
+            related_evidence = format_authority_bound_memory_packet(packet)
             validate_rendered_evidence(
-                (evidence,),
+                (support_evidence, related_evidence),
                 budget=configured_model_evidence_budget(),
             )
             llm._set_artifact_evidence_refs(
-                tuple(f"event:{item.source_event_id}" for item in packet.items)
+                tuple(
+                    f"event:{item.root_event_id}"
+                    for item in self_evidence(
+                        conn,
+                        representation.representation_id,
+                    )
+                    if item.relation is SelfEvidenceRelation.SUPPORTS
+                )
+                + tuple(f"event:{item.source_event_id}" for item in packet.items)
             )
             review = llm.review_self_schema(
                 candidate=representation.model_dump_json(),
-                evidence=evidence,
+                support_evidence=support_evidence,
+                related_evidence=related_evidence,
             )
             resolution = apply_review(
                 conn,
