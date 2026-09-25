@@ -1,0 +1,37 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 117,
+  "correlation_id": "59a0963d-68c9-58b9-8796-d30abdda52a8",
+  "event_id": "00ee1aaa-8a72-514e-a0a8-b83b74879db5",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-25T05:59:19.738226+00:00",
+  "payload": {
+    "memory_request_id": "cd3d8739-0e27-5264-9b6a-fe36a95da036",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [
+        "5b487aba-36e5-5449-8c59-abdd7bd8cad1"
+      ],
+      "include_persisted_history": true,
+      "limit": 10,
+      "query_text": "I am spontaneous and trust my gut.",
+      "reference_time": null,
+      "source_types": [
+        "USER_PROMPT",
+        "TOOL_RESULT",
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "FOCUSED"
+  },
+  "payload_text": "I am spontaneous and trust my gut.",
+  "record_hash": "6343b8b71c5976d91ecf761e0246fc95c730184987ca292e3cc45c8b1ce49b32",
+  "source": "self-review:self-reflection/v1:8a3857b8-0787-5dfc-8861-e8fd94d8a599"
+}

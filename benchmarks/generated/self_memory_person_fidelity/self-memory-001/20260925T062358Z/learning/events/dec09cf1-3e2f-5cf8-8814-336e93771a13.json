@@ -1,0 +1,25 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 43,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "dec09cf1-3e2f-5cf8-8814-336e93771a13",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:23:59.723624+00:00",
+  "payload": {
+    "data": {
+      "after_key": "",
+      "due_at": "2026-09-25T06:23:59.722617Z",
+      "schedule_id": "881c103b-791d-5267-ba39-c6e471a48cfa"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "881c103b-791d-5267-ba39-c6e471a48cfa",
+    "record_kind": "consolidation_schedule",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "3f59677715e0b552c194729d4c6f20a95ebea32a1cc53768ebd327812c35cfa5",
+  "source": "cognitive_runtime"
+}

@@ -1,0 +1,38 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 2,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "50da089e-628d-5b21-a38b-7eeceda5ec6a",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:36:24.813673+00:00",
+  "payload": {
+    "data": {
+      "context_tags": [
+        "decision_making",
+        "risk_management"
+      ],
+      "created_at": "2026-09-25T06:24:07.147972Z",
+      "embodiment_ref": null,
+      "future_orientation": null,
+      "kind": "BEHAVIORAL_TENDENCY",
+      "perspective": "INFERRED",
+      "plasticity": "SLOW",
+      "policy_version": "self-memory/v1",
+      "procedure_ref": null,
+      "relationship_ref": null,
+      "representation_id": "21dc79b4-5d27-562b-91ab-a3311a44f5e5",
+      "statement": "I apply a principle of cautious action—'Measure twice, panic once'—to technical and operational decisions, especially when uncertainty is present.",
+      "subject": "self"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "21dc79b4-5d27-562b-91ab-a3311a44f5e5",
+    "record_kind": "self_representation",
+    "revision": "benchmark-self-snapshot:8e457c55868ff6cb629a5f293df0438655246c2d1f9774b951af9d5fc5a37819"
+  },
+  "payload_text": null,
+  "record_hash": "2265e28d715072e4b7f91549de1cbfc0a83f06cdc307109c75db8ed115999de1",
+  "source": "cognitive_runtime"
+}

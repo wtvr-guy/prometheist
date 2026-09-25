@@ -1,0 +1,35 @@
+{
+  "artifact_hash": "097dd5505f30e0063d695cdee794147f65e4764a2e49f89196a1fe62c66c08fd",
+  "artifact_id": "8b4d80a3-b4f2-552a-893b-308991cb2655",
+  "artifact_key": "llm-validation:SITUATION_SELF_REVIEW:b5d51a09-e931-52b5-987c-071f45d61f6f:13:SELF_SCHEMA_REVIEW",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "8fab0327-8679-573d-b3d9-3eff1d02de7e",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "correlation_id": "59a0963d-68c9-58b9-8796-d30abdda52a8",
+  "created_at": "2026-09-25T06:03:07.976710+00:00",
+  "interaction_id": "59a0963d-68c9-58b9-8796-d30abdda52a8",
+  "journal_sequence": 37,
+  "payload": {
+    "claim_id": "b5d51a09-e931-52b5-987c-071f45d61f6f",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "01226b1251b0f23d3bd2ba5dcc0ed61275bc4dfa32091d22a8e44ee7717016ea",
+    "invocation_artifact_id": "8da5ea2d-5684-52b5-a88f-2ce4db99a0c0",
+    "invocation_index": 13,
+    "kind": "SELF_SCHEMA_REVIEW",
+    "parsed_output": {
+      "opposition_indices": [],
+      "rationale": "The provided self-representation is not supported by any evidence in the timeline. The evidence timeline contains no items—no supported or disconfirming statements—regarding sentiment, physical safety, risk evaluation, or any related trait. The self-representation claims a commitment to retiring hazardous objects based on unmanageable risk, but there is no historical memory or capability-result evidence to validate or contextualize this assertion. Without any supporting data, the claim remains unsupported. Therefore, the absence of evidence constitutes a contest, not a mere lack of disconfirmation. A self-representation must be grounded in actual evidence, not asserted independently.",
+      "verdict": "CONTEST"
+    },
+    "raw_output_sha256": "6d79aad5c8f5c8967f079312cb29aad90f9528ce7526d88dc3c71243fc57d8c2",
+    "status": "VALID"
+  },
+  "payload_hash": "def4f1e4e5eb1920261555afae6e905606e8c5f41dd65e4be1d4fc61521948eb",
+  "previous_artifact_hash": "01226b1251b0f23d3bd2ba5dcc0ed61275bc4dfa32091d22a8e44ee7717016ea",
+  "previous_artifact_id": "8da5ea2d-5684-52b5-a88f-2ce4db99a0c0",
+  "producer": "percept_response_v2/validation",
+  "stage": "SITUATION_SELF_REVIEW",
+  "task_id": "59a0963d-68c9-58b9-8796-d30abdda52a8"
+}

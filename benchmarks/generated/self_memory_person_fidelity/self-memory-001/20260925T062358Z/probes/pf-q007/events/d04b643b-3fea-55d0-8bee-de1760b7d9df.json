@@ -1,0 +1,33 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 18,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "d04b643b-3fea-55d0-8bee-de1760b7d9df",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:36:21.621314+00:00",
+  "payload": {
+    "data": {
+      "context_tags": [
+        "situation:ab19f74f-bef2-53f2-86c9-f1432ce9b2f0"
+      ],
+      "derivation_method": "self-reflection/v1",
+      "evidence_id": "d9307f9c-16e1-5814-98a5-90e79d29c996",
+      "known_at": "2026-09-24T23:23:59.392029-07:00",
+      "observed_at": "2025-02-15T17:44:00Z",
+      "origin": "DIRECT",
+      "relation": "SUPPORTS",
+      "representation_id": "250e5ec0-b8e4-52d7-9889-9bc6b21b1714",
+      "root_event_id": "126d1421-0cc8-5fae-bbb6-bb5354468fc6"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "250e5ec0-b8e4-52d7-9889-9bc6b21b1714:d9307f9c-16e1-5814-98a5-90e79d29c996",
+    "record_kind": "self_evidence",
+    "revision": "benchmark-self-snapshot:8e457c55868ff6cb629a5f293df0438655246c2d1f9774b951af9d5fc5a37819"
+  },
+  "payload_text": null,
+  "record_hash": "0bf85771af2e85fdced27fd380684e44176288888ac541bd701af5c32da1ad18",
+  "source": "cognitive_runtime"
+}

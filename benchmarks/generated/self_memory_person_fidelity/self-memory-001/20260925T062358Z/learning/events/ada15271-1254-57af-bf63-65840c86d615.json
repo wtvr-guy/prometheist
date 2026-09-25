@@ -1,0 +1,87 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 133,
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "event_id": "ada15271-1254-57af-bf63-65840c86d615",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-25T06:32:07.233392+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "21bca37c-6798-5670-91c2-c5e8e5b0911c",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [
+          "126d1421-0cc8-5fae-bbb6-bb5354468fc6"
+        ],
+        "include_persisted_history": true,
+        "limit": 10,
+        "query_text": "I will not help build behavioral-surveillance technology.",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT",
+          "TOOL_RESULT",
+          "PERCEPT_OBSERVATION",
+          "SYSTEM_EVENT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "adaptive_recall_stage": "FOCUSED",
+        "association_decay": 0.92,
+        "association_hops": 5,
+        "association_limit": 1200,
+        "candidate_limit": 150,
+        "depth": "SINGLE_CANDIDATE_DEEPEST",
+        "focus_attempts": [
+          {
+            "focus_event_id": "126d1421-0cc8-5fae-bbb6-bb5354468fc6",
+            "kernel_trace": {
+              "cue_nodes": [
+                "event:126d1421-0cc8-5fae-bbb6-bb5354468fc6",
+                "term:behavioral-surveillance",
+                "term:build",
+                "term:help",
+                "term:not",
+                "term:technology",
+                "term:will"
+              ],
+              "decay": 0.92,
+              "items": [
+                {
+                  "association_hops": [],
+                  "associative_activation": 0.0,
+                  "baseline_score": 0.78,
+                  "event_id": "126d1421-0cc8-5fae-bbb6-bb5354468fc6",
+                  "global_seq": 39,
+                  "selected": true,
+                  "total_score": 0.78
+                }
+              ],
+              "max_hops": 5,
+              "policy_version": "deterministic-associations-v4"
+            },
+            "semantic_query_text": "I will not help build behavioral-surveillance technology.",
+            "supported": true
+          }
+        ],
+        "focus_event_ids": [
+          "126d1421-0cc8-5fae-bbb6-bb5354468fc6"
+        ],
+        "kernel": "associative_recall_from_postgres",
+        "retrieval_role": "FOCUSED",
+        "semantic_query_text": "I will not help build behavioral-surveillance technology."
+      },
+      "supported": false
+    },
+    "requesting_component": "self-review:self-reflection/v1:2a5d3ce4-6ef3-5f8c-a2d4-c15550a0d7bf"
+  },
+  "payload_text": null,
+  "record_hash": "a104717bdacf494a439da48e39804cea7babf518af470ac01a95e52a01a66347",
+  "source": "jit_memory"
+}

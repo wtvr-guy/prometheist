@@ -1,0 +1,35 @@
+{
+  "artifact_hash": "22fef685df4d7cd24ae3706bf82021cf04f348abb5ab64e169de347e56f843e6",
+  "artifact_id": "5f3ee1be-cdf1-531a-be7d-463d04067c19",
+  "artifact_key": "llm-validation:SITUATION_SELF_REVIEW:f07f426d-28da-5e56-ab9f-cba8d1688246:8:SELF_SCHEMA_REVIEW",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "408aeaea-aadf-5ba8-8444-8192ce0917e8",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "created_at": "2026-09-25T06:32:48.719531+00:00",
+  "interaction_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "journal_sequence": 27,
+  "payload": {
+    "claim_id": "f07f426d-28da-5e56-ab9f-cba8d1688246",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "3188593577fdf9b944e745ed4388924e11c0232ed79051a475146de539372afd",
+    "invocation_artifact_id": "5dabdfd0-f8f5-5336-bf92-121b890e7fb7",
+    "invocation_index": 8,
+    "kind": "SELF_SCHEMA_REVIEW",
+    "parsed_output": {
+      "opposition_indices": [],
+      "rationale": "The provided self-representation is entirely absent from the evidence timeline. The evidence set contains no items—no supported statements, no historical memory, no capability-result data—regarding any self-representation, values, moral priorities, or medical access. The claimed statement about prioritizing reduction of suffering through accessible medical devices is not present in any of the retrieved evidence. Since there is no supporting evidence at all, and the evidence timeline is explicitly empty, the proposed self-representation cannot be established. The absence of any related evidence—positive or negative—means the claim lacks grounding. Therefore, it is contested due to lack of support, not because of contradiction.",
+      "verdict": "CONTEST"
+    },
+    "raw_output_sha256": "b4c8323eff601a49f6fc5337cc7564f28afe7fd0f84788120f6cd8d0a9f7134a",
+    "status": "VALID"
+  },
+  "payload_hash": "a29604269999b52297a3569b94f2d42867f12686128724ae5b4068a57d5d767c",
+  "previous_artifact_hash": "3188593577fdf9b944e745ed4388924e11c0232ed79051a475146de539372afd",
+  "previous_artifact_id": "5dabdfd0-f8f5-5336-bf92-121b890e7fb7",
+  "producer": "percept_response_v2/validation",
+  "stage": "SITUATION_SELF_REVIEW",
+  "task_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3"
+}

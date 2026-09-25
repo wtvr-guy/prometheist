@@ -1,0 +1,16 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "873e9cc4-3a2f-419d-af63-140526590087",
+  "conversation_seq": 1,
+  "correlation_id": "2603b7cb-5263-49e3-8378-a8ce14ec3052",
+  "event_id": "eb0b51a4-129e-517a-a0df-2c39672310db",
+  "event_type": "USER_PROMPT",
+  "journaled_at": "2026-09-25T06:36:24.164496+00:00",
+  "payload": {
+    "text": "Write the short project message I would most likely send after a production power board reports an unexplained voltage spike during final hardware testing."
+  },
+  "payload_text": "Write the short project message I would most likely send after a production power board reports an unexplained voltage spike during final hardware testing.",
+  "record_hash": "7368d36c1c482ad1f56d5c696716c1cbb68117506aa17769592c2f434b87c9b1",
+  "source": "user"
+}

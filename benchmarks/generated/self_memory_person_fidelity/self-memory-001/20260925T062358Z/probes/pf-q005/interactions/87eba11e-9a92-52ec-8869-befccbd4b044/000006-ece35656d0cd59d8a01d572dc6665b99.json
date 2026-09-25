@@ -1,0 +1,209 @@
+{
+  "artifact_hash": "2755570da767c2d60e07198810cc9115be9b3bdb39d650ae06b07bc53fc336e5",
+  "artifact_id": "ece35656-d0cd-59d8-a01d-572dc6665b99",
+  "artifact_key": "stage-result:V2_PRECOGNITIVE",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "c4bc8ad8-8ab7-5d94-99ba-f860f6d00894",
+  "conversation_id": "97cb6cff-6216-4393-b3a7-042148c69dd7",
+  "correlation_id": "31d74410-b689-4bac-8b7c-76b327887ea2",
+  "created_at": "2026-09-25T06:35:24.889956+00:00",
+  "interaction_id": "87eba11e-9a92-52ec-8869-befccbd4b044",
+  "journal_sequence": 6,
+  "payload": {
+    "output": {
+      "aperture_packet": {
+        "items": [
+          {
+            "content": "Theo's recovery is private. Even if a family friend says they already know about it, I would give a vague answer and let Theo decide what to disclose. Protecting his control over his own story matters more than satisfying someone's curiosity.",
+            "conversation_id": "8ac5db90-8196-59cb-be19-98108550bc10",
+            "conversation_seq": 2,
+            "created_at": "2026-09-24T23:34:49.665731-07:00",
+            "event_type": "USER_PROMPT",
+            "global_seq": 4,
+            "provenance_event_ids": [],
+            "retrieval_reasons": [
+              "ATTENTION_APERTURE",
+              "LEXICAL_CUE"
+            ],
+            "score": 0.22285714285714286,
+            "source": "user",
+            "source_event_id": "4305d458-5acb-52d7-b73e-49af6aa2a453"
+          }
+        ],
+        "memory_request_id": "135dc7c9-637c-5794-a4fe-62441b6fd233",
+        "need": {
+          "active_event_ids": [],
+          "conversation_id": null,
+          "entities": [],
+          "focus_event_ids": [],
+          "include_persisted_history": true,
+          "limit": 6,
+          "query_text": "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field.",
+          "reference_time": null,
+          "source_types": [
+            "PERCEPT_OBSERVATION",
+            "SYSTEM_EVENT",
+            "TOOL_RESULT",
+            "USER_PROMPT"
+          ],
+          "supplemental_query_texts": []
+        },
+        "origin": "INTERNAL_MEMORY",
+        "retrieval_trace": {
+          "activation_kernel": {
+            "kernel": "recall_from_postgres",
+            "kernel_trace": {
+              "candidates_considered": 1,
+              "cue_tokens": [
+                "like",
+                "surprise",
+                "give",
+                "answer",
+                "would",
+                "consider",
+                "accurate",
+                "rather",
+                "than",
+                "reduc",
+                "yes",
+                "no",
+                "profile",
+                "field"
+              ],
+              "items": [
+                {
+                  "event_id": "4305d458-5acb-52d7-b73e-49af6aa2a453",
+                  "global_seq": 4,
+                  "reasons": [
+                    "LEXICAL_CUE"
+                  ],
+                  "score": {
+                    "conversation": 0.0,
+                    "entity": 0.0,
+                    "lexical": 0.2857142857142857,
+                    "temporal": 0.0,
+                    "total": 0.22285714285714286
+                  },
+                  "selected": true
+                }
+              ],
+              "normalized_entities": [],
+              "policy_version": "deterministic-cues-v2"
+            },
+            "retrieval_role": "ATTENTION_ACTIVATION"
+          },
+          "association_hops": 0,
+          "baseline_recall_limit": 6,
+          "candidate_limit": 750,
+          "depth": "BROAD_SHALLOW",
+          "packet_item_limit": 6,
+          "query_strategy": "working_state_plus_baseline_activation",
+          "retrieval_role": "ATTENTION_ACTIVATION",
+          "working_state_event_ids": [],
+          "working_state_item_count": 0
+        },
+        "supported": true
+      },
+      "attention_aperture_version": "v0.7-attention-aperture-v4",
+      "capability_catalog": [],
+      "disposition": {
+        "capability_indices": [],
+        "response_required": true
+      },
+      "execution_plan": {
+        "catalog_capability_ids": [],
+        "items": [],
+        "registry_version": "v0.7-capability-registry-v9",
+        "requested_catalog_indices": []
+      },
+      "percept": {
+        "context": {
+          "active_goal_refs": [],
+          "causal_percept_refs": [],
+          "entity_refs": [],
+          "expectation_refs": [],
+          "integrity": 0,
+          "observations": [],
+          "opportunity": 0,
+          "task_refs": [],
+          "threat": 0,
+          "uncertainty": 0
+        },
+        "conversation_id": "97cb6cff-6216-4393-b3a7-042148c69dd7",
+        "correlation_id": "31d74410-b689-4bac-8b7c-76b327887ea2",
+        "features": {
+          "contains_code_block": false,
+          "contains_question": true,
+          "contains_structured_payload": false,
+          "contains_url": false,
+          "line_count": 1,
+          "normalized_characters": 116,
+          "token_count": 22,
+          "uppercase_ratio": 0.043010752688172046
+        },
+        "input_buffer": {
+          "max_segments": 4,
+          "retained_segment_indices": [
+            0
+          ],
+          "segment_char_limit": 160,
+          "segments": [
+            "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field."
+          ],
+          "total_characters": 116,
+          "total_segments": 1,
+          "truncated": false
+        },
+        "normalized_text": "Do I like surprises? Give the answer I would consider accurate rather than reducing me to a yes or no profile field.",
+        "observed_at": "2026-09-24T23:34:52.701949-07:00",
+        "percept_id": "a738bf64-863f-53cb-9279-4689d6145a48",
+        "policy_version": "v0.8-perception-v2",
+        "raw_value_sha256": "a3e52843699dd74533a6397ca818bfe66cc46e04ebab031ab3a891230fb7f6f9",
+        "response_required": true,
+        "schema_version": 1,
+        "source": {
+          "interface": "chat",
+          "kind": "USER_INTERACTION",
+          "modality": "TEXT",
+          "source_id": "user"
+        },
+        "source_event_id": "d7f1f403-dd5c-5b24-bf0a-4c023b0b8b6b"
+      },
+      "salience_assessment": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "a738bf64-863f-53cb-9279-4689d6145a48",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "self_context": {
+        "admission": "PRIMARY_DERIVED_CONTEXT",
+        "items": []
+      }
+    },
+    "output_refs": [
+      "memory-request:135dc7c9-637c-5794-a4fe-62441b6fd233"
+    ]
+  },
+  "payload_hash": "3923e87250a1a1e8e906e6aceb1e4843697a5b3e880e66563456f8a25d78244f",
+  "previous_artifact_hash": "f219f5609246294e7d7b725f2cc725f4dd032982c8f6d89f5cbf9efa9483601e",
+  "previous_artifact_id": "fd548a1a-0c8d-54e1-94e3-865b4395d44e",
+  "producer": "percept_response_v2",
+  "stage": "V2_PRECOGNITIVE",
+  "task_id": "26c63196-d1ac-5586-91b0-1d2c7dfdbd03"
+}

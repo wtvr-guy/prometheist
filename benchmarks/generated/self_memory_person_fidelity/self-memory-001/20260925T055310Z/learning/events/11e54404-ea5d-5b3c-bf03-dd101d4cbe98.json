@@ -1,0 +1,65 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 46,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "11e54404-ea5d-5b3c-bf03-dd101d4cbe98",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T05:53:12.239647+00:00",
+  "payload": {
+    "data": {
+      "active_goal_refs": [],
+      "causal_relations": [],
+      "created_at": "2026-09-25T05:53:12.189544Z",
+      "entity_refs": [],
+      "epistemic_status": "DERIVED",
+      "expected_state": [],
+      "observed_state": [],
+      "percept_ids": [
+        "58af370d-b106-51ff-b800-621f48a363b7"
+      ],
+      "prediction_error": 0.0,
+      "prediction_errors": [],
+      "provenance": [
+        "84da7f3a-b882-509f-8e81-6a8eced8e81a"
+      ],
+      "retention_hint": "ROUTINE",
+      "salience": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "58af370d-b106-51ff-b800-621f48a363b7",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 0,
+          "novelty_score": 1,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 0,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "situation_id": "0cd934db-ad9e-5aef-868b-7280991d94b4",
+      "snapshot_id": "dbf91c75-bd29-52cf-ad74-2d498490e233",
+      "supersedes": null,
+      "temporal_relations": [],
+      "uncertainty": 0,
+      "updated_at": "2026-09-25T05:53:12.189544Z"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "0cd934db-ad9e-5aef-868b-7280991d94b4",
+    "record_kind": "situation",
+    "revision": "dbf91c75-bd29-52cf-ad74-2d498490e233"
+  },
+  "payload_text": null,
+  "record_hash": "e6ed65ac87283d5688f06971a58e9388ad407dc413bfdb78499a9c5a3983318f",
+  "source": "cognitive_runtime"
+}

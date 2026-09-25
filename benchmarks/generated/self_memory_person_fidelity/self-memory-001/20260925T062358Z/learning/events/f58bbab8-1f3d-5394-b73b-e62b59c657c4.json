@@ -1,0 +1,85 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 118,
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "event_id": "f58bbab8-1f3d-5394-b73b-e62b59c657c4",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-25T06:30:33.294829+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "0af6fa76-2ced-58ad-8cce-b4e528a48672",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [
+          "5b487aba-36e5-5449-8c59-abdd7bd8cad1"
+        ],
+        "include_persisted_history": true,
+        "limit": 10,
+        "query_text": "I am spontaneous and trust my gut.",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT",
+          "TOOL_RESULT",
+          "PERCEPT_OBSERVATION",
+          "SYSTEM_EVENT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "adaptive_recall_stage": "FOCUSED",
+        "association_decay": 0.92,
+        "association_hops": 5,
+        "association_limit": 1200,
+        "candidate_limit": 150,
+        "depth": "SINGLE_CANDIDATE_DEEPEST",
+        "focus_attempts": [
+          {
+            "focus_event_id": "5b487aba-36e5-5449-8c59-abdd7bd8cad1",
+            "kernel_trace": {
+              "cue_nodes": [
+                "event:5b487aba-36e5-5449-8c59-abdd7bd8cad1",
+                "term:am",
+                "term:gut",
+                "term:spontaneou",
+                "term:trust"
+              ],
+              "decay": 0.92,
+              "items": [
+                {
+                  "association_hops": [],
+                  "associative_activation": 0.0,
+                  "baseline_score": 0.78,
+                  "event_id": "5b487aba-36e5-5449-8c59-abdd7bd8cad1",
+                  "global_seq": 16,
+                  "selected": true,
+                  "total_score": 0.78
+                }
+              ],
+              "max_hops": 5,
+              "policy_version": "deterministic-associations-v4"
+            },
+            "semantic_query_text": "I am spontaneous and trust my gut.",
+            "supported": true
+          }
+        ],
+        "focus_event_ids": [
+          "5b487aba-36e5-5449-8c59-abdd7bd8cad1"
+        ],
+        "kernel": "associative_recall_from_postgres",
+        "retrieval_role": "FOCUSED",
+        "semantic_query_text": "I am spontaneous and trust my gut."
+      },
+      "supported": false
+    },
+    "requesting_component": "self-review:self-reflection/v1:ce72ce78-05fd-585c-8644-1479d47376ff"
+  },
+  "payload_text": null,
+  "record_hash": "0631240517a3d4969597c70cd9f8bb649aee19a51bf377fcfc4cda026a4d1bef",
+  "source": "jit_memory"
+}

@@ -1,0 +1,35 @@
+{
+  "artifact_hash": "4d5b7f465608fd92a261f7a0f9c185ba06509ed545ed7e28218fc1caf7e60610",
+  "artifact_id": "24bb5d17-09b0-5e41-b5e7-cb8ccd034c62",
+  "artifact_key": "llm-validation:SITUATION_SELF_REVIEW:f07f426d-28da-5e56-ab9f-cba8d1688246:13:SELF_SCHEMA_REVIEW",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "408aeaea-aadf-5ba8-8444-8192ce0917e8",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "created_at": "2026-09-25T06:34:44.425258+00:00",
+  "interaction_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "journal_sequence": 37,
+  "payload": {
+    "claim_id": "f07f426d-28da-5e56-ab9f-cba8d1688246",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "6cde0b161027621cb113072ee64cfbdf616a0b672b3dc21c25a3fb5b8b48b660",
+    "invocation_artifact_id": "fa99095b-18c5-50a5-abaa-407af3158b83",
+    "invocation_index": 13,
+    "kind": "SELF_SCHEMA_REVIEW",
+    "parsed_output": {
+      "opposition_indices": [],
+      "rationale": "The provided self-representation is not supported by any evidence in the timeline. The evidence timeline contains no items—no supported or disconfirming statements—regarding sentiment, physical safety, risk evaluation, or any related trait. The self-representation claims a trait about sentiment not overriding physical safety, but there is no historical memory or capability-result evidence to confirm, contradict, or even contextualize this assertion. Without any evidence at all, the claim cannot be established, let alone validated. Therefore, the absence of any supporting data constitutes a contest, as the claim lacks grounding in observed or retrievable experience.",
+      "verdict": "CONTEST"
+    },
+    "raw_output_sha256": "e65542cda9918d0eac1623f8494c53db92c4d50130be977d8d0c961744e21190",
+    "status": "VALID"
+  },
+  "payload_hash": "db4102365a3995309d977bc2f847dcc50e76de8c755458b42d6c882709a22a55",
+  "previous_artifact_hash": "6cde0b161027621cb113072ee64cfbdf616a0b672b3dc21c25a3fb5b8b48b660",
+  "previous_artifact_id": "fa99095b-18c5-50a5-abaa-407af3158b83",
+  "producer": "percept_response_v2/validation",
+  "stage": "SITUATION_SELF_REVIEW",
+  "task_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3"
+}

@@ -1,0 +1,157 @@
+{
+  "artifact_hash": "ef08d881fec0b98c8b8a9d54cd8917d755d76ed0e9287a69a0e2536f88ff6b83",
+  "artifact_id": "6dc8ff19-6898-5448-a43c-a911408b3e5b",
+  "artifact_key": "llm-validation:SITUATION_SELF_PROPOSE:fdc7020f-cc7c-5255-8f03-fc4289b732d9:1:SELF_SCHEMA_PROPOSAL",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "8fab0327-8679-573d-b3d9-3eff1d02de7e",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "correlation_id": "59a0963d-68c9-58b9-8796-d30abdda52a8",
+  "created_at": "2026-09-25T05:58:33.531033+00:00",
+  "interaction_id": "59a0963d-68c9-58b9-8796-d30abdda52a8",
+  "journal_sequence": 8,
+  "payload": {
+    "claim_id": "fdc7020f-cc7c-5255-8f03-fc4289b732d9",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "44047c7adefff4b8c9c1a622ce361f1c56cac004326364ee532bc9444a0403b6",
+    "invocation_artifact_id": "8a6e66ae-0d7b-50aa-8241-b2ee182de6ca",
+    "invocation_index": 1,
+    "kind": "SELF_SCHEMA_PROPOSAL",
+    "parsed_output": {
+      "proposals": [
+        {
+          "context_tags": [
+            "ethics",
+            "technology_refusal"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "VALUE",
+          "perspective": "AVOWED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "I will not help build behavioral-surveillance technology.",
+          "support_indices": [
+            0
+          ]
+        },
+        {
+          "context_tags": [
+            "values",
+            "moral_priority",
+            "medical_access"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "VALUE",
+          "perspective": "AVOWED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "I prioritize reducing suffering through accessible medical devices, even at a cost to financial gain.",
+          "support_indices": [
+            0
+          ]
+        },
+        {
+          "context_tags": [
+            "decision_making",
+            "risk_aversion",
+            "clarity"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "BEHAVIORAL_TENDENCY",
+          "perspective": "OBSERVED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "In high-stakes situations, I name what is known, halt unsafe actions, and refuse to present false certainty.",
+          "support_indices": [
+            1
+          ]
+        },
+        {
+          "context_tags": [
+            "decision_making",
+            "risk_management"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "BEHAVIORAL_TENDENCY",
+          "perspective": "INFERRED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "I apply a principle of cautious action—'Measure twice, panic once'—to technical and operational decisions, especially when uncertainty is present.",
+          "support_indices": [
+            1,
+            2
+          ]
+        },
+        {
+          "context_tags": [
+            "communication_style"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "TRAIT",
+          "perspective": "AVOWED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "My work style is concise, direct, and occasionally includes dry humor.",
+          "support_indices": [
+            1
+          ]
+        },
+        {
+          "context_tags": [
+            "emotional_value",
+            "ritual",
+            "family_connection"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "TRAIT",
+          "perspective": "AVOWED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "I value emotional and sensory continuity with my grandmother, as reflected in my ritual of repairing her copper espresso maker.",
+          "support_indices": [
+            5
+          ]
+        },
+        {
+          "context_tags": [
+            "safety",
+            "risk_evaluation",
+            "practicality"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "TRAIT",
+          "perspective": "AVOWED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "Sentiment does not override physical safety; I will retire a potentially hazardous object if it poses an unmanageable risk.",
+          "support_indices": [
+            6
+          ]
+        }
+      ]
+    },
+    "raw_output_sha256": "182c47c31140f298ff00240085d0c5a05b1e1d041411c7b9b1f70737f8817613",
+    "status": "VALID"
+  },
+  "payload_hash": "3a0a0961dac0fc08b1ed35312a8ad3133ae0b4eddda763b3189b2ff3db306a53",
+  "previous_artifact_hash": "44047c7adefff4b8c9c1a622ce361f1c56cac004326364ee532bc9444a0403b6",
+  "previous_artifact_id": "8a6e66ae-0d7b-50aa-8241-b2ee182de6ca",
+  "producer": "percept_response_v2/validation",
+  "stage": "SITUATION_SELF_PROPOSE",
+  "task_id": "59a0963d-68c9-58b9-8796-d30abdda52a8"
+}

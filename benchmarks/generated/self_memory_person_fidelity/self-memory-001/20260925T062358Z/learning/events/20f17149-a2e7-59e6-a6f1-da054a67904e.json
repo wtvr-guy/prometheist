@@ -1,0 +1,39 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 77,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "20f17149-a2e7-59e6-a6f1-da054a67904e",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:27:28.897286+00:00",
+  "payload": {
+    "data": {
+      "context_tags": [
+        "work-life balance",
+        "hybrid work",
+        "well-being"
+      ],
+      "created_at": "2026-09-25T06:24:07.147972Z",
+      "embodiment_ref": null,
+      "future_orientation": null,
+      "kind": "BEHAVIORAL_TENDENCY",
+      "perspective": "ASPIRATIONAL",
+      "plasticity": "SLOW",
+      "policy_version": "self-memory/v1",
+      "procedure_ref": null,
+      "relationship_ref": null,
+      "representation_id": "46b9e294-469b-5541-908c-559427ad27cc",
+      "statement": "I want to maintain a balance between solitude for deep work and human contact to preserve energy and judgment.",
+      "subject": "self"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "46b9e294-469b-5541-908c-559427ad27cc",
+    "record_kind": "self_representation",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "e354d93a198e487f8a537aa55b2073e12569601e9782615238bd4f1833b26b2b",
+  "source": "cognitive_runtime"
+}

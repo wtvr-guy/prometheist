@@ -1,0 +1,92 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 112,
+  "correlation_id": "59a0963d-68c9-58b9-8796-d30abdda52a8",
+  "event_id": "d93bf248-efc0-57fe-93d3-3e4b2f58df17",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-25T05:58:35.065797+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "35104d43-5c41-5bda-8d0a-20e0c322b1c3",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [
+          "8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87"
+        ],
+        "include_persisted_history": true,
+        "limit": 10,
+        "query_text": "Important systems should fail gracefully and remain understandable when everything around them is going wrong.",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT",
+          "TOOL_RESULT",
+          "PERCEPT_OBSERVATION",
+          "SYSTEM_EVENT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "adaptive_recall_stage": "FOCUSED",
+        "association_decay": 0.92,
+        "association_hops": 5,
+        "association_limit": 1200,
+        "candidate_limit": 150,
+        "depth": "SINGLE_CANDIDATE_DEEPEST",
+        "focus_attempts": [
+          {
+            "focus_event_id": "8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87",
+            "kernel_trace": {
+              "cue_nodes": [
+                "event:8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87",
+                "term:around",
+                "term:everyth",
+                "term:fail",
+                "term:going",
+                "term:gracefully",
+                "term:important",
+                "term:remain",
+                "term:should",
+                "term:system",
+                "term:understandable",
+                "term:wrong"
+              ],
+              "decay": 0.92,
+              "items": [
+                {
+                  "association_hops": [],
+                  "associative_activation": 0.0,
+                  "baseline_score": 0.78,
+                  "event_id": "8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87",
+                  "global_seq": 4,
+                  "selected": true,
+                  "total_score": 0.78
+                }
+              ],
+              "max_hops": 5,
+              "policy_version": "deterministic-associations-v4"
+            },
+            "semantic_query_text": "Important systems should fail gracefully and remain understandable when everything around them is going wrong.",
+            "supported": true
+          }
+        ],
+        "focus_event_ids": [
+          "8b3f597b-fe26-5a2e-9fa4-e2dcc8a75d87"
+        ],
+        "kernel": "associative_recall_from_postgres",
+        "retrieval_role": "FOCUSED",
+        "semantic_query_text": "Important systems should fail gracefully and remain understandable when everything around them is going wrong."
+      },
+      "supported": false
+    },
+    "requesting_component": "self-review:self-reflection/v1:3bd63127-7b92-56d6-8b75-febaa0f67608"
+  },
+  "payload_text": null,
+  "record_hash": "46e3830b7563653d38d50423999587aa2d30d50aa04e286b5b8030dc5400ba4e",
+  "source": "jit_memory"
+}

@@ -1,0 +1,42 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 131,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "d4c91068-05b4-55cc-b9a4-10c0abaa3ffd",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:00:51.359117+00:00",
+  "payload": {
+    "data": {
+      "counterevidence_checked": true,
+      "identity_centrality": "MODERATE",
+      "metrics": {
+        "context_count": 1,
+        "first_support_at": "2025-02-15T17:40:00Z",
+        "last_support_at": "2025-02-15T17:40:00Z",
+        "opposition_root_count": 0,
+        "prediction_ambiguous_count": 0,
+        "prediction_confirmed_count": 0,
+        "prediction_contradicted_count": 0,
+        "source_count": 1,
+        "source_type_count": 1,
+        "support_root_count": 1
+      },
+      "policy_version": "self-memory/v1",
+      "representation_id": "448b059b-0806-5443-b35f-95d46eea9f08",
+      "resolution_id": "9d908dcc-7157-572a-ad46-0a3c1d04fc1f",
+      "resolved_at": "2026-09-25T05:53:15.152494Z",
+      "status": "CONTESTED",
+      "supersedes": "e03c57fd-9460-548a-9bbd-3f1852cfd536"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "448b059b-0806-5443-b35f-95d46eea9f08",
+    "record_kind": "self_resolution",
+    "revision": "9d908dcc-7157-572a-ad46-0a3c1d04fc1f"
+  },
+  "payload_text": null,
+  "record_hash": "5f7f63da67c98031e2558cd7c124c17ee1d618f5d79f354efa738242b225ff7c",
+  "source": "cognitive_runtime"
+}

@@ -1,0 +1,39 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 108,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "8d837351-9636-5383-b4d0-e8744f2ff95f",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T05:58:33.865366+00:00",
+  "payload": {
+    "data": {
+      "context_tags": [
+        "safety",
+        "risk_evaluation",
+        "practicality"
+      ],
+      "created_at": "2026-09-25T05:53:15.152494Z",
+      "embodiment_ref": null,
+      "future_orientation": null,
+      "kind": "TRAIT",
+      "perspective": "AVOWED",
+      "plasticity": "SLOW",
+      "policy_version": "self-memory/v1",
+      "procedure_ref": null,
+      "relationship_ref": null,
+      "representation_id": "acb87c4f-8a86-5da1-add4-00bfb2cbd910",
+      "statement": "Sentiment does not override physical safety; I will retire a potentially hazardous object if it poses an unmanageable risk.",
+      "subject": "self"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "acb87c4f-8a86-5da1-add4-00bfb2cbd910",
+    "record_kind": "self_representation",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "baaeb9c82ca8516eb27feb40b291d3530309b78d8d847748489354e4ac1204f7",
+  "source": "cognitive_runtime"
+}

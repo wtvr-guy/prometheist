@@ -1,0 +1,37 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 138,
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "event_id": "f1ede7bd-0003-518a-8bde-b3ab711432c0",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-25T06:32:48.745244+00:00",
+  "payload": {
+    "memory_request_id": "27d16588-7182-50fd-b7ba-627cbc866f72",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [
+        "49e8c126-dded-50fc-a59b-b2d0fcd866ae"
+      ],
+      "include_persisted_history": true,
+      "limit": 10,
+      "query_text": "In high-stakes situations, I name what is known, halt unsafe actions, and refuse to present false certainty.",
+      "reference_time": null,
+      "source_types": [
+        "USER_PROMPT",
+        "TOOL_RESULT",
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "FOCUSED"
+  },
+  "payload_text": "In high-stakes situations, I name what is known, halt unsafe actions, and refuse to present false certainty.",
+  "record_hash": "f43399c6882fdd32bc33d9f1a686aae01cd5466c4ebe54d02dce8f59309a659f",
+  "source": "self-review:self-reflection/v1:685cbd1d-aa00-5e3f-980d-aa901c077c66"
+}

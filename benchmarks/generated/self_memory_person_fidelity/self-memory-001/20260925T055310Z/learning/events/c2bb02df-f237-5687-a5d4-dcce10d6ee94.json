@@ -1,0 +1,37 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 126,
+  "correlation_id": "59a0963d-68c9-58b9-8796-d30abdda52a8",
+  "event_id": "c2bb02df-f237-5687-a5d4-dcce10d6ee94",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-25T06:00:15.621260+00:00",
+  "payload": {
+    "memory_request_id": "7a7263cd-b7bb-573c-803e-b6701e597974",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [
+        "6754f32b-5157-5e29-a689-516ef395cec8"
+      ],
+      "include_persisted_history": true,
+      "limit": 10,
+      "query_text": "I avoid surprise parties aimed at me because being made the center of an unplanned event feels like losing control.",
+      "reference_time": null,
+      "source_types": [
+        "USER_PROMPT",
+        "TOOL_RESULT",
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "FOCUSED"
+  },
+  "payload_text": "I avoid surprise parties aimed at me because being made the center of an unplanned event feels like losing control.",
+  "record_hash": "d91674fa51f53802ee8036b107c949fb97792001b3ef417c1af72a8b33d14476",
+  "source": "self-review:self-reflection/v1:5908412c-443a-5dbb-9c39-79fa2b83a4c4"
+}

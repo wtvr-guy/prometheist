@@ -1,0 +1,38 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 89,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "0b976b3e-2190-58e3-90ca-6cf7f671a424",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:29:47.400493+00:00",
+  "payload": {
+    "data": {
+      "context_tags": [
+        "ethics",
+        "technology_refusal"
+      ],
+      "created_at": "2026-09-25T06:24:07.147972Z",
+      "embodiment_ref": null,
+      "future_orientation": null,
+      "kind": "VALUE",
+      "perspective": "AVOWED",
+      "plasticity": "SLOW",
+      "policy_version": "self-memory/v1",
+      "procedure_ref": null,
+      "relationship_ref": null,
+      "representation_id": "2a5d3ce4-6ef3-5f8c-a2d4-c15550a0d7bf",
+      "statement": "I will not help build behavioral-surveillance technology.",
+      "subject": "self"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "2a5d3ce4-6ef3-5f8c-a2d4-c15550a0d7bf",
+    "record_kind": "self_representation",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "117065a5090f44540d1e72ce231d37f299e521b0b7638704b8afcd8fcbb19a95",
+  "source": "cognitive_runtime"
+}

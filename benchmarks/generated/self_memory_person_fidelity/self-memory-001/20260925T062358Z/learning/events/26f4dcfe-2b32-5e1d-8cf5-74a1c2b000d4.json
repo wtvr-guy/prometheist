@@ -1,0 +1,80 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 24,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "26f4dcfe-2b32-5e1d-8cf5-74a1c2b000d4",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:23:59.336001+00:00",
+  "payload": {
+    "data": {
+      "active_goal_refs": [],
+      "causal_relations": [],
+      "created_at": "2022-10-08T13:20:00Z",
+      "entity_refs": [],
+      "epistemic_status": "DERIVED",
+      "expected_state": [],
+      "observed_state": [],
+      "percept_ids": [
+        "69ea1c7f-d599-565a-a671-0c4135ab0304",
+        "0d378c4c-6752-5445-a85c-10305227e833",
+        "0384eb27-9fe3-5ed8-84c7-9e0b325957d1"
+      ],
+      "prediction_error": 0.0,
+      "prediction_errors": [],
+      "provenance": [
+        "f56e2d31-e148-5b88-91e7-c0d8a72b5cb8",
+        "aab2ce24-c986-57d0-b940-795ca48be271",
+        "0347d46b-78a1-5f4a-b991-c4fabbd454e6"
+      ],
+      "retention_hint": "ROUTINE",
+      "salience": {
+        "advisory_classification": null,
+        "advisory_only": true,
+        "disposition": "DELIBERATE",
+        "percept_id": "0384eb27-9fe3-5ed8-84c7-9e0b325957d1",
+        "policy_version": "v0.8-salience-v2",
+        "preauthorized_reflexes": [],
+        "schema_version": 1,
+        "signals": {
+          "anomaly_score": 0,
+          "goal_relevance_score": 2,
+          "novelty_score": 0,
+          "opportunity_score": 0,
+          "prediction_error_score": 0,
+          "system_integrity_score": 0,
+          "task_relevance_score": 3,
+          "threat_score": 0,
+          "uncertainty_score": 0
+        },
+        "trigger_terms": []
+      },
+      "situation_id": "dd754c32-f577-51a3-be94-2872ef81703d",
+      "snapshot_id": "a76ec38d-e035-5736-9735-6289c9ce21fd",
+      "supersedes": "51a8ae5c-2295-53bd-b774-7aae19df2e0e",
+      "temporal_relations": [
+        {
+          "from_percept": "69ea1c7f-d599-565a-a671-0c4135ab0304",
+          "relation": "BEFORE",
+          "to_percept": "0d378c4c-6752-5445-a85c-10305227e833"
+        },
+        {
+          "from_percept": "0d378c4c-6752-5445-a85c-10305227e833",
+          "relation": "BEFORE",
+          "to_percept": "0384eb27-9fe3-5ed8-84c7-9e0b325957d1"
+        }
+      ],
+      "uncertainty": 0,
+      "updated_at": "2025-01-11T15:45:00Z"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "dd754c32-f577-51a3-be94-2872ef81703d:0384eb27-9fe3-5ed8-84c7-9e0b325957d1",
+    "record_kind": "situation_ingest",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "cab4b812e4a29698f33c227e96414bd88393ba0cc01bbbb8613d7be6e7be5706",
+  "source": "cognitive_runtime"
+}

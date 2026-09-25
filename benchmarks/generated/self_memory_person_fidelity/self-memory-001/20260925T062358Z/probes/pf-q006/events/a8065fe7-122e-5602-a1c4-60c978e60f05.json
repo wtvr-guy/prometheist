@@ -1,0 +1,39 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 8,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "a8065fe7-122e-5602-a1c4-60c978e60f05",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:36:18.022995+00:00",
+  "payload": {
+    "data": {
+      "context_tags": [
+        "family",
+        "emotional protection",
+        "autonomy"
+      ],
+      "created_at": "2026-09-25T06:24:07.147972Z",
+      "embodiment_ref": null,
+      "future_orientation": null,
+      "kind": "VALUE",
+      "perspective": "INFERRED",
+      "plasticity": "SLOW",
+      "policy_version": "self-memory/v1",
+      "procedure_ref": null,
+      "relationship_ref": null,
+      "representation_id": "5c6792b6-9931-591a-9778-0e18f557af39",
+      "statement": "Protecting a younger sibling's autonomy and control over their personal story is a priority.",
+      "subject": "self"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "5c6792b6-9931-591a-9778-0e18f557af39",
+    "record_kind": "self_representation",
+    "revision": "benchmark-self-snapshot:8e457c55868ff6cb629a5f293df0438655246c2d1f9774b951af9d5fc5a37819"
+  },
+  "payload_text": null,
+  "record_hash": "03b7cf82ce2be6684f2b2cfe9f64736b903cecae9126909136855d60ad4ae6a2",
+  "source": "cognitive_runtime"
+}

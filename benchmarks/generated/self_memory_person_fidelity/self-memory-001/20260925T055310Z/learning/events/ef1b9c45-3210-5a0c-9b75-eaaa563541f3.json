@@ -1,0 +1,42 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 55,
+  "correlation_id": "59a0963d-68c9-58b9-8796-d30abdda52a8",
+  "event_id": "ef1b9c45-3210-5a0c-9b75-eaaa563541f3",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-25T05:53:13.398090+00:00",
+  "payload": {
+    "memory_request_id": "d55ffa08-18b5-545c-b71e-8eb8d257dcbb",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [],
+      "include_persisted_history": true,
+      "limit": 5,
+      "query_text": "{\"after_key\":\"\",\"schedule_id\":\"91444627-1f57-56c0-87d0-40f716bd1dbf\"}",
+      "reference_time": null,
+      "source_types": [
+        "AGENT_DECISION",
+        "AGENT_DELEGATION",
+        "CAPABILITY_PACKET",
+        "CAPABILITY_REQUEST",
+        "CAPABILITY_RESULT",
+        "DERIVED_REPRESENTATION",
+        "MEMORY_PACKET",
+        "MEMORY_REQUEST",
+        "RETRIEVAL_REQUEST",
+        "RETRIEVAL_RESULT",
+        "TOOL_REQUEST"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "ATTENTION_ACTIVATION"
+  },
+  "payload_text": "{\"after_key\":\"\",\"schedule_id\":\"91444627-1f57-56c0-87d0-40f716bd1dbf\"}",
+  "record_hash": "c0fdda31f37656f7d50ecbaf7e799484d2f23b915671d11871ae4be3a2bf3f79",
+  "source": "situation-aperture:59a0963d-68c9-58b9-8796-d30abdda52a8"
+}

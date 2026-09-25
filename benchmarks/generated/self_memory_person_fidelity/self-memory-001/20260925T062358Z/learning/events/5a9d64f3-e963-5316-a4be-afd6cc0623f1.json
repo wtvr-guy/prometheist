@@ -1,0 +1,38 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 141,
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "event_id": "5a9d64f3-e963-5316-a4be-afd6cc0623f1",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-25T06:33:11.583373+00:00",
+  "payload": {
+    "memory_request_id": "d87fb1a2-36ca-5406-bf1d-2c9bacf10d02",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [
+        "7cb097a7-b3aa-5cf9-88ed-f0a792d75b88",
+        "49e8c126-dded-50fc-a59b-b2d0fcd866ae"
+      ],
+      "include_persisted_history": true,
+      "limit": 10,
+      "query_text": "I apply a principle of cautious action—'Measure twice, panic once'—to technical and operational decisions, especially when uncertainty is present.",
+      "reference_time": null,
+      "source_types": [
+        "USER_PROMPT",
+        "TOOL_RESULT",
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "RELATIONAL"
+  },
+  "payload_text": "I apply a principle of cautious action—'Measure twice, panic once'—to technical and operational decisions, especially when uncertainty is present.",
+  "record_hash": "d6548cf60c56ba3c58243f571201de2bf924aaf8cd69530679849e65f846e9c0",
+  "source": "self-review:self-reflection/v1:21dc79b4-5d27-562b-91ab-a3311a44f5e5"
+}

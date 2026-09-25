@@ -1,0 +1,38 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 74,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "068a110e-ecc5-52bd-97c9-13b176366605",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T05:56:29.776517+00:00",
+  "payload": {
+    "data": {
+      "context_tags": [
+        "self-perception",
+        "decision-style"
+      ],
+      "created_at": "2026-09-25T05:53:15.152494Z",
+      "embodiment_ref": null,
+      "future_orientation": null,
+      "kind": "BEHAVIORAL_TENDENCY",
+      "perspective": "AVOWED",
+      "plasticity": "SLOW",
+      "policy_version": "self-memory/v1",
+      "procedure_ref": null,
+      "relationship_ref": null,
+      "representation_id": "8a3857b8-0787-5dfc-8861-e8fd94d8a599",
+      "statement": "I am spontaneous and trust my gut.",
+      "subject": "self"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "8a3857b8-0787-5dfc-8861-e8fd94d8a599",
+    "record_kind": "self_representation",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "57d5c2a6cbf57770eff52066ad991eecfe751ca5598444ac5b1342a585d0718e",
+  "source": "cognitive_runtime"
+}

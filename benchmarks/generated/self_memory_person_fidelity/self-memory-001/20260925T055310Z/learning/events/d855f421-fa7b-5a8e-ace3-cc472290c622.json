@@ -1,0 +1,24 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 53,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "d855f421-fa7b-5a8e-ace3-cc472290c622",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T05:53:12.543479+00:00",
+  "payload": {
+    "data": {
+      "after_key": "0cd934db-ad9e-5aef-868b-7280991d94b4",
+      "revision": 1
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "self-memory-learning:20260925T055310Z",
+    "record_kind": "candidate_cursor",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "fd311ba301140ef46fab2735ae7cc3d26eb0aecebacbc3aa16cad22dfe5a9f34",
+  "source": "cognitive_runtime"
+}

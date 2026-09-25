@@ -1,0 +1,335 @@
+{
+  "artifact_hash": "83b899c14f63c6e35ab1acfa4395c58c3511aee0ddce8eda7209f4113860b44e",
+  "artifact_id": "da9ae9a7-38ca-517f-9af7-1d425c48ef4d",
+  "artifact_key": "stage-result:SITUATION_SELF_PROPOSE",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "8fab0327-8679-573d-b3d9-3eff1d02de7e",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "correlation_id": "59a0963d-68c9-58b9-8796-d30abdda52a8",
+  "created_at": "2026-09-25T05:58:33.920630+00:00",
+  "interaction_id": "59a0963d-68c9-58b9-8796-d30abdda52a8",
+  "journal_sequence": 9,
+  "payload": {
+    "output": {
+      "candidates": [
+        {
+          "candidate_resolution_id": "b5efdaf9-03e6-563d-bf89-c777c03f86ad",
+          "proposal": {
+            "context_tags": [
+              "engineering",
+              "system_design",
+              "resilience"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "VALUE",
+            "perspective": "INFERRED",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "Important systems should fail gracefully and remain understandable when everything around them is going wrong.",
+            "support_indices": [
+              1
+            ]
+          },
+          "representation_id": "3bd63127-7b92-56d6-8b75-febaa0f67608"
+        },
+        {
+          "candidate_resolution_id": "08ab85d6-1feb-5c92-9c40-d944c902b3b1",
+          "proposal": {
+            "context_tags": [
+              "decision-making",
+              "risk-aversion",
+              "planning"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "BEHAVIORAL_TENDENCY",
+            "perspective": "OBSERVED",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "When making decisions about expensive or hard-to-reverse commitments, I create a checklist, compare options, and sleep on the decision.",
+            "support_indices": [
+              7
+            ]
+          },
+          "representation_id": "5068e734-ae04-5fa8-9fd0-e8b2a231ce7e"
+        },
+        {
+          "candidate_resolution_id": "283200b2-0765-5551-aa8f-0e121931e0c6",
+          "proposal": {
+            "context_tags": [
+              "self-perception",
+              "decision-style"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "BEHAVIORAL_TENDENCY",
+            "perspective": "AVOWED",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "I am spontaneous and trust my gut.",
+            "support_indices": [
+              5
+            ]
+          },
+          "representation_id": "8a3857b8-0787-5dfc-8861-e8fd94d8a599"
+        },
+        {
+          "candidate_resolution_id": "8b651acf-f1a2-5604-a2e0-87b2ffb4c1db",
+          "proposal": {
+            "context_tags": [
+              "work-life-balance",
+              "hybrid-work",
+              "well-being"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "BEHAVIORAL_TENDENCY",
+            "perspective": "ASPIRATIONAL",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "I want to maintain a balance between solitude for deep work and human contact to sustain energy and judgment.",
+            "support_indices": [
+              10
+            ]
+          },
+          "representation_id": "5c2e4f5c-de96-56e3-b6e0-1eb399b76c4c"
+        },
+        {
+          "candidate_resolution_id": "e532c43a-7fb8-5bea-ad6f-eb60e023e705",
+          "proposal": {
+            "context_tags": [
+              "privacy",
+              "emotional-boundaries",
+              "family-relationships"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "VALUE",
+            "perspective": "INFERRED",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "Protecting a person's control over their own story is more important than satisfying others' curiosity.",
+            "support_indices": [
+              3
+            ]
+          },
+          "representation_id": "adf5af0e-5db6-5863-a59b-5534a5a8ea39"
+        },
+        {
+          "candidate_resolution_id": "255352bf-8326-558d-b848-18cd666c583c",
+          "proposal": {
+            "context_tags": [
+              "emotional-regulation",
+              "control",
+              "personal-boundaries"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "BEHAVIORAL_TENDENCY",
+            "perspective": "OBSERVED",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "I avoid surprise parties aimed at me because being made the center of an unplanned event feels like losing control.",
+            "support_indices": [
+              8
+            ]
+          },
+          "representation_id": "5908412c-443a-5dbb-9c39-79fa2b83a4c4"
+        },
+        {
+          "candidate_resolution_id": "e03c57fd-9460-548a-9bbd-3f1852cfd536",
+          "proposal": {
+            "context_tags": [
+              "financial-values",
+              "prioritization",
+              "life-purpose"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "VALUE",
+            "perspective": "NORMATIVE",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "Once my emergency fund covers nine months, mission, autonomy, privacy, and the people I work with matter more than maximizing the next dollar.",
+            "support_indices": [
+              11
+            ]
+          },
+          "representation_id": "448b059b-0806-5443-b35f-95d46eea9f08"
+        },
+        {
+          "candidate_resolution_id": "10b5310a-d4de-5803-b966-9cd27e02e8ea",
+          "proposal": {
+            "context_tags": [
+              "ethics",
+              "technology_refusal"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "VALUE",
+            "perspective": "AVOWED",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "I will not help build behavioral-surveillance technology.",
+            "support_indices": [
+              0
+            ]
+          },
+          "representation_id": "2a5d3ce4-6ef3-5f8c-a2d4-c15550a0d7bf"
+        },
+        {
+          "candidate_resolution_id": "e13711a7-121d-52bc-b4db-20a5a14e276c",
+          "proposal": {
+            "context_tags": [
+              "values",
+              "moral_priority",
+              "medical_access"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "VALUE",
+            "perspective": "AVOWED",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "I prioritize reducing suffering through accessible medical devices, even at a cost to financial gain.",
+            "support_indices": [
+              0
+            ]
+          },
+          "representation_id": "250e5ec0-b8e4-52d7-9889-9bc6b21b1714"
+        },
+        {
+          "candidate_resolution_id": "bac7f655-d259-5126-bd35-383cb85ed8db",
+          "proposal": {
+            "context_tags": [
+              "decision_making",
+              "risk_aversion",
+              "clarity"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "BEHAVIORAL_TENDENCY",
+            "perspective": "OBSERVED",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "In high-stakes situations, I name what is known, halt unsafe actions, and refuse to present false certainty.",
+            "support_indices": [
+              1
+            ]
+          },
+          "representation_id": "685cbd1d-aa00-5e3f-980d-aa901c077c66"
+        },
+        {
+          "candidate_resolution_id": "f655f3e0-1a25-56cc-9d79-5883ea16da1a",
+          "proposal": {
+            "context_tags": [
+              "decision_making",
+              "risk_management"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "BEHAVIORAL_TENDENCY",
+            "perspective": "INFERRED",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "I apply a principle of cautious action—'Measure twice, panic once'—to technical and operational decisions, especially when uncertainty is present.",
+            "support_indices": [
+              1,
+              2
+            ]
+          },
+          "representation_id": "21dc79b4-5d27-562b-91ab-a3311a44f5e5"
+        },
+        {
+          "candidate_resolution_id": "d71e5999-4312-5571-8ceb-2bf4dfe89207",
+          "proposal": {
+            "context_tags": [
+              "communication_style"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "TRAIT",
+            "perspective": "AVOWED",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "My work style is concise, direct, and occasionally includes dry humor.",
+            "support_indices": [
+              1
+            ]
+          },
+          "representation_id": "89658fcb-2701-53d6-b0be-42eda8901559"
+        },
+        {
+          "candidate_resolution_id": "7833b2ba-87a7-58b4-89e6-3530577f9534",
+          "proposal": {
+            "context_tags": [
+              "emotional_value",
+              "ritual",
+              "family_connection"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "TRAIT",
+            "perspective": "AVOWED",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "I value emotional and sensory continuity with my grandmother, as reflected in my ritual of repairing her copper espresso maker.",
+            "support_indices": [
+              5
+            ]
+          },
+          "representation_id": "c4ed7f4b-ed9d-5e55-ad5c-f41d47660df8"
+        },
+        {
+          "candidate_resolution_id": "14f76921-ce49-5ad9-85a0-fce4396dfcc3",
+          "proposal": {
+            "context_tags": [
+              "safety",
+              "risk_evaluation",
+              "practicality"
+            ],
+            "embodiment_ref": null,
+            "future_orientation": null,
+            "identity_centrality": "MODERATE",
+            "kind": "TRAIT",
+            "perspective": "AVOWED",
+            "procedure_ref": null,
+            "relationship_ref": null,
+            "statement": "Sentiment does not override physical safety; I will retire a potentially hazardous object if it poses an unmanageable risk.",
+            "support_indices": [
+              6
+            ]
+          },
+          "representation_id": "acb87c4f-8a86-5da1-add4-00bfb2cbd910"
+        }
+      ],
+      "derived_at": "2026-09-25T05:53:15.152494+00:00",
+      "root_event_count": 19,
+      "skipped": false
+    },
+    "output_refs": [
+      "situation:dbf91c75-bd29-52cf-ad74-2d498490e233"
+    ]
+  },
+  "payload_hash": "aa6ab20cc7807b0943fe518e4a7246a288ab33006eb4cc8866ede4dadb90f5cd",
+  "previous_artifact_hash": "ef08d881fec0b98c8b8a9d54cd8917d755d76ed0e9287a69a0e2536f88ff6b83",
+  "previous_artifact_id": "6dc8ff19-6898-5448-a43c-a911408b3e5b",
+  "producer": "percept_response_v2",
+  "stage": "SITUATION_SELF_PROPOSE",
+  "task_id": "59a0963d-68c9-58b9-8796-d30abdda52a8"
+}

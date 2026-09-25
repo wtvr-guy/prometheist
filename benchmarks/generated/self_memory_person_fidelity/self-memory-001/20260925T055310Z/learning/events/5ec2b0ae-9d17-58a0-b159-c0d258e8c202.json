@@ -1,0 +1,39 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 71,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "5ec2b0ae-9d17-58a0-b159-c0d258e8c202",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T05:56:29.725387+00:00",
+  "payload": {
+    "data": {
+      "context_tags": [
+        "decision-making",
+        "risk-aversion",
+        "planning"
+      ],
+      "created_at": "2026-09-25T05:53:15.152494Z",
+      "embodiment_ref": null,
+      "future_orientation": null,
+      "kind": "BEHAVIORAL_TENDENCY",
+      "perspective": "OBSERVED",
+      "plasticity": "SLOW",
+      "policy_version": "self-memory/v1",
+      "procedure_ref": null,
+      "relationship_ref": null,
+      "representation_id": "5068e734-ae04-5fa8-9fd0-e8b2a231ce7e",
+      "statement": "When making decisions about expensive or hard-to-reverse commitments, I create a checklist, compare options, and sleep on the decision.",
+      "subject": "self"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "5068e734-ae04-5fa8-9fd0-e8b2a231ce7e",
+    "record_kind": "self_representation",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "44a2c80bcc6c43bb8bb34001de012aebec7896e6fb1eb688290c420349ed6b48",
+  "source": "cognitive_runtime"
+}

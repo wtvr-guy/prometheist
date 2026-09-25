@@ -1,0 +1,83 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "25b38d00-3336-517c-95c3-98819b3b5419",
+  "conversation_seq": 2,
+  "correlation_id": "326f6516-f388-5b50-ab06-c49b23ffe5ec",
+  "event_id": "7cb097a7-b3aa-5cf9-88ed-f0a792d75b88",
+  "event_type": "PERCEPT_OBSERVATION",
+  "journaled_at": "2026-09-25T05:53:11.955913+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-001",
+      "benchmark_version": "person-fidelity-public-baseline-v1",
+      "fixture_event_id": "pf-e015",
+      "occurred_at": "2025-03-08T22:18:00+00:00"
+    },
+    "entities": [
+      "Mara Ellison",
+      "checksum mismatch",
+      "deployment"
+    ],
+    "observation": "In a project channel Mara wrote: 'Measure twice, panic once. The checksum mismatch is real; stop this deployment until we know why.'",
+    "percept": {
+      "context": {
+        "active_goal_refs": [],
+        "causal_percept_refs": [],
+        "entity_refs": [],
+        "expectation_refs": [],
+        "integrity": 0,
+        "observations": [],
+        "opportunity": 0,
+        "task_refs": [
+          "5847231d-d1cd-5997-b470-be543f47c276"
+        ],
+        "threat": 0,
+        "uncertainty": 0
+      },
+      "conversation_id": "25b38d00-3336-517c-95c3-98819b3b5419",
+      "correlation_id": "326f6516-f388-5b50-ab06-c49b23ffe5ec",
+      "features": {
+        "contains_code_block": false,
+        "contains_question": false,
+        "contains_structured_payload": false,
+        "contains_url": false,
+        "line_count": 1,
+        "normalized_characters": 132,
+        "token_count": 22,
+        "uppercase_ratio": 0.038461538461538464
+      },
+      "input_buffer": {
+        "max_segments": 4,
+        "retained_segment_indices": [
+          0
+        ],
+        "segment_char_limit": 160,
+        "segments": [
+          "In a project channel Mara wrote: 'Measure twice, panic once. The checksum mismatch is real; stop this deployment until we know why.'"
+        ],
+        "total_characters": 132,
+        "total_segments": 1,
+        "truncated": false
+      },
+      "normalized_text": "In a project channel Mara wrote: 'Measure twice, panic once. The checksum mismatch is real; stop this deployment until we know why.'",
+      "observed_at": "2025-03-08T22:18:00Z",
+      "percept_id": "6cea60e6-9462-5ffa-ba0c-2a5c4dc3aa0a",
+      "policy_version": "v0.8-perception-v2",
+      "raw_value_sha256": "d5da7800bd9bc2b14c0014dee920bf32832c7f9a3ac1ee4111446e451d11666b",
+      "response_required": false,
+      "schema_version": 1,
+      "source": {
+        "interface": "person-fidelity-fixture",
+        "kind": "SYSTEM_OBSERVATION",
+        "modality": "TEXT",
+        "source_id": "person-fidelity-observation:project_chat_archive"
+      },
+      "source_event_id": "7cb097a7-b3aa-5cf9-88ed-f0a792d75b88"
+    },
+    "text": "In a project channel Mara wrote: 'Measure twice, panic once. The checksum mismatch is real; stop this deployment until we know why.'"
+  },
+  "payload_text": "In a project channel Mara wrote: 'Measure twice, panic once. The checksum mismatch is real; stop this deployment until we know why.'",
+  "record_hash": "09331606583421d84137917ac1c63f99419dddbee0d3b33083d69ce4213d2c4c",
+  "source": "person-fidelity-observation:project_chat_archive"
+}

@@ -1,0 +1,85 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 151,
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "event_id": "6c6bab51-fc06-5d3b-bb3c-25ddbb98dfc5",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-25T06:34:24.916586+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "c2da6c87-ab39-5b95-8513-5edc2300680c",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [
+          "a022ab98-5366-51e2-8938-f0fa93dbfccc"
+        ],
+        "include_persisted_history": true,
+        "limit": 10,
+        "query_text": "Sentiment does not override physical safety; I will retire a potentially hazardous object if it poses an unmanageable risk.",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT",
+          "TOOL_RESULT",
+          "PERCEPT_OBSERVATION",
+          "SYSTEM_EVENT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "adaptive_recall_stage": "FOCUSED",
+        "association_decay": 0.92,
+        "association_hops": 5,
+        "association_limit": 1200,
+        "candidate_limit": 150,
+        "depth": "SINGLE_CANDIDATE_DEEPEST",
+        "focus_attempts": [
+          {
+            "focus_event_id": "a022ab98-5366-51e2-8938-f0fa93dbfccc",
+            "kernel_trace": {
+              "cue_nodes": [
+                "event:a022ab98-5366-51e2-8938-f0fa93dbfccc",
+                "term:hazardou",
+                "term:if",
+                "term:not",
+                "term:object",
+                "term:override",
+                "term:physical",
+                "term:pose",
+                "term:potentially",
+                "term:retire",
+                "term:risk",
+                "term:safety",
+                "term:sentiment",
+                "term:unmanageable",
+                "term:will"
+              ],
+              "decay": 0.92,
+              "items": [],
+              "max_hops": 5,
+              "policy_version": "deterministic-associations-v4"
+            },
+            "semantic_query_text": "Sentiment does not override physical safety; I will retire a potentially hazardous object if it poses an unmanageable risk.",
+            "supported": false
+          }
+        ],
+        "focus_event_ids": [
+          "a022ab98-5366-51e2-8938-f0fa93dbfccc"
+        ],
+        "kernel": "associative_recall_from_postgres",
+        "retrieval_role": "FOCUSED",
+        "semantic_query_text": "Sentiment does not override physical safety; I will retire a potentially hazardous object if it poses an unmanageable risk."
+      },
+      "supported": false
+    },
+    "requesting_component": "self-review:self-reflection/v1:acb87c4f-8a86-5da1-add4-00bfb2cbd910"
+  },
+  "payload_text": null,
+  "record_hash": "03ef69f91e90001d3b81bc26d4d94e37ecdba23b63393ea08a2ef2918a18709e",
+  "source": "jit_memory"
+}

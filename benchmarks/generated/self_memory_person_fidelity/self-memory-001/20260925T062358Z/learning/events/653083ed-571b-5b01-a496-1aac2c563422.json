@@ -1,0 +1,82 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 139,
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "event_id": "653083ed-571b-5b01-a496-1aac2c563422",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-25T06:32:48.777613+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "27d16588-7182-50fd-b7ba-627cbc866f72",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [
+          "49e8c126-dded-50fc-a59b-b2d0fcd866ae"
+        ],
+        "include_persisted_history": true,
+        "limit": 10,
+        "query_text": "In high-stakes situations, I name what is known, halt unsafe actions, and refuse to present false certainty.",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT",
+          "TOOL_RESULT",
+          "PERCEPT_OBSERVATION",
+          "SYSTEM_EVENT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "adaptive_recall_stage": "FOCUSED",
+        "association_decay": 0.92,
+        "association_hops": 5,
+        "association_limit": 1200,
+        "candidate_limit": 150,
+        "depth": "SINGLE_CANDIDATE_DEEPEST",
+        "focus_attempts": [
+          {
+            "focus_event_id": "49e8c126-dded-50fc-a59b-b2d0fcd866ae",
+            "kernel_trace": {
+              "cue_nodes": [
+                "event:49e8c126-dded-50fc-a59b-b2d0fcd866ae",
+                "term:action",
+                "term:certainty",
+                "term:false",
+                "term:halt",
+                "term:high-stake",
+                "term:known",
+                "term:name",
+                "term:present",
+                "term:refuse",
+                "term:situation",
+                "term:unsafe"
+              ],
+              "decay": 0.92,
+              "items": [],
+              "max_hops": 5,
+              "policy_version": "deterministic-associations-v4"
+            },
+            "semantic_query_text": "In high-stakes situations, I name what is known, halt unsafe actions, and refuse to present false certainty.",
+            "supported": false
+          }
+        ],
+        "focus_event_ids": [
+          "49e8c126-dded-50fc-a59b-b2d0fcd866ae"
+        ],
+        "kernel": "associative_recall_from_postgres",
+        "retrieval_role": "FOCUSED",
+        "semantic_query_text": "In high-stakes situations, I name what is known, halt unsafe actions, and refuse to present false certainty."
+      },
+      "supported": false
+    },
+    "requesting_component": "self-review:self-reflection/v1:685cbd1d-aa00-5e3f-980d-aa901c077c66"
+  },
+  "payload_text": null,
+  "record_hash": "50db7862f4d3d0484d28c1c30871c6669ee6aef2c83d61c51469f8b16ede0779",
+  "source": "jit_memory"
+}

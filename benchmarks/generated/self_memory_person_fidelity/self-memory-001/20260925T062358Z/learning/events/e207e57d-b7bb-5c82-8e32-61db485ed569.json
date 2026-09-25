@@ -1,0 +1,80 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 124,
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "event_id": "e207e57d-b7bb-5c82-8e32-61db485ed569",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-25T06:31:09.707937+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "46923da4-5c6a-5f77-9f2e-107eb21d3979",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [
+          "4305d458-5acb-52d7-b73e-49af6aa2a453"
+        ],
+        "include_persisted_history": true,
+        "limit": 10,
+        "query_text": "Protecting a younger sibling's autonomy and control over their personal story is a priority.",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT",
+          "TOOL_RESULT",
+          "PERCEPT_OBSERVATION",
+          "SYSTEM_EVENT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "adaptive_recall_stage": "FOCUSED",
+        "association_decay": 0.92,
+        "association_hops": 5,
+        "association_limit": 1200,
+        "candidate_limit": 150,
+        "depth": "SINGLE_CANDIDATE_DEEPEST",
+        "focus_attempts": [
+          {
+            "focus_event_id": "4305d458-5acb-52d7-b73e-49af6aa2a453",
+            "kernel_trace": {
+              "cue_nodes": [
+                "event:4305d458-5acb-52d7-b73e-49af6aa2a453",
+                "term:autonomy",
+                "term:control",
+                "term:over",
+                "term:personal",
+                "term:priority",
+                "term:protect",
+                "term:sibl",
+                "term:story",
+                "term:younger"
+              ],
+              "decay": 0.92,
+              "items": [],
+              "max_hops": 5,
+              "policy_version": "deterministic-associations-v4"
+            },
+            "semantic_query_text": "Protecting a younger sibling's autonomy and control over their personal story is a priority.",
+            "supported": false
+          }
+        ],
+        "focus_event_ids": [
+          "4305d458-5acb-52d7-b73e-49af6aa2a453"
+        ],
+        "kernel": "associative_recall_from_postgres",
+        "retrieval_role": "FOCUSED",
+        "semantic_query_text": "Protecting a younger sibling's autonomy and control over their personal story is a priority."
+      },
+      "supported": false
+    },
+    "requesting_component": "self-review:self-reflection/v1:5c6792b6-9931-591a-9778-0e18f557af39"
+  },
+  "payload_text": null,
+  "record_hash": "aa3e3fc662e1bceb22251ff11876fb603cb625651ae20f4eed9a8a7be3e4aeb2",
+  "source": "jit_memory"
+}

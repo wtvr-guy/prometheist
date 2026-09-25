@@ -1,0 +1,39 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 9,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "32739156-4ce9-53f6-9302-268814fb5553",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:36:18.034046+00:00",
+  "payload": {
+    "data": {
+      "context_tags": [
+        "decision_making",
+        "risk_aversion",
+        "clarity"
+      ],
+      "created_at": "2026-09-25T06:24:07.147972Z",
+      "embodiment_ref": null,
+      "future_orientation": null,
+      "kind": "BEHAVIORAL_TENDENCY",
+      "perspective": "OBSERVED",
+      "plasticity": "SLOW",
+      "policy_version": "self-memory/v1",
+      "procedure_ref": null,
+      "relationship_ref": null,
+      "representation_id": "685cbd1d-aa00-5e3f-980d-aa901c077c66",
+      "statement": "In high-stakes situations, I name what is known, halt unsafe actions, and refuse to present false certainty.",
+      "subject": "self"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "685cbd1d-aa00-5e3f-980d-aa901c077c66",
+    "record_kind": "self_representation",
+    "revision": "benchmark-self-snapshot:8e457c55868ff6cb629a5f293df0438655246c2d1f9774b951af9d5fc5a37819"
+  },
+  "payload_text": null,
+  "record_hash": "cf72c6d4fb46dd67825b2ed6d262ad0b3aeb035405bc9ed401c7cd1ac3790a36",
+  "source": "cognitive_runtime"
+}

@@ -1,0 +1,37 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 114,
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "event_id": "cb44f3a6-c0ba-527e-9315-6dcee453ea61",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-25T06:30:17.670419+00:00",
+  "payload": {
+    "memory_request_id": "a35ebb3f-f2cf-5000-a7e2-d51bd9c8fad9",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [
+        "5ce5e3c2-6533-53fe-876c-8a4a0cc9b632"
+      ],
+      "include_persisted_history": true,
+      "limit": 10,
+      "query_text": "When making decisions about expensive or hard-to-reverse commitments, the person creates a checklist, compares options, and sleeps on the decision.",
+      "reference_time": null,
+      "source_types": [
+        "USER_PROMPT",
+        "TOOL_RESULT",
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "FOCUSED"
+  },
+  "payload_text": "When making decisions about expensive or hard-to-reverse commitments, the person creates a checklist, compares options, and sleeps on the decision.",
+  "record_hash": "2ea7d72cfe62bf201eec3575c8265b15b08b40ea6c8586829c4ab11e46c2be17",
+  "source": "self-review:self-reflection/v1:1186df65-dfa6-511d-8f93-210dfb3e6e37"
+}

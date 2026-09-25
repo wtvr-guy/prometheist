@@ -1,0 +1,93 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 121,
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "event_id": "64379b4a-3957-52e4-8d7b-cc3ea1cf443d",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-25T06:30:53.105107+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "e4ac2e51-b8c2-5776-898f-1532d3b67b07",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [
+          "0347d46b-78a1-5f4a-b991-c4fabbd454e6"
+        ],
+        "include_persisted_history": true,
+        "limit": 10,
+        "query_text": "I want to maintain a balance between solitude for deep work and human contact to preserve energy and judgment.",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT",
+          "TOOL_RESULT",
+          "PERCEPT_OBSERVATION",
+          "SYSTEM_EVENT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "adaptive_recall_stage": "FOCUSED",
+        "association_decay": 0.92,
+        "association_hops": 5,
+        "association_limit": 1200,
+        "candidate_limit": 150,
+        "depth": "SINGLE_CANDIDATE_DEEPEST",
+        "focus_attempts": [
+          {
+            "focus_event_id": "0347d46b-78a1-5f4a-b991-c4fabbd454e6",
+            "kernel_trace": {
+              "cue_nodes": [
+                "event:0347d46b-78a1-5f4a-b991-c4fabbd454e6",
+                "term:balance",
+                "term:between",
+                "term:contact",
+                "term:deep",
+                "term:energy",
+                "term:human",
+                "term:judgment",
+                "term:maintain",
+                "term:preserve",
+                "term:solitude",
+                "term:want",
+                "term:work"
+              ],
+              "decay": 0.92,
+              "items": [
+                {
+                  "association_hops": [],
+                  "associative_activation": 0.0,
+                  "baseline_score": 0.52,
+                  "event_id": "0347d46b-78a1-5f4a-b991-c4fabbd454e6",
+                  "global_seq": 33,
+                  "selected": true,
+                  "total_score": 0.52
+                }
+              ],
+              "max_hops": 5,
+              "policy_version": "deterministic-associations-v4"
+            },
+            "semantic_query_text": "I want to maintain a balance between solitude for deep work and human contact to preserve energy and judgment.",
+            "supported": true
+          }
+        ],
+        "focus_event_ids": [
+          "0347d46b-78a1-5f4a-b991-c4fabbd454e6"
+        ],
+        "kernel": "associative_recall_from_postgres",
+        "retrieval_role": "FOCUSED",
+        "semantic_query_text": "I want to maintain a balance between solitude for deep work and human contact to preserve energy and judgment."
+      },
+      "supported": false
+    },
+    "requesting_component": "self-review:self-reflection/v1:46b9e294-469b-5541-908c-559427ad27cc"
+  },
+  "payload_text": null,
+  "record_hash": "0aee28b7b971043291ef29e7860cb8ad811071b310671bec6a676cf0a5e7c39c",
+  "source": "jit_memory"
+}

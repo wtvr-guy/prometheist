@@ -1,0 +1,159 @@
+{
+  "artifact_hash": "a2d84263bdf5b1e65bc9b230223c6fab3af7d67e04112b95c14495c87df6f404",
+  "artifact_id": "b01b1475-35ef-525b-9439-ae107dd2e137",
+  "artifact_key": "llm-validation:SITUATION_SELF_PROPOSE:2281aa44-6ae3-5289-9277-206bc4b606d8:0:SELF_SCHEMA_PROPOSAL",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "408aeaea-aadf-5ba8-8444-8192ce0917e8",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "created_at": "2026-09-25T06:27:28.700958+00:00",
+  "interaction_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "journal_sequence": 6,
+  "payload": {
+    "claim_id": "2281aa44-6ae3-5289-9277-206bc4b606d8",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "93d875692415220d78c6eb35fd33f7fc58b4da7baa959d82ba5bde0559c30538",
+    "invocation_artifact_id": "a9f12cc7-8ee0-5c8c-820f-df3dc08358bf",
+    "invocation_index": 0,
+    "kind": "SELF_SCHEMA_PROPOSAL",
+    "parsed_output": {
+      "proposals": [
+        {
+          "context_tags": [
+            "engineering",
+            "system_design",
+            "resilience"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "VALUE",
+          "perspective": "INFERRED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "Important systems should fail gracefully and remain understandable when everything around them is going wrong.",
+          "support_indices": [
+            1
+          ]
+        },
+        {
+          "context_tags": [
+            "decision-making",
+            "risk-aversion",
+            "spontaneity"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "BEHAVIORAL_TENDENCY",
+          "perspective": "OBSERVED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "When making decisions about expensive or hard-to-reverse commitments, the person creates a checklist, compares options, and sleeps on the decision.",
+          "support_indices": [
+            7
+          ]
+        },
+        {
+          "context_tags": [
+            "self-perception",
+            "decision-making"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "BEHAVIORAL_TENDENCY",
+          "perspective": "AVOWED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "I am spontaneous and trust my gut.",
+          "support_indices": [
+            5
+          ]
+        },
+        {
+          "context_tags": [
+            "work-life balance",
+            "hybrid work",
+            "well-being"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "BEHAVIORAL_TENDENCY",
+          "perspective": "ASPIRATIONAL",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "I want to maintain a balance between solitude for deep work and human contact to preserve energy and judgment.",
+          "support_indices": [
+            10
+          ]
+        },
+        {
+          "context_tags": [
+            "family",
+            "emotional protection",
+            "autonomy"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "VALUE",
+          "perspective": "INFERRED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "Protecting a younger sibling's autonomy and control over their personal story is a priority.",
+          "support_indices": [
+            3
+          ]
+        },
+        {
+          "context_tags": [
+            "financial values",
+            "prioritization",
+            "life goals"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "VALUE",
+          "perspective": "NORMATIVE",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "Once an emergency fund covers nine months, mission, autonomy, privacy, and the people I work with matter more than maximizing the next dollar.",
+          "support_indices": [
+            11
+          ]
+        },
+        {
+          "context_tags": [
+            "social engagement",
+            "emotional well-being",
+            "work-life balance"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "BEHAVIORAL_TENDENCY",
+          "perspective": "OBSERVED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "The person consistently delays or cancels social plans during remote-only periods, indicating a pattern of increased isolation and reduced energy.",
+          "support_indices": [
+            9
+          ]
+        }
+      ]
+    },
+    "raw_output_sha256": "65e26fb3a174ea211310fe80b264cf18015f604e59e9f504f9e77a25892852a3",
+    "status": "VALID"
+  },
+  "payload_hash": "108ececf2a03183032825214142881beeefe4f1cb42666236ec3145f6624c085",
+  "previous_artifact_hash": "93d875692415220d78c6eb35fd33f7fc58b4da7baa959d82ba5bde0559c30538",
+  "previous_artifact_id": "a9f12cc7-8ee0-5c8c-820f-df3dc08358bf",
+  "producer": "percept_response_v2/validation",
+  "stage": "SITUATION_SELF_PROPOSE",
+  "task_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3"
+}

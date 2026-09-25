@@ -1,0 +1,109 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 47,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "d604d2ee-01b6-5dec-8ec8-b109412db91e",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:36:17.398419+00:00",
+  "payload": {
+    "data": {
+      "action": "DENY_MODEL_OR_PROCESS_ADMISSION",
+      "authority": "CLAIM_TIME_RESOURCE_GATE",
+      "evidence": {
+        "active_claim_ids": [],
+        "assignment_id": "c4bc8ad8-8ab7-5d94-99ba-f860f6d00894",
+        "captured_at": "2026-09-25T06:36:17.333269Z",
+        "claim_policy_version": "v0.7-f-guarded-claim-v1",
+        "decision": "DENIED",
+        "evaluated_at": "2026-09-25T06:36:17.345336Z",
+        "observation_id": "d4b7ce93-3696-5fc7-a328-08e3320d95f4",
+        "reason": "claim resource 'host-ram-mib' lacks safe capacity (476 < 512)",
+        "resource_safety_policy_version": "v0.7-native-calibration-v1",
+        "resource_snapshot": {
+          "capacities": [
+            {
+              "admission_capacity": 5,
+              "committed_units": 0,
+              "configured_capacity": 8,
+              "configured_headroom_units": 1,
+              "measurement": "HOST",
+              "observed_available_units": 7,
+              "resource_class": "CPU_GENERAL",
+              "resource_id": "host-cpu",
+              "uncertainty_headroom_units": 1
+            },
+            {
+              "admission_capacity": 476,
+              "committed_units": 0,
+              "configured_capacity": 16118,
+              "configured_headroom_units": 1612,
+              "measurement": "HOST",
+              "observed_available_units": 2114,
+              "resource_class": "MEMORY_RAM",
+              "resource_id": "host-ram-mib",
+              "uncertainty_headroom_units": 26
+            },
+            {
+              "admission_capacity": 1,
+              "committed_units": 0,
+              "configured_capacity": 1,
+              "configured_headroom_units": 0,
+              "measurement": "CONFIGURED",
+              "observed_available_units": 1,
+              "resource_class": "LLM_INFERENCE",
+              "resource_id": "local-llm",
+              "uncertainty_headroom_units": 0
+            }
+          ],
+          "captured_at": "2026-09-25T06:36:17.333269Z",
+          "healthy": true,
+          "host_id": "worker-claim:self-memory-fidelity:20260925T062358Z:pf-q005",
+          "metrics": {
+            "cpu_utilization_percent": 2,
+            "load_1m": null,
+            "logical_cpu_count": 8,
+            "memory_available_mib": 2114,
+            "memory_total_mib": 16118,
+            "platform": "Windows"
+          },
+          "observation_id": "63c891fa-bbff-5a6a-a013-2f703815003c",
+          "policy": {
+            "cpu_system_headroom_percent": 10,
+            "default_llm_process_memory_mib": 3072,
+            "default_process_cpu_units": 1,
+            "default_process_memory_mib": 512,
+            "llm_concurrency_limit": 1,
+            "max_cpu_pressure_percent": 85,
+            "memory_system_headroom_min_mib": 1024,
+            "memory_system_headroom_percent": 10,
+            "observation_max_age_seconds": 5,
+            "policy_version": "v0.7-native-calibration-v1",
+            "uncertainty_headroom_percent": 5
+          },
+          "probe_errors": [],
+          "safety_policy_version": "v0.7-native-calibration-v1",
+          "scheduler_cycle": 1,
+          "valid_until": "2026-09-25T06:36:22.333269Z"
+        },
+        "step_id": "1c0b1040-590f-57c6-ba5e-633e053b7bdc",
+        "target_reservation_ids": [
+          "10106b5b-d512-59bf-a2be-f5a52b61b7f4",
+          "936e14b6-a4e9-5e27-b17d-94faeb42724b",
+          "3ef84086-e452-5584-a5a6-dcbe346114aa"
+        ],
+        "valid_until": "2026-09-25T06:36:22.333269Z"
+      },
+      "reason": "claim resource 'host-ram-mib' lacks safe capacity (476 < 512)"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "d4b7ce93-3696-5fc7-a328-08e3320d95f4",
+    "record_kind": "reflex",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "01a03a336216c3097a4b5fc79e9d8ee9d6db9e5fa20f9f123a8a1282768efd0c",
+  "source": "cognitive_runtime"
+}

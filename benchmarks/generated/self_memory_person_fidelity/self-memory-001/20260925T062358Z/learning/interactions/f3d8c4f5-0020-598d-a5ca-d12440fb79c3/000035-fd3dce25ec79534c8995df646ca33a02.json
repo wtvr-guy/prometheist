@@ -1,0 +1,35 @@
+{
+  "artifact_hash": "ac78b1647d7d77b29282f96c9ef06e3b4719d1ea790aefc52ed7a04512229d87",
+  "artifact_id": "fd3dce25-ec79-534c-8995-df646ca33a02",
+  "artifact_key": "llm-validation:SITUATION_SELF_REVIEW:f07f426d-28da-5e56-ab9f-cba8d1688246:12:SELF_SCHEMA_REVIEW",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "408aeaea-aadf-5ba8-8444-8192ce0917e8",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "created_at": "2026-09-25T06:34:24.855491+00:00",
+  "interaction_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "journal_sequence": 35,
+  "payload": {
+    "claim_id": "f07f426d-28da-5e56-ab9f-cba8d1688246",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "191b3d8efbc9a83c7ec469f05cd911fc33c7642b1785e8a2eb8afdfe1e5071f1",
+    "invocation_artifact_id": "9424b6f6-0452-5932-9223-ae1df085fc0b",
+    "invocation_index": 12,
+    "kind": "SELF_SCHEMA_REVIEW",
+    "parsed_output": {
+      "opposition_indices": [],
+      "rationale": "The proposed self-representation—'I value emotional and sensory continuity with my grandmother, as reflected in my ritual of repairing her copper espresso maker'—is not supported by any evidence in the provided timeline. The evidence timeline explicitly states 'supported: false' and contains an empty list of items, indicating no supporting evidence exists. There is no historical memory, capability-result, or related-evidence to validate the claim. Therefore, the assertion is contradicted by the absence of any evidence, and the proposed self-representation cannot be established. The claim is not merely unsupported; it is contradicted by the evidentiary vacuum.",
+      "verdict": "CONTEST"
+    },
+    "raw_output_sha256": "20238423af9e084d4b6d9e9cf705b358309c04778aa00e97d4a7fe65494e47f7",
+    "status": "VALID"
+  },
+  "payload_hash": "a089a916b0506131ad7afb26f7761bc090eba19dad9cfdaf00e2311d993e79f1",
+  "previous_artifact_hash": "191b3d8efbc9a83c7ec469f05cd911fc33c7642b1785e8a2eb8afdfe1e5071f1",
+  "previous_artifact_id": "9424b6f6-0452-5932-9223-ae1df085fc0b",
+  "producer": "percept_response_v2/validation",
+  "stage": "SITUATION_SELF_REVIEW",
+  "task_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3"
+}

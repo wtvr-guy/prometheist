@@ -1,0 +1,79 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 145,
+  "correlation_id": "f3d8c4f5-0020-598d-a5ca-d12440fb79c3",
+  "event_id": "0284ad3d-1ee9-50c5-92b9-41af1f1bb017",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-25T06:33:35.208141+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "bbf19949-7d67-5ce4-8cd0-d371e47df555",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [
+          "49e8c126-dded-50fc-a59b-b2d0fcd866ae"
+        ],
+        "include_persisted_history": true,
+        "limit": 10,
+        "query_text": "My work style is concise, direct, and occasionally includes dry humor.",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT",
+          "TOOL_RESULT",
+          "PERCEPT_OBSERVATION",
+          "SYSTEM_EVENT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "adaptive_recall_stage": "FOCUSED",
+        "association_decay": 0.92,
+        "association_hops": 5,
+        "association_limit": 1200,
+        "candidate_limit": 150,
+        "depth": "SINGLE_CANDIDATE_DEEPEST",
+        "focus_attempts": [
+          {
+            "focus_event_id": "49e8c126-dded-50fc-a59b-b2d0fcd866ae",
+            "kernel_trace": {
+              "cue_nodes": [
+                "event:49e8c126-dded-50fc-a59b-b2d0fcd866ae",
+                "term:concise",
+                "term:direct",
+                "term:dry",
+                "term:humor",
+                "term:include",
+                "term:occasionally",
+                "term:style",
+                "term:work"
+              ],
+              "decay": 0.92,
+              "items": [],
+              "max_hops": 5,
+              "policy_version": "deterministic-associations-v4"
+            },
+            "semantic_query_text": "My work style is concise, direct, and occasionally includes dry humor.",
+            "supported": false
+          }
+        ],
+        "focus_event_ids": [
+          "49e8c126-dded-50fc-a59b-b2d0fcd866ae"
+        ],
+        "kernel": "associative_recall_from_postgres",
+        "retrieval_role": "FOCUSED",
+        "semantic_query_text": "My work style is concise, direct, and occasionally includes dry humor."
+      },
+      "supported": false
+    },
+    "requesting_component": "self-review:self-reflection/v1:89658fcb-2701-53d6-b0be-42eda8901559"
+  },
+  "payload_text": null,
+  "record_hash": "0c86fcfe9749667fff8b4f7a2e3bc4bcb6c849881dfb34a9f75ae6392a7036e6",
+  "source": "jit_memory"
+}

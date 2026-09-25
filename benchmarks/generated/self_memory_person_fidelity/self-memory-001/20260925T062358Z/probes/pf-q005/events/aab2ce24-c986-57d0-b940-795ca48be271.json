@@ -1,0 +1,86 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "931c75cb-941f-57e9-9320-96c832380879",
+  "conversation_seq": 2,
+  "correlation_id": "9ebc4b32-3d58-5bdd-8b37-34758499375f",
+  "event_id": "aab2ce24-c986-57d0-b940-795ca48be271",
+  "event_type": "PERCEPT_OBSERVATION",
+  "journaled_at": "2026-09-25T06:34:49.737971+00:00",
+  "payload": {
+    "benchmark_fixture": {
+      "benchmark_id": "PERSON-FIDELITY-001",
+      "benchmark_version": "person-fidelity-public-baseline-v1",
+      "fixture_event_id": "pf-e006",
+      "occurred_at": "2024-12-20T23:30:00+00:00"
+    },
+    "entities": [
+      "Mara Ellison",
+      "remote-only work",
+      "isolation",
+      "collaborative design"
+    ],
+    "observation": "During Mara's second remote-only year, her calendar shows repeated cancellations of social plans. Her private weekly reviews increasingly mention isolation, low energy, and slower judgment on collaborative design problems.",
+    "percept": {
+      "context": {
+        "active_goal_refs": [],
+        "causal_percept_refs": [],
+        "entity_refs": [],
+        "expectation_refs": [],
+        "integrity": 0,
+        "observations": [],
+        "opportunity": 0,
+        "task_refs": [
+          "71d68c0c-a35c-5137-bcb4-c3d8ce2c4ae2"
+        ],
+        "threat": 0,
+        "uncertainty": 0
+      },
+      "conversation_id": "931c75cb-941f-57e9-9320-96c832380879",
+      "correlation_id": "9ebc4b32-3d58-5bdd-8b37-34758499375f",
+      "features": {
+        "contains_code_block": false,
+        "contains_question": false,
+        "contains_structured_payload": false,
+        "contains_url": false,
+        "line_count": 1,
+        "normalized_characters": 222,
+        "token_count": 29,
+        "uppercase_ratio": 0.016042780748663103
+      },
+      "input_buffer": {
+        "max_segments": 4,
+        "retained_segment_indices": [
+          0,
+          1
+        ],
+        "segment_char_limit": 160,
+        "segments": [
+          "During Mara's second remote-only year, her calendar shows repeated cancellations of social plans. Her private weekly reviews increasingly mention isolation, low",
+          " energy, and slower judgment on collaborative design problems."
+        ],
+        "total_characters": 222,
+        "total_segments": 2,
+        "truncated": false
+      },
+      "normalized_text": "During Mara's second remote-only year, her calendar shows repeated cancellations of social plans. Her private weekly reviews increasingly mention isolation, low energy, and slower judgment on collaborative design problems.",
+      "observed_at": "2024-12-20T23:30:00Z",
+      "percept_id": "0d378c4c-6752-5445-a85c-10305227e833",
+      "policy_version": "v0.8-perception-v2",
+      "raw_value_sha256": "87b853f71c050797834ed6fdbccf709e646e4a941189f816e0341415e78fb151",
+      "response_required": false,
+      "schema_version": 1,
+      "source": {
+        "interface": "person-fidelity-fixture",
+        "kind": "SYSTEM_OBSERVATION",
+        "modality": "TEXT",
+        "source_id": "person-fidelity-observation:calendar_observation"
+      },
+      "source_event_id": "aab2ce24-c986-57d0-b940-795ca48be271"
+    },
+    "text": "During Mara's second remote-only year, her calendar shows repeated cancellations of social plans. Her private weekly reviews increasingly mention isolation, low energy, and slower judgment on collaborative design problems."
+  },
+  "payload_text": "During Mara's second remote-only year, her calendar shows repeated cancellations of social plans. Her private weekly reviews increasingly mention isolation, low energy, and slower judgment on collaborative design problems.",
+  "record_hash": "f157c8f8b2fb123b787fcfd6f403591cf34f1625281feff4bec97f3c4e583273",
+  "source": "person-fidelity-observation:calendar_observation"
+}

@@ -1,0 +1,35 @@
+{
+  "artifact_hash": "f95eefee19487b5ccb800862b95d7bcb09a64d99601d95c45088dff4952c507c",
+  "artifact_id": "f5b96dca-9e90-53df-84a2-7aebb180cef4",
+  "artifact_key": "llm-validation:SITUATION_SELF_REVIEW:b5d51a09-e931-52b5-987c-071f45d61f6f:1:SELF_SCHEMA_REVIEW",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "8fab0327-8679-573d-b3d9-3eff1d02de7e",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "correlation_id": "59a0963d-68c9-58b9-8796-d30abdda52a8",
+  "created_at": "2026-09-25T05:59:19.711094+00:00",
+  "interaction_id": "59a0963d-68c9-58b9-8796-d30abdda52a8",
+  "journal_sequence": 13,
+  "payload": {
+    "claim_id": "b5d51a09-e931-52b5-987c-071f45d61f6f",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "553a72c50ca609afba17ca7e93126ffa2d6f5a75b0b875f0ee7a7d721a8a3a09",
+    "invocation_artifact_id": "1ee5a948-1bbe-5d26-8600-a2e8dec9f033",
+    "invocation_index": 1,
+    "kind": "SELF_SCHEMA_REVIEW",
+    "parsed_output": {
+      "opposition_indices": [],
+      "rationale": "The provided self-representation ('self') is entirely absent from the evidence timeline. The only evidence available is a behavioral tendency statement about decision-making, which does not match or support any proposed self-representation. There is no instance of the candidate self-representation being observed, reported, or implied in the evidence. Therefore, the candidate self-representation cannot be established, and no related evidence exists to affirm it. The evidence timeline is empty, and the candidate is not present in any supported item. This constitutes a genuine absence of support, leading to a contest.",
+      "verdict": "CONTEST"
+    },
+    "raw_output_sha256": "4fbedf4708312490d3a83b0f25ddca47928edd3a360958dd295cab11bccc7c1b",
+    "status": "VALID"
+  },
+  "payload_hash": "c026b2d45158bb445f08cdac7df7865173724e218a8aea61004a6de2be185ce3",
+  "previous_artifact_hash": "553a72c50ca609afba17ca7e93126ffa2d6f5a75b0b875f0ee7a7d721a8a3a09",
+  "previous_artifact_id": "1ee5a948-1bbe-5d26-8600-a2e8dec9f033",
+  "producer": "percept_response_v2/validation",
+  "stage": "SITUATION_SELF_REVIEW",
+  "task_id": "59a0963d-68c9-58b9-8796-d30abdda52a8"
+}
