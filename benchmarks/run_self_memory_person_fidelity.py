@@ -28,11 +28,14 @@ from uuid import UUID, uuid4
 
 from dotenv import load_dotenv
 
-ROOT = Path(__file__).resolve().parents[1]
+BENCHMARK_DIR = Path(__file__).resolve().parent
+ROOT = BENCHMARK_DIR.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+if str(BENCHMARK_DIR) not in sys.path:
+    sys.path.insert(0, str(BENCHMARK_DIR))
 
-from benchmarks.run_person_fidelity_baseline import (  # noqa: E402
+from run_person_fidelity_baseline import (  # noqa: E402
     DEFAULT_CORPUS,
     HOLDOUT_CORPUS,
     DATABASE_ENV,
