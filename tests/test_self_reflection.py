@@ -114,6 +114,73 @@ def test_consolidation_evidence_includes_free_text_roots_and_real_situation_cont
     assert by_id[first.event_id].context_refs != by_id[second.event_id].context_refs
 
 
+def test_reflection_preserves_observation_time_separately_from_known_time(conn):
+    historical = datetime(2021, 2, 3, 19, 10, tzinfo=timezone.utc)
+    conversation_id = uuid4()
+    correlation_id = uuid4()
+    event_store.start_conversation(conn, conversation_id)
+    root = event_store.record_event(
+        conn,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        event_type=EventType.USER_PROMPT,
+        source="user",
+        payload={
+            "text": "I learned to value graceful failure during the radio outage.",
+            "benchmark_fixture": {"occurred_at": historical.isoformat()},
+        },
+        payload_text="I learned to value graceful failure during the radio outage.",
+        event_id=uuid4(),
+    )
+    percept = normalize_user_interaction_percept(
+        user_text=root.payload["text"],
+        observed_at=historical,
+        correlation_id=correlation_id,
+        source_event_id=root.event_id,
+        conversation_id=conversation_id,
+    )
+    situation = persist_situations(conn, percept)[0]
+    consolidation_id = uuid4()
+    put_record(
+        conn,
+        "consolidation_input",
+        str(consolidation_id),
+        {
+            "after_key": "",
+            "record_keys": [
+                f"{situation.situation_id}:{percept.percept_id}",
+            ],
+            "derived_at": datetime.now(timezone.utc).isoformat(),
+            "next_cursor": None,
+        },
+        revision="1",
+    )
+
+    evidence = collect_consolidation_evidence(conn, consolidation_id)
+    assert len(evidence) == 1
+    assert datetime.fromisoformat(evidence[0].created_at) == historical
+
+    proposal = SelfSchemaProposal(
+        kind=SelfRepresentationKind.VALUE,
+        perspective=SelfPerspective.AVOWED,
+        statement="Graceful failure matters to me.",
+        identity_centrality=IdentityCentrality.CENTRAL,
+        support_indices=(0,),
+    )
+    representation, _ = materialize_proposal(
+        conn,
+        proposal=proposal,
+        evidence=evidence,
+        derived_at=datetime.now(timezone.utc),
+    )
+    stored = self_evidence(conn, representation.representation_id)
+
+    assert len(stored) == 1
+    assert stored[0].observed_at == historical
+    assert stored[0].known_at == root.created_at
+    assert stored[0].known_at > stored[0].observed_at
+
+
 def test_materialization_uses_application_contexts_for_breadth(conn):
     first, _ = _record_user_prompt(conn, "I chose inspectability over speed.")
     second, _ = _record_user_prompt(conn, "I chose auditability over convenience.")
