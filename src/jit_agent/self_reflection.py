@@ -101,9 +101,16 @@ class SelfSchemaReview(FrozenRecord):
     rationale: str = Field(min_length=1, max_length=MAX_REVIEW_RATIONALE_CHARS)
 
     @model_validator(mode="after")
-    def unique_indices(self) -> "SelfSchemaReview":
+    def review_contract(self) -> "SelfSchemaReview":
         if len(self.opposition_indices) != len(set(self.opposition_indices)):
             raise ValueError("opposition_indices must not contain duplicates")
+        if (
+            self.verdict is SelfReviewVerdict.CONTEST
+            and not self.opposition_indices
+        ):
+            raise ValueError(
+                "CONTEST requires at least one concrete opposition index"
+            )
         return self
 
 
