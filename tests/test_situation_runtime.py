@@ -6,7 +6,10 @@ import pytest
 
 from jit_agent import db, event_store
 from jit_agent.action_outcomes import issue_action, observe_action_outcome
-from jit_agent.attention_observation import HostResourceMetrics
+from jit_agent.attention_observation import (
+    HostResourceMetrics,
+    ReservationCreditHostResourceProbe,
+)
 from jit_agent.attention_store import load_scheduler
 from jit_agent.cognitive_store import get_record, list_records, put_record, rebuild_heads
 from jit_agent.consolidation import ConsolidationSchedule, consolidate_page, emit_due_consolidations, schedule_consolidation
@@ -22,7 +25,12 @@ from jit_agent.semantic_memory import (
     selected_assertion,
     semantic_evidence,
 )
-from jit_agent.situation_runtime import drain_situations, submit_situation_page, run_situation_task
+from jit_agent.situation_runtime import (
+    SituationStage,
+    drain_situations,
+    run_situation_task,
+    submit_situation_page,
+)
 from jit_agent.situations import register_expectation
 
 
@@ -162,9 +170,13 @@ def test_four_percepts_one_guarded_task_and_finite_action_feedback(conn, monkeyp
     assert len([item for item in final["artifact_chain"] if item["artifact_type"] == "STAGE_RESULT"]) == 8
 
 
-def test_situation_claim_rechecks_ollama_residency(conn, monkeypatch):
+def _capture_first_situation_claim_probe(
+    conn,
+    monkeypatch,
+    *,
+    model_stage: bool,
+):
     from jit_agent import situation_runtime
-    from jit_agent.ollama_runtime import OllamaClaimHostResourceProbe
 
     source = source_setup(conn)
     add_observation(conn, source, value=500)
@@ -177,9 +189,8 @@ def test_situation_claim_rechecks_ollama_residency(conn, monkeypatch):
     task_id, = submit_situation_page(
         conn,
         probe=FixedProbe(),
-        ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=True),
+        ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=False),
     )
-
     captured = {}
 
     class CapturingLauncher:
@@ -203,6 +214,12 @@ def test_situation_claim_rechecks_ollama_residency(conn, monkeypatch):
         "GuardedWorkerLauncher",
         CapturingLauncher,
     )
+    if model_stage:
+        monkeypatch.setattr(
+            situation_runtime,
+            "situation_stage_uses_model",
+            lambda *_args, **_kwargs: True,
+        )
 
     with pytest.raises(RuntimeError, match="stop after launcher construction"):
         run_situation_task(
@@ -211,12 +228,92 @@ def test_situation_claim_rechecks_ollama_residency(conn, monkeypatch):
             probe=FixedProbe(),
             ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=False),
         )
+    return captured["probe"]
 
-    assert isinstance(captured["probe"], OllamaClaimHostResourceProbe)
-    assert captured["probe"].scheduled_memory_mib == 512
-    captured["probe"].capture()
-    assert captured["probe"].last_effective_required_memory_mib == 3_072
-    assert captured["probe"].last_memory_debit_mib > 0
+
+def test_situation_deterministic_stage_credits_unused_llm_reservation(
+    conn,
+    monkeypatch,
+):
+    probe = _capture_first_situation_claim_probe(
+        conn,
+        monkeypatch,
+        model_stage=False,
+    )
+
+    assert isinstance(probe, ReservationCreditHostResourceProbe)
+    assert probe.scheduled_memory_mib == 3_072
+    assert probe.required_memory_mib == 512
+    physical = probe.base_probe.capture()
+    adjusted = probe.capture()
+    assert adjusted.memory_available_mib == min(
+        adjusted.memory_total_mib,
+        physical.memory_available_mib + 2_560,
+    )
+
+
+def test_situation_model_stage_rechecks_ollama_residency(conn, monkeypatch):
+    from jit_agent.ollama_runtime import OllamaClaimHostResourceProbe
+
+    probe = _capture_first_situation_claim_probe(
+        conn,
+        monkeypatch,
+        model_stage=True,
+    )
+
+    assert isinstance(probe, OllamaClaimHostResourceProbe)
+    assert probe.scheduled_memory_mib == 3_072
+    probe.capture()
+    assert probe.last_effective_required_memory_mib == 3_072
+    assert probe.last_memory_credit_mib == 0
+
+
+def test_nonresponse_consolidation_tail_stages_are_model_free(conn):
+    source = source_setup(conn)
+    add_observation(conn, source, value=500)
+    now = datetime.now(timezone.utc)
+    schedule_consolidation(
+        conn,
+        ConsolidationSchedule(schedule_id=uuid4(), due_at=now),
+    )
+    emit_due_consolidations(conn, now=now)
+    task_id, = submit_situation_page(
+        conn,
+        probe=FixedProbe(),
+        ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=False),
+    )
+    task_data = get_record(conn, "situation_task", str(task_id))
+    task = __import__(
+        "jit_agent.situation_runtime",
+        fromlist=["SituationTask"],
+    ).SituationTask.model_validate(task_data)
+
+    from jit_agent.situation_runtime import situation_stage_uses_model
+
+    assert (
+        situation_stage_uses_model(
+            conn,
+            task,
+            SituationStage.COMPOSE,
+        )
+        is False
+    )
+    assert (
+        situation_stage_uses_model(
+            conn,
+            task,
+            SituationStage.RESPOND,
+        )
+        is False
+    )
+    assert (
+        situation_stage_uses_model(
+            conn,
+            task,
+            SituationStage.PERSIST,
+        )
+        is False
+    )
 
 
 def test_clean_worker_exit_without_a_durable_result_does_not_complete_task(conn):
