@@ -139,7 +139,6 @@ def _seed_life_record(
         PerceptModality,
         PerceptSource,
         normalize_percept,
-        normalize_user_interaction_percept,
     )
     from jit_agent.percept_triage import SourcePolicy
     from jit_agent.situations import persist_situations
@@ -159,6 +158,15 @@ def _seed_life_record(
         )
         event_id = deterministic_fixture_uuid(corpus, "event", fixture.event_id)
         event_store.start_conversation(conn, conversation_id)
+        fixture_context = PerceptContext(
+            task_refs=(
+                deterministic_fixture_uuid(
+                    corpus,
+                    "situation-context",
+                    fixture.conversation_id,
+                ),
+            )
+        )
 
         if fixture.event_type is EventType.USER_PROMPT:
             event = event_store.record_event(
@@ -172,12 +180,20 @@ def _seed_life_record(
                 event_id=event_id,
             )
             if form_situations:
-                percept = normalize_user_interaction_percept(
-                    user_text=fixture.text,
+                percept = normalize_percept(
+                    source=PerceptSource(
+                        source_id="user",
+                        kind=PerceptKind.USER_INTERACTION,
+                        modality=PerceptModality.TEXT,
+                        interface="chat",
+                    ),
+                    observation=fixture.text,
                     observed_at=fixture.occurred_at,
                     correlation_id=correlation_id,
                     source_event_id=event.event_id,
                     conversation_id=conversation_id,
+                    response_required=True,
+                    context=fixture_context,
                 )
                 persist_situations(conn, percept)
         else:
@@ -207,7 +223,7 @@ def _seed_life_record(
                 conversation_id=conversation_id,
                 correlation_id=correlation_id,
                 response_required=False,
-                context=PerceptContext(),
+                context=fixture_context,
             )
             payload = canonical_seed_payload(corpus, fixture)
             payload.update(
