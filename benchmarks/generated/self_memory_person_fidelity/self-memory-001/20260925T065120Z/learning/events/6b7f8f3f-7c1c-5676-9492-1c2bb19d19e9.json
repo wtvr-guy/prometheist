@@ -1,0 +1,40 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 62,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "6b7f8f3f-7c1c-5676-9492-1c2bb19d19e9",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:51:29.666030+00:00",
+  "payload": {
+    "data": {
+      "allowed_task_classes": [
+        "OBSERVE",
+        "RECONCILE"
+      ],
+      "deterministic_task": null,
+      "evidence_domains": [
+        "DERIVED_INTERNAL"
+      ],
+      "kind": "ACTION_OUTCOME",
+      "maximum_urgency": "ROUTINE",
+      "modalities": [
+        "STRUCTURED"
+      ],
+      "natural_language_response": false,
+      "response_required": false,
+      "self_model_evidence": false,
+      "semantic_triage": false,
+      "source_id": "system:action-outcome"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "system:action-outcome",
+    "record_kind": "source_policy",
+    "revision": "8ba29fcea4a533e3016cf951a06858ab6f2465e516f121006d82fef5f563fce4"
+  },
+  "payload_text": null,
+  "record_hash": "24a2f795d0d6c05d5d14153b5be3b747f90da1ff8360fb02832b8b0b07c88f11",
+  "source": "cognitive_runtime"
+}

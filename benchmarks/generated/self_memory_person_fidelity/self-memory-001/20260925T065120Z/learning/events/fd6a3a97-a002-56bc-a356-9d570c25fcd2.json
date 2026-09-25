@@ -1,0 +1,37 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 120,
+  "correlation_id": "865e3dc4-fa3e-5043-b34a-a61dba150120",
+  "event_id": "fd6a3a97-a002-56bc-a356-9d570c25fcd2",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-25T06:58:40.904678+00:00",
+  "payload": {
+    "memory_request_id": "4e572289-0d2e-57fe-809e-73a4b64622f3",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [
+        "0347d46b-78a1-5f4a-b991-c4fabbd454e6"
+      ],
+      "include_persisted_history": true,
+      "limit": 10,
+      "query_text": "I want to maintain a balance between solitude for deep work and human contact to sustain energy and judgment.",
+      "reference_time": null,
+      "source_types": [
+        "USER_PROMPT",
+        "TOOL_RESULT",
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "FOCUSED"
+  },
+  "payload_text": "I want to maintain a balance between solitude for deep work and human contact to sustain energy and judgment.",
+  "record_hash": "f185e49fd8d4302c266b34ca855bc36a9cda073e75a10fac64463ca1e2fdfe1d",
+  "source": "self-review:self-reflection/v1:5c2e4f5c-de96-56e3-b6e0-1eb399b76c4c"
+}

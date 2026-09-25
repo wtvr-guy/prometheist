@@ -1,0 +1,35 @@
+{
+  "artifact_hash": "935bd6870e19a224f881f86769d84e203855d716dda509be4803c8f2b94cbc59",
+  "artifact_id": "ba274e4d-de8f-52d7-b928-c39dd4e183f9",
+  "artifact_key": "stage-result:SITUATION_TRIAGE",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "c4a2de78-4aac-5cca-b0e9-b0965ae23c5d",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "correlation_id": "865e3dc4-fa3e-5043-b34a-a61dba150120",
+  "created_at": "2026-09-25T06:51:28.646512+00:00",
+  "interaction_id": "865e3dc4-fa3e-5043-b34a-a61dba150120",
+  "journal_sequence": 3,
+  "payload": {
+    "output": {
+      "decision": {
+        "candidate_task_class": "CONSOLIDATE",
+        "evidence_domains": [
+          "DERIVED_INTERNAL"
+        ],
+        "task_required": true,
+        "urgency_class": "ROUTINE"
+      },
+      "inference_used": false
+    },
+    "output_refs": [
+      "situation:e4137481-d353-5ea2-b698-ed186d7b19aa"
+    ]
+  },
+  "payload_hash": "7ecc41446421a06b7a0b2a2c65d3c6b6c9a2ee3c7ce59a7cdde05eb3d8416064",
+  "previous_artifact_hash": "2415897d45c4ec34b85701d960ce3c8be503601e5124546044e06bedca88ea0b",
+  "previous_artifact_id": "113a0448-73da-5551-99ad-d47f62245129",
+  "producer": "percept_response_v2",
+  "stage": "SITUATION_TRIAGE",
+  "task_id": "865e3dc4-fa3e-5043-b34a-a61dba150120"
+}

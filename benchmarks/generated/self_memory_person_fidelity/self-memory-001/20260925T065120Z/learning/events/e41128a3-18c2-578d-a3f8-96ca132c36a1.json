@@ -1,0 +1,37 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 123,
+  "correlation_id": "865e3dc4-fa3e-5043-b34a-a61dba150120",
+  "event_id": "e41128a3-18c2-578d-a3f8-96ca132c36a1",
+  "event_type": "MEMORY_REQUEST",
+  "journaled_at": "2026-09-25T06:59:06.659439+00:00",
+  "payload": {
+    "memory_request_id": "447762f0-5965-5d5c-a24e-907662e6e1a8",
+    "need": {
+      "active_event_ids": [],
+      "conversation_id": null,
+      "entities": [],
+      "focus_event_ids": [
+        "4305d458-5acb-52d7-b73e-49af6aa2a453"
+      ],
+      "include_persisted_history": true,
+      "limit": 10,
+      "query_text": "Protecting a person's control over their own story is more important than satisfying others' curiosity.",
+      "reference_time": null,
+      "source_types": [
+        "USER_PROMPT",
+        "TOOL_RESULT",
+        "PERCEPT_OBSERVATION",
+        "SYSTEM_EVENT"
+      ],
+      "supplemental_query_texts": []
+    },
+    "origin": "INTERNAL_MEMORY",
+    "retrieval_role": "FOCUSED"
+  },
+  "payload_text": "Protecting a person's control over their own story is more important than satisfying others' curiosity.",
+  "record_hash": "3c457fddfeab3d6ceb0116287c853753c60eab9c7873600e5f5d18f6f0374d31",
+  "source": "self-review:self-reflection/v1:adf5af0e-5db6-5863-a59b-5534a5a8ea39"
+}

@@ -1,0 +1,37 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 102,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "3b2052ae-5170-5988-a820-791371c98bc5",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:57:14.040008+00:00",
+  "payload": {
+    "data": {
+      "context_tags": [
+        "communication_style"
+      ],
+      "created_at": "2026-09-25T06:51:29.604726Z",
+      "embodiment_ref": null,
+      "future_orientation": null,
+      "kind": "TRAIT",
+      "perspective": "AVOWED",
+      "plasticity": "SLOW",
+      "policy_version": "self-memory/v1",
+      "procedure_ref": null,
+      "relationship_ref": null,
+      "representation_id": "89658fcb-2701-53d6-b0be-42eda8901559",
+      "statement": "My work style is concise, direct, and occasionally includes dry humor.",
+      "subject": "self"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "89658fcb-2701-53d6-b0be-42eda8901559",
+    "record_kind": "self_representation",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "f222a90e46143725a3ca17005240ca97def1bcd7ae2a02e2d7f1af3a5d7458b3",
+  "source": "cognitive_runtime"
+}

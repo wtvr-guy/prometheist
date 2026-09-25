@@ -1,0 +1,159 @@
+{
+  "artifact_hash": "b2161cfb0b36efa481ff2d7f677d3b139aba6a80930a5bbbf09fe5f6b20c01ce",
+  "artifact_id": "6185f9b2-55ed-5a49-8232-8a6a3fcd802f",
+  "artifact_key": "llm-validation:SITUATION_SELF_PROPOSE:f542df55-5b84-5eb4-8a8f-1a1f478f72c8:0:SELF_SCHEMA_PROPOSAL",
+  "artifact_schema_version": 1,
+  "artifact_type": "LLM_VALIDATION",
+  "assignment_id": "c4a2de78-4aac-5cca-b0e9-b0965ae23c5d",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "correlation_id": "865e3dc4-fa3e-5043-b34a-a61dba150120",
+  "created_at": "2026-09-25T06:54:53.872117+00:00",
+  "interaction_id": "865e3dc4-fa3e-5043-b34a-a61dba150120",
+  "journal_sequence": 6,
+  "payload": {
+    "claim_id": "f542df55-5b84-5eb4-8a8f-1a1f478f72c8",
+    "error_message": null,
+    "error_type": null,
+    "invocation_artifact_hash": "9db9f931428bd1738b46eb454e73f66b39d260d2fd96b0ea145a1f2f6f6aee3e",
+    "invocation_artifact_id": "41789f4b-7352-5cfd-83d4-715d636652d1",
+    "invocation_index": 0,
+    "kind": "SELF_SCHEMA_PROPOSAL",
+    "parsed_output": {
+      "proposals": [
+        {
+          "context_tags": [
+            "engineering",
+            "system_design",
+            "resilience"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "VALUE",
+          "perspective": "INFERRED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "Important systems should fail gracefully and remain understandable when everything around them is going wrong.",
+          "support_indices": [
+            1
+          ]
+        },
+        {
+          "context_tags": [
+            "decision-making",
+            "risk-aversion",
+            "planning"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "BEHAVIORAL_TENDENCY",
+          "perspective": "OBSERVED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "When making decisions about expensive or hard-to-reverse commitments, I create a checklist, compare options, and sleep on the decision.",
+          "support_indices": [
+            7
+          ]
+        },
+        {
+          "context_tags": [
+            "self-perception",
+            "decision-style"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "BEHAVIORAL_TENDENCY",
+          "perspective": "AVOWED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "I am spontaneous and trust my gut.",
+          "support_indices": [
+            5
+          ]
+        },
+        {
+          "context_tags": [
+            "work-life-balance",
+            "hybrid-work",
+            "well-being"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "BEHAVIORAL_TENDENCY",
+          "perspective": "ASPIRATIONAL",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "I want to maintain a balance between solitude for deep work and human contact to sustain energy and judgment.",
+          "support_indices": [
+            10
+          ]
+        },
+        {
+          "context_tags": [
+            "privacy",
+            "emotional-boundaries",
+            "family-relationships"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "VALUE",
+          "perspective": "INFERRED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "Protecting a person's control over their own story is more important than satisfying others' curiosity.",
+          "support_indices": [
+            3
+          ]
+        },
+        {
+          "context_tags": [
+            "emotional-regulation",
+            "control",
+            "personal-boundaries"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "BEHAVIORAL_TENDENCY",
+          "perspective": "OBSERVED",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "I avoid surprise parties aimed at me because being made the center of an unplanned event feels like losing control.",
+          "support_indices": [
+            8
+          ]
+        },
+        {
+          "context_tags": [
+            "financial-values",
+            "prioritization",
+            "life-purpose"
+          ],
+          "embodiment_ref": null,
+          "future_orientation": null,
+          "identity_centrality": "MODERATE",
+          "kind": "VALUE",
+          "perspective": "NORMATIVE",
+          "procedure_ref": null,
+          "relationship_ref": null,
+          "statement": "Once my emergency fund covers nine months, mission, autonomy, privacy, and the people I work with matter more than maximizing the next dollar.",
+          "support_indices": [
+            11
+          ]
+        }
+      ]
+    },
+    "raw_output_sha256": "d02f7d668e0187353fd8304466bce95449dea5c8304bdf3d60c29d154e00e63a",
+    "status": "VALID"
+  },
+  "payload_hash": "c28bd33b0ad9b605d133089f59bc59347823f0630157178b5379f5a52d9edf83",
+  "previous_artifact_hash": "9db9f931428bd1738b46eb454e73f66b39d260d2fd96b0ea145a1f2f6f6aee3e",
+  "previous_artifact_id": "41789f4b-7352-5cfd-83d4-715d636652d1",
+  "producer": "percept_response_v2/validation",
+  "stage": "SITUATION_SELF_PROPOSE",
+  "task_id": "865e3dc4-fa3e-5043-b34a-a61dba150120"
+}

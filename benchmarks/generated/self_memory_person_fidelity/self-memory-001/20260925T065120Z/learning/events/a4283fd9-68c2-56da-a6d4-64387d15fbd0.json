@@ -1,0 +1,39 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 105,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "a4283fd9-68c2-56da-a6d4-64387d15fbd0",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:57:14.087654+00:00",
+  "payload": {
+    "data": {
+      "context_tags": [
+        "emotional_value",
+        "ritual",
+        "family_connection"
+      ],
+      "created_at": "2026-09-25T06:51:29.604726Z",
+      "embodiment_ref": null,
+      "future_orientation": null,
+      "kind": "TRAIT",
+      "perspective": "AVOWED",
+      "plasticity": "SLOW",
+      "policy_version": "self-memory/v1",
+      "procedure_ref": null,
+      "relationship_ref": null,
+      "representation_id": "c4ed7f4b-ed9d-5e55-ad5c-f41d47660df8",
+      "statement": "I value emotional and sensory continuity with my grandmother, as reflected in my ritual of repairing her copper espresso maker.",
+      "subject": "self"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "c4ed7f4b-ed9d-5e55-ad5c-f41d47660df8",
+    "record_kind": "self_representation",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "755615b5a63fbb6e35eb7dfae228ab7e62e34e5c514cdc73d1cfcb1e087e89e8",
+  "source": "cognitive_runtime"
+}

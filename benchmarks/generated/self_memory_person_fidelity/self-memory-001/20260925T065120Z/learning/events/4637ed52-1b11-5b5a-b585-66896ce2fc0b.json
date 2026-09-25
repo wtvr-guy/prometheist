@@ -1,0 +1,39 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 86,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "4637ed52-1b11-5b5a-b585-66896ce2fc0b",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:54:54.243924+00:00",
+  "payload": {
+    "data": {
+      "context_tags": [
+        "financial-values",
+        "prioritization",
+        "life-purpose"
+      ],
+      "created_at": "2026-09-25T06:51:29.604726Z",
+      "embodiment_ref": null,
+      "future_orientation": null,
+      "kind": "VALUE",
+      "perspective": "NORMATIVE",
+      "plasticity": "SLOW",
+      "policy_version": "self-memory/v1",
+      "procedure_ref": null,
+      "relationship_ref": null,
+      "representation_id": "448b059b-0806-5443-b35f-95d46eea9f08",
+      "statement": "Once my emergency fund covers nine months, mission, autonomy, privacy, and the people I work with matter more than maximizing the next dollar.",
+      "subject": "self"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "448b059b-0806-5443-b35f-95d46eea9f08",
+    "record_kind": "self_representation",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "242c9f9ba8b423c409ec0e9154c5512ba183a0f44bbd44f1df6127ea95b5dc22",
+  "source": "cognitive_runtime"
+}

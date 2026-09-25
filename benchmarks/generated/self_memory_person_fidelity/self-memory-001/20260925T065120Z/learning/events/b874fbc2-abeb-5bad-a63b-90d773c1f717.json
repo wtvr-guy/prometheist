@@ -1,0 +1,72 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 45,
+  "correlation_id": "c58ac592-84eb-5e7f-a08d-a897044dd1c1",
+  "event_id": "b874fbc2-abeb-5bad-a63b-90d773c1f717",
+  "event_type": "PERCEPT_OBSERVATION",
+  "journaled_at": "2026-09-25T06:51:22.162406+00:00",
+  "payload": {
+    "observation": {
+      "after_key": "",
+      "schedule_id": "c58ac592-84eb-5e7f-a08d-a897044dd1c1"
+    },
+    "percept": {
+      "context": {
+        "active_goal_refs": [],
+        "causal_percept_refs": [],
+        "entity_refs": [],
+        "expectation_refs": [],
+        "integrity": 0,
+        "observations": [],
+        "opportunity": 0,
+        "task_refs": [],
+        "threat": 0,
+        "uncertainty": 0
+      },
+      "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+      "correlation_id": "c58ac592-84eb-5e7f-a08d-a897044dd1c1",
+      "features": {
+        "contains_code_block": false,
+        "contains_question": false,
+        "contains_structured_payload": true,
+        "contains_url": false,
+        "line_count": 1,
+        "normalized_characters": 69,
+        "token_count": 1,
+        "uppercase_ratio": 0.0
+      },
+      "input_buffer": {
+        "max_segments": 4,
+        "retained_segment_indices": [
+          0
+        ],
+        "segment_char_limit": 160,
+        "segments": [
+          "{\"after_key\":\"\",\"schedule_id\":\"c58ac592-84eb-5e7f-a08d-a897044dd1c1\"}"
+        ],
+        "total_characters": 69,
+        "total_segments": 1,
+        "truncated": false
+      },
+      "normalized_text": "{\"after_key\":\"\",\"schedule_id\":\"c58ac592-84eb-5e7f-a08d-a897044dd1c1\"}",
+      "observed_at": "2026-09-25T06:51:22.130350Z",
+      "percept_id": "5acebb49-6ab0-5640-9611-d98376f6143a",
+      "policy_version": "v0.8-perception-v2",
+      "raw_value_sha256": "b3aa895e63048a58897ed35a7040275870fd941824d7ce004fe3a326fff3a0a5",
+      "response_required": false,
+      "schema_version": 1,
+      "source": {
+        "interface": "scheduler",
+        "kind": "SCHEDULED_EVENT",
+        "modality": "STRUCTURED",
+        "source_id": "scheduler:consolidation"
+      },
+      "source_event_id": "b874fbc2-abeb-5bad-a63b-90d773c1f717"
+    }
+  },
+  "payload_text": null,
+  "record_hash": "cb291466fc6325ede32e656323c39442ff322e1fd2f2338d9771161e2e5e08df",
+  "source": "scheduler:consolidation"
+}

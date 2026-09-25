@@ -1,0 +1,134 @@
+{
+  "artifact_hash": "2415897d45c4ec34b85701d960ce3c8be503601e5124546044e06bedca88ea0b",
+  "artifact_id": "113a0448-73da-5551-99ad-d47f62245129",
+  "artifact_key": "stage-result:SITUATION_MEMORY",
+  "artifact_schema_version": 1,
+  "artifact_type": "STAGE_RESULT",
+  "assignment_id": "c4a2de78-4aac-5cca-b0e9-b0965ae23c5d",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "correlation_id": "865e3dc4-fa3e-5043-b34a-a61dba150120",
+  "created_at": "2026-09-25T06:51:27.859233+00:00",
+  "interaction_id": "865e3dc4-fa3e-5043-b34a-a61dba150120",
+  "journal_sequence": 2,
+  "payload": {
+    "output": {
+      "memory_packet": {
+        "items": [
+          {
+            "content": "{\"data\": {\"after_key\": \"\", \"due_at\": \"2026-09-25T06:51:22.130350Z\", \"schedule_id\": \"c58ac592-84eb-5e7f-a08d-a897044dd1c1\"}, \"epistemic_status\": \"DERIVED\", \"kind\": \"COGNITIVE_RECORD\", \"record_key\": \"c58ac592-84eb-5e7f-a08d-a897044dd1c1\", \"record_kind\": \"consolidation_schedule\", \"revision\": \"1\"}",
+            "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+            "conversation_seq": 43,
+            "created_at": "2026-09-24T23:51:22.131364-07:00",
+            "event_type": "DERIVED_REPRESENTATION",
+            "global_seq": 62,
+            "provenance_event_ids": [],
+            "retrieval_reasons": [
+              "ATTENTION_APERTURE",
+              "LEXICAL_CUE"
+            ],
+            "score": 0.78,
+            "source": "cognitive_runtime",
+            "source_event_id": "edf2431c-c67f-5e30-82eb-227ec5cd24f6"
+          }
+        ],
+        "memory_request_id": "0c05a1a0-d287-58e5-abff-320eadb85af5",
+        "need": {
+          "active_event_ids": [],
+          "conversation_id": null,
+          "entities": [],
+          "focus_event_ids": [],
+          "include_persisted_history": true,
+          "limit": 5,
+          "query_text": "{\"after_key\":\"\",\"schedule_id\":\"c58ac592-84eb-5e7f-a08d-a897044dd1c1\"}",
+          "reference_time": null,
+          "source_types": [
+            "AGENT_DECISION",
+            "AGENT_DELEGATION",
+            "CAPABILITY_PACKET",
+            "CAPABILITY_REQUEST",
+            "CAPABILITY_RESULT",
+            "DERIVED_REPRESENTATION",
+            "MEMORY_PACKET",
+            "MEMORY_REQUEST",
+            "RETRIEVAL_REQUEST",
+            "RETRIEVAL_RESULT",
+            "TOOL_REQUEST"
+          ],
+          "supplemental_query_texts": []
+        },
+        "origin": "INTERNAL_MEMORY",
+        "retrieval_trace": {
+          "activation_kernel": {
+            "kernel": "recall_from_postgres",
+            "kernel_trace": {
+              "candidates_considered": 1,
+              "cue_tokens": [
+                "after_key",
+                "schedule_id",
+                "c58ac592-84eb-5e7f-a08d-a897044dd1c1"
+              ],
+              "items": [
+                {
+                  "event_id": "edf2431c-c67f-5e30-82eb-227ec5cd24f6",
+                  "global_seq": 62,
+                  "reasons": [
+                    "LEXICAL_CUE"
+                  ],
+                  "score": {
+                    "conversation": 0.0,
+                    "entity": 0.0,
+                    "lexical": 1.0,
+                    "temporal": 0.0,
+                    "total": 0.78
+                  },
+                  "selected": true
+                }
+              ],
+              "normalized_entities": [],
+              "policy_version": "deterministic-cues-v2"
+            },
+            "retrieval_role": "ATTENTION_ACTIVATION"
+          },
+          "association_hops": 0,
+          "baseline_recall_limit": 5,
+          "candidate_limit": 750,
+          "depth": "BROAD_SHALLOW",
+          "packet_item_limit": 5,
+          "query_strategy": "working_state_plus_baseline_activation",
+          "retrieval_role": "ATTENTION_ACTIVATION",
+          "working_state_event_ids": [],
+          "working_state_item_count": 0
+        },
+        "supported": true
+      },
+      "source_policy": {
+        "allowed_task_classes": [
+          "CONSOLIDATE"
+        ],
+        "deterministic_task": "CONSOLIDATE",
+        "evidence_domains": [
+          "DERIVED_INTERNAL"
+        ],
+        "kind": "SCHEDULED_EVENT",
+        "maximum_urgency": "ROUTINE",
+        "modalities": [
+          "STRUCTURED"
+        ],
+        "natural_language_response": false,
+        "response_required": false,
+        "self_model_evidence": false,
+        "semantic_triage": false,
+        "source_id": "scheduler:consolidation"
+      }
+    },
+    "output_refs": [
+      "situation:e4137481-d353-5ea2-b698-ed186d7b19aa"
+    ]
+  },
+  "payload_hash": "b33ecd934a5b4c236f7bdec779bbded7edb7273befc68b82ba26c87f96749d93",
+  "previous_artifact_hash": "dbb5831042f8139cc6f615ea06483b3c390f5ee0e007dcea75989a17420a3c55",
+  "previous_artifact_id": "020efb0c-8454-5714-8312-89aa788b8b91",
+  "producer": "percept_response_v2",
+  "stage": "SITUATION_MEMORY",
+  "task_id": "865e3dc4-fa3e-5043-b34a-a61dba150120"
+}

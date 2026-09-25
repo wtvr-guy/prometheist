@@ -1,0 +1,39 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 80,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "ebfc70c8-c111-5e35-9384-a26e97539173",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:54:54.134438+00:00",
+  "payload": {
+    "data": {
+      "context_tags": [
+        "privacy",
+        "emotional-boundaries",
+        "family-relationships"
+      ],
+      "created_at": "2026-09-25T06:51:29.604726Z",
+      "embodiment_ref": null,
+      "future_orientation": null,
+      "kind": "VALUE",
+      "perspective": "INFERRED",
+      "plasticity": "SLOW",
+      "policy_version": "self-memory/v1",
+      "procedure_ref": null,
+      "relationship_ref": null,
+      "representation_id": "adf5af0e-5db6-5863-a59b-5534a5a8ea39",
+      "statement": "Protecting a person's control over their own story is more important than satisfying others' curiosity.",
+      "subject": "self"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "adf5af0e-5db6-5863-a59b-5534a5a8ea39",
+    "record_kind": "self_representation",
+    "revision": "1"
+  },
+  "payload_text": null,
+  "record_hash": "4ad57e16b6db78104ae5fde9b9d03d0056434738d93324d0684e2a33ab2c8b32",
+  "source": "cognitive_runtime"
+}

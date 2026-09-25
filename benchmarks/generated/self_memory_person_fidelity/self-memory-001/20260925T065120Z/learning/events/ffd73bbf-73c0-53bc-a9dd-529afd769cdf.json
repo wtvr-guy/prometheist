@@ -1,0 +1,92 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 115,
+  "correlation_id": "865e3dc4-fa3e-5043-b34a-a61dba150120",
+  "event_id": "ffd73bbf-73c0-53bc-a9dd-529afd769cdf",
+  "event_type": "MEMORY_PACKET",
+  "journaled_at": "2026-09-25T06:57:53.364677+00:00",
+  "payload": {
+    "packet": {
+      "items": [],
+      "memory_request_id": "ddbaf8aa-c228-540e-8695-bd6f06897955",
+      "need": {
+        "active_event_ids": [],
+        "conversation_id": null,
+        "entities": [],
+        "focus_event_ids": [
+          "5ce5e3c2-6533-53fe-876c-8a4a0cc9b632"
+        ],
+        "include_persisted_history": true,
+        "limit": 10,
+        "query_text": "When making decisions about expensive or hard-to-reverse commitments, I create a checklist, compare options, and sleep on the decision.",
+        "reference_time": null,
+        "source_types": [
+          "USER_PROMPT",
+          "TOOL_RESULT",
+          "PERCEPT_OBSERVATION",
+          "SYSTEM_EVENT"
+        ],
+        "supplemental_query_texts": []
+      },
+      "origin": "INTERNAL_MEMORY",
+      "retrieval_trace": {
+        "adaptive_recall_stage": "FOCUSED",
+        "association_decay": 0.92,
+        "association_hops": 5,
+        "association_limit": 1200,
+        "candidate_limit": 150,
+        "depth": "SINGLE_CANDIDATE_DEEPEST",
+        "focus_attempts": [
+          {
+            "focus_event_id": "5ce5e3c2-6533-53fe-876c-8a4a0cc9b632",
+            "kernel_trace": {
+              "cue_nodes": [
+                "event:5ce5e3c2-6533-53fe-876c-8a4a0cc9b632",
+                "term:about",
+                "term:checklist",
+                "term:commitment",
+                "term:compare",
+                "term:create",
+                "term:decision",
+                "term:expensive",
+                "term:hard-to-reverse",
+                "term:mak",
+                "term:option",
+                "term:sleep"
+              ],
+              "decay": 0.92,
+              "items": [
+                {
+                  "association_hops": [],
+                  "associative_activation": 0.0,
+                  "baseline_score": 0.6381818181818183,
+                  "event_id": "5ce5e3c2-6533-53fe-876c-8a4a0cc9b632",
+                  "global_seq": 23,
+                  "selected": true,
+                  "total_score": 0.6381818181818183
+                }
+              ],
+              "max_hops": 5,
+              "policy_version": "deterministic-associations-v4"
+            },
+            "semantic_query_text": "When making decisions about expensive or hard-to-reverse commitments, I create a checklist, compare options, and sleep on the decision.",
+            "supported": true
+          }
+        ],
+        "focus_event_ids": [
+          "5ce5e3c2-6533-53fe-876c-8a4a0cc9b632"
+        ],
+        "kernel": "associative_recall_from_postgres",
+        "retrieval_role": "FOCUSED",
+        "semantic_query_text": "When making decisions about expensive or hard-to-reverse commitments, I create a checklist, compare options, and sleep on the decision."
+      },
+      "supported": false
+    },
+    "requesting_component": "self-review:self-reflection/v1:5068e734-ae04-5fa8-9fd0-e8b2a231ce7e"
+  },
+  "payload_text": null,
+  "record_hash": "d0d513783c29acf826d65cce00a0b9e1a622cc2a73e42a0a861879cc8bb1d093",
+  "source": "jit_memory"
+}

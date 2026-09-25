@@ -1,0 +1,40 @@
+{
+  "artifact_schema_version": 1,
+  "artifact_type": "EVENT_RECORD",
+  "conversation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "conversation_seq": 13,
+  "correlation_id": "e4873cd3-d448-5c3e-97cb-405b26222465",
+  "event_id": "dd278479-b6a7-51bf-a095-2118ebd11d4e",
+  "event_type": "DERIVED_REPRESENTATION",
+  "journaled_at": "2026-09-25T06:51:21.533374+00:00",
+  "payload": {
+    "data": {
+      "allowed_task_classes": [
+        "OBSERVE",
+        "RECONCILE"
+      ],
+      "deterministic_task": null,
+      "evidence_domains": [
+        "DERIVED_INTERNAL"
+      ],
+      "kind": "SYSTEM_OBSERVATION",
+      "maximum_urgency": "ROUTINE",
+      "modalities": [
+        "TEXT"
+      ],
+      "natural_language_response": false,
+      "response_required": false,
+      "self_model_evidence": true,
+      "semantic_triage": false,
+      "source_id": "person-fidelity-observation:purchase_observation"
+    },
+    "epistemic_status": "DERIVED",
+    "kind": "COGNITIVE_RECORD",
+    "record_key": "person-fidelity-observation:purchase_observation",
+    "record_kind": "source_policy",
+    "revision": "cd97cc1c2fa16d0d2e8677594a26bbe04832534867ab16d58caf1d26367a40c4"
+  },
+  "payload_text": null,
+  "record_hash": "73567f5aa6edc4969d87dbd0cf605808df89afa1e3e03aac1a586218dda1a4a4",
+  "source": "cognitive_runtime"
+}
