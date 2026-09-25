@@ -28,6 +28,7 @@ from jit_agent.self_reflection import (
     apply_review,
     collect_consolidation_evidence,
     materialize_proposal,
+    review_memory_packet,
 )
 from jit_agent.situations import persist_situations
 
@@ -266,6 +267,143 @@ def test_invalid_support_index_fails_before_creating_representation(conn):
             evidence=evidence,
             derived_at=datetime.now(timezone.utc),
         )
+
+
+def test_review_cannot_turn_a_support_root_into_opposition(conn):
+    root, _ = _record_user_prompt(conn, "I prefer modular systems.")
+    proposal = SelfSchemaProposal(
+        kind=SelfRepresentationKind.PREFERENCE,
+        perspective=SelfPerspective.AVOWED,
+        statement="I prefer modular systems.",
+        identity_centrality=IdentityCentrality.MODERATE,
+        support_indices=(0,),
+    )
+    evidence = (
+        ReflectionEvidence(
+            event_id=root.event_id,
+            event_type=root.event_type,
+            source=root.source,
+            created_at=root.created_at.isoformat(),
+            content=root.payload["text"],
+            context_refs=("situation:test",),
+        ),
+    )
+    representation, _ = materialize_proposal(
+        conn,
+        proposal=proposal,
+        evidence=evidence,
+        derived_at=datetime.now(timezone.utc) + timedelta(minutes=1),
+    )
+    packet = MemoryPacket(
+        memory_request_id=uuid4(),
+        need=MemoryNeed(query_text="modular", limit=1),
+        supported=True,
+        items=[
+            MemoryEvidence(
+                source_event_id=root.event_id,
+                event_type=root.event_type,
+                source=root.source,
+                created_at=root.created_at,
+                conversation_id=root.conversation_id,
+                conversation_seq=root.conversation_seq,
+                global_seq=root.global_seq,
+                content=root.payload["text"],
+            )
+        ],
+    )
+    review = SelfSchemaReview(
+        verdict=SelfReviewVerdict.CONTEST,
+        opposition_indices=(0,),
+        rationale="The model incorrectly selected the support root as contrary.",
+    )
+
+    resolution = apply_review(
+        conn,
+        representation=representation,
+        review=review,
+        review_packet=packet,
+        resolved_at=datetime.now(timezone.utc) + timedelta(minutes=2),
+    )
+
+    assert resolution.status is SelfResolutionStatus.CANDIDATE
+    stored = self_evidence(conn, representation.representation_id)
+    assert len(stored) == 1
+    assert stored[0].relation.value == "SUPPORTS"
+
+
+def test_review_memory_packet_removes_candidate_support_roots(conn, monkeypatch):
+    support, _ = _record_user_prompt(conn, "I prefer modular systems.")
+    related, _ = _record_user_prompt(conn, "I prefer reversible systems.")
+    proposal = SelfSchemaProposal(
+        kind=SelfRepresentationKind.PREFERENCE,
+        perspective=SelfPerspective.AVOWED,
+        statement="I prefer modular systems.",
+        identity_centrality=IdentityCentrality.MODERATE,
+        support_indices=(0,),
+    )
+    evidence = (
+        ReflectionEvidence(
+            event_id=support.event_id,
+            event_type=support.event_type,
+            source=support.source,
+            created_at=support.created_at.isoformat(),
+            content=support.payload["text"],
+            context_refs=("situation:test",),
+        ),
+    )
+    representation, _ = materialize_proposal(
+        conn,
+        proposal=proposal,
+        evidence=evidence,
+        derived_at=datetime.now(timezone.utc) + timedelta(minutes=1),
+    )
+    raw_packet = MemoryPacket(
+        memory_request_id=uuid4(),
+        need=MemoryNeed(query_text=representation.statement, limit=10),
+        supported=True,
+        items=[
+            MemoryEvidence(
+                source_event_id=support.event_id,
+                event_type=support.event_type,
+                source=support.source,
+                created_at=support.created_at,
+                conversation_id=support.conversation_id,
+                conversation_seq=support.conversation_seq,
+                global_seq=support.global_seq,
+                content=support.payload["text"],
+            ),
+            MemoryEvidence(
+                source_event_id=related.event_id,
+                event_type=related.event_type,
+                source=related.source,
+                created_at=related.created_at,
+                conversation_id=related.conversation_id,
+                conversation_seq=related.conversation_seq,
+                global_seq=related.global_seq,
+                content=related.payload["text"],
+            ),
+        ],
+        retrieval_trace={"fixture": True},
+    )
+
+    monkeypatch.setattr(
+        "jit_agent.self_reflection.jit_memory.request_memory",
+        lambda *args, **kwargs: raw_packet,
+    )
+
+    packet = review_memory_packet(
+        conn,
+        representation=representation,
+        conversation_id=uuid4(),
+        correlation_id=uuid4(),
+        before_global_seq=related.global_seq + 1,
+    )
+
+    assert [item.source_event_id for item in packet.items] == [related.event_id]
+    assert packet.supported is True
+    assert packet.retrieval_trace["self_review_support_roots_excluded"] == [
+        str(support.event_id)
+    ]
 
 
 def test_review_opposition_index_is_application_validated(conn):
