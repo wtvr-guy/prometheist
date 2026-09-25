@@ -12,6 +12,7 @@ from jit_agent.cognitive_store import get_record, list_records, put_record, rebu
 from jit_agent.consolidation import ConsolidationSchedule, consolidate_page, emit_due_consolidations, schedule_consolidation
 from jit_agent.expectations import Expectation
 from jit_agent.models import EventType
+from jit_agent.ollama_runtime import OllamaRuntimeState
 from jit_agent.percept_context import Observation, PerceptContext
 from jit_agent.percept_intake import ingest_percept, install_source_policy
 from jit_agent.perception import PerceptKind, PerceptModality, PerceptSource
@@ -32,6 +33,25 @@ class FixedProbe:
     def capture(self):
         return HostResourceMetrics(platform="test", logical_cpu_count=8, cpu_utilization_percent=10,
                                    load_1m=0, memory_total_mib=16384, memory_available_mib=self.available)
+
+
+class FixedOllamaRuntimeProbe:
+    def __init__(self, *, resident: bool):
+        self.resident = resident
+
+    def capture(self):
+        return OllamaRuntimeState(
+            model="qwen3:4b-instruct-2507-q4_K_M",
+            probe_ok=True,
+            resident=self.resident,
+            reported_name=(
+                "qwen3:4b-instruct-2507-q4_K_M"
+                if self.resident
+                else None
+            ),
+            size_bytes=3_000 * 1024 * 1024 if self.resident else None,
+            size_vram_bytes=0 if self.resident else None,
+        )
 
 
 @pytest.fixture
@@ -239,6 +259,47 @@ def test_situation_priority_cannot_override_memory_admission(conn):
     assert len(ids) == 1
     assert not load_scheduler(conn).worker_visible_assignments()
     assert run_situation_task(conn, ids[0], probe=FixedProbe(10)) is None
+
+
+@pytest.mark.parametrize(
+    ("resident", "expected_memory_mib"),
+    [(True, 512), (False, 3_072)],
+)
+def test_consolidation_admission_uses_ollama_incremental_memory(
+    conn,
+    resident,
+    expected_memory_mib,
+):
+    source = source_setup(conn)
+    add_observation(conn, source, value=500)
+    now = datetime.now(timezone.utc)
+    schedule_consolidation(
+        conn,
+        ConsolidationSchedule(schedule_id=uuid4(), due_at=now),
+    )
+    emit_due_consolidations(conn, now=now)
+
+    task_ids = submit_situation_page(
+        conn,
+        probe=FixedProbe(),
+        ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=resident),
+    )
+
+    assert len(task_ids) == 1
+    task = load_scheduler(conn).tasks[task_ids[0]]
+    estimate = task.metadata.process_resource_estimate
+    assert estimate.memory_mib == expected_memory_mib
+    assert estimate.llm_slots == 1
+    assert task.resumable_state["resource_admission"]["memory_mib"] == (
+        expected_memory_mib
+    )
+    assert task.resumable_state["resource_admission"]["requires_model"] is True
+    assert (
+        task.resumable_state["resource_admission"]["ollama_runtime_state"][
+            "resident"
+        ]
+        is resident
+    )
 
 
 def test_scheduled_consolidation_executes_separately_and_preserves_sources(conn):
