@@ -137,6 +137,28 @@ The system forces bounded Adaptive Recall instead.
 context is `PRIMARY_DERIVED_CONTEXT` and was actually rendered into the final
 responder's evidence channel.
 
+### Fail closed after bounded historical recall is exhausted
+
+A history-dependent request now treats the Composer's terminal
+`memory_sufficient=false` as a control result, not a suggestion. The final
+responder does not synthesize an answer from a merely non-empty but explicitly
+incomplete historical packet. It first checks for an explicit current-message
+fallback literal and otherwise returns the generic insufficient-evidence response.
+
+This is especially important for legitimate unknowns: unrelated autobiographical
+material is no longer enough to authorize answer generation merely because some
+memory was retrieved.
+
+### Specific historical facts are not Self-Memory by default
+
+The response-policy contract now distinguishes a specific remembered personal fact
+from a derived person-model conclusion. A question such as a remembered person's
+name, place, date, possession, or event detail is `USER_AUTHORED` when prior
+testimony would have to establish it. `SELF_MODEL` remains reserved for derived
+preferences, values, traits, behavioral tendencies, relationships, decision
+patterns, prospective identity, and narrative themes.
+
+
 ## New benchmark: SELF-MEMORY-001
 
 `benchmarks/run_self_memory_person_fidelity.py` uses the same frozen synthetic
