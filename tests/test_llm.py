@@ -206,7 +206,7 @@ def test_history_dependent_response_fails_closed_when_composer_exhausts_recall()
         adaptive_recall_rounds=1,
     )
     client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
-    fake_http = _FakeHTTPClient([])
+    fake_http = _FakeHTTPClient(['{"verbatim_value":null}'])
     client._client = fake_http
 
     answer = client.generate_final_response(
@@ -217,7 +217,8 @@ def test_history_dependent_response_fails_closed_when_composer_exhausts_recall()
     )
 
     assert answer == "Persisted evidence is insufficient."
-    assert fake_http.calls == []
+    assert len(fake_http.calls) == 1
+    assert "current-fallback selector" in fake_http.calls[0][1]["messages"][0]["content"]
 
 
 def test_verbatim_placeholders_prevent_model_from_respelling_opaque_literals():
