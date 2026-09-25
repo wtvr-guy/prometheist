@@ -367,7 +367,9 @@ be surfaced.
 Evidence scopes:
 - USER_AUTHORED: what the user explicitly said, named, reported, instructed, or
   stated about themselves in prior USER_PROMPT evidence. Choose this for
-  questions about exact prior claims, wording, declarations, or self-reports.
+  questions about exact prior claims, wording, declarations, self-reports, or a
+  specific historical personal fact (for example a remembered person's name,
+  place, date, possession, or event detail) that must come from prior testimony.
 - SELF_MODEL: what Prometheist's accumulated person-model concludes about the
   user's usual preferences, traits, values, roles, behavioral tendencies,
   decision patterns, relationships, prospective identity, or narrative themes.
@@ -384,11 +386,14 @@ Evidence scopes:
   message facts, general knowledge, or ordinary evidence can answer.
 
 Choose the narrowest role justified by the current request. USER_AUTHORED is
-about attributable prior user statements; SELF_MODEL is about derived,
-provenance-grounded conclusions across experience. A question about a plan or
-aspiration is USER_AUTHORED when asking what the user said/planned, but
-SELF_MODEL when asking how that goal fits the person's enduring modeled
-identity. Choose MIXED_CONVERSATION when the current message explicitly refers
+about attributable prior user statements and specific remembered personal facts;
+SELF_MODEL is about derived, provenance-grounded patterns or conclusions across
+experience. Do not use SELF_MODEL merely because the question is about the
+person. "What was my fifth-grade teacher's name?" is USER_AUTHORED if history
+would have to establish the answer; "what kind of teacher would I probably work
+well with?" is SELF_MODEL. A question about a plan or aspiration is USER_AUTHORED
+when asking what the user said/planned, but SELF_MODEL when asking how that goal
+fits the person's enduring modeled identity. Choose MIXED_CONVERSATION when the current message explicitly refers
 to what the assistant just said, answered, recommended, ruled out, or asked, or asks
 to reconstruct a prior exchange involving both participants.
 
@@ -846,10 +851,19 @@ class PerceptLLM(OllamaClient):
         )
         if (
             scope_requires_historical_support(policy.evidence_scope)
+            and not package.sufficient
+        ):
+            self._set_artifact_evidence_refs(())
+            return self._select_current_fallback_literal(percept) or (
+                _GENERIC_INSUFFICIENT_RESPONSE
+            )
+        if (
+            scope_requires_historical_support(policy.evidence_scope)
             and not has_admitted_history
             and not has_admitted_result
             and not has_admitted_self
         ):
+            self._set_artifact_evidence_refs(())
             return self._select_current_fallback_literal(percept) or (
                 _GENERIC_INSUFFICIENT_RESPONSE
             )
