@@ -745,7 +745,10 @@ def main() -> None:
             print(
                 "  structural="
                 + ("PASS" if result["structural_evidence"]["passed"] else "FAIL")
-                + f" self={len(result['response_realization']['activated_self_representation_ids'])}",
+                + (
+                    " self="
+                    f"{len(result['response_realization']['activated_self_representation_ids'])}"
+                ),
                 flush=True,
             )
 
