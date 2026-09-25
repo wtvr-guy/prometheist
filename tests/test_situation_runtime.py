@@ -162,6 +162,63 @@ def test_four_percepts_one_guarded_task_and_finite_action_feedback(conn, monkeyp
     assert len([item for item in final["artifact_chain"] if item["artifact_type"] == "STAGE_RESULT"]) == 8
 
 
+def test_situation_claim_rechecks_ollama_residency(conn, monkeypatch):
+    from jit_agent import situation_runtime
+    from jit_agent.ollama_runtime import OllamaClaimHostResourceProbe
+
+    source = source_setup(conn)
+    add_observation(conn, source, value=500)
+    now = datetime.now(timezone.utc)
+    schedule_consolidation(
+        conn,
+        ConsolidationSchedule(schedule_id=uuid4(), due_at=now),
+    )
+    emit_due_consolidations(conn, now=now)
+    task_id, = submit_situation_page(
+        conn,
+        probe=FixedProbe(),
+        ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=True),
+    )
+
+    captured = {}
+
+    class CapturingLauncher:
+        def __init__(
+            self,
+            connection_factory,
+            *,
+            probe,
+            policy,
+            scheduler_key,
+            **_kwargs,
+        ):
+            del connection_factory, policy, scheduler_key
+            captured["probe"] = probe
+
+        def launch(self, **_kwargs):
+            raise RuntimeError("stop after launcher construction")
+
+    monkeypatch.setattr(
+        situation_runtime,
+        "GuardedWorkerLauncher",
+        CapturingLauncher,
+    )
+
+    with pytest.raises(RuntimeError, match="stop after launcher construction"):
+        run_situation_task(
+            conn,
+            task_id,
+            probe=FixedProbe(),
+            ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=False),
+        )
+
+    assert isinstance(captured["probe"], OllamaClaimHostResourceProbe)
+    assert captured["probe"].scheduled_memory_mib == 512
+    captured["probe"].capture()
+    assert captured["probe"].last_effective_required_memory_mib == 3_072
+    assert captured["probe"].last_memory_debit_mib > 0
+
+
 def test_clean_worker_exit_without_a_durable_result_does_not_complete_task(conn):
     source = source_setup(conn)
     add_observation(conn, source)
