@@ -142,6 +142,8 @@ def test_response_policy_defaults_ordinary_questions_to_natural_language() -> No
     assert "a request to answer naturally" in normalized
     assert "self_model" in normalized
     assert "what do i usually prefer?" in normalized
+    assert "fifth-grade teacher" in normalized
+    assert "specific remembered personal facts" in normalized
 
 
 @pytest.mark.parametrize(
