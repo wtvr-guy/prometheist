@@ -13,6 +13,7 @@ from uuid import uuid4
 import pytest
 
 from benchmarks import run_person_fidelity_baseline as native_runner
+from benchmarks import run_self_memory_person_fidelity as self_memory_runner
 from jit_agent import artifact_journal, event_artifact_store
 from jit_agent.person_fidelity_benchmark import (
     REQUIRED_BASELINE_DIMENSIONS,
@@ -516,6 +517,61 @@ def test_run_manifest_hashes_every_raw_artifact_and_labels_training_state(tmp_pa
     assert by_path[relative_event_path]["sha256"] == hashlib.sha256(
         event_path.read_bytes()
     ).hexdigest()
+
+
+def test_self_memory_inventory_accepts_learning_and_nested_probe_artifacts(
+    tmp_path,
+):
+    root = tmp_path / "self-memory-run"
+    learning_event = root / "learning" / "events" / "learn.json"
+    probe_event = root / "probes" / "pf-q005" / "events" / "probe.json"
+    probe_interaction = (
+        root
+        / "probes"
+        / "pf-q005"
+        / "interactions"
+        / "interaction-id"
+        / "000001-artifact.json"
+    )
+    native_runner._write_result(
+        learning_event,
+        {"artifact_type": "EVENT_RECORD", "event_id": "learn-event"},
+    )
+    native_runner._write_result(
+        probe_event,
+        {"artifact_type": "EVENT_DATABASE_COMMIT", "event_id": "probe-event"},
+    )
+    native_runner._write_result(
+        probe_interaction,
+        {
+            "artifact_type": "FINAL_DISPOSITION",
+            "artifact_id": "artifact-1",
+            "interaction_id": "interaction-id",
+        },
+    )
+
+    entries = self_memory_runner._self_memory_artifact_file_inventory(root)
+
+    assert {item["relative_path"] for item in entries} == {
+        "learning/events/learn.json",
+        "probes/pf-q005/events/probe.json",
+        (
+            "probes/pf-q005/interactions/"
+            "interaction-id/000001-artifact.json"
+        ),
+    }
+
+
+def test_self_memory_inventory_rejects_unknown_nested_layout(tmp_path):
+    root = tmp_path / "self-memory-run"
+    unexpected = root / "probes" / "pf-q005" / "debug" / "trace.json"
+    native_runner._write_result(unexpected, {"artifact_type": "DEBUG"})
+
+    with pytest.raises(
+        RuntimeError,
+        match="unexpected self-memory benchmark artifact layout",
+    ):
+        self_memory_runner._self_memory_artifact_file_inventory(root)
 
 
 def test_run_manifest_rejects_unexpected_files_in_artifact_tree(tmp_path):

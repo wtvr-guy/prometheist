@@ -206,6 +206,39 @@ This prevents a correct self-schema answer from being falsely marked as missing 
 source evidence while preserving the distinction between direct episodic recall and
 derived self-model influence.
 
+## Follow-up native smoke run: universal contesting
+
+The first native `SELF-MEMORY-001` smoke run reached the production learning
+pipeline and formed 14 self representations, but all 14 resolved to `CONTESTED`.
+Consequently no core established self representations were available for Working
+Self fallback and the four smoke probes reported zero activated self memories.
+
+The review path exposed an application-level defect. Counterevidence recall was
+focused from the candidate's support roots, so the review packet could contain the
+same canonical events already recorded as `SUPPORTS`. The model's
+`opposition_indices` were then trusted directly and those roots could be written
+again as `OPPOSES`. A single canonical event could therefore count on both sides
+of the same proposition, and any opposition root forces an attempted established
+schema to `CONTESTED`.
+
+Corrections:
+
+- canonical support roots and independently retrieved related/counterevidence are
+  now separate reviewer channels;
+- support roots are removed from the packet whose indices may be selected as
+  opposition;
+- the durable self-evidence layer rejects opposite polarity for the same
+  representation/root pair;
+- `CONTEST` structured output requires at least one concrete opposition index;
+- if no valid opposing root survives application validation, a contest request
+  remains `CANDIDATE` rather than manufacturing `CONTESTED`.
+
+The same run also exposed a benchmark-only manifest bug: the legacy artifact
+inventory expected `<probe>/events`, whereas the self-memory runner uses
+`learning/...` and `probes/<probe>/...`. SELF-MEMORY now has its own strict
+inventory validator for those two layouts. Failed pre-fix artifact trees remain
+preserved.
+
 ## What remains deliberately unchanged
 
 The global memory lexical score and the `0.15` admission threshold have **not**

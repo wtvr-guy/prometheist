@@ -101,9 +101,16 @@ class SelfSchemaReview(FrozenRecord):
     rationale: str = Field(min_length=1, max_length=MAX_REVIEW_RATIONALE_CHARS)
 
     @model_validator(mode="after")
-    def unique_indices(self) -> "SelfSchemaReview":
+    def review_contract(self) -> "SelfSchemaReview":
         if len(self.opposition_indices) != len(set(self.opposition_indices)):
             raise ValueError("opposition_indices must not contain duplicates")
+        if (
+            self.verdict is SelfReviewVerdict.CONTEST
+            and not self.opposition_indices
+        ):
+            raise ValueError(
+                "CONTEST requires at least one concrete opposition index"
+            )
         return self
 
 
@@ -140,16 +147,25 @@ self-organization, not how true it is. Be conservative.
 
 SELF_SCHEMA_REVIEW_PROMPT = """\
 You are Prometheist's Self-Schema Review Specialist. Your only job is to review
-one proposed self representation against its support evidence and a separately
-retrieved related-evidence set.
+one proposed self representation against two explicitly separated channels:
+(1) canonical support roots already attached to the candidate, and
+(2) independently retrieved related/counterevidence.
+
+opposition_indices refer ONLY to the numbered related/counterevidence channel.
+Never select a support root as opposition. A merely different topic, different
+preference, different context, or absence of corroboration is not contrary
+evidence.
 
 Return:
 - ESTABLISH only when the candidate remains well supported after considering
   related/disconfirming evidence;
-- CONTEST when material contrary evidence exists or the pattern is genuinely
-  inconsistent;
-- REJECT when the proposed abstraction is not supported;
-- KEEP_CANDIDATE when evidence is plausible but too narrow for establishment.
+- CONTEST only when one or more related-evidence items materially contradict
+  the candidate; include every such item's opposition_index;
+- REJECT when the proposed abstraction is not supported by its support roots;
+- KEEP_CANDIDATE when support is plausible but too narrow for establishment.
+
+If verdict is CONTEST, opposition_indices must be non-empty. If no material
+contrary evidence exists, do not return CONTEST.
 
 Do not explain contradictions away merely to preserve a coherent identity.
 Context-specific differences are legitimate, but the application—not you—owns
@@ -354,6 +370,42 @@ def materialize_proposal(
     return representation, resolution
 
 
+def render_candidate_support_evidence(
+    conn: psycopg.Connection,
+    representation: SelfRepresentation,
+) -> str:
+    blocks: list[str] = []
+    support = [
+        item
+        for item in self_evidence(conn, representation.representation_id)
+        if item.relation is SelfEvidenceRelation.SUPPORTS
+    ]
+    for index, item in enumerate(
+        sorted(support, key=lambda value: (value.observed_at, str(value.root_event_id)))
+    ):
+        root = event_store.get_event_by_id(conn, item.root_event_id)
+        if root is None:
+            raise RuntimeError(
+                f"self support evidence root is missing: {item.root_event_id}"
+            )
+        blocks.append(
+            "\n".join(
+                (
+                    f"support_index={index}",
+                    f"event_id={root.event_id}",
+                    f"event_type={root.event_type.value}",
+                    f"source={root.source}",
+                    f"observed_at={item.observed_at.isoformat()}",
+                    f"content={_event_content(root)}",
+                )
+            )
+        )
+    return (
+        "[Canonical support roots]\n"
+        + ("\n\n".join(blocks) if blocks else "items: []")
+    )
+
+
 def review_memory_packet(
     conn: psycopg.Connection,
     *,
@@ -387,7 +439,7 @@ def review_memory_packet(
             EventType.SYSTEM_EVENT,
         ],
     )
-    return jit_memory.request_memory(
+    packet = jit_memory.request_memory(
         conn,
         conversation_id=conversation_id,
         correlation_id=correlation_id,
@@ -406,6 +458,23 @@ def review_memory_packet(
         ),
         recall_stage=recall_stage,
     )
+    support_set = set(support_ids)
+    related_items = [
+        item for item in packet.items if item.source_event_id not in support_set
+    ]
+    return packet.model_copy(
+        update={
+            "items": related_items,
+            "supported": bool(related_items),
+            "retrieval_trace": {
+                **dict(packet.retrieval_trace),
+                "self_review_support_roots_excluded": [
+                    str(value) for value in support_ids
+                ],
+            },
+        },
+        deep=True,
+    )
 
 
 def apply_review(
@@ -416,10 +485,18 @@ def apply_review(
     review_packet: MemoryPacket,
     resolved_at,
 ) -> SelfResolution:
+    support_ids = {
+        item.root_event_id
+        for item in self_evidence(conn, representation.representation_id)
+        if item.relation is SelfEvidenceRelation.SUPPORTS
+    }
+    recorded_opposition_ids: set[UUID] = set()
     for index in review.opposition_indices:
         if index < 0 or index >= len(review_packet.items):
             raise ValueError("self review selected unavailable opposition evidence")
         item = review_packet.items[index]
+        if item.source_event_id in support_ids:
+            continue
         root = event_store.get_event_by_id(conn, item.source_event_id)
         if root is None:
             raise RuntimeError(
@@ -434,10 +511,15 @@ def apply_review(
             derivation_method=SELF_REFLECTION_POLICY,
             known_at=root.created_at,
         )
+        recorded_opposition_ids.add(item.source_event_id)
 
     requested_status = {
         SelfReviewVerdict.ESTABLISH: SelfResolutionStatus.ESTABLISHED,
-        SelfReviewVerdict.CONTEST: SelfResolutionStatus.CONTESTED,
+        SelfReviewVerdict.CONTEST: (
+            SelfResolutionStatus.CONTESTED
+            if recorded_opposition_ids
+            else SelfResolutionStatus.CANDIDATE
+        ),
         SelfReviewVerdict.REJECT: SelfResolutionStatus.REJECTED,
         SelfReviewVerdict.KEEP_CANDIDATE: SelfResolutionStatus.CANDIDATE,
     }[review.verdict]

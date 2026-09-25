@@ -41,7 +41,6 @@ from run_person_fidelity_baseline import (  # noqa: E402
     DATABASE_ENV,
     _apply_schema_and_require_benchmark_database,
     _artifact_chain_receipt,
-    _artifact_file_inventory,
     _display_path,
     _memory_packet_evidence_refs,
     _prompt_event,
@@ -595,6 +594,68 @@ def _run_probe(
     }
 
 
+def _self_memory_artifact_file_inventory(
+    artifact_root: Path,
+) -> list[dict[str, Any]]:
+    """Inventory the learning tree plus isolated probe trees without rewriting bytes."""
+
+    entries: list[dict[str, Any]] = []
+    for path in sorted(artifact_root.rglob("*")):
+        if path.is_symlink():
+            raise RuntimeError(
+                f"benchmark artifact roots must not contain symlinks: {path}"
+            )
+        if not path.is_file():
+            continue
+        if path.name == "run_manifest.json":
+            continue
+        if path.suffix.casefold() != ".json":
+            raise RuntimeError(f"unexpected non-JSON benchmark artifact: {path}")
+
+        relative = path.relative_to(artifact_root).as_posix()
+        parts = Path(relative).parts
+        valid_learning = (
+            len(parts) >= 3
+            and parts[0] == "learning"
+            and parts[1] in {"events", "interactions"}
+        )
+        valid_probe = (
+            len(parts) >= 4
+            and parts[0] == "probes"
+            and parts[2] in {"events", "interactions"}
+        )
+        if not (valid_learning or valid_probe):
+            raise RuntimeError(
+                f"unexpected self-memory benchmark artifact layout: {relative}"
+            )
+
+        raw = path.read_bytes()
+        try:
+            document = json.loads(raw)
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise RuntimeError(f"invalid JSON benchmark artifact: {path}") from exc
+        if not isinstance(document, dict):
+            raise RuntimeError(f"benchmark artifact is not a JSON object: {path}")
+
+        entries.append(
+            {
+                "relative_path": relative,
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "size_bytes": len(raw),
+                "artifact_type": document.get("artifact_type"),
+                "artifact_id": document.get("artifact_id"),
+                "artifact_hash": document.get("artifact_hash"),
+                "event_id": document.get("event_id"),
+                "record_hash": document.get("record_hash"),
+                "commit_hash": document.get("commit_hash"),
+                "interaction_id": document.get("interaction_id"),
+                "journal_sequence": document.get("journal_sequence"),
+                "stage": document.get("stage"),
+            }
+        )
+    return entries
+
+
 def _manifest(
     *,
     benchmark_id: str,
@@ -606,7 +667,7 @@ def _manifest(
     results: list[dict[str, Any]],
     learning_task_ids: list[UUID],
 ) -> dict[str, Any]:
-    files = _artifact_file_inventory(artifact_root)
+    files = _self_memory_artifact_file_inventory(artifact_root)
     type_counts = Counter(str(item["artifact_type"]) for item in files)
     return {
         "schema_version": 1,

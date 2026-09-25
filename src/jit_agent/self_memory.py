@@ -518,6 +518,21 @@ def record_self_evidence(
             "direct self-report perspectives require USER_PROMPT support roots"
         )
 
+    opposite_relation = (
+        SelfEvidenceRelation.OPPOSES
+        if relation is SelfEvidenceRelation.SUPPORTS
+        else SelfEvidenceRelation.SUPPORTS
+    )
+    for existing_evidence in self_evidence(conn, representation.representation_id):
+        if (
+            existing_evidence.root_event_id == root_event_id
+            and existing_evidence.relation is opposite_relation
+        ):
+            raise ValueError(
+                "one canonical root cannot both support and oppose the same "
+                f"self representation: {root_event_id}"
+            )
+
     evidence_id = uuid5(
         COGNITIVE_NAMESPACE,
         (
