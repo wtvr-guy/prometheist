@@ -269,6 +269,15 @@ def test_invalid_support_index_fails_before_creating_representation(conn):
         )
 
 
+def test_contest_review_requires_concrete_opposition_index():
+    with pytest.raises(ValueError, match="CONTEST requires"):
+        SelfSchemaReview(
+            verdict=SelfReviewVerdict.CONTEST,
+            opposition_indices=(),
+            rationale="The candidate feels inconsistent.",
+        )
+
+
 def test_review_cannot_turn_a_support_root_into_opposition(conn):
     root, _ = _record_user_prompt(conn, "I prefer modular systems.")
     proposal = SelfSchemaProposal(
