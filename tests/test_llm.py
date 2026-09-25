@@ -185,6 +185,41 @@ def test_user_facing_answer_fails_closed_after_two_invalid_outputs():
         client._text("FINAL_RESPONSE_V2", "system", "Question")
 
 
+def test_history_dependent_response_fails_closed_when_composer_exhausts_recall():
+    packet = MemoryPacket(
+        memory_request_id=uuid4(),
+        need=MemoryNeed(query_text="What was my fifth-grade teacher's name?"),
+        supported=True,
+        items=[
+            _evidence(
+                EventType.USER_PROMPT,
+                "An unrelated remembered preference.",
+                1,
+            )
+        ],
+    )
+    package = ResponseMemoryPackage(
+        memory_packet=packet,
+        sufficient=False,
+        unresolved_memory_deficit="The teacher's name is not present in history.",
+        composer_rounds=2,
+        adaptive_recall_rounds=1,
+    )
+    client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
+    fake_http = _FakeHTTPClient([])
+    client._client = fake_http
+
+    answer = client.generate_final_response(
+        "What was my fifth-grade teacher's name?",
+        package,
+        (),
+        response_policy=_natural_policy(HistoricalEvidenceScope.USER_AUTHORED),
+    )
+
+    assert answer == "Persisted evidence is insufficient."
+    assert fake_http.calls == []
+
+
 def test_verbatim_placeholders_prevent_model_from_respelling_opaque_literals():
     exact_code = "A66673AD"
     packet = MemoryPacket(
