@@ -29,7 +29,11 @@ from jit_agent.response_policy import (
     ResponseSurfaceMode,
     source_types_for_scope,
 )
-from jit_agent.self_memory import get_self_representation
+from jit_agent.self_memory import (
+    SelfEvidenceRelation,
+    get_self_representation,
+    self_evidence,
+)
 from jit_agent.self_reflection import (
     SELF_SCHEMA_PROPOSAL_PROMPT,
     SELF_SCHEMA_REVIEW_PROMPT,
