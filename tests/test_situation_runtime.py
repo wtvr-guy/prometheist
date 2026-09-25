@@ -81,6 +81,19 @@ def add_observation(conn, source, property_name="memory", value=300, expected=No
                               observations=(Observation(subject=subject, property=property_name, value=value),)))
 
 
+def consolidation_task_id(conn, task_ids):
+    matches = []
+    for task_id in task_ids:
+        task = get_record(conn, "situation_task", str(task_id))
+        if (
+            task is not None
+            and task["percept"]["source"]["source_id"] == "scheduler:consolidation"
+        ):
+            matches.append(task_id)
+    assert len(matches) == 1
+    return matches[0]
+
+
 def register_memory_expectation(conn):
     now = datetime.now(timezone.utc)
     expectation = Expectation(expectation_id=uuid4(), subject="worker:1", property="memory",
@@ -186,11 +199,12 @@ def _capture_first_situation_claim_probe(
         ConsolidationSchedule(schedule_id=uuid4(), due_at=now),
     )
     emit_due_consolidations(conn, now=now)
-    task_id, = submit_situation_page(
+    task_ids = submit_situation_page(
         conn,
         probe=FixedProbe(),
         ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=False),
     )
+    task_id = consolidation_task_id(conn, task_ids)
     captured = {}
 
     class CapturingLauncher:
@@ -439,8 +453,8 @@ def test_consolidation_admission_uses_ollama_incremental_memory(
         ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=resident),
     )
 
-    assert len(task_ids) == 1
-    task = load_scheduler(conn).tasks[task_ids[0]]
+    task_id = consolidation_task_id(conn, task_ids)
+    task = load_scheduler(conn).tasks[task_id]
     estimate = task.metadata.process_resource_estimate
     assert estimate.memory_mib == expected_memory_mib
     assert estimate.llm_slots == 1
