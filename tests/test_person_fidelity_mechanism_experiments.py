@@ -633,7 +633,7 @@ def test_attempt_artifact_paths_fit_windows_path_budget():
     assert all("/" not in directory and "\\" not in directory for directory in directories)
 
     representative_root = PureWindowsPath(
-        r"C:\Users\gy0d8\OneDrive\Documents\jit_agent_prototype"
+        r"C:\Users\gy0d8\OneDrive\Documents\prometheist_prototype"
     ) / "benchmarks" / "generated" / "pfmx" / "2026-09-21_215914"
     longest_atomic_target = (
         representative_root

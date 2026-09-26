@@ -396,7 +396,7 @@ def test_review_memory_packet_removes_candidate_support_roots(conn, monkeypatch)
     )
 
     monkeypatch.setattr(
-        "jit_agent.self_reflection.jit_memory.request_memory",
+        "prometheist.self_reflection.jit_memory.request_memory",
         lambda *args, **kwargs: raw_packet,
     )
 

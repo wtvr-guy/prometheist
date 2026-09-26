@@ -298,7 +298,7 @@ def test_nonresponse_consolidation_tail_stages_are_model_free(conn):
     )
     task_data = get_record(conn, "situation_task", str(task_id))
     task = __import__(
-        "jit_agent.situation_runtime",
+        "prometheist.situation_runtime",
         fromlist=["SituationTask"],
     ).SituationTask.model_validate(task_data)
 

@@ -368,7 +368,7 @@ def run_situation_task(
                 scheduler_key=scheduler_key,
             )
         launched = stage_launcher.launch(step_id=step_id, worker_id=f"situation-{task_id}-{stage.name}",
-                                   command=[sys.executable, "-m", "jit_agent.situation_worker"],
+                                   command=[sys.executable, "-m", "prometheist.situation_worker"],
                                    lease_seconds=SITUATION_WORKER_LEASE_SECONDS)
         try:
             code = launched.process.wait(timeout=SITUATION_WORKER_TIMEOUT_SECONDS)

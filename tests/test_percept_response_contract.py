@@ -77,7 +77,7 @@ def test_empty_self_model_packet_cannot_be_accepted_as_sufficient(monkeypatch) -
             )
 
     monkeypatch.setattr(
-        "jit_agent.percept_response_runtime._adaptive_recall",
+        "prometheist.percept_response_runtime._adaptive_recall",
         lambda *args, **kwargs: packet,
     )
 

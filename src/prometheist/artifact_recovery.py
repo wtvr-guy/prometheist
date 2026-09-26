@@ -319,7 +319,7 @@ def resume_interaction_from_artifacts(
         launched = launcher.launch(
             step_id=step_id,
             worker_id=worker_id,
-            command=[sys.executable, "-m", "jit_agent.percept_response_worker"],
+            command=[sys.executable, "-m", "prometheist.percept_response_worker"],
             lease_seconds=effective_lease,
         )
         try:

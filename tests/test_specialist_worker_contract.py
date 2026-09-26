@@ -129,7 +129,7 @@ def test_response_stage_inherits_exact_policy_without_reclassification(monkeypat
         PerceptStage.EXECUTE_WORK: {"work_results": []},
     }
     monkeypatch.setattr(
-        "jit_agent.percept_response_runtime._stage_result",
+        "prometheist.percept_response_runtime._stage_result",
         lambda _conn, _interaction, stage, _scheduler_key: results[stage],
     )
     received: list[ResponsePolicy] = []

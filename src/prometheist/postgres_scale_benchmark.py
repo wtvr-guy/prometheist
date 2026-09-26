@@ -345,7 +345,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--database-url",
-        default=os.environ.get("JIT_AGENT_BENCHMARK_DATABASE_URL"),
+        default=os.environ.get("PROMETHEIST_BENCHMARK_DATABASE_URL"),
         help="Dedicated test/benchmark PostgreSQL URL. Never use the dev database.",
     )
     parser.add_argument(
@@ -371,7 +371,7 @@ def main() -> None:
 
     if not args.database_url:
         parser.error(
-            "--database-url or JIT_AGENT_BENCHMARK_DATABASE_URL is required; "
+            "--database-url or PROMETHEIST_BENCHMARK_DATABASE_URL is required; "
             "use a dedicated database whose name contains 'test' or 'benchmark'."
         )
 

@@ -17,7 +17,7 @@ import platform
 
 os.environ["DATABASE_URL"] = os.environ.get(
     "TEST_DATABASE_URL",
-    "postgresql://jit_agent_app@localhost:5432/jit_agent_test",
+    "postgresql://prometheist_app@localhost:5432/prometheist_test",
 )
 
 import pytest

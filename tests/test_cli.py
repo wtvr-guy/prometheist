@@ -55,9 +55,9 @@ def test_module_entrypoint_configures_utf8_before_argument_parsing():
         stderr = Probe(sys.stderr)
         sys.stdout = stdout
         sys.stderr = stderr
-        sys.argv = ["jit_agent.cli", "--help"]
+        sys.argv = ["prometheist.cli", "--help"]
         try:
-            runpy.run_module("jit_agent.cli", run_name="__main__")
+            runpy.run_module("prometheist.cli", run_name="__main__")
         except SystemExit as exc:
             if exc.code not in (0, None):
                 raise

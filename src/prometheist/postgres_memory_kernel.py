@@ -1,7 +1,7 @@
 """PostgreSQL adapter for the deterministic Prometheist memory kernel.
 
 This module is additive to the MVP Retrieval Service. It intentionally does
-not replace ``jit_agent.retrieval`` yet; the existing proof-of-concept remains
+not replace ``prometheist.retrieval`` yet; the existing proof-of-concept remains
 usable while the Memory Kernel evolves beside it. A later MAS milestone can
 place the verified kernel behind the shared JIT-memory boundary.
 """

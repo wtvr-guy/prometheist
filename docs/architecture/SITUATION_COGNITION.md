@@ -201,12 +201,12 @@ An input can share `entity_refs: ["worker:1"]` across deliveries and interfaces:
 ```
 
 ```bash
-uv run python -m jit_agent.percept_cli install-source source.json
-uv run python -m jit_agent.percept_cli expectation expectation.json
-uv run python -m jit_agent.percept_cli ingest sample.json
-uv run python -m jit_agent.percept_cli schedule-consolidation schedule.json
-uv run python -m jit_agent.percept_cli tick
-uv run python -m jit_agent.percept_cli situations
+uv run python -m prometheist.percept_cli install-source source.json
+uv run python -m prometheist.percept_cli expectation expectation.json
+uv run python -m prometheist.percept_cli ingest sample.json
+uv run python -m prometheist.percept_cli schedule-consolidation schedule.json
+uv run python -m prometheist.percept_cli tick
+uv run python -m prometheist.percept_cli situations
 ```
 
 Expectations require their explicit validity interval and provenance references;

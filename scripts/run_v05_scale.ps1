@@ -1,5 +1,5 @@
 param(
-    [string]$DatabaseUrl = $env:JIT_AGENT_BENCHMARK_DATABASE_URL,
+    [string]$DatabaseUrl = $env:PROMETHEIST_BENCHMARK_DATABASE_URL,
     [int[]]$EventCounts = @(1000, 10000, 50000),
     [int]$ProbeEvery = 500,
     [int]$ConfusableEvery = 12,
@@ -31,7 +31,7 @@ if (-not $SkipTests) {
 }
 
 Write-Host "`n[2/4] Materializing deterministic scale corpora..."
-& uv run python -m jit_agent.scale_corpus `
+& uv run python -m prometheist.scale_corpus `
     --events $EventCounts `
     --probe-every $ProbeEvery `
     --confusable-every $ConfusableEvery
@@ -40,7 +40,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "`n[3/4] Running full-history in-memory benchmark..."
-& uv run python -m jit_agent.scale_benchmark `
+& uv run python -m prometheist.scale_benchmark `
     --events $EventCounts `
     --probe-every $ProbeEvery `
     --confusable-every $ConfusableEvery `
@@ -54,12 +54,12 @@ if ($SkipPostgres) {
     Write-Host "`n[4/4] PostgreSQL benchmark skipped by request."
 } else {
     if (-not $DatabaseUrl) {
-        throw "PostgreSQL benchmark requires -DatabaseUrl or JIT_AGENT_BENCHMARK_DATABASE_URL. Use only a dedicated database whose name contains 'test' or 'benchmark'."
+        throw "PostgreSQL benchmark requires -DatabaseUrl or PROMETHEIST_BENCHMARK_DATABASE_URL. Use only a dedicated database whose name contains 'test' or 'benchmark'."
     }
 
-    $env:JIT_AGENT_BENCHMARK_DATABASE_URL = $DatabaseUrl
+    $env:PROMETHEIST_BENCHMARK_DATABASE_URL = $DatabaseUrl
     Write-Host "`n[4/4] Running indexed PostgreSQL associative benchmark..."
-    & uv run python -m jit_agent.postgres_scale_benchmark `
+    & uv run python -m prometheist.postgres_scale_benchmark `
         --events $EventCounts `
         --probe-every $ProbeEvery `
         --confusable-every $ConfusableEvery `

@@ -1,7 +1,7 @@
 """Application-owned execution binding for non-selectable internal memory.
 
 Memory expansion for user prompts belongs to the deterministic Adaptive Recall
-loop in jit_agent.percept_response_runtime. The retained jit_memory binding is a
+loop in prometheist.percept_response_runtime. The retained jit_memory binding is a
 task-neutral service boundary for non-interactive system work; it is never
 exposed in the pre-cognitive capability catalog.
 """
