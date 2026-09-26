@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
+import subprocess
 import tempfile
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -225,6 +226,13 @@ def main() -> None:
         if args.result is not None
         else verify_bundle(args.verify_bundle)
     )
+    if args.result is not None and args.output.resolve() == DEFAULT_OUTPUT.resolve():
+        subprocess.run(
+            ["git", "add", "--", ".tmp/latest-benchmark.zip"],
+            cwd=ROOT,
+            check=True,
+        )
+        outcome["staged_for_commit"] = True
     print(json.dumps(outcome, indent=2, sort_keys=True))
 
 

@@ -53,7 +53,7 @@ try {
     if ($output) {
         uv run --locked python benchmarks/package_benchmark_run.py --result $output
         if ($LASTEXITCODE -ne 0) { throw "benchmark sharing ZIP failed; raw run remains intact" }
-        Write-Host "Commit and push .tmp/latest-benchmark.zip when you want the run inspected."
+        Write-Host "Latest benchmark ZIP staged automatically; commit and push when you want it inspected."
     }
 }
 finally {

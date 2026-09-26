@@ -3,9 +3,6 @@ __pycache__/
 *.pyc
 .env
 .pytest_cache/
-# Only the latest verified sharing bundle belongs in the branch.
-.tmp/*
-!.tmp/latest-benchmark.zip
 # Keep complete benchmark evidence locally. Share one verified run through the
 # tracked .tmp/latest-benchmark.zip rather than committing thousands of files.
 benchmarks/generated/

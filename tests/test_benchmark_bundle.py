@@ -115,9 +115,7 @@ class BenchmarkBundleTests(unittest.TestCase):
             subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True)
 
         git("init", "--quiet")
-        (repo / ".gitignore").write_text(
-            ".tmp/*\n!.tmp/latest-benchmark.zip\n", encoding="utf-8"
-        )
+        (repo / ".gitignore").write_text(".prometheist/\n", encoding="utf-8")
         source = repo / "source.txt"
         source.write_text("unchanged", encoding="utf-8")
         git("add", ".gitignore", "source.txt")
@@ -147,6 +145,29 @@ class BenchmarkBundleTests(unittest.TestCase):
                 mechanism._git_revision(require_clean=True)
             with self.assertRaisesRegex(RuntimeError, "clean"):
                 self_memory._require_clean_revision()
+
+    def test_cli_stages_verified_default_bundle(self) -> None:
+        repo = Path(self.workspace.name)
+        subprocess.run(["git", "init", "--quiet"], cwd=repo, check=True)
+        default_output = repo / ".tmp" / "latest-benchmark.zip"
+        with (
+            patch.object(packaging, "ROOT", repo),
+            patch.object(packaging, "DEFAULT_OUTPUT", default_output),
+            patch.object(packaging, "_native_verify"),
+            patch.object(sys, "argv", [
+                "package_benchmark_run.py", "--result", str(self.result),
+            ]),
+        ):
+            packaging.main()
+        staged = subprocess.run(
+            ["git", "diff", "--cached", "--name-only"],
+            cwd=repo,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.splitlines()
+        self.assertEqual(staged, [".tmp/latest-benchmark.zip"])
+        self.assertEqual(packaging.verify_bundle(default_output)["status"], "VALID")
 
 
 if __name__ == "__main__":

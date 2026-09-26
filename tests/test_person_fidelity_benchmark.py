@@ -378,14 +378,13 @@ def test_git_round_trip_preserves_legacy_and_new_evidence_bytes(tmp_path):
             assert (checkout / relative).read_bytes() == raw
 
 
-def test_benchmark_output_is_ignored_but_test_runtime_artifacts_remain_visible():
+def test_benchmark_and_runtime_artifacts_are_ignored_but_zip_is_visible():
     ignore_rules = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
 
     assert "benchmarks/generated/" in ignore_rules
     assert "benchmarks/results/*.json" in ignore_rules
-    assert ".tmp/*" in ignore_rules
-    assert "!.tmp/latest-benchmark.zip" in ignore_rules
-    assert ".prometheist/" not in ignore_rules
+    assert not any(rule.startswith(".tmp") or rule.startswith("!.tmp") for rule in ignore_rules)
+    assert ".prometheist/" in ignore_rules
 
 
 def test_untracked_native_evidence_does_not_dirty_the_tested_source_revision():

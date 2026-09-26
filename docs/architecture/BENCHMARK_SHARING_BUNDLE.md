@@ -32,12 +32,13 @@ bundles merely by guessing which files belonged to them. ZIP verification checks
 transport integrity and completeness; the original native verifier also checks
 event and interaction chains before packaging.
 
-Only `.tmp/latest-benchmark.zip` is visible to Git; other `.tmp` files and new
-`benchmarks/generated/` evidence are ignored. New result JSON files are ignored
-as well; previously tracked summaries remain available as historical reports.
-After each run, commit and push the changed ZIP on the branch to make it available
-to a remote reviewer. A changed or untracked latest ZIP does not block the next
-run's clean-source check. Self-memory runs use the same ZIP format. Their current
+`.tmp/` is Git-visible. The packager writes only `latest-benchmark.zip` there and
+stages it automatically after successful verification. New `benchmarks/generated/`
+evidence and new result JSON files are ignored; previously tracked summaries
+remain available as historical reports. After each run, commit and push the staged
+ZIP on the branch to make it available to a remote reviewer. A changed or
+untracked latest ZIP does not block the next run's clean-source check. Self-memory
+runs use the same ZIP format. Their current
 runner does not yet implement the native
 interaction-chain verifier, so their package check covers the result receipt,
 manifest, exact raw file set, sizes, and SHA-256 hashes.

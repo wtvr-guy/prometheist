@@ -46,12 +46,11 @@ and may be moved with:
 PROMETHEIST_ARTIFACT_ROOT=<path>
 ```
 
-The development repository deliberately leaves `.prometheist/` visible to Git so
-synthetic and explicitly non-sensitive test interactions can be shared for exact
-cross-machine debugging and audit. This is a repository-development policy, not an
-assumption that personal cognitive records are public. A deployment containing real
-personal memory, credentials, private tool results, or identifying sensor data should
-set `PROMETHEIST_ARTIFACT_ROOT` outside a public checkout or use a private repository.
+The `.prometheist/` directory is local and Git-ignored. It may eventually contain
+personal cognitive records, so its contents must not be checked into a public
+repository. The previously tracked synthetic examples remain recoverable in earlier
+commits, but new runtime artifacts stay in the user-controlled local root. A
+deployment may also set `PROMETHEIST_ARTIFACT_ROOT` outside the checkout.
 
 Public fictional benchmark journals under `benchmarks/generated/` are retained
 locally and excluded from new Git commits. A native person-fidelity run writes a
@@ -459,9 +458,8 @@ Current policy:
 - artifacts are immutable;
 - ordinary retention/compaction does not delete them;
 - the artifact root is user-controlled;
-- `.prometheist/` is Git-visible in this development repository so non-sensitive test
-  journals can be audited remotely; real personal deployments must choose an
-  appropriately private artifact root or repository;
+- `.prometheist/` is Git-ignored. Runtime journals remain in their user-controlled
+  local root; deliberately selected synthetic evidence may be shared separately;
 - public fictional benchmark journals and generated corpora are permanent local
   evidence. They are ignored by Git for new runs and shared as verified run ZIPs;
   they must not be deleted or rewritten after a failed run;
