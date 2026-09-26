@@ -124,6 +124,72 @@ def _benchmark_id(corpus: PersonFidelityCorpus) -> str:
     return HOLDOUT_SELF_BENCHMARK_ID if corpus.is_holdout else PUBLIC_BENCHMARK_ID
 
 
+def _resource_preflight(
+    *,
+    runtime_probe=None,
+    host_probe=None,
+    policy=None,
+) -> dict[str, Any]:
+    """Evaluate the exact native RAM policy before mutating benchmark state."""
+
+    from jit_agent.attention_observation import (
+        HOST_MEMORY_RESOURCE_ID,
+        SystemHostResourceProbe,
+        build_resource_observation,
+        discover_local_execution_resources,
+    )
+    from jit_agent.native_policy import native_resource_safety_policy
+    from jit_agent.ollama_runtime import OllamaRuntimeProbe
+
+    effective_policy = policy or native_resource_safety_policy()
+    runtime = (runtime_probe or OllamaRuntimeProbe()).capture()
+    metrics = (host_probe or SystemHostResourceProbe()).capture()
+    resources = discover_local_execution_resources(
+        metrics,
+        policy=effective_policy,
+    )
+    snapshot = build_resource_observation(
+        scheduler_cycle=1,
+        captured_at=datetime.now(timezone.utc),
+        resources=resources,
+        reservations=[],
+        policy=effective_policy,
+        metrics=metrics,
+    )
+    memory = snapshot.capacity_by_resource_id()[HOST_MEMORY_RESOURCE_ID]
+    required_mib = runtime.incremental_process_memory_mib(effective_policy)
+    safe_available_mib = memory.available_for_new_work
+    return {
+        "model": runtime.model,
+        "ollama_probe_ok": runtime.probe_ok,
+        "ollama_resident": runtime.resident,
+        "ollama_residency": runtime.residency_label,
+        "ollama_error": runtime.error,
+        "physical_available_mib": metrics.memory_available_mib,
+        "safe_available_mib": safe_available_mib,
+        "required_incremental_mib": required_mib,
+        "admissible": safe_available_mib >= required_mib,
+        "policy_version": effective_policy.policy_version,
+    }
+
+
+def _require_resource_preflight(preflight: dict[str, Any]) -> None:
+    if preflight["admissible"]:
+        return
+    raise SystemExit(
+        "Self-memory benchmark resource preflight denied before database reset. "
+        f"model={preflight['model']} "
+        f"ollama={preflight['ollama_residency']} "
+        f"physical_available={preflight['physical_available_mib']} MiB "
+        f"safe_available={preflight['safe_available_mib']} MiB "
+        f"required={preflight['required_incremental_mib']} MiB. "
+        "Free enough RAM for the governed cold-load budget, or intentionally "
+        "preload the configured model and verify it appears in ollama ps; "
+        "then rerun. Prometheist will use the smaller warm-resident incremental "
+        "reservation only after residency is verified."
+    )
+
+
 def _seed_life_record(
     conn,
     corpus: PersonFidelityCorpus,
@@ -715,6 +781,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--artifact-root", type=Path)
     parser.add_argument("--validate-only", action="store_true")
+    parser.add_argument("--preflight-only", action="store_true")
     args = parser.parse_args()
 
     corpus = load_person_fidelity_corpus(
@@ -746,6 +813,19 @@ def main() -> None:
             "whose name contains 'benchmark'."
         )
     os.environ["DATABASE_URL"] = database_url
+
+    resource_preflight = _resource_preflight()
+    print(
+        "[preflight] "
+        f"ollama={resource_preflight['ollama_residency']} "
+        f"safe_ram={resource_preflight['safe_available_mib']}MiB "
+        f"required={resource_preflight['required_incremental_mib']}MiB",
+        flush=True,
+    )
+    if args.preflight_only:
+        print(json.dumps(resource_preflight, indent=2, sort_keys=True))
+        return
+    _require_resource_preflight(resource_preflight)
 
     captured_at = datetime.now(timezone.utc)
     run_id = captured_at.strftime("%Y%m%dT%H%M%SZ")
@@ -859,6 +939,10 @@ def main() -> None:
             "python": sys.version,
             "ollama_base_url": configured_ollama_base_url(),
             "configured_model": configured_ollama_model(),
+            "resource_preflight": resource_preflight,
+            "ollama_keep_alive": os.environ.get(
+                "PROMETHEIST_OLLAMA_KEEP_ALIVE"
+            ),
             "artifact_root": str(artifact_root),
         },
         "learning": learning,
