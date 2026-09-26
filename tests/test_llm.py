@@ -150,6 +150,25 @@ def test_user_facing_answers_use_expressive_temperature_with_structured_envelope
     assert payload["options"] == {"num_predict": 256, "temperature": 0.65}
 
 
+def test_explicit_ollama_keep_alive_is_sent_without_changing_default(
+    monkeypatch,
+):
+    monkeypatch.setenv("PROMETHEIST_OLLAMA_KEEP_ALIVE", "30m")
+    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
+    fake_http = _FakeHTTPClient(['{"ok":true}'])
+    client._client = fake_http
+
+    client._structured(
+        "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "system",
+        "user",
+        {"type": "object"},
+        32,
+    )
+
+    assert fake_http.calls[0][1]["keep_alive"] == "30m"
+
+
 def test_control_llm_kinds_remain_deterministic_when_response_temperature_is_high(
     monkeypatch,
 ):
