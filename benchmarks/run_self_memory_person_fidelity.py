@@ -75,6 +75,8 @@ SELF_MEMORY_RECORD_KINDS = (
 
 
 def _is_allowed_untracked_evidence(status_line: str) -> bool:
+    if status_line[3:].replace("\\", "/") == ".tmp/latest-benchmark.zip":
+        return True
     if not status_line.startswith("?? "):
         return False
     path = status_line[3:].replace("\\", "/")
@@ -99,7 +101,7 @@ def _require_clean_revision() -> str:
     if revision.returncode != 0 or not revision.stdout.strip():
         raise RuntimeError("self-memory benchmark requires a committed Git revision")
     status = subprocess.run(
-        ["git", "status", "--porcelain"],
+        ["git", "status", "--porcelain", "--untracked-files=all"],
         cwd=ROOT,
         check=False,
         capture_output=True,

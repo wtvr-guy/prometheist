@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -14,6 +15,9 @@ from zipfile import ZipFile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
 import package_benchmark_run as packaging  # noqa: E402
+import run_person_fidelity_baseline as baseline  # noqa: E402
+import run_person_fidelity_mechanism_experiments as mechanism  # noqa: E402
+import run_self_memory_person_fidelity as self_memory  # noqa: E402
 
 
 class BenchmarkBundleTests(unittest.TestCase):
@@ -102,6 +106,47 @@ class BenchmarkBundleTests(unittest.TestCase):
 
         self.assertEqual(packaging.package_run(self.result, self.output)["artifact_count"], 1)
         self.assertEqual(packaging.verify_bundle(self.output)["status"], "VALID")
+
+    def test_all_runners_treat_only_latest_zip_as_output(self) -> None:
+        repo = Path(self.workspace.name) / "repo"
+        repo.mkdir()
+
+        def git(*args: str) -> None:
+            subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True)
+
+        git("init", "--quiet")
+        (repo / ".gitignore").write_text(
+            ".tmp/*\n!.tmp/latest-benchmark.zip\n", encoding="utf-8"
+        )
+        source = repo / "source.txt"
+        source.write_text("unchanged", encoding="utf-8")
+        git("add", ".gitignore", "source.txt")
+        git("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "start")
+
+        bundle = repo / ".tmp" / "latest-benchmark.zip"
+        bundle.parent.mkdir()
+
+        with (
+            patch.object(baseline, "ROOT", repo),
+            patch.object(mechanism, "ROOT", repo),
+            patch.object(self_memory, "ROOT", repo),
+        ):
+            for contents in (b"untracked", b"changed"):
+                bundle.write_bytes(contents)
+                baseline._require_clean_revision()
+                mechanism._git_revision(require_clean=True)
+                self_memory._require_clean_revision()
+                if contents == b"untracked":
+                    git("add", ".tmp/latest-benchmark.zip")
+                    git("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "bundle")
+
+            source.write_text("changed source", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "clean"):
+                baseline._require_clean_revision()
+            with self.assertRaisesRegex(RuntimeError, "clean"):
+                mechanism._git_revision(require_clean=True)
+            with self.assertRaisesRegex(RuntimeError, "clean"):
+                self_memory._require_clean_revision()
 
 
 if __name__ == "__main__":

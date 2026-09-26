@@ -57,6 +57,8 @@ def _generated_dir(corpus: PersonFidelityCorpus) -> Path:
 def _is_untracked_benchmark_evidence(status_line: str) -> bool:
     """Keep prior immutable evidence from invalidating the source-revision guard."""
 
+    if status_line[3:].replace("\\", "/") == ".tmp/latest-benchmark.zip":
+        return True
     if not status_line.startswith("?? "):
         return False
     path = status_line[3:].replace("\\", "/")
@@ -81,7 +83,7 @@ def _require_clean_revision() -> str:
     if revision.returncode != 0 or not revision.stdout.strip():
         raise RuntimeError("person-fidelity evidence requires a committed Git revision")
     status = subprocess.run(
-        ["git", "status", "--porcelain"],
+        ["git", "status", "--porcelain", "--untracked-files=all"],
         cwd=ROOT,
         check=False,
         capture_output=True,

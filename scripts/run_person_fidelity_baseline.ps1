@@ -52,7 +52,7 @@ try {
 
     Write-Host "Person-fidelity evidence written to $output"
     Write-Host "Raw event and interaction artifacts are retained under $evidenceDir."
-    Write-Host "Upload .tmp/latest-benchmark.zip when you want the run inspected."
+    Write-Host "Commit and push .tmp/latest-benchmark.zip when you want the run inspected."
     Write-Host "The structural result is not a semantic verdict. Human review remains required."
 }
 finally {

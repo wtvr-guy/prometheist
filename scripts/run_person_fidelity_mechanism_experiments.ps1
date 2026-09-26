@@ -55,7 +55,7 @@ try {
 
     Write-Host "Native experiment result written to $output"
     Write-Host "Complete raw artifact journal written to $artifactRootArgument"
-    Write-Host "Upload .tmp/latest-benchmark.zip when you want the run inspected."
+    Write-Host "Commit and push .tmp/latest-benchmark.zip when you want the run inspected."
     Write-Host "Review and commit the result before promoting either candidate."
 }
 finally {

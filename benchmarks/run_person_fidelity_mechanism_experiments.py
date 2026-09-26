@@ -793,7 +793,7 @@ def _git_revision(*, require_clean: bool) -> str:
     ).stdout.strip()
     if require_clean:
         status = subprocess.run(
-            ["git", "status", "--porcelain"],
+            ["git", "status", "--porcelain", "--untracked-files=all"],
             cwd=ROOT,
             check=True,
             capture_output=True,
@@ -803,7 +803,8 @@ def _git_revision(*, require_clean: bool) -> str:
             line
             for line in status
             if not (
-                line.startswith("?? benchmarks/results/PERSON-FIDELITY-EXP2-")
+                line[3:].replace("\\", "/") == ".tmp/latest-benchmark.zip"
+                or line.startswith("?? benchmarks/results/PERSON-FIDELITY-EXP2-")
                 or line.startswith("?? benchmarks/results/PERSON-FIDELITY-EXP3-")
             )
         ]

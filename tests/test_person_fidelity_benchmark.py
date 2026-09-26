@@ -383,7 +383,8 @@ def test_benchmark_output_is_ignored_but_test_runtime_artifacts_remain_visible()
 
     assert "benchmarks/generated/" in ignore_rules
     assert "benchmarks/results/*.json" in ignore_rules
-    assert ".tmp/" in ignore_rules
+    assert ".tmp/*" in ignore_rules
+    assert "!.tmp/latest-benchmark.zip" in ignore_rules
     assert ".prometheist/" not in ignore_rules
 
 
@@ -401,6 +402,9 @@ def test_untracked_native_evidence_does_not_dirty_the_tested_source_revision():
         " M benchmarks/generated/person_fidelity/prior-evidence.json"
     )
     assert not native_runner._is_untracked_benchmark_evidence("?? src/unreviewed.py")
+    assert native_runner._is_untracked_benchmark_evidence("?? .tmp/latest-benchmark.zip")
+    assert native_runner._is_untracked_benchmark_evidence(" M .tmp/latest-benchmark.zip")
+    assert not native_runner._is_untracked_benchmark_evidence(" M .tmp/other.zip")
 
 
 def test_artifact_chain_receipt_indexes_every_model_and_stage_boundary():

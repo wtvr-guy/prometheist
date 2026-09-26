@@ -57,7 +57,7 @@ Public fictional benchmark journals under `benchmarks/generated/` are retained
 locally and excluded from new Git commits. A native person-fidelity run writes a
 content-addressed manifest over every raw event and interaction artifact so the
 compact result under `benchmarks/results/` remains connected to the exact causal
-record. A verified ZIP in `.tmp/` makes one run portable for review; see
+record. A verified Git-visible ZIP in `.tmp/` makes the latest run portable for review; see
 [`BENCHMARK_SHARING_BUNDLE.md`](BENCHMARK_SHARING_BUNDLE.md). Historical Git commits
 still contain the previously checked-in raw evidence.
 
