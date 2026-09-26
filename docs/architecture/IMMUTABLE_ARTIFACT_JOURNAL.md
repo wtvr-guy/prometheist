@@ -53,10 +53,13 @@ assumption that personal cognitive records are public. A deployment containing r
 personal memory, credentials, private tool results, or identifying sensor data should
 set `PROMETHEIST_ARTIFACT_ROOT` outside a public checkout or use a private repository.
 
-Public fictional benchmark journals under `benchmarks/generated/` are likewise
-Git-visible and permanent. A native person-fidelity run writes a content-addressed
-manifest over every raw event and interaction artifact so the compact result under
-`benchmarks/results/` remains connected to the exact causal record.
+Public fictional benchmark journals under `benchmarks/generated/` are retained
+locally and excluded from new Git commits. A native person-fidelity run writes a
+content-addressed manifest over every raw event and interaction artifact so the
+compact result under `benchmarks/results/` remains connected to the exact causal
+record. A verified ZIP in `.tmp/` makes one run portable for review; see
+[`BENCHMARK_SHARING_BUNDLE.md`](BENCHMARK_SHARING_BUNDLE.md). Historical Git commits
+still contain the previously checked-in raw evidence.
 
 Current mechanism-run manifests also bind the host/runtime evidence used to interpret
 model behavior: operating-system and Python identity, CPU/RAM facts, discoverable
@@ -459,8 +462,9 @@ Current policy:
 - `.prometheist/` is Git-visible in this development repository so non-sensitive test
   journals can be audited remotely; real personal deployments must choose an
   appropriately private artifact root or repository;
-- public fictional benchmark journals and generated corpora are permanent evidence,
-  remain visible to Git, and must not be deleted or rewritten after a failed run;
+- public fictional benchmark journals and generated corpora are permanent local
+  evidence. They are ignored by Git for new runs and shared as verified run ZIPs;
+  they must not be deleted or rewritten after a failed run;
 - every retained training candidate keeps its source role, model/runtime, tested
   revision, artifact hashes, and human-review status; preservation alone never marks a
   model output as a positive training example;

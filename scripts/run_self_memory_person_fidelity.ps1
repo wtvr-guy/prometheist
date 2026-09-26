@@ -39,8 +39,22 @@ try {
         $argsList += $id
     }
 
+    $output = $null
+    if (-not $ValidateOnly -and -not $PreflightOnly) {
+        $benchmarkId = if ($Holdout) { "SELF-MEMORY-002-HOLDOUT" } else { "SELF-MEMORY-001" }
+        $stamp = Get-Date -Format "yyyy-MM-dd_HHmmss"
+        $output = "benchmarks/results/${benchmarkId}_$stamp.json"
+        $argsList += "--output"
+        $argsList += $output
+    }
+
     uv run --locked python benchmarks/run_self_memory_person_fidelity.py @argsList
     if ($LASTEXITCODE -ne 0) { throw "self-memory person-fidelity run failed" }
+    if ($output) {
+        uv run --locked python benchmarks/package_benchmark_run.py --result $output
+        if ($LASTEXITCODE -ne 0) { throw "benchmark sharing ZIP failed; raw run remains intact" }
+        Write-Host "Upload .tmp/latest-benchmark.zip when you want the run inspected."
+    }
 }
 finally {
     if ($locationPushed) {

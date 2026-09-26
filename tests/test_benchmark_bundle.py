@@ -81,6 +81,28 @@ class BenchmarkBundleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "file set differs"):
             packaging.verify_bundle(self.output)
 
+    def test_self_memory_run_uses_its_receipt_and_manifest(self) -> None:
+        manifest = json.loads(self.manifest.read_text(encoding="utf-8"))
+        manifest.update({
+            "artifact_type": "SELF_MEMORY_PERSON_FIDELITY_RUN_MANIFEST",
+            "schema_version": 1,
+            "benchmark_id": "SELF-MEMORY-001",
+            "fixture_sha256": "fixture-hash",
+            "revision": "tested-revision",
+        })
+        self.manifest.write_text(json.dumps(manifest), encoding="utf-8")
+        result = json.loads(self.result.read_text(encoding="utf-8"))
+        result.update({key: manifest[key] for key in ("benchmark_id", "fixture_sha256", "revision")})
+        raw = self.manifest.read_bytes()
+        result["artifact_evidence"].update({
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "size_bytes": len(raw),
+        })
+        self.result.write_text(json.dumps(result), encoding="utf-8")
+
+        self.assertEqual(packaging.package_run(self.result, self.output)["artifact_count"], 1)
+        self.assertEqual(packaging.verify_bundle(self.output)["status"], "VALID")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -56,6 +56,15 @@ def _native_verify(result_path: Path, manifest: dict) -> None:
         verification = verify_result(result_path)
         if not verification.get("valid"):
             raise ValueError(f"mechanism result failed verification: {verification}")
+    elif kind == "SELF_MEMORY_PERSON_FIDELITY_RUN_MANIFEST":
+        result = _read_object(result_path.read_bytes(), "self-memory result")
+        if manifest.get("schema_version") != 1 or any(
+            manifest.get(key) != result.get(key)
+            for key in ("benchmark_id", "fixture_sha256", "revision")
+        ):
+            raise ValueError("self-memory manifest does not match the result")
+        # This runner has no native interaction-chain verifier yet. The receipt,
+        # exact file set, sizes and hashes are checked below and again in the ZIP.
     else:
         raise ValueError(f"unsupported benchmark manifest type: {kind!r}")
 

@@ -4,9 +4,10 @@ __pycache__/
 .env
 .pytest_cache/
 .tmp/
-# Benchmark corpora and native evidence are deliberately visible to Git. They
-# are immutable research records built from fictional subjects and may support
-# later evaluation, preference data, or carefully reviewed training datasets.
+# Keep complete benchmark evidence locally. Share one verified run through the
+# ignored .tmp/latest-benchmark.zip rather than committing thousands of files.
+benchmarks/generated/
+benchmarks/results/*.json
 # The default .prometheist artifact journal is also deliberately visible in
 # this development repository. Checked-in journals must contain test/synthetic
 # evidence only; real deployments should configure an external artifact root.

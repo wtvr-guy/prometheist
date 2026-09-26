@@ -57,14 +57,8 @@ jobs:
           uv run python benchmarks/run_person_fidelity_baseline.py --validate-only
           uv run python benchmarks/run_person_fidelity_mechanism_experiments.py --validate-only
 
-      - name: Verify retained person-fidelity artifacts
-        run: |
-          uv run python benchmarks/run_person_fidelity_baseline.py \
-            --verify-result benchmarks/results/PERSON-FIDELITY-001_2026-09-16_215839.json
-          uv run python benchmarks/run_person_fidelity_mechanism_experiments.py \
-            --verify-result benchmarks/results/PERSON-FIDELITY-EXP2-COMPOSER-SUFFICIENCY_2026-09-21_130207.json
-          uv run python benchmarks/run_person_fidelity_mechanism_experiments.py \
-            --verify-result benchmarks/results/PERSON-FIDELITY-EXP3-HISTORICAL-SOURCE-POLICY_2026-09-21_130846.json
+      - name: Check shareable benchmark packaging without PostgreSQL
+        run: uv run python -m unittest discover -s tests -p test_benchmark_bundle.py
 
       - name: Run deterministic constraint calibration
         run: uv run python benchmarks/run_deterministic_constraints.py

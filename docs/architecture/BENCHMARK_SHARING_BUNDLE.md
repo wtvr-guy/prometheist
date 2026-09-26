@@ -32,8 +32,16 @@ bundles merely by guessing which files belonged to them. ZIP verification checks
 transport integrity and completeness; the original native verifier also checks
 event and interaction chains before packaging.
 
-`.tmp/` is ignored by Git. To share a run, upload `latest-benchmark.zip` itself;
-the ignored local file is not accessible to a remote reviewer. This step does not
-change tracking of `benchmarks/generated/`, `benchmarks/results/`, or historical
-artifacts. A later Git retention migration must protect the existing local archive
-before untracking its files.
+`.tmp/` and new `benchmarks/generated/` evidence are ignored by Git. New result
+JSON files are ignored as well; previously tracked summaries remain available as
+historical reports. To share a run, upload `latest-benchmark.zip` itself; the
+ignored local file is not accessible to a remote reviewer. Self-memory runs use
+the same ZIP format. Their current runner does not yet implement the native
+interaction-chain verifier, so their package check covers the result receipt,
+manifest, exact raw file set, sizes, and SHA-256 hashes.
+
+The historical raw files were removed from the current Git tree after the local
+archive was backed up. They still exist in earlier commits. Pulling that deletion
+can remove the old `generated` tree from a working checkout; restore the backed-up
+tree to `benchmarks/generated/` after pulling. New runs append there locally, and
+the latest ZIP is replaced only after a successfully verified package.
