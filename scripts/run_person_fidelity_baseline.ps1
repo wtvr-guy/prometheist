@@ -47,8 +47,12 @@ try {
     uv run --locked python benchmarks/run_person_fidelity_baseline.py @fixtureArgs --output $output
     if ($LASTEXITCODE -ne 0) { throw "person-fidelity run failed" }
 
+    uv run --locked python benchmarks/package_benchmark_run.py --result $output
+    if ($LASTEXITCODE -ne 0) { throw "benchmark sharing ZIP failed; raw run remains intact" }
+
     Write-Host "Person-fidelity evidence written to $output"
-    Write-Host "Raw event and interaction artifacts are retained under $evidenceDir and are visible to Git."
+    Write-Host "Raw event and interaction artifacts are retained under $evidenceDir."
+    Write-Host "Upload .tmp/latest-benchmark.zip when you want the run inspected."
     Write-Host "The structural result is not a semantic verdict. Human review remains required."
 }
 finally {

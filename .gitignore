@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .env
 .pytest_cache/
+.tmp/
 # Benchmark corpora and native evidence are deliberately visible to Git. They
 # are immutable research records built from fictional subjects and may support
 # later evaluation, preference data, or carefully reviewed training datasets.
