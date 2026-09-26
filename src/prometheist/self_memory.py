@@ -25,6 +25,7 @@ from prometheist.cognitive_store import (
     record_lock,
 )
 from prometheist.models import EventType
+from prometheist.memory_kernel import tokenize
 from prometheist.percept_context import FrozenRecord, Reference, Scalar, aware
 from prometheist.response_policy import HistoricalEvidenceScope, ResponseSurfaceMode
 
@@ -1051,12 +1052,17 @@ def _search_self_candidates(
 ) -> tuple[SelfContextItem, ...]:
     """Sparse activation over current self heads without scanning lifetime history."""
 
+    # A question is a set of cues, not a phrase that every representation must
+    # contain in full. plainto_tsquery joins its lexemes with AND, making even
+    # an exact topical match disappear as soon as the question has other words.
+    query_terms = sorted(set(tokenize(query_text)))
+    lexical_query = " OR ".join(query_terms)
     lexical_rows = conn.execute(
         """
         SELECT r.payload, s.payload,
                ts_rank(
-                   to_tsvector('simple', coalesce(r.payload->>'statement', '')),
-                   plainto_tsquery('simple', %s)
+                   to_tsvector('english', coalesce(r.payload->>'statement', '')),
+                   websearch_to_tsquery('english', %s)
                ) AS rank
         FROM cognitive_heads r
         JOIN cognitive_heads s
@@ -1065,17 +1071,17 @@ def _search_self_candidates(
         WHERE r.record_kind = %s
           AND s.payload->>'status' IN ('ESTABLISHED', 'CONTESTED')
           AND to_tsvector(
-                'simple',
+                'english',
                 coalesce(r.payload->>'statement', '')
-              ) @@ plainto_tsquery('simple', %s)
+              ) @@ websearch_to_tsquery('english', %s)
         ORDER BY rank DESC, r.record_key
         LIMIT %s
         """,
         (
-            query_text,
+            lexical_query,
             SELF_RESOLUTION_KIND,
             SELF_REPRESENTATION_KIND,
-            query_text,
+            lexical_query,
             limit,
         ),
     ).fetchall()

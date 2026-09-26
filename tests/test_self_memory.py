@@ -34,6 +34,7 @@ from prometheist.self_memory import (
     self_evidence,
     self_predictions,
 )
+from prometheist.self_memory import _search_self_candidates
 
 
 @pytest.fixture
@@ -479,6 +480,33 @@ def test_general_current_questions_do_not_receive_unrelated_core_fallback(conn):
 
     assert packet.admission is SelfContextAdmission.PRIMARY_DERIVED_CONTEXT
     assert packet.items == ()
+
+
+def test_self_search_uses_disjunctive_topic_cues_for_full_questions():
+    class EmptySearch:
+        def __init__(self):
+            self.calls = []
+
+        def execute(self, sql, params):
+            self.calls.append((sql, params))
+            return self
+
+        def fetchall(self):
+            return []
+
+    conn = EmptySearch()
+    assert _search_self_candidates(
+        conn,
+        "Do I like surprises? Give the answer I would consider accurate",
+        entity_refs=(),
+        limit=8,
+        include_core_fallback=False,
+    ) == ()
+    sql, params = conn.calls[0]
+    assert "websearch_to_tsquery('english', %s)" in sql
+    assert params[0] == params[3]
+    assert "surprise" in params[0].split(" OR ")
+    assert " OR " in params[0]
 
 
 def test_working_self_persists_bounded_activation(conn):

@@ -840,6 +840,12 @@ class PerceptLLM(OllamaClient):
 
         policy = response_policy.model_copy(deep=True)
         admitted_packet = filter_memory_packet_for_scope(packet, policy.evidence_scope)
+        # A negative Composer decision means the retrieved packet did not
+        # establish the answer. Do not expose its unrelated history to a
+        # GENERAL_OR_CURRENT final worker or mark it as admitted evidence.
+        # Historical scopes take the explicit insufficient-support path below.
+        if not package.sufficient:
+            admitted_packet = None
         admitted_results = _admitted_capability_results(policy.evidence_scope, work_results)
         has_admitted_history = bool(admitted_packet and admitted_packet.items)
         has_admitted_result = bool(admitted_results)
@@ -903,7 +909,8 @@ class PerceptLLM(OllamaClient):
         )
         self_view = ""
         if (
-            package.self_context is not None
+            package.sufficient
+            and package.self_context is not None
             and package.self_context.admission
             is SelfContextAdmission.PRIMARY_DERIVED_CONTEXT
         ):
@@ -915,7 +922,8 @@ class PerceptLLM(OllamaClient):
         )
         refs = list(_memory_evidence_refs(admitted_packet))
         if (
-            package.self_context is not None
+            package.sufficient
+            and package.self_context is not None
             and package.self_context.admission
             is SelfContextAdmission.PRIMARY_DERIVED_CONTEXT
         ):
