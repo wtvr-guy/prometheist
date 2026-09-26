@@ -7,9 +7,9 @@ import pytest
 
 from benchmarks import replay_person_fidelity_retrieval as replay
 from benchmarks import person_fidelity_exp1_lexical_candidates as exp1
-from jit_agent.memory_kernel import MemoryEvent
-from jit_agent.person_fidelity_benchmark import load_person_fidelity_corpus
-from jit_agent.response_policy import HistoricalEvidenceScope
+from prometheist.memory_kernel import MemoryEvent
+from prometheist.person_fidelity_benchmark import load_person_fidelity_corpus
+from prometheist.response_policy import HistoricalEvidenceScope
 
 
 ROOT = Path(__file__).resolve().parents[1]

@@ -3,11 +3,11 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent import db, event_store
-from jit_agent.cognitive_store import list_records, put_record
-from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from jit_agent.perception import normalize_user_interaction_percept
-from jit_agent.self_memory import (
+from prometheist import db, event_store
+from prometheist.cognitive_store import list_records, put_record
+from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from prometheist.perception import normalize_user_interaction_percept
+from prometheist.self_memory import (
     FutureOrientation,
     IdentityCentrality,
     PlasticityClass,
@@ -20,7 +20,7 @@ from jit_agent.self_memory import (
     resolve_self_representation,
     self_evidence,
 )
-from jit_agent.self_reflection import (
+from prometheist.self_reflection import (
     ReflectionEvidence,
     SelfReviewVerdict,
     SelfSchemaProposal,
@@ -30,7 +30,7 @@ from jit_agent.self_reflection import (
     materialize_proposal,
     review_memory_packet,
 )
-from jit_agent.situations import persist_situations
+from prometheist.situations import persist_situations
 
 
 @pytest.fixture

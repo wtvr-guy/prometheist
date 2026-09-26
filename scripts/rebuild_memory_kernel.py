@@ -1,8 +1,8 @@
 """Rebuild and verify all v0.2 derived memory state from authoritative events."""
 from __future__ import annotations
 
-from jit_agent import db
-from jit_agent.postgres_memory_kernel import rebuild, verify
+from prometheist import db
+from prometheist.postgres_memory_kernel import rebuild, verify
 
 
 def main() -> None:

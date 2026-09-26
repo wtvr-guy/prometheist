@@ -4,10 +4,10 @@ import uuid
 
 import pytest
 
-from jit_agent import db, event_store, postgres_memory_kernel
-from jit_agent.jit_memory import ATTENTION_ACTIVATION_CANDIDATE_LIMIT
-from jit_agent.memory_kernel import CueState
-from jit_agent.models import EventType
+from prometheist import db, event_store, postgres_memory_kernel
+from prometheist.jit_memory import ATTENTION_ACTIVATION_CANDIDATE_LIMIT
+from prometheist.memory_kernel import CueState
+from prometheist.models import EventType
 
 
 @pytest.fixture

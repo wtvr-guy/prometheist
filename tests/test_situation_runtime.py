@@ -4,34 +4,34 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent import db, event_store
-from jit_agent.action_outcomes import issue_action, observe_action_outcome
-from jit_agent.attention_observation import (
+from prometheist import db, event_store
+from prometheist.action_outcomes import issue_action, observe_action_outcome
+from prometheist.attention_observation import (
     HostResourceMetrics,
     ReservationCreditHostResourceProbe,
 )
-from jit_agent.attention_store import load_scheduler
-from jit_agent.cognitive_store import get_record, list_records, put_record, rebuild_heads
-from jit_agent.consolidation import ConsolidationSchedule, consolidate_page, emit_due_consolidations, schedule_consolidation
-from jit_agent.expectations import Expectation
-from jit_agent.models import EventType
-from jit_agent.ollama_runtime import OllamaRuntimeState
-from jit_agent.percept_context import Observation, PerceptContext
-from jit_agent.percept_intake import ingest_percept, install_source_policy
-from jit_agent.perception import PerceptKind, PerceptModality, PerceptSource
-from jit_agent.percept_triage import SourcePolicy
-from jit_agent.semantic_memory import (
+from prometheist.attention_store import load_scheduler
+from prometheist.cognitive_store import get_record, list_records, put_record, rebuild_heads
+from prometheist.consolidation import ConsolidationSchedule, consolidate_page, emit_due_consolidations, schedule_consolidation
+from prometheist.expectations import Expectation
+from prometheist.models import EventType
+from prometheist.ollama_runtime import OllamaRuntimeState
+from prometheist.percept_context import Observation, PerceptContext
+from prometheist.percept_intake import ingest_percept, install_source_policy
+from prometheist.perception import PerceptKind, PerceptModality, PerceptSource
+from prometheist.percept_triage import SourcePolicy
+from prometheist.semantic_memory import (
     current_semantic_resolution,
     selected_assertion,
     semantic_evidence,
 )
-from jit_agent.situation_runtime import (
+from prometheist.situation_runtime import (
     SituationStage,
     drain_situations,
     run_situation_task,
     submit_situation_page,
 )
-from jit_agent.situations import register_expectation
+from prometheist.situations import register_expectation
 
 
 class FixedProbe:
@@ -125,7 +125,7 @@ def test_intake_replay_and_conflicting_delivery(conn):
 
 
 def test_intake_crash_recovers_post_snapshot_receipt(conn, monkeypatch):
-    from jit_agent import percept_intake
+    from prometheist import percept_intake
     source = source_setup(conn)
     args = dict(source=source, observation={"value": 1}, observed_at=datetime.now(timezone.utc), delivery_id="interrupted")
     original = percept_intake.put_record
@@ -171,7 +171,7 @@ def test_four_percepts_one_guarded_task_and_finite_action_feedback(conn, monkeyp
     for _ in range(4):
         drain_situations(conn, probe=FixedProbe())
     assert len(list_records(conn, "action_execution")) == 1
-    from jit_agent import artifact_journal
+    from prometheist import artifact_journal
     artifacts = artifact_journal.interaction_artifacts(ids[0])
     assert not any(value["artifact_type"] == "LLM_INVOCATION" for value in artifacts)
     assert len([value for value in artifacts if value["artifact_type"] == "STAGE_RESULT"]) == 8
@@ -189,7 +189,7 @@ def _capture_first_situation_claim_probe(
     *,
     model_stage: bool,
 ):
-    from jit_agent import situation_runtime
+    from prometheist import situation_runtime
 
     source = source_setup(conn)
     add_observation(conn, source, value=500)
@@ -267,7 +267,7 @@ def test_situation_deterministic_stage_credits_unused_llm_reservation(
 
 
 def test_situation_model_stage_rechecks_ollama_residency(conn, monkeypatch):
-    from jit_agent.ollama_runtime import OllamaClaimHostResourceProbe
+    from prometheist.ollama_runtime import OllamaClaimHostResourceProbe
 
     probe = _capture_first_situation_claim_probe(
         conn,
@@ -302,7 +302,7 @@ def test_nonresponse_consolidation_tail_stages_are_model_free(conn):
         fromlist=["SituationTask"],
     ).SituationTask.model_validate(task_data)
 
-    from jit_agent.situation_runtime import situation_stage_uses_model
+    from prometheist.situation_runtime import situation_stage_uses_model
 
     assert (
         situation_stage_uses_model(
@@ -350,7 +350,7 @@ def test_clean_worker_exit_without_a_durable_result_does_not_complete_task(conn)
 
 @pytest.mark.parametrize("failure_boundary", ["manifest", "progress"])
 def test_situation_finalization_recovers_without_repeating_work(conn, monkeypatch, failure_boundary):
-    from jit_agent import artifact_journal, situation_runtime
+    from prometheist import artifact_journal, situation_runtime
 
     source = source_setup(conn)
     add_observation(conn, source, expected=register_memory_expectation(conn))
@@ -560,8 +560,8 @@ def test_forged_action_success_receipt_fails_closed(conn):
 
 
 def test_media_quarantine_revalidates_content_not_supplied_metadata(conn, tmp_path):
-    from jit_agent.percept_adapters import preserve_media, verify_media
-    from jit_agent.reflexes import quarantine_corrupt_media
+    from prometheist.percept_adapters import preserve_media, verify_media
+    from prometheist.reflexes import quarantine_corrupt_media
     original = tmp_path / "input.bin"
     original.write_bytes(b"valid content")
     reference = preserve_media(original, mime_type="application/octet-stream")

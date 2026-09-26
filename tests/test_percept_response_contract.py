@@ -5,23 +5,23 @@ from types import SimpleNamespace
 
 import pytest
 
-from jit_agent import jit_memory
-from jit_agent.capability_registry import (
+from prometheist import jit_memory
+from prometheist.capability_registry import (
     DEFAULT_REGISTRY,
     CapabilityDescriptor,
     CapabilityKind,
     CapabilityRegistry,
     RegisteredCapability,
 )
-from jit_agent.models import MemoryNeed, MemoryPacket
-from jit_agent.percept_response_runtime import (
+from prometheist.models import MemoryNeed, MemoryPacket
+from prometheist.percept_response_runtime import (
     MemorySufficiencyDecision,
     PreCognitiveDisposition,
     _compose_memory_package,
     _effective_adaptive_stage,
     _external_capability_catalog,
 )
-from jit_agent.percept_response_worker import UserPromptWorkSelection
+from prometheist.percept_response_worker import UserPromptWorkSelection
 
 
 def test_user_prompt_work_selection_has_no_response_choice() -> None:

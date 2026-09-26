@@ -5,11 +5,11 @@ import uuid
 
 import pytest
 
-from jit_agent.model_evidence_budget import ModelEvidenceBudgetExceeded
-from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from jit_agent.percept_response_runtime import ResponseMemoryPackage
-from jit_agent.percept_response_worker import UserPromptLLM
-from jit_agent.response_policy import (
+from prometheist.model_evidence_budget import ModelEvidenceBudgetExceeded
+from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from prometheist.percept_response_runtime import ResponseMemoryPackage
+from prometheist.percept_response_worker import UserPromptLLM
+from prometheist.response_policy import (
     HistoricalEvidenceScope,
     ResponsePolicy,
     ResponseSurfaceMode,

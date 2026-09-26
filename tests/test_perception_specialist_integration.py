@@ -3,22 +3,22 @@ from datetime import datetime, timezone
 from types import SimpleNamespace
 from uuid import uuid4
 
-from jit_agent.capability_registry import DEFAULT_REGISTRY, CapabilityDescriptor, CapabilityKind
-from jit_agent.models import EventType, MemoryNeed, MemoryPacket
-from jit_agent.perception import (
+from prometheist.capability_registry import DEFAULT_REGISTRY, CapabilityDescriptor, CapabilityKind
+from prometheist.models import EventType, MemoryNeed, MemoryPacket
+from prometheist.perception import (
     AdvisorySemanticClassification,
     evaluate_salience,
     normalize_user_interaction_percept,
 )
-from jit_agent.percept_response_runtime import PerceptStage, PreCognitiveDisposition, _execute_stage
-from jit_agent.percept_response_worker import UserPromptLLM
-from jit_agent.response_policy import (
+from prometheist.percept_response_runtime import PerceptStage, PreCognitiveDisposition, _execute_stage
+from prometheist.percept_response_worker import UserPromptLLM
+from prometheist.response_policy import (
     RESPONSE_POLICY_VERSION,
     HistoricalEvidenceScope,
     ResponsePolicy,
     ResponseSurfaceMode,
 )
-from jit_agent.self_memory import SelfContextAdmission, SelfContextPacket
+from prometheist.self_memory import SelfContextAdmission, SelfContextPacket
 
 
 def _percept():

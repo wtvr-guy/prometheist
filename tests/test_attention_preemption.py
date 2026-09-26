@@ -4,8 +4,8 @@ from uuid import UUID
 
 import pytest
 
-from jit_agent import attention_store, db
-from jit_agent.attention import (
+from prometheist import attention_store, db
+from prometheist.attention import (
     AttentionTask,
     InterruptionPolicy,
     JITAttentionScheduler,
@@ -14,13 +14,13 @@ from jit_agent.attention import (
     TaskCriticality,
     deterministic_task_id,
 )
-from jit_agent.attention_preemption import PreemptionEventType
-from jit_agent.attention_resources import (
+from prometheist.attention_preemption import PreemptionEventType
+from prometheist.attention_resources import (
     ExecutionResource,
     ExecutionResourceClass,
     ResourceRequirement,
 )
-from jit_agent.attention_store import (
+from prometheist.attention_store import (
     load_preemption_event_count,
     load_scheduler,
     save_scheduler,

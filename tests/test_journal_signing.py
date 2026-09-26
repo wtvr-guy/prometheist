@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent import artifact_journal, journal_signing
+from prometheist import artifact_journal, journal_signing
 
 
 def _finalized_interaction(tmp_path, monkeypatch) -> tuple:

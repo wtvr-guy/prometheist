@@ -14,8 +14,8 @@ import pytest
 
 from benchmarks import run_person_fidelity_baseline as native_runner
 from benchmarks import run_self_memory_person_fidelity as self_memory_runner
-from jit_agent import artifact_journal, event_artifact_store
-from jit_agent.person_fidelity_benchmark import (
+from prometheist import artifact_journal, event_artifact_store
+from prometheist.person_fidelity_benchmark import (
     REQUIRED_BASELINE_DIMENSIONS,
     canonical_seed_payload,
     chronological_life_events,
@@ -520,8 +520,8 @@ def test_run_manifest_hashes_every_raw_artifact_and_labels_training_state(tmp_pa
 
 
 def test_self_memory_resource_preflight_distinguishes_warm_from_cold():
-    from jit_agent.attention_observation import HostResourceMetrics
-    from jit_agent.ollama_runtime import OllamaRuntimeState
+    from prometheist.attention_observation import HostResourceMetrics
+    from prometheist.ollama_runtime import OllamaRuntimeState
 
     class FixedRuntimeProbe:
         def __init__(self, resident):

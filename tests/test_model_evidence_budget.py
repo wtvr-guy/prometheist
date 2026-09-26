@@ -5,14 +5,14 @@ import uuid
 
 import pytest
 
-from jit_agent.model_evidence_budget import (
+from prometheist.model_evidence_budget import (
     ModelEvidenceBudget,
     ModelEvidenceBudgetExceeded,
     configured_model_evidence_budget,
     validate_capability_result_content,
     validate_memory_packet_content,
 )
-from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 
 
 def _evidence(content: str, seq: int) -> MemoryEvidence:

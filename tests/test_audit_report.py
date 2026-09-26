@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent import artifact_journal, audit_report, blob_store, llm_artifact_store
+from prometheist import artifact_journal, audit_report, blob_store, llm_artifact_store
 
 
 def _write_full_chain(*, response_text: str = "done") -> tuple:

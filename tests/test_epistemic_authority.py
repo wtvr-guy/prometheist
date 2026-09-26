@@ -3,11 +3,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from jit_agent.epistemic_authority import (
+from prometheist.epistemic_authority import (
     authority_for_event_type,
     format_authority_bound_memory_packet,
 )
-from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 
 
 def _evidence(event_type: EventType, content: str, seq: int) -> MemoryEvidence:

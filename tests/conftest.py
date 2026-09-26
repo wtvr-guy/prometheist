@@ -23,7 +23,7 @@ os.environ["DATABASE_URL"] = os.environ.get(
 import pytest
 import httpx
 
-from jit_agent import db
+from prometheist import db
 
 SCHEMA_PATH = pathlib.Path(__file__).resolve().parent.parent / "schema.sql"
 

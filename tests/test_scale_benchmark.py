@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from jit_agent.scale_benchmark import run_scale_document
-from jit_agent.scale_corpus import load_document
+from prometheist.scale_benchmark import run_scale_document
+from prometheist.scale_corpus import load_document
 
 
 ROOT = Path(__file__).resolve().parent.parent

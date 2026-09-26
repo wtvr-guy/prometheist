@@ -5,23 +5,23 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent.percept_response_worker import (
+from prometheist.percept_response_worker import (
     _INTERACTIVE_PERSONALITY_PROMPT,
     _USER_PROMPT_COMPOSER,
     UserPromptLLM,
     UserPromptWorkSelection,
 )
-from jit_agent.percept_response_runtime import (
+from prometheist.percept_response_runtime import (
     _RESPONSE_POLICY_PROMPT,
     _SELF_MODEL_COMPOSER_PROMPT,
 )
-from jit_agent.models import EventType, MemoryNeed, MemoryPacket
-from jit_agent.response_policy import (
+from prometheist.models import EventType, MemoryNeed, MemoryPacket
+from prometheist.response_policy import (
     HistoricalEvidenceScope,
     ResponseSurfaceMode,
     source_types_for_scope,
 )
-from jit_agent.self_memory import (
+from prometheist.self_memory import (
     IdentityCentrality,
     SelfContextAdmission,
     SelfContextItem,

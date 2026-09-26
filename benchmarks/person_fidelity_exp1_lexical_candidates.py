@@ -21,9 +21,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from benchmarks import replay_person_fidelity_retrieval as replay  # noqa: E402
-from jit_agent.jit_memory import MINIMUM_SCORE  # noqa: E402
-from jit_agent.memory_kernel import LEXICAL_WEIGHT, MemoryEvent, tokenize  # noqa: E402
-from jit_agent.person_fidelity_benchmark import (  # noqa: E402
+from prometheist.jit_memory import MINIMUM_SCORE  # noqa: E402
+from prometheist.memory_kernel import LEXICAL_WEIGHT, MemoryEvent, tokenize  # noqa: E402
+from prometheist.person_fidelity_benchmark import (  # noqa: E402
     FidelityProbe,
     PersonFidelityCorpus,
 )

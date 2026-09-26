@@ -4,7 +4,7 @@ import subprocess
 import sys
 import textwrap
 
-from jit_agent import cli
+from prometheist import cli
 
 
 class _StreamProbe:

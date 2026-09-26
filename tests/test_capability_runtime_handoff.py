@@ -4,8 +4,8 @@ import uuid
 
 import pytest
 
-from jit_agent import capability_runtime
-from jit_agent.capability_registry import (
+from prometheist import capability_runtime
+from prometheist.capability_registry import (
     CapabilityDescriptor,
     CapabilityKind,
     RegisteredCapability,

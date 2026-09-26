@@ -32,19 +32,19 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from jit_agent import artifact_journal  # noqa: E402
-from jit_agent.interaction_contracts import DurableInteraction  # noqa: E402
-from jit_agent.llm import OllamaClient, _quarantined_evidence  # noqa: E402
-from jit_agent.percept_response_runtime import (  # noqa: E402
+from prometheist import artifact_journal  # noqa: E402
+from prometheist.interaction_contracts import DurableInteraction  # noqa: E402
+from prometheist.llm import OllamaClient, _quarantined_evidence  # noqa: E402
+from prometheist.percept_response_runtime import (  # noqa: E402
     MemorySufficiencyDecision,
     PerceptStage,
     _RESPONSE_POLICY_PROMPT,
 )
-from jit_agent.percept_response_worker import (  # noqa: E402
+from prometheist.percept_response_worker import (  # noqa: E402
     UserPromptLLM,
     _USER_PROMPT_COMPOSER,
 )
-from jit_agent.response_policy import (  # noqa: E402
+from prometheist.response_policy import (  # noqa: E402
     ResponsePolicy,
     explicit_prior_assistant_reference,
 )

@@ -5,8 +5,8 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from jit_agent.response_policy import (
+from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from prometheist.response_policy import (
     ExactSourceComposition,
     ExactSourceSelection,
     HistoricalEvidenceScope,

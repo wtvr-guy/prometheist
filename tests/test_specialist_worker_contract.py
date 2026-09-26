@@ -5,21 +5,21 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent.capability_registry import DEFAULT_REGISTRY
-from jit_agent.interaction_contracts import DurableInteraction
-from jit_agent.models import MemoryNeed, MemoryPacket
-from jit_agent.percept_response_runtime import (
+from prometheist.capability_registry import DEFAULT_REGISTRY
+from prometheist.interaction_contracts import DurableInteraction
+from prometheist.models import MemoryNeed, MemoryPacket
+from prometheist.percept_response_runtime import (
     PerceptStage,
     ResponseMemoryPackage,
     _execute_stage,
     _validated_response_policy,
 )
-from jit_agent.percept_response_worker import (
+from prometheist.percept_response_worker import (
     USER_PROMPT_STAGE_SPECIALIST_ROLES,
     UserPromptLLM,
     _ALLOWED_LLM_KINDS_BY_STAGE,
 )
-from jit_agent.response_policy import (
+from prometheist.response_policy import (
     RESPONSE_POLICY_VERSION,
     HistoricalEvidenceScope,
     ResponsePolicy,

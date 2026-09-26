@@ -3,13 +3,13 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent import db, event_store
-from jit_agent.models import EventType
-from jit_agent.response_policy import (
+from prometheist import db, event_store
+from prometheist.models import EventType
+from prometheist.response_policy import (
     HistoricalEvidenceScope,
     ResponseSurfaceMode,
 )
-from jit_agent.self_memory import (
+from prometheist.self_memory import (
     FutureOrientation,
     IdentityCentrality,
     PlasticityClass,

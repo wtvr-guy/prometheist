@@ -5,11 +5,11 @@ from datetime import datetime, timezone
 
 import pytest
 
-from jit_agent import artifact_journal, db
-from jit_agent.attention_store import load_scheduler
-from jit_agent.interaction_contracts import DurableInteraction
-from jit_agent.interaction_store import load_interaction, save_interaction
-from jit_agent.perception import (
+from prometheist import artifact_journal, db
+from prometheist.attention_store import load_scheduler
+from prometheist.interaction_contracts import DurableInteraction
+from prometheist.interaction_store import load_interaction, save_interaction
+from prometheist.perception import (
     AdvisorySemanticClassification,
     PerceptKind,
     PerceptModality,
@@ -21,10 +21,10 @@ from jit_agent.perception import (
     normalize_scheduled_percept,
     normalize_user_interaction_percept,
 )
-from jit_agent.percept_response_runtime import PerceptStage, begin_percept
-from jit_agent.percept_response_worker import UserPromptLLM, _execute_claimed_user_prompt_step
-from jit_agent.worker_protocol import deterministic_worker_step_id
-from jit_agent.worker_store import guarded_claim_worker_step, load_worker_result
+from prometheist.percept_response_runtime import PerceptStage, begin_percept
+from prometheist.percept_response_worker import UserPromptLLM, _execute_claimed_user_prompt_step
+from prometheist.worker_protocol import deterministic_worker_step_id
+from prometheist.worker_store import guarded_claim_worker_step, load_worker_result
 
 
 NOW = datetime(2026, 9, 10, 17, 0, tzinfo=timezone.utc)
@@ -32,7 +32,7 @@ NOW = datetime(2026, 9, 10, 17, 0, tzinfo=timezone.utc)
 
 class FixedProbe:
     def capture(self):
-        from jit_agent.attention_observation import HostResourceMetrics
+        from prometheist.attention_observation import HostResourceMetrics
 
         return HostResourceMetrics(
             platform="test",

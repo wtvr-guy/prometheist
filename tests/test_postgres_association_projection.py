@@ -2,10 +2,10 @@ import uuid
 
 import pytest
 
-from jit_agent import db, event_store
-from jit_agent.models import EventType
-from jit_agent.postgres_association_projection import load_associations
-from jit_agent.postgres_memory_kernel import rebuild
+from prometheist import db, event_store
+from prometheist.models import EventType
+from prometheist.postgres_association_projection import load_associations
+from prometheist.postgres_memory_kernel import rebuild
 
 
 @pytest.fixture

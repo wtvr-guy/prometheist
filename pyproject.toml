@@ -1,5 +1,5 @@
 [project]
-name = "jit-agent"
+name = "prometheist"
 # Internal package/release metadata is intentionally independent of Prometheist's
 # architectural milestone labels (v0.5, v0.6, ...). See README.md#versioning.
 version = "0.8.0"

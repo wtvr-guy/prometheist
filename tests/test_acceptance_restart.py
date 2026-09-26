@@ -10,8 +10,8 @@ import uuid
 
 import pytest
 
-from jit_agent import db, event_store
-from jit_agent.models import EventType
+from prometheist import db, event_store
+from prometheist.models import EventType
 from tests._cli_helpers import ollama_available, print_transcript, run_once
 from tests._native_artifact_assertions import (
     assert_response_evidence_receipt,

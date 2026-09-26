@@ -25,7 +25,7 @@ from uuid import UUID, uuid4
 
 from dotenv import load_dotenv
 
-from jit_agent.person_fidelity_benchmark import (
+from prometheist.person_fidelity_benchmark import (
     HOLDOUT_BENCHMARK_ID,
     FidelityProbe,
     PersonFidelityCorpus,
@@ -153,7 +153,7 @@ def _reset_database(conn) -> None:
 
 
 def _seed_life_record(conn, corpus: PersonFidelityCorpus) -> dict[str, UUID]:
-    from jit_agent import event_store
+    from prometheist import event_store
 
     event_ids: dict[str, UUID] = {}
     for fixture in chronological_life_events(corpus):
@@ -182,8 +182,8 @@ def _seed_life_record(conn, corpus: PersonFidelityCorpus) -> dict[str, UUID]:
 
 
 def _prompt_event(conn, conversation_id: UUID, prompt: str):
-    from jit_agent import event_store
-    from jit_agent.models import EventType
+    from prometheist import event_store
+    from prometheist.models import EventType
 
     matches = [
         event
@@ -199,8 +199,8 @@ def _memory_packet_evidence_refs(
     conversation_id: UUID,
     correlation_id: UUID,
 ) -> list[str]:
-    from jit_agent import event_store
-    from jit_agent.models import EventType
+    from prometheist import event_store
+    from prometheist.models import EventType
 
     references: set[str] = set()
     for event in event_store.get_events_by_conversation(conn, conversation_id):
@@ -276,9 +276,9 @@ def _run_probe(
     run_id: str,
     run_artifact_root: Path,
 ) -> dict[str, Any]:
-    from jit_agent import artifact_journal
-    from jit_agent.interaction_contracts import deterministic_interaction_id
-    from jit_agent.percept_response_runtime import handle_percept_in_worker_processes
+    from prometheist import artifact_journal
+    from prometheist.interaction_contracts import deterministic_interaction_id
+    from prometheist.percept_response_runtime import handle_percept_in_worker_processes
 
     _reset_database(conn)
     probe_artifact_root = run_artifact_root / probe.probe_id
@@ -556,7 +556,7 @@ def _resolve_recorded_path(value: str) -> Path:
 def _verify_result_artifacts(result_path: Path) -> dict[str, Any]:
     """Verify the summary receipt, byte inventory, event mirrors, and chains."""
 
-    from jit_agent import artifact_journal, event_artifact_store
+    from prometheist import artifact_journal, event_artifact_store
 
     result = _load_json_object(result_path)
     if result.get("schema_version") != 2:
@@ -845,8 +845,8 @@ def main() -> None:
         raise SystemExit("result artifact must be outside the raw artifact root")
     manifest_path = run_artifact_root / "run_manifest.json"
 
-    from jit_agent import db
-    from jit_agent.ollama_runtime import configured_ollama_base_url, configured_ollama_model
+    from prometheist import db
+    from prometheist.ollama_runtime import configured_ollama_base_url, configured_ollama_model
 
     with db.get_connection() as conn:
         database_name = _apply_schema_and_require_benchmark_database(conn)

@@ -6,12 +6,12 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent import llm
-from jit_agent.llm import _strip_thinking
-from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from jit_agent.percept_response_runtime import ResponseMemoryPackage, _FINAL_RESPONSE_PROMPT
-from jit_agent.percept_response_worker import UserPromptLLM
-from jit_agent.response_policy import (
+from prometheist import llm
+from prometheist.llm import _strip_thinking
+from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from prometheist.percept_response_runtime import ResponseMemoryPackage, _FINAL_RESPONSE_PROMPT
+from prometheist.percept_response_worker import UserPromptLLM
+from prometheist.response_policy import (
     HistoricalEvidenceScope,
     ResponsePolicy,
     ResponseSurfaceMode,

@@ -48,7 +48,7 @@ from run_person_fidelity_baseline import (  # noqa: E402
     _sha256_file,
     _write_result,
 )
-from jit_agent.person_fidelity_benchmark import (  # noqa: E402
+from prometheist.person_fidelity_benchmark import (  # noqa: E402
     HOLDOUT_BENCHMARK_ID,
     FidelityProbe,
     PersonFidelityCorpus,
@@ -132,14 +132,14 @@ def _resource_preflight(
 ) -> dict[str, Any]:
     """Evaluate the exact native RAM policy before mutating benchmark state."""
 
-    from jit_agent.attention_observation import (
+    from prometheist.attention_observation import (
         HOST_MEMORY_RESOURCE_ID,
         SystemHostResourceProbe,
         build_resource_observation,
         discover_local_execution_resources,
     )
-    from jit_agent.native_policy import native_resource_safety_policy
-    from jit_agent.ollama_runtime import OllamaRuntimeProbe
+    from prometheist.native_policy import native_resource_safety_policy
+    from prometheist.ollama_runtime import OllamaRuntimeProbe
 
     effective_policy = policy or native_resource_safety_policy()
     runtime = (runtime_probe or OllamaRuntimeProbe()).capture()
@@ -198,18 +198,18 @@ def _seed_life_record(
 ) -> dict[str, UUID]:
     """Seed one equivalent life record with observable behavior as percept evidence."""
 
-    from jit_agent import event_store
-    from jit_agent.models import EventType
-    from jit_agent.percept_context import PerceptContext
-    from jit_agent.percept_intake import install_source_policy
-    from jit_agent.perception import (
+    from prometheist import event_store
+    from prometheist.models import EventType
+    from prometheist.percept_context import PerceptContext
+    from prometheist.percept_intake import install_source_policy
+    from prometheist.perception import (
         PerceptKind,
         PerceptModality,
         PerceptSource,
         normalize_percept,
     )
-    from jit_agent.percept_triage import SourcePolicy
-    from jit_agent.situations import persist_situations
+    from prometheist.percept_triage import SourcePolicy
+    from prometheist.situations import persist_situations
 
     event_ids: dict[str, UUID] = {}
     installed_observation_sources: set[str] = set()
@@ -324,12 +324,12 @@ def _learn_self_memory(
     run_id: str,
     learning_root: Path,
 ) -> tuple[dict[str, UUID], list[UUID]]:
-    from jit_agent.consolidation import (
+    from prometheist.consolidation import (
         ConsolidationSchedule,
         emit_due_consolidations,
         schedule_consolidation,
     )
-    from jit_agent.situation_runtime import run_situation_task, submit_situation_page
+    from prometheist.situation_runtime import run_situation_task, submit_situation_page
 
     os.environ["PROMETHEIST_ARTIFACT_ROOT"] = str(learning_root)
     event_ids = _seed_life_record(conn, corpus, form_situations=True)
@@ -408,7 +408,7 @@ def _restore_self_memory(
     conn,
     snapshot: dict[str, list[tuple[str, dict[str, Any]]]],
 ) -> None:
-    from jit_agent.cognitive_store import put_record
+    from prometheist.cognitive_store import put_record
 
     digest = _snapshot_digest(snapshot)
     for kind in SELF_MEMORY_RECORD_KINDS:
@@ -427,7 +427,7 @@ def _learning_summary(
     corpus: PersonFidelityCorpus,
     event_ids: dict[str, UUID],
 ) -> dict[str, Any]:
-    from jit_agent.self_memory import (
+    from prometheist.self_memory import (
         SELF_REPRESENTATION_KIND,
         SelfRepresentation,
         current_self_resolution,
@@ -501,7 +501,7 @@ def _expand_self_evidence_refs(
     conn,
     evidence_refs: list[str],
 ) -> tuple[list[str], list[str]]:
-    from jit_agent.self_memory import self_evidence
+    from prometheist.self_memory import self_evidence
 
     rooted = {
         reference
@@ -546,9 +546,9 @@ def _run_probe(
     run_artifact_root: Path,
     snapshot: dict[str, list[tuple[str, dict[str, Any]]]],
 ) -> dict[str, Any]:
-    from jit_agent import artifact_journal
-    from jit_agent.interaction_contracts import deterministic_interaction_id
-    from jit_agent.percept_response_runtime import handle_percept_in_worker_processes
+    from prometheist import artifact_journal
+    from prometheist.interaction_contracts import deterministic_interaction_id
+    from prometheist.percept_response_runtime import handle_percept_in_worker_processes
 
     _reset_database(conn)
     probe_root = run_artifact_root / "probes" / probe.probe_id
@@ -844,8 +844,8 @@ def main() -> None:
     if output.exists():
         raise SystemExit(f"result artifact already exists: {output}")
 
-    from jit_agent import db
-    from jit_agent.ollama_runtime import (
+    from prometheist import db
+    from prometheist.ollama_runtime import (
         configured_ollama_base_url,
         configured_ollama_model,
     )

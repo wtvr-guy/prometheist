@@ -7,8 +7,8 @@ import uuid
 from datetime import timedelta
 from uuid import UUID
 
-from jit_agent import db, event_store
-from jit_agent.attention import (
+from prometheist import db, event_store
+from prometheist.attention import (
     AttentionTask,
     InterruptionPolicy,
     SchedulingMetadata,
@@ -16,11 +16,11 @@ from jit_agent.attention import (
     TaskCriticality,
     deterministic_task_id,
 )
-from jit_agent.attention_observation import HostResourceMetrics, LocalResourceAdmissionController
-from jit_agent.attention_resources import ProcessResourceEstimate, ResourceEstimateSource
-from jit_agent.attention_store import allocate_created_seq, load_scheduler, save_scheduler
-from jit_agent.worker_protocol import WorkerEffectPolicy
-from jit_agent.worker_store import register_worker_step
+from prometheist.attention_observation import HostResourceMetrics, LocalResourceAdmissionController
+from prometheist.attention_resources import ProcessResourceEstimate, ResourceEstimateSource
+from prometheist.attention_store import allocate_created_seq, load_scheduler, save_scheduler
+from prometheist.worker_protocol import WorkerEffectPolicy
+from prometheist.worker_store import register_worker_step
 from tests._v07_restart_process import BASE_TIME
 
 

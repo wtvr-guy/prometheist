@@ -4,13 +4,13 @@ import uuid
 
 import pytest
 
-from jit_agent import db, event_store, postgres_memory_kernel
-from jit_agent.attention_aperture import open_attention_aperture
-from jit_agent.interaction_contracts import (
+from prometheist import db, event_store, postgres_memory_kernel
+from prometheist.attention_aperture import open_attention_aperture
+from prometheist.interaction_contracts import (
     deterministic_interaction_event_id,
     deterministic_interaction_id,
 )
-from jit_agent.models import EventType
+from prometheist.models import EventType
 
 
 @pytest.fixture

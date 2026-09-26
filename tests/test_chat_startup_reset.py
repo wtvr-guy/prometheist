@@ -4,9 +4,9 @@ import uuid
 
 from psycopg.types.json import Json
 
-from jit_agent import cli, db, event_store
-from jit_agent.chat_startup import reset_chat_execution_state
-from jit_agent.models import EventType
+from prometheist import cli, db, event_store
+from prometheist.chat_startup import reset_chat_execution_state
+from prometheist.models import EventType
 
 
 def test_chat_execution_reset_preserves_memory_resources_and_other_scheduler() -> None:
