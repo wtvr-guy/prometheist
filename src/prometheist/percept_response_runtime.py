@@ -203,7 +203,7 @@ class MemorySufficiencyDecision(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     sufficient: bool
-    memory_deficit: str | None = None
+    memory_deficit: str | None = Field(default=None, max_length=160)
 
     @model_validator(mode="after")
     def validate_contract(self) -> "MemorySufficiencyDecision":
@@ -215,6 +215,10 @@ class MemorySufficiencyDecision(BaseModel):
         else:
             self.memory_deficit = self.memory_deficit.strip()
         return self
+
+
+class ComposerValidationError(ValueError):
+    """All bounded Composer attempts produced invalid control output."""
 
 
 class ResponseMemoryPackage(BaseModel):
@@ -260,6 +264,8 @@ not consume, summarize, reinterpret, or request tool/action results. Do not writ
 the user-facing answer. If memory is insufficient, identify only the missing
 semantic remembered information in memory_deficit. Adaptive Recall owns retrieval
 mechanics. If memory is sufficient, return sufficient=true and memory_deficit=null.
+If insufficient, give one short, searchable description of the missing personal
+evidence (at most 160 characters). Never list reasons or repeat the question.
 A legitimate unknown is acceptable; never invent memory.
 
 Persistent memory arrives in a separate QUARANTINED_EVIDENCE channel. Derived
@@ -315,7 +321,8 @@ question specifically requires source history.
 Return sufficient=true only when every material slot is filled. Otherwise return
 sufficient=false and make memory_deficit a concise retrieval-oriented description
 of the missing evidence. Name every materially missing dimension in searchable
-semantic terms; do not ask vaguely for "more context."
+semantic terms in at most 160 characters; use short phrases, not explanations.
+Do not ask vaguely for "more context."
 
 An empty packet, irrelevant packet, one-sided packet, or partial packet is
 insufficient for this route. A legitimately unknown personal fact also remains
@@ -608,7 +615,7 @@ class PerceptLLM(OllamaClient):
         validate_rendered_evidence((memory_text, self_text), budget=budget)
         current_user = f"[Current percept]\n{percept}"
         last_error: ValueError | None = None
-        for token_cap in (96, 192):
+        for token_cap in (256, 384):
             try:
                 content = self._structured_with_evidence(
                     "V2_MEMORY_SUFFICIENCY",
@@ -629,7 +636,7 @@ class PerceptLLM(OllamaClient):
                 )
             except ValueError as exc:
                 last_error = exc
-        raise ValueError(f"v2 Composer decision failed to validate: {last_error}")
+        raise ComposerValidationError(f"v2 Composer decision failed to validate: {last_error}")
 
     def _response_policy(self, percept: str) -> ResponsePolicy:
         """Classify source and surface requirements from current authority only."""
@@ -1128,10 +1135,25 @@ def _compose_memory_package(
             composer_self_context,
         )
 
+    def unvalidated_package(rounds: int, expansions: int) -> ResponseMemoryPackage:
+        # Invalid model control cannot authorize memory admission or further
+        # retrieval. Preserve an explicit, recoverable insufficient disposition.
+        return ResponseMemoryPackage(
+            memory_packet=packet,
+            self_context=self_context,
+            sufficient=False,
+            unresolved_memory_deficit="Composer output invalid; memory sufficiency undetermined.",
+            composer_rounds=rounds,
+            adaptive_recall_rounds=expansions,
+        )
+
     decisions: list[MemorySufficiencyDecision] = []
     expansions: list[MemoryPacket] = []
     for round_index, _stage in enumerate(_ADAPTIVE_RECALL_STAGES):
-        decision = assess(packet)
+        try:
+            decision = assess(packet)
+        except ComposerValidationError:
+            return unvalidated_package(len(decisions) + 1, len(expansions))
         decisions.append(decision)
         if decision.sufficient:
             return ResponseMemoryPackage(
@@ -1156,7 +1178,10 @@ def _compose_memory_package(
         if no_progress:
             break
 
-    final_decision = assess(packet)
+    try:
+        final_decision = assess(packet)
+    except ComposerValidationError:
+        return unvalidated_package(len(decisions) + 1, len(expansions))
     decisions.append(final_decision)
     return ResponseMemoryPackage(
         memory_packet=packet,

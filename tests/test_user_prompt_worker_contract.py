@@ -12,6 +12,8 @@ from prometheist.percept_response_worker import (
     UserPromptWorkSelection,
 )
 from prometheist.percept_response_runtime import (
+    ComposerValidationError,
+    MemorySufficiencyDecision,
     _RESPONSE_POLICY_PROMPT,
     _SELF_MODEL_COMPOSER_PROMPT,
 )
@@ -44,6 +46,30 @@ def test_composer_treats_current_prompt_as_direct_evidence() -> None:
     assert "current user prompt is itself direct current evidence" in normalized
     assert "do not require" in normalized
     assert "historical memory" in normalized
+
+
+def test_composer_rejects_verbose_deficit_and_retries_truncated_json(monkeypatch) -> None:
+    llm = UserPromptLLM()
+    calls = []
+
+    def fake_structured(kind, system, current_user, evidence, schema, max_tokens):
+        calls.append(max_tokens)
+        assert schema["properties"]["memory_deficit"]["anyOf"][0]["maxLength"] == 160
+        return '{"sufficient":false,"memory_deficit":"' + "missing context " * 30
+
+    monkeypatch.setattr(llm, "_structured_with_evidence", fake_structured)
+    packet = MemoryPacket(
+        memory_request_id=uuid4(),
+        need=MemoryNeed(query_text="What would I choose?"),
+        supported=False,
+        items=[],
+    )
+    with pytest.raises(ComposerValidationError):
+        llm.assess_memory_sufficiency("What would I choose?", packet)
+    assert calls == [256, 384]
+
+    with pytest.raises(ValueError):
+        MemorySufficiencyDecision(sufficient=False, memory_deficit="x" * 161)
 
 
 def test_user_prompt_composer_accepts_and_renders_typed_self_context(monkeypatch) -> None:

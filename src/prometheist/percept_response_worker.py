@@ -35,6 +35,7 @@ from prometheist.model_evidence_budget import (
 )
 from prometheist.llm import _evidence_transport_layout, _quarantined_evidence
 from prometheist.percept_response_runtime import (
+    ComposerValidationError,
     MemorySufficiencyDecision,
     PerceptLLM,
     PerceptStage,
@@ -129,6 +130,8 @@ Return sufficient=false only when answering genuinely depends on prior system
 history or remembered user-specific information that is not established by the
 current prompt and is missing from the supplied persistent-memory evidence. In
 that case, memory_deficit must identify only the missing remembered information.
+Use one short, searchable phrase of at most 160 characters. Do not explain the
+decision or repeat the user's question in memory_deficit.
 
 Do not decide whether Prometheist should respond; direct user prompts already
 require a response. Do not consume, summarize, reinterpret, or request tool/action
@@ -632,7 +635,7 @@ class UserPromptLLM(PerceptLLM):
         validate_rendered_evidence((memory_text, self_text), budget=budget)
         current_user = f"[Current user prompt]\n{percept}"
         last_error: ValueError | None = None
-        for token_cap in (96, 192):
+        for token_cap in (256, 384):
             try:
                 content = self._structured_with_evidence(
                     "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
@@ -655,7 +658,7 @@ class UserPromptLLM(PerceptLLM):
                 )
             except (ValueError, json.JSONDecodeError) as exc:
                 last_error = exc
-        raise ValueError(f"v2 Composer decision failed to validate: {last_error}")
+        raise ComposerValidationError(f"v2 Composer decision failed to validate: {last_error}")
 
     def generate_final_response(
         self,

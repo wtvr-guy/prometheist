@@ -15,6 +15,7 @@ from prometheist.capability_registry import (
 )
 from prometheist.models import MemoryNeed, MemoryPacket
 from prometheist.percept_response_runtime import (
+    ComposerValidationError,
     MemorySufficiencyDecision,
     PreCognitiveDisposition,
     _compose_memory_package,
@@ -93,6 +94,36 @@ def test_empty_self_model_packet_cannot_be_accepted_as_sufficient(monkeypatch) -
     assert package.sufficient is False
     assert package.adaptive_recall_rounds == 1
     assert "history-dependent request" in package.unresolved_memory_deficit
+
+
+def test_invalid_composer_output_finishes_without_admitting_memory(monkeypatch) -> None:
+    packet = MemoryPacket(
+        memory_request_id=uuid.uuid4(),
+        need=MemoryNeed(query_text="Which offer would I choose?"),
+        supported=False,
+        items=[],
+    )
+
+    class InvalidComposer:
+        def assess_memory_sufficiency(self, *args, **kwargs):
+            raise ComposerValidationError("both attempts ended in truncated JSON")
+
+    def must_not_recall(*args, **kwargs):
+        raise AssertionError("invalid Composer output is not a semantic recall query")
+
+    monkeypatch.setattr("prometheist.percept_response_runtime._adaptive_recall", must_not_recall)
+    package = _compose_memory_package(
+        None,
+        InvalidComposer(),
+        SimpleNamespace(user_text="Which offer would I choose?"),
+        packet,
+        [],
+        person_history_required=True,
+    )
+    assert package.sufficient is False
+    assert package.composer_rounds == 1
+    assert package.adaptive_recall_rounds == 0
+    assert "Composer output invalid" in package.unresolved_memory_deficit
 
 
 def test_legacy_memory_research_modes_are_not_pre_cognitive_capabilities() -> None:
