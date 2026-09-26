@@ -20,9 +20,9 @@ import random
 import time
 import uuid
 
-from jit_agent import db, event_store
-from jit_agent.percept_response_runtime import handle_percept_in_worker_processes
-from jit_agent.models import EventType
+from prometheist import db, event_store
+from prometheist.percept_response_runtime import handle_percept_in_worker_processes
+from prometheist.models import EventType
 
 _SUBJECTS = ["my neighbor", "the team", "our cat", "the intern", "my sister", "the vendor"]
 _VERBS = ["mentioned", "forgot about", "asked about", "complained about", "joked about"]

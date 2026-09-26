@@ -4,25 +4,34 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent import db, event_store
-from jit_agent.action_outcomes import issue_action, observe_action_outcome
-from jit_agent.attention_observation import HostResourceMetrics
-from jit_agent.attention_store import load_scheduler
-from jit_agent.cognitive_store import get_record, list_records, put_record, rebuild_heads
-from jit_agent.consolidation import ConsolidationSchedule, consolidate_page, emit_due_consolidations, schedule_consolidation
-from jit_agent.expectations import Expectation
-from jit_agent.models import EventType
-from jit_agent.percept_context import Observation, PerceptContext
-from jit_agent.percept_intake import ingest_percept, install_source_policy
-from jit_agent.perception import PerceptKind, PerceptModality, PerceptSource
-from jit_agent.percept_triage import SourcePolicy
-from jit_agent.semantic_memory import (
+from prometheist import db, event_store
+from prometheist.action_outcomes import issue_action, observe_action_outcome
+from prometheist.attention_observation import (
+    HostResourceMetrics,
+    ReservationCreditHostResourceProbe,
+)
+from prometheist.attention_store import load_scheduler
+from prometheist.cognitive_store import get_record, list_records, put_record, rebuild_heads
+from prometheist.consolidation import ConsolidationSchedule, consolidate_page, emit_due_consolidations, schedule_consolidation
+from prometheist.expectations import Expectation
+from prometheist.models import EventType
+from prometheist.ollama_runtime import OllamaRuntimeState
+from prometheist.percept_context import Observation, PerceptContext
+from prometheist.percept_intake import ingest_percept, install_source_policy
+from prometheist.perception import PerceptKind, PerceptModality, PerceptSource
+from prometheist.percept_triage import SourcePolicy
+from prometheist.semantic_memory import (
     current_semantic_resolution,
     selected_assertion,
     semantic_evidence,
 )
-from jit_agent.situation_runtime import drain_situations, submit_situation_page, run_situation_task
-from jit_agent.situations import register_expectation
+from prometheist.situation_runtime import (
+    SituationStage,
+    drain_situations,
+    run_situation_task,
+    submit_situation_page,
+)
+from prometheist.situations import register_expectation
 
 
 class FixedProbe:
@@ -32,6 +41,25 @@ class FixedProbe:
     def capture(self):
         return HostResourceMetrics(platform="test", logical_cpu_count=8, cpu_utilization_percent=10,
                                    load_1m=0, memory_total_mib=16384, memory_available_mib=self.available)
+
+
+class FixedOllamaRuntimeProbe:
+    def __init__(self, *, resident: bool):
+        self.resident = resident
+
+    def capture(self):
+        return OllamaRuntimeState(
+            model="qwen3:4b-instruct-2507-q4_K_M",
+            probe_ok=True,
+            resident=self.resident,
+            reported_name=(
+                "qwen3:4b-instruct-2507-q4_K_M"
+                if self.resident
+                else None
+            ),
+            size_bytes=3_000 * 1024 * 1024 if self.resident else None,
+            size_vram_bytes=0 if self.resident else None,
+        )
 
 
 @pytest.fixture
@@ -51,6 +79,19 @@ def add_observation(conn, source, property_name="memory", value=300, expected=No
                           delivery_id=delivery_id or str(uuid4()), context=PerceptContext(
                               entity_refs=(subject,), expectation_refs=(expected,) if expected else (),
                               observations=(Observation(subject=subject, property=property_name, value=value),)))
+
+
+def consolidation_task_id(conn, task_ids):
+    matches = []
+    for task_id in task_ids:
+        task = get_record(conn, "situation_task", str(task_id))
+        if (
+            task is not None
+            and task["percept"]["source"]["source_id"] == "scheduler:consolidation"
+        ):
+            matches.append(task_id)
+    assert len(matches) == 1
+    return matches[0]
 
 
 def register_memory_expectation(conn):
@@ -84,7 +125,7 @@ def test_intake_replay_and_conflicting_delivery(conn):
 
 
 def test_intake_crash_recovers_post_snapshot_receipt(conn, monkeypatch):
-    from jit_agent import percept_intake
+    from prometheist import percept_intake
     source = source_setup(conn)
     args = dict(source=source, observation={"value": 1}, observed_at=datetime.now(timezone.utc), delivery_id="interrupted")
     original = percept_intake.put_record
@@ -130,16 +171,163 @@ def test_four_percepts_one_guarded_task_and_finite_action_feedback(conn, monkeyp
     for _ in range(4):
         drain_situations(conn, probe=FixedProbe())
     assert len(list_records(conn, "action_execution")) == 1
-    from jit_agent import artifact_journal
+    from prometheist import artifact_journal
     artifacts = artifact_journal.interaction_artifacts(ids[0])
     assert not any(value["artifact_type"] == "LLM_INVOCATION" for value in artifacts)
-    assert len([value for value in artifacts if value["artifact_type"] == "STAGE_RESULT"]) == 6
+    assert len([value for value in artifacts if value["artifact_type"] == "STAGE_RESULT"]) == 8
     verification = artifact_journal.verify_interaction_chain(ids[0])
     assert verification["valid"] and verification["complete"]
     final = verification["last_artifact"]["payload"]
     assert final["last_completed_stage"] == "SITUATION_PERSIST"
     assert final["response_required"] is False and final["response_text"] is None
-    assert len([item for item in final["artifact_chain"] if item["artifact_type"] == "STAGE_RESULT"]) == 6
+    assert len([item for item in final["artifact_chain"] if item["artifact_type"] == "STAGE_RESULT"]) == 8
+
+
+def _capture_first_situation_claim_probe(
+    conn,
+    monkeypatch,
+    *,
+    model_stage: bool,
+):
+    from prometheist import situation_runtime
+
+    source = source_setup(conn)
+    add_observation(conn, source, value=500)
+    now = datetime.now(timezone.utc)
+    schedule_consolidation(
+        conn,
+        ConsolidationSchedule(schedule_id=uuid4(), due_at=now),
+    )
+    emit_due_consolidations(conn, now=now)
+    task_ids = submit_situation_page(
+        conn,
+        probe=FixedProbe(),
+        ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=False),
+    )
+    task_id = consolidation_task_id(conn, task_ids)
+    captured = {}
+
+    class CapturingLauncher:
+        def __init__(
+            self,
+            connection_factory,
+            *,
+            probe,
+            policy,
+            scheduler_key,
+            **_kwargs,
+        ):
+            del connection_factory, policy, scheduler_key
+            captured["probe"] = probe
+
+        def launch(self, **_kwargs):
+            raise RuntimeError("stop after launcher construction")
+
+    monkeypatch.setattr(
+        situation_runtime,
+        "GuardedWorkerLauncher",
+        CapturingLauncher,
+    )
+    if model_stage:
+        monkeypatch.setattr(
+            situation_runtime,
+            "situation_stage_uses_model",
+            lambda *_args, **_kwargs: True,
+        )
+
+    with pytest.raises(RuntimeError, match="stop after launcher construction"):
+        run_situation_task(
+            conn,
+            task_id,
+            probe=FixedProbe(),
+            ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=False),
+        )
+    return captured["probe"]
+
+
+def test_situation_deterministic_stage_credits_unused_llm_reservation(
+    conn,
+    monkeypatch,
+):
+    probe = _capture_first_situation_claim_probe(
+        conn,
+        monkeypatch,
+        model_stage=False,
+    )
+
+    assert isinstance(probe, ReservationCreditHostResourceProbe)
+    assert probe.scheduled_memory_mib == 3_072
+    assert probe.required_memory_mib == 512
+    physical = probe.base_probe.capture()
+    adjusted = probe.capture()
+    assert adjusted.memory_available_mib == min(
+        adjusted.memory_total_mib,
+        physical.memory_available_mib + 2_560,
+    )
+
+
+def test_situation_model_stage_rechecks_ollama_residency(conn, monkeypatch):
+    from prometheist.ollama_runtime import OllamaClaimHostResourceProbe
+
+    probe = _capture_first_situation_claim_probe(
+        conn,
+        monkeypatch,
+        model_stage=True,
+    )
+
+    assert isinstance(probe, OllamaClaimHostResourceProbe)
+    assert probe.scheduled_memory_mib == 3_072
+    probe.capture()
+    assert probe.last_effective_required_memory_mib == 3_072
+    assert probe.last_memory_credit_mib == 0
+
+
+def test_nonresponse_consolidation_tail_stages_are_model_free(conn):
+    source = source_setup(conn)
+    add_observation(conn, source, value=500)
+    now = datetime.now(timezone.utc)
+    schedule_consolidation(
+        conn,
+        ConsolidationSchedule(schedule_id=uuid4(), due_at=now),
+    )
+    emit_due_consolidations(conn, now=now)
+    task_id, = submit_situation_page(
+        conn,
+        probe=FixedProbe(),
+        ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=False),
+    )
+    task_data = get_record(conn, "situation_task", str(task_id))
+    task = __import__(
+        "prometheist.situation_runtime",
+        fromlist=["SituationTask"],
+    ).SituationTask.model_validate(task_data)
+
+    from prometheist.situation_runtime import situation_stage_uses_model
+
+    assert (
+        situation_stage_uses_model(
+            conn,
+            task,
+            SituationStage.COMPOSE,
+        )
+        is False
+    )
+    assert (
+        situation_stage_uses_model(
+            conn,
+            task,
+            SituationStage.RESPOND,
+        )
+        is False
+    )
+    assert (
+        situation_stage_uses_model(
+            conn,
+            task,
+            SituationStage.PERSIST,
+        )
+        is False
+    )
 
 
 def test_clean_worker_exit_without_a_durable_result_does_not_complete_task(conn):
@@ -162,7 +350,7 @@ def test_clean_worker_exit_without_a_durable_result_does_not_complete_task(conn)
 
 @pytest.mark.parametrize("failure_boundary", ["manifest", "progress"])
 def test_situation_finalization_recovers_without_repeating_work(conn, monkeypatch, failure_boundary):
-    from jit_agent import artifact_journal, situation_runtime
+    from prometheist import artifact_journal, situation_runtime
 
     source = source_setup(conn)
     add_observation(conn, source, expected=register_memory_expectation(conn))
@@ -188,7 +376,7 @@ def test_situation_finalization_recovers_without_repeating_work(conn, monkeypatc
         run_situation_task(conn, task_id, probe=FixedProbe())
 
     before = artifact_journal.interaction_artifacts(task_id)
-    assert len([value for value in before if value["artifact_type"] == "STAGE_RESULT"]) == 6
+    assert len([value for value in before if value["artifact_type"] == "STAGE_RESULT"]) == 8
     assert len(list_records(conn, "action_execution")) == 1
     assert not list_records(conn, "situation_progress")
     if failure_boundary == "manifest":
@@ -239,6 +427,47 @@ def test_situation_priority_cannot_override_memory_admission(conn):
     assert len(ids) == 1
     assert not load_scheduler(conn).worker_visible_assignments()
     assert run_situation_task(conn, ids[0], probe=FixedProbe(10)) is None
+
+
+@pytest.mark.parametrize(
+    ("resident", "expected_memory_mib"),
+    [(True, 512), (False, 3_072)],
+)
+def test_consolidation_admission_uses_ollama_incremental_memory(
+    conn,
+    resident,
+    expected_memory_mib,
+):
+    source = source_setup(conn)
+    add_observation(conn, source, value=500)
+    now = datetime.now(timezone.utc)
+    schedule_consolidation(
+        conn,
+        ConsolidationSchedule(schedule_id=uuid4(), due_at=now),
+    )
+    emit_due_consolidations(conn, now=now)
+
+    task_ids = submit_situation_page(
+        conn,
+        probe=FixedProbe(),
+        ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=resident),
+    )
+
+    task_id = consolidation_task_id(conn, task_ids)
+    task = load_scheduler(conn).tasks[task_id]
+    estimate = task.metadata.process_resource_estimate
+    assert estimate.memory_mib == expected_memory_mib
+    assert estimate.llm_slots == 1
+    assert task.resumable_state["resource_admission"]["memory_mib"] == (
+        expected_memory_mib
+    )
+    assert task.resumable_state["resource_admission"]["requires_model"] is True
+    assert (
+        task.resumable_state["resource_admission"]["ollama_runtime_state"][
+            "resident"
+        ]
+        is resident
+    )
 
 
 def test_scheduled_consolidation_executes_separately_and_preserves_sources(conn):
@@ -331,8 +560,8 @@ def test_forged_action_success_receipt_fails_closed(conn):
 
 
 def test_media_quarantine_revalidates_content_not_supplied_metadata(conn, tmp_path):
-    from jit_agent.percept_adapters import preserve_media, verify_media
-    from jit_agent.reflexes import quarantine_corrupt_media
+    from prometheist.percept_adapters import preserve_media, verify_media
+    from prometheist.reflexes import quarantine_corrupt_media
     original = tmp_path / "input.bin"
     original.write_bytes(b"valid content")
     reference = preserve_media(original, mime_type="application/octet-stream")

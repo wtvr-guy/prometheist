@@ -16,20 +16,28 @@ flowchart TD
     F --> G[Registered local work]
     G --> H[Observed action outcome]
     H --> A
-    G --> I[Optional response]
+    G --> SR1[Self-schema proposal when consolidating]
+    SR1 --> SR2[Independent self-schema review]
+    SR2 --> I[Optional response]
+    G --> I
     E --> J[Memory-only Composer]
     J --> I
     I --> K[Durable completion]
 ```
 
-The six non-user stages are `SITUATION_MEMORY`, `SITUATION_TRIAGE`,
-`SITUATION_EXECUTE`, `SITUATION_COMPOSE_MEMORY`, `SITUATION_RESPOND`, and
+The eight non-user stages are `SITUATION_MEMORY`, `SITUATION_TRIAGE`,
+`SITUATION_EXECUTE`, `SITUATION_SELF_PROPOSE`, `SITUATION_SELF_REVIEW`,
+`SITUATION_COMPOSE_MEMORY`, `SITUATION_RESPOND`, and
 `SITUATION_PERSIST`. Each runs in a fresh process under `GuardedWorkerLauncher`.
+The two self-memory stages are model-free skips for non-consolidation work. For
+`CONSOLIDATE`, they are separate fresh specialists: proposal can only propose
+typed self representations from bounded canonical roots; review independently
+expands related/counterevidence before application-owned resolution.
 Stage results reach the independent artifact journal before claim completion.
 Replacement workers rehydrate completed artifacts instead of repeating inference.
 The supervisor verifies each durable worker result against its independent stage
 artifact; a zero process exit code alone cannot complete a stage. Before marking
-the task completed, it checks all six handoffs and the canonical completion record,
+the task completed, it checks all eight handoffs and the canonical completion record,
 verifies the hash chain, and publishes a final-disposition manifest naming
 `SITUATION_PERSIST`. This includes silent, `LLM=null` situations. A failed manifest
 write leaves the task resumable. A crash after scheduler completion but before the
@@ -193,12 +201,12 @@ An input can share `entity_refs: ["worker:1"]` across deliveries and interfaces:
 ```
 
 ```bash
-uv run python -m jit_agent.percept_cli install-source source.json
-uv run python -m jit_agent.percept_cli expectation expectation.json
-uv run python -m jit_agent.percept_cli ingest sample.json
-uv run python -m jit_agent.percept_cli schedule-consolidation schedule.json
-uv run python -m jit_agent.percept_cli tick
-uv run python -m jit_agent.percept_cli situations
+uv run python -m prometheist.percept_cli install-source source.json
+uv run python -m prometheist.percept_cli expectation expectation.json
+uv run python -m prometheist.percept_cli ingest sample.json
+uv run python -m prometheist.percept_cli schedule-consolidation schedule.json
+uv run python -m prometheist.percept_cli tick
+uv run python -m prometheist.percept_cli situations
 ```
 
 Expectations require their explicit validity interval and provenance references;

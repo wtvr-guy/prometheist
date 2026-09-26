@@ -252,19 +252,30 @@ history.
 This follows the project's rule that derived cognitive structures are
 replaceable while admitted source evidence is lossless.
 
+## Relationship to the Self-Memory System
+
+Semantic assertion/evidence/resolution remains the factual derived-memory layer.
+The higher-order [Self-Memory System](SELF_MEMORY_SYSTEM.md) is separate because
+roles, values, traits, aspirations, decision tendencies, relational schemas, and
+narrative hypotheses have different evidentiary and plasticity requirements than a
+subject/property fact.
+
+Scheduled consolidation may now feed a separate two-specialist self-reflection
+path. Free-text canonical provenance can participate in that path even when no
+structured `Observation` was extracted. This does not turn free text into an
+ordinary `SemanticAssertion` automatically.
+
+Semantic/self-derived context may guide Adaptive Recall, and the response policy
+can admit self-model conclusions for inferential identity questions. Exact-source
+or source-restricted requests still require qualifying canonical evidence.
+
 ## Deliberate remaining boundaries
 
-- Free-text conversation is not yet automatically extracted into semantic
-  assertions. That requires a separate narrow extraction specialist.
-- Higher-order reflection/generalization is not yet implemented. Such a worker
-  should emit assertions/evidence through this same interface with its own
-  derivation_method.
-- Semantic resolutions are not yet admitted directly into
-  Composer/Adaptive Recall. Retrieval integration should occur only after
-  authority/source-role handling and person-fidelity benchmarks cover
-  ambiguity, historical backfill, self-report versus behavior, and current
-  corrections.
-- Confidence is evidence metadata, not yet a universal belief score.
-- Historical bi-temporal queries may scan all semantic evidence for one exact
-  subject/property through bounded pages. This is an exceptional forensic
-  operation; ordinary cognition uses the indexed current resolution.
+- Free-text conversation is not automatically converted into ordinary structured
+  semantic assertions; self reflection and semantic fact extraction remain distinct.
+- Confidence remains evidence metadata, not a universal belief score.
+- Historical bi-temporal semantic queries may scan all evidence for one exact
+  subject/property through bounded pages; ordinary cognition uses indexed heads.
+- Self-memory promotion is experimental until person-fidelity and native-model
+  evaluation establish that it improves prediction/response fidelity without
+  unsupported identity generalization.

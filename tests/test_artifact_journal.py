@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from jit_agent import artifact_journal, event_artifact_store, llm_artifact_store
+from prometheist import artifact_journal, event_artifact_store, llm_artifact_store
 from tests._native_artifact_assertions import assert_response_evidence_receipt
 
 

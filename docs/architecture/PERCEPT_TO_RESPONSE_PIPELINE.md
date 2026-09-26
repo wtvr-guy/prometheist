@@ -35,12 +35,16 @@ flowchart TD
     B --> C[Reference resolver]
     C --> D[Evidence policy specialist]
     D --> E[Bounded memory aperture]
+    D --> S[Bounded Working Self activation]
     E --> F[Work selection specialist]
     F --> G[Deterministic execution]
     E --> H[Memory-only Composer]
-    H --> I[Adaptive Recall]
+    S --> H
+    S -. routing hints .-> I[Adaptive Recall]
+    H --> I
     I --> H
     H --> J[Final responder]
+    S --> J
     G --> J
     J --> K[Durable persistence]
 ```
@@ -97,6 +101,15 @@ relevant to the current request:
 
 The system remains the owner of ordering, identity, provenance, WorkingState, resource policy, and durable control state.
 
+The same current-only policy also governs derived self-memory admission. A
+`SELF_MODEL` scope means the user is asking for Prometheist's provenance-grounded
+person-model conclusion (for example a usual preference, trait pattern, value, or
+likely decision), rather than asking what the user explicitly said. For
+`USER_AUTHORED`, exact-source, tool, and other source-restricted requests,
+self-memory remains routing context only: its statements can seed Adaptive Recall,
+but they cannot substitute for the required canonical event role. See
+[SELF_MEMORY_SYSTEM.md](SELF_MEMORY_SYSTEM.md).
+
 Deterministic salience and model reasoning are intentionally separate. The salience layer may provide bounded advisory context to later model workers, but models do not gain policy authority over response requirements, reflex authorization, task identity, scheduling, or memory ordering by virtue of seeing the salience result.
 
 ## 5. The pre-cognitive work-triage specialist
@@ -149,11 +162,18 @@ Its responsibility is to determine whether the memory context available for a re
 
 It is **not** a general evidence synthesizer, a second pre-cognitive executive, a tool-result interpreter, or the final response generator.
 
-The Composer receives the current user prompt plus the current memory evidence. The
-memory is a separate quarantined evidence message followed by the current prompt; it
+The Composer receives the current user prompt plus the current canonical memory
+evidence. When response policy permits first-class derived self context, it also
+receives a separately typed/rendered `SelfContextPacket`. That packet is explicitly
+marked as revisable derived person-model state, not a quotation or independent
+canonical source. For routing-only scopes the Composer never receives self context as
+evidence.
+
+Memory is a separate quarantined evidence message followed by the current prompt; it
 is not concatenated into the prompt's instruction channel. The Composer determines
-whether activated/retrieved persistent memory is sufficient for a separate responder
-to answer accurately.
+whether the admitted memory context is sufficient for a separate responder to answer
+accurately. It does not decide whether any self schema is true; that remains the
+Self-Memory System's resolution responsibility.
 
 ### 7.1 If memory is sufficient
 

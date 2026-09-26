@@ -6,12 +6,12 @@ import json
 from types import SimpleNamespace
 from uuid import uuid4
 
-from jit_agent import artifact_journal
-from jit_agent.llm import _render_qwen_evidence_bound_prompt
-from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from jit_agent.percept_response_runtime import PerceptStage, ResponseMemoryPackage
-from jit_agent.percept_response_worker import UserPromptLLM
-from jit_agent.response_policy import (
+from prometheist import artifact_journal
+from prometheist.llm import _render_qwen_evidence_bound_prompt
+from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from prometheist.percept_response_runtime import PerceptStage, ResponseMemoryPackage
+from prometheist.percept_response_worker import UserPromptLLM
+from prometheist.response_policy import (
     HistoricalEvidenceScope,
     ResponsePolicy,
     ResponseSurfaceMode,

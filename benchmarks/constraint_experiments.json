@@ -534,6 +534,67 @@
         "native_latency_and_memory"
       ],
       "search": "Preserve the original lexical baseline and separately ablate situation grouping, prediction comparisons, triage, reflexes, and consolidation. Freeze labels and held-out inputs before tuning one parameter family at a time. Current tests establish invariants, not optimal values or neurobiological fidelity. Expand boundary winners before accepting tuned defaults."
+    },
+    "SELF-MEMORY-001": {
+      "title": "Self-memory activation, consolidation, and person-model calibration",
+      "environment": "deterministic_ci_then_target_windows_postgresql_ollama_and_human_review",
+      "parameters": [
+        "self_context_item_limit",
+        "core_self_fallback_limit",
+        "self_context_tag_limit",
+        "self_statement_length_limit",
+        "generalized_support_root_minimum",
+        "slow_schema_context_minimum",
+        "reflection_evidence_batch_limit",
+        "self_proposals_per_batch",
+        "review_evidence_limit",
+        "review_focus_root_limit",
+        "proposal_output_token_cap",
+        "review_output_token_cap"
+      ],
+      "scenario_families": [
+        "avowed_self_vs_observed_behavior",
+        "aspiration_vs_current_identity",
+        "stable_preference_with_outlier",
+        "gradual_change",
+        "abrupt_explicit_correction",
+        "context_conditioned_trait",
+        "relationship_specific_behavior",
+        "value_tradeoff_across_contexts",
+        "shared_root_derivation",
+        "counterevidence_promotion",
+        "narrative_correspondence_vs_coherence",
+        "self_model_source_authority",
+        "held_out_novel_decision",
+        "irrelevant_core_schema_contamination",
+        "model_output_self_reinforcement_attack",
+        "longitudinal_schema_growth"
+      ],
+      "hard_invariants": [
+        "canonical autobiographical evidence is never rewritten or replaced",
+        "derived representations never multiply independent evidence roots",
+        "model-authored output cannot independently establish user identity",
+        "avowed aspirational and normative self claims retain USER_PROMPT authority",
+        "establishment requires counterevidence review",
+        "source-restricted and exact-source responses never substitute self schemas for canonical evidence",
+        "self context cannot authorize external work",
+        "identity maturity cannot be self-certified by a transient model or derived schema",
+        "all proposal and review model calls remain separate stateless guarded workers",
+        "online context stays bounded independently of lifetime history"
+      ],
+      "quality_order": [
+        "hard_invariant_pass_rate",
+        "held_out_person_prediction_accuracy",
+        "worst_dimension_person_fidelity",
+        "unsupported_schema_rate",
+        "counterevidence_detection_rate",
+        "current_vs_historical_identity_accuracy",
+        "source_authority_accuracy",
+        "irrelevant_self_context_rate",
+        "model_calls_per_consolidation",
+        "latency_and_memory"
+      ],
+      "search": "Freeze deterministic and native person-fidelity cases before tuning. Sweep one bound or promotion threshold family at a time against the episodic-only and semantic-only baselines. High-centrality schemas receive stronger counterevidence tests, not relaxed proof requirements. Any boundary winner must be expanded before acceptance; report insufficient discrimination rather than treating the current defaults as optimized."
     }
   }
 }

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from jit_agent.associative_benchmark import run_comparison
+from prometheist.associative_benchmark import run_comparison
 
 
 ROOT = Path(__file__).resolve().parent.parent

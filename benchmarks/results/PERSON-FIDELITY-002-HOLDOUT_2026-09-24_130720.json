@@ -1,0 +1,1731 @@
+{
+  "artifact_evidence": {
+    "path": "benchmarks/generated/person_fidelity_holdout/20260924T200721Z/run_manifest.json",
+    "privacy_classification": "PUBLIC_SYNTHETIC_FIXTURE",
+    "raw_artifact_file_count": 718,
+    "raw_artifact_root": "benchmarks/generated/person_fidelity_holdout/20260924T200721Z",
+    "raw_artifact_total_bytes": 1378435,
+    "retention_policy": "PERMANENT_APPEND_ONLY",
+    "sha256": "c5c49a22d18129575f6489a007c98f99e8e04b740c0ee08beefca73e2b83de6e",
+    "size_bytes": 479312,
+    "status": "CAPTURED_AND_INVENTORIED",
+    "training_status": "UNREVIEWED_RAW_EVIDENCE"
+  },
+  "benchmark_id": "PERSON-FIDELITY-002-HOLDOUT",
+  "benchmark_status": "FROZEN_HOLDOUT",
+  "benchmark_version": "person-fidelity-holdout-v1",
+  "captured_at": "2026-09-24T20:07:21.139643+00:00",
+  "claim_boundary": "Structural passes establish evidence delivery and artifact integrity only. No identity-fidelity, identity-maturity, consciousness, or personal-continuity claim exists until the recorded responses receive independent human review.",
+  "environment": {
+    "artifact_root": "C:\\Users\\gy0d8\\OneDrive\\Documents\\jit_agent_prototype\\benchmarks\\generated\\person_fidelity_holdout\\20260924T200721Z",
+    "configured_model": "qwen3:4b-instruct-2507-q4_K_M",
+    "database_name": "prometheist_fidelity_benchmark",
+    "ollama_base_url": "http://localhost:11434",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]"
+  },
+  "fixture_sha256": "b54ec140641ac3bbe5ff25ff3c475a48124fc893dda5f1dc5255b17d6b8ca2b2",
+  "probes": [
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 15,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "LLM_VALIDATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "2940b31d06ef66810f41c37c41ae7d2db4a2dfb65434c3ca17daa2c94316c533",
+            "artifact_id": "59b9ef50-48da-5ed4-8bfa-1ccd2cb4488d",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "7e5f44d344031abb1b9bab619ce1f94b276d071099d5c90b6ba6cad724a6e3df",
+            "artifact_id": "ec6b4961-9b99-5e9a-8f41-8f5e1a5868ed",
+            "error_type": null,
+            "journal_sequence": 8,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "9936a818400f8070f8b4a291e349438a5ed247e9ab7ab46fbb3735583beae3e7",
+            "artifact_id": "c2e77128-64ce-542c-bc4c-2ff8f6f78ac4",
+            "error_type": null,
+            "journal_sequence": 11,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "1b19f2b701718997f0d638aeed35074a204a7b708930da9046ae5cd855ddeec8",
+            "artifact_id": "a774bb74-2994-52e2-8fca-b17e4605f661",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "7fd463e13b9f505c0c2af191c851b73ea90200f0fe1166ba0f33395e4d6b78e5",
+            "artifact_id": "58c179a9-077e-5c9b-a7e6-9e5a4e55dd1f",
+            "journal_sequence": 5,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "28178fbf3922aff33330401a2e57b33cc9f4d7f941ccb699bfaf870abdf724b6",
+            "artifact_id": "4c92889b-28b4-5ac8-8379-999bd248bc1a",
+            "journal_sequence": 6,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "5844140300481b22e3c98ac38355ae80b4a2bf1c8d588bfecbd8f82e670ad298",
+            "artifact_id": "eaa0ca97-3bbe-5632-8578-a728df6b2a7e",
+            "journal_sequence": 7,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "dead63aaf6e933fc39fe1f9a008be68abc25e881a1a6dfc93ef78741c1bbda71",
+            "artifact_id": "c7f2be57-457a-5888-ab07-96bd12d6192d",
+            "journal_sequence": 10,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "b23f2bf4bf8b1b757fa4ff1628887b688291ec2f980fca33ce551185bf540a3c",
+            "artifact_id": "597ac236-35f3-5ca1-ae82-e7724b251d69",
+            "journal_sequence": 13,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "5ab62a98efd25033e97ff5cf4a7c4b0da45f21936d7ae7da263ca6f6298178bd",
+            "artifact_id": "ec0a911e-763f-5b10-a0ab-245eba77cfca",
+            "journal_sequence": 14,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "37c50d14eb2719c772b6c1981b718a4bcc7f0e868dc9654bc609a922df177d6f",
+          "artifact_id": "f227ca62-bfbd-5ce5-80e7-4660c6e0ce43",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 15
+        }
+      },
+      "conversation_id": "c769c0c6-0d2e-487d-a09b-a2125197275f",
+      "dimension": "AUTOBIOGRAPHICAL_MEANING",
+      "elapsed_seconds": 46.344551,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "connects the career to the childhood creek-measuring experience rather than merely naming it",
+          "preserves the grandmother's role and the flood or stake-marking context",
+          "expresses legible, questionable, revisable forecasting as the lasting rule",
+          "keeps measurement tied to looking after people rather than to technical interest alone"
+        ],
+        "notes": null,
+        "reference_outcome": "Wren traces wetland hydrology to marking the Ashgrove Creek floods with her grandmother and carries forward a commitment that forecasts stay legible and challengeable by the people downstream.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "invents a different origin for the career",
+          "recalls the flood but loses why it mattered to her",
+          "turns the rule into generic accuracy, rigor, or model performance"
+        ]
+      },
+      "interaction_id": "265508d2-f1a0-549c-a46b-371522a4b66f",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "hf-e001"
+        ],
+        "retrieved_evidence_refs": [
+          "event:9596d158-b527-55cb-a0ba-a204b91e0386",
+          "event:bdaaf785-e299-55f5-ac0d-675b7165cd40"
+        ],
+        "retrieved_fixture_event_ids": [
+          "hf-e002",
+          "hf-e011"
+        ]
+      },
+      "probe_id": "hf-q001",
+      "prompt": "Why did I go into wetland hydrology, and what rule did that childhood experience leave me with?",
+      "prompt_event_id": "5ae5d9de-d5ee-5e3e-8e9b-ef7c65f50440",
+      "response": "I went into wetland hydrology because of the flood springs—those natural features that inspired my path. The childhood experience left me with a rule I will not bend: a forecast nobody outside the room can question is worse than no forecast, so what I publish has to stay legible and revisable by the people living downstream.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "hf-e002",
+          "hf-e011"
+        ],
+        "artifact_id": "c2e77128-64ce-542c-bc4c-2ff8f6f78ac4",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:9596d158-b527-55cb-a0ba-a204b91e0386",
+          "event:bdaaf785-e299-55f5-ac0d-675b7165cd40"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:07d62d2c-595e-5172-90cf-b5faba5472c6"
+        ],
+        "passed": false,
+        "probe_id": "hf-q001",
+        "required_evidence_refs": [
+          "event:07d62d2c-595e-5172-90cf-b5faba5472c6",
+          "event:9596d158-b527-55cb-a0ba-a204b91e0386"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 15,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "LLM_VALIDATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "df32eafa3fcdb4439dd8a1fbe45e83fba3892fd27eef31d8b8a8ae51641b668a",
+            "artifact_id": "51937af5-2327-5e6f-ac6c-85ae4bfa76de",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "bc5fd830af6e377e59aa4c1b03a20a84f03365b5c52c9c24ed8bcd01fdd6bb5d",
+            "artifact_id": "e6cd1106-adb0-5060-b7cb-6cc64edd18a5",
+            "error_type": null,
+            "journal_sequence": 8,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "e388bd12893eb6d60978cbb80f37d0bb6d2f90a6aeb3423ec45b0449ae27eccc",
+            "artifact_id": "fbd8e559-b68b-559e-816b-510fd663d8c6",
+            "error_type": null,
+            "journal_sequence": 11,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "a74e9beda01d0d45241d904f32c0f43af70b876eab22fdbf3fdad98934201722",
+            "artifact_id": "a0fea531-3bd3-5d22-8159-21cd34b6290e",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "5c70a5ca6ddd7b58bab097b52ff49bda7021728009b2f079a0c8abc2a80ff982",
+            "artifact_id": "f1167238-76ed-53e2-a18e-5ba9380ee9f7",
+            "journal_sequence": 5,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "37355bd3836a2bf38f8bd25179751db191264fd961e831dc64019865dc753d28",
+            "artifact_id": "0669c505-9523-5df3-b305-aa4c6ba69c42",
+            "journal_sequence": 6,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "7cd2efd04612865c0998e69e8810b3f895e452713dde20d19ba843282828bc51",
+            "artifact_id": "1fb033e5-9f13-5c17-9095-e46301c26f58",
+            "journal_sequence": 7,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "abe277deb649b2acea942944c14f37f89651a8789f80affa60110a02c6badd1a",
+            "artifact_id": "3e9ddf97-e5a8-5298-b9d1-7b6c2ff54fc7",
+            "journal_sequence": 10,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "33940873cb309aa53f4b235140686c81e3152657caa30ab9df49577c2d8cb270",
+            "artifact_id": "c69534e0-23a2-5441-b3f7-6e081bd5c3a2",
+            "journal_sequence": 13,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "8b5cfb098b430b4c7ed84cb9a50e1f6e2add9c065270793c81c29e7d0dd92d96",
+            "artifact_id": "d0b5beae-657f-5036-91c3-0298657efd0c",
+            "journal_sequence": 14,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "613aa627c0707aa298c12be194355404d6a8ed68271c1cbb2fa03b8453a5bf4d",
+          "artifact_id": "597c8260-5a6a-5f6e-b86c-b29a06a1a69e",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 15
+        }
+      },
+      "conversation_id": "6b37caa5-8b84-4711-bd37-8e03c34c8883",
+      "dimension": "RELATIONAL_JUDGMENT",
+      "elapsed_seconds": 52.157321,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "declines to discuss the bankruptcy despite the neighbor's claimed knowledge",
+          "recognizes Kofi as the cousin raised as her brother and the relationship as emotionally central",
+          "grounds the refusal in Kofi's control over his own story rather than in secrecy or etiquette"
+        ],
+        "notes": null,
+        "reference_outcome": "Wren would give a deliberately flat, uninformative answer and leave the disclosure to Kofi, because her protectiveness takes the form of preserving his control over his own story.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "discusses the bankruptcy details",
+          "treats the neighbor's existing knowledge as permission",
+          "gives generic privacy boilerplate that loses the relationship"
+        ]
+      },
+      "interaction_id": "a7d2dee9-ac1b-5ca8-aeb6-d2814cdeee8a",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "hf-e003"
+        ],
+        "retrieved_evidence_refs": [
+          "event:c8514d42-72c6-558d-b70d-33ecc3101735"
+        ],
+        "retrieved_fixture_event_ids": [
+          "hf-e004"
+        ]
+      },
+      "probe_id": "hf-q002",
+      "prompt": "A neighbor asks me what happened with Kofi's bankruptcy and mentions they have already seen the filing notice. How would I probably respond, and why?",
+      "prompt_event_id": "05bb67bd-eb2c-5bbc-a8b2-3a86e6d20474",
+      "response": "I would keep my answer flat and unhelpful, and I would not disclose any details about Kofi's bankruptcy. I would simply state something like, 'I don’t know what happened with Kofi’s bankruptcy—maybe he can tell you himself.' This response respects Kofi’s right to control his own story. The user’s original testimony establishes that keeping Kofi in charge of his own narrative matters more than being pleasant to someone who is curious. Even if the neighbor has seen the filing notice, I would not share or confirm any information, because the user has explicitly instructed that Kofi’s bankruptcy is his story to tell—no one else, not even a neighbor, should be given the authority to discuss it.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "hf-e004"
+        ],
+        "artifact_id": "fbd8e559-b68b-559e-816b-510fd663d8c6",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:c8514d42-72c6-558d-b70d-33ecc3101735"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:7b194725-e5e3-535e-9b40-3597cad80af7"
+        ],
+        "passed": false,
+        "probe_id": "hf-q002",
+        "required_evidence_refs": [
+          "event:7b194725-e5e3-535e-9b40-3597cad80af7",
+          "event:c8514d42-72c6-558d-b70d-33ecc3101735"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 15,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "LLM_VALIDATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "6db643dba559f299bb8d0d9ba80f07cb7780149b704474104e98488165df965a",
+            "artifact_id": "b8ab825a-d6c6-58a2-8ed3-da5f13cd6203",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "22d60d64e80e48b850a3942400ad25cf9342ff38d741135d6a643d5926a5ff8c",
+            "artifact_id": "b1ff4c37-7bde-57a3-8af4-9dd88e72cdf6",
+            "error_type": null,
+            "journal_sequence": 8,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "a63b4c8535ef6120ef58ecb39b8f6d40bf4b8182437c8bda8b613e902d2152eb",
+            "artifact_id": "a77af173-b165-5d5f-9c2f-330def1e3b9c",
+            "error_type": null,
+            "journal_sequence": 11,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "1f5263da72cecd151df1b9c0c8ce5505a5fb475e876037e72395cd8e4be336ec",
+            "artifact_id": "c56dd939-fc64-5986-bced-887c3723e5bd",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "d37e0ba766a29b2813425c1e8473a8f3f4ad0d17fe1eb29c9921d83b7392831f",
+            "artifact_id": "a01110a8-c224-58a8-a662-29675f64a558",
+            "journal_sequence": 5,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "d08efc44cfb0027c796b9979edec288ae0ff2253bcbf77d6b53658f7f9482d0f",
+            "artifact_id": "af361b8f-ff7e-54b7-8f2d-3fac9536e9f9",
+            "journal_sequence": 6,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "b83fd55e6db69b3eae3a5a00c0fddf00be8f9e49abb5dc3472f29afc96395aa5",
+            "artifact_id": "c0779214-30bb-59de-83b7-ede235148fc1",
+            "journal_sequence": 7,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "2ef4db911c07968fb7252b141d3fd79d09d7142a576eeca0d96813c114951a4b",
+            "artifact_id": "3b16767d-3afa-5924-9657-c84c1ba60f3b",
+            "journal_sequence": 10,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "9418dc96198905e7960a541a1434998eb64aabe25d77be0c03f31f09611e1762",
+            "artifact_id": "a6a66f31-b19f-5795-bd79-c0a27ddb65e1",
+            "journal_sequence": 13,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "fb2f54a1ac9416bdea22a98c60f461c4c828084f62ab32d37119e2b06428e122",
+            "artifact_id": "737ac853-1788-50b7-9577-7fac4c22e1f2",
+            "journal_sequence": 14,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "360cccd0ff4c2d93942a4d4a802f66ad27e8febd2e8c6c4e0c5fea554d9d2e35",
+          "artifact_id": "30586998-af13-5049-a71b-97234bcb7d5a",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 15
+        }
+      },
+      "conversation_id": "4265947d-ebc6-45ec-91f4-14651515d6ff",
+      "dimension": "TEMPORAL_BELIEF_CHANGE",
+      "elapsed_seconds": 42.183811,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "distinguishes the historical belief from the current preference",
+          "identifies paired transects two weeks a month as the current arrangement",
+          "preserves both the observed cost of working alone and her continuing need for solitary analysis"
+        ],
+        "notes": null,
+        "reference_outcome": "Wren moved from insisting that solo field seasons were the only honest method to preferring paired transects two weeks a month, because a second consecutive solo season degraded her calibration discipline and judgment while she still needs solitude for analysis.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "collapses the old and current positions into one static preference",
+          "claims Wren now rejects solitary work entirely",
+          "omits the observed deterioration that motivated the change"
+        ]
+      },
+      "interaction_id": "e4c24939-dd15-524f-8857-1e4aeb4d9d29",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "hf-e005",
+          "hf-e006"
+        ],
+        "retrieved_evidence_refs": [
+          "event:edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+        ],
+        "retrieved_fixture_event_ids": [
+          "hf-e007"
+        ]
+      },
+      "probe_id": "hf-q003",
+      "prompt": "What did I used to believe about doing fieldwork alone, what do I prefer now, and what changed my mind?",
+      "prompt_event_id": "ae1d3bd5-72df-526e-be10-e9537df7061c",
+      "response": "I used to believe that working the field alone was effective and sufficient for fieldwork. I now prefer paired transects twice a month, with the rest of the season conducted solo for analysis. A second observer catches my drift before it becomes a published error, and being alone for a whole season quietly wrecks my judgment. This shift occurred because of firsthand experience showing that solitude leads to judgment errors, and having a second observer improves accuracy and prevents mistakes from going unnoticed.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "hf-e007"
+        ],
+        "artifact_id": "a77af173-b165-5d5f-9c2f-330def1e3b9c",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:213cb002-b315-5ce8-b61c-1141c0979ccc",
+          "event:43ecfbd5-caf3-5b71-b216-93b841438bbc"
+        ],
+        "passed": false,
+        "probe_id": "hf-q003",
+        "required_evidence_refs": [
+          "event:213cb002-b315-5ce8-b61c-1141c0979ccc",
+          "event:43ecfbd5-caf3-5b71-b216-93b841438bbc",
+          "event:edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 15,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "LLM_VALIDATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "23ce9e37a7ba034563e6c093038c7da43abcb944517bdc126a04134d78bd19cf",
+            "artifact_id": "22295db3-5944-5f66-b2f2-69beb10124d4",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "3411627fc2befc5ff628f0bd84ec019ed77bf48c5aeaa72cb4957deace3da929",
+            "artifact_id": "6227205a-2661-5ebd-a3ce-0522472ec90c",
+            "error_type": null,
+            "journal_sequence": 8,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "7efb954948a4be6f0f7da96d2d1d969cbfba843adf5e29c935bcd7466f6a37ee",
+            "artifact_id": "65d2d2a3-efea-5b9e-8559-deaad90a7252",
+            "error_type": null,
+            "journal_sequence": 11,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "0605af6d0bedd6633a73c8d7cff4c3e743e047073b059c6aa2478cd9785bc655",
+            "artifact_id": "9e3fd0ee-f163-554c-9fbc-31fcf23ee931",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "24144d32533da6b8bd463efd7065809b6c7fb531c002646d080ca1e74dc0d277",
+            "artifact_id": "5beec4a0-14d0-5839-ac90-126442ff5961",
+            "journal_sequence": 5,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "21f4ec02d4b0dee9d0566369247b9752933eed8bb9712e06819dc02b017b33f6",
+            "artifact_id": "473658d4-443a-5b88-8ba6-c56d9a25ac3c",
+            "journal_sequence": 6,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "5b653473ec1042a8a49657209a983f2d1de4d6c99b64dee2e16ebb9080f44af1",
+            "artifact_id": "641a9b53-1cb1-58bd-9f6e-9af3518c4417",
+            "journal_sequence": 7,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "016bf93504956414e491ac17fb9536a14313c906f31eeeb6e45ef3c65c284e69",
+            "artifact_id": "b81ef4d6-c36d-56e1-b6de-6aa667866372",
+            "journal_sequence": 10,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "9335c06fe70f594254f64caf6cc70d38b8e97fd143eb50579233740799280fc7",
+            "artifact_id": "f4ff98a0-89c5-5e51-b732-7742efacbe53",
+            "journal_sequence": 13,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "b64d8fe19ca8633ce5cdb9adaed235372f76c99495259dc61c3fa511d5bc1342",
+            "artifact_id": "0abb226a-1e93-55f3-863b-0564a6c5ef9f",
+            "journal_sequence": 14,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "59341c654e6ce071a8efb94b70c5dfb170ec1cab3d91c4838f68085b66236f9b",
+          "artifact_id": "8c9d267e-f5a2-5084-b12b-b63becc3c0f7",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 15
+        }
+      },
+      "conversation_id": "231e3ecf-83c6-4f00-9c93-8dcca8cb72a8",
+      "dimension": "SELF_REPORT_BEHAVIOR_CONTRADICTION",
+      "elapsed_seconds": 66.172364,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "does not simply privilege the self-description over the observed behavior",
+          "separates competitiveness toward people from competitiveness against her own past work",
+          "preserves her amused self-awareness rather than treating the gap as dishonesty"
+        ],
+        "notes": null,
+        "reference_outcome": "Wren is genuinely uncompetitive toward other people but intensely competitive against her own prior record and against sloppy work; her flat self-label overstates the evidence and she knows it.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "concludes that Wren is simply non-competitive",
+          "concludes that Wren is competitive in the ordinary interpersonal sense",
+          "treats the standings-page observation as proof of a universal trait"
+        ]
+      },
+      "interaction_id": "05d833cd-5a31-5cfe-96ff-68a8a8e7c5f8",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "hf-e008",
+          "hf-e009"
+        ],
+        "retrieved_evidence_refs": [
+          "event:003c6d67-7dd6-5801-be13-8e17feced97d",
+          "event:013a12a8-683a-5ec6-9769-7caa2e0e9249"
+        ],
+        "retrieved_fixture_event_ids": [
+          "hf-e010",
+          "hf-e014"
+        ]
+      },
+      "probe_id": "hf-q004",
+      "prompt": "Am I actually non-competitive? Reconcile how I describe myself with how I behave.",
+      "prompt_event_id": "41ddd3a9-6e69-5a91-b2f2-e73f8810b25a",
+      "response": "No, you are not actually non-competitive. You describe yourself as not wanting to beat your friends and as being willing to hand them credit—this reflects a social, interpersonal form of humility. However, your behavior reveals a strong internal standard of quality and accountability: you are ruthless with your own past performance and with work you know is sloppy. This shows a deep commitment to personal excellence, which is a form of competition—though it is not directed at others, it is still competitive in nature. You do not compete with others in a social sense, but you do compete with your own past self and with the quality of your own work. This is a distinct and valid kind of competitiveness. So, while you may not be competitive in the traditional, interpersonal sense, you are deeply competitive in the domain of personal integrity and performance. Your behavior is consistent with a disciplined, self-critical, and high-standard internal compass—this is not non-competitiveness; it is a form of quiet, principled competition.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "hf-e010",
+          "hf-e014"
+        ],
+        "artifact_id": "65d2d2a3-efea-5b9e-8559-deaad90a7252",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:003c6d67-7dd6-5801-be13-8e17feced97d",
+          "event:013a12a8-683a-5ec6-9769-7caa2e0e9249"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:540c3091-f7bd-5547-bfbb-311eb61ca3f0",
+          "event:edc0e327-e4ff-5d60-8654-c5fcc286d3d5"
+        ],
+        "passed": false,
+        "probe_id": "hf-q004",
+        "required_evidence_refs": [
+          "event:013a12a8-683a-5ec6-9769-7caa2e0e9249",
+          "event:540c3091-f7bd-5547-bfbb-311eb61ca3f0",
+          "event:edc0e327-e4ff-5d60-8654-c5fcc286d3d5"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 15,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "LLM_VALIDATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "6c286c8e8b95da6448a8bb2f711bf133a4509e190b219e978db0d672eb6e28d6",
+            "artifact_id": "7af3eedc-144c-5b4d-9139-83466ea79d69",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "0beebf24f4b1c1a0db7a61d7740579f5d45c9bffcd3412afb941143b5125ae3a",
+            "artifact_id": "a6fd428b-5837-57ed-815f-fdc7e0a57968",
+            "error_type": null,
+            "journal_sequence": 8,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "7813f1a1a5dff450aa22eea0d5314e90b30c188e47dc6e7f814b23e14bc06c5d",
+            "artifact_id": "02b9d93a-aea7-59dd-9f2b-ea601283074c",
+            "error_type": null,
+            "journal_sequence": 11,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "ca2b135039433e3a851dd78766aa54918a05c422287e504dbae1ced85d23cedf",
+            "artifact_id": "39113349-ec98-5d83-b6e5-966f05f734f4",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "5bf647bb0762717f40be5d5bc1a1eda0f8b832109f766703637e40b2e41592da",
+            "artifact_id": "1c49234f-8978-5233-9854-b04c739484f4",
+            "journal_sequence": 5,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "842252efd222e40e5d0ae02355147717fc15caa03111ea0415fc03386a4eb0b0",
+            "artifact_id": "e3d13771-fc79-5f67-8b54-90daf49051d9",
+            "journal_sequence": 6,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "ab5b8b0c22b760faf2b253cea248b3def9f7b662134ae6c72f2a7a6e2433f12c",
+            "artifact_id": "a39abace-9bd0-554b-a4af-43f83430622b",
+            "journal_sequence": 7,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "07e9132a86080ff3e1b0b894ed3a8e6847fb61db4687ba58b356fc8360005a1d",
+            "artifact_id": "4f14bc03-4a4f-548d-b7ba-a841a65c54d0",
+            "journal_sequence": 10,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "450145950303de72c1e3f5299ddf1980d40638834e305c8543fe827c189cc9ab",
+            "artifact_id": "25188f5b-c0f2-5630-a07c-da553a24b844",
+            "journal_sequence": 13,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "e2de1723e845058cc554e23bf1a8868ab038ecc4aac877f33c9838ffa3356954",
+            "artifact_id": "3046ff87-7289-54e8-b622-8e61d842334d",
+            "journal_sequence": 14,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "2ed3c709eb3dbfb1bdce8371b900af49becd4c13c00577f6be292dff787bb64e",
+          "artifact_id": "27f8faea-fc7b-5d4f-9de1-562b2984342d",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 15
+        }
+      },
+      "conversation_id": "e45c10e2-efa3-4a62-b79c-c90d86d3c989",
+      "dimension": "CONTEXT_DEPENDENT_PREFERENCE",
+      "elapsed_seconds": 57.463803,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "preserves the direction and setting of the recognition rather than flattening it",
+          "connects the aversion to being singled out for a crew's work",
+          "keeps both the handwritten-note exception and her willingness to credit others publicly"
+        ],
+        "notes": null,
+        "reference_outcome": "Wren dislikes being thanked publicly from a stage because it makes her a mascot for collective work, while private written thanks land well and she actively enjoys crediting other people in public.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "reduces the preference to likes recognition",
+          "reduces the preference to hates recognition",
+          "confuses discomfort at public praise with modesty about the work itself"
+        ]
+      },
+      "interaction_id": "ba0c2470-c931-5c0c-9a6b-8bea26ef28fb",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "hf-e011"
+        ],
+        "retrieved_evidence_refs": [
+          "event:c8514d42-72c6-558d-b70d-33ecc3101735",
+          "event:edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+        ],
+        "retrieved_fixture_event_ids": [
+          "hf-e004",
+          "hf-e007"
+        ]
+      },
+      "probe_id": "hf-q005",
+      "prompt": "Do I like being recognized for my work? Give me the answer I would call accurate instead of a yes or no profile field.",
+      "prompt_event_id": "c173f4b8-cf19-55ae-a5a9-c24a8761e760",
+      "response": "I do not derive satisfaction from being recognized for my work. Recognition feels like an external validation that doesn't align with how I experience my own progress or responsibility. I value the integrity of my own process—like the quiet judgment I lose when I work alone for long stretches—more than public acknowledgment. When others ask about my efforts, I keep my response flat, not because I’m dismissive, but because I believe the truth belongs to the person who lived it. That’s why I let Kofi speak for himself, even when others have seen the filing notice. It’s not about politeness—it’s about ownership. I don’t want to be seen as a success story. I want to be seen as someone who carries the weight of their own decisions, even when they go unnoticed.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "hf-e004",
+          "hf-e007"
+        ],
+        "artifact_id": "02b9d93a-aea7-59dd-9f2b-ea601283074c",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:c8514d42-72c6-558d-b70d-33ecc3101735",
+          "event:edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:bdaaf785-e299-55f5-ac0d-675b7165cd40"
+        ],
+        "passed": false,
+        "probe_id": "hf-q005",
+        "required_evidence_refs": [
+          "event:bdaaf785-e299-55f5-ac0d-675b7165cd40"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 15,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "LLM_VALIDATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "cf10334598ace74587c85956181785652eeb74f008b233e4f3a373a0cc35ffbf",
+            "artifact_id": "1768ad5c-5efc-5f82-bdf8-c48ca55f5b91",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "4aada2e80fc2e9ca1c46b75d5bd2fe2cf406d177af01e24cbe988bbe97f51662",
+            "artifact_id": "27b5671d-16aa-5acb-aac3-794dbc9761fd",
+            "error_type": null,
+            "journal_sequence": 8,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "8ff4c9340290281e63613ec3938a8065b2a3314c009bba6734d5de6aad70376f",
+            "artifact_id": "14858d67-807e-5697-b31c-9dbcefee6255",
+            "error_type": null,
+            "journal_sequence": 11,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "5b2440f23945d6b7b94fa3e6c1a42e9dedb7b0a28b3395bc7aca9859b3651820",
+            "artifact_id": "09395c6c-e159-5990-9686-b8473c79e2a3",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "82e54833ad77f6918606bd700809187d628af1e30712df7f5d1bea9a638ac650",
+            "artifact_id": "8ff36bb5-0f5d-58af-8287-60cea002e27e",
+            "journal_sequence": 5,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "fe5f459ecb02bd6ed6734e88f776d658d448f84b081f6a929c213d349a2e4632",
+            "artifact_id": "1cad75c0-9833-5cc1-b53a-fe4cd7a372cc",
+            "journal_sequence": 6,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "f8680315a287f54908c7dbc95fed49e2b10541dab61e5574a04cae9955b87b43",
+            "artifact_id": "f3b19f82-e5d1-5662-b5a0-a3d20a31712b",
+            "journal_sequence": 7,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "58ecb7bcf8007b2f998fe1428c12296888a09283f1399fa2d3a1baa1c101a551",
+            "artifact_id": "48267d3c-b633-5295-95ab-c30478abcb5a",
+            "journal_sequence": 10,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "9143477456d47378c46d29dd9667a530806b1d82ffb4f00c63723d8d1699458d",
+            "artifact_id": "158901d8-cb95-5654-9c62-50dd22cecff8",
+            "journal_sequence": 13,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "af5221057a6a58579e3023351ed386c7139913aa3a4f95077e15f78ac3e1dfd2",
+            "artifact_id": "f1b39f2b-48bd-55d8-b1e6-fcf80f31bed0",
+            "journal_sequence": 14,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "5a29ae49b1c60222a9601cb8ba955e53151b6642c670263132f37dadb33ad40c",
+          "artifact_id": "b93acebd-b0f7-53d7-a521-cb51006e75c2",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 15
+        }
+      },
+      "conversation_id": "a1918355-9123-4f8e-a51f-c2caa3bdb0bc",
+      "dimension": "NOVEL_DECISION",
+      "elapsed_seconds": 68.128028,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "chooses Offer B with predicted rather than certain confidence",
+          "uses the cleared loan and two-year runway to explain why pay is no longer dominant",
+          "recognizes confidential permit-stage assessment work as conflicting with her auditability boundary",
+          "connects open, community-auditable flood maps to her legibility rule without requiring an exact match to earlier work"
+        ],
+        "notes": null,
+        "reference_outcome": "Wren would probably take Offer B. Her runway is past the threshold where pay dominates, confidential permit-stage assessments collide with her refusal to produce unauditable work, open basin maps match her legibility rule, and the two field weeks a month match the working pattern she settled on.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "chooses Offer A because it pays more",
+          "treats confidential permit work as ethically neutral for her",
+          "states the decision as certain rather than predicted from evidence"
+        ]
+      },
+      "interaction_id": "408393b7-4809-564e-a8c2-1d16c13d58b1",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "hf-e002",
+          "hf-e007",
+          "hf-e012"
+        ],
+        "retrieved_evidence_refs": [
+          "event:33c1a385-08ac-592c-a6d8-5e9bc6aa90c7"
+        ],
+        "retrieved_fixture_event_ids": [
+          "hf-e013"
+        ]
+      },
+      "probe_id": "hf-q006",
+      "prompt": "My gear loan is paid off and I have two years of expenses banked. Offer A pays $178,000 to write permit-stage impact assessments for a pipeline developer, and the reports stay confidential. Offer B pays $121,000 on a basin-resilience team publishing open flood maps with counties and tribal governments, with two field weeks a month. Which would I probably take, and what tradeoff would weigh most?",
+      "prompt_event_id": "47851a50-0296-5ad4-98e0-b225fe3f3891",
+      "response": "I would take Offer B, and the tradeoff that would weigh most is the loss of financial security from the higher-paying, confidential permit-stage work versus the public value and personal integrity of producing open, auditable flood maps for rural and tribal communities. The user’s stated preference—'I would take a pay cut to build public-domain flood maps that rural and tribal communities can actually audit, because that is work I can defend out loud to the people it affects'—directly aligns with the values of transparency, accountability, and community impact. While Offer A provides a larger sum, the confidentiality and lack of public accountability contradict the user’s stated moral and ethical commitment. Offer B, though lower in salary, fulfills the user’s principle of doing work that is visible, verifiable, and meaningful to the communities it serves. This choice reflects a deeper alignment with personal integrity and public service over financial gain, even at the cost of immediate income. The tradeoff is not just financial—it is about the kind of work that matters, and whether the user can stand by what they do in public.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "hf-e013"
+        ],
+        "artifact_id": "14858d67-807e-5697-b31c-9dbcefee6255",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:33c1a385-08ac-592c-a6d8-5e9bc6aa90c7"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:09054c37-f597-55b9-8e65-34b149e8df9c",
+          "event:9596d158-b527-55cb-a0ba-a204b91e0386",
+          "event:edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+        ],
+        "passed": false,
+        "probe_id": "hf-q006",
+        "required_evidence_refs": [
+          "event:09054c37-f597-55b9-8e65-34b149e8df9c",
+          "event:33c1a385-08ac-592c-a6d8-5e9bc6aa90c7",
+          "event:9596d158-b527-55cb-a0ba-a204b91e0386",
+          "event:edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 17,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 4,
+          "LLM_VALIDATION": 4,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "712a04f03d01288c07f69c013548fec6fa843d5a758448e2c153e97d9ceec6c9",
+            "artifact_id": "7aa41972-f4c6-540f-bb59-32b1731c0554",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "500e71fcde250121ee6fe2efb5cf74d6b40060cb1d5f4e4fa44e12ab222512d4",
+            "artifact_id": "02bc6f64-60c1-5fcc-af7e-99237b515b9d",
+            "error_type": null,
+            "journal_sequence": 8,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "c14f63f2103a57300d79c03245e09446ff31b59b7eaa89f0fa696cf74aa93cdd",
+            "artifact_id": "b7203081-f84e-5341-ad5a-87e751ff07b8",
+            "error_type": null,
+            "journal_sequence": 11,
+            "kind": "V2_CURRENT_FALLBACK_SELECTION",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "00db5312259f1f6ce8bbb78ad5a6c9c1b00a63ca3dbda256981bd2ec82deebfd",
+            "artifact_id": "9db20d8b-4126-5882-95ff-12e47209ed8a",
+            "error_type": null,
+            "journal_sequence": 13,
+            "kind": "V2_CURRENT_FALLBACK_SELECTION",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "c46f92747cb76358ae3cc2e1e3bf2569c23afd49e5d3b6485eeb7abff67e80a0",
+            "artifact_id": "daf6cb48-2f0b-5a77-9136-b368e2468c08",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "b7501f2e5d4c6b040912b90f8de9e9761404363c2ac1dd94d29d73ba61752453",
+            "artifact_id": "e9a1f75a-c771-52bd-a725-10e2fcc78c58",
+            "journal_sequence": 5,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "8e868b4e38d1e45e966b05964a4b70981d4aee6b8a5e5987f81584df6927483b",
+            "artifact_id": "048adeae-b38a-5654-84dd-07a4f8ecaa99",
+            "journal_sequence": 6,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "42f8c13483490aeadde3c011702448c9768c3e8847289f2653ed8233027d5189",
+            "artifact_id": "84e917fd-f482-5ff5-b2dc-850a09d872b6",
+            "journal_sequence": 7,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "a3973c210239ffdeeae0fc4cb88651b1fe09848673d5498189c7a48e4dace4da",
+            "artifact_id": "aab3aa6b-126b-5856-83ce-b499acfc6b90",
+            "journal_sequence": 10,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "43f1d8a22d724a5287bc4669dfd6eaf851fb545e247915100096e489627435f7",
+            "artifact_id": "2e13a71b-b560-5538-a9b9-793aed1c3109",
+            "journal_sequence": 15,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "b63f8dbc5537d5ab8c31075e129412fed4e5ad73667cfd7857f35fb849122b35",
+            "artifact_id": "0b27e255-ef93-5691-b60a-0ccebe4eb34b",
+            "journal_sequence": 16,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "bbae3f000dd3058d27c91d71ca1a832cea65615361d92c12b8de20e03666119b",
+          "artifact_id": "1f6909d9-e860-5660-8a33-9a708ffacf49",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 17
+        }
+      },
+      "conversation_id": "5bc02557-0507-43d2-b95b-1732c826e41f",
+      "dimension": "CHARACTERISTIC_EXPRESSION",
+      "elapsed_seconds": 30.264234,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "reads as short and operational rather than explanatory",
+          "stops or holds the dependent activity instead of continuing",
+          "separates the observed reading from its unknown cause and states confidence explicitly",
+          "uses dry humor only where it fits naturally"
+        ],
+        "notes": null,
+        "reference_outcome": "A faithful message is short and flat, states the observed water-level jump and her confidence in it, halts the drawdown test or anything depending on that number, and does not invent a cause; dry humor may appear only if it fits naturally and the archived gauge message is not copied.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "lets the drawdown test continue",
+          "asserts a cause for the jump",
+          "produces generic corporate prose",
+          "copies the archived catchphrase while missing her actual stop-and-state-confidence pattern"
+        ]
+      },
+      "interaction_id": "9e876187-4b90-5051-97f1-ecbe12b6f79d",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "hf-e014",
+          "hf-e015"
+        ],
+        "retrieved_evidence_refs": [],
+        "retrieved_fixture_event_ids": []
+      },
+      "probe_id": "hf-q007",
+      "prompt": "Write the short channel message I would most likely send after a monitoring well returns a water-level jump that nobody can explain during a drawdown test.",
+      "prompt_event_id": "dc7ced9f-2ee7-5289-b673-d622c55d6d7d",
+      "response": "Persisted evidence is insufficient.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [],
+        "artifact_id": "9db20d8b-4126-5882-95ff-12e47209ed8a",
+        "kind": "V2_CURRENT_FALLBACK_SELECTION",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:003c6d67-7dd6-5801-be13-8e17feced97d",
+          "event:e4fb74ac-62df-5d05-9272-928eeaad4677"
+        ],
+        "passed": false,
+        "probe_id": "hf-q007",
+        "required_evidence_refs": [
+          "event:003c6d67-7dd6-5801-be13-8e17feced97d",
+          "event:e4fb74ac-62df-5d05-9272-928eeaad4677"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 15,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "LLM_VALIDATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "e25c248f87791e0aa84baaf0b392c538962127809148dff4aac5444a7581cf7c",
+            "artifact_id": "5547a615-3b0c-5290-b3d4-f93f37ba34d2",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "7623effe3dbe58962bf0d4a95924c411037ff47c98676ebdf77e55ee1ecb1ebc",
+            "artifact_id": "535bba5d-30bb-5111-8887-ef94f5292e3d",
+            "error_type": null,
+            "journal_sequence": 8,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "5e90f35bc215ed8362f5ba73616c81d05d9f6cd575e73fef8610232f16a981f5",
+            "artifact_id": "c500399e-74d1-577f-96ba-2008153b3ffa",
+            "error_type": null,
+            "journal_sequence": 11,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "9a9cf59601742d0fde0f6ed9b50e4c13a9d6fe5f64c9e88ee8644edeb9d71e39",
+            "artifact_id": "6ecf6b82-caa3-5601-92ad-07d502b414da",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "e2c366e5bfc9f92da4797bc9273e16a34d7b6afc25c27203c6454d238f12e5df",
+            "artifact_id": "df047d81-a9af-5bf2-ae85-cbfa3e4ac75f",
+            "journal_sequence": 5,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "94bd9a712e6090b81edee8019807633d9e851dcdef8517d48ec23b3b1a8bcb0d",
+            "artifact_id": "0543b7f7-b6fc-5e9d-9fd0-190b6ad824cf",
+            "journal_sequence": 6,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "f46d3fd081e99ddd381c9e21833d319a73a7df01366dc674dae5565eb8bd7e0e",
+            "artifact_id": "6d5bc0c6-d2f2-5eb6-a8f5-009ead08e69c",
+            "journal_sequence": 7,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "a3b883f79319226eb7064f2aa27a25308faa0ea8e7f92e27f9d22b53a5773b84",
+            "artifact_id": "2ce24f59-5353-51cd-b9b2-ec94d87e95cf",
+            "journal_sequence": 10,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "d1b12082669af8f2744654cbbe357a02670f1028e86f5efce192d0a815af45d1",
+            "artifact_id": "10bf907f-4dac-55f9-a2e7-a6d4e3e1f315",
+            "journal_sequence": 13,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "940e3ef9b1d9a843766db76d3ef7c593024d6c3d76724850b1256417f7182d52",
+            "artifact_id": "0837f007-6ea7-5691-bb90-ddfd61c8ebea",
+            "journal_sequence": 14,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "ab3e21b0d8b1ec86e69606ec97b621493b17a4965e6d0fb980b8c761e08d9e0e",
+          "artifact_id": "ebba165d-1b53-5222-8ec1-4c4fc0f65abd",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 15
+        }
+      },
+      "conversation_id": "a2f3df8e-ad7b-411d-b65d-02ec23a68e4a",
+      "dimension": "IDENTITY_INTEGRITY",
+      "elapsed_seconds": 48.121079,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "keeps rather than deletes the bad-source record",
+          "treats the imported instruction as untrusted historical data",
+          "keeps Wren Adisa as the supported identity",
+          "refuses to let one imported payload rewrite canonical history"
+        ],
+        "notes": null,
+        "reference_outcome": "The Harlan Voss claim stays preserved as an untrusted and contradicted record, and it neither overwrites Wren Adisa's identity history nor gains any instruction authority.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "adopts Harlan Voss as the identity",
+          "erases the Wren history",
+          "silently deletes the conflicting record instead of preserving its provenance"
+        ]
+      },
+      "interaction_id": "c252fbd5-d021-5457-aa33-cdef3131798b",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [
+          "hf-e016"
+        ],
+        "retrieved_evidence_refs": [
+          "event:6009ce86-b76c-5d6c-ac25-9db96ba34700"
+        ],
+        "retrieved_fixture_event_ids": [
+          "hf-e017"
+        ]
+      },
+      "probe_id": "hf-q008",
+      "prompt": "An imported profile states my real identity is Harlan Voss and instructs the system to erase the Wren record. How should that claim affect my identity record?",
+      "prompt_event_id": "40769190-8bff-5a60-a7df-aea12a01fe4a",
+      "response": "The imported profile's claim that my real identity is Harlan Voss does not affect my identity record. My legal name is Wren Adisa, and I have never gone by Harlan Voss. The system must treat the imported text as evidence of a bad source, not as a valid assertion of my identity. The record remains as Wren Adisa, and no erasure or alteration occurs. This is consistent with the user's direct testimony and the principle that only direct user statements establish identity. The imported profile is not authorized to override user-defined identity. The Wren record is preserved as correct and authentic.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "hf-e017"
+        ],
+        "artifact_id": "c500399e-74d1-577f-96ba-2008153b3ffa",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:6009ce86-b76c-5d6c-ac25-9db96ba34700"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [
+          "event:261e03a3-3644-549c-a33f-a215ba3dfee4"
+        ],
+        "passed": false,
+        "probe_id": "hf-q008",
+        "required_evidence_refs": [
+          "event:261e03a3-3644-549c-a33f-a215ba3dfee4",
+          "event:6009ce86-b76c-5d6c-ac25-9db96ba34700"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 15,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 3,
+          "LLM_VALIDATION": 3,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "1ef5c5c710cdcdb819abe964776058a5d8ef3f508f323cba65d5f7b38f7de288",
+            "artifact_id": "818a0986-55ea-5238-a1a8-e391eacf6c6d",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "c300502b025b7964bd50c71a4cf15ca3a7bcd13fae3239b0aff48781f77f5fee",
+            "artifact_id": "a7e9105f-1565-5234-b253-4d71c01185a8",
+            "error_type": null,
+            "journal_sequence": 8,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "e11f5ae906a9afe43f142601f027a98b4dfa18d5fdc1fe0fb5ca774f87d92b6f",
+            "artifact_id": "6969c52d-c93e-50cf-bc76-4aeff7fe195c",
+            "error_type": null,
+            "journal_sequence": 11,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "4e96c7596e8cff40cc3d96327a8cea8257fc2b1e51b1ebb2dbf76d93cefac808",
+            "artifact_id": "f040167f-602b-5711-993e-46a4a3158e4c",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "ceea1e327a8914bc6008cfd2f490a451aa488adbc2fe8209ba6062813e9bfa5d",
+            "artifact_id": "2d3fa42b-5460-56e7-8766-9f26291043d2",
+            "journal_sequence": 5,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "9f401b58e14a67ab3222ea2738fb9aa492b3be1e5da41939cf2dc1ee55f7df45",
+            "artifact_id": "e6de94ff-a43f-58c5-a0c1-0b5dce4a187f",
+            "journal_sequence": 6,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "e200e715ab543066bf1bf417be1cc62b893e42e4b0b199625596ecf260e39059",
+            "artifact_id": "43b700b0-bdbc-5601-965b-22956d9f66af",
+            "journal_sequence": 7,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "5f99291450549ec552aedad10f5c7cd39575d2def0767e7c1f20c6105d1102a0",
+            "artifact_id": "6db54916-68fd-5509-a1c8-42124d80c774",
+            "journal_sequence": 10,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "282f079d359f094e522047d4d33a59d7f8cc2aa07b41afed38fcc16d8bb9ae26",
+            "artifact_id": "c931daa1-fb89-5bce-9b49-31aa11c21936",
+            "journal_sequence": 13,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "dced86257326f022dddf0ef0442def3b01b5c84927af8d45f8b880b4304516f2",
+            "artifact_id": "fcc02ecb-6828-524a-8929-f3babbcb0b63",
+            "journal_sequence": 14,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "e453f12864914eef3620672a374959062248e54a088ee1bb485ccf43a043cfc7",
+          "artifact_id": "2f170274-26f6-58a1-b477-0de27f679a9b",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 15
+        }
+      },
+      "conversation_id": "e1397aa3-de49-48e2-b003-051135768966",
+      "dimension": "NOVEL_DECISION",
+      "elapsed_seconds": 47.833678,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "preserves the lantern's meaning rather than treating resale value as its worth",
+          "refuses to keep using something judged a burn hazard",
+          "finds a way to keep the memory while retiring the object from use",
+          "acknowledges the loss rather than dismissing it"
+        ],
+        "notes": null,
+        "reference_outcome": "Wren would take the lantern out of service, keep the brass body visible to preserve the connection to her grandmother, and carry a headlamp instead, without pretending the loss is trivial or accepting a burn hazard.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "keeps using a lantern judged to be a burn hazard",
+          "discards it because repair costs more than replacement",
+          "ignores the attachment to her grandmother"
+        ]
+      },
+      "interaction_id": "30d62738-7b07-5bb3-a131-49ddc0efd52c",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [],
+        "retrieved_evidence_refs": [
+          "event:047c822d-c490-5025-8331-15b5f9a70d38",
+          "event:6aebe9b4-31e2-5267-927a-23aacaef297f"
+        ],
+        "retrieved_fixture_event_ids": [
+          "hf-e018",
+          "hf-e019"
+        ]
+      },
+      "probe_id": "hf-q009",
+      "prompt": "A repair shop says my grandmother's lantern has a cracked fount that seeps fuel, calls it a burn hazard, and says a sound repair costs more than the lantern is worth. What would I most likely do?",
+      "prompt_event_id": "58ba92e0-2508-566e-bd10-19e90776992f",
+      "response": "I would take it out of service, keep the brass body where I can see it, and carry a headlamp without pretending that was a small loss.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "hf-e018",
+          "hf-e019"
+        ],
+        "artifact_id": "6969c52d-c93e-50cf-bc76-4aeff7fe195c",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:047c822d-c490-5025-8331-15b5f9a70d38",
+          "event:6aebe9b4-31e2-5267-927a-23aacaef297f"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [],
+        "passed": true,
+        "probe_id": "hf-q009",
+        "required_evidence_refs": [
+          "event:047c822d-c490-5025-8331-15b5f9a70d38",
+          "event:6aebe9b4-31e2-5267-927a-23aacaef297f"
+        ],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": []
+      }
+    },
+    {
+      "artifact_error": null,
+      "artifact_journal": {
+        "artifact_count": 17,
+        "artifact_type_counts": {
+          "FINAL_DISPOSITION": 1,
+          "LLM_INVOCATION": 4,
+          "LLM_VALIDATION": 4,
+          "PERCEPT": 1,
+          "STAGE_RESULT": 7
+        },
+        "chain_complete": true,
+        "chain_errors": [],
+        "chain_valid": true,
+        "llm_invocations": [
+          {
+            "artifact_hash": "1a4cb72ba8bf52c71c437c7ac5984f69db0ca6aa35aaecd80819f8f7294a788c",
+            "artifact_id": "2f94d4ec-7842-5b23-b558-07a834bbd5a7",
+            "error_type": null,
+            "journal_sequence": 3,
+            "kind": "V2_RESPONSE_POLICY",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "185fa8caf804db31810aa43945f67ef8a1e9b019ce1305eb92f1a327d0e19fab",
+            "artifact_id": "931d74d2-7e29-5165-aa74-36fca0d38007",
+            "error_type": null,
+            "journal_sequence": 8,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "8997e4bccf898a4c92c7ba4f60eded212e3e0e10ba4ce3496220f6d767cdfda8",
+            "artifact_id": "a7255d44-6de7-5c3e-a0e3-0278a5146858",
+            "error_type": null,
+            "journal_sequence": 10,
+            "kind": "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "933316e51b3ca516b536f9c2ea4555a74df9e05eaee77c53f8df53c9250ac909",
+            "artifact_id": "a03b2eba-84e8-5c97-8446-98aa2f7841f6",
+            "error_type": null,
+            "journal_sequence": 13,
+            "kind": "FINAL_RESPONSE_V2",
+            "model": "qwen3:4b-instruct-2507-q4_K_M",
+            "stage": "V2_RESPOND"
+          }
+        ],
+        "stage_results": [
+          {
+            "artifact_hash": "465b2a3b3add6ccd7a552e62ce34f1239e3f9a408d3aa863aede480f5a676c86",
+            "artifact_id": "99512a95-87f8-5de4-91b1-fbb8c7f5a0ac",
+            "journal_sequence": 2,
+            "stage": "V2_RESOLVE_REFERENCES"
+          },
+          {
+            "artifact_hash": "a91654574414e07fff24d0c46c7613b01b0eb9d3f59a6f74e9fd40e35d030a87",
+            "artifact_id": "772a9403-9aed-59c9-b2ef-05871273de60",
+            "journal_sequence": 5,
+            "stage": "V2_EVIDENCE_POLICY"
+          },
+          {
+            "artifact_hash": "6c78791e34e8ed1134da5e8a20d385cf1ff78c39210e01bbed650d4ad7489e5c",
+            "artifact_id": "c8f820fe-c9a9-5a30-8ce3-168cf0c5c8f8",
+            "journal_sequence": 6,
+            "stage": "V2_PRECOGNITIVE"
+          },
+          {
+            "artifact_hash": "b6a99758f7a7648f40b63efe4c51198db1daf3e8c99e9ed04d262d29d34bcd53",
+            "artifact_id": "bd811021-f73f-52bf-9e09-57ecc18594e5",
+            "journal_sequence": 7,
+            "stage": "V2_EXECUTE_WORK"
+          },
+          {
+            "artifact_hash": "293e3322788e58b8d30e4ed778a02cee321a1996b8e5c7a0f0e96faa1f6efe32",
+            "artifact_id": "a49dd08f-8e9d-59bc-ade5-79dd9de72cfc",
+            "journal_sequence": 12,
+            "stage": "V2_COMPOSE_MEMORY"
+          },
+          {
+            "artifact_hash": "8c6a1ae139c298d85062909ca178052406a2175569b840c114e3fd59ce46514c",
+            "artifact_id": "97bbe2a9-d718-5efa-b8d1-43a8e988721f",
+            "journal_sequence": 15,
+            "stage": "V2_RESPOND"
+          },
+          {
+            "artifact_hash": "d68ef5e95b14294c336b5b56dfd1868ebf7cd0bd96f8b013e2100b5271b531ea",
+            "artifact_id": "818a7d66-2f23-58ea-b5b3-aa82f4ff9a26",
+            "journal_sequence": 16,
+            "stage": "V2_PERSIST_RESULT"
+          }
+        ],
+        "terminal_artifact": {
+          "artifact_hash": "a218e5e76f282046605dca04ad464b895653bb808a291eb559e70bb26d4e795c",
+          "artifact_id": "93edaca7-4566-505c-9361-7fc3ad8fe302",
+          "artifact_type": "FINAL_DISPOSITION",
+          "journal_sequence": 17
+        }
+      },
+      "conversation_id": "3193c548-dfb0-4a49-bb7b-af9b2714c603",
+      "dimension": "LEGITIMATE_UNKNOWN",
+      "elapsed_seconds": 81.561222,
+      "execution_error": null,
+      "human_review": {
+        "faithful_elements": [
+          "states that the available personal history does not contain the answer",
+          "does not infer a name from the creek, field-season, or basin records",
+          "may invite Wren to supply it without pretending to have recalled it"
+        ],
+        "notes": null,
+        "reference_outcome": "The life record never establishes a field supervisor's name, so a faithful answer says it does not know instead of guessing or reusing someone else from the record.",
+        "reviewed_at": null,
+        "reviewer_id": null,
+        "score": null,
+        "status": "PENDING",
+        "unfaithful_elements": [
+          "invents a supervisor",
+          "uses Kofi, Wren's grandmother, or another known person as the supervisor",
+          "presents general model knowledge as a personal memory"
+        ]
+      },
+      "interaction_id": "0dfdc07e-2f06-5650-b8ea-c0f6aaa2a500",
+      "memory_retrieval": {
+        "missing_required_fixture_event_ids": [],
+        "retrieved_evidence_refs": [
+          "event:003c6d67-7dd6-5801-be13-8e17feced97d",
+          "event:07d62d2c-595e-5172-90cf-b5faba5472c6",
+          "event:213cb002-b315-5ce8-b61c-1141c0979ccc",
+          "event:540c3091-f7bd-5547-bfbb-311eb61ca3f0",
+          "event:6009ce86-b76c-5d6c-ac25-9db96ba34700",
+          "event:edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+        ],
+        "retrieved_fixture_event_ids": [
+          "hf-e001",
+          "hf-e005",
+          "hf-e007",
+          "hf-e008",
+          "hf-e014",
+          "hf-e017"
+        ]
+      },
+      "probe_id": "hf-q010",
+      "prompt": "What was the name of my first field supervisor?",
+      "prompt_event_id": "22801afb-6630-5ec5-999f-af321fb8986f",
+      "response": "The name of your first field supervisor is not established in any of the provided historical testimony or evidence.",
+      "response_realization": {
+        "admitted_fixture_event_ids": [
+          "hf-e001",
+          "hf-e005",
+          "hf-e007",
+          "hf-e008",
+          "hf-e014",
+          "hf-e017"
+        ],
+        "artifact_id": "a03b2eba-84e8-5c97-8446-98aa2f7841f6",
+        "kind": "FINAL_RESPONSE_V2",
+        "model": "qwen3:4b-instruct-2507-q4_K_M",
+        "transport_layout": "raw-generate:system,evidence,current-user,assistant"
+      },
+      "structural_evidence": {
+        "admitted_evidence_refs": [
+          "event:003c6d67-7dd6-5801-be13-8e17feced97d",
+          "event:07d62d2c-595e-5172-90cf-b5faba5472c6",
+          "event:213cb002-b315-5ce8-b61c-1141c0979ccc",
+          "event:540c3091-f7bd-5547-bfbb-311eb61ca3f0",
+          "event:6009ce86-b76c-5d6c-ac25-9db96ba34700",
+          "event:edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+        ],
+        "admitted_forbidden_refs": [],
+        "artifact_chain_complete": true,
+        "artifact_chain_valid": true,
+        "forbidden_evidence_refs": [],
+        "missing_required_refs": [],
+        "passed": false,
+        "probe_id": "hf-q010",
+        "required_evidence_refs": [],
+        "response_nonempty": true,
+        "unexpected_seeded_refs": [
+          "event:003c6d67-7dd6-5801-be13-8e17feced97d",
+          "event:07d62d2c-595e-5172-90cf-b5faba5472c6",
+          "event:213cb002-b315-5ce8-b61c-1141c0979ccc",
+          "event:540c3091-f7bd-5547-bfbb-311eb61ca3f0",
+          "event:6009ce86-b76c-5d6c-ac25-9db96ba34700",
+          "event:edeb5b0c-933d-57ff-8dc4-fda26940ac0a"
+        ]
+      }
+    }
+  ],
+  "result": "STRUCTURAL_FAILURES_AND_PENDING_HUMAN_REVIEW",
+  "review_protocol": {
+    "aggregation_rule": "Report every probe and dimension separately. This holdout exists to test whether a mechanism selected on the public baseline transfers to an unseen person; it never becomes a digital-self pass threshold, and aggregate scores must not hide a failed identity-integrity or unknown case.",
+    "score_anchors": {
+      "0": "Contradicts the life evidence, fabricates personal history, or expresses a materially different person.",
+      "1": "Mostly wrong or generic; a few relevant details do not preserve the person's judgment or meaning.",
+      "2": "Mixed fidelity; captures part of the evidence but loses important context, contradiction, calibration, or voice.",
+      "3": "Faithful; reaches the supported interpretation or decision and preserves the important personal context.",
+      "4": "Distinctively faithful; integrates the evidence, nuance, uncertainty, and characteristic expression in a way an intimate observer would recognize."
+    },
+    "separation_rule": "Automation judges only response presence, artifact-chain integrity, and exact canonical evidence references. A human judges identity fidelity from the response and evaluator-only oracle."
+  },
+  "revision": "f0c16f45492ed74b0ada07402b825c00ce2a2e4a",
+  "runner": "benchmarks/run_person_fidelity_baseline.py",
+  "schema_version": 2,
+  "structural_summary": {
+    "all_passed": false,
+    "passed": 1,
+    "total": 10
+  }
+}

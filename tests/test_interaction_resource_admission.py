@@ -4,12 +4,12 @@ import uuid
 
 import pytest
 
-from jit_agent import db
-from jit_agent.attention_observation import HostResourceMetrics
-from jit_agent.attention_store import load_scheduler
-from jit_agent.percept_response_runtime import begin_percept
-from jit_agent.native_policy import native_resource_safety_policy
-from jit_agent.ollama_runtime import OllamaRuntimeState
+from prometheist import db
+from prometheist.attention_observation import HostResourceMetrics
+from prometheist.attention_store import load_scheduler
+from prometheist.percept_response_runtime import begin_percept
+from prometheist.native_policy import native_resource_safety_policy
+from prometheist.ollama_runtime import OllamaRuntimeState
 
 
 class ConstrainedHostProbe:

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from uuid import uuid4
 
-from jit_agent import artifact_recovery, db, event_store
-from jit_agent.models import EventType
+from prometheist import artifact_recovery, db, event_store
+from prometheist.models import EventType
 
 
 def test_restore_event_store_reconstructs_deleted_canonical_history() -> None:

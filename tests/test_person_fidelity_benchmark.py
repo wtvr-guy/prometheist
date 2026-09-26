@@ -13,8 +13,9 @@ from uuid import uuid4
 import pytest
 
 from benchmarks import run_person_fidelity_baseline as native_runner
-from jit_agent import artifact_journal, event_artifact_store
-from jit_agent.person_fidelity_benchmark import (
+from benchmarks import run_self_memory_person_fidelity as self_memory_runner
+from prometheist import artifact_journal, event_artifact_store
+from prometheist.person_fidelity_benchmark import (
     REQUIRED_BASELINE_DIMENSIONS,
     canonical_seed_payload,
     chronological_life_events,
@@ -377,12 +378,13 @@ def test_git_round_trip_preserves_legacy_and_new_evidence_bytes(tmp_path):
             assert (checkout / relative).read_bytes() == raw
 
 
-def test_benchmark_and_test_runtime_artifacts_are_git_visible():
+def test_benchmark_and_runtime_artifacts_are_ignored_but_zip_is_visible():
     ignore_rules = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
 
-    assert "benchmarks/generated/" not in ignore_rules
-    assert not any(rule.startswith("benchmarks/generated/") for rule in ignore_rules)
-    assert ".prometheist/" not in ignore_rules
+    assert "benchmarks/generated/" in ignore_rules
+    assert "benchmarks/results/*.json" in ignore_rules
+    assert not any(rule.startswith(".tmp") or rule.startswith("!.tmp") for rule in ignore_rules)
+    assert ".prometheist/" in ignore_rules
 
 
 def test_untracked_native_evidence_does_not_dirty_the_tested_source_revision():
@@ -399,6 +401,9 @@ def test_untracked_native_evidence_does_not_dirty_the_tested_source_revision():
         " M benchmarks/generated/person_fidelity/prior-evidence.json"
     )
     assert not native_runner._is_untracked_benchmark_evidence("?? src/unreviewed.py")
+    assert native_runner._is_untracked_benchmark_evidence("?? .tmp/latest-benchmark.zip")
+    assert native_runner._is_untracked_benchmark_evidence(" M .tmp/latest-benchmark.zip")
+    assert not native_runner._is_untracked_benchmark_evidence(" M .tmp/other.zip")
 
 
 def test_artifact_chain_receipt_indexes_every_model_and_stage_boundary():
@@ -516,6 +521,124 @@ def test_run_manifest_hashes_every_raw_artifact_and_labels_training_state(tmp_pa
     assert by_path[relative_event_path]["sha256"] == hashlib.sha256(
         event_path.read_bytes()
     ).hexdigest()
+
+
+def test_self_memory_resource_preflight_distinguishes_warm_from_cold():
+    from prometheist.attention_observation import HostResourceMetrics
+    from prometheist.ollama_runtime import OllamaRuntimeState
+
+    class FixedRuntimeProbe:
+        def __init__(self, resident):
+            self.resident = resident
+
+        def capture(self):
+            return OllamaRuntimeState(
+                model="qwen3:4b-instruct-2507-q4_K_M",
+                probe_ok=True,
+                resident=self.resident,
+                reported_name=(
+                    "qwen3:4b-instruct-2507-q4_K_M"
+                    if self.resident
+                    else None
+                ),
+                size_bytes=3_000 * 1024 * 1024 if self.resident else None,
+                size_vram_bytes=0 if self.resident else None,
+            )
+
+    class FixedHostProbe:
+        def capture(self):
+            return HostResourceMetrics(
+                platform="test",
+                logical_cpu_count=8,
+                cpu_utilization_percent=10,
+                load_1m=0,
+                memory_total_mib=16_384,
+                memory_available_mib=4_700,
+            )
+
+    warm = self_memory_runner._resource_preflight(
+        runtime_probe=FixedRuntimeProbe(True),
+        host_probe=FixedHostProbe(),
+    )
+    cold = self_memory_runner._resource_preflight(
+        runtime_probe=FixedRuntimeProbe(False),
+        host_probe=FixedHostProbe(),
+    )
+
+    assert warm["required_incremental_mib"] == 512
+    assert warm["admissible"] is True
+    assert cold["required_incremental_mib"] == 3_072
+    assert cold["admissible"] is False
+    assert warm["safe_available_mib"] == cold["safe_available_mib"]
+
+
+def test_self_memory_resource_preflight_fails_before_execution_when_unsafe():
+    with pytest.raises(SystemExit, match="before database reset"):
+        self_memory_runner._require_resource_preflight(
+            {
+                "model": "fixture-model",
+                "ollama_residency": "cold-nonresident",
+                "physical_available_mib": 4_700,
+                "safe_available_mib": 2_907,
+                "required_incremental_mib": 3_072,
+                "admissible": False,
+            }
+        )
+
+
+def test_self_memory_inventory_accepts_learning_and_nested_probe_artifacts(
+    tmp_path,
+):
+    root = tmp_path / "self-memory-run"
+    learning_event = root / "learning" / "events" / "learn.json"
+    probe_event = root / "probes" / "pf-q005" / "events" / "probe.json"
+    probe_interaction = (
+        root
+        / "probes"
+        / "pf-q005"
+        / "interactions"
+        / "interaction-id"
+        / "000001-artifact.json"
+    )
+    native_runner._write_result(
+        learning_event,
+        {"artifact_type": "EVENT_RECORD", "event_id": "learn-event"},
+    )
+    native_runner._write_result(
+        probe_event,
+        {"artifact_type": "EVENT_DATABASE_COMMIT", "event_id": "probe-event"},
+    )
+    native_runner._write_result(
+        probe_interaction,
+        {
+            "artifact_type": "FINAL_DISPOSITION",
+            "artifact_id": "artifact-1",
+            "interaction_id": "interaction-id",
+        },
+    )
+
+    entries = self_memory_runner._self_memory_artifact_file_inventory(root)
+
+    assert {item["relative_path"] for item in entries} == {
+        "learning/events/learn.json",
+        "probes/pf-q005/events/probe.json",
+        (
+            "probes/pf-q005/interactions/"
+            "interaction-id/000001-artifact.json"
+        ),
+    }
+
+
+def test_self_memory_inventory_rejects_unknown_nested_layout(tmp_path):
+    root = tmp_path / "self-memory-run"
+    unexpected = root / "probes" / "pf-q005" / "debug" / "trace.json"
+    native_runner._write_result(unexpected, {"artifact_type": "DEBUG"})
+
+    with pytest.raises(
+        RuntimeError,
+        match="unexpected self-memory benchmark artifact layout",
+    ):
+        self_memory_runner._self_memory_artifact_file_inventory(root)
 
 
 def test_run_manifest_rejects_unexpected_files_in_artifact_tree(tmp_path):

@@ -3,8 +3,8 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent import db
-from jit_agent.semantic_memory import (
+from prometheist import db
+from prometheist.semantic_memory import (
     EvidenceRelation,
     EvidenceSourceKind,
     ResolutionStatus,

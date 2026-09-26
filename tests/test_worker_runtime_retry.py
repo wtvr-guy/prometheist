@@ -1,8 +1,8 @@
 from types import SimpleNamespace
 from uuid import uuid4
 
-from jit_agent import worker_runtime
-from jit_agent.worker_protocol import WorkerClaimDecision
+from prometheist import worker_runtime
+from prometheist.worker_protocol import WorkerClaimDecision
 
 
 class FakeCursor:

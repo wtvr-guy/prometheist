@@ -11,9 +11,9 @@ import time
 
 import httpx
 from dotenv import load_dotenv
-from jit_agent.llm import _TextAnswer
-from jit_agent.percept_response_runtime import MemorySufficiencyDecision
-from jit_agent.percept_response_worker import UserPromptWorkSelection
+from prometheist.llm import _TextAnswer
+from prometheist.percept_response_runtime import MemorySufficiencyDecision
+from prometheist.percept_response_worker import UserPromptWorkSelection
 
 load_dotenv()
 

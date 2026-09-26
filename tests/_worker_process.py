@@ -7,9 +7,9 @@ import sys
 from datetime import datetime, timezone
 from uuid import UUID
 
-from jit_agent import db
-from jit_agent.attention_observation import HostResourceMetrics
-from jit_agent.worker_store import guarded_claim_worker_step
+from prometheist import db
+from prometheist.attention_observation import HostResourceMetrics
+from prometheist.worker_store import guarded_claim_worker_step
 
 
 CAPTURED_AT = datetime(2026, 8, 26, 16, 0, tzinfo=timezone.utc)

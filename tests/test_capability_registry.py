@@ -5,8 +5,8 @@ import uuid
 
 import pytest
 
-from jit_agent import db, event_store
-from jit_agent.capability_registry import (
+from prometheist import db, event_store
+from prometheist.capability_registry import (
     CapabilityDescriptor,
     CapabilityKind,
     CapabilityNeed,
@@ -15,7 +15,7 @@ from jit_agent.capability_registry import (
     deterministic_capability_request_id,
     request_capability,
 )
-from jit_agent.models import EventType
+from prometheist.models import EventType
 
 
 def _registration(

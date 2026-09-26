@@ -110,6 +110,27 @@ See the [milestone](milestones/v0.8/README.md),
 Budgets and ordinal bins remain provisional; integration is not evidence of
 improved cognition or native performance.
 
+### Experimental Self-Memory System
+
+The person-fidelity baseline and subsequent semantic-memory review justified pulling
+one bounded Horizon-A mechanism forward for experimental integration:
+[the Self-Memory System](architecture/SELF_MEMORY_SYSTEM.md). It is layered on the
+v0.8 situation/consolidation substrate and does not redefine the v0.8 milestone as a
+completed person model.
+
+The experiment separates canonical autobiographical evidence from typed,
+provenance-grounded self representations; distinguishes avowed, observed, inferred,
+aspirational, normative, and socially attributed perspectives; requires
+counterevidence review before establishment; preserves canonical-root closure across
+higher-order derivation; supports held-out prediction/outcome feedback; and activates
+only a bounded Working Self for live cognition.
+
+This mechanism remains **experimental** until deterministic, native-model, and
+person-fidelity gates show that it improves identity/decision fidelity without
+unsupported generalization, source-authority regression, self-reinforcing model
+output, or unacceptable local-resource cost. It does not authorize the constitutional
+identity-maturity transition.
+
 The [audit completion record](audits/COPILOT_AUDIT_REVIEW_2026-09-16.md#completion-evidence--2026-09-17)
 records the reviewed completion/recovery fixes, passing CI on `23ef8d8`
 (378 passed, 13 skipped), and Mike's separate report of passing local tests.
@@ -132,9 +153,9 @@ and source-policy selection. It preserves the first schema-v1 result at `bf80979
 and an incomplete intervening attempt. A valid artifact bundle establishes the
 negative baseline; it does not establish satisfactory person fidelity.
 
-Before introducing a person-model mechanism, Prometheist must record what the
-unmodified persistent/stateless architecture can already do with longitudinal life
-evidence. The first public baseline uses a fictional person and independently probes
+The frozen baseline records what the unmodified persistent/stateless architecture
+could do with longitudinal life evidence before the experimental person-model
+mechanism was introduced. The first public baseline uses a fictional person and independently probes
 autobiographical meaning, relationships, belief change, self-report/behavior
 contradiction, contextual preference, novel decisions, characteristic expression,
 identity integrity, and legitimate unknowns.
@@ -226,9 +247,18 @@ Post-v1.0 work should proceed as independent empirical horizons rather than one 
 
 ### Horizon A — longitudinal imprinting and person-model formation
 
+**Current experimental mechanism:** `self-memory-system-v1`; not yet accepted.
+
 Primary question: can Prometheist derive a revisable, provenance-bearing model of an individual from years of heterogeneous life evidence without replacing that evidence or reducing the person to a static profile?
 
-Candidate research includes autobiographical and semantic self-memory, relationships, values, characteristic reasoning, emotional associations, context-dependent behavior, self-description versus observed conduct, contradictions, belief evolution, skills, goals, and enduring intentions.
+The first implementation now supplies a typed self graph, explicit perspective and
+plasticity classes, canonical-root evidence accounting, counterevidence review,
+prediction feedback, bounded Working Self activation, and policy-aware
+Composer/Adaptive-Recall integration. Remaining research includes calibrated
+autobiographical episode hierarchy, richer relationship/value learning, emotional
+associations, context-conditioned trait distributions, procedural self-learning,
+narrative evolution, long-horizon prediction calibration, and native person-fidelity
+evaluation.
 
 ### Horizon B — person-fidelity evaluation
 

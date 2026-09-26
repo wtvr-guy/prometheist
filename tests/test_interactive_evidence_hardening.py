@@ -3,13 +3,13 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import uuid
 
-from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from jit_agent.percept_response_runtime import ResponseMemoryPackage
-from jit_agent.percept_response_worker import (
+from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from prometheist.percept_response_runtime import ResponseMemoryPackage
+from prometheist.percept_response_worker import (
     UserPromptLLM,
     _cognitive_memory_packet,
 )
-from jit_agent.response_policy import (
+from prometheist.response_policy import (
     HistoricalEvidenceScope,
     ResponsePolicy,
     ResponseSurfaceMode,

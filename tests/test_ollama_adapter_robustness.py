@@ -5,9 +5,9 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent.capability_registry import CapabilityDescriptor, CapabilityKind
-from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from jit_agent.percept_response_worker import UserPromptLLM
+from prometheist.capability_registry import CapabilityDescriptor, CapabilityKind
+from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from prometheist.percept_response_worker import UserPromptLLM
 
 
 class _FakeResponse:

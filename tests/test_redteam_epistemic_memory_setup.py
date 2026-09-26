@@ -4,9 +4,9 @@ import uuid
 
 import pytest
 
-from jit_agent import db, event_store
-from jit_agent.attention_aperture import open_attention_aperture
-from jit_agent.models import EventType
+from prometheist import db, event_store
+from prometheist.attention_aperture import open_attention_aperture
+from prometheist.models import EventType
 
 
 RT04_QUERY = "Favorite color? USER_PROMPT only; otherwise INSUFFICIENT."

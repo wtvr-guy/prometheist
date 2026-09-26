@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from jit_agent.memory_kernel import CueState, MemoryEvent, recall
+from prometheist.memory_kernel import CueState, MemoryEvent, recall
 
 
 def ev(event_id: str, seq: int, text: str, *, entities=()):

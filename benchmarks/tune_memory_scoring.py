@@ -18,9 +18,9 @@ from itertools import product
 from pathlib import Path
 from typing import Any, Iterable
 
-from jit_agent.association_projection import derive_associations
-from jit_agent.associative_memory import Association, associative_recall
-from jit_agent.memory_kernel import CueState, MemoryEvent, MemoryScoringPolicy
+from prometheist.association_projection import derive_associations
+from prometheist.associative_memory import Association, associative_recall
+from prometheist.memory_kernel import CueState, MemoryEvent, MemoryScoringPolicy
 
 ROOT = Path(__file__).resolve().parents[1]
 BENCHMARK_DIR = ROOT / "benchmarks"

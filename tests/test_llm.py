@@ -6,12 +6,12 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent import llm
-from jit_agent.llm import _strip_thinking
-from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from jit_agent.percept_response_runtime import ResponseMemoryPackage, _FINAL_RESPONSE_PROMPT
-from jit_agent.percept_response_worker import UserPromptLLM
-from jit_agent.response_policy import (
+from prometheist import llm
+from prometheist.llm import _strip_thinking
+from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from prometheist.percept_response_runtime import ResponseMemoryPackage, _FINAL_RESPONSE_PROMPT
+from prometheist.percept_response_worker import UserPromptLLM
+from prometheist.response_policy import (
     HistoricalEvidenceScope,
     ResponsePolicy,
     ResponseSurfaceMode,
@@ -150,6 +150,25 @@ def test_user_facing_answers_use_expressive_temperature_with_structured_envelope
     assert payload["options"] == {"num_predict": 256, "temperature": 0.65}
 
 
+def test_explicit_ollama_keep_alive_is_sent_without_changing_default(
+    monkeypatch,
+):
+    monkeypatch.setenv("PROMETHEIST_OLLAMA_KEEP_ALIVE", "30m")
+    client = llm.OllamaClient(base_url="http://ollama.test", model="model:test")
+    fake_http = _FakeHTTPClient(['{"ok":true}'])
+    client._client = fake_http
+
+    client._structured(
+        "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+        "system",
+        "user",
+        {"type": "object"},
+        32,
+    )
+
+    assert fake_http.calls[0][1]["keep_alive"] == "30m"
+
+
 def test_control_llm_kinds_remain_deterministic_when_response_temperature_is_high(
     monkeypatch,
 ):
@@ -183,6 +202,42 @@ def test_user_facing_answer_fails_closed_after_two_invalid_outputs():
     client._client = _FakeHTTPClient(["not-json", '{"answer":"   "}'])
     with pytest.raises(ValueError, match="model answer failed to validate"):
         client._text("FINAL_RESPONSE_V2", "system", "Question")
+
+
+def test_history_dependent_response_fails_closed_when_composer_exhausts_recall():
+    packet = MemoryPacket(
+        memory_request_id=uuid4(),
+        need=MemoryNeed(query_text="What was my fifth-grade teacher's name?"),
+        supported=True,
+        items=[
+            _evidence(
+                EventType.USER_PROMPT,
+                "An unrelated remembered preference.",
+                1,
+            )
+        ],
+    )
+    package = ResponseMemoryPackage(
+        memory_packet=packet,
+        sufficient=False,
+        unresolved_memory_deficit="The teacher's name is not present in history.",
+        composer_rounds=2,
+        adaptive_recall_rounds=1,
+    )
+    client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
+    fake_http = _FakeHTTPClient(['{"verbatim_value":null}'])
+    client._client = fake_http
+
+    answer = client.generate_final_response(
+        "What was my fifth-grade teacher's name?",
+        package,
+        (),
+        response_policy=_natural_policy(HistoricalEvidenceScope.USER_AUTHORED),
+    )
+
+    assert answer == "Persisted evidence is insufficient."
+    assert len(fake_http.calls) == 1
+    assert "current-fallback selector" in fake_http.calls[0][1]["messages"][0]["content"]
 
 
 def test_verbatim_placeholders_prevent_model_from_respelling_opaque_literals():

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import httpx
 
-from jit_agent.attention_observation import HostResourceMetrics
-from jit_agent.native_policy import native_resource_safety_policy
-from jit_agent.ollama_runtime import OllamaClaimHostResourceProbe, OllamaRuntimeProbe
+from prometheist.attention_observation import HostResourceMetrics
+from prometheist.native_policy import native_resource_safety_policy
+from prometheist.ollama_runtime import OllamaClaimHostResourceProbe, OllamaRuntimeProbe
 
 
 _MIB = 1024 * 1024
