@@ -3,9 +3,8 @@ __pycache__/
 *.pyc
 .env
 .pytest_cache/
-.tmp/
 # Keep complete benchmark evidence locally. Share one verified run through the
-# ignored .tmp/latest-benchmark.zip rather than committing thousands of files.
+# .tmp/latest-benchmark.zip rather than committing thousands of files.
 benchmarks/generated/
 benchmarks/results/*.json
 # The default .prometheist artifact journal is also deliberately visible in
