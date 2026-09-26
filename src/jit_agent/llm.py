@@ -327,6 +327,9 @@ class OllamaClient:
     def __init__(self, base_url: str | None = None, model: str | None = None) -> None:
         self.base_url = base_url or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
         self.model = model or configured_ollama_model()
+        self.keep_alive = (
+            os.environ.get("PROMETHEIST_OLLAMA_KEEP_ALIVE", "").strip() or None
+        )
         self._client = httpx.Client(
             base_url=self.base_url,
             timeout=300.0,
@@ -560,6 +563,8 @@ class OllamaClient:
                 "stream": False,
                 "options": {"num_predict": max_tokens, "temperature": temperature},
             }
+        if self.keep_alive is not None:
+            request_json["keep_alive"] = self.keep_alive
         body = self._perform_ollama_request(
             kind=kind,
             request_path=request_path,
@@ -664,6 +669,8 @@ class OllamaClient:
                 "stream": False,
                 "options": {"num_predict": max_tokens, "temperature": temperature},
             }
+        if self.keep_alive is not None:
+            request_json["keep_alive"] = self.keep_alive
         body = self._perform_ollama_request(
             kind=kind,
             request_path=request_path,

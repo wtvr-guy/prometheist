@@ -47,7 +47,12 @@ from jit_agent.self_reflection import (
     render_candidate_support_evidence,
     review_memory_packet,
 )
-from jit_agent.situation_runtime import SITUATION_PROTOCOL, SituationStage, SituationTask
+from jit_agent.situation_runtime import (
+    SITUATION_PROTOCOL,
+    SituationStage,
+    SituationTask,
+    situation_stage_uses_model,
+)
 from jit_agent.worker_protocol import deterministic_worker_step_id
 from jit_agent.worker_store import complete_worker_claim, load_worker_claim_envelope, load_worker_result, release_worker_claim
 
@@ -400,49 +405,11 @@ def execute_claimed_situation_step(conn, *, claim_id: UUID, worker_id: str, sche
         if recovered:
             output = recovered["output"]
         else:
-            self_reflection = False
-            if stage in {SituationStage.SELF_PROPOSE, SituationStage.SELF_REVIEW}:
-                triage_output = _output(
-                    conn,
-                    task,
-                    SituationStage.TRIAGE,
-                    scheduler_key,
-                )
-                triage_decision = TriageDecision.model_validate(
-                    triage_output["decision"]
-                )
-                if triage_decision.candidate_task_class is TaskClass.CONSOLIDATE:
-                    if stage is SituationStage.SELF_PROPOSE:
-                        action_id = uuid5(task.task_id, "registered-action")
-                        self_reflection = bool(
-                            collect_consolidation_evidence(conn, action_id)
-                        )
-                    else:
-                        proposal_output = _output(
-                            conn,
-                            task,
-                            SituationStage.SELF_PROPOSE,
-                            scheduler_key,
-                        )
-                        self_reflection = bool(
-                            proposal_output.get("candidates")
-                        )
-            uses_model = (
-                (
-                    stage is SituationStage.TRIAGE
-                    and deterministic_triage(
-                        task.percept,
-                        task.situation,
-                        task.policy,
-                    )
-                    is None
-                )
-                or self_reflection
-                or (
-                    stage in {SituationStage.COMPOSE, SituationStage.RESPOND}
-                    and task.policy.response_required
-                    and task.policy.natural_language_response
-                )
+            uses_model = situation_stage_uses_model(
+                conn,
+                task,
+                stage,
+                scheduler_key=scheduler_key,
             )
             llm = (
                 llm_factory(interaction=task, stage=stage, claim_id=claim_id)

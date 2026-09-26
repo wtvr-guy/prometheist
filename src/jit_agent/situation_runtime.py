@@ -17,7 +17,10 @@ from pydantic import Field
 
 from jit_agent import artifact_journal, db, event_store
 from jit_agent.attention import AttentionTask, SchedulingMetadata, TaskCriticality, ServiceClass, InterruptionPolicy
-from jit_agent.attention_observation import LocalResourceAdmissionController
+from jit_agent.attention_observation import (
+    LocalResourceAdmissionController,
+    ReservationCreditHostResourceProbe,
+)
 from jit_agent.attention_resources import ProcessResourceEstimate, ResourceEstimateSource
 from jit_agent.attention_store import DEFAULT_SCHEDULER_KEY, allocate_created_seq, load_scheduler, save_scheduler
 from jit_agent.cognitive_store import get_record, list_records, put_record, record_lock
@@ -28,7 +31,14 @@ from jit_agent.ollama_runtime import (
 )
 from jit_agent.percept_context import FrozenRecord
 from jit_agent.perception import Percept
-from jit_agent.percept_triage import SourcePolicy, deterministic_triage, UrgencyClass
+from jit_agent.percept_triage import (
+    SourcePolicy,
+    TaskClass,
+    TriageDecision,
+    UrgencyClass,
+    deterministic_triage,
+)
+from jit_agent.self_reflection import collect_consolidation_evidence
 from jit_agent.situations import Situation
 from jit_agent.worker_protocol import deterministic_worker_step_id, WorkerEffectPolicy
 from jit_agent.worker_runtime import GuardedWorkerLauncher
@@ -229,6 +239,55 @@ def submit_situation_page(
     return submitted
 
 
+def situation_stage_uses_model(
+    conn: psycopg.Connection,
+    task: SituationTask,
+    stage: SituationStage,
+    *,
+    scheduler_key: str = DEFAULT_SCHEDULER_KEY,
+) -> bool:
+    """Return whether this exact stage is permitted to instantiate an LLM."""
+
+    if stage is SituationStage.TRIAGE:
+        return (
+            deterministic_triage(
+                task.percept,
+                task.situation,
+                task.policy,
+            )
+            is None
+        )
+
+    if stage in {SituationStage.SELF_PROPOSE, SituationStage.SELF_REVIEW}:
+        triage_output = _require_situation_result(
+            conn,
+            task,
+            SituationStage.TRIAGE,
+            scheduler_key=scheduler_key,
+        )
+        triage_decision = TriageDecision.model_validate(
+            triage_output["decision"]
+        )
+        if triage_decision.candidate_task_class is not TaskClass.CONSOLIDATE:
+            return False
+        if stage is SituationStage.SELF_PROPOSE:
+            action_id = uuid5(task.task_id, "registered-action")
+            return bool(collect_consolidation_evidence(conn, action_id))
+        proposal_output = _require_situation_result(
+            conn,
+            task,
+            SituationStage.SELF_PROPOSE,
+            scheduler_key=scheduler_key,
+        )
+        return bool(proposal_output.get("candidates"))
+
+    return (
+        stage in {SituationStage.COMPOSE, SituationStage.RESPOND}
+        and task.policy.response_required
+        and task.policy.natural_language_response
+    )
+
+
 def run_situation_task(
     conn: psycopg.Connection,
     task_id: UUID,
@@ -258,36 +317,20 @@ def run_situation_task(
     task = task.model_copy(update={"assignment_id": assignments[0].assignment_id})
     assignment_id = assignments[0].assignment_id
     put_record(conn, "situation_task", str(task_id), task.model_dump(mode="json"), revision=str(assignment_id))
-    if launcher is None:
-        effective_policy = policy or native_resource_safety_policy()
-        physical_probe = probe
-        resource_admission = scheduler.tasks[task_id].resumable_state.get(
-            "resource_admission",
-            {},
+    effective_policy = policy or native_resource_safety_policy()
+    physical_probe = probe
+    resource_admission = scheduler.tasks[task_id].resumable_state.get(
+        "resource_admission",
+        {},
+    )
+    scheduled_memory_mib = int(
+        resource_admission.get(
+            "memory_mib",
+            effective_policy.default_process_memory_mib,
         )
-        scheduled_memory_mib = int(
-            resource_admission.get(
-                "memory_mib",
-                effective_policy.default_process_memory_mib,
-            )
-        )
-        requires_model = bool(resource_admission.get("requires_model", False))
-        claim_probe = (
-            OllamaClaimHostResourceProbe(
-                base_probe=physical_probe,
-                runtime_probe=ollama_runtime_probe or OllamaRuntimeProbe(),
-                policy=effective_policy,
-                scheduled_memory_mib=scheduled_memory_mib,
-            )
-            if requires_model
-            else physical_probe
-        )
-        launcher = GuardedWorkerLauncher(
-            db.get_connection,
-            probe=claim_probe,
-            policy=effective_policy,
-            scheduler_key=scheduler_key,
-        )
+    )
+    runtime_probe = ollama_runtime_probe or OllamaRuntimeProbe()
+
     for stage in SituationStage:
         step_id = deterministic_worker_step_id(assignment_id, stage.value)
         if load_worker_result(conn, step_id, scheduler_key=scheduler_key):
@@ -296,7 +339,35 @@ def run_situation_task(
         register_worker_step(conn, assignment_id=assignment_id, step_key=stage.value, capability=stage.capability,
                              input_refs=[f"situation:{task.situation.snapshot_id}", f"event:{task.user_prompt_event_id}"],
                              effect_policy=WorkerEffectPolicy.IDEMPOTENT_WITH_KEY, scheduler_key=scheduler_key)
-        launched = launcher.launch(step_id=step_id, worker_id=f"situation-{task_id}-{stage.name}",
+        stage_launcher = launcher
+        if stage_launcher is None:
+            uses_model = situation_stage_uses_model(
+                conn,
+                task,
+                stage,
+                scheduler_key=scheduler_key,
+            )
+            claim_probe = (
+                OllamaClaimHostResourceProbe(
+                    base_probe=physical_probe,
+                    runtime_probe=runtime_probe,
+                    policy=effective_policy,
+                    scheduled_memory_mib=scheduled_memory_mib,
+                )
+                if uses_model
+                else ReservationCreditHostResourceProbe(
+                    base_probe=physical_probe,
+                    scheduled_memory_mib=scheduled_memory_mib,
+                    required_memory_mib=effective_policy.default_process_memory_mib,
+                )
+            )
+            stage_launcher = GuardedWorkerLauncher(
+                db.get_connection,
+                probe=claim_probe,
+                policy=effective_policy,
+                scheduler_key=scheduler_key,
+            )
+        launched = stage_launcher.launch(step_id=step_id, worker_id=f"situation-{task_id}-{stage.name}",
                                    command=[sys.executable, "-m", "jit_agent.situation_worker"],
                                    lease_seconds=SITUATION_WORKER_LEASE_SECONDS)
         try:

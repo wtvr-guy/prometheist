@@ -202,6 +202,58 @@ class HostResourceProbe(Protocol):
         ...
 
 
+class ReservationCreditHostResourceProbe:
+    """Credit unused task-level RAM reservation for one smaller worker stage.
+
+    The Attention Fabric currently reserves process RAM at task-assignment
+    granularity. A multi-stage task may therefore reserve a cold LLM budget even
+    while executing a deterministic stage. This probe preserves the durable task
+    reservation while adjusting only the fresh host observation used for one
+    claim. The credit is bounded to the difference between the durable
+    reservation and this stage's declared process requirement.
+
+    Because normal uncertainty/headroom policy is applied after this adjusted
+    observation, the credit remains conservative. This class cannot represent a
+    stage whose actual requirement exceeds the durable reservation.
+    """
+
+    def __init__(
+        self,
+        *,
+        base_probe: HostResourceProbe | None = None,
+        scheduled_memory_mib: int,
+        required_memory_mib: int,
+    ) -> None:
+        if scheduled_memory_mib < 1:
+            raise ValueError("scheduled_memory_mib must be positive")
+        if required_memory_mib < 1:
+            raise ValueError("required_memory_mib must be positive")
+        if required_memory_mib > scheduled_memory_mib:
+            raise ValueError(
+                "required_memory_mib cannot exceed scheduled_memory_mib"
+            )
+        self.base_probe = base_probe or SystemHostResourceProbe()
+        self.scheduled_memory_mib = scheduled_memory_mib
+        self.required_memory_mib = required_memory_mib
+        self.last_physical_metrics: HostResourceMetrics | None = None
+        self.last_memory_credit_mib = (
+            scheduled_memory_mib - required_memory_mib
+        )
+
+    def capture(self) -> HostResourceMetrics:
+        physical = self.base_probe.capture()
+        self.last_physical_metrics = physical.model_copy(deep=True)
+        return physical.model_copy(
+            update={
+                "memory_available_mib": min(
+                    physical.memory_total_mib,
+                    physical.memory_available_mib + self.last_memory_credit_mib,
+                )
+            },
+            deep=True,
+        )
+
+
 class SystemHostResourceProbe:
     """Small standard-library CPU/RAM probe for Linux, Windows, and macOS."""
 

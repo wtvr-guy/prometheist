@@ -519,6 +519,69 @@ def test_run_manifest_hashes_every_raw_artifact_and_labels_training_state(tmp_pa
     ).hexdigest()
 
 
+def test_self_memory_resource_preflight_distinguishes_warm_from_cold():
+    from jit_agent.attention_observation import HostResourceMetrics
+    from jit_agent.ollama_runtime import OllamaRuntimeState
+
+    class FixedRuntimeProbe:
+        def __init__(self, resident):
+            self.resident = resident
+
+        def capture(self):
+            return OllamaRuntimeState(
+                model="qwen3:4b-instruct-2507-q4_K_M",
+                probe_ok=True,
+                resident=self.resident,
+                reported_name=(
+                    "qwen3:4b-instruct-2507-q4_K_M"
+                    if self.resident
+                    else None
+                ),
+                size_bytes=3_000 * 1024 * 1024 if self.resident else None,
+                size_vram_bytes=0 if self.resident else None,
+            )
+
+    class FixedHostProbe:
+        def capture(self):
+            return HostResourceMetrics(
+                platform="test",
+                logical_cpu_count=8,
+                cpu_utilization_percent=10,
+                load_1m=0,
+                memory_total_mib=16_384,
+                memory_available_mib=4_700,
+            )
+
+    warm = self_memory_runner._resource_preflight(
+        runtime_probe=FixedRuntimeProbe(True),
+        host_probe=FixedHostProbe(),
+    )
+    cold = self_memory_runner._resource_preflight(
+        runtime_probe=FixedRuntimeProbe(False),
+        host_probe=FixedHostProbe(),
+    )
+
+    assert warm["required_incremental_mib"] == 512
+    assert warm["admissible"] is True
+    assert cold["required_incremental_mib"] == 3_072
+    assert cold["admissible"] is False
+    assert warm["safe_available_mib"] == cold["safe_available_mib"]
+
+
+def test_self_memory_resource_preflight_fails_before_execution_when_unsafe():
+    with pytest.raises(SystemExit, match="before database reset"):
+        self_memory_runner._require_resource_preflight(
+            {
+                "model": "fixture-model",
+                "ollama_residency": "cold-nonresident",
+                "physical_available_mib": 4_700,
+                "safe_available_mib": 2_907,
+                "required_incremental_mib": 3_072,
+                "admissible": False,
+            }
+        )
+
+
 def test_self_memory_inventory_accepts_learning_and_nested_probe_artifacts(
     tmp_path,
 ):
