@@ -565,24 +565,6 @@ class OllamaClient:
             }
         if self.keep_alive is not None:
             request_json["keep_alive"] = self.keep_alive
-        if self.keep_alive is not None:
-            request_json["keep_alive"] = self.keep_alive
-        if self.keep_alive is not None:
-            request_json["keep_alive"] = self.keep_alive
-        if self.keep_alive is not None:
-            request_json["keep_alive"] = self.keep_alive
-        if self.keep_alive is not None:
-            request_json["keep_alive"] = self.keep_alive
-        if self.keep_alive is not None:
-            request_json["keep_alive"] = self.keep_alive
-        if self.keep_alive is not None:
-            request_json["keep_alive"] = self.keep_alive
-        if self.keep_alive is not None:
-            request_json["keep_alive"] = self.keep_alive
-        if self.keep_alive is not None:
-            request_json["keep_alive"] = self.keep_alive
-        if self.keep_alive is not None:
-            request_json["keep_alive"] = self.keep_alive
         body = self._perform_ollama_request(
             kind=kind,
             request_path=request_path,
@@ -687,6 +669,8 @@ class OllamaClient:
                 "stream": False,
                 "options": {"num_predict": max_tokens, "temperature": temperature},
             }
+        if self.keep_alive is not None:
+            request_json["keep_alive"] = self.keep_alive
         body = self._perform_ollama_request(
             kind=kind,
             request_path=request_path,
