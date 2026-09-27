@@ -35,6 +35,7 @@ if str(ROOT) not in sys.path:
 if str(BENCHMARK_DIR) not in sys.path:
     sys.path.insert(0, str(BENCHMARK_DIR))
 
+from prometheist import event_artifact_store  # noqa: E402
 from run_person_fidelity_baseline import (  # noqa: E402
     DEFAULT_CORPUS,
     HOLDOUT_CORPUS,
@@ -677,7 +678,7 @@ def _self_memory_artifact_file_inventory(
             continue
         if path.name == "run_manifest.json":
             continue
-        if path.suffix.casefold() != ".json":
+        if path.suffix.casefold() not in {".json", ".jsonl"}:
             raise RuntimeError(f"unexpected non-JSON benchmark artifact: {path}")
 
         relative = path.relative_to(artifact_root).as_posix()
@@ -698,10 +699,20 @@ def _self_memory_artifact_file_inventory(
             )
 
         raw = path.read_bytes()
-        try:
-            document = json.loads(raw)
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise RuntimeError(f"invalid JSON benchmark artifact: {path}") from exc
+        if path.suffix.casefold() == ".jsonl":
+            if path.parent.name != "events":
+                raise RuntimeError(f"unexpected event stream location: {path}")
+            record, commit = event_artifact_store.read_event_file(path)
+            document = {
+                **record,
+                "artifact_type": "EVENT_JOURNAL",
+                "commit_hash": commit["commit_hash"] if commit else None,
+            }
+        else:
+            try:
+                document = json.loads(raw)
+            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                raise RuntimeError(f"invalid JSON benchmark artifact: {path}") from exc
         if not isinstance(document, dict):
             raise RuntimeError(f"benchmark artifact is not a JSON object: {path}")
 

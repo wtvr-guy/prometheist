@@ -25,6 +25,7 @@ from uuid import UUID, uuid4
 
 from dotenv import load_dotenv
 
+from prometheist import event_artifact_store
 from prometheist.person_fidelity_benchmark import (
     HOLDOUT_BENCHMARK_ID,
     FidelityProbe,
@@ -444,13 +445,23 @@ def _artifact_file_inventory(run_artifact_root: Path) -> list[dict[str, Any]]:
             continue
         if path.name == "run_manifest.json":
             continue
-        if path.suffix.casefold() != ".json":
+        if path.suffix.casefold() not in {".json", ".jsonl"}:
             raise RuntimeError(f"unexpected non-JSON benchmark artifact: {path}")
         raw = path.read_bytes()
-        try:
-            document = json.loads(raw)
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise RuntimeError(f"invalid JSON benchmark artifact: {path}") from exc
+        if path.suffix.casefold() == ".jsonl":
+            if path.parent.name != "events":
+                raise RuntimeError(f"unexpected event stream location: {path}")
+            record, commit = event_artifact_store.read_event_file(path)
+            document = {
+                **record,
+                "artifact_type": "EVENT_JOURNAL",
+                "commit_hash": commit["commit_hash"] if commit else None,
+            }
+        else:
+            try:
+                document = json.loads(raw)
+            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                raise RuntimeError(f"invalid JSON benchmark artifact: {path}") from exc
         if not isinstance(document, dict):
             raise RuntimeError(f"benchmark artifact is not a JSON object: {path}")
         relative = path.relative_to(run_artifact_root).as_posix()

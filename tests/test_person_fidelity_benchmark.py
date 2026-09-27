@@ -755,7 +755,7 @@ def test_result_verifier_checks_raw_events_and_interaction_chains(tmp_path, monk
     assert verified["verified_event_count"] == 1
     assert verified["verified_interaction_count"] == 1
 
-    event_path = next((probe_root / "events").glob("*.json"))
+    event_path = next((probe_root / "events").glob("*.jsonl"))
     event_path.write_text("{}\n", encoding="utf-8")
     with pytest.raises(RuntimeError, match="artifact (size|SHA-256) mismatch"):
         native_runner._verify_result_artifacts(result_path)
@@ -779,8 +779,8 @@ def test_result_verifier_preserves_a_probe_that_failed_before_interaction_creati
         payload={"text": "evidence written before process failure"},
         payload_text="evidence written before process failure",
     )
-    event_record = next((probe_root / "events").glob("*.json"))
-    record = json.loads(event_record.read_text(encoding="utf-8"))
+    event_record = next((probe_root / "events").glob("*.jsonl"))
+    record, _commit = event_artifact_store.read_event_file(event_record)
     event_artifact_store.write_event_commit(
         event_id=record["event_id"],
         global_seq=1,

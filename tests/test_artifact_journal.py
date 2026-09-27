@@ -405,6 +405,9 @@ def test_event_artifacts_are_semantically_idempotent_and_verifiable(tmp_path, mo
     )
     assert first["record_hash"] == second["record_hash"]
     assert event_artifact_store.verify_event_record(first)
+    event_files = list((tmp_path / "artifacts" / "events").iterdir())
+    assert len(event_files) == 1
+    assert event_files[0].suffix == ".jsonl"
 
     committed_at = datetime.now(timezone.utc)
     commit = event_artifact_store.write_event_commit(
@@ -423,7 +426,149 @@ def test_event_artifacts_are_semantically_idempotent_and_verifiable(tmp_path, mo
     )
     assert commit == retry
     assert event_artifact_store.verify_event_commit(commit)
+    assert list((tmp_path / "artifacts" / "events").iterdir()) == event_files
+    assert len(event_files[0].read_text(encoding="utf-8").splitlines()) == 2
     pairs = event_artifact_store.iter_event_artifacts()
     assert len(pairs) == 1
     assert pairs[0]["record"]["event_id"] == str(event_id)
     assert pairs[0]["commit"]["global_seq"] == 42
+
+
+def test_event_stream_repairs_only_a_matching_interrupted_commit(tmp_path, monkeypatch):
+    import pytest
+
+    monkeypatch.setenv("PROMETHEIST_ARTIFACT_ROOT", str(tmp_path))
+    event_id, conversation_id, correlation_id = uuid4(), uuid4(), uuid4()
+    record = event_artifact_store.write_event_record(
+        event_id=event_id,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        conversation_seq=1,
+        event_type="USER_PROMPT",
+        source="user",
+        payload={"text": "test"},
+        payload_text="test",
+    )
+    path = tmp_path / "events" / f"{event_id}.jsonl"
+    created_at = datetime.now(timezone.utc)
+    semantic = {
+        "artifact_schema_version": 1,
+        "artifact_type": "EVENT_DATABASE_COMMIT",
+        "event_id": str(event_id),
+        "record_hash": record["record_hash"],
+        "global_seq": 5,
+        "conversation_seq": 1,
+        "created_at": created_at.isoformat(),
+        "schema_version": 1,
+    }
+    expected = {**semantic, "commit_hash": event_artifact_store._digest(semantic)}
+    encoded = event_artifact_store._line(expected)
+    with path.open("ab") as handle:
+        handle.write(encoded[:25])
+    with pytest.raises(RuntimeError, match="incomplete"):
+        event_artifact_store.iter_event_artifacts()
+
+    commit = event_artifact_store.write_event_commit(
+        event_id=event_id,
+        global_seq=5,
+        conversation_seq=1,
+        created_at=created_at,
+        schema_version=1,
+    )
+    assert commit == expected
+    before_retry = path.read_bytes()
+    assert event_artifact_store.write_event_commit(
+        event_id=event_id,
+        global_seq=5,
+        conversation_seq=1,
+        created_at=created_at,
+        schema_version=1,
+    ) == commit
+    assert path.read_bytes() == before_retry
+    with pytest.raises(ValueError, match="conflicting event commit"):
+        event_artifact_store.write_event_commit(
+            event_id=event_id,
+            global_seq=6,
+            conversation_seq=1,
+            created_at=created_at,
+            schema_version=1,
+        )
+    path.write_bytes(path.read_bytes().replace(b'"global_seq":5', b'"global_seq":6'))
+    with pytest.raises(RuntimeError, match="invalid event commit"):
+        event_artifact_store.read_event_file(path)
+
+
+def test_event_stream_rejects_corrupt_tail_and_reads_legacy_pair(tmp_path, monkeypatch):
+    import pytest
+
+    monkeypatch.setenv("PROMETHEIST_ARTIFACT_ROOT", str(tmp_path))
+    event_id, conversation_id, correlation_id = uuid4(), uuid4(), uuid4()
+    record = event_artifact_store.write_event_record(
+        event_id=event_id,
+        conversation_id=conversation_id,
+        correlation_id=correlation_id,
+        conversation_seq=1,
+        event_type="USER_PROMPT",
+        source="user",
+        payload={"text": "test"},
+        payload_text="test",
+    )
+    path = tmp_path / "events" / f"{event_id}.jsonl"
+    with path.open("ab") as handle:
+        handle.write(b"garbage")
+    with pytest.raises(RuntimeError, match="conflicting incomplete"):
+        event_artifact_store.write_event_commit(
+            event_id=event_id,
+            global_seq=1,
+            conversation_seq=1,
+            created_at=datetime.now(timezone.utc),
+            schema_version=1,
+        )
+
+    # A pre-upgrade event remains a two-file pair on retry; no migration rewrites it.
+    path.rename(tmp_path / "events" / f"{event_id}.jsonl.saved")
+    legacy = tmp_path / "events" / f"{event_id}.json"
+    event_artifact_store._atomic_write(legacy, record)
+    committed_at = datetime.now(timezone.utc)
+    commit = event_artifact_store.write_event_commit(
+        event_id=event_id,
+        global_seq=1,
+        conversation_seq=1,
+        created_at=committed_at,
+        schema_version=1,
+    )
+    assert (tmp_path / "events" / f"{event_id}.commit.json").exists()
+    assert event_artifact_store.read_event_file(legacy) == (record, commit)
+
+
+def test_parallel_event_commit_retries_append_only_one_stamp(tmp_path, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+
+    monkeypatch.setenv("PROMETHEIST_ARTIFACT_ROOT", str(tmp_path))
+    event_id = uuid4()
+    event_artifact_store.write_event_record(
+        event_id=event_id,
+        conversation_id=uuid4(),
+        correlation_id=uuid4(),
+        conversation_seq=1,
+        event_type="USER_PROMPT",
+        source="user",
+        payload={"text": "test"},
+        payload_text="test",
+    )
+    committed_at = datetime.now(timezone.utc)
+
+    def commit_retry():
+        return event_artifact_store.write_event_commit(
+            event_id=event_id,
+            global_seq=1,
+            conversation_seq=1,
+            created_at=committed_at,
+            schema_version=1,
+        )
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        results = list(pool.map(lambda _index: commit_retry(), range(8)))
+    assert all(result == results[0] for result in results)
+    path = tmp_path / "events" / f"{event_id}.jsonl"
+    assert len(path.read_text(encoding="utf-8").splitlines()) == 2

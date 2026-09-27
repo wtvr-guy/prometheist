@@ -4,7 +4,7 @@
 **Constitutional authority:** implements Article 36 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).  
 **Applies to:** canonical events, percept-to-response stage boundaries, stateless LLM invocations, content-addressed blob storage, inspection and human auditing, signed journal heads, interruption recovery, and database reconstruction
 
-Prometheist maintains an independent immutable JSON artifact journal in addition to PostgreSQL. PostgreSQL remains the indexed operational store used for efficient retrieval, scheduling, and execution. It is not the only surviving representation of Prometheist's memory, cognition, or completed work.
+Prometheist maintains an independent append-only artifact journal in addition to PostgreSQL. Each logical record is immutable and hash-checked. PostgreSQL remains the indexed operational store used for efficient retrieval, scheduling, and execution. It is not the only surviving representation of Prometheist's memory, cognition, or completed work.
 
 The artifact journal exists for four reasons:
 
@@ -71,8 +71,9 @@ The journal contains two classes of records:
 ```text
 artifacts/
   events/
-    <event-id>.json
-    <event-id>.commit.json
+    <event-id>.jsonl                    # new, one append-only file per event
+    <event-id>.json                    # historical two-file format
+    <event-id>.commit.json             # historical two-file format
 
   interactions/
     <interaction-id>/
@@ -89,7 +90,7 @@ Interaction filenames deliberately use the bounded deterministic artifact UUID r
 
 ## 2. Canonical event mirroring
 
-Every canonical event written through `event_store.record_event` is independently mirrored to JSON.
+Every canonical event written through `event_store.record_event` is independently mirrored. New events use a two-line JSON Lines file. Each line is a complete JSON object with its own hash; the first line is atomically written and fsynced, and the second is appended and fsynced after PostgreSQL commits. Existing `.json` and `.commit.json` pairs stay in their original form and remain readable and repairable by retry.
 
 A new event follows this durability order:
 
@@ -98,13 +99,13 @@ allocate deterministic/explicit event identity
         ↓
 lock conversation sequence in PostgreSQL transaction
         ↓
-atomically write + fsync EVENT_RECORD JSON
+atomically write + fsync first EVENT_RECORD JSONL entry
         ↓
 insert event row and advance conversation sequence
         ↓
 COMMIT PostgreSQL transaction
         ↓
-atomically write + fsync EVENT_DATABASE_COMMIT JSON
+append + fsync second EVENT_DATABASE_COMMIT JSONL entry
 ```
 
 The first artifact contains the semantic event record:
@@ -129,9 +130,9 @@ The second artifact records database-commit metadata:
 - schema version;
 - commit hash.
 
-This two-record protocol distinguishes an event that was durably journaled before a crash from an event known to have committed to PostgreSQL.
+This two-entry protocol distinguishes an event that was durably journaled before a crash from an event known to have committed to PostgreSQL. The two immutable logical artifacts now share one physical file. Benchmark inventories call that file `EVENT_JOURNAL` while recording both entry hashes; old manifests and their separate file counts remain valid.
 
-A crash may therefore produce a semantic event artifact without a corresponding database-commit artifact. That is a recoverable state. A committed new PostgreSQL event should not exist without its semantic JSON record because the semantic artifact is written first.
+A crash may produce a complete first entry without a commit entry. This means database commit status is unknown, not necessarily rollback. A partial second entry is rejected by readers; a deterministic retry with authoritative database metadata can finish it only if the existing bytes are an exact prefix of the expected entry. Conflicting bytes fail closed. A committed new PostgreSQL event should not exist without its semantic record because that entry is written first.
 
 Deterministic retries repair missing commit artifacts and fail closed if an existing JSON artifact conflicts with the retry's semantic identity.
 

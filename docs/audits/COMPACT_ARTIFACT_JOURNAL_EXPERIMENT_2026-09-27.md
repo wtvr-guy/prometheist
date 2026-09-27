@@ -43,3 +43,16 @@ missing validation in a historical report remains a failure.
 The benchmark should compare interaction-journal `artifact_count`, total file count,
 verification, model-attempt and error counts, and actual fidelity scores. This change
 does not alter the model prompt, retrieval policy, or cognitive stage output.
+
+## Per-event JSON Lines extension
+
+The follow-up experiment places the two hashed event entries in one append-only
+`.jsonl` file per new event. The commit entry is appended only after PostgreSQL
+commits. Old `.json` / `.commit.json` pairs remain readable, retain their bytes,
+and use the old retry path. A partial second line fails verification until a retry
+matches its exact expected prefix; a conflicting tail is never overwritten.
+
+For the supplied baseline's 467 events, an identical run would have 467 fewer
+physical files from event receipts and 28 fewer successful-validation artifacts:
+approximately 555 rather than 1,050 files (47% fewer). This is a file-count
+projection, not a native benchmark measurement. Both logical event records remain.
