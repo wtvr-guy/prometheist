@@ -595,6 +595,38 @@
         "latency_and_memory"
       ],
       "search": "Freeze deterministic and native person-fidelity cases before tuning. Sweep one bound or promotion threshold family at a time against the episodic-only and semantic-only baselines. High-centrality schemas receive stronger counterevidence tests, not relaxed proof requirements. Any boundary winner must be expanded before acceptance; report insufficient discrimination rather than treating the current defaults as optimized."
+    },
+    "CANONICAL-NEIGHBORHOOD-001": {
+      "title": "Canonical local context before Composer sufficiency",
+      "environment": "deterministic_ci_then_target_windows_host_with_ollama",
+      "parameters": [
+        "CANONICAL_NEIGHBOR_SEQUENCE_WINDOW"
+      ],
+      "scenario_families": [
+        "retrieved_followup_missing_root",
+        "interleaved_internal_events",
+        "interleaved_topics",
+        "cross_conversation_recall",
+        "source_policy_exclusion",
+        "future_history_boundary",
+        "saturated_packet",
+        "no_recursive_expansion"
+      ],
+      "hard_invariants": [
+        "preserve canonical bytes and original seed order",
+        "honor source policy and cutoff at both endpoints",
+        "bound index range and packet size",
+        "no fixture IDs or expected answers in runtime",
+        "retain route provenance"
+      ],
+      "quality_order": [
+        "hard_invariant_pass_rate",
+        "required_evidence_coverage",
+        "irrelevant_context_rate",
+        "model_input_bytes",
+        "latency"
+      ],
+      "search": "Provisional window 32, not calibrated. Compare parent 07f4f49 with this mechanism on frozen SELF-MEMORY-001 pf-q001/pf-q002, then full public and holdout. Sweep windows and noise only after freezing those cases; expand a winning search boundary. See docs/experiments/CANONICAL_NEIGHBORHOOD_001.md."
     }
   }
 }

@@ -57,6 +57,7 @@ is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
 
 ## Research and experiment evidence
 
+- [`experiments/CANONICAL_NEIGHBORHOOD_001.md`](experiments/CANONICAL_NEIGHBORHOOD_001.md) — bounded local canonical context before Composer sufficiency; frozen pf-q001/pf-q002 failures and native acceptance commands.
 - [`concepts/lessons_from_cognitive_neuroscience.md`](concepts/lessons_from_cognitive_neuroscience.md) — mechanism-level research input; it motivates hypotheses but does not override experiments.
 - [`concepts/lessons_from_similar_projects.md`](concepts/lessons_from_similar_projects.md) — comparison with related cognitive and agent systems.
 - [`experiments/PERSON_FIDELITY_BASELINE.md`](experiments/PERSON_FIDELITY_BASELINE.md) — frozen public person-fidelity baseline with separate structural-provenance and human-semantic verdicts.

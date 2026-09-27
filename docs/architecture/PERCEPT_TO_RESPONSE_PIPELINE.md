@@ -38,7 +38,8 @@ flowchart TD
     D --> S[Bounded Working Self activation]
     E --> F[Work selection specialist]
     F --> G[Deterministic execution]
-    E --> H[Memory-only Composer]
+    E --> N[Bounded canonical neighbors]
+    N --> H[Memory-only Composer]
     S --> H
     S -. routing hints .-> I[Adaptive Recall]
     H --> I
@@ -155,6 +156,21 @@ Capability/tool workers return authoritative structured results whenever possibl
 A completed tool or capability result does **not** pass through the v2 Composer merely so the Composer can restate or reinterpret it.
 
 ## 7. The v2 Composer: memory-context sufficiency specialist
+
+Before its first sufficiency call, deterministic `canonical_neighborhood` expands
+the initial packet once. It preserves original seeds and adds each seed's nearest
+permitted predecessor/successor within 32 canonical conversation-sequence positions,
+up to the existing response-memory item limit. Both endpoints must precede the
+interaction's history cutoff and satisfy the selected source policy. Added events
+cannot seed another expansion. Conversation order supplies local provenance context,
+not proof of a shared semantic episode or a restriction on global retrieval.
+
+The returned packet records exact neighbor content and seed/direction provenance in
+the existing Composer stage result; it creates no additional LLM role or standalone
+artifact family. Adaptive Recall preserves that trace when merging later packets.
+The window is a provisional empirical tunable. See
+[`CANONICAL_NEIGHBORHOOD_001.md`](../experiments/CANONICAL_NEIGHBORHOOD_001.md)
+for the frozen failure, native acceptance command, and limitations.
 
 The v2 Composer has a deliberately narrow domain.
 

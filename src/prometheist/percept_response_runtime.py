@@ -29,6 +29,7 @@ from pydantic import (
 )
 
 from prometheist import db, event_store, jit_memory
+from prometheist.canonical_neighborhood import expand_canonical_neighbors
 from prometheist.attention import (
     AttentionTask,
     InterruptionPolicy,
@@ -1002,6 +1003,7 @@ def _merge_memory_packets(
             "round_index": round_index,
             "base_memory_request_id": str(base.memory_request_id),
             "expansion_memory_request_id": str(expansion.memory_request_id),
+            "base_retrieval_trace": base.retrieval_trace,
         },
     )
 
@@ -1094,6 +1096,15 @@ def _compose_memory_package(
     """Bounded Composer/Adaptive-Recall loop with explicit no-progress exhaustion."""
 
     packet = initial_packet.model_copy(deep=True)
+    if packet.items and source_types:
+        packet = expand_canonical_neighbors(
+            conn,
+            packet,
+            source_types=source_types,
+            before_global_seq=interaction.before_global_seq,
+            item_limit=_RESPONSE_MEMORY_ITEM_LIMIT,
+            memory_request_id=uuid5(interaction.interaction_id, "canonical-neighborhood"),
+        )
     composer_self_context = (
         self_context
         if self_context is not None

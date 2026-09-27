@@ -60,6 +60,13 @@
       "rationale": "Ordinal advisory mapping/retention hint; never canonical deletion or action authority. Defined in perception.evaluate_salience or situations.form_situation.",
       "source_path": "src/prometheist/situations.py",
       "source_fragment": "magnitude >= 1.0"
+    },
+    "src/prometheist/canonical_neighborhood.py::<module>::CANONICAL_NEIGHBOR_SEQUENCE_WINDOW": {
+      "expected_value": 32,
+      "classification": "EMPIRICAL_TUNABLE",
+      "benchmark_id": "CANONICAL-NEIGHBORHOOD-001",
+      "status": "PROVISIONAL",
+      "rationale": "Caps conversation-sequence index range per original seed and direction. Native quality and noise calibration pending; see docs/experiments/CANONICAL_NEIGHBORHOOD_001.md."
     }
   },
   "groups": {
@@ -119,7 +126,8 @@
         "src/prometheist/ollama_runtime.py::OllamaClaimHostResourceProbe.capture::last_memory_debit_mib": 0,
         "src/prometheist/ollama_runtime.py::OllamaClaimHostResourceProbe.capture::comparison": 0,
         "src/prometheist/attention_observation.py::ReservationCreditHostResourceProbe.__init__::comparison": 1,
-        "src/prometheist/attention_observation.py::ReservationCreditHostResourceProbe.__init__::comparison#2": 1
+        "src/prometheist/attention_observation.py::ReservationCreditHostResourceProbe.__init__::comparison#2": 1,
+        "src/prometheist/canonical_neighborhood.py::expand_canonical_neighbors::comparison": 1
       }
     },
     "external": {
