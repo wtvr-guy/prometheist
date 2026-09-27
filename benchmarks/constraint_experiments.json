@@ -596,6 +596,30 @@
       ],
       "search": "Freeze deterministic and native person-fidelity cases before tuning. Sweep one bound or promotion threshold family at a time against the episodic-only and semantic-only baselines. High-centrality schemas receive stronger counterevidence tests, not relaxed proof requirements. Any boundary winner must be expanded before acceptance; report insufficient discrimination rather than treating the current defaults as optimized."
     },
+    "COMPOSER-COVERAGE-001": {
+      "title": "Explicit personal-evidence coverage before Composer sufficiency",
+      "environment": "deterministic_ci_then_target_windows_host_with_ollama",
+      "parameters": ["MAX_COVERAGE_REQUIREMENTS", "MAX_COVERAGE_NEED_CHARS"],
+      "scenario_families": [
+        "partial_personal_priorities", "preference_vs_adjacent_value",
+        "hypothetical_scenario_vs_personal_history", "observed_communication_style",
+        "one_sided_change", "self_report_vs_observation", "unknown_fact",
+        "invalid_source_selection", "routing_only_self_context"
+      ],
+      "hard_invariants": [
+        "a missing requirement cannot produce sufficient=true",
+        "every selected source exists in the admitted catalog",
+        "preserve source authority and evidence quarantine",
+        "no fixture IDs or expected answers in runtime",
+        "no extra model role or unbounded calls"
+      ],
+      "quality_order": [
+        "hard_invariant_pass_rate", "required_evidence_coverage",
+        "premature_sufficiency_rate", "retrieval_query_relevance",
+        "invalid_output_rate", "model_input_bytes", "latency"
+      ],
+      "search": "Provisional bounds, not calibrated. Compare the boolean-contract parent 2bf7c60 with explicit coverage on frozen SELF-MEMORY-001 pf-q005/pf-q006/pf-q007 using the identical frozen learning snapshot, then full public and holdout. Assess both missing-slot honesty and source relevance; Python can enforce only structural coverage. Freeze additional paraphrase and long-query families before tuning. Expand any winning search boundary. See docs/experiments/COMPOSER_COVERAGE_001.md."
+    },
     "CANONICAL-NEIGHBORHOOD-001": {
       "title": "Canonical local context before Composer sufficiency",
       "environment": "deterministic_ci_then_target_windows_host_with_ollama",

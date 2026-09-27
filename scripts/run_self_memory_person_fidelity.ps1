@@ -3,7 +3,9 @@ param(
     [switch]$ValidateOnly,
     [switch]$PreflightOnly,
     [switch]$Holdout,
-    [string[]]$ProbeId
+    [string[]]$ProbeId,
+    [string]$LearningBundle,
+    [switch]$FreshLearning
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,6 +39,20 @@ try {
     foreach ($id in $ProbeId) {
         $argsList += "--probe-id"
         $argsList += $id
+    }
+
+    if ($FreshLearning -and $LearningBundle) {
+        throw "Choose either -FreshLearning or -LearningBundle."
+    }
+    if (-not $ValidateOnly -and -not $PreflightOnly -and -not $FreshLearning) {
+        if (-not $LearningBundle -and (Test-Path ".tmp/latest-benchmark.zip")) {
+            $LearningBundle = ".tmp/latest-benchmark.zip"
+        }
+        if ($LearningBundle) {
+            $argsList += @("--learning-bundle", $LearningBundle)
+            Write-Host "Reusing the verified learning phase from $LearningBundle"
+            Write-Host "Use -FreshLearning when testing changes to learning itself."
+        }
     }
 
     $output = $null

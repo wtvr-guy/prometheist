@@ -15,8 +15,8 @@ from prometheist.percept_response_runtime import (
     ComposerValidationError,
     MemorySufficiencyDecision,
     _RESPONSE_POLICY_PROMPT,
-    _SELF_MODEL_COMPOSER_PROMPT,
 )
+from prometheist.composer_coverage import COVERAGE_PROMPT
 from prometheist.models import EventType, MemoryNeed, MemoryPacket
 from prometheist.response_policy import (
     HistoricalEvidenceScope,
@@ -137,8 +137,8 @@ def test_self_model_composer_uses_historical_completeness_contract(
         captured["kind"] = kind
         captured["system"] = system
         return (
-            '{"sufficient":false,'
-            '"memory_deficit":"observed behavior relevant to the preference"}'
+            '{"requirements":[{"need":"observed preference behavior",'
+            '"evidence_index":null}]}'
         )
 
     monkeypatch.setattr(llm, "_structured_with_evidence", fake_structured)
@@ -157,8 +157,8 @@ def test_self_model_composer_uses_historical_completeness_contract(
 
     assert decision.sufficient is False
     assert captured["kind"] == "V2_MEMORY_SUFFICIENCY_USER_PROMPT"
-    assert captured["system"] == _SELF_MODEL_COMPOSER_PROMPT
-    assert "every material slot is filled" in captured["system"]
+    assert captured["system"] == COVERAGE_PROMPT
+    assert "every independent personal fact" in captured["system"]
 
 
 def test_response_policy_defaults_ordinary_questions_to_natural_language() -> None:

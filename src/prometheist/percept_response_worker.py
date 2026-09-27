@@ -23,6 +23,9 @@ from uuid import UUID, uuid5
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from prometheist import artifact_journal, db, event_store, llm_artifact_store
+from prometheist.composer_coverage import (
+    COVERAGE_PROMPT, EvidenceCoverage, coverage_catalog, coverage_schema,
+)
 from prometheist.capability_registry import DEFAULT_REGISTRY, CapabilityDescriptor
 from prometheist.epistemic_authority import format_authority_bound_memory_packet
 from prometheist.interaction_store import load_interaction_by_task
@@ -41,7 +44,6 @@ from prometheist.percept_response_runtime import (
     PerceptStage,
     PreCognitiveDisposition,
     ResponseMemoryPackage,
-    _SELF_MODEL_COMPOSER_PROMPT,
     _execute_stage,
     _memory_evidence_refs,
     _stage_result,
@@ -633,6 +635,10 @@ class UserPromptLLM(PerceptLLM):
         validate_memory_packet_content(visible_packet, budget=budget)
         memory_text = format_authority_bound_memory_packet(visible_packet)
         self_text = render_self_context(self_context)
+        if person_history_required:
+            memory_text, coverage_refs = coverage_catalog(visible_packet, self_context)
+            self_text = ""
+            self._set_artifact_evidence_refs(coverage_refs)
         validate_rendered_evidence((memory_text, self_text), budget=budget)
         current_user = f"[Current user prompt]\n{percept}"
         last_error: ValueError | None = None
@@ -641,20 +647,27 @@ class UserPromptLLM(PerceptLLM):
                 content = self._structured_with_evidence(
                     "V2_MEMORY_SUFFICIENCY_USER_PROMPT",
                     (
-                        _SELF_MODEL_COMPOSER_PROMPT
+                        COVERAGE_PROMPT
                         if person_history_required
                         else _USER_PROMPT_COMPOSER
                     ),
                     current_user,
                     _quarantined_evidence(memory_text, self_text),
-                    MemorySufficiencyDecision.model_json_schema(),
+                    (coverage_schema(len(coverage_refs)) if person_history_required
+                     else MemorySufficiencyDecision.model_json_schema()),
                     token_cap,
                 )
                 return self._validated_model_output(
                     kind="V2_MEMORY_SUFFICIENCY_USER_PROMPT",
                     raw_output=content,
-                    validator=lambda: MemorySufficiencyDecision.model_validate_json(
-                        _normalize_memory_sufficiency_content(content)
+                    validator=lambda: (
+                        MemorySufficiencyDecision(**EvidenceCoverage.model_validate_json(
+                            content,
+                        ).decision_fields(len(coverage_refs)))
+                        if person_history_required
+                        else MemorySufficiencyDecision.model_validate_json(
+                            _normalize_memory_sufficiency_content(content)
+                        )
                     ),
                 )
             except (ValueError, json.JSONDecodeError) as exc:

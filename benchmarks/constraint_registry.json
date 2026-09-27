@@ -67,6 +67,20 @@
       "benchmark_id": "CANONICAL-NEIGHBORHOOD-001",
       "status": "PROVISIONAL",
       "rationale": "Caps conversation-sequence index range per original seed and direction. Native quality and noise calibration pending; see docs/experiments/CANONICAL_NEIGHBORHOOD_001.md."
+    },
+    "src/prometheist/composer_coverage.py::<module>::MAX_COVERAGE_REQUIREMENTS": {
+      "expected_value": 6,
+      "classification": "EMPIRICAL_TUNABLE",
+      "benchmark_id": "COMPOSER-COVERAGE-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounds the explicit evidence requirements within the existing Composer output budget. Native coverage/truncation calibration pending; see docs/experiments/COMPOSER_COVERAGE_001.md."
+    },
+    "src/prometheist/composer_coverage.py::<module>::MAX_COVERAGE_NEED_CHARS": {
+      "expected_value": 80,
+      "classification": "EMPIRICAL_TUNABLE",
+      "benchmark_id": "COMPOSER-COVERAGE-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounds each searchable personal-evidence requirement. Native retrieval quality and output-length calibration pending; see docs/experiments/COMPOSER_COVERAGE_001.md."
     }
   },
   "groups": {

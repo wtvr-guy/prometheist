@@ -36,6 +36,9 @@ if str(BENCHMARK_DIR) not in sys.path:
     sys.path.insert(0, str(BENCHMARK_DIR))
 
 from prometheist import event_artifact_store, percept_journal  # noqa: E402
+from learning_checkpoint import (  # noqa: E402
+    SELF_MEMORY_RECORD_KINDS, load_learning_bundle, snapshot_digest,
+)
 from run_person_fidelity_baseline import (  # noqa: E402
     DEFAULT_CORPUS,
     HOLDOUT_CORPUS,
@@ -66,13 +69,6 @@ PUBLIC_BENCHMARK_ID = "SELF-MEMORY-001"
 HOLDOUT_SELF_BENCHMARK_ID = "SELF-MEMORY-002-HOLDOUT"
 GENERATED_DIR = ROOT / "benchmarks" / "generated" / "self_memory_person_fidelity"
 RESULT_DIR = ROOT / "benchmarks" / "results"
-SELF_MEMORY_RECORD_KINDS = (
-    "self_representation",
-    "self_evidence",
-    "self_resolution",
-    "self_edge",
-    "self_prediction",
-)
 
 
 def _is_allowed_untracked_evidence(status_line: str) -> bool:
@@ -398,13 +394,7 @@ def _snapshot_self_memory(conn) -> dict[str, list[tuple[str, dict[str, Any]]]]:
 def _snapshot_digest(
     snapshot: dict[str, list[tuple[str, dict[str, Any]]]],
 ) -> str:
-    encoded = json.dumps(
-        snapshot,
-        sort_keys=True,
-        separators=(",", ":"),
-        default=str,
-    ).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
+    return snapshot_digest(snapshot)
 
 
 def _restore_self_memory(
@@ -540,6 +530,14 @@ def _active_self_context_from_artifacts(
     return value if isinstance(value, dict) else None
 
 
+def _composed_memory_from_artifacts(artifacts: list[dict[str, Any]]) -> dict:
+    for artifact in reversed(artifacts):
+        if (artifact.get("artifact_type") == "STAGE_RESULT"
+            and artifact.get("stage") == "V2_COMPOSE_MEMORY"):
+            return artifact.get("payload", {}).get("output", {}).get("memory_package", {})
+    return {}
+
+
 def _run_probe(
     conn,
     corpus: PersonFidelityCorpus,
@@ -624,6 +622,13 @@ def _run_probe(
         if prompt_event is not None
         else []
     )
+    composed = _composed_memory_from_artifacts(artifacts)
+    composed_refs = [
+        f"event:{item['source_event_id']}"
+        for item in composed.get("memory_packet", {}).get("items", [])
+    ]
+    request_packet_refs = list(retrieved_refs)
+    retrieved_refs = sorted(set(retrieved_refs) | set(composed_refs))
     retrieved_fixture_ids = sorted(
         fixture_by_ref[reference]
         for reference in retrieved_refs
@@ -652,6 +657,11 @@ def _run_probe(
         },
         "working_self": _active_self_context_from_artifacts(artifacts),
         "memory_retrieval": {
+            "request_packet_evidence_refs": request_packet_refs,
+            "composed_packet_evidence_refs": composed_refs,
+            "composer_sufficient": composed.get("sufficient"),
+            "composer_rounds": composed.get("composer_rounds"),
+            "adaptive_recall_rounds": composed.get("adaptive_recall_rounds"),
             "retrieved_evidence_refs": retrieved_refs,
             "retrieved_fixture_event_ids": retrieved_fixture_ids,
             "missing_required_fixture_event_ids": sorted(
@@ -798,6 +808,8 @@ def main() -> None:
     parser.add_argument("--artifact-root", type=Path)
     parser.add_argument("--validate-only", action="store_true")
     parser.add_argument("--preflight-only", action="store_true")
+    parser.add_argument("--learning-bundle", type=Path,
+                        help="reuse only the verified learning phase from an earlier self-memory ZIP")
     args = parser.parse_args()
 
     corpus = load_person_fidelity_corpus(
@@ -866,20 +878,29 @@ def main() -> None:
         configured_ollama_model,
     )
 
+    learning_root = artifact_root / "learning"
+    reused = (
+        load_learning_bundle(
+            args.learning_bundle.resolve(), corpus=corpus,
+            configured_model=configured_ollama_model(), learning_root=learning_root,
+        ) if args.learning_bundle else None
+    )
     with db.get_connection() as conn:
         database_name = _apply_schema_and_require_benchmark_database(conn)
         _reset_database(conn)
-        learning_root = artifact_root / "learning"
-        print("[learning] building self memory through production consolidation", flush=True)
-        learned_event_ids, learning_task_ids = _learn_self_memory(
-            conn,
-            corpus,
-            run_id=run_id,
-            learning_root=learning_root,
-        )
-        snapshot = _snapshot_self_memory(conn)
-        learning = _learning_summary(conn, corpus, learned_event_ids)
-        learning["snapshot_sha256"] = _snapshot_digest(snapshot)
+        if reused is not None:
+            snapshot, learning, learning_task_ids = reused
+            print("[learning] reusing verified frozen self memory; no consolidation calls", flush=True)
+        else:
+            print("[learning] building self memory through production consolidation", flush=True)
+            learned_event_ids, learning_task_ids = _learn_self_memory(
+                conn, corpus, run_id=run_id, learning_root=learning_root,
+            )
+            snapshot = _snapshot_self_memory(conn)
+            learning = _learning_summary(conn, corpus, learned_event_ids)
+            learning["snapshot_sha256"] = _snapshot_digest(snapshot)
+            learning["origin_revision"] = revision
+            learning["execution"] = "FRESH_PRODUCTION_LEARNING"
         print(
             f"  representations={learning['representation_count']} "
             f"statuses={learning['status_counts']}",

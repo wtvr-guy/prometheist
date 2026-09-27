@@ -1,7 +1,15 @@
 # Canonical neighborhood before Composer sufficiency
 
 Date: 2026-09-27. Mechanism: `canonical-local-context-v1`.
-Status: implemented candidate; native model acceptance pending.
+Status: targeted native structural acceptance passed; full corpus pending.
+
+Follow-up: the native run `SELF-MEMORY-001_2026-09-27_095628.json` at `56b0469`
+passed both `pf-q001` and `pf-q002`; its 276-artifact ZIP verifies. Both composed
+packets include their required roots. The radio answer is faithful; the Theo
+answer respects privacy but retains assistant-like phrasing. See
+[`COMPOSER_COVERAGE_001.md`](COMPOSER_COVERAGE_001.md) for the next mechanism,
+current branch, and learning-reuse instructions. The original command and
+learning behavior below describe this experiment at its original revision.
 
 ## Frozen failure and hypothesis
 

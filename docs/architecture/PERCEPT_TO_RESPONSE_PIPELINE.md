@@ -191,6 +191,22 @@ whether the admitted memory context is sufficient for a separate responder to an
 accurately. It does not decide whether any self schema is true; that remains the
 Self-Memory System's resolution responsibility.
 
+For the `SELF_MODEL` historical route, `composer_coverage.py` makes that check
+explicit. Canonical evidence and admitted derived self items share a numbered
+catalog while retaining their authority labels. The model returns a bounded list
+of `{need, evidence_index}` requirements. A null index means missing evidence;
+Python derives `sufficient=false` and sends the first missing need to Adaptive
+Recall. Every index must refer to a supplied source, and repeated invalid output
+fails closed under the existing retry protocol. The raw model response and ordered
+source references remain in the existing LLM artifact journal.
+
+Missing needs describe short personal subjects, such as `financial priorities`,
+rather than technical details of a hypothetical current situation. The Composer
+still judges which requirements matter and whether a source supports them; a
+valid index is not proof of semantic support. Generic memory routes retain the
+existing boolean/deficit contract. See
+[`COMPOSER_COVERAGE_001.md`](../experiments/COMPOSER_COVERAGE_001.md).
+
 ### 7.1 If memory is sufficient
 
 The Composer produces/approves a bounded response-ready **memory package** for the final responder.
