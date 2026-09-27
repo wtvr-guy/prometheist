@@ -44,7 +44,10 @@ class _TextAnswer(BaseModel):
 
     answer: str = Field(
         min_length=1,
-        description="Final user-facing answer only, with no analysis or preamble.",
+        description=(
+            "Complete user-facing response, including any requested explanation. "
+            "Exclude private deliberation and unrequested preamble."
+        ),
     )
 
     @field_validator("answer")
