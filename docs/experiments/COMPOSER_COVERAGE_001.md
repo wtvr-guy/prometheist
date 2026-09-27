@@ -3,6 +3,12 @@
 Date: 2026-09-27. Status: implemented candidate; native model acceptance pending.
 Parent: `2bf7c60` on `experiment/compact-artifact-journal`.
 
+Follow-up: the native `d971214` run scored 0/3 on pf-q005/pf-q006/pf-q007. Coverage
+output was valid but did not resolve source discovery or semantic completeness.
+The negative result and next source-navigation experiment are documented in
+[`SELF_ROOT_NAVIGATION_001.md`](SELF_ROOT_NAVIGATION_001.md). Learning reuse did
+match the original snapshot and skip consolidation successfully.
+
 ## Evidence motivating this change
 
 The preceding canonical-neighborhood change passed both targeted structural

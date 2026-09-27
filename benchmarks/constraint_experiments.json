@@ -6,6 +6,31 @@
     "tie_break": "Prefer lower runtime/resource/complexity cost only after quality metrics are indistinguishable under the available evidence."
   },
   "experiments": {
+    "SELF-ROOT-NAVIGATION-001": {
+      "title": "Learned self descriptions as canonical source navigation",
+      "environment": "deterministic_ci_then_target_windows_host_with_ollama",
+      "parameters": ["SELF_ROOT_CANDIDATE_LIMIT"],
+      "scenario_families": [
+        "candidate_hypothesis_source_recovery", "learned_topic_tags",
+        "compound_query_cues", "observed_message_style", "opposing_evidence",
+        "source_policy_before_truncation", "future_link_boundary",
+        "rejected_hypothesis", "saturated_packet", "unknown_topic"
+      ],
+      "hard_invariants": [
+        "only original canonical text enters the returned packet",
+        "navigation never promotes candidate beliefs",
+        "source policy and history cutoff apply to roots and navigation records",
+        "supporting and opposing roots remain distinguishable",
+        "bounded candidates, packet and one-hop local expansion",
+        "no fixture IDs or expected answers in runtime"
+      ],
+      "quality_order": [
+        "hard_invariant_pass_rate", "required_canonical_root_coverage",
+        "irrelevant_context_rate", "native_sufficiency_accuracy",
+        "model_calls", "latency", "indexed_query_cost"
+      ],
+      "search": "Freeze failed native d971214 run and its exact 56b0469 learning snapshot. Compare source delivery on pf-q005/pf-q006/pf-q007 with the prior route, retaining Composer and admission contracts. Replay tests are not model acceptance. Assess full public and holdout plus noise/scale cases before calibration. Eight candidates is provisional; expand any winning tuning boundary. A separate response-format wording change must not be credited with source-recovery improvement. See docs/experiments/SELF_ROOT_NAVIGATION_001.md."
+    },
     "PERCEPTION-SALIENCE-001": {
       "title": "Perception buffer and advisory salience calibration",
       "environment": "deterministic_ci_then_target_windows_host_with_ollama",

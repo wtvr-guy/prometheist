@@ -30,6 +30,7 @@ from pydantic import (
 
 from prometheist import db, event_store, jit_memory
 from prometheist.canonical_neighborhood import expand_canonical_neighbors
+from prometheist.self_memory_navigation import expand_self_memory_roots
 from prometheist.composer_coverage import (
     COVERAGE_PROMPT, EvidenceCoverage, coverage_catalog, coverage_schema,
 )
@@ -960,6 +961,7 @@ def _merge_memory_packets(
             "base_memory_request_id": str(base.memory_request_id),
             "expansion_memory_request_id": str(expansion.memory_request_id),
             "base_retrieval_trace": base.retrieval_trace,
+            "expansion_retrieval_trace": expansion.retrieval_trace,
         },
     )
 
@@ -1003,8 +1005,37 @@ def _adaptive_recall(
     round_index: int,
     source_types: list[EventType],
     self_context: SelfContextPacket | None = None,
+    person_history_required: bool = False,
 ) -> MemoryPacket:
     """Deterministically expand memory from the Composer's semantic deficit."""
+
+    if person_history_required and source_types:
+        # The deficit searches learned navigation hints, including candidates.
+        # Expand only these selected roots locally, never prior neighbor additions.
+        root_request_id = uuid5(interaction.interaction_id, f"self-roots:{round_index}")
+        roots = expand_self_memory_roots(
+            conn,
+            MemoryPacket(
+                memory_request_id=root_request_id,
+                need=current_packet.need.model_copy(deep=True), supported=False, items=[],
+            ),
+            query_text=deficit, source_types=source_types,
+            before_global_seq=interaction.before_global_seq,
+            item_limit=_RESPONSE_MEMORY_ITEM_LIMIT,
+            memory_request_id=root_request_id,
+        )
+        roots = expand_canonical_neighbors(
+            conn, roots, source_types=source_types,
+            before_global_seq=interaction.before_global_seq,
+            item_limit=_RESPONSE_MEMORY_ITEM_LIMIT,
+            memory_request_id=uuid5(interaction.interaction_id, f"self-root-neighbors:{round_index}"),
+        )
+        routed = _merge_memory_packets(
+            interaction.interaction_id, current_packet, roots, round_index=round_index,
+        )
+        if _packet_event_ids(routed) != _packet_event_ids(current_packet):
+            return routed
+        current_packet = routed  # Retain even an empty navigation attempt for audit.
 
     requested_stage = _adaptive_stage(round_index)
     stage, focus_ids = _effective_adaptive_stage(requested_stage, current_packet)
@@ -1052,6 +1083,13 @@ def _compose_memory_package(
     """Bounded Composer/Adaptive-Recall loop with explicit no-progress exhaustion."""
 
     packet = initial_packet.model_copy(deep=True)
+    if person_history_required and source_types:
+        packet = expand_self_memory_roots(
+            conn, packet, query_text=interaction.user_text, source_types=source_types,
+            before_global_seq=interaction.before_global_seq,
+            item_limit=_RESPONSE_MEMORY_ITEM_LIMIT,
+            memory_request_id=uuid5(interaction.interaction_id, "self-roots:initial"),
+        )
     if packet.items and source_types:
         packet = expand_canonical_neighbors(
             conn,
@@ -1138,6 +1176,7 @@ def _compose_memory_package(
             round_index=round_index,
             source_types=source_types,
             self_context=self_context,
+            person_history_required=person_history_required,
         )
         expansions.append(expanded)
         no_progress = _packet_event_ids(expanded) == _packet_event_ids(packet)

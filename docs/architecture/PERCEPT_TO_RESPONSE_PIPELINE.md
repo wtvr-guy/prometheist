@@ -157,6 +157,16 @@ A completed tool or capability result does **not** pass through the v2 Composer 
 
 ## 7. The v2 Composer: memory-context sufficiency specialist
 
+For `SELF_MODEL` requests, deterministic `self_memory_navigation` first searches
+learned statements and topic tags, then follows their evidence links to canonical
+sources. Candidate hypotheses may supply navigation hints without becoming
+established self beliefs. Rejected/superseded hypotheses are excluded. Source
+policy and the exclusive cutoff cover both the source and its learned navigation
+records; exact canonical content retains authority. The route uses bounded indexed
+queries and the existing response packet limit. It also runs against a missing
+evidence cue during Adaptive Recall, before falling back to association search.
+See [`SELF_ROOT_NAVIGATION_001.md`](../experiments/SELF_ROOT_NAVIGATION_001.md).
+
 Before its first sufficiency call, deterministic `canonical_neighborhood` expands
 the initial packet once. It preserves original seeds and adds each seed's nearest
 permitted predecessor/successor within 32 canonical conversation-sequence positions,

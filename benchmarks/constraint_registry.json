@@ -1,6 +1,18 @@
 {
   "schema_version": 2,
   "constraints": {
+    "src/prometheist/self_memory_navigation.py::<module>::SELF_ROOT_CANDIDATE_LIMIT": {
+      "expected_value": 8,
+      "classification": "EMPIRICAL_TUNABLE",
+      "benchmark_id": "SELF-ROOT-NAVIGATION-001",
+      "status": "PROVISIONAL",
+      "rationale": "Caps learned navigation candidates per query independently of lifetime history. Output uses the existing response packet limit. Native noise and scale calibration pending; see docs/experiments/SELF_ROOT_NAVIGATION_001.md."
+    },
+    "src/prometheist/self_memory_navigation.py::expand_self_memory_roots::comparison": {
+      "expected_value": 1,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "A packet capacity must be a positive integer."
+    },
     "manual:situation-policy:prediction_error_large": {
       "manual": true,
       "expected_value": 1,
