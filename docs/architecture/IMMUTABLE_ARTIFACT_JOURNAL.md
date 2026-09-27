@@ -224,19 +224,21 @@ their location plus byte length and SHA-256 so truncation, unexpected thinking-m
 activation, and cross-attempt identity remain diagnosable without turning private
 chain-of-thought into an artifact. User-visible constrained output remains exact.
 
-Every invocation is followed by a linked `LLM_VALIDATION` artifact. It records:
+When a model attempt fails parsing, schema validation, or transport, a linked
+`LLM_VALIDATION` artifact records:
 
 - the invocation artifact ID and hash;
 - invocation index and semantic kind;
-- `VALID`, `INVALID`, or `TRANSPORT_ERROR` status;
+- `INVALID` or `TRANSPORT_ERROR` status;
 - the SHA-256 of the raw normalized output when present;
-- the exact parsed/validated object when accepted; and
-- the parser/schema/transport exception type and message when rejected.
+- the parser/schema/transport exception type and message.
 
-Retries therefore remain separate causal attempts. A malformed or truncated first
-response and a valid second response produce two invocation artifacts and two linked
-validation artifacts; the rejected attempt is not overwritten or inferable only from
-the later success.
+Retries remain separate causal attempts. A malformed first response and a valid
+second response produce two invocation artifacts, one linked failure artifact, and
+the committed stage result. Routine validation success creates no separate record:
+the stage result establishes acceptance. If the worker crashes before that result,
+the surviving invocation is an incomplete attempt, not proof of successful validation.
+Historical journals with `VALID` records remain readable and verifiable.
 
 For natural response this includes the resolved Prometheist personality/identity
 system prompt. For response policy it proves that only current authority was
@@ -268,9 +270,10 @@ complete durable worker claim/result in PostgreSQL
 allow downstream stage
 ```
 
-LLM invocation and validation artifacts are written during stage computation, before
-the stage-result artifact. A successful invocation cannot be followed by another
-model call in the same worker until its validation outcome has been persisted.
+LLM invocations and exceptional validation artifacts are written during stage
+computation, before the stage-result artifact. A successful invocation cannot be
+followed by another model call in the same worker until its validation has resolved;
+routine success is proven by the eventual stage result.
 
 A stage is therefore recoverable if the process disappears after the artifact write but before the PostgreSQL worker result commits.
 

@@ -485,6 +485,7 @@ SOURCE_POLICY_PRODUCTION_BASELINE_PROMPTS = (
 COMPOSER_PRODUCTION_BASELINE_PROMPTS = (
     COMPOSER_PRODUCTION_BASELINE_PROMPT_V1,
     COMPOSER_PRODUCTION_BASELINE_PROMPT_V2,
+    _USER_PROMPT_COMPOSER,
 )
 
 # Latest aliases are kept for callers that do not need historical replay.
@@ -1740,7 +1741,7 @@ def run_experiments(
     standalone_schema_versions = {"v1": 1, "v2": 2, "v3": 3}
     report: dict[str, Any] = {
         "schema_version": (
-            4
+            5
             if run_artifact_root is not None
             else standalone_schema_versions[candidate_version]
         ),
@@ -1963,7 +1964,9 @@ def _verify_result_artifacts(
     deterministic_attempts = 0
     verified_invocations = 0
     verified_validations = 0
-    require_validation_links = int(report_without_hash.get("schema_version", 0)) >= 4
+    schema_version = int(report_without_hash.get("schema_version", 0))
+    require_validation_links = schema_version >= 4
+    compact_validation = schema_version >= 5
     try:
         for attempt in attempts:
             attempt_root = root.joinpath(*PurePosixPath(attempt["artifact_directory"]).parts)
@@ -2010,7 +2013,11 @@ def _verify_result_artifacts(
                 if invocation_count < 1:
                     raise RuntimeError(f"model attempt has no invocation artifact: {interaction_id}")
                 if require_validation_links:
-                    if len(validations) != invocation_count:
+                    if (
+                        len(validations) > invocation_count
+                        if compact_validation
+                        else len(validations) != invocation_count
+                    ):
                         raise RuntimeError(
                             "model attempt invocation/validation counts differ: "
                             f"{interaction_id}"
@@ -2061,11 +2068,34 @@ def _verify_result_artifacts(
                                 f"{interaction_id}"
                             )
                         status = payload.get("status")
-                        if status not in {"VALID", "INVALID", "TRANSPORT_ERROR"}:
+                        allowed_statuses = (
+                            {"INVALID", "TRANSPORT_ERROR"}
+                            if compact_validation
+                            else {"VALID", "INVALID", "TRANSPORT_ERROR"}
+                        )
+                        if status not in allowed_statuses:
                             raise RuntimeError(
                                 f"unknown validation status {status!r}: {interaction_id}"
                             )
                         valid_count += int(status == "VALID")
+                        linked_invocations.add(invocation_id)
+                    for invocation in invocations:
+                        invocation_payload = invocation.get("payload")
+                        if not isinstance(invocation_payload, dict):
+                            raise RuntimeError(f"invocation payload is missing: {interaction_id}")
+                        if (
+                            compact_validation
+                            and str(invocation["artifact_id"]) not in linked_invocations
+                        ):
+                            if (
+                                invocation_payload.get("output") is None
+                                or invocation_payload.get("error_type") is not None
+                            ):
+                                raise RuntimeError(
+                                    f"unexplained failed model invocation: {interaction_id}"
+                                )
+                            if type_counts.get("STAGE_RESULT") == 1:
+                                valid_count += 1
                         diagnostics = invocation_payload.get("transport_diagnostics")
                         if not isinstance(diagnostics, dict):
                             raise RuntimeError(
@@ -2089,7 +2119,6 @@ def _verify_result_artifacts(
                                 raise RuntimeError(
                                     f"transport diagnostics lack {field}: {interaction_id}"
                                 )
-                        linked_invocations.add(invocation_id)
                     if evaluation["payload"].get("output") is not None and valid_count < 1:
                         raise RuntimeError(
                             f"successful model attempt has no valid output: {interaction_id}"

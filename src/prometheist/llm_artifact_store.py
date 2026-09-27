@@ -95,8 +95,17 @@ def write_llm_validation(
     parsed_output: Any,
     error_type: str | None,
     error_message: str | None,
-) -> dict[str, Any]:
-    """Persist the parse/schema outcome that accepted or rejected one invocation."""
+) -> dict[str, Any] | None:
+    """Persist exceptional outcomes; a committed stage result proves routine success.
+
+    The invocation still holds the exact input and raw output. An invocation with
+    no validation or stage result is an incomplete attempt, never an accepted one.
+    """
+
+    if status == "VALID":
+        return None
+    if status not in {"INVALID", "TRANSPORT_ERROR"}:
+        raise ValueError(f"unknown LLM validation status: {status}")
 
     return artifact_journal.write_interaction_artifact(
         artifact_key=f"llm-validation:{stage}:{claim_id}:{invocation_index}:{kind}",

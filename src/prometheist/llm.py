@@ -430,11 +430,7 @@ class OllamaClient:
         self._record_validation_outcome(
             kind=kind,
             raw_output=raw_output,
-            parsed_output=(
-                parsed.model_dump(mode="json")
-                if isinstance(parsed, BaseModel)
-                else parsed
-            ),
+            parsed_output=None,
             error=None,
             status="VALID",
         )

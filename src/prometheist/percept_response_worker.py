@@ -310,7 +310,7 @@ class UserPromptLLM(PerceptLLM):
     ) -> str:
         self._require_stage_specialization(kind)
         if self._pending_validation is not None:
-            raise RuntimeError("prior LLM invocation has no persisted validation outcome")
+            raise RuntimeError("prior LLM invocation has no resolved validation outcome")
         invocation_index = next(self._artifact_invocations)
         try:
             output = super()._structured(
@@ -377,7 +377,7 @@ class UserPromptLLM(PerceptLLM):
     ) -> str:
         self._require_stage_specialization(kind)
         if self._pending_validation is not None:
-            raise RuntimeError("prior LLM invocation has no persisted validation outcome")
+            raise RuntimeError("prior LLM invocation has no resolved validation outcome")
         invocation_index = next(self._artifact_invocations)
         try:
             output = super()._structured_with_evidence(
@@ -540,15 +540,16 @@ class UserPromptLLM(PerceptLLM):
                 f"validation kind {kind} does not match pending invocation {expected_kind}"
             )
         invocation = self._artifact_invocation_records[invocation_index]
-        self._journal_llm_validation(
-            invocation_index=invocation_index,
-            kind=kind,
-            invocation=invocation,
-            raw_output=raw_output,
-            parsed_output=parsed_output,
-            error=error,
-            status=status,
-        )
+        if status != "VALID":
+            self._journal_llm_validation(
+                invocation_index=invocation_index,
+                kind=kind,
+                invocation=invocation,
+                raw_output=raw_output,
+                parsed_output=parsed_output,
+                error=error,
+                status=status,
+            )
         self._pending_validation = None
 
     def decide_disposition(
