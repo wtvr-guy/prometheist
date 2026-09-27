@@ -253,13 +253,13 @@ def test_model_attempt_journals_exact_llm_invocation(tmp_path, monkeypatch):
     receipt = result["cases"][0]["attempts"][0]["artifact_journal"]
     assert receipt["artifact_type_counts"]["LLM_INVOCATION"] == 1
     assert receipt["artifact_type_counts"].get("LLM_VALIDATION", 0) == 0
-    invocation_path = next(
-        path
-        for path in (tmp_path / "artifacts").rglob("*.json")
-        if json.loads(path.read_text(encoding="utf-8"))["artifact_type"]
-        == "LLM_INVOCATION"
+    invocation = next(
+        json.loads(line)
+        for path in (tmp_path / "artifacts").rglob("*.jsonl")
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if json.loads(line)["artifact_type"] == "LLM_INVOCATION"
     )
-    payload = json.loads(invocation_path.read_text(encoding="utf-8"))["payload"]
+    payload = invocation["payload"]
     assert payload["system_prompt"] == mechanism._USER_PROMPT_COMPOSER
     assert payload["user_prompt"].endswith(case["prompt"])
     assert payload["output"] is not None
@@ -392,9 +392,9 @@ def test_model_retry_journals_invalid_and_valid_parse_outcomes(tmp_path, monkeyp
     assert receipt["artifact_type_counts"]["LLM_VALIDATION"] == 1
     validation_payloads = [
         document["payload"]
-        for path in (tmp_path / "artifacts").rglob("*.json")
-        if (document := json.loads(path.read_text(encoding="utf-8")))["artifact_type"]
-        == "LLM_VALIDATION"
+        for path in (tmp_path / "artifacts").rglob("*.jsonl")
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if (document := json.loads(line))["artifact_type"] == "LLM_VALIDATION"
     ]
     validation_payloads.sort(key=lambda payload: payload["invocation_index"])
     assert [payload["status"] for payload in validation_payloads] == ["INVALID"]
@@ -455,7 +455,7 @@ def test_artifact_manifest_verification_detects_raw_artifact_mutation(tmp_path):
 
     assert mechanism.verify_result(result_path)["valid"] is True
     raw_artifact = next(
-        path for path in artifact_root.rglob("*.json") if path != manifest_path
+        path for path in artifact_root.rglob("*.jsonl")
     )
     raw_artifact.write_bytes(raw_artifact.read_bytes() + b" ")
     verification = mechanism.verify_result(result_path)

@@ -8,7 +8,9 @@ import json
 import os
 from pathlib import Path
 from typing import Any, BinaryIO, Iterator
-from uuid import UUID
+from uuid import UUID, uuid5
+
+from prometheist import percept_journal
 
 ARTIFACT_SCHEMA_VERSION = 1
 
@@ -211,6 +213,7 @@ def write_event_record(
     source: str,
     payload: dict[str, Any],
     payload_text: str | None,
+    journal_id: UUID | None = None,
 ) -> dict[str, Any]:
     semantic = _semantic_record(
         event_id=event_id,
@@ -225,6 +228,10 @@ def write_event_record(
     record = dict(semantic)
     record["record_hash"] = _digest(semantic)
     record["journaled_at"] = datetime.now(timezone.utc).isoformat()
+    if journal_id is not None and journal_id not in {
+        correlation_id, uuid5(conversation_id, f"interaction:{correlation_id}")
+    }:
+        raise ValueError("percept journal identity must match its correlation")
     legacy_path = _record_path(event_id)
     stream_path = _stream_path(event_id)
     if legacy_path.exists() and stream_path.exists():
@@ -246,6 +253,38 @@ def write_event_record(
         ):
             raise ValueError(f"conflicting event artifact retry: {event_id}")
         return existing
+    scope = journal_id or percept_journal.scope_for(conversation_id, correlation_id)
+    if scope is not None:
+        path = percept_journal.path_for(scope)
+        with percept_journal.locked(path, create=True) as handle:
+            entries, partial = percept_journal.parse_unlocked(handle, path, allow_partial=True)
+            if any(
+                item.get("conversation_id") != str(conversation_id)
+                or item.get("correlation_id") != str(correlation_id)
+                for item in entries
+                if item.get("artifact_type") == "EVENT_RECORD"
+                or item.get("interaction_id") == str(scope)
+            ):
+                raise RuntimeError(f"percept journal scope conflicts with event: {path}")
+            existing_records = [
+                item for item in entries
+                if item.get("artifact_type") == "EVENT_RECORD" and item.get("event_id") == str(event_id)
+            ]
+            if len(existing_records) > 1:
+                raise RuntimeError(f"duplicate event in percept journal: {event_id}")
+            if existing_records:
+                existing = existing_records[0]
+                if not verify_event_record(existing) or any(
+                    existing.get(key) != value for key, value in semantic.items()
+                ):
+                    raise ValueError(f"conflicting event artifact retry: {event_id}")
+                return existing
+            if partial:
+                raise RuntimeError(f"incomplete percept journal before new event: {path}")
+            if any(item.get("event_id") == str(event_id) for item in entries):
+                raise RuntimeError(f"orphaned event commit in percept journal: {event_id}")
+            percept_journal.append_unlocked(handle, path, record)
+        return record
     _atomic_write_bytes(stream_path, _line(record))
     return record
 
@@ -257,13 +296,54 @@ def write_event_commit(
     conversation_seq: int,
     created_at: datetime,
     schema_version: int,
+    conversation_id: UUID | None = None,
+    correlation_id: UUID | None = None,
 ) -> dict[str, Any]:
     legacy_path = _record_path(event_id)
     stream_path = _stream_path(event_id)
     if legacy_path.exists() and stream_path.exists():
         raise RuntimeError(f"event has both legacy and stream artifacts: {event_id}")
     if not legacy_path.exists() and not stream_path.exists():
-        raise RuntimeError(f"event commit has no semantic artifact: {event_id}")
+        if conversation_id is None or correlation_id is None:
+            raise RuntimeError(f"event commit has no semantic artifact: {event_id}")
+        scope = percept_journal.scope_for(conversation_id, correlation_id)
+        if scope is None:
+            raise RuntimeError(f"event commit has no percept journal: {event_id}")
+        path = percept_journal.path_for(scope)
+        with percept_journal.locked(path) as handle:
+            entries, partial = percept_journal.parse_unlocked(handle, path, allow_partial=True)
+            records = [
+                item for item in entries
+                if item.get("artifact_type") == "EVENT_RECORD" and item.get("event_id") == str(event_id)
+            ]
+            if len(records) != 1:
+                raise RuntimeError(f"event commit has no unique semantic artifact: {event_id}")
+            record = records[0]
+            if not verify_event_record(record) or record["conversation_seq"] != conversation_seq:
+                raise RuntimeError(f"invalid semantic artifact: {event_id}")
+            semantic = {
+                "artifact_schema_version": ARTIFACT_SCHEMA_VERSION,
+                "artifact_type": "EVENT_DATABASE_COMMIT",
+                "event_id": str(event_id),
+                "record_hash": record["record_hash"],
+                "global_seq": global_seq,
+                "conversation_seq": conversation_seq,
+                "created_at": created_at.isoformat(),
+                "schema_version": schema_version,
+            }
+            commit = {**semantic, "commit_hash": _digest(semantic)}
+            existing = [
+                item for item in entries
+                if item.get("artifact_type") == "EVENT_DATABASE_COMMIT" and item.get("event_id") == str(event_id)
+            ]
+            if existing:
+                if len(existing) != 1 or existing[0] != commit:
+                    raise ValueError(f"conflicting event commit retry: {event_id}")
+                if partial:
+                    raise RuntimeError(f"incomplete percept journal after event commit: {path}")
+                return existing[0]
+            percept_journal.append_unlocked(handle, path, commit, partial_prefix=partial)
+        return commit
     record = (
         _load(legacy_path)
         if legacy_path.exists()
@@ -335,11 +415,10 @@ def verify_event_commit(commit: dict[str, Any]) -> bool:
 
 def iter_event_artifacts() -> list[dict[str, Any]]:
     directory = _event_dir()
-    if not directory.exists():
-        return []
     pairs: list[dict[str, Any]] = []
     seen: set[str] = set()
-    for path in sorted((*directory.glob("*.json"), *directory.glob("*.jsonl"))):
+    paths = sorted((*directory.glob("*.json"), *directory.glob("*.jsonl"))) if directory.exists() else []
+    for path in paths:
         if path.name.endswith(".commit.json"):
             continue
         record, commit = read_event_file(path)
@@ -348,9 +427,37 @@ def iter_event_artifacts() -> list[dict[str, Any]]:
             raise RuntimeError(f"duplicate or misnamed event artifact: {path}")
         seen.add(str(event_id))
         pairs.append({"record": record, "commit": commit})
-    for path in directory.glob("*.commit.json"):
+    for path in directory.glob("*.commit.json") if directory.exists() else ():
         if path.name.removesuffix(".commit.json") not in seen:
             raise RuntimeError(f"orphaned event commit artifact: {path}")
+    for path in sorted(percept_journal.root().glob("*.jsonl")) if percept_journal.root().exists() else ():
+        by_id: dict[str, dict[str, Any]] = {}
+        for entry in percept_journal.read(path):
+            kind = entry.get("artifact_type")
+            if kind not in {"EVENT_RECORD", "EVENT_DATABASE_COMMIT"}:
+                continue
+            event_id = entry.get("event_id")
+            if not isinstance(event_id, str):
+                raise RuntimeError(f"event entry has no identity: {path}")
+            pair = by_id.setdefault(event_id, {})
+            key = "record" if kind == "EVENT_RECORD" else "commit"
+            if key in pair:
+                raise RuntimeError(f"duplicate event entry {event_id}: {path}")
+            pair[key] = entry
+        for event_id, pair in by_id.items():
+            record, commit = pair.get("record"), pair.get("commit")
+            if record is None or not verify_event_record(record):
+                raise RuntimeError(f"invalid event record {event_id}: {path}")
+            if commit is not None and (
+                not verify_event_commit(commit)
+                or commit.get("record_hash") != record["record_hash"]
+                or commit.get("conversation_seq") != record["conversation_seq"]
+            ):
+                raise RuntimeError(f"invalid event receipt {event_id}: {path}")
+            if event_id in seen or str(UUID(event_id)) != event_id:
+                raise RuntimeError(f"duplicate or malformed event id {event_id}: {path}")
+            seen.add(event_id)
+            pairs.append({"record": record, "commit": commit})
     pairs.sort(
         key=lambda item: (
             int(item["commit"]["global_seq"]) if item["commit"] else 2**63 - 1,

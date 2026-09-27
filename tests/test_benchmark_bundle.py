@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -11,6 +12,10 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from zipfile import ZipFile
+from datetime import datetime, timezone
+from uuid import uuid4, uuid5
+
+from prometheist import artifact_journal, event_artifact_store
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
@@ -106,6 +111,34 @@ class BenchmarkBundleTests(unittest.TestCase):
 
         self.assertEqual(packaging.package_run(self.result, self.output)["artifact_count"], 1)
         self.assertEqual(packaging.verify_bundle(self.output)["status"], "VALID")
+
+    def test_self_memory_inventory_counts_one_percept_file_and_checks_its_entries(self) -> None:
+        run_root = Path(self.workspace.name) / "self-memory-artifacts"
+        learning_root = run_root / "learning"
+        conversation_id, correlation_id, event_id = uuid4(), uuid4(), uuid4()
+        interaction_id = uuid5(conversation_id, f"interaction:{correlation_id}")
+        with patch.dict(os.environ, {"PROMETHEIST_ARTIFACT_ROOT": str(learning_root)}):
+            event_artifact_store.write_event_record(
+                event_id=event_id, conversation_id=conversation_id,
+                correlation_id=correlation_id, conversation_seq=1,
+                event_type="USER_PROMPT", source="user", payload={"text": "hello"},
+                payload_text="hello", journal_id=interaction_id,
+            )
+            artifact_journal.write_percept_artifact(
+                interaction_id=interaction_id, conversation_id=conversation_id,
+                correlation_id=correlation_id, task_id=interaction_id,
+                user_text="hello", user_prompt_event_id=event_id,
+            )
+            event_artifact_store.write_event_commit(
+                event_id=event_id, conversation_id=conversation_id,
+                correlation_id=correlation_id, conversation_seq=1, global_seq=1,
+                created_at=datetime(2026, 9, 27, tzinfo=timezone.utc), schema_version=1,
+            )
+            inventory = self_memory._self_memory_artifact_file_inventory(run_root)
+        self.assertEqual(len(inventory), 1)
+        self.assertEqual(inventory[0]["artifact_type"], "PERCEPT_JOURNAL")
+        self.assertEqual(inventory[0]["interaction_id"], str(interaction_id))
+        self.assertEqual(inventory[0]["journal_sequence"], 1)
 
     def test_all_runners_treat_only_latest_zip_as_output(self) -> None:
         repo = Path(self.workspace.name) / "repo"

@@ -364,6 +364,9 @@ class OllamaClient:
             "transport_error_message": None,
         }
         try:
+            from prometheist.model_evidence_budget import validate_model_input
+
+            validate_model_input(request_json)
             response = self._client.post(request_path, json=request_json)
             diagnostics["http_status_code"] = getattr(response, "status_code", None)
             response_content = getattr(response, "content", None)

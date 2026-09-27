@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from prometheist import artifact_journal  # noqa: E402
+from prometheist import artifact_journal, percept_journal  # noqa: E402
 from prometheist.interaction_contracts import DurableInteraction  # noqa: E402
 from prometheist.llm import OllamaClient, _quarantined_evidence  # noqa: E402
 from prometheist.percept_response_runtime import (  # noqa: E402
@@ -1530,10 +1530,15 @@ def _artifact_file_inventory(run_artifact_root: Path) -> list[dict[str, Any]]:
             raise RuntimeError(f"benchmark artifact roots must not contain symlinks: {path}")
         if not path.is_file() or path.name == "run_manifest.json":
             continue
-        if path.suffix.casefold() != ".json":
+        if path.suffix.casefold() not in {".json", ".jsonl"}:
             raise RuntimeError(f"unexpected non-JSON benchmark artifact: {path}")
         raw = path.read_bytes()
-        document = json.loads(raw)
+        if path.suffix.casefold() == ".jsonl":
+            if path.parent.name != "percepts":
+                raise RuntimeError(f"unexpected percept journal location: {path}")
+            document = percept_journal.inspect(path)
+        else:
+            document = json.loads(raw)
         if not isinstance(document, dict):
             raise RuntimeError(f"benchmark artifact is not a JSON object: {path}")
         entries.append(

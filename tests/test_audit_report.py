@@ -154,9 +154,11 @@ def test_render_interaction_audit_reports_broken_hash_chain(tmp_path, monkeypatc
     percept_path = Path(
         artifact_journal.interaction_artifacts(interaction_id)[0]["_path"]
     )
-    document = json.loads(percept_path.read_text(encoding="utf-8"))
+    lines = percept_path.read_text(encoding="utf-8").splitlines()
+    document = json.loads(lines[0])
     document["payload"]["user_text"] = "an attacker rewrote this after the fact"
-    percept_path.write_text(json.dumps(document, indent=2), encoding="utf-8")
+    lines[0] = json.dumps(document)
+    percept_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     report = audit_report.render_interaction_audit(interaction_id)
 

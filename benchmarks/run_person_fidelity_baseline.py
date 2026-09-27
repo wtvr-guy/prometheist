@@ -25,7 +25,7 @@ from uuid import UUID, uuid4
 
 from dotenv import load_dotenv
 
-from prometheist import event_artifact_store
+from prometheist import event_artifact_store, percept_journal
 from prometheist.person_fidelity_benchmark import (
     HOLDOUT_BENCHMARK_ID,
     FidelityProbe,
@@ -449,14 +449,17 @@ def _artifact_file_inventory(run_artifact_root: Path) -> list[dict[str, Any]]:
             raise RuntimeError(f"unexpected non-JSON benchmark artifact: {path}")
         raw = path.read_bytes()
         if path.suffix.casefold() == ".jsonl":
-            if path.parent.name != "events":
-                raise RuntimeError(f"unexpected event stream location: {path}")
-            record, commit = event_artifact_store.read_event_file(path)
-            document = {
-                **record,
-                "artifact_type": "EVENT_JOURNAL",
-                "commit_hash": commit["commit_hash"] if commit else None,
-            }
+            if path.parent.name == "percepts":
+                document = percept_journal.inspect(path)
+            elif path.parent.name == "events":
+                record, commit = event_artifact_store.read_event_file(path)
+                document = {
+                    **record,
+                    "artifact_type": "EVENT_JOURNAL",
+                    "commit_hash": commit["commit_hash"] if commit else None,
+                }
+            else:
+                raise RuntimeError(f"unexpected artifact stream location: {path}")
         else:
             try:
                 document = json.loads(raw)
@@ -466,7 +469,7 @@ def _artifact_file_inventory(run_artifact_root: Path) -> list[dict[str, Any]]:
             raise RuntimeError(f"benchmark artifact is not a JSON object: {path}")
         relative = path.relative_to(run_artifact_root).as_posix()
         parts = Path(relative).parts
-        if len(parts) < 3 or parts[1] not in {"events", "interactions"}:
+        if len(parts) < 3 or parts[1] not in {"events", "interactions", "percepts"}:
             raise RuntimeError(f"unexpected benchmark artifact layout: {relative}")
         entries.append(
             {

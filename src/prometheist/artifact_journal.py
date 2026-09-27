@@ -19,6 +19,7 @@ from typing import Any, Iterable
 from uuid import UUID, uuid5
 
 from prometheist.perception import Percept, SalienceAssessment
+from prometheist import percept_journal
 
 ARTIFACT_SCHEMA_VERSION = 1
 _ARTIFACT_NAMESPACE = UUID("b983b0b7-a203-5c60-96f0-b17d2d94bf1a")
@@ -96,10 +97,18 @@ def _event_dir() -> Path:
 
 def interaction_artifacts(interaction_id: UUID) -> list[dict[str, Any]]:
     directory = _interaction_dir(interaction_id)
-    if not directory.exists():
-        return []
+    stream = percept_journal.path_for(interaction_id)
+    legacy = sorted(directory.glob("*.json")) if directory.exists() else []
+    if stream.exists() and legacy:
+        raise RuntimeError(f"interaction has both legacy and percept artifacts: {interaction_id}")
+    if stream.exists():
+        return [
+            {**item, "_path": str(stream)}
+            for item in percept_journal.read(stream)
+            if item.get("interaction_id") == str(interaction_id)
+        ]
     records: list[dict[str, Any]] = []
-    for path in sorted(directory.glob("*.json")):
+    for path in legacy:
         record = _load_json(path)
         record["_path"] = str(path)
         records.append(record)
@@ -136,22 +145,44 @@ def write_interaction_artifact(
     bounded independently of stage/kind labels and claim identifiers.
     """
 
-    existing = _find_artifact_by_key(interaction_id, artifact_key)
     payload_hash = _sha256(payload)
+    directory = _interaction_dir(interaction_id)
+    if not directory.exists() or not list(directory.glob("*.json")):
+        stream = percept_journal.path_for(interaction_id)
+        with percept_journal.locked(stream, create=True) as handle:
+            entries = percept_journal.entries_unlocked(handle, stream)
+            if any(
+                entry.get("conversation_id") != str(conversation_id)
+                or entry.get("correlation_id") != str(correlation_id)
+                for entry in entries
+                if entry.get("artifact_type") == "EVENT_RECORD"
+            ):
+                raise RuntimeError(f"percept journal scope conflicts with worker: {stream}")
+            if directory.exists() and list(directory.glob("*.json")):
+                raise RuntimeError(f"interaction has both legacy and percept artifacts: {interaction_id}")
+            prior = [item for item in entries if item.get("interaction_id") == str(interaction_id)]
+            existing = next((item for item in prior if item.get("artifact_key") == artifact_key), None)
+            if existing is not None:
+                _check_artifact_retry(
+                    existing, artifact_key, artifact_type, conversation_id, correlation_id,
+                    task_id, assignment_id, stage, producer, payload_hash,
+                )
+                return {**existing, "_path": str(stream)}
+            previous = prior[-1] if prior else None
+            envelope = _interaction_envelope(
+                artifact_key, artifact_type, interaction_id, conversation_id,
+                correlation_id, task_id, assignment_id, stage, producer,
+                payload_hash, payload, previous,
+            )
+            percept_journal.append_unlocked(handle, stream, envelope)
+            return {**envelope, "_path": str(stream)}
+
+    existing = _find_artifact_by_key(interaction_id, artifact_key)
     if existing is not None:
-        expected = {
-            "artifact_type": artifact_type,
-            "conversation_id": str(conversation_id),
-            "correlation_id": str(correlation_id),
-            "task_id": str(task_id) if task_id else None,
-            "assignment_id": str(assignment_id) if assignment_id else None,
-            "stage": stage,
-            "producer": producer,
-            "payload_hash": payload_hash,
-        }
-        actual = {key: existing.get(key) for key in expected}
-        if actual != expected:
-            raise ValueError(f"conflicting immutable artifact retry: {artifact_key}")
+        _check_artifact_retry(
+            existing, artifact_key, artifact_type, conversation_id, correlation_id,
+            task_id, assignment_id, stage, producer, payload_hash,
+        )
         return existing
 
     prior = interaction_artifacts(interaction_id)
@@ -196,6 +227,55 @@ def write_interaction_artifact(
         )
     _atomic_write_json(target, envelope)
     envelope["_path"] = str(target)
+    return envelope
+
+
+def _check_artifact_retry(
+    existing: dict[str, Any], artifact_key: str, artifact_type: str,
+    conversation_id: UUID, correlation_id: UUID, task_id: UUID | None,
+    assignment_id: UUID | None, stage: str | None, producer: str, payload_hash: str,
+) -> None:
+    expected = {
+        "artifact_type": artifact_type,
+        "conversation_id": str(conversation_id),
+        "correlation_id": str(correlation_id),
+        "task_id": str(task_id) if task_id else None,
+        "assignment_id": str(assignment_id) if assignment_id else None,
+        "stage": stage,
+        "producer": producer,
+        "payload_hash": payload_hash,
+    }
+    if {key: existing.get(key) for key in expected} != expected:
+        raise ValueError(f"conflicting immutable artifact retry: {artifact_key}")
+
+
+def _interaction_envelope(
+    artifact_key: str, artifact_type: str, interaction_id: UUID,
+    conversation_id: UUID, correlation_id: UUID, task_id: UUID | None,
+    assignment_id: UUID | None, stage: str | None, producer: str,
+    payload_hash: str, payload: dict[str, Any], previous: dict[str, Any] | None,
+) -> dict[str, Any]:
+    artifact_id = uuid5(_ARTIFACT_NAMESPACE, f"{interaction_id}:{artifact_key}")
+    envelope = {
+        "artifact_schema_version": ARTIFACT_SCHEMA_VERSION,
+        "artifact_id": str(artifact_id),
+        "artifact_key": artifact_key,
+        "artifact_type": artifact_type,
+        "interaction_id": str(interaction_id),
+        "conversation_id": str(conversation_id),
+        "correlation_id": str(correlation_id),
+        "task_id": str(task_id) if task_id else None,
+        "assignment_id": str(assignment_id) if assignment_id else None,
+        "stage": stage,
+        "producer": producer,
+        "journal_sequence": int(previous["journal_sequence"]) + 1 if previous else 1,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "previous_artifact_id": previous.get("artifact_id") if previous else None,
+        "previous_artifact_hash": previous.get("artifact_hash") if previous else None,
+        "payload_hash": payload_hash,
+        "payload": payload,
+    }
+    envelope["artifact_hash"] = _sha256(envelope)
     return envelope
 
 
@@ -396,14 +476,15 @@ def inspect_interaction(interaction_id: UUID) -> dict[str, Any]:
 
 def latest_interaction_id(*, complete: bool | None = None) -> UUID | None:
     directory = artifact_root() / "interactions"
-    if not directory.exists():
+    stream_root = percept_journal.root()
+    if not directory.exists() and not stream_root.exists():
         return None
     candidates: list[tuple[float, UUID]] = []
-    for child in directory.iterdir():
-        if not child.is_dir():
-            continue
+    children = list(directory.iterdir()) if directory.exists() else []
+    children.extend(stream_root.glob("*.jsonl") if stream_root.exists() else ())
+    for child in children:
         try:
-            interaction_id = UUID(child.name)
+            interaction_id = UUID(child.stem if child.is_file() else child.name)
         except ValueError:
             continue
         artifacts = interaction_artifacts(interaction_id)

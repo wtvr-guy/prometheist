@@ -53,6 +53,8 @@ def _journal_committed_event(event: Event, payload_text: str | None) -> None:
         conversation_seq=event.conversation_seq,
         created_at=event.created_at,
         schema_version=event.schema_version,
+        conversation_id=event.conversation_id,
+        correlation_id=event.correlation_id,
     )
 
 
@@ -66,6 +68,7 @@ def record_event(
     payload: dict[str, Any],
     payload_text: str | None = None,
     event_id: uuid.UUID | None = None,
+    journal_id: uuid.UUID | None = None,
 ) -> Event:
     """Append one canonical event and durably mirror it outside PostgreSQL.
 
@@ -124,6 +127,7 @@ def record_event(
                 source=source,
                 payload=payload,
                 payload_text=payload_text,
+                journal_id=journal_id,
             )
 
             cur.execute(
@@ -168,6 +172,8 @@ def record_event(
         conversation_seq=stored.conversation_seq,
         created_at=stored.created_at,
         schema_version=stored.schema_version,
+        conversation_id=stored.conversation_id,
+        correlation_id=stored.correlation_id,
     )
     return stored
 

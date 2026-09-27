@@ -18,8 +18,10 @@ from prometheist.models import MemoryPacket
 
 DEFAULT_MAX_EVIDENCE_ITEM_BYTES = 16384
 DEFAULT_MAX_EVIDENCE_TOTAL_BYTES = 65536
+DEFAULT_MAX_MODEL_INPUT_BYTES = 98304
 _ITEM_ENV = "PROMETHEIST_MAX_MODEL_EVIDENCE_ITEM_BYTES"
 _TOTAL_ENV = "PROMETHEIST_MAX_MODEL_EVIDENCE_TOTAL_BYTES"
+_INPUT_ENV = "PROMETHEIST_MAX_MODEL_INPUT_BYTES"
 
 
 class ModelEvidenceBudgetExceeded(RuntimeError):
@@ -67,6 +69,26 @@ def configured_model_evidence_budget() -> ModelEvidenceBudget:
             DEFAULT_MAX_EVIDENCE_TOTAL_BYTES,
         ),
     )
+
+
+def validate_model_input(request: dict[str, Any]) -> None:
+    """Bound the complete rendered prompt, message roles and output schema.
+
+    This is a deterministic byte bound, not a model-specific tokenizer count.
+    It includes current input and instructions that evidence-only limits omit.
+    """
+
+    maximum = _positive_env_int(_INPUT_ENV, DEFAULT_MAX_MODEL_INPUT_BYTES)
+    input_fields = {
+        key: request[key]
+        for key in ("prompt", "messages", "format")
+        if key in request
+    }
+    size = len(json.dumps(input_fields, ensure_ascii=False, default=str).encode("utf-8"))
+    if size > maximum:
+        raise ModelEvidenceBudgetExceeded(
+            f"complete model input exceeds byte budget: bytes={size} max={maximum}"
+        )
 
 
 def _utf8_size(text: str) -> int:

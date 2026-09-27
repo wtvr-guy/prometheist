@@ -35,7 +35,7 @@ if str(ROOT) not in sys.path:
 if str(BENCHMARK_DIR) not in sys.path:
     sys.path.insert(0, str(BENCHMARK_DIR))
 
-from prometheist import event_artifact_store  # noqa: E402
+from prometheist import event_artifact_store, percept_journal  # noqa: E402
 from run_person_fidelity_baseline import (  # noqa: E402
     DEFAULT_CORPUS,
     HOLDOUT_CORPUS,
@@ -686,12 +686,12 @@ def _self_memory_artifact_file_inventory(
         valid_learning = (
             len(parts) >= 3
             and parts[0] == "learning"
-            and parts[1] in {"events", "interactions"}
+            and parts[1] in {"events", "interactions", "percepts"}
         )
         valid_probe = (
             len(parts) >= 4
             and parts[0] == "probes"
-            and parts[2] in {"events", "interactions"}
+            and parts[2] in {"events", "interactions", "percepts"}
         )
         if not (valid_learning or valid_probe):
             raise RuntimeError(
@@ -700,14 +700,17 @@ def _self_memory_artifact_file_inventory(
 
         raw = path.read_bytes()
         if path.suffix.casefold() == ".jsonl":
-            if path.parent.name != "events":
-                raise RuntimeError(f"unexpected event stream location: {path}")
-            record, commit = event_artifact_store.read_event_file(path)
-            document = {
-                **record,
-                "artifact_type": "EVENT_JOURNAL",
-                "commit_hash": commit["commit_hash"] if commit else None,
-            }
+            if path.parent.name == "percepts":
+                document = percept_journal.inspect(path)
+            elif path.parent.name == "events":
+                record, commit = event_artifact_store.read_event_file(path)
+                document = {
+                    **record,
+                    "artifact_type": "EVENT_JOURNAL",
+                    "commit_hash": commit["commit_hash"] if commit else None,
+                }
+            else:
+                raise RuntimeError(f"unexpected artifact stream location: {path}")
         else:
             try:
                 document = json.loads(raw)

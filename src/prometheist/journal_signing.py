@@ -38,6 +38,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 
 from prometheist.artifact_journal import artifact_root, verify_interaction_chain
+from prometheist import percept_journal
 
 SIGNATURE_ALGORITHM = "ed25519"
 
@@ -160,6 +161,12 @@ def sign_journal_head(interaction_id: UUID) -> dict[str, Any]:
         "signing_key_id": key_id,
         "algorithm": SIGNATURE_ALGORITHM,
     }
+    stream = percept_journal.path_for(interaction_id)
+    if stream.exists():
+        contents = percept_journal.inspect(stream)
+        if contents["uncommitted_events"]:
+            raise ValueError("refusing to sign a percept with missing database receipts")
+        anchor["percept_journal_sha256"] = hashlib.sha256(stream.read_bytes()).hexdigest()
     signature = private_key.sign(_canonical_anchor_bytes(anchor))
     anchor["signature"] = signature.hex()
     _atomic_write_bytes(_anchor_path(interaction_id), (json.dumps(anchor, indent=2, sort_keys=True) + "\n").encode("utf-8"))
@@ -207,6 +214,21 @@ def verify_signed_journal_head(interaction_id: UUID) -> dict[str, Any]:
             "interaction_id": str(interaction_id), "signed": True, "valid": False,
             "reason": "signature is valid but no longer matches the current journal head",
         }
+    if "percept_journal_sha256" in anchor:
+        stream = percept_journal.path_for(interaction_id)
+        try:
+            percept_journal.inspect(stream)
+            current_digest = hashlib.sha256(stream.read_bytes()).hexdigest()
+        except (OSError, RuntimeError, ValueError) as exc:
+            return {
+                "interaction_id": str(interaction_id), "signed": True, "valid": False,
+                "reason": f"percept journal cannot be verified: {exc}",
+            }
+        if current_digest != anchor["percept_journal_sha256"]:
+            return {
+                "interaction_id": str(interaction_id), "signed": True, "valid": False,
+                "reason": "signature is valid but no longer matches the percept journal",
+            }
     return {
         "interaction_id": str(interaction_id), "signed": True, "valid": True,
         "signing_key_id": anchor["signing_key_id"], "journal_head": anchor["journal_head"],

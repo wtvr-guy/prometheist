@@ -1233,6 +1233,7 @@ def begin_percept(
         payload={"text": user_text},
         payload_text=user_text,
         event_id=deterministic_interaction_event_id(interaction_id, "user-prompt"),
+        journal_id=interaction_id,
     )
     percept = normalize_user_interaction_percept(
         user_text=user_text,
