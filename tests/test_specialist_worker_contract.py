@@ -48,7 +48,9 @@ def test_every_stage_has_one_named_specialist_role() -> None:
     assert _ALLOWED_LLM_KINDS_BY_STAGE[PerceptStage.PERSIST_RESULT] == set()
 
 
-@pytest.mark.parametrize("protocol_version", ["v0.7-interaction-v9", "v0.8-interaction-v10"])
+@pytest.mark.parametrize("protocol_version", [
+    "v0.7-interaction-v9", "v0.8-interaction-v10", "v0.8-interaction-v11",
+])
 def test_pre_split_interaction_protocol_cannot_resume_under_new_stage_graph(
     protocol_version: str,
 ) -> None:

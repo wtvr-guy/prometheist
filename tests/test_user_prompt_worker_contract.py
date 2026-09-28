@@ -16,7 +16,7 @@ from prometheist.percept_response_runtime import (
     MemorySufficiencyDecision,
     _RESPONSE_POLICY_PROMPT,
 )
-from prometheist.composer_coverage import COVERAGE_PROMPT
+from prometheist.composer_coverage import COVERAGE_PROMPT, MemoryRequirements
 from prometheist.models import EventType, MemoryNeed, MemoryPacket
 from prometheist.response_policy import (
     HistoricalEvidenceScope,
@@ -137,8 +137,7 @@ def test_self_model_composer_uses_historical_completeness_contract(
         captured["kind"] = kind
         captured["system"] = system
         return (
-            '{"requirements":[{"need":"observed preference behavior",'
-            '"evidence_index":null}]}'
+            '{"coverage":[{"requirement_index":0,"evidence_indices":[]}]}'
         )
 
     monkeypatch.setattr(llm, "_structured_with_evidence", fake_structured)
@@ -153,12 +152,15 @@ def test_self_model_composer_uses_historical_completeness_contract(
         "What do I usually prefer?",
         packet,
         person_history_required=True,
+        requirements=MemoryRequirements.model_validate({"requirements": [
+            {"need": "observed preference behavior"},
+        ]}),
     )
 
     assert decision.sufficient is False
     assert captured["kind"] == "V2_MEMORY_SUFFICIENCY_USER_PROMPT"
     assert captured["system"] == COVERAGE_PROMPT
-    assert "every independent personal fact" in captured["system"]
+    assert "fixed memory requirements" in captured["system"]
 
 
 def test_response_policy_defaults_ordinary_questions_to_natural_language() -> None:

@@ -621,6 +621,32 @@
       ],
       "search": "Freeze deterministic and native person-fidelity cases before tuning. Sweep one bound or promotion threshold family at a time against the episodic-only and semantic-only baselines. High-centrality schemas receive stronger counterevidence tests, not relaxed proof requirements. Any boundary winner must be expanded before acceptance; report insufficient discrimination rather than treating the current defaults as optimized."
     },
+    "COMPOSER-REQUIREMENTS-001": {
+      "title": "Current-only fixed requirements before personal-evidence matching",
+      "environment": "deterministic_ci_then_target_windows_host_with_ollama",
+      "parameters": ["MAX_COVERAGE_REQUIREMENTS", "MAX_COVERAGE_NEED_CHARS"],
+      "scenario_families": [
+        "retrieved_topic_contaminates_requirements", "answer_as_missing_memory",
+        "joint_evidence_explains_change", "analogous_observed_message",
+        "fixed_requirements_across_recall", "unknown_fact", "invalid_plan",
+        "invalid_or_missing_coverage_slot", "durable_stage_recovery"
+      ],
+      "hard_invariants": [
+        "requirement planning receives only the current request",
+        "planning and coverage have separate guarded worker roles",
+        "every committed requirement appears exactly once in coverage",
+        "all selected sources exist in the admitted catalog",
+        "missing support cannot authorize history admission",
+        "no fixture IDs or expected answers in runtime",
+        "bounded calls and unchanged source policy, retrieval, and response prompt"
+      ],
+      "quality_order": [
+        "hard_invariant_pass_rate", "faithful_answer_rate",
+        "false_insufficiency_rate", "premature_sufficiency_rate",
+        "requirement_relevance", "invalid_output_rate", "model_calls", "latency"
+      ],
+      "search": "Freeze the aab8127 bundle: 7/10 structural, with all required roots retrieved for pf-q003/pf-q007 but false insufficiency, and two wasted recalls for pf-q009. Compare current-only fixed requirements against this joint planning/matching baseline with identical frozen learning, beginning with those three probes. Keep bounds unchanged initially; separately measure added planning latency and any saved recall. Then run all SELF_MODEL probes and the full suite/holdout. See docs/experiments/COMPOSER_REQUIREMENTS_001.md."
+    },
     "COMPOSER-COVERAGE-001": {
       "title": "Explicit personal-evidence coverage before Composer sufficiency",
       "environment": "deterministic_ci_then_target_windows_host_with_ollama",

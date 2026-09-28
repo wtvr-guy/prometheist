@@ -24,7 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from prometheist import artifact_journal, db, event_store, llm_artifact_store
 from prometheist.composer_coverage import (
-    COVERAGE_PROMPT, EvidenceCoverage, coverage_catalog, coverage_schema,
+    COVERAGE_PROMPT, EvidenceCoverage, MemoryRequirements, coverage_catalog, coverage_schema,
 )
 from prometheist.capability_registry import DEFAULT_REGISTRY, CapabilityDescriptor
 from prometheist.epistemic_authority import format_authority_bound_memory_packet
@@ -65,6 +65,7 @@ _NON_COGNITIVE_MEMORY_SOURCES = frozenset(
 USER_PROMPT_STAGE_SPECIALIST_ROLES = {
     PerceptStage.RESOLVE_REFERENCES: "deterministic reference resolver",
     PerceptStage.EVIDENCE_POLICY: "evidence policy specialist",
+    PerceptStage.MEMORY_REQUIREMENTS: "memory requirement specialist",
     PerceptStage.PRECOGNITIVE: "work triage specialist",
     PerceptStage.EXECUTE_WORK: "deterministic capability executor",
     PerceptStage.COMPOSE_MEMORY: "memory sufficiency specialist",
@@ -75,6 +76,7 @@ USER_PROMPT_STAGE_SPECIALIST_ROLES = {
 _ALLOWED_LLM_KINDS_BY_STAGE = {
     PerceptStage.RESOLVE_REFERENCES: frozenset(),
     PerceptStage.EVIDENCE_POLICY: frozenset({"V2_RESPONSE_POLICY"}),
+    PerceptStage.MEMORY_REQUIREMENTS: frozenset({"V2_MEMORY_REQUIREMENTS"}),
     PerceptStage.PRECOGNITIVE: frozenset({"PRECOGNITIVE_USER_PROMPT_WORK"}),
     PerceptStage.EXECUTE_WORK: frozenset(),
     PerceptStage.COMPOSE_MEMORY: frozenset({"V2_MEMORY_SUFFICIENCY_USER_PROMPT"}),
@@ -623,7 +625,10 @@ class UserPromptLLM(PerceptLLM):
         self_context: SelfContextPacket | None = None,
         *,
         person_history_required: bool = False,
+        requirements: MemoryRequirements | None = None,
     ) -> MemorySufficiencyDecision:
+        if person_history_required and requirements is None:
+            raise ComposerValidationError("person-history coverage requires committed requirements")
         visible_packet = _cognitive_memory_packet(memory_packet)
         refs = list(_memory_evidence_refs(visible_packet))
         if self_context is not None:
@@ -641,6 +646,8 @@ class UserPromptLLM(PerceptLLM):
             self._set_artifact_evidence_refs(coverage_refs)
         validate_rendered_evidence((memory_text, self_text), budget=budget)
         current_user = f"[Current user prompt]\n{percept}"
+        if person_history_required:
+            current_user += "\n\n" + requirements.render()
         last_error: ValueError | None = None
         for token_cap in (256, 384):
             try:
@@ -653,7 +660,7 @@ class UserPromptLLM(PerceptLLM):
                     ),
                     current_user,
                     _quarantined_evidence(memory_text, self_text),
-                    (coverage_schema(len(coverage_refs)) if person_history_required
+                    (coverage_schema(requirements, len(coverage_refs)) if person_history_required
                      else MemorySufficiencyDecision.model_json_schema()),
                     token_cap,
                 )
@@ -663,7 +670,7 @@ class UserPromptLLM(PerceptLLM):
                     validator=lambda: (
                         MemorySufficiencyDecision(**EvidenceCoverage.model_validate_json(
                             content,
-                        ).decision_fields(len(coverage_refs)))
+                        ).decision_fields(requirements, len(coverage_refs)))
                         if person_history_required
                         else MemorySufficiencyDecision.model_validate_json(
                             _normalize_memory_sufficiency_content(content)

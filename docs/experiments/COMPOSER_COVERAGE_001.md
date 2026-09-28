@@ -3,6 +3,12 @@
 Date: 2026-09-27. Status: implemented candidate; native model acceptance pending.
 Parent: `2bf7c60` on `experiment/compact-artifact-journal`.
 
+Follow-up 2026-09-28: source delivery improved, but the native 7/10 structural run
+still rejects complete evidence for pf-q003/pf-q007. Joint requirement generation
+and evidence matching is now superseded by the candidate in
+[`COMPOSER_REQUIREMENTS_001.md`](COMPOSER_REQUIREMENTS_001.md). The original
+contract and negative results below remain the historical experiment record.
+
 Follow-up: the native `d971214` run scored 0/3 on pf-q005/pf-q006/pf-q007. Coverage
 output was valid but did not resolve source discovery or semantic completeness.
 The negative result and next source-navigation experiment are documented in

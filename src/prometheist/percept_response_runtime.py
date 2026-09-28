@@ -32,7 +32,8 @@ from prometheist import db, event_store, jit_memory
 from prometheist.canonical_neighborhood import expand_canonical_neighbors
 from prometheist.self_memory_navigation import expand_self_memory_roots
 from prometheist.composer_coverage import (
-    COVERAGE_PROMPT, EvidenceCoverage, coverage_catalog, coverage_schema,
+    COVERAGE_PROMPT, REQUIREMENTS_PROMPT, EvidenceCoverage, MemoryRequirements,
+    coverage_catalog, coverage_schema,
 )
 from prometheist.attention import (
     AttentionTask,
@@ -163,6 +164,7 @@ internal retrieval mechanics unless the user asks about them.
 class PerceptStage(str, Enum):
     RESOLVE_REFERENCES = "V2_RESOLVE_REFERENCES"
     EVIDENCE_POLICY = "V2_EVIDENCE_POLICY"
+    MEMORY_REQUIREMENTS = "V2_MEMORY_REQUIREMENTS"
     PRECOGNITIVE = "V2_PRECOGNITIVE"
     EXECUTE_WORK = "V2_EXECUTE_WORK"
     COMPOSE_MEMORY = "V2_COMPOSE_MEMORY"
@@ -174,6 +176,7 @@ class PerceptStage(str, Enum):
         return {
             PerceptStage.RESOLVE_REFERENCES: "interaction.resolve_references",
             PerceptStage.EVIDENCE_POLICY: "interaction.plan_evidence",
+            PerceptStage.MEMORY_REQUIREMENTS: "interaction.memory_requirements",
             PerceptStage.PRECOGNITIVE: "interaction.precognitive_disposition",
             PerceptStage.EXECUTE_WORK: "capability.execute",
             PerceptStage.COMPOSE_MEMORY: "interaction.compose_memory",
@@ -236,6 +239,7 @@ class ResponseMemoryPackage(BaseModel):
     unresolved_memory_deficit: str | None = None
     composer_rounds: int
     adaptive_recall_rounds: int
+    requirements: MemoryRequirements | None = None
 
 
 _PRECOGNITIVE_PROMPT = """\
@@ -546,6 +550,25 @@ class PerceptLLM(OllamaClient):
                 last_error = exc
         raise ValueError(f"pre-cognitive disposition failed to validate: {last_error}")
 
+    def plan_memory_requirements(self, percept: str) -> MemoryRequirements:
+        """Current-only specialist; the durable stage commits its result once."""
+        self._set_artifact_evidence_refs(())
+        last_error: ValueError | None = None
+        for token_cap in (256, 384):
+            try:
+                content = self._structured_with_evidence(
+                    "V2_MEMORY_REQUIREMENTS", REQUIREMENTS_PROMPT, percept,
+                    _quarantined_evidence(), MemoryRequirements.model_json_schema(),
+                    token_cap,
+                )
+                return self._validated_model_output(
+                    kind="V2_MEMORY_REQUIREMENTS", raw_output=content,
+                    validator=lambda: MemoryRequirements.model_validate_json(content),
+                )
+            except ValueError as exc:
+                last_error = exc
+        raise ComposerValidationError(f"memory requirements failed to validate: {last_error}")
+
     def assess_memory_sufficiency(
         self,
         percept: str,
@@ -553,7 +576,10 @@ class PerceptLLM(OllamaClient):
         self_context: SelfContextPacket | None = None,
         *,
         person_history_required: bool = False,
+        requirements: MemoryRequirements | None = None,
     ) -> MemorySufficiencyDecision:
+        if person_history_required and requirements is None:
+            raise ComposerValidationError("person-history coverage requires committed requirements")
         refs = list(_memory_evidence_refs(memory_packet))
         if self_context is not None:
             refs.extend(
@@ -570,6 +596,8 @@ class PerceptLLM(OllamaClient):
             self._set_artifact_evidence_refs(coverage_refs)
         validate_rendered_evidence((memory_text, self_text), budget=budget)
         current_user = f"[Current percept]\n{percept}"
+        if person_history_required:
+            current_user += "\n\n" + requirements.render()
         last_error: ValueError | None = None
         for token_cap in (256, 384):
             try:
@@ -582,7 +610,7 @@ class PerceptLLM(OllamaClient):
                     ),
                     current_user,
                     _quarantined_evidence(memory_text, self_text),
-                    (coverage_schema(len(coverage_refs)) if person_history_required
+                    (coverage_schema(requirements, len(coverage_refs)) if person_history_required
                      else MemorySufficiencyDecision.model_json_schema()),
                     token_cap,
                 )
@@ -592,7 +620,7 @@ class PerceptLLM(OllamaClient):
                     validator=lambda: (
                         MemorySufficiencyDecision(**EvidenceCoverage.model_validate_json(
                             content,
-                        ).decision_fields(len(coverage_refs)))
+                        ).decision_fields(requirements, len(coverage_refs)))
                         if person_history_required
                         else MemorySufficiencyDecision.model_validate_json(content)
                     ),
@@ -1084,6 +1112,7 @@ def _compose_memory_package(
     self_context: SelfContextPacket | None = None,
     *,
     person_history_required: bool = False,
+    requirements: MemoryRequirements | None = None,
 ) -> ResponseMemoryPackage:
     """Bounded Composer/Adaptive-Recall loop with explicit no-progress exhaustion."""
 
@@ -1112,11 +1141,14 @@ def _compose_memory_package(
     )
     def assess(current_packet: MemoryPacket) -> MemorySufficiencyDecision:
         if person_history_required:
+            if requirements is None:
+                raise ComposerValidationError("person-history coverage requires committed requirements")
             decision = llm.assess_memory_sufficiency(
                 interaction.user_text,
                 current_packet,
                 composer_self_context,
                 person_history_required=True,
+                requirements=requirements,
             )
             if (
                 decision.sufficient
@@ -1155,6 +1187,7 @@ def _compose_memory_package(
             unresolved_memory_deficit="Composer output invalid; memory sufficiency undetermined.",
             composer_rounds=rounds,
             adaptive_recall_rounds=expansions,
+            requirements=requirements,
         )
 
     decisions: list[MemorySufficiencyDecision] = []
@@ -1172,6 +1205,7 @@ def _compose_memory_package(
                 sufficient=True,
                 composer_rounds=len(decisions),
                 adaptive_recall_rounds=len(expansions),
+                requirements=requirements,
             )
         expanded = _adaptive_recall(
             conn,
@@ -1203,6 +1237,7 @@ def _compose_memory_package(
         ),
         composer_rounds=len(decisions),
         adaptive_recall_rounds=len(expansions),
+        requirements=requirements,
     )
 
 
@@ -1425,6 +1460,15 @@ def _execute_stage(
             "response_source_types": [event_type.value for event_type in source_types],
         }, []
 
+    if stage is PerceptStage.MEMORY_REQUIREMENTS:
+        response_policy = _validated_response_policy(
+            _stage_result(conn, interaction, PerceptStage.EVIDENCE_POLICY, scheduler_key)
+        )
+        if response_policy.evidence_scope is not HistoricalEvidenceScope.SELF_MODEL:
+            return {"skipped": True, "requirements": None}, []
+        requirements = llm.plan_memory_requirements(interaction.user_text)
+        return {"skipped": False, "requirements": requirements.model_dump(mode="json")}, []
+
     if stage is PerceptStage.PRECOGNITIVE:
         evidence_policy = _stage_result(
             conn,
@@ -1551,6 +1595,10 @@ def _execute_stage(
         self_context = SelfContextPacket.model_validate(
             precognitive["self_context"]
         )
+        requirements = None
+        if response_policy.evidence_scope is HistoricalEvidenceScope.SELF_MODEL:
+            planned = _stage_result(conn, interaction, PerceptStage.MEMORY_REQUIREMENTS, scheduler_key)
+            requirements = MemoryRequirements.model_validate(planned["requirements"])
         package = _compose_memory_package(
             conn,
             llm,
@@ -1562,6 +1610,7 @@ def _execute_stage(
                 response_policy.evidence_scope
                 is HistoricalEvidenceScope.SELF_MODEL
             ),
+            requirements=requirements,
         )
         return {"skipped": False, "memory_package": package.model_dump(mode="json")}, [
             f"memory-request:{package.memory_packet.memory_request_id}"

@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, model_validator
 from prometheist.perception import Percept, SalienceAssessment
 
 
-INTERACTION_PROTOCOL_VERSION = "v0.8-interaction-v11"
+INTERACTION_PROTOCOL_VERSION = "v0.8-interaction-v12"
 
 
 class MemoryContext(Protocol):

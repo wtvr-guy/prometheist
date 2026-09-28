@@ -10,6 +10,7 @@ from psycopg.rows import dict_row
 
 from prometheist import db, event_store
 from prometheist.cognitive_store import put_record
+from prometheist.composer_coverage import MemoryRequirements
 from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 from prometheist.percept_response_runtime import MemorySufficiencyDecision, _compose_memory_package
 from prometheist.person_fidelity_benchmark import load_person_fidelity_corpus
@@ -86,6 +87,9 @@ def test_frozen_failure_required_roots_reach_even_immediately_permissive_compose
         conn, Composer(), SimpleNamespace(user_text=probe.prompt, before_global_seq=cutoff(conn),
                                         interaction_id=uuid4()), initial, SOURCE_TYPES,
         person_history_required=True,
+        requirements=MemoryRequirements.model_validate({"requirements": [
+            {"need": "personal preferences and priorities"},
+        ]}),
     )
     assert package.composer_rounds == 1
     assert package.adaptive_recall_rounds == 0
@@ -104,8 +108,9 @@ def test_frozen_message_deficits_recover_style_and_observed_example(learned):
                                     evidence_scope=HistoricalEvidenceScope.SELF_MODEL,
                                     surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE)
     # These are the actual successive missing cues in the failed native run.
-    deficits = iter(["personal history of response to unexplained hardware anomalies",
-                     "project message style in final hardware testing context"])
+    frozen_needs = ["personal history of response to unexplained hardware anomalies",
+                    "project message style in final hardware testing context"]
+    deficits = iter(frozen_needs)
 
     class Composer:
         def assess_memory_sufficiency(self, prompt, packet, self_context, **kwargs):
@@ -117,6 +122,9 @@ def test_frozen_message_deficits_recover_style_and_observed_example(learned):
         conn, Composer(), SimpleNamespace(user_text=probe.prompt, before_global_seq=cutoff(conn),
             interaction_id=uuid4(), conversation_id=conversation, correlation_id=uuid4(), task_id=uuid4()),
         packet_for(conn), SOURCE_TYPES, context, person_history_required=True,
+        requirements=MemoryRequirements.model_validate({"requirements": [
+            {"need": need} for need in frozen_needs
+        ]}),
     )
     assert package.sufficient
     assert required.issubset({item.source_event_id for item in package.memory_packet.items})

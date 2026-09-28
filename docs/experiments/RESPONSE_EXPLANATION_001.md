@@ -3,6 +3,13 @@
 Date: 2026-09-27. Status: wording candidate; native semantic acceptance pending.
 Separate from the source-navigation change at `c70c231`.
 
+Follow-up 2026-09-28: the same application code produced a one-sentence pf-q006
+answer in the targeted run and an expanded answer in the full suite. The short
+answer stopped normally after 14 tokens; both runs used temperature 0.65. The
+full answer still omits the explicit runway threshold. This wording change has
+not established reliable explanation completeness. See the frozen review in
+[`COMPOSER_REQUIREMENTS_001.md`](COMPOSER_REQUIREMENTS_001.md).
+
 The frozen `d971214` run's pf-q006 asks for a predicted offer choice and its main
 tradeoff. The final worker returns `{"answer": "Offer B"}`. Ollama records
 `done_reason=stop` and `eval_count=10` with a 256-token allowance. This is an

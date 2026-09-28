@@ -1,8 +1,8 @@
 # Percept-to-Response Pipeline
 
 **Status:** authoritative implemented v2 path, adopted 2026-08-29 and revised
-2026-09-12 to separate and durably bind evidence policy from work triage and
-response realization.
+2026-09-28 to commit current-only personal-memory requirements separately from
+evidence matching. Native acceptance of this latest split is pending.
 
 **Scope:** the path from an admitted input through pre-cognitive work selection, capability execution, memory sufficiency, and final response generation.
 
@@ -34,6 +34,8 @@ flowchart TD
     A[Canonical user prompt] --> B[Percept and situation formation]
     B --> C[Reference resolver]
     C --> D[Evidence policy specialist]
+    D --> R[Current-only memory requirements]
+    R --> H
     D --> E[Bounded memory aperture]
     D --> S[Bounded Working Self activation]
     E --> F[Work selection specialist]
@@ -203,19 +205,29 @@ Self-Memory System's resolution responsibility.
 
 For the `SELF_MODEL` historical route, `composer_coverage.py` makes that check
 explicit. Canonical evidence and admitted derived self items share a numbered
-catalog while retaining their authority labels. The model returns a bounded list
-of `{need, evidence_index}` requirements. A null index means missing evidence;
-Python derives `sufficient=false` and sends the first missing need to Adaptive
-Recall. Every index must refer to a supplied source, and repeated invalid output
-fails closed under the existing retry protocol. The raw model response and ordered
-source references remain in the existing LLM artifact journal.
+catalog while retaining their authority labels. A separate guarded
+`V2_MEMORY_REQUIREMENTS` stage first commits a bounded list of `{need}` items from
+the current prompt alone. It sees no retrieved memories, self context or tool
+results. The result is durably published before stage completion and reused after
+restart. Non-SELF_MODEL routes skip requirement inference.
+
+Composer receives that fixed list and returns
+`{requirement_index, evidence_indices}` coverage entries. An empty source list means
+missing evidence; several sources may jointly cover one requirement. Python
+requires every fixed requirement exactly once, rejects duplicate/out-of-range
+indices, derives `sufficient=false` for any missing slot, and sends the first
+missing need to Adaptive Recall. It does not let Composer add, drop, or rename
+requirements. Repeated invalid output fails closed. The raw model response and
+ordered source references remain in the LLM artifact journal; the final Composer
+package also retains the exact committed requirement plan for audit.
 
 Missing needs describe short personal subjects, such as `financial priorities`,
-rather than technical details of a hypothetical current situation. The Composer
-still judges which requirements matter and whether a source supports them; a
-valid index is not proof of semantic support. Generic memory routes retain the
-existing boolean/deficit contract. See
-[`COMPOSER_COVERAGE_001.md`](../experiments/COMPOSER_COVERAGE_001.md).
+rather than technical details of a hypothetical current situation. The requirement
+specialist can still choose poor requirements and Composer can still cite an
+irrelevant source; a valid index is not proof of semantic support. Generic memory
+routes retain the existing boolean/deficit contract. The final response prompt and
+evidence admission remain unchanged. See
+[`COMPOSER_REQUIREMENTS_001.md`](../experiments/COMPOSER_REQUIREMENTS_001.md).
 
 ### 7.1 If memory is sufficient
 
@@ -342,13 +354,14 @@ The current user-prompt path should therefore be read as a specific fully wired 
 
 ## 12. LLM-worker accounting
 
-The user-response path has four semantic LLM worker **roles**, each isolated behind
+The user-response path has five semantic LLM worker **roles**, each isolated behind
 its own guarded stage contract:
 
 1. **Evidence-policy specialist** — historical source scope and output surface from current authority only.
-2. **Work-triage specialist** — bounded semantic non-memory work selection only.
-3. **v2 Composer** — memory-context sufficiency and semantic memory-deficit identification.
-4. **Response realization** — exact-source selection or personality-conditioned
+2. **Memory-requirement specialist** — necessary personal-memory requirements from the current request only; conditional on SELF_MODEL.
+3. **Work-triage specialist** — bounded semantic non-memory work selection only.
+4. **v2 Composer** — memory-context sufficiency and semantic memory-deficit identification.
+5. **Response realization** — exact-source selection or personality-conditioned
    natural-language expression; a current-only fallback selector runs only for an
    explicit unsupported-history fallback.
 

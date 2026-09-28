@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from prometheist import jit_memory
+from prometheist.composer_coverage import MemoryRequirements
 from prometheist.capability_registry import (
     DEFAULT_REGISTRY,
     CapabilityDescriptor,
@@ -69,6 +70,7 @@ def test_empty_self_model_packet_cannot_be_accepted_as_sufficient(monkeypatch) -
             self_context=None,
             *,
             person_history_required=False,
+            requirements=None,
         ):
             del percept, memory_packet, self_context
             assert person_history_required is True
@@ -89,6 +91,9 @@ def test_empty_self_model_packet_cannot_be_accepted_as_sufficient(monkeypatch) -
         packet,
         [],
         person_history_required=True,
+        requirements=MemoryRequirements.model_validate({"requirements": [
+            {"need": "personal priorities"},
+        ]}),
     )
 
     assert package.sufficient is False
