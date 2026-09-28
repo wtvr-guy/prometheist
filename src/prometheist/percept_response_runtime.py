@@ -10,7 +10,6 @@ from __future__ import annotations
 from prometheist.contract_registry import SEMANTIC_CONTRACTS
 
 from prometheist.prompt_registry import (
-    _PRECOGNITIVE_PROMPT,
     _FINAL_RESPONSE_PROMPT,
     _RESPONSE_POLICY_PROMPT,
     _CURRENT_FALLBACK_SELECTION_PROMPT,
@@ -106,8 +105,6 @@ from prometheist.ollama_runtime import (
     OllamaRuntimeState,
 )
 from prometheist.perception import (
-    SalienceAssessment,
-    format_salience_context,
     normalize_user_interaction_percept,
 )
 from prometheist.response_policy import (
@@ -279,57 +276,6 @@ class PerceptLLM(OllamaClient):
 
 class PerceptSpecialists(PerceptLLM):
     """Explicit semantic contracts, separate from the transport-only base."""
-
-    def decide_disposition(
-        self,
-        percept: str,
-        memory_packet: MemoryPacket,
-        capability_catalog: tuple[CapabilityDescriptor, ...],
-        salience_assessment: SalienceAssessment | None = None,
-    ) -> PreCognitiveDisposition:
-        self._set_artifact_evidence_refs(_memory_evidence_refs(memory_packet))
-        budget = configured_model_evidence_budget()
-        validate_memory_packet_content(memory_packet, budget=budget)
-        catalog_text = "\n".join(
-            f"{index}: {item.capability_id} | {item.kind.value} | {item.description}"
-            for index, item in enumerate(capability_catalog)
-        ) or "none"
-        memory_text = format_authority_bound_memory_packet(memory_packet)
-        if salience_assessment is not None:
-            memory_text += "\n\n[Advisory deterministic salience]\n" + format_salience_context(
-                salience_assessment
-            )
-        validate_rendered_evidence((memory_text,), budget=budget)
-        current_user = (
-            f"[Current percept]\n{percept}\n\n"
-            f"[Executable capability catalog]\n{catalog_text}"
-        )
-
-        def validate_decision(content: str) -> PreCognitiveDisposition:
-            decision = PreCognitiveDisposition.model_validate_json(content)
-            if any(index >= len(capability_catalog) for index in decision.capability_indices):
-                raise ValueError("pre-cognitive worker selected an unavailable capability")
-            return decision
-
-        last_error: ValueError | None = None
-        for token_cap in (48, 96):
-            try:
-                content = self._structured_with_evidence(
-                    "PRECOGNITIVE_DISPOSITION",
-                    _PRECOGNITIVE_PROMPT,
-                    current_user,
-                    _quarantined_evidence(memory_text),
-                    SEMANTIC_CONTRACTS["PRECOGNITIVE_DISPOSITION"].output_schema(),
-                    token_cap,
-                )
-                return self._validated_model_output(
-                    kind="PRECOGNITIVE_DISPOSITION",
-                    raw_output=content,
-                    validator=lambda: validate_decision(content),
-                )
-            except ValueError as exc:
-                last_error = exc
-        raise ValueError(f"pre-cognitive disposition failed to validate: {last_error}")
 
     def _response_policy(self, percept: str) -> ResponsePolicy:
         """Classify source and surface requirements from current authority only."""

@@ -421,28 +421,30 @@ def apply_review(
         for item in self_evidence(conn, representation.representation_id)
         if item.relation is SelfEvidenceRelation.SUPPORTS
     }
-    recorded_opposition_ids: set[UUID] = set()
+    selected_roots = []
     for index in review.opposition_indices:
         if index < 0 or index >= len(review_packet.items):
             raise ValueError("self review selected unavailable opposition evidence")
         item = review_packet.items[index]
         if item.source_event_id in support_ids:
-            continue
+            raise ValueError("self review cannot mark a support root as opposition")
         root = event_store.get_event_by_id(conn, item.source_event_id)
         if root is None:
             raise RuntimeError(
                 f"self review evidence root is missing: {item.source_event_id}"
             )
+        selected_roots.append(root)
+
+    for root in selected_roots:
         record_self_evidence(
             conn,
             representation=representation,
-            root_event_id=item.source_event_id,
+            root_event_id=root.event_id,
             relation=SelfEvidenceRelation.OPPOSES,
             origin=SelfEvidenceOrigin.DIRECT,
             derivation_method=SELF_REFLECTION_POLICY,
             known_at=root.created_at,
         )
-        recorded_opposition_ids.add(item.source_event_id)
 
     # Evidence relations are semantic proposals. Status follows the versioned
     # deterministic support/breadth/opposition policy, never an LLM verdict.

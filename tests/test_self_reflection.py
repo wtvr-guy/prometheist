@@ -322,15 +322,13 @@ def test_review_cannot_turn_a_support_root_into_opposition(conn):
         rationale="The model incorrectly selected the support root as contrary.",
     )
 
-    resolution = apply_review(
-        conn,
-        representation=representation,
-        review=review,
-        review_packet=packet,
-        resolved_at=datetime.now(timezone.utc) + timedelta(minutes=2),
-    )
-
-    assert resolution.status is SelfResolutionStatus.CANDIDATE
+    with pytest.raises(ValueError, match="support root as opposition"):
+        apply_review(
+            conn, representation=representation, review=review,
+            review_packet=packet,
+            resolved_at=datetime.now(timezone.utc) + timedelta(minutes=2),
+        )
+    assert current_self_resolution(conn, representation.representation_id).status is SelfResolutionStatus.CANDIDATE
     stored = self_evidence(conn, representation.representation_id)
     assert len(stored) == 1
     assert stored[0].relation.value == "SUPPORTS"

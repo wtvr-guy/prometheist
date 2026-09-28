@@ -202,18 +202,12 @@ def test_user_facing_answer_fails_closed_after_two_invalid_outputs():
         client._text("FINAL_RESPONSE_V2", "system", "Question")
 
 
-def test_history_dependent_response_fails_closed_when_composer_exhausts_recall():
+def test_history_dependent_response_fails_closed_without_admissible_evidence():
     packet = MemoryPacket(
         memory_request_id=uuid4(),
         need=MemoryNeed(query_text="What was my fifth-grade teacher's name?"),
-        supported=True,
-        items=[
-            _evidence(
-                EventType.USER_PROMPT,
-                "An unrelated remembered preference.",
-                1,
-            )
-        ],
+        supported=False,
+        items=[],
     )
     package = ResponseMemoryPackage(
         memory_packet=packet,

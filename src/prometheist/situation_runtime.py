@@ -1,8 +1,8 @@
 """Durable non-user cognition through the existing Attention Fabric and guards.
 
 Deterministic adapters can run with LLM=null. Opaque operational semantics use
-one triage specialist. Optional natural responses retain separate memory-only
-Composer and final-responder processes from the v0.7 closure architecture.
+one triage specialist. Optional natural responses use separate deterministic
+memory retrieval and final-responder processes.
 """
 from __future__ import annotations
 

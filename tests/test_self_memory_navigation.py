@@ -160,6 +160,16 @@ def test_compound_cue_can_find_a_learned_topic_tag(learned):
     assert event_ids["pf-e002"] in {item.source_event_id for item in packet.items}, packet.retrieval_trace
 
 
+def test_cue_in_linked_source_can_find_a_paraphrased_self_representation(learned):
+    conn, _, event_ids, snapshot = learned
+    # Learned statements/tags omit this canonical wording. Source cues must
+    # still locate the representation's original evidence without a model query.
+    assert all("messages" not in row[1]["statement"] for row in snapshot["self_representation"])
+    packet = navigate(conn, "messages")
+    assert event_ids["pf-e014"] in {item.source_event_id for item in packet.items}
+    assert not navigate(conn, "messages", types=[EventType.SYSTEM_EVENT]).items
+
+
 def test_counterevidence_is_returned_only_after_its_link_is_known(learned):
     conn, _, event_ids, snapshot = learned
     old = next(data for _, data in snapshot["self_evidence"]

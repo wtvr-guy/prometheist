@@ -32,7 +32,7 @@ def expand_canonical_neighbors(
     precede the caller's history boundary and satisfy its source policy. The
     sequence window bounds rows examined through idx_events_conversation_seq;
     this never scans a whole conversation or treats it as a global recall wall.
-    The returned packet and trace are persisted by the existing Composer stage.
+    The returned packet and trace are persisted by the retrieval stage.
     """
     if item_limit < 1:
         raise ValueError("item_limit must be positive")

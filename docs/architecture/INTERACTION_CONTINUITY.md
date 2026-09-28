@@ -86,23 +86,19 @@ current prompt + bounded aperture
   -> bounded Working Self activation under the same evidence policy
   -> fresh pre-cognitive non-memory work-triage specialist
   -> deterministic external work execution
-  -> fresh Composer memory-sufficiency judgment
-       -> sufficient: response-ready memory package
-       -> deficit: deterministic Adaptive Recall -> fresh Composer
+  -> fixed bounded retrieval routes and deterministic evidence merge
   -> application filters event roles
   -> quarantined evidence precedes the current prompt
   -> validated exact-source output or natural final responder
 ```
 
-Composer reassessment may recur only inside this narrow memory-sufficiency loop. It
-does not become a general router. The Composer cannot decide whether to respond,
-select external work, reinterpret tool results, or generate final prose.
+Retrieval is model-free and exhausts its finite routes. It cannot decide whether
+to respond, select external work, reinterpret tool results, or generate final prose.
 
 ## Adaptive Recall
 
-Adaptive Recall is deterministic memory expansion driven by a bounded semantic
-deficit from the Composer. It progresses through architecture-neutral retrieval
-stages:
+Adaptive Recall is deterministic memory expansion driven by the original prompt
+and already learned navigation cues. It progresses through fixed retrieval stages:
 
 - `BROAD` — expand general candidate coverage;
 - `ASSOCIATIVE` — traverse bounded evidence associations;

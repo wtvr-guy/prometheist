@@ -221,7 +221,8 @@ An `ESTABLISHED` request fails or is weakened when:
 - a slow/very-slow inferred schema lacks support from the configured number of
   independent durable source contexts.
 
-The reflection LLM may recommend a verdict. It cannot bypass these guards.
+The review LLM identifies opposition by packet index and gives a rationale.
+It cannot request a durable status; ordinary code applies these guards.
 
 Known opposition forces `CONTESTED` rather than allowing a model to explain
 away inconvenient evidence.
@@ -283,15 +284,13 @@ It does not choose plasticity and cannot establish its own proposal.
 ### Review specialist
 
 The review specialist receives one candidate plus a separately retrieved
-related-evidence packet. It may return:
-
-- `ESTABLISH`
-- `CONTEST`
-- `REJECT`
-- `KEEP_CANDIDATE`
+related-evidence packet. It returns `opposition_indices` and `rationale`.
+Establishment, contestation, rejection, and remaining a candidate are owned by
+the deterministic resolution policy, not model-authored verdicts.
 
 Any opposition indices are application-validated against the exact packet and
-resolved back to canonical event IDs.
+resolved back to canonical event IDs. A support root cannot also be selected as
+opposition. All selected roots are validated before any opposition is recorded.
 
 Proposal and review are separate fresh LLM invocations and separate guarded
 worker stages.
@@ -405,33 +404,17 @@ context for natural-language cognition.
 
 Exact-source modes never use derived self memory as the quoted source.
 
-## Composer and Adaptive Recall
+## Fixed retrieval
 
-The Composer remains a memory-sufficiency specialist.
+The former Composer is replaced by [fixed deterministic retrieval](FIXED_RETRIEVAL.md).
+Active self-schema statements may supply supplemental navigation cues even in
+routing-only mode. Canonical source admission still obeys the current evidence
+policy. Learned statements, tags, and admissible linked source text can locate
+supporting and opposing canonical roots without promoting a representation.
 
-When policy permits primary derived context, Composer receives a separately
-rendered `SelfContextPacket` in addition to canonical memory. It does not
-resolve whether the schema is true.
-
-When self context is routing-only, Composer does not see it as evidence.
-
-Adaptive Recall may use active self-schema statements as supplemental retrieval
-queries even in routing-only mode. Canonical source-type admission still obeys
-the current evidence policy.
-
-Therefore:
-
-    self schema
-        -> routing
-        -> canonical recall
-        -> Composer
-
-is allowed for source-restricted questions, while:
-
-    self schema
-        -> Composer/final responder
-
-is allowed only under a policy that admits derived self conclusions.
+The final responder receives the separately rendered `SelfContextPacket` only
+under a policy that admits derived self conclusions. No retrieval stage decides
+that memory is sufficient or that a self-schema is true.
 
 ## Final responder
 

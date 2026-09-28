@@ -52,29 +52,26 @@ reassessment of the same semantic question. They do not authorize a second role.
 
 ## Current user-prompt specialists
 
-The implemented v2 user-prompt path uses these process boundaries:
+The implemented fixed retrieval user-prompt path uses these process boundaries:
 
 | Stage | Responsibility | LLM use |
 |---|---|---|
 | Reference resolution | Expose deterministic WorkingState availability | None |
 | Evidence policy | Select historical source scope and response surface from the current prompt only | One policy role, with bounded validation retries |
-| Memory requirements | Commit the necessary remembered facts/patterns from the current request only | One requirement role for SELF_MODEL; skipped without inference for other scopes |
 | Work triage | Select required non-memory capability indices from the admitted aperture | One work-selection role, with bounded validation retries |
 | Capability execution | Execute the committed application-owned plan | None in the stage itself; invoked capabilities own their contracts |
-| Memory composition | Match sources to committed requirements and identify missing support | One Composer role, freshly reassessed against the same requirements across bounded Adaptive Recall rounds |
+| Memory retrieval | Execute fixed bounded routes and merge source-admissible evidence with explicit budgets and diversity | None |
 | Response realization | Produce exact-source or natural output under the committed policy | One realization mode per path, with bounded validation retries |
 | Result persistence | Persist and emit the completed disposition | None |
 
 The evidence-policy result is an immutable stage artifact. Work triage, Adaptive
-Recall, the Composer, and response realization inherit that exact policy. They may
+Recall, fixed retrieval, and response realization inherit that exact policy. They may
 not reclassify it.
 
-The memory-requirement result is likewise an immutable stage artifact. Composer
-cannot invoke the requirement model contract or revise the list after seeing
-retrieved memories. Several sources may jointly cover a requirement. Python
-requires every committed slot exactly once and computes the next missing need.
-This split is an experimental response to observed requirement drift and circular
-answer-as-memory deficits; see [COMPOSER_REQUIREMENTS_001.md](../experiments/COMPOSER_REQUIREMENTS_001.md).
+The retrieval result is an immutable stage artifact containing evidence and route
+receipts. It has no requirements, deficit, coverage decision, or sufficiency flag.
+The retired split is preserved as an experiment in
+[COMPOSER_REQUIREMENTS_001.md](../experiments/COMPOSER_REQUIREMENTS_001.md).
 
 ## Percept triage for non-user inputs
 

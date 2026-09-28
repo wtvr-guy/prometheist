@@ -4,10 +4,10 @@
 used automatically for every percept. ``request_memory`` is the conservative
 evidence boundary used by deterministic Adaptive Recall.
 
-Adaptive Recall never asks a model to write a query or canonical event ID. The
-v2 Composer supplies only a semantic memory deficit; application code selects
-bounded canonical focus events and advances through progressively stronger
-association stages. The current percept remains the semantic cue throughout.
+Adaptive Recall never asks a model to write a query or canonical event ID.
+Application code selects bounded canonical focus events and advances through
+the fixed association stages. The current percept remains the semantic cue;
+already learned self-context may supply additional navigation hints.
 """
 from __future__ import annotations
 

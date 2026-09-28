@@ -24,7 +24,7 @@ $env:PROMETHEIST_PRIVATE_DATABASE_URL = 'postgresql://prometheist_app:YOUR_PASSW
 uv run prometheist chat --profile C:\Prometheist\subject_001\profile.json
 ```
 
-Use the actual local PostgreSQL role/password if yours differs. The profile references the environment variable; credentials do not go in the profile or Git. `--profile` binds the database to the subject, rejects test/benchmark database names or a conflicting subject binding, and sends artifacts to the private root. Subsequent chat commands must include `--profile`. The private database must have the schema before activation.
+Use the actual local PostgreSQL role/password if yours differs. The profile references the environment variable; credentials do not go in the profile or Git. `--profile` binds the database to the subject, rejects a populated unbound database, test/benchmark database names, or a conflicting subject binding, and sends artifacts to the private root. Subsequent chat commands must include `--profile`. The private database must have the schema before activation.
 
 Run existing synthetic benchmarks against their dedicated benchmark database, without the private profile. Never point a benchmark reset at the private database. Do not replace `.tmp/latest-benchmark.zip` with private subject data: that file is tracked for deliberately shareable synthetic evidence only.
 

@@ -11,6 +11,7 @@ def test_every_stage_has_one_registered_contract_and_capability():
     assert {s.capability for s in stages} == {c.capability for c in STAGE_CONTRACTS.values()}
     assert len({s.capability for s in stages}) == len(stages)
     assert contract_manifest() == contract_manifest()
+    assert set(SEMANTIC_CONTRACTS) == set().union(*(c.kinds for c in STAGE_CONTRACTS.values()))
 
 
 def test_retired_control_contracts_are_absent():

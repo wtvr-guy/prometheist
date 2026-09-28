@@ -291,11 +291,12 @@ def test_nonresponse_consolidation_tail_stages_are_model_free(conn):
         ConsolidationSchedule(schedule_id=uuid4(), due_at=now),
     )
     emit_due_consolidations(conn, now=now)
-    task_id, = submit_situation_page(
+    task_ids = submit_situation_page(
         conn,
         probe=FixedProbe(),
         ollama_runtime_probe=FixedOllamaRuntimeProbe(resident=False),
     )
+    task_id = consolidation_task_id(conn, task_ids)
     task_data = get_record(conn, "situation_task", str(task_id))
     task = __import__(
         "prometheist.situation_runtime",

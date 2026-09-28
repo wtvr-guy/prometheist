@@ -8,7 +8,7 @@ The active path is:
 1. Resolve references and classify the current prompt's source/surface policy.
 2. Open the bounded attention aperture; activate derived self-context.
 3. Select and execute any registered non-memory work. Empty catalogs need no model call.
-4. Retrieve canonical self-model support/opposition roots where applicable and one bounded canonical neighborhood.
+4. Retrieve canonical self-model support/opposition roots where applicable and one bounded canonical neighborhood. Cues match learned statements, tags, and their admissible linked source text, so paraphrasing during learning does not erase the original navigation cues.
 5. Run BROAD, ASSOCIATIVE, RELATIONAL, FOCUSED in that fixed order. A route without its required focus roots is explicitly recorded as skipped. An empty result from one route does not stop later routes.
 6. Merge bounded route results deterministically, deduplicate event IDs, enforce source types and the exclusive history cutoff, alternate newer/older evidence within routes, and interleave routes and known evidence roles. Record budget exclusions without truncating or deleting canonical events.
 7. Give the final responder admitted memory, separately labeled derived self-context, and authoritative capability results. Persist the response and final disposition.

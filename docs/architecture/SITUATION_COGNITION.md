@@ -20,14 +20,14 @@ flowchart TD
     SR1 --> SR2[Independent self-schema review]
     SR2 --> I[Optional response]
     G --> I
-    E --> J[Memory-only Composer]
+    E --> J[Fixed deterministic retrieval]
     J --> I
     I --> K[Durable completion]
 ```
 
 The eight non-user stages are `SITUATION_MEMORY`, `SITUATION_TRIAGE`,
 `SITUATION_EXECUTE`, `SITUATION_SELF_PROPOSE`, `SITUATION_SELF_REVIEW`,
-`SITUATION_COMPOSE_MEMORY`, `SITUATION_RESPOND`, and
+`SITUATION_RETRIEVE_MEMORY`, `SITUATION_RESPOND`, and
 `SITUATION_PERSIST`. Each runs in a fresh process under `GuardedWorkerLauncher`.
 The two self-memory stages are model-free skips for non-consolidation work. For
 `CONSOLIDATE`, they are separate fresh specialists: proposal can only propose
@@ -45,7 +45,7 @@ progress cursor commits is repaired when bounded polling revisits that situation
 before admitting a newer snapshot, without rerunning completed workers. An empty
 page can first wrap the candidate cursor to the beginning.
 
-The user pipeline retains its seven v0.7 closure stages. Intake now also forms a
+The user pipeline uses the registered [fixed retrieval stages](FIXED_RETRIEVAL.md). Intake also forms a
 situation before submitting the user task. User response necessity is forced true
 at both normalization and application work-disposition boundaries. The current
 prompt alone determines historical evidence scope and response surface; salience
@@ -108,7 +108,7 @@ separate narrow work selector. No generic shell or network executor is introduce
 
 Responses are optional and application-owned. Structured reports need no model.
 When `natural_language_response` and `response_required` are both enabled, the
-existing memory-only Composer/Adaptive Recall mechanism and final responder run
+fixed deterministic retrieval mechanism and final responder run
 in separate guarded processes. Work results reach the final responder directly.
 Non-user observations never become the current user instruction: the instruction
 is application-authored and evidence remains quarantined.

@@ -5,8 +5,8 @@ an LLM deciding whether unseen memory might matter. Every interaction receives
 one bounded, provenance-bearing activation packet derived from the current
 percept plus durable WorkingState. Valid active WorkingState is guaranteed
 exposure; the aperture recall budget limits only additional baseline history.
-When the v2 Composer finds the packet insufficient, deterministic Adaptive
-Recall may widen or deepen retrieval. Basic memory availability and every
+Fixed deterministic retrieval then widens and deepens recall through its
+bounded routes. Basic memory availability and every
 retrieval-stage choice remain part of Prometheist's cognitive substrate.
 
 The aperture uses JIT Memory's activation boundary rather than its stricter

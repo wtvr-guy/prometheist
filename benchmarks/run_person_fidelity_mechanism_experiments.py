@@ -484,6 +484,9 @@ SOURCE_POLICY_PRODUCTION_BASELINE_PROMPTS = (
 COMPOSER_PRODUCTION_BASELINE_PROMPTS = (
     COMPOSER_PRODUCTION_BASELINE_PROMPT_V1,
     COMPOSER_PRODUCTION_BASELINE_PROMPT_V2,
+    # Frozen final production baseline, including its bounded deficit wording.
+    # This literal lives only in the legacy ablation contract after retirement.
+    _USER_PROMPT_COMPOSER,
 )
 
 # Latest aliases are kept for callers that do not need historical replay.
@@ -524,6 +527,7 @@ class CurrentEvidenceDecision(BaseModel):
 
 
 class ExperimentalComposerStage(str, Enum):
+    LEGACY_COMPOSER = "EXP_LEGACY_COMPOSER"
     CURRENT_EVIDENCE = "EXP_V3_CURRENT_EVIDENCE"
     MEMORY_COMPLETENESS = "EXP_V3_MEMORY_COMPLETENESS"
 
@@ -557,7 +561,7 @@ class MechanismFixture(BaseModel):
 class AttemptArtifactContext:
     interaction: DurableInteraction
     claim_id: UUID
-    stage: PerceptStage
+    stage: PerceptStage | ExperimentalComposerStage
     artifact_root: Path
     artifact_directory: str
 
@@ -576,7 +580,7 @@ def _attempt_artifact_context(
     conversation_id = uuid5(interaction_id, "conversation")
     correlation_id = uuid5(interaction_id, "correlation")
     stage = (
-        PerceptStage.RETRIEVE_MEMORY
+        ExperimentalComposerStage.LEGACY_COMPOSER
         if experiment == "composer_sufficiency"
         else PerceptStage.EVIDENCE_POLICY
     )
@@ -830,6 +834,12 @@ def _artifact_client(
     *,
     evidence_refs: tuple[str, ...],
 ) -> UserPromptLLM:
+    if context.stage is ExperimentalComposerStage.LEGACY_COMPOSER:
+        return _experimental_artifact_client(
+            template, context, stage=context.stage,
+            allowed_kind="V2_MEMORY_SUFFICIENCY_USER_PROMPT",
+            evidence_refs=evidence_refs,
+        )
     client = UserPromptLLM(
         base_url=template.base_url,
         model=template.model,

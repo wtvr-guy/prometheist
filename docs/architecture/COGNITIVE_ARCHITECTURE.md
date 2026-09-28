@@ -119,9 +119,9 @@ transport. Hidden transcripts and worker-local continuity are prohibited.
 
 ## Authoritative v2 user-prompt path
 
-The v2 path in
+The fixed retrieval path in
 [`PERCEPT_TO_RESPONSE_PIPELINE.md`](PERCEPT_TO_RESPONSE_PIPELINE.md) is the only live
-architecture for explicit user prompts. Non-user percepts run the separate six-stage
+architecture for explicit user prompts. Non-user percepts run the separate eight-stage
 situation pipeline in [`SITUATION_COGNITION.md`](SITUATION_COGNITION.md), which reuses
 the same durable attention, worker, memory, and artifact machinery and does not relax
 the evidence, authority, or determinism rules below.
@@ -137,18 +137,17 @@ For an explicit user prompt:
 4. a fresh work-triage specialist selects zero or more **non-memory** work requirements;
 5. Prometheist expands dependencies and runs authorized work through the durable
    execution plane;
-6. a fresh v2 Composer judges only persistent-memory sufficiency;
-7. if memory is insufficient, deterministic Adaptive Recall expands it and a fresh
-   Composer reassesses, subject to bounded stopping policy;
+6. deterministic retrieval navigates canonical self-memory roots and neighbors;
+7. fixed BROAD, ASSOCIATIVE, RELATIONAL, and FOCUSED routes expand memory, followed
+   by bounded deterministic merging and diversity selection;
 8. application code filters event roles under the exact persisted policy and supplies admitted data as quarantined
    evidence before the current prompt;
 9. exact output is source-selected and mechanically validated, or a natural final
    responder receives the admitted evidence and resolved personality contract;
 10. the response and final artifact disposition are persisted.
 
-Work/tool results never pass through the Composer for reinterpretation. The Composer
-never decides whether to answer, schedules no work, performs no effect, and generates
-no final prose.
+Work/tool results reach the responder directly. Retrieval makes no sufficiency
+judgment, schedules no external work, performs no effect, and generates no prose.
 
 Adaptive Recall is internal memory substrate, not an exposed capability. Its
 `BROAD`, `ASSOCIATIVE`, `RELATIONAL`, and `FOCUSED` stages describe deterministic

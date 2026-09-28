@@ -67,6 +67,10 @@ def activate_imprint(path: Path) -> ImprintProfile:
     # One identity per database. Bind before any chat or sensor input is admitted.
     import psycopg
     with psycopg.connect(url) as conn:
+        conn.execute("LOCK TABLE imprint_identity IN EXCLUSIVE MODE")
+        existing = conn.execute("SELECT subject_id FROM imprint_identity WHERE singleton").fetchone()
+        if existing is None and conn.execute("SELECT EXISTS(SELECT 1 FROM events)").fetchone()[0]:
+            raise ValueError("first imprint activation requires an empty database")
         conn.execute("INSERT INTO imprint_identity VALUES (true, %s) ON CONFLICT DO NOTHING", (profile.subject_id,))
         bound = conn.execute("SELECT subject_id FROM imprint_identity WHERE singleton").fetchone()[0]
         if bound != profile.subject_id:

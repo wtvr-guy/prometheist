@@ -29,7 +29,7 @@ def expand_self_memory_roots(
     item_limit: int,
     memory_request_id: UUID,
 ) -> MemoryPacket:
-    """Search current learned statements/tags, then follow stored source links.
+    """Search learned statements/tags and linked sources, then follow source links.
 
     Source policy and the exclusive history cutoff apply before truncation.
     Representation, resolution and link records must also predate the cutoff.
@@ -54,31 +54,35 @@ def expand_self_memory_roots(
             """
             SELECT r.record_key AS representation_id, r.event_id AS representation_event_id,
                    s.event_id AS resolution_event_id, s.payload->>'status' AS status,
-                   ts_rank(to_tsvector('english',
+                   greatest(roots.rank, ts_rank(to_tsvector('english',
                        coalesce(r.payload->>'statement', '') || ' ' ||
                        replace(coalesce((r.payload->'context_tags')::text, ''), '_', ' ')),
-                       websearch_to_tsquery('english', %(query)s)) AS rank
+                       websearch_to_tsquery('english', %(query)s))) AS rank
             FROM cognitive_heads r
             JOIN cognitive_heads s ON s.record_kind = 'self_resolution'
                                   AND s.record_key = r.record_key
+            CROSS JOIN LATERAL (
+                SELECT max(ts_rank(to_tsvector('english',
+                           coalesce(nullif(e.payload_text, ''), e.payload->>'text', '')),
+                           websearch_to_tsquery('english', %(query)s))) AS rank
+                FROM cognitive_heads link
+                JOIN events e ON e.event_id = (link.payload->>'root_event_id')::uuid
+                WHERE link.record_kind = 'self_evidence'
+                  AND link.payload->>'representation_id' = r.record_key
+                  AND link.payload->>'relation' IN ('SUPPORTS', 'OPPOSES')
+                  AND link.global_seq < %(cutoff)s AND e.global_seq < %(cutoff)s
+                  AND e.event_type = ANY(%(types)s)
+                  AND coalesce(nullif(e.payload_text, ''), e.payload->>'text', '') <> ''
+            ) roots
             WHERE r.record_kind = 'self_representation'
               AND r.payload->>'subject' = 'self'
               AND r.global_seq < %(cutoff)s AND s.global_seq < %(cutoff)s
               AND s.payload->>'status' IN ('CANDIDATE', 'ESTABLISHED', 'CONTESTED')
-              AND to_tsvector('english',
+              AND roots.rank IS NOT NULL
+              AND (roots.rank > 0 OR to_tsvector('english',
                     coalesce(r.payload->>'statement', '') || ' ' ||
                     replace(coalesce((r.payload->'context_tags')::text, ''), '_', ' '))
-                  @@ websearch_to_tsquery('english', %(query)s)
-              AND EXISTS (
-                  SELECT 1 FROM cognitive_heads link
-                  JOIN events e ON e.event_id = (link.payload->>'root_event_id')::uuid
-                  WHERE link.record_kind = 'self_evidence'
-                    AND link.payload->>'representation_id' = r.record_key
-                    AND link.payload->>'relation' IN ('SUPPORTS', 'OPPOSES')
-                    AND link.global_seq < %(cutoff)s AND e.global_seq < %(cutoff)s
-                    AND e.event_type = ANY(%(types)s)
-                    AND coalesce(nullif(e.payload_text, ''), e.payload->>'text', '') <> ''
-              )
+                  @@ websearch_to_tsquery('english', %(query)s))
             ORDER BY rank DESC, r.record_key
             LIMIT %(candidate_limit)s
             """,

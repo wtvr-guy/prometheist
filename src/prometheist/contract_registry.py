@@ -29,7 +29,6 @@ class SemanticContract:
 
 SEMANTIC_CONTRACTS = MappingProxyType({
     "V2_RESPONSE_POLICY": SemanticContract("_RESPONSE_POLICY_PROMPT", "response_policy:ResponsePolicy"),
-    "PRECOGNITIVE_DISPOSITION": SemanticContract("_PRECOGNITIVE_PROMPT", "percept_response_runtime:PreCognitiveDisposition"),
     "PRECOGNITIVE_USER_PROMPT_WORK": SemanticContract("_USER_PROMPT_WORK_SELECTION", "percept_response_worker:UserPromptWorkSelection"),
     "V2_CURRENT_FALLBACK_SELECTION": SemanticContract("_CURRENT_FALLBACK_SELECTION_PROMPT", "response_policy:CurrentFallbackSelection"),
     "V2_EXACT_SOURCE_SELECTION": SemanticContract("_EXACT_SOURCE_SELECTION_PROMPT", "response_policy:ExactSourceSelection"),
@@ -68,6 +67,7 @@ STAGE_CONTRACTS = MappingProxyType({
 
 
 SCHEMA_CONTRACTS = MappingProxyType({
+    "precognitive-disposition/v1": "percept_response_runtime:PreCognitiveDisposition",
     "response-memory/v3": "percept_response_runtime:ResponseMemoryPackage",
     "imprint-profile/v1": "imprinting:ImprintProfile",
     "memory-packet/v1": "models:MemoryPacket",

@@ -592,7 +592,7 @@ def test_v3_result_verifier_accepts_committed_success_without_validation_artifac
 
     verification = mechanism.verify_result(result_path)
 
-    assert verification["valid"] is True
+    assert verification["valid"] is True, verification
     assert verification["artifact_verification"]["verified_llm_invocation_count"] == 2
     assert verification["artifact_verification"]["verified_llm_validation_count"] == 0
 
