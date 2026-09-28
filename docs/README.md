@@ -87,3 +87,9 @@ headers identify them as historical/superseded where necessary. The live path ne
 depends on their old router, memory-capability, or agent terminology.
 
 - [Situation cognition and operator guide](architecture/SITUATION_COGNITION.md)
+
+## Current empirical imprinting transition
+
+- [Fixed retrieval and registries](architecture/FIXED_RETRIEVAL.md)
+- [Private imprint setup](engineering/IMPRINTING_SETUP.md)
+- [Cleanup and branch audit](audits/ARCHITECTURE_CLEANUP_2026-09-28.md)

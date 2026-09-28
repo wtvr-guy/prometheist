@@ -42,8 +42,6 @@ def test_single_oversized_memory_event_cannot_expand_v2_model_context(monkeypatc
     )
     package = ResponseMemoryPackage(
         memory_packet=packet,
-        sufficient=True,
-        composer_rounds=1,
         adaptive_recall_rounds=0,
     )
     client = UserPromptLLM(base_url="http://ollama.test", model="model:test")

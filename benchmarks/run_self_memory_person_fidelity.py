@@ -533,7 +533,7 @@ def _active_self_context_from_artifacts(
 def _composed_memory_from_artifacts(artifacts: list[dict[str, Any]]) -> dict:
     for artifact in reversed(artifacts):
         if (artifact.get("artifact_type") == "STAGE_RESULT"
-            and artifact.get("stage") == "V2_COMPOSE_MEMORY"):
+            and artifact.get("stage") in {"V2_COMPOSE_MEMORY", "V3_RETRIEVE_MEMORY"}):
             return artifact.get("payload", {}).get("output", {}).get("memory_package", {})
     return {}
 
@@ -659,8 +659,9 @@ def _run_probe(
         "memory_retrieval": {
             "request_packet_evidence_refs": request_packet_refs,
             "composed_packet_evidence_refs": composed_refs,
-            "composer_sufficient": composed.get("sufficient"),
-            "composer_rounds": composed.get("composer_rounds"),
+            "retrieval_policy": composed.get("retrieval_policy", "legacy-composer"),
+            "retrieval_stop_reason": composed.get("stop_reason"),
+            "retrieval_routes": composed.get("route_results", []),
             "adaptive_recall_rounds": composed.get("adaptive_recall_rounds"),
             "retrieved_evidence_refs": retrieved_refs,
             "retrieved_fixture_event_ids": retrieved_fixture_ids,

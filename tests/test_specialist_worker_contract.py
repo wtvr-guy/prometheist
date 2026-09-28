@@ -108,9 +108,6 @@ def test_response_stage_inherits_exact_policy_without_reclassification(monkeypat
             supported=False,
             items=[],
         ),
-        sufficient=False,
-        unresolved_memory_deficit="remembered constraint",
-        composer_rounds=1,
         adaptive_recall_rounds=0,
     )
     results = {
@@ -125,7 +122,7 @@ def test_response_stage_inherits_exact_policy_without_reclassification(monkeypat
         PerceptStage.PRECOGNITIVE: {
             "disposition": {"response_required": True, "capability_indices": []},
         },
-        PerceptStage.COMPOSE_MEMORY: {
+        PerceptStage.RETRIEVE_MEMORY: {
             "memory_package": package.model_dump(mode="json"),
         },
         PerceptStage.EXECUTE_WORK: {"work_results": []},

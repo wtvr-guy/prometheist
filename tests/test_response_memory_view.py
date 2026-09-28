@@ -86,8 +86,6 @@ def test_final_responder_receives_compact_oldest_to_newest_evidence_timeline():
     )
     package = ResponseMemoryPackage(
         memory_packet=packet,
-        sufficient=True,
-        composer_rounds=1,
         adaptive_recall_rounds=0,
     )
     client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
@@ -125,7 +123,7 @@ def test_final_responder_receives_compact_oldest_to_newest_evidence_timeline():
     assert payload["messages"][2]["content"] == "Answer from the timeline."
 
 
-def test_insufficient_general_memory_does_not_admit_unrelated_history():
+def test_retrieval_completion_does_not_claim_semantic_sufficiency():
     unrelated = _evidence(
         event_type=EventType.USER_PROMPT,
         content="My work messages are direct and concise.",
@@ -141,9 +139,6 @@ def test_insufficient_general_memory_does_not_admit_unrelated_history():
     )
     package = ResponseMemoryPackage(
         memory_packet=packet,
-        sufficient=False,
-        unresolved_memory_deficit="No teacher name in the available history.",
-        composer_rounds=2,
         adaptive_recall_rounds=1,
     )
     client = UserPromptLLM(base_url="http://ollama.test", model="model:test")
@@ -157,5 +152,8 @@ def test_insufficient_general_memory_does_not_admit_unrelated_history():
     assert client.generate_final_response(
         "What was my teacher's name?", package, (), response_policy=policy
     ) == "I do not know the name."
-    assert "My work messages" not in fake.calls[0][1]["messages"][1]["content"]
-    assert client._artifact_evidence_refs == ()
+    evidence = fake.calls[0][1]["messages"][1]["content"]
+    assert "My work messages" in evidence
+    assert "does not establish answerability" in evidence
+    assert "memory_sufficient" not in evidence
+    assert client._artifact_evidence_refs == (f"event:{unrelated.source_event_id}",)

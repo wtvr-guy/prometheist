@@ -51,7 +51,7 @@ Verify the architectural claim a user/system actually depends on:
 - bounded cognitive context;
 - exact provenance;
 - one-pass pre-cognitive non-memory work selection and deterministic execution;
-- bounded Composer/Adaptive Recall memory reassessment;
+- fixed deterministic retrieval, source/cutoff enforcement, and model-free route completion;
 - direct work-result handoff and mandatory explicit-user response;
 - process destruction/recovery;
 - resource admission and safe execution.
@@ -141,8 +141,8 @@ against a real individual and prospectively frozen holdouts. The first public me
 
 Native cognitive benchmark runs are research evidence, including failures. Their raw
 event mirrors, stage artifacts, model invocations, outputs, and chain manifests remain
-Git-visible and append-only when the subject and inputs are fictional or deliberately
-non-sensitive. A compact aggregate result is not an acceptable substitute for the
+locally durable and append-only. Deliberately shareable synthetic runs can be packaged
+in the verified benchmark ZIP. Private subject evidence stays outside Git. A compact aggregate result is not an acceptable substitute for the
 underlying causal artifacts. Preserved model output remains unreviewed training data
 until an explicit human label identifies it as a positive, negative, preference, or
 held-out example.

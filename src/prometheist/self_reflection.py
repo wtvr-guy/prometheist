@@ -2,15 +2,18 @@
 
 Proposal and review are separate semantic responsibilities. The proposer may
 suggest typed self representations from canonical evidence. The reviewer sees
-the candidate plus independently expanded related evidence and decides whether
-the application should attempt to establish, contest, reject, or retain it as a
-candidate. Application code resolves all indices to canonical event IDs and owns
+the candidate plus independently expanded related evidence and identifies
+possible opposition. It cannot select a durable epistemic status. Application code resolves all indices to canonical event IDs and owns
 the final state transition.
 """
 from __future__ import annotations
 
+from prometheist.prompt_registry import (
+    SELF_SCHEMA_PROPOSAL_PROMPT as SELF_SCHEMA_PROPOSAL_PROMPT,
+    SELF_SCHEMA_REVIEW_PROMPT as SELF_SCHEMA_REVIEW_PROMPT,
+)
+
 from datetime import datetime
-from enum import Enum
 import json
 from uuid import UUID, uuid5
 
@@ -50,14 +53,7 @@ MAX_REVIEW_EVIDENCE_ITEMS = 10
 MAX_REVIEW_RATIONALE_CHARS = 1024
 MAX_REVIEW_FOCUS_ROOTS = 4
 MIN_RELATIONAL_REVIEW_ROOTS = 2
-SELF_REFLECTION_POLICY = "self-reflection/v1"
-
-
-class SelfReviewVerdict(str, Enum):
-    ESTABLISH = "ESTABLISH"
-    CONTEST = "CONTEST"
-    REJECT = "REJECT"
-    KEEP_CANDIDATE = "KEEP_CANDIDATE"
+SELF_REFLECTION_POLICY = "self-reflection/v2"
 
 
 class ReflectionEvidence(FrozenRecord):
@@ -96,7 +92,6 @@ class SelfSchemaProposalBatch(FrozenRecord):
 
 
 class SelfSchemaReview(FrozenRecord):
-    verdict: SelfReviewVerdict
     opposition_indices: tuple[int, ...] = Field(default=(), max_length=MAX_REVIEW_EVIDENCE_ITEMS)
     rationale: str = Field(min_length=1, max_length=MAX_REVIEW_RATIONALE_CHARS)
 
@@ -104,74 +99,10 @@ class SelfSchemaReview(FrozenRecord):
     def review_contract(self) -> "SelfSchemaReview":
         if len(self.opposition_indices) != len(set(self.opposition_indices)):
             raise ValueError("opposition_indices must not contain duplicates")
-        if (
-            self.verdict is SelfReviewVerdict.CONTEST
-            and not self.opposition_indices
-        ):
-            raise ValueError(
-                "CONTEST requires at least one concrete opposition index"
-            )
         return self
 
 
-SELF_SCHEMA_PROPOSAL_PROMPT = """\
-You are Prometheist's Self-Schema Proposal Specialist. Your only job is to
-propose compact, typed, revisable self representations that are directly
-supported by the supplied canonical evidence.
 
-Do not answer a user. Do not execute work. Do not decide whether a proposal is
-true enough to establish. Do not invent evidence or event IDs; select only
-support_indices from the numbered evidence.
-
-Distinguish these perspectives:
-- AVOWED: the person explicitly describes their present/past self.
-- OBSERVED: directly observed behavior/state without broad generalization.
-- INFERRED: a cautious pattern inferred across evidence.
-- ASPIRATIONAL: desired future self, aspiration, or goal identity.
-- NORMATIVE: what the person says they should/ought to be or do.
-- SOCIAL_ATTRIBUTION: an attributed view of the person from another source.
-
-Never convert an aspiration into a present trait. Never convert one behavior
-into a stable trait/value/decision policy. Values should describe principles
-that appear to guide tradeoffs, not ordinary likes. Traits and behavioral
-tendencies should be context-qualified when evidence is context-dependent.
-Narrative hypotheses are interpretations, never canonical facts.
-
-Learning timescale is application-owned. Do not propose or choose a plasticity
-class. context_tags describe the semantic scope of the representation; they do
-not count as independent evidence or prove cross-context breadth.
-
-identity_centrality means how central the representation appears to the person's
-self-organization, not how true it is. Be conservative.
-"""
-
-SELF_SCHEMA_REVIEW_PROMPT = """\
-You are Prometheist's Self-Schema Review Specialist. Your only job is to review
-one proposed self representation against two explicitly separated channels:
-(1) canonical support roots already attached to the candidate, and
-(2) independently retrieved related/counterevidence.
-
-opposition_indices refer ONLY to the numbered related/counterevidence channel.
-Never select a support root as opposition. A merely different topic, different
-preference, different context, or absence of corroboration is not contrary
-evidence.
-
-Return:
-- ESTABLISH only when the candidate remains well supported after considering
-  related/disconfirming evidence;
-- CONTEST only when one or more related-evidence items materially contradict
-  the candidate; include every such item's opposition_index;
-- REJECT when the proposed abstraction is not supported by its support roots;
-- KEEP_CANDIDATE when support is plausible but too narrow for establishment.
-
-If verdict is CONTEST, opposition_indices must be non-empty. If no material
-contrary evidence exists, do not return CONTEST.
-
-Do not explain contradictions away merely to preserve a coherent identity.
-Context-specific differences are legitimate, but the application—not you—owns
-final promotion and may keep a generalized candidate unestablished. A derived
-schema never outranks its canonical evidence.
-"""
 
 
 def _proposal_root_allowed(conn: psycopg.Connection, event) -> bool:
@@ -513,16 +444,9 @@ def apply_review(
         )
         recorded_opposition_ids.add(item.source_event_id)
 
-    requested_status = {
-        SelfReviewVerdict.ESTABLISH: SelfResolutionStatus.ESTABLISHED,
-        SelfReviewVerdict.CONTEST: (
-            SelfResolutionStatus.CONTESTED
-            if recorded_opposition_ids
-            else SelfResolutionStatus.CANDIDATE
-        ),
-        SelfReviewVerdict.REJECT: SelfResolutionStatus.REJECTED,
-        SelfReviewVerdict.KEEP_CANDIDATE: SelfResolutionStatus.CANDIDATE,
-    }[review.verdict]
+    # Evidence relations are semantic proposals. Status follows the versioned
+    # deterministic support/breadth/opposition policy, never an LLM verdict.
+    requested_status = SelfResolutionStatus.ESTABLISHED
     current = current_self_resolution(conn, representation.representation_id)
     if current is None:
         raise RuntimeError("self review candidate has no prior resolution")

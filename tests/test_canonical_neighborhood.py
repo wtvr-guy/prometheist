@@ -11,9 +11,7 @@ from prometheist.canonical_neighborhood import (
 )
 from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
 from prometheist.percept_response_runtime import (
-    MemorySufficiencyDecision,
-    _compose_memory_package,
-    _merge_memory_packets,
+    retrieve_memory_package,
 )
 from prometheist.person_fidelity_benchmark import load_person_fidelity_corpus
 
@@ -66,7 +64,7 @@ def expand(conn, packet, cutoff, *, limit=20, types=None):
     )
 
 
-def test_first_composer_sees_missing_context_even_when_it_immediately_says_sufficient(conn):
+def test_fixed_retrieval_preserves_missing_neighbor_context(conn):
     conversation = event_store.start_conversation(conn)
     root = record(conn, conversation, "Dad and I restored a receiver after the storm.")
     record(conn, conversation, "internal packet", EventType.MEMORY_PACKET)
@@ -75,29 +73,14 @@ def test_first_composer_sees_missing_context_even_when_it_immediately_says_suffi
     question = record(conn, other, "Why does this matter to me?")
     original = packet_for(seed)
 
-    class Composer:
-        def assess_memory_sufficiency(self, prompt, packet):
-            assert [i.source_event_id for i in packet.items] == [seed.event_id, root.event_id]
-            assert packet.items[1].content == root.payload["text"]
-            return MemorySufficiencyDecision(sufficient=True)
-
-    package = _compose_memory_package(
-        conn, Composer(),
-        SimpleNamespace(
-            user_text=question.payload["text"], before_global_seq=question.global_seq,
-            interaction_id=uuid4(),
-        ),
+    package = retrieve_memory_package(
+        conn, SimpleNamespace(interaction_id=uuid4(), conversation_id=other,
+                              correlation_id=uuid4(), task_id=uuid4(),
+                              user_text=question.payload["text"], before_global_seq=question.global_seq),
         original, [EventType.USER_PROMPT],
     )
-    assert package.composer_rounds == 1
-    assert package.adaptive_recall_rounds == 0
-    assert len(original.items) == 1
-    assert package.memory_packet.items[1].provenance_event_ids == [seed.event_id]
-    assert package.memory_packet.items[1].score is None
-    restored = MemoryPacket.model_validate_json(package.memory_packet.model_dump_json())
-    merged = _merge_memory_packets(uuid4(), restored, packet_for(), round_index=0)
-    assert merged.retrieval_trace["base_retrieval_trace"] == restored.retrieval_trace
-    assert merged.items == restored.items
+    assert {i.source_event_id for i in package.memory_packet.items} == {seed.event_id, root.event_id}
+    assert next(i.content for i in package.memory_packet.items if i.source_event_id == root.event_id) == root.payload["text"]
 
 
 def test_neighbors_are_one_hop_deduplicated_and_preserve_seeds_under_saturation(conn):

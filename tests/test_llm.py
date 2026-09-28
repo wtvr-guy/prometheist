@@ -67,8 +67,6 @@ def _packet(*contents: str) -> MemoryPacket:
 def _package(packet: MemoryPacket | None = None) -> ResponseMemoryPackage:
     return ResponseMemoryPackage(
         memory_packet=packet or _packet(),
-        sufficient=True,
-        composer_rounds=1,
         adaptive_recall_rounds=0,
     )
 
@@ -219,9 +217,6 @@ def test_history_dependent_response_fails_closed_when_composer_exhausts_recall()
     )
     package = ResponseMemoryPackage(
         memory_packet=packet,
-        sufficient=False,
-        unresolved_memory_deficit="The teacher's name is not present in history.",
-        composer_rounds=2,
         adaptive_recall_rounds=1,
     )
     client = UserPromptLLM(base_url="http://ollama.test", model="model:test")

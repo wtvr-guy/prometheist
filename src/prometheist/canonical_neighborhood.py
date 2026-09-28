@@ -1,4 +1,4 @@
-"""Bounded local canonical context, expanded once before memory sufficiency.
+"""Bounded local canonical context, expanded once during fixed retrieval.
 
 Conversation ordering is a provenance relation, not a semantic episode label.
 Neighbors remain attributed evidence; proximity never asserts relevance or truth.

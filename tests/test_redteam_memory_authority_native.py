@@ -56,8 +56,6 @@ def _package(expected: str, poison_text: str, poison_type: EventType) -> Respons
     )
     return ResponseMemoryPackage(
         memory_packet=packet,
-        sufficient=True,
-        composer_rounds=1,
         adaptive_recall_rounds=0,
     )
 

@@ -348,7 +348,12 @@ def main() -> None:
         dest="property_name",
         help="Property reference to look up with memory-fact, e.g. 'preferred_drink'.",
     )
+    parser.add_argument("--profile", help="Private imprint profile.json outside the source checkout")
     args = parser.parse_args()
+    if args.profile:
+        from pathlib import Path
+        from prometheist.imprinting import activate_imprint
+        activate_imprint(Path(args.profile))
 
     if args.command in {"inspect", "verify", "audit", "recover", "restore-events", "sign", "verify-signature"}:
         if args.once is not None:

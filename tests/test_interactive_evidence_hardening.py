@@ -117,8 +117,6 @@ def test_final_responder_gets_user_evidence_authority_and_no_trace(monkeypatch) 
     )
     package = ResponseMemoryPackage(
         memory_packet=_packet(direct_user_evidence, bad_prior_response, recursive_trace),
-        sufficient=True,
-        composer_rounds=1,
         adaptive_recall_rounds=0,
     )
 

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from prometheist import db
 from prometheist.cognitive_store import get_record, list_records, put_record, rebuild_heads
@@ -40,14 +40,20 @@ def _require_payload(data: Any, command: str) -> dict[str, Any]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--profile", type=Path, help="Private imprint profile outside Git")
     commands = parser.add_subparsers(dest="command", required=True)
     for name in ("install-source", "ingest", "expectation", "schedule-consolidation"):
         commands.add_parser(name).add_argument("json_file", type=Path)
     commands.add_parser("tick")
+    consolidate = commands.add_parser("consolidate", help="Schedule one bounded consolidation page and run one scheduler tick")
+    consolidate.add_argument("--after-key", default="")
     commands.add_parser("rebuild-heads")
     show = commands.add_parser("situations")
     show.add_argument("--after-key", default="")
     args = parser.parse_args()
+    if args.profile:
+        from prometheist.imprinting import activate_imprint
+        activate_imprint(args.profile)
     with db.get_connection() as conn:
         data = json.loads(args.json_file.read_text(encoding="utf-8")) if hasattr(args, "json_file") else None
         if args.command == "install-source":
@@ -66,6 +72,11 @@ def main() -> None:
                 correlation_id=UUID(payload["correlation_id"]) if payload.get("correlation_id") else None, **kwargs,
             )
             print(percept.model_dump_json(indent=2))
+        elif args.command == "consolidate":
+            schedule_consolidation(conn, ConsolidationSchedule(
+                schedule_id=uuid4(), due_at=datetime.now(timezone.utc), after_key=args.after_key,
+            ))
+            print(json.dumps(tick(conn), indent=2))
         elif args.command == "tick":
             print(json.dumps(tick(conn), indent=2))
         elif args.command == "situations":

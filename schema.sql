@@ -757,3 +757,9 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS cognitive_event_head ON events;
 CREATE TRIGGER cognitive_event_head AFTER INSERT ON events
 FOR EACH ROW EXECUTE FUNCTION project_cognitive_event();
+
+-- A private deployment binds one subject to one database. No identity data in Git.
+CREATE TABLE IF NOT EXISTS imprint_identity (
+    singleton boolean PRIMARY KEY CHECK (singleton),
+    subject_id text NOT NULL
+);

@@ -308,7 +308,7 @@ def test_nonresponse_consolidation_tail_stages_are_model_free(conn):
         situation_stage_uses_model(
             conn,
             task,
-            SituationStage.COMPOSE,
+            SituationStage.RETRIEVE,
         )
         is False
     )

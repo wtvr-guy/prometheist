@@ -44,7 +44,7 @@ from prometheist.worker_protocol import deterministic_worker_step_id, WorkerEffe
 from prometheist.worker_runtime import GuardedWorkerLauncher
 from prometheist.worker_store import register_worker_step, load_worker_result
 
-SITUATION_PROTOCOL = "v0.8-situation-v2"
+SITUATION_PROTOCOL = "v0.8-situation-v3"
 SITUATION_WORKER_LEASE_SECONDS = 600
 SITUATION_WORKER_TIMEOUT_SECONDS = 660
 
@@ -55,13 +55,14 @@ class SituationStage(str, Enum):
     EXECUTE = "SITUATION_EXECUTE"
     SELF_PROPOSE = "SITUATION_SELF_PROPOSE"
     SELF_REVIEW = "SITUATION_SELF_REVIEW"
-    COMPOSE = "SITUATION_COMPOSE_MEMORY"
+    RETRIEVE = "SITUATION_RETRIEVE_MEMORY"
     RESPOND = "SITUATION_RESPOND"
     PERSIST = "SITUATION_PERSIST"
 
     @property
     def capability(self) -> str:
-        return f"situation.{self.name.casefold()}"
+        from prometheist.contract_registry import STAGE_CONTRACTS
+        return STAGE_CONTRACTS[self.value].capability
 
 
 class SituationTask(FrozenRecord):
@@ -282,7 +283,7 @@ def situation_stage_uses_model(
         return bool(proposal_output.get("candidates"))
 
     return (
-        stage in {SituationStage.COMPOSE, SituationStage.RESPOND}
+        stage is SituationStage.RESPOND
         and task.policy.response_required
         and task.policy.natural_language_response
     )

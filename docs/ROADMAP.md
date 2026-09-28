@@ -1,5 +1,13 @@
 # Prometheist Roadmap: Foundation to Digital Selfhood
 
+Current implementation update (2026-09-28): the Composer and MEMORY_REQUIREMENTS
+control stages are retired. The authoritative current stage sequence, registry
+contracts, and migration rules are in [Fixed retrieval](architecture/FIXED_RETRIEVAL.md).
+Private empirical imprinting uses a person-general self-model and isolated runtime
+state; see [setup](engineering/IMPRINTING_SETUP.md). Earlier Composer-specific
+descriptions below record the previous design and do not override this update.
+
+
 **Mission alignment update:** 2026-09-14
 
 **Current milestone:** v0.8 — predictive situations and non-user cognition.

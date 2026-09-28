@@ -90,8 +90,6 @@ def test_real_ollama_response_reconciles_recent_relational_evidence():
     )
     package = ResponseMemoryPackage(
         memory_packet=packet,
-        sufficient=True,
-        composer_rounds=1,
         adaptive_recall_rounds=0,
     )
 

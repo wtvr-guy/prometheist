@@ -80,19 +80,25 @@
       "status": "PROVISIONAL",
       "rationale": "Caps conversation-sequence index range per original seed and direction. Native quality and noise calibration pending; see docs/experiments/CANONICAL_NEIGHBORHOOD_001.md."
     },
-    "src/prometheist/composer_coverage.py::<module>::MAX_COVERAGE_REQUIREMENTS": {
-      "expected_value": 6,
-      "classification": "EMPIRICAL_TUNABLE",
-      "benchmark_id": "COMPOSER-REQUIREMENTS-001",
-      "status": "PROVISIONAL",
-      "rationale": "Unchanged provisional bound, now shared by current-only requirement planning and fixed-slot Composer coverage. Native calibration pending; see docs/experiments/COMPOSER_REQUIREMENTS_001.md."
+    "src/prometheist/fixed_retrieval.py::merge_evidence::comparison": {
+      "expected_value": 1,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "A bounded evidence view must allow at least one item; this validates the existing configurable budget."
     },
-    "src/prometheist/composer_coverage.py::<module>::MAX_COVERAGE_NEED_CHARS": {
-      "expected_value": 80,
-      "classification": "EMPIRICAL_TUNABLE",
-      "benchmark_id": "COMPOSER-REQUIREMENTS-001",
-      "status": "PROVISIONAL",
-      "rationale": "Unchanged provisional bound for each committed searchable requirement. Native retrieval and planning quality calibration pending; see docs/experiments/COMPOSER_REQUIREMENTS_001.md."
+    "src/prometheist/percept_journal.py::inspect::interaction_count": {
+      "expected_value": 0,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "Count origin, not retention policy."
+    },
+    "src/prometheist/percept_journal.py::inspect::interaction_count.coefficient": {
+      "expected_value": 1,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "One increment per inspected interaction."
+    },
+    "src/prometheist/percept_response_runtime.py::ResponseMemoryPackage::adaptive_recall_rounds": {
+      "expected_value": 0,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "No route completed before execution; the result records executed routes."
     }
   },
   "groups": {
@@ -100,7 +106,6 @@
       "classification": "STRUCTURAL_INVARIANT",
       "rationale": "Domain, protocol, sentinel, or representation constraint required for deterministic validity; it is not an empirical optimization knob.",
       "members": {
-        "src/prometheist/composer_coverage.py::coverage_schema::update.minimum": 0,
         "src/prometheist/associative_memory.py::_direct_evidence_is_admissible::comparison": 0,
         "src/prometheist/associative_memory.py::_direct_evidence_is_admissible::comparison#2": 1,
         "src/prometheist/associative_memory.py::associative_recall::comparison": 1,
@@ -351,7 +356,8 @@
         "src/prometheist/llm.py::OllamaClient.__init__::Client.timeout": 300,
         "src/prometheist/llm.py::OllamaClient._text::max_tokens": 256,
         "src/prometheist/model_evidence_budget.py::<module>::DEFAULT_MAX_EVIDENCE_ITEM_BYTES": 16384,
-        "src/prometheist/model_evidence_budget.py::<module>::DEFAULT_MAX_EVIDENCE_TOTAL_BYTES": 65536
+        "src/prometheist/model_evidence_budget.py::<module>::DEFAULT_MAX_EVIDENCE_TOTAL_BYTES": 65536,
+        "src/prometheist/model_evidence_budget.py::<module>::DEFAULT_MAX_MODEL_INPUT_BYTES": 98304
       }
     },
     "ollama_runtime": {

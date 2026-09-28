@@ -51,6 +51,10 @@ def write_llm_invocation(
         "error_type": error_type,
         "error_message": error_message,
     }
+    from prometheist.contract_registry import contract_manifest
+    registered = contract_manifest()["semantic_contracts"].get(kind)
+    if registered is not None:
+        payload["contract_identity"] = registered
     resolved_evidence_refs = list(evidence_refs)
     if resolved_evidence_refs:
         payload["evidence_refs"] = resolved_evidence_refs

@@ -35,14 +35,13 @@ if str(ROOT) not in sys.path:
 from prometheist import artifact_journal, percept_journal  # noqa: E402
 from prometheist.interaction_contracts import DurableInteraction  # noqa: E402
 from prometheist.llm import OllamaClient, _quarantined_evidence  # noqa: E402
+from benchmarks.legacy_composer_contract import MemorySufficiencyDecision, _USER_PROMPT_COMPOSER  # noqa: E402
 from prometheist.percept_response_runtime import (  # noqa: E402
-    MemorySufficiencyDecision,
     PerceptStage,
     _RESPONSE_POLICY_PROMPT,
 )
 from prometheist.percept_response_worker import (  # noqa: E402
     UserPromptLLM,
-    _USER_PROMPT_COMPOSER,
 )
 from prometheist.response_policy import (  # noqa: E402
     ResponsePolicy,
@@ -485,7 +484,6 @@ SOURCE_POLICY_PRODUCTION_BASELINE_PROMPTS = (
 COMPOSER_PRODUCTION_BASELINE_PROMPTS = (
     COMPOSER_PRODUCTION_BASELINE_PROMPT_V1,
     COMPOSER_PRODUCTION_BASELINE_PROMPT_V2,
-    _USER_PROMPT_COMPOSER,
 )
 
 # Latest aliases are kept for callers that do not need historical replay.
@@ -578,7 +576,7 @@ def _attempt_artifact_context(
     conversation_id = uuid5(interaction_id, "conversation")
     correlation_id = uuid5(interaction_id, "correlation")
     stage = (
-        PerceptStage.COMPOSE_MEMORY
+        PerceptStage.RETRIEVE_MEMORY
         if experiment == "composer_sufficiency"
         else PerceptStage.EVIDENCE_POLICY
     )

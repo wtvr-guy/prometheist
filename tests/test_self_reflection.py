@@ -22,7 +22,6 @@ from prometheist.self_memory import (
 )
 from prometheist.self_reflection import (
     ReflectionEvidence,
-    SelfReviewVerdict,
     SelfSchemaProposal,
     SelfSchemaReview,
     apply_review,
@@ -269,13 +268,11 @@ def test_invalid_support_index_fails_before_creating_representation(conn):
         )
 
 
-def test_contest_review_requires_concrete_opposition_index():
-    with pytest.raises(ValueError, match="CONTEST requires"):
-        SelfSchemaReview(
-            verdict=SelfReviewVerdict.CONTEST,
-            opposition_indices=(),
-            rationale="The candidate feels inconsistent.",
-        )
+def test_review_has_no_durable_status_authority():
+    review = SelfSchemaReview(opposition_indices=(), rationale="No contrary evidence found.")
+    assert review.opposition_indices == ()
+    with pytest.raises(ValueError):
+        SelfSchemaReview(verdict="ESTABLISH", opposition_indices=(), rationale="Trust me.")
 
 
 def test_review_cannot_turn_a_support_root_into_opposition(conn):
@@ -321,7 +318,6 @@ def test_review_cannot_turn_a_support_root_into_opposition(conn):
         ],
     )
     review = SelfSchemaReview(
-        verdict=SelfReviewVerdict.CONTEST,
         opposition_indices=(0,),
         rationale="The model incorrectly selected the support root as contrary.",
     )
@@ -458,7 +454,6 @@ def test_review_opposition_index_is_application_validated(conn):
         ],
     )
     review = SelfSchemaReview(
-        verdict=SelfReviewVerdict.CONTEST,
         opposition_indices=(1,),
         rationale="Contrary evidence was claimed outside the supplied packet.",
     )

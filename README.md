@@ -466,3 +466,10 @@ documents define the rules, experiments, and mechanisms used to pursue it:
 Prometheist is available for noncommercial use under the terms in
 [`LICENSE`](LICENSE). Commercial use requires a separate license from the
 licensor.
+
+## Start a private imprint
+
+The current runtime uses bounded deterministic retrieval. For the registry audit,
+private subject setup, and the remaining Android integration work, see
+[Imprinting setup](docs/engineering/IMPRINTING_SETUP.md). Personal life records and
+self-model state belong in a separate private local deployment, outside Git.

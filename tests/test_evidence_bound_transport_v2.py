@@ -80,8 +80,6 @@ def _package() -> ResponseMemoryPackage:
     )
     return ResponseMemoryPackage(
         memory_packet=packet,
-        sufficient=True,
-        composer_rounds=1,
         adaptive_recall_rounds=0,
     )
 

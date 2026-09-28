@@ -10,9 +10,8 @@ from psycopg.rows import dict_row
 
 from prometheist import db, event_store
 from prometheist.cognitive_store import put_record
-from prometheist.composer_coverage import MemoryRequirements
 from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from prometheist.percept_response_runtime import MemorySufficiencyDecision, _compose_memory_package
+from prometheist.percept_response_runtime import retrieve_memory_package
 from prometheist.person_fidelity_benchmark import load_person_fidelity_corpus
 from prometheist.response_policy import HistoricalEvidenceScope, ResponseSurfaceMode
 from prometheist.self_memory import activate_self_context
@@ -69,7 +68,7 @@ def navigate(conn, query, *, packet=None, limit=20, types=SOURCE_TYPES, before=N
 @pytest.mark.parametrize("probe_id,initial_seed_ids", [
     ("pf-q005", ["pf-e004"]), ("pf-q006", []),
 ])
-def test_frozen_failure_required_roots_reach_even_immediately_permissive_composer(
+def test_frozen_failure_required_roots_reach_fixed_retrieval(
     learned, probe_id, initial_seed_ids,
 ):
     conn, corpus, event_ids, snapshot = learned
@@ -78,28 +77,22 @@ def test_frozen_failure_required_roots_reach_even_immediately_permissive_compose
     initial = packet_for(conn, [event_ids[key] for key in initial_seed_ids])
     assert not required.issubset({item.source_event_id for item in initial.items})
 
-    class Composer:
-        def assess_memory_sufficiency(self, prompt, packet, self_context, **kwargs):
-            assert required.issubset({item.source_event_id for item in packet.items}), packet.retrieval_trace
-            return MemorySufficiencyDecision(sufficient=True)
-
-    package = _compose_memory_package(
-        conn, Composer(), SimpleNamespace(user_text=probe.prompt, before_global_seq=cutoff(conn),
-                                        interaction_id=uuid4()), initial, SOURCE_TYPES,
+    conversation = event_store.start_conversation(conn)
+    package = retrieve_memory_package(
+        conn, SimpleNamespace(user_text=probe.prompt, before_global_seq=cutoff(conn),
+                              interaction_id=uuid4(), conversation_id=conversation,
+                              correlation_id=uuid4(), task_id=uuid4()), initial, SOURCE_TYPES,
         person_history_required=True,
-        requirements=MemoryRequirements.model_validate({"requirements": [
-            {"need": "personal preferences and priorities"},
-        ]}),
     )
-    assert package.composer_rounds == 1
-    assert package.adaptive_recall_rounds == 0
+    assert required.issubset({item.source_event_id for item in package.memory_packet.items})
+    assert package.retrieval_policy == "fixed-retrieval/v1"
     # Navigation must not promote any candidate or rewrite a learned assertion.
     for key, payload in snapshot["self_resolution"]:
         assert conn.execute("SELECT payload FROM cognitive_heads WHERE record_kind='self_resolution' "
                             "AND record_key=%s", (key,)).fetchone()[0] == payload
 
 
-def test_frozen_message_deficits_recover_style_and_observed_example(learned):
+def test_frozen_message_prompt_recovers_style_and_observed_example(learned):
     conn, corpus, event_ids, _ = learned
     probe = next(p for p in corpus.probes if p.probe_id == "pf-q007")
     required = {event_ids[key] for key in probe.required_event_ids}
@@ -107,28 +100,13 @@ def test_frozen_message_deficits_recover_style_and_observed_example(learned):
     context = activate_self_context(conn, query_text=probe.prompt,
                                     evidence_scope=HistoricalEvidenceScope.SELF_MODEL,
                                     surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE)
-    # These are the actual successive missing cues in the failed native run.
-    frozen_needs = ["personal history of response to unexplained hardware anomalies",
-                    "project message style in final hardware testing context"]
-    deficits = iter(frozen_needs)
-
-    class Composer:
-        def assess_memory_sufficiency(self, prompt, packet, self_context, **kwargs):
-            if required.issubset({item.source_event_id for item in packet.items}):
-                return MemorySufficiencyDecision(sufficient=True)
-            return MemorySufficiencyDecision(sufficient=False, memory_deficit=next(deficits))
-
-    package = _compose_memory_package(
-        conn, Composer(), SimpleNamespace(user_text=probe.prompt, before_global_seq=cutoff(conn),
+    package = retrieve_memory_package(
+        conn, SimpleNamespace(user_text=probe.prompt, before_global_seq=cutoff(conn),
             interaction_id=uuid4(), conversation_id=conversation, correlation_id=uuid4(), task_id=uuid4()),
         packet_for(conn), SOURCE_TYPES, context, person_history_required=True,
-        requirements=MemoryRequirements.model_validate({"requirements": [
-            {"need": need} for need in frozen_needs
-        ]}),
     )
-    assert package.sufficient
     assert required.issubset({item.source_event_id for item in package.memory_packet.items})
-    assert package.adaptive_recall_rounds <= 2
+    assert package.adaptive_recall_rounds == 4
     assert "self-memory-canonical-navigation-v1" in json.dumps(package.memory_packet.retrieval_trace)
 
 

@@ -1,37 +1,22 @@
 from __future__ import annotations
 
 import os
-from uuid import uuid4
 
 import pytest
 
 from prometheist.percept_response_worker import (
     _INTERACTIVE_PERSONALITY_PROMPT,
-    _USER_PROMPT_COMPOSER,
     UserPromptLLM,
     UserPromptWorkSelection,
 )
 from prometheist.percept_response_runtime import (
-    ComposerValidationError,
-    MemorySufficiencyDecision,
     _RESPONSE_POLICY_PROMPT,
 )
-from prometheist.composer_coverage import COVERAGE_PROMPT, MemoryRequirements
-from prometheist.models import EventType, MemoryNeed, MemoryPacket
+from prometheist.models import EventType
 from prometheist.response_policy import (
     HistoricalEvidenceScope,
     ResponseSurfaceMode,
     source_types_for_scope,
-)
-from prometheist.self_memory import (
-    IdentityCentrality,
-    SelfContextAdmission,
-    SelfContextItem,
-    SelfContextPacket,
-    SelfEvidenceMetrics,
-    SelfPerspective,
-    SelfRepresentationKind,
-    SelfResolutionStatus,
 )
 
 
@@ -41,126 +26,12 @@ def test_user_prompt_work_schema_cannot_decide_response_requirement() -> None:
     assert set(schema.get("properties", {})) == {"capability_indices"}
 
 
-def test_composer_treats_current_prompt_as_direct_evidence() -> None:
-    normalized = " ".join(_USER_PROMPT_COMPOSER.split()).casefold()
-    assert "current user prompt is itself direct current evidence" in normalized
-    assert "do not require" in normalized
-    assert "historical memory" in normalized
 
 
-def test_composer_rejects_verbose_deficit_and_retries_truncated_json(monkeypatch) -> None:
-    llm = UserPromptLLM()
-    calls = []
-
-    def fake_structured(kind, system, current_user, evidence, schema, max_tokens):
-        calls.append(max_tokens)
-        assert schema["properties"]["memory_deficit"]["anyOf"][0]["maxLength"] == 160
-        return '{"sufficient":false,"memory_deficit":"' + "missing context " * 30
-
-    monkeypatch.setattr(llm, "_structured_with_evidence", fake_structured)
-    packet = MemoryPacket(
-        memory_request_id=uuid4(),
-        need=MemoryNeed(query_text="What would I choose?"),
-        supported=False,
-        items=[],
-    )
-    with pytest.raises(ComposerValidationError):
-        llm.assess_memory_sufficiency("What would I choose?", packet)
-    assert calls == [256, 384]
-
-    with pytest.raises(ValueError):
-        MemorySufficiencyDecision(sufficient=False, memory_deficit="x" * 161)
 
 
-def test_user_prompt_composer_accepts_and_renders_typed_self_context(monkeypatch) -> None:
-    llm = UserPromptLLM()
-    captured: dict[str, str] = {}
-
-    def fake_structured(kind, system, current_user, evidence, schema, max_tokens):
-        del system, schema, max_tokens
-        captured["kind"] = kind
-        captured["current_user"] = current_user
-        captured["evidence"] = evidence
-        return '{"sufficient":true,"memory_deficit":null}'
-
-    monkeypatch.setattr(llm, "_structured_with_evidence", fake_structured)
-
-    packet = MemoryPacket(
-        memory_request_id=uuid4(),
-        need=MemoryNeed(query_text="What do I usually prefer?"),
-        supported=False,
-        items=[],
-    )
-    self_context = SelfContextPacket(
-        admission=SelfContextAdmission.PRIMARY_DERIVED_CONTEXT,
-        items=(
-            SelfContextItem(
-                representation_id=uuid4(),
-                kind=SelfRepresentationKind.PREFERENCE,
-                perspective=SelfPerspective.INFERRED,
-                statement="The person usually prefers modular systems.",
-                status=SelfResolutionStatus.ESTABLISHED,
-                identity_centrality=IdentityCentrality.MODERATE,
-                metrics=SelfEvidenceMetrics(
-                    support_root_count=3,
-                    opposition_root_count=0,
-                    source_type_count=1,
-                    source_count=1,
-                    context_count=2,
-                ),
-                support_event_types=(EventType.USER_PROMPT,),
-            ),
-        ),
-    )
-
-    decision = llm.assess_memory_sufficiency(
-        "What do I usually prefer?",
-        packet,
-        self_context,
-    )
-
-    assert decision.sufficient is True
-    assert captured["kind"] == "V2_MEMORY_SUFFICIENCY_USER_PROMPT"
-    assert "What do I usually prefer?" in captured["current_user"]
-    assert "[Derived self-memory]" in captured["evidence"]
-    assert "The person usually prefers modular systems." in captured["evidence"]
 
 
-def test_self_model_composer_uses_historical_completeness_contract(
-    monkeypatch,
-) -> None:
-    llm = UserPromptLLM()
-    captured: dict[str, str] = {}
-
-    def fake_structured(kind, system, current_user, evidence, schema, max_tokens):
-        del current_user, evidence, schema, max_tokens
-        captured["kind"] = kind
-        captured["system"] = system
-        return (
-            '{"coverage":[{"requirement_index":0,"evidence_indices":[]}]}'
-        )
-
-    monkeypatch.setattr(llm, "_structured_with_evidence", fake_structured)
-    packet = MemoryPacket(
-        memory_request_id=uuid4(),
-        need=MemoryNeed(query_text="What do I usually prefer?"),
-        supported=False,
-        items=[],
-    )
-
-    decision = llm.assess_memory_sufficiency(
-        "What do I usually prefer?",
-        packet,
-        person_history_required=True,
-        requirements=MemoryRequirements.model_validate({"requirements": [
-            {"need": "observed preference behavior"},
-        ]}),
-    )
-
-    assert decision.sufficient is False
-    assert captured["kind"] == "V2_MEMORY_SUFFICIENCY_USER_PROMPT"
-    assert captured["system"] == COVERAGE_PROMPT
-    assert "fixed memory requirements" in captured["system"]
 
 
 def test_response_policy_defaults_ordinary_questions_to_natural_language() -> None:

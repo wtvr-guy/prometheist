@@ -1,6 +1,10 @@
 """One claimed situation stage per fresh process, with exact artifact handoffs."""
 from __future__ import annotations
 
+from prometheist.contract_registry import SEMANTIC_CONTRACTS
+
+from prometheist.contract_registry import STAGE_CONTRACTS
+
 from datetime import datetime
 import json
 import os
@@ -14,7 +18,7 @@ from prometheist.epistemic_authority import format_authority_bound_memory_packet
 from prometheist.llm import _quarantined_evidence
 from prometheist.model_evidence_budget import configured_model_evidence_budget, validate_rendered_evidence
 from prometheist.models import MemoryPacket
-from prometheist.percept_response_runtime import ResponseMemoryPackage, _compose_memory_package
+from prometheist.percept_response_runtime import ResponseMemoryPackage, retrieve_memory_package
 from prometheist.percept_response_worker import UserPromptLLM
 from prometheist.percept_triage import (
     TRIAGE_PROMPT,
@@ -60,16 +64,8 @@ TRIAGE_MAX_TOKENS = 512
 SELF_PROPOSAL_MAX_TOKENS = 768
 SELF_REVIEW_MAX_TOKENS = 384
 SITUATION_MODEL_ITEMS = 8
-_ALLOWED_LLM_KINDS = {
-    SituationStage.MEMORY: frozenset(),
-    SituationStage.TRIAGE: frozenset({"PERCEPT_TRIAGE"}),
-    SituationStage.EXECUTE: frozenset(),
-    SituationStage.SELF_PROPOSE: frozenset({"SELF_SCHEMA_PROPOSAL"}),
-    SituationStage.SELF_REVIEW: frozenset({"SELF_SCHEMA_REVIEW"}),
-    SituationStage.COMPOSE: frozenset({"V2_MEMORY_SUFFICIENCY_USER_PROMPT"}),
-    SituationStage.RESPOND: frozenset({"FINAL_RESPONSE_V2"}),
-    SituationStage.PERSIST: frozenset(),
-}
+
+_ALLOWED_LLM_KINDS = {stage: STAGE_CONTRACTS[stage.value].kinds for stage in SituationStage}
 
 
 class SituationLLM(UserPromptLLM):
@@ -84,7 +80,7 @@ class SituationLLM(UserPromptLLM):
             SELF_SCHEMA_PROPOSAL_PROMPT,
             "Propose only self representations supported by the supplied evidence.",
             _quarantined_evidence(evidence),
-            SelfSchemaProposalBatch.model_json_schema(),
+            SEMANTIC_CONTRACTS["SELF_SCHEMA_PROPOSAL"].output_schema(),
             SELF_PROPOSAL_MAX_TOKENS,
         )
         return self._validated_model_output(
@@ -113,7 +109,7 @@ class SituationLLM(UserPromptLLM):
             SELF_SCHEMA_REVIEW_PROMPT,
             "Review the supplied self representation against all supplied evidence.",
             _quarantined_evidence(payload),
-            SelfSchemaReview.model_json_schema(),
+            SEMANTIC_CONTRACTS["SELF_SCHEMA_REVIEW"].output_schema(),
             SELF_REVIEW_MAX_TOKENS,
         )
         return self._validated_model_output(
@@ -132,7 +128,7 @@ class SituationLLM(UserPromptLLM):
             system,
             current,
             _quarantined_evidence(evidence),
-            TriageDecision.model_json_schema(),
+            SEMANTIC_CONTRACTS["PERCEPT_TRIAGE"].output_schema(),
             TRIAGE_MAX_TOKENS,
         )
         return self._validated_model_output(
@@ -356,14 +352,11 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
             )
         return {"skipped": False, "reviews": reviews}
 
-    if stage is SituationStage.COMPOSE:
+    if stage is SituationStage.RETRIEVE:
         packet = MemoryPacket.model_validate(_output(conn, task, SituationStage.MEMORY, scheduler_key)["memory_packet"])
         if not task.policy.response_required or not task.policy.natural_language_response:
             return {"skipped": True}
-        if llm is None:
-            raise RuntimeError("natural response requires a separate memory specialist")
-        # Composer receives persistent memory alone; work results bypass it.
-        package = _compose_memory_package(conn, llm, task, packet, _source_types(task.policy.evidence_domains))
+        package = retrieve_memory_package(conn, task, packet, _source_types(task.policy.evidence_domains))
         return {"memory_package": package.model_dump(mode="json")}
     if stage is SituationStage.RESPOND:
         execution = _output(conn, task, SituationStage.EXECUTE, scheduler_key)
@@ -372,7 +365,7 @@ def execute_situation_stage(conn, task: SituationTask, stage: SituationStage, *,
         if task.policy.natural_language_response:
             if llm is None:
                 raise RuntimeError("natural response requires a separate final responder")
-            package = ResponseMemoryPackage.model_validate(_output(conn, task, SituationStage.COMPOSE, scheduler_key)["memory_package"])
+            package = ResponseMemoryPackage.model_validate(_output(conn, task, SituationStage.RETRIEVE, scheduler_key)["memory_package"])
             text = llm.generate_final_response(
                 task.user_text, package, tuple(execution["work_results"]) or
                 ({"capability_id": "situation.observation", "result_data": _situation_view(task)},),
