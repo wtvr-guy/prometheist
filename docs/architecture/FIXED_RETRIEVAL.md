@@ -46,3 +46,15 @@ New interactions use `interaction-fixed-retrieval-v3`; new situation tasks use `
 Subject IDs and individual values belong to private runtime state. No cognitive rule names subject_001 or assumes the founder's preferences. See [the setup and evaluation protocol](../engineering/IMPRINTING_SETUP.md).
 
 The frozen previous-learning bundle can isolate retrieval changes from relearning. A run that also changes self-learning policy is an end-to-end comparison, not evidence that retrieval alone caused the difference. Preserve both successful and negative results, source-delivery metrics, model-call counts, latency, and independent human judgments. Sounding similar is only one fidelity dimension. Additional subjects and prospectively withheld cases remain necessary to test generalization.
+
+Known-answer retrieval fixtures are development targets: inspect the expected
+canonical roots and tune general mechanisms against them. Once a fixture has
+guided a change, report it as calibration evidence. Use independent histories,
+opposite preferences, paraphrases, distractors, contradictions, and temporal
+cutoffs to challenge the same rule, then evaluate on withheld questions. Never
+route by fixture IDs or copy an expected answer into production behavior.
+
+Measure required-source recall, irrelevant-source inclusion, forbidden-source
+violations, deterministic replay, latency, and bounded resource use separately
+from final-answer quality. Full source delivery can establish a retrieval result;
+it cannot by itself establish faithful interpretation or person fidelity.

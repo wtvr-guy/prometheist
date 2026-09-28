@@ -11,9 +11,7 @@ import time
 
 import httpx
 from dotenv import load_dotenv
-from prometheist.llm import _TextAnswer
-from prometheist.percept_response_runtime import MemorySufficiencyDecision
-from prometheist.percept_response_worker import UserPromptWorkSelection
+from prometheist.contract_registry import SEMANTIC_CONTRACTS
 
 load_dotenv()
 
@@ -74,14 +72,14 @@ def main() -> None:
                     "content": "The codename for Project Oriole is 12AB34CD.",
                 }
             ],
-            "format": UserPromptWorkSelection.model_json_schema(),
+            "format": SEMANTIC_CONTRACTS["PRECOGNITIVE_USER_PROMPT_WORK"].output_schema(),
             "think": False,
             "stream": False,
         },
     )
 
     _call(
-        "D: v2 Composer memory-sufficiency schema",
+        "D: evidence-policy schema",
         {
             "model": MODEL,
             "messages": [
@@ -90,7 +88,7 @@ def main() -> None:
                     "content": "What was the codename I gave you for Project Oriole?",
                 }
             ],
-            "format": MemorySufficiencyDecision.model_json_schema(),
+            "format": SEMANTIC_CONTRACTS["V2_RESPONSE_POLICY"].output_schema(),
             "think": False,
             "stream": False,
         },
@@ -106,7 +104,7 @@ def main() -> None:
                     "content": "What was the codename I gave you for Project Oriole?",
                 }
             ],
-            "format": _TextAnswer.model_json_schema(),
+            "format": SEMANTIC_CONTRACTS["FINAL_RESPONSE_V2"].output_schema(),
             "think": False,
             "stream": False,
         },
