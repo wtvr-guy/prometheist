@@ -157,7 +157,9 @@ adequate cognitive specialist.
 **My files** is the writable `files/` folder alongside the private profile.
 **Runtime records** exposes the whole private deployment for inspection and download.
 Add another existing local folder with a reviewed, revocable read-only or read/write
-scope. The app retains its resolved path and filesystem identity. OS permissions
+scope. Network/UNC/mapped-network roots and linked root paths are rejected before
+resolution; a network filesystem needs its own explicit integration and consent.
+The app retains its resolved path and filesystem identity. OS permissions
 still apply. Viewing or uploading a file does **not** automatically index it into
 memory, execute it, or send it to a model.
 

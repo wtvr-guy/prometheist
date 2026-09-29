@@ -12,7 +12,7 @@ import hashlib
 import json
 import mimetypes
 import os
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import shutil
 import stat
 import tempfile
@@ -92,7 +92,7 @@ def scope_proposal(path, label, writable):
     # Intentional operator scope selection, not a path beneath a preexisting grant.
     # Only authenticated same-origin UI requests reach this boundary. A separate
     # accepted digest is required before this path can become a browsing root.
-    selected = Path(path).expanduser()
+    selected = local_scope_path(path)
     if not selected.is_absolute():
         raise ValueError("Choose an absolute local folder path")
     resolved = selected.resolve(strict=True)
@@ -106,6 +106,38 @@ def scope_proposal(path, label, writable):
                 + "Symlinks/junctions are not followed. System-owned Prometheist records remain read-only. "
                 + "No file is sent to a model, indexed into memory, or transmitted to a remote service by granting this scope.",
             "duration": "until you remove this folder from Files"}
+
+
+def local_scope_path(path):
+    """Reject network destinations before path resolution can contact a server."""
+    raw = str(path)
+    if raw.startswith(("\\\\", "//")) or PureWindowsPath(raw).drive.startswith("\\\\"):
+        raise ValueError("Network and device namespace paths need a separate network-filesystem integration")
+    selected = Path(raw).expanduser()
+    if not selected.is_absolute() or ".." in selected.parts:
+        raise ValueError("Choose an absolute local folder path without parent traversal")
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+        drive_type = ctypes.WinDLL("kernel32", use_last_error=True).GetDriveTypeW
+        drive_type.argtypes = [wintypes.LPCWSTR]
+        drive_type.restype = wintypes.UINT
+        if drive_type(selected.anchor) == 4:  # DRIVE_REMOTE, Win32 API constant
+            raise ValueError("Mapped network drives require a separate network-filesystem integration")
+    else:
+        import psutil
+        mounts = [entry for entry in psutil.disk_partitions(all=True)
+                  if selected.is_relative_to(Path(entry.mountpoint))]
+        if mounts:
+            mount = max(mounts, key=lambda entry: len(Path(entry.mountpoint).parts))
+            if mount.fstype.casefold() in {"nfs", "nfs4", "cifs", "smbfs", "smb3", "fuse.sshfs", "davfs", "davfs2", "afpfs"}:
+                raise ValueError("Network mounts require a separate network-filesystem integration")
+    cursor = Path(selected.anchor)
+    for part in selected.parts[1:]:
+        cursor /= part
+        if cursor.is_symlink() or cursor.is_junction():
+            raise ValueError("Choose the actual local folder; linked roots are not followed")
+    return selected
 
 
 def path_parts(relative):

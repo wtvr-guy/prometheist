@@ -110,7 +110,9 @@ def test_llm_invocation_artifact_preserves_exact_stateless_contract(tmp_path, mo
     )
 
     assert artifact["artifact_type"] == "LLM_INVOCATION"
+    assert artifact["producer"] == "percept_response_v2/ollama"
     assert artifact["payload"] == {
+        "provider": "ollama",
         "claim_id": str(claim_id),
         "invocation_index": 0,
         "kind": "FINAL_RESPONSE",

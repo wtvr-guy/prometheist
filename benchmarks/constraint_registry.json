@@ -1248,6 +1248,11 @@
       "expected_value": 1,
       "classification": "STRUCTURAL_INVARIANT",
       "rationale": "CPU claims must reserve at least one positive scheduling unit."
+    },
+    "src/prometheist/gui_files.py::local_scope_path::comparison": {
+      "expected_value": 4,
+      "classification": "EXTERNAL_CONTRACT",
+      "rationale": "Win32 GetDriveTypeW DRIVE_REMOTE enumeration value; mapped network drives require separate destination consent. https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getdrivetypew"
     }
   },
   "groups": {

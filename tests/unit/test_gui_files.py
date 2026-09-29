@@ -136,3 +136,23 @@ def test_edit_preserves_existing_access_permissions(files):
     files.write_text("files", "permissions.txt", "after", revision(path))
     assert path.read_text() == "after"
     assert permissions() == before
+
+
+@pytest.mark.parametrize("path", [r"\\server\share\private", "//server/share/private", r"\\?\UNC\server\share", r"\\.\PhysicalDrive0"])
+def test_network_scope_rejected_before_any_path_resolution(path, monkeypatch):
+    from pathlib import Path
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Network path must be refused before resolve/stat")
+    monkeypatch.setattr(Path, "resolve", forbidden)
+    with pytest.raises(ValueError, match="Network"):
+        scope_proposal(path, "Remote", True)
+
+
+def test_scope_does_not_follow_a_linked_root(files, tmp_path):
+    linked = tmp_path / "linked-root"
+    try:
+        linked.symlink_to(files.workspace, target_is_directory=True)
+    except OSError:
+        pytest.skip("Symlink creation is unavailable for this Windows account")
+    with pytest.raises(ValueError, match="linked roots"):
+        scope_proposal(linked, "Link", True)
