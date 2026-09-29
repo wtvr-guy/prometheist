@@ -113,3 +113,21 @@ def test_connectivity_does_not_follow_redirects_or_send_inventory(monkeypatch):
     monkeypatch.setattr(httpx, "Client", factory)
     assert check_connectivity(url)["http_status"] == 302
     assert len(calls) == 1 and calls[0].method == "HEAD" and calls[0].content == b""
+
+
+def test_concurrent_grant_and_revocation_cannot_restore_an_old_grant():
+    from concurrent.futures import ThreadPoolExecutor
+    purpose = NetworkPurpose.MODEL
+    old = "https://revoked.example"
+    grant_consent(old, purpose, accepted_digest=content_digest(consent_proposal(old, purpose)))
+    urls = [f"https://destination-{i}.example" for i in range(12)]
+    with ThreadPoolExecutor() as pool:
+        futures = [pool.submit(grant_consent, url, purpose,
+                   accepted_digest=content_digest(consent_proposal(url, purpose))) for url in urls]
+        futures.append(pool.submit(revoke_consent, old, purpose))
+        for future in futures:
+            future.result()
+    with pytest.raises(PermissionError):
+        require_destination(old, purpose)
+    for url in urls:
+        require_destination(url, purpose)

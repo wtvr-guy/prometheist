@@ -14,7 +14,7 @@ from uuid import uuid4
 import psutil
 
 from prometheist.environment_contracts import (
-    DISCOVERY_TIMEOUT_SECONDS, MAX_DISCOVERY_BYTES, MAX_PROVIDER_RESOURCES,
+    DISCOVERY_TIMEOUT_SECONDS, MAX_DISCOVERY_BYTES, MAX_PROVIDER_RESOURCES, MAX_SENSOR_READINGS,
     DiscoveredResource, EnvironmentScan, ProviderReport, ResourceKind,
     ScanStatus, SensorReading, resource_id,
 )
@@ -36,6 +36,7 @@ class ProviderContract:
 
 
 PROVIDER_REGISTRY = MappingProxyType({
+    "platform.devices": ProviderContract("unsupported", ResourceKind.DEVICE, "", "", "explicit unavailable-device-provider receipt on unsupported platforms"),
     "runtime": ProviderContract("any", ResourceKind.HOST, "", "", "OS, runtime, CPU/RAM and local sensor readings"),
     "runtime.network": ProviderContract("any", ResourceKind.NETWORK, "", "", "local network interfaces; no active probe"),
     "runtime.storage": ProviderContract("any", ResourceKind.VOLUME, "", "", "mounted local volumes and free space"),
@@ -82,12 +83,12 @@ def _reading(resource, metric, value, unit):
 
 
 def _report(provider, resources, readings=(), *, diagnostic=None):
-    truncated = len(resources) > MAX_PROVIDER_RESOURCES
+    truncated = len(resources) > MAX_PROVIDER_RESOURCES or len(readings) > MAX_SENSOR_READINGS
     resources = resources[:MAX_PROVIDER_RESOURCES]
     retained = {r.resource_id for r in resources}
     return ProviderReport(provider=provider, status=ScanStatus.PARTIAL if truncated else ScanStatus.COMPLETE,
         resources=tuple(sorted(resources, key=lambda r: str(r.resource_id))),
-        readings=tuple(sorted((r for r in readings if r.resource_id in retained), key=lambda r: (str(r.resource_id), r.metric))),
+        readings=tuple(sorted((r for r in readings if r.resource_id in retained), key=lambda r: (str(r.resource_id), r.metric))[:MAX_SENSOR_READINGS]),
         diagnostic="resource bound exceeded; absence is unknown" if truncated else diagnostic)
 
 
@@ -114,7 +115,17 @@ def runtime_inventory(host_id):
 
 def network_inventory(host_id):
     provider = "runtime.network"
-    stats, addresses = psutil.net_if_stats(), psutil.net_if_addrs()
+    failures = []
+    try:
+        stats = psutil.net_if_stats()
+    except OSError as exc:
+        stats = {}
+        failures.append(f"interface stats: {type(exc).__name__}")
+    try:
+        addresses = psutil.net_if_addrs()
+    except OSError as exc:
+        addresses = {}
+        failures.append(f"interface addresses: {type(exc).__name__}")
     resources = []
     for name in sorted(set(stats) | set(addresses)):
         stat = stats.get(name)
@@ -123,7 +134,8 @@ def network_inventory(host_id):
                         "addresses": [{"family": str(a.family), "address": a.address, "netmask": a.netmask}
                                       for a in addresses.get(name, ())],
                         "internet_reachability": "UNKNOWN", "active_probe": False}))
-    return _report(provider, resources)
+    result = _report(provider, resources, diagnostic="; ".join(failures) or None)
+    return result.model_copy(update={"status": ScanStatus.PARTIAL}) if failures else result
 
 
 def storage_inventory(host_id):
@@ -156,7 +168,11 @@ def storage_inventory(host_id):
 def sensor_inventory(host_id):
     provider = "runtime.sensors"
     resources, readings, unsupported = [], [], []
-    battery = psutil.sensors_battery()
+    try:
+        battery = psutil.sensors_battery()
+    except OSError as exc:
+        battery = None
+        unsupported.append(f"sensors_battery: {type(exc).__name__}")
     if battery is not None:
         resource = _resource(host_id, provider, "battery", "System battery", kind=ResourceKind.BATTERY, available=True)
         resources.append(resource)
@@ -168,14 +184,20 @@ def sensor_inventory(host_id):
         if function is None:
             unsupported.append(api)
             continue
-        for group, values in sorted(function().items()):
+        try:
+            groups = function()
+        except OSError as exc:
+            unsupported.append(f"{api}: {type(exc).__name__}")
+            continue
+        for group, values in sorted(groups.items()):
             for index, reading in enumerate(values):
                 key = f"{api}:{group}:{index}:{reading.label}"
                 resource = _resource(host_id, provider, key, reading.label or group, available=True,
                     properties={"api": api, "group": group})
                 resources.append(resource)
                 readings.append(_reading(resource, metric, reading.current, unit))
-    return _report(provider, resources, readings, diagnostic=("Unavailable APIs: " + ", ".join(unsupported)) if unsupported else None)
+    report = _report(provider, resources, readings, diagnostic=("Unavailable APIs: " + ", ".join(unsupported)) if unsupported else None)
+    return report.model_copy(update={"status": ScanStatus.PARTIAL}) if unsupported else report
 
 
 def linux_devices(host_id):
@@ -218,7 +240,7 @@ def decode_windows_report(host_id, payload):
         parent = row.get("Parent") or row.get("PNPDeviceID")
         parent_id = resource_id(host_id, "windows.pnp", parent) if parent else None
         kind = contract.kind
-        if provider == "windows.pnp" and row.get("Class", "").casefold() in {"sensor", "sensors"}:
+        if provider == "windows.pnp" and (row.get("Class") or "").casefold() in {"sensor", "sensors"}:
             kind = ResourceKind.SENSOR
         available = (row.get("Status") == "OK") if row.get("Status") else None
         if provider == "windows.displays":

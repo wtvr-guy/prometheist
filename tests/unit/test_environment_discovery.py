@@ -60,6 +60,27 @@ def test_windows_sensor_samples_are_separate_from_static_topology():
     assert "CurrentTemperature" not in report.resources[0].properties
 
 
+def test_present_windows_device_without_class_keeps_its_identity():
+    report = decode_windows_report(HOST, {"provider": "windows.pnp", "status": "COMPLETE", "rows": [
+        {"InstanceId": "ROOT\\unclassified", "Class": None, "FriendlyName": None}]})
+    assert report.status is ScanStatus.COMPLETE
+    assert report.resources[0].kind is ResourceKind.DEVICE
+    assert report.resources[0].name == "ROOT\\unclassified"
+
+
+def test_one_denied_portable_sensor_does_not_hide_other_readings(monkeypatch):
+    import prometheist.environment_providers as providers
+    def denied():
+        raise PermissionError("denied")
+    monkeypatch.setattr(providers.psutil, "sensors_battery", denied)
+    monkeypatch.setattr(providers.psutil, "sensors_fans", lambda: {}, raising=False)
+    monkeypatch.setattr(providers.psutil, "sensors_temperatures", lambda: {"cpu": [SimpleNamespace(label="die", current=42)]}, raising=False)
+    report = providers.sensor_inventory(HOST)
+    assert report.status is ScanStatus.PARTIAL
+    assert len(report.readings) == 1
+    assert report.readings[0].value == 42
+
+
 def test_windows_timeout_retains_completed_sections_and_marks_others_unknown():
     line = json.dumps({"provider": "windows.cpu", "status": "COMPLETE", "rows": [{"DeviceID": "CPU0", "Name": "Processor"}]}).encode()
     def timeout(command, **kwargs):
