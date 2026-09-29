@@ -109,3 +109,18 @@ def test_key_is_passed_only_in_child_environment(tmp_path, monkeypatch):
         assert "test-memory-key" not in path.read_text()
     complete.set()
     manager.thread.join(timeout=5)
+
+
+def test_history_poll_uses_bounded_startup_index(tmp_path, monkeypatch):
+    from pathlib import Path
+    from prometheist.gui_jobs import JOB_HISTORY_LIMIT
+    root = tmp_path / "artifacts"
+    for _ in range(JOB_HISTORY_LIMIT + 5):
+        job_id = str(uuid4())
+        write_private_policy(root / "operator/app-jobs" / job_id / "job.json", {"id":job_id, "status":"completed"})
+    manager = JobManager(root, profile=profile(tmp_path))
+    def no_scan(*args, **kwargs):
+        raise AssertionError("Polling must not enumerate lifetime history")
+    monkeypatch.setattr(Path, "glob", no_scan)
+    assert len(manager.list()) == JOB_HISTORY_LIMIT
+    assert manager.list() == manager.list()

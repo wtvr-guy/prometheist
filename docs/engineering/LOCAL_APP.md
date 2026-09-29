@@ -50,7 +50,8 @@ app process runs, and its configured interval can be changed in Settings.
   Stop cancels Prometheist's transfer request; the separate Ollama daemon may finish
   an in-flight download and retain reusable partial layers.
 - **Activity** shows the latest 200 app jobs, their captured settings, progress,
-  results, and bounded worker-log tails. Older receipts remain available in Files.
+  results, and bounded worker-log tails. Older receipts remain available in Files. A bounded recent-job index prevents
+  polling from scanning lifetime history; restart performs one recovery scan.
   Cancellation stops only the owned orchestrator and its descendants. It retains
   already-admitted input and partial artifacts; it does not silently retry.
 - **Settings** separates workspace preferences, stage routing, resource admission,
@@ -169,7 +170,8 @@ attachment downloads, never executable app-origin previews. Symlinks, junctions,
 special files and ambiguous Windows names cannot be followed through Files.
 
 Edits require the file revision observed when opened. A concurrent change rejects
-the save. Replaced text is retained in **File activity → Previous version**. Files
+the save. Replacements preserve POSIX ownership/mode/access ACLs where exposed, or
+use Windows ReplaceFileW to preserve the existing DACL without ignoring ACL errors. Replaced text is retained in **File activity → Previous version**. Files
 never overwrites an existing copy/upload/move destination. Trash stays on the source
 volume and is never automatically emptied. File activity restores to the original
 path only if it is still free. Cross-volume moves require copy, verification, then

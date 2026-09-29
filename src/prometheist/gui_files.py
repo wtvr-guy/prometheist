@@ -35,6 +35,33 @@ FILE_SCOPE_VERSION = "file-scopes/v1"
 INTERNAL_PREFIX = ".prometheist-"
 
 
+def replace_preserving_permissions(temporary: Path, destination: Path):
+    """Existing-file edits preserve access; a failed merge never ignores ACLs."""
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+        replace = ctypes.WinDLL("kernel32", use_last_error=True).ReplaceFileW
+        replace.argtypes = [wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.LPCWSTR,
+                            wintypes.DWORD, wintypes.LPVOID, wintypes.LPVOID]
+        replace.restype = wintypes.BOOL
+        # Same-volume backup also preserves recovery if Windows reports a partial move.
+        backup = temporary.with_name(temporary.name + "-previous")
+        if not replace(str(destination), str(temporary), str(backup), 0, None, None):
+            raise ctypes.WinError(ctypes.get_last_error())
+        backup.unlink(missing_ok=True)
+    else:
+        original, staged = destination.stat(), temporary.stat()
+        if (original.st_uid, original.st_gid) != (staged.st_uid, staged.st_gid):
+            os.chown(temporary, original.st_uid, original.st_gid)
+        os.chmod(temporary, stat.S_IMODE(original.st_mode))
+        if hasattr(os, "listxattr"):
+            # Preserve POSIX access ACLs where exposed. Failure prevents replacement.
+            for name in os.listxattr(destination):
+                if name == "system.posix_acl_access":
+                    os.setxattr(temporary, name, os.getxattr(destination, name))
+        os.replace(temporary, destination)
+
+
 class FileRoot(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     id: str
@@ -295,7 +322,7 @@ class FileManager:
                 if expected_revision:
                     if revision(path) != expected_revision:
                         raise ValueError("File changed during save; previous content was retained")
-                    os.replace(temporary, path)
+                    replace_preserving_permissions(temporary, path)
                 else:
                     os.link(temporary, path)  # atomic create-if-absent, never overwrite
                     temporary.unlink()

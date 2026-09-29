@@ -49,17 +49,18 @@ def response_request(selection, *, kind, system, user, evidence, schema, max_tok
         # A separate user data item; historical material never becomes developer authority.
         inputs.append({"role": "user", "content": evidence})
     inputs.append({"role": "user", "content": user})
+    output_budget = DEFAULT_REASONING_BUDGET if reasoning else max_tokens
+    if final:
+        output_budget = parameters.get("max_output_tokens", output_budget)
     request = {
         "model": selection.model, "instructions": system, "input": inputs,
         "store": False, "stream": False,
-        "max_output_tokens": (parameters.get("max_output_tokens", DEFAULT_REASONING_BUDGET)
-                              if reasoning else parameters.get("max_output_tokens", max_tokens)
-                              if final else max_tokens),
+        "max_output_tokens": output_budget,
         "text": {"format": {"type": "json_schema", "name": "prometheist_output",
                             "strict": True, "schema": strict_schema(schema)}},
     }
     if reasoning:
-        if "reasoning_effort" in parameters:
+        if final and "reasoning_effort" in parameters:
             request["reasoning"] = {"effort": parameters["reasoning_effort"]}
     else:
         request["temperature"] = parameters.get("temperature", 0.65) if final else 0

@@ -142,3 +142,31 @@ def test_measured_cost_and_remote_ollama_capacity_are_local_host_scoped(monkeypa
     monkeypatch.setenv(GUI_CONFIG_ENV, remote.model_dump_json())
     assert not configured_runtime_probe().capture().resident
     assert native_resource_safety_policy().default_llm_process_memory_mib == 512
+
+
+def test_reasoning_final_overrides_never_change_control_budgets():
+    from prometheist.openai_transport import DEFAULT_REASONING_BUDGET
+    selection = ModelSelection(provider="openai", model="gpt-5", parameters={"max_output_tokens":256, "reasoning_effort":"low", "verbosity":"high"})
+    args = {"system":"policy", "user":"task", "evidence":"", "schema":{"type":"object", "properties":{}}, "max_tokens":128}
+    control = response_request(selection, kind="V2_RESPONSE_POLICY", **args)
+    final = response_request(selection, kind="FINAL_RESPONSE_V2", **args)
+    assert control["max_output_tokens"] == DEFAULT_REASONING_BUDGET
+    assert "reasoning" not in control and "verbosity" not in control["text"]
+    assert final["max_output_tokens"] == 256
+    assert final["reasoning"] == {"effort":"low"} and final["text"]["verbosity"] == "high"
+
+
+def test_invocation_artifact_records_real_provider(monkeypatch):
+    from uuid import uuid4
+    from prometheist import artifact_journal, llm_artifact_store
+    captured = {}
+    def write(**kwargs):
+        captured.update(kwargs)
+        return kwargs
+    monkeypatch.setattr(artifact_journal, "write_interaction_artifact", write)
+    llm_artifact_store.write_llm_invocation(interaction_id=uuid4(),conversation_id=uuid4(),correlation_id=uuid4(),
+        task_id=uuid4(),assignment_id=uuid4(),stage="V2_RESPOND",claim_id=uuid4(),invocation_index=1,
+        kind="FINAL_RESPONSE_V2",model="gpt-5",base_url="https://api.openai.com/v1",system_prompt="s",user_prompt="u",
+        schema={},max_tokens=256,temperature=None,output="{}",error_type=None,error_message=None,provider="openai")
+    assert captured["producer"] == "percept_response_v2/openai"
+    assert captured["payload"]["provider"] == "openai"

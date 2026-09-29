@@ -133,8 +133,7 @@ def test_navigation_controls_and_persistent_file_workflow(local_app, tmp_path):
         expect(page.get_by_role("heading", name="No external destinations authorized")).to_be_visible()
         page.get_by_role("button", name="Chat", exact=True).click()
         page.set_viewport_size({"width": 390, "height": 844})
-        for notification in page.get_by_role("button", name="Dismiss notification").all():
-            notification.click()
+        page.get_by_role("button", name="Dismiss notification").evaluate_all("buttons => buttons.forEach(button => button.click())")
         controls_box = page.get_by_role("button", name="Controls", exact=True).bounding_box()
         assert controls_box["x"] + controls_box["width"] <= 390
         page.screenshot(path=str(screenshots / "chat-mobile.png"), full_page=True)
@@ -174,6 +173,7 @@ def test_fallback_order_and_specialist_registration_without_inference(local_app,
         card=page.get_by_role("article").filter(has=page.get_by_role("heading", name="qwen3:4b", exact=True))
         card.get_by_role("button", name="Use as specialist", exact=True).click()
         page.get_by_role("button", name="Register specialist", exact=True).click()
+        expect(page.get_by_role("status").filter(has_text="Installed specialist registered")).to_be_visible()
         assert app.state.control.settings.task_routing.specialists[0].tasks == ["coding"]
         page.get_by_role("button", name="Chat", exact=True).click()
         page.get_by_role("button", name="Preview route", exact=True).click()

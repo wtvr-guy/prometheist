@@ -365,6 +365,7 @@ class UserPromptLLM(PerceptSpecialists):
             ),
             evidence_refs=self._artifact_evidence_refs,
             transport_diagnostics=transport_diagnostics,
+            provider=self.selection.provider if getattr(self, "selection", None) is not None else "ollama",
         )
         self._artifact_invocation_records[invocation_index] = artifact
         return artifact

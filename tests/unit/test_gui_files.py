@@ -106,3 +106,33 @@ def test_new_scope_requires_an_absolute_path_and_exact_review(files, tmp_path):
         scope_proposal("../relative", "Relative", True)
     with pytest.raises(ValueError, match="acceptance"):
         files.add_root(tmp_path, "Unreviewed", True, "not-the-proposal-digest")
+
+
+def test_edit_preserves_existing_access_permissions(files):
+    import os
+    import stat
+    files.write_text("files", "permissions.txt", "before")
+    path = files.workspace / "permissions.txt"
+    if os.name == "nt":
+        import ctypes
+        import subprocess
+        from ctypes import wintypes
+        # Turn inherited entries into explicit entries: a new temp file differs.
+        subprocess.run(["icacls", str(path), "/inheritance:d"], check=True, capture_output=True)
+        api = ctypes.WinDLL("advapi32", use_last_error=True).GetFileSecurityW
+        api.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.LPVOID, wintypes.DWORD, ctypes.POINTER(wintypes.DWORD)]
+        api.restype = wintypes.BOOL
+        def permissions():
+            size = wintypes.DWORD()
+            api(str(path), 4, None, 0, ctypes.byref(size))
+            buf = ctypes.create_string_buffer(size.value)
+            assert api(str(path), 4, buf, size, ctypes.byref(size)), ctypes.WinError(ctypes.get_last_error())
+            return buf.raw
+    else:
+        path.chmod(0o640)
+        def permissions():
+            return stat.S_IMODE(path.stat().st_mode), path.stat().st_uid, path.stat().st_gid
+    before = permissions()
+    files.write_text("files", "permissions.txt", "after", revision(path))
+    assert path.read_text() == "after"
+    assert permissions() == before

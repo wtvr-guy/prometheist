@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import heapq
 import json
 import os
 from pathlib import Path
@@ -36,8 +37,12 @@ class JobManager:
         self.process = None
         self.active = None
         self.thread = None
+        # One startup scan; polling never enumerates lifetime history.
+        paths = list(self.directory.glob("*/job.json"))
+        self.recent_ids = [path.parent.name for path in heapq.nlargest(
+            JOB_HISTORY_LIMIT, paths, key=lambda path: (path.stat().st_mtime_ns, path.parent.name))]
         # A receipt is never replayed on restart; canonical events may already exist.
-        for path in self.directory.glob("*/job.json"):
+        for path in paths:
             record = json.loads(path.read_text(encoding="utf-8"))
             if record["status"] in ACTIVE_STATES:
                 owned = self._owned_process(record)
@@ -79,9 +84,8 @@ class JobManager:
         return record
 
     def list(self):
-        # Directory count can grow, but at most this page of records is deserialized.
-        paths = sorted(self.directory.glob("*/job.json"), key=lambda p: p.stat().st_mtime, reverse=True)
-        return [self.get(path.parent.name) for path in paths[:JOB_HISTORY_LIMIT]]
+        with self.lock:
+            return [self.get(job_id) for job_id in self.recent_ids]
 
     def submit(self, action, payload, settings, *, api_key=""):
         with self.lock:
@@ -95,6 +99,7 @@ class JobManager:
                       "selection": settings.selection.model_dump(mode="json"),
                       "settings": settings.model_dump(mode="json"), "result": None, "error": None}
             write_private_policy(directory / "job.json", record)
+            self.recent_ids = [job_id, *self.recent_ids][:JOB_HISTORY_LIMIT]
             config_path = directory / "settings.json"
             write_private_policy(config_path, settings.model_dump(mode="json"))
             environment = {**os.environ, **settings.worker_environment(config_path), "PYTHONIOENCODING": "utf-8"}
