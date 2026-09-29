@@ -25,7 +25,7 @@ def write_llm_invocation(
     user_prompt: str,
     schema: dict[str, Any],
     max_tokens: int,
-    temperature: float,
+    temperature: float | None,
     output: str | None,
     error_type: str | None,
     error_message: str | None,

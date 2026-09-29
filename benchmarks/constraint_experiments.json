@@ -780,6 +780,45 @@
         "monitor_CPU_RAM_disk_cost"
       ],
       "search": "Measure startup and polling on target Dell and native hosted Windows. Vary enumeration size, timeout and interval independently. Measure slow/denied drivers and offline operation; expand any winning boundary before selecting. CI establishes contracts, not laptop coverage or attack resistance. Defaults remain provisional."
+    },
+    "LOCAL-APP-001": {
+      "title": "Local control app, provider isolation and persistent file operations",
+      "environment": "deterministic_api_browser_ci_then_native_windows_and_opt_in_model_accounts",
+      "parameters": [
+        "request and text bounds",
+        "listing/search/copy entry bounds",
+        "chunk size",
+        "job/model timeouts",
+        "generation override ranges",
+        "resource and evidence settings"
+      ],
+      "scenario_families": [
+        "wrong Host/Origin and unauthenticated access",
+        "revoked cloud consent",
+        "unsupported parameters and bounded evidence",
+        "lost update and restart",
+        "path escape, link and protected-record mutation",
+        "chunk offset and destination collision",
+        "cancelled model/copy jobs",
+        "desktop and mobile UI"
+      ],
+      "hard_invariants": [
+        "no external request without exact current consent",
+        "no credentials in persisted settings or artifacts",
+        "no canonical rewrite through Files",
+        "no silent file overwrite",
+        "settings pinned per job",
+        "finite bounded model inputs",
+        "control sampling unaffected by final-response overrides"
+      ],
+      "quality_order": [
+        "hard_invariant_pass_rate",
+        "successful workflow completion",
+        "clarity of failure recovery",
+        "response latency",
+        "host resource cost"
+      ],
+      "search": "Sweep chunk/preview/listing limits and deadlines against large local folders, slow disks, model sizes, context lengths and native Windows. Report truncated search coverage and interrupted copies explicitly. Expand any winning boundary before calibration. Defaults remain provisional."
     }
   }
 }

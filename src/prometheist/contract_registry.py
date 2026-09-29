@@ -67,6 +67,9 @@ STAGE_CONTRACTS = MappingProxyType({
 
 
 SCHEMA_CONTRACTS = MappingProxyType({
+    "file-scopes/v1": "gui_files:FileScopes",
+    "app-settings/v1": "gui_config:AppSettings",
+    "model-selection/v1": "gui_config:ModelSelection",
     "host-environment/v1": "environment_contracts:EnvironmentScan",
     "environment-map/v1": "environment_contracts:EnvironmentMap",
     "network-consent/v1": "network_consent:NetworkConsent",
@@ -106,7 +109,8 @@ def contract_manifest():
         schemas[key] = {"model": target, "sha256": sha256(json.dumps(schema, sort_keys=True).encode()).hexdigest()}
     from prometheist.environment_providers import PROVIDER_REGISTRY
     from prometheist.security_posture import SECURITY_CAPABILITIES, POSTURE_RULES
-    return {"version": CONTRACT_REGISTRY_VERSION, "semantic_contracts": result,
+    from prometheist.model_parameters import parameter_manifest
+    return {"version": CONTRACT_REGISTRY_VERSION, "model_parameters": parameter_manifest(), "semantic_contracts": result,
             "operator_security_capabilities": dict(SECURITY_CAPABILITIES),
             "security_posture_rules": {key: {"provider": value[0], "property": value[1], "expected": value[2], "meaning": value[3]}
                                        for key, value in POSTURE_RULES.items()},

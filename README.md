@@ -24,6 +24,18 @@ It is:
 
 > **You act through a digital embodiment.**
 
+## Local app
+
+Run `uv run prometheist gui --profile <private-profile.json>` for the chat-first
+local interface. It includes Ollama model management, opt-in OpenAI access,
+generation controls, stage routing, granular system settings, host/security
+observations, and a persistent Files workspace with editing, uploads/downloads,
+folder access scopes, version receipts and recoverable Trash.
+
+See [local app setup and controls](docs/engineering/LOCAL_APP.md). The app uses the
+existing guarded worker and evidence pipeline; a dedicated migrated private
+PostgreSQL database is still required for chat.
+
 ## Why Prometheist exists
 
 Human beings are biological systems. We age, become injured, suffer disease, lose

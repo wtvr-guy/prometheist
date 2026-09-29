@@ -291,6 +291,10 @@ def _run_chat(conversation_id: uuid.UUID) -> None:
 
 def main() -> None:
     _configure_utf8_streams()
+    if len(sys.argv) > 1 and sys.argv[1] == "gui":
+        from prometheist.gui_cli import main as gui_main
+        gui_main(sys.argv[2:])
+        return
     if len(sys.argv) > 1 and sys.argv[1] == "environment":
         from prometheist.environment_cli import main as environment_main
         environment_main(sys.argv[2:])

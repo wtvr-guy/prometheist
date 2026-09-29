@@ -24,9 +24,13 @@ class NetworkPurpose(str, Enum):
     MODEL = "model_inference"
     DATABASE = "database_storage"
     CONNECTIVITY = "connectivity_check"
+    MODEL_CATALOG = "model_catalog"
+    MODEL_DOWNLOAD = "model_download"
 
 
 DISCLOSURES = {
+    NetworkPurpose.MODEL_CATALOG: "Sends your model search terms and IP address to ollama.com. No chat, personal evidence, host inventory or API key is included.",
+    NetworkPurpose.MODEL_DOWNLOAD: "Asks your configured Ollama service to download a selected model from the Ollama registry and its storage/CDN providers. Those services receive the model name, network address and request timing. The local service writes model weights to its own storage. No chat or personal evidence is included. The Ollama daemon, not Prometheist, performs the transfer and may finish an in-flight transfer after cancellation.",
     NetworkPurpose.MODEL: "Sends prompts, retrieved personal evidence, and model requests to this model endpoint. The endpoint operator can receive and retain them.",
     NetworkPurpose.DATABASE: "Sends database credentials and private canonical/derived records to this PostgreSQL endpoint. Its operator can receive and retain them.",
     NetworkPurpose.CONNECTIVITY: "Sends an HTTPS HEAD request with no body or personal inventory to this exact URL. The destination and DNS resolver can observe your IP address, hostname lookup, request path and timing. No redirects are followed.",
@@ -118,7 +122,7 @@ def require_destination(url: str, purpose: NetworkPurpose, *, root: Path | None 
     destination = normalize_destination(url, purpose)
     # Active checks always require informed consent, including a selected local
     # endpoint; a generic "online" setting cannot silently authorize probing.
-    if purpose is not NetworkPurpose.CONNECTIVITY and _loopback(urlsplit(destination).hostname):
+    if purpose in (NetworkPurpose.MODEL, NetworkPurpose.DATABASE) and _loopback(urlsplit(destination).hostname):
         return
     proposal = consent_proposal(url, purpose)
     for grant in load_consent(root).grants:

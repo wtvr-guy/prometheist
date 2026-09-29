@@ -94,3 +94,28 @@ jobs:
 
       - name: Run test suite
         run: uv run pytest -q
+
+  browser-app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PROMETHEIST_BROWSER_TESTS: "1"
+      PROMETHEIST_SCREENSHOTS: browser-screenshots
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Install uv
+        run: python -m pip install --upgrade uv==0.11.33
+      - name: Sync locked environment
+        run: uv sync --frozen
+      - name: Browser app and persistent file acceptance
+        run: uv run pytest -q tests/browser --confcutdir=tests/browser
+      - name: Keep browser evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: local-app-screenshots
+          path: browser-screenshots
+          if-no-files-found: warn
