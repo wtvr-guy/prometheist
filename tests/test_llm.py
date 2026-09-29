@@ -297,3 +297,6 @@ def test_verbatim_restore_does_not_confuse_double_digit_placeholder_indices():
         "[[VERBATIM_10]]": "TENTH-5678",
     }
     assert llm._restore_verbatim_literals("VERBATIM_10", mapping) == "TENTH-5678"
+
+
+pytestmark = pytest.mark.usefixtures("consented_mock_ollama")

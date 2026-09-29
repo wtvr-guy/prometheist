@@ -28,6 +28,20 @@ from prometheist import db
 SCHEMA_PATH = pathlib.Path(__file__).resolve().parent.parent / "schema.sql"
 
 
+@pytest.fixture
+def consented_mock_ollama(_isolated_artifact_root):
+    """Transport fixtures explicitly authorize their reserved .test destination.
+
+    This does not bypass the production guard or grant real remote endpoints.
+    Tests using this fixture replace the HTTP transport with an in-memory fake.
+    """
+    from prometheist.environment_contracts import content_digest
+    from prometheist.network_consent import NetworkPurpose, consent_proposal, grant_consent
+    purpose = NetworkPurpose.MODEL
+    url = "http://ollama.test"
+    grant_consent(url, purpose, accepted_digest=content_digest(consent_proposal(url, purpose)))
+
+
 def pytest_sessionstart(session) -> None:
     """Fail closed when an explicitly requested real-machine gate is unavailable."""
 

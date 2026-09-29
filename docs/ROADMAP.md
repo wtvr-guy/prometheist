@@ -306,3 +306,9 @@ broad external actuators, self-updating person models, identity-maturity protoco
 literal oscillatory models, and biological simulation remain outside the committed
 pre-v1.0 path until a frozen failure justifies a specific experiment. Their relevance
 to the long-term mission does not exempt them from one-mechanism experimental discipline.
+
+## Host and security foundation — September 2026
+
+Implemented deterministic startup/poll inventory, persistent device topology and readings, host-exposed Phone Link discovery, Windows protection-state findings, purpose/destination egress consent, and explicit security enrollment with reviewed runtime Firewall rules. Registries describe real capabilities. See [coverage and native acceptance](engineering/HOST_ENVIRONMENT.md).
+
+Remaining: Android companion/gateway; native target-machine sensor and traffic verification; authenticated security-event intake and tested response procedures; owner-authorized red-team scenarios and purple replay evaluation; explicit startup/service installation and reliable alert delivery. The full personal-security mission is an objective, not an expert-capability claim for this foundation.

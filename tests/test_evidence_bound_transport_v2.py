@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -171,3 +173,6 @@ def test_qwen_raw_evidence_cannot_break_out_with_chat_control_tokens():
     assert rendered.count("<|im_start|>system") == 1
     assert rendered.count("<|im_start|>assistant") == 1
     assert rendered.index("<tool_response>") < rendered.index("current user task")
+
+
+pytestmark = pytest.mark.usefixtures("consented_mock_ollama")

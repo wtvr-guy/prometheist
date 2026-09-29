@@ -211,3 +211,6 @@ def test_signed_percept_covers_event_records_as_well_as_worker_chain(tmp_path, m
     signed = journal_signing.verify_signed_journal_head(interaction_id)
     assert signed["valid"] is False
     assert "no longer matches the percept journal" in signed["reason"]
+
+
+pytestmark = pytest.mark.usefixtures("consented_mock_ollama")

@@ -9,12 +9,20 @@
     "SELF-ROOT-NAVIGATION-001": {
       "title": "Learned self descriptions as canonical source navigation",
       "environment": "deterministic_ci_then_target_windows_host_with_ollama",
-      "parameters": ["SELF_ROOT_CANDIDATE_LIMIT"],
+      "parameters": [
+        "SELF_ROOT_CANDIDATE_LIMIT"
+      ],
       "scenario_families": [
-        "candidate_hypothesis_source_recovery", "learned_topic_tags",
-        "compound_query_cues", "observed_message_style", "opposing_evidence",
-        "source_policy_before_truncation", "future_link_boundary",
-        "rejected_hypothesis", "saturated_packet", "unknown_topic"
+        "candidate_hypothesis_source_recovery",
+        "learned_topic_tags",
+        "compound_query_cues",
+        "observed_message_style",
+        "opposing_evidence",
+        "source_policy_before_truncation",
+        "future_link_boundary",
+        "rejected_hypothesis",
+        "saturated_packet",
+        "unknown_topic"
       ],
       "hard_invariants": [
         "only original canonical text enters the returned packet",
@@ -25,9 +33,13 @@
         "no fixture IDs or expected answers in runtime"
       ],
       "quality_order": [
-        "hard_invariant_pass_rate", "required_canonical_root_coverage",
-        "irrelevant_context_rate", "native_sufficiency_accuracy",
-        "model_calls", "latency", "indexed_query_cost"
+        "hard_invariant_pass_rate",
+        "required_canonical_root_coverage",
+        "irrelevant_context_rate",
+        "native_sufficiency_accuracy",
+        "model_calls",
+        "latency",
+        "indexed_query_cost"
       ],
       "search": "Freeze failed native d971214 run and its exact 56b0469 learning snapshot. Compare source delivery on pf-q005/pf-q006/pf-q007 with the prior route, retaining Composer and admission contracts. Replay tests are not model acceptance. Assess full public and holdout plus noise/scale cases before calibration. Eight candidates is provisional; expand any winning tuning boundary. A separate response-format wording change must not be credited with source-recovery improvement. See docs/experiments/SELF_ROOT_NAVIGATION_001.md."
     },
@@ -624,12 +636,20 @@
     "COMPOSER-REQUIREMENTS-001": {
       "title": "Current-only fixed requirements before personal-evidence matching",
       "environment": "deterministic_ci_then_target_windows_host_with_ollama",
-      "parameters": ["MAX_COVERAGE_REQUIREMENTS", "MAX_COVERAGE_NEED_CHARS"],
+      "parameters": [
+        "MAX_COVERAGE_REQUIREMENTS",
+        "MAX_COVERAGE_NEED_CHARS"
+      ],
       "scenario_families": [
-        "retrieved_topic_contaminates_requirements", "answer_as_missing_memory",
-        "joint_evidence_explains_change", "analogous_observed_message",
-        "fixed_requirements_across_recall", "unknown_fact", "invalid_plan",
-        "invalid_or_missing_coverage_slot", "durable_stage_recovery"
+        "retrieved_topic_contaminates_requirements",
+        "answer_as_missing_memory",
+        "joint_evidence_explains_change",
+        "analogous_observed_message",
+        "fixed_requirements_across_recall",
+        "unknown_fact",
+        "invalid_plan",
+        "invalid_or_missing_coverage_slot",
+        "durable_stage_recovery"
       ],
       "hard_invariants": [
         "requirement planning receives only the current request",
@@ -641,21 +661,34 @@
         "bounded calls and unchanged source policy, retrieval, and response prompt"
       ],
       "quality_order": [
-        "hard_invariant_pass_rate", "faithful_answer_rate",
-        "false_insufficiency_rate", "premature_sufficiency_rate",
-        "requirement_relevance", "invalid_output_rate", "model_calls", "latency"
+        "hard_invariant_pass_rate",
+        "faithful_answer_rate",
+        "false_insufficiency_rate",
+        "premature_sufficiency_rate",
+        "requirement_relevance",
+        "invalid_output_rate",
+        "model_calls",
+        "latency"
       ],
       "search": "Freeze the aab8127 bundle: 7/10 structural, with all required roots retrieved for pf-q003/pf-q007 but false insufficiency, and two wasted recalls for pf-q009. Compare current-only fixed requirements against this joint planning/matching baseline with identical frozen learning, beginning with those three probes. Keep bounds unchanged initially; separately measure added planning latency and any saved recall. Then run all SELF_MODEL probes and the full suite/holdout. See docs/experiments/COMPOSER_REQUIREMENTS_001.md."
     },
     "COMPOSER-COVERAGE-001": {
       "title": "Explicit personal-evidence coverage before Composer sufficiency",
       "environment": "deterministic_ci_then_target_windows_host_with_ollama",
-      "parameters": ["MAX_COVERAGE_REQUIREMENTS", "MAX_COVERAGE_NEED_CHARS"],
+      "parameters": [
+        "MAX_COVERAGE_REQUIREMENTS",
+        "MAX_COVERAGE_NEED_CHARS"
+      ],
       "scenario_families": [
-        "partial_personal_priorities", "preference_vs_adjacent_value",
-        "hypothetical_scenario_vs_personal_history", "observed_communication_style",
-        "one_sided_change", "self_report_vs_observation", "unknown_fact",
-        "invalid_source_selection", "routing_only_self_context"
+        "partial_personal_priorities",
+        "preference_vs_adjacent_value",
+        "hypothetical_scenario_vs_personal_history",
+        "observed_communication_style",
+        "one_sided_change",
+        "self_report_vs_observation",
+        "unknown_fact",
+        "invalid_source_selection",
+        "routing_only_self_context"
       ],
       "hard_invariants": [
         "a missing requirement cannot produce sufficient=true",
@@ -665,9 +698,13 @@
         "no extra model role or unbounded calls"
       ],
       "quality_order": [
-        "hard_invariant_pass_rate", "required_evidence_coverage",
-        "premature_sufficiency_rate", "retrieval_query_relevance",
-        "invalid_output_rate", "model_input_bytes", "latency"
+        "hard_invariant_pass_rate",
+        "required_evidence_coverage",
+        "premature_sufficiency_rate",
+        "retrieval_query_relevance",
+        "invalid_output_rate",
+        "model_input_bytes",
+        "latency"
       ],
       "search": "Provisional bounds, not calibrated. Compare the boolean-contract parent 2bf7c60 with explicit coverage on frozen SELF-MEMORY-001 pf-q005/pf-q006/pf-q007 using the identical frozen learning snapshot, then full public and holdout. Assess both missing-slot honesty and source relevance; Python can enforce only structural coverage. Freeze additional paraphrase and long-query families before tuning. Expand any winning search boundary. See docs/experiments/COMPOSER_COVERAGE_001.md."
     },
@@ -702,6 +739,47 @@
         "latency"
       ],
       "search": "Provisional window 32, not calibrated. Compare parent 07f4f49 with this mechanism on frozen SELF-MEMORY-001 pf-q001/pf-q002, then full public and holdout. Sweep windows and noise only after freezing those cases; expand a winning search boundary. See docs/experiments/CANONICAL_NEIGHBORHOOD_001.md."
+    },
+    "HOST-ENVIRONMENT-001": {
+      "title": "Local host inventory and continuous security posture bounds",
+      "environment": "deterministic_ci_then_native_windows_laptop",
+      "parameters": [
+        "provider resource/readings bounds",
+        "discovery bytes and timeouts",
+        "poll interval",
+        "CPU sample interval",
+        "diagnostic length",
+        "monitor stop grace"
+      ],
+      "scenario_families": [
+        "reordering and replay",
+        "real unplug/replug",
+        "partial and permission-denied enumeration",
+        "collector timeout",
+        "crash between durable writes",
+        "no-op polling",
+        "large virtual device topology",
+        "consent revocation",
+        "Firewall rule collision and effective policy",
+        "Phone Link without phone sensor access"
+      ],
+      "hard_invariants": [
+        "No external application request without exact purpose/destination consent",
+        "Failures do not establish resource absence or disabled protection",
+        "No model grants authority or emits commands",
+        "Recovery is idempotent and old scans cannot replace newer state",
+        "Foreign device reports cannot increase local schedulable CPU/RAM",
+        "Firewall changes touch only exact owned rules and runtime paths",
+        "Incomplete policy installation is never reported as traffic enforcement"
+      ],
+      "quality_order": [
+        "hard_invariant_pass_rate",
+        "supported_device_coverage",
+        "change_detection_delay",
+        "scan_latency",
+        "monitor_CPU_RAM_disk_cost"
+      ],
+      "search": "Measure startup and polling on target Dell and native hosted Windows. Vary enumeration size, timeout and interval independently. Measure slow/denied drivers and offline operation; expand any winning boundary before selecting. CI establishes contracts, not laptop coverage or attack resistance. Defaults remain provisional."
     }
   }
 }

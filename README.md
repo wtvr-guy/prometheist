@@ -473,3 +473,7 @@ The current runtime uses bounded deterministic retrieval. For the registry audit
 private subject setup, and the remaining Android integration work, see
 [Imprinting setup](docs/engineering/IMPRINTING_SETUP.md). Personal life records and
 self-model state belong in a separate private local deployment, outside Git.
+
+## Host environment and private security
+
+Startup discovery and continuous local monitoring cover OS-exposed resources, devices, sensors and Windows security posture. Exact destination consent guards remote model/database calls, and enrolled operators can apply reviewed Windows Firewall rules for the runtime. See [host environment setup and limits](docs/engineering/HOST_ENVIRONMENT.md). Phone Link is detected without assuming access to the phone's internal sensors. Native laptop acceptance remains required.

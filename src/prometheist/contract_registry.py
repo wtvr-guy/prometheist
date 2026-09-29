@@ -67,6 +67,12 @@ STAGE_CONTRACTS = MappingProxyType({
 
 
 SCHEMA_CONTRACTS = MappingProxyType({
+    "host-environment/v1": "environment_contracts:EnvironmentScan",
+    "environment-map/v1": "environment_contracts:EnvironmentMap",
+    "network-consent/v1": "network_consent:NetworkConsent",
+    "windows-firewall-plan/v1": "os_security:FirewallPlan",
+    "security-enrollment/v1": "security_posture:SecurityEnrollment",
+    "security-posture/v1": "security_posture:SecurityAssessment",
     "precognitive-disposition/v1": "percept_response_runtime:PreCognitiveDisposition",
     "response-memory/v3": "percept_response_runtime:ResponseMemoryPackage",
     "imprint-profile/v1": "imprinting:ImprintProfile",
@@ -98,7 +104,14 @@ def contract_manifest():
         module, name = target.split(":")
         schema = getattr(import_module("prometheist." + module), name).model_json_schema()
         schemas[key] = {"model": target, "sha256": sha256(json.dumps(schema, sort_keys=True).encode()).hexdigest()}
+    from prometheist.environment_providers import PROVIDER_REGISTRY
+    from prometheist.security_posture import SECURITY_CAPABILITIES, POSTURE_RULES
     return {"version": CONTRACT_REGISTRY_VERSION, "semantic_contracts": result,
+            "operator_security_capabilities": dict(SECURITY_CAPABILITIES),
+            "security_posture_rules": {key: {"provider": value[0], "property": value[1], "expected": value[2], "meaning": value[3]}
+                                       for key, value in POSTURE_RULES.items()},
+            "environment_providers": {key: {"platform": value.platform, "resource_kind": value.kind.value,
+                "scope": value.scope, "network_io": False, "model_calls": False} for key, value in PROVIDER_REGISTRY.items()},
             "schemas": schemas, "external_capability_registry": CAPABILITY_REGISTRY_VERSION,
             "external_capabilities": [d.model_dump(mode="json") for d in DEFAULT_REGISTRY.capability_catalog()],
             "stages": {key: {"capability": value.capability, "role": value.role,

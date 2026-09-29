@@ -13,6 +13,25 @@ on:
   pull_request:
 
 jobs:
+  windows-environment:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    env:
+      PROMETHEIST_TEST_FIREWALL: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Install uv
+        run: python -m pip install --upgrade uv==0.11.33
+      - name: Sync locked environment
+        run: uv sync --frozen
+      - name: Portable contracts
+        run: uv run pytest -q tests/unit --confcutdir=tests/unit
+      - name: Native Windows providers and exact managed Firewall rules
+        run: uv run pytest -q tests/native --confcutdir=tests/native
+
   pytest:
     runs-on: ubuntu-latest
     timeout-minutes: 15

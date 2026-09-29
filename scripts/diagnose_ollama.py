@@ -12,6 +12,7 @@ import time
 import httpx
 from dotenv import load_dotenv
 from prometheist.contract_registry import SEMANTIC_CONTRACTS
+from prometheist.network_consent import NetworkPurpose, require_destination
 
 load_dotenv()
 
@@ -20,7 +21,8 @@ MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:4b")
 
 
 def _call(label: str, payload: dict) -> None:
-    client = httpx.Client(base_url=BASE_URL, timeout=300.0)
+    require_destination(BASE_URL, NetworkPurpose.MODEL)
+    client = httpx.Client(base_url=BASE_URL, timeout=300.0, trust_env=False)
     t0 = time.monotonic()
     response = client.post("/api/chat", json=payload)
     elapsed = time.monotonic() - t0

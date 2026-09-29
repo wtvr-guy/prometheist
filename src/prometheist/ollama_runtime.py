@@ -133,6 +133,8 @@ class OllamaRuntimeProbe:
 
     def capture(self) -> OllamaRuntimeState:
         try:
+            from prometheist.network_consent import NetworkPurpose, require_destination
+            require_destination(str(getattr(self._client, "base_url", self.base_url)), NetworkPurpose.MODEL)
             response = self._client.get("/api/ps")
             response.raise_for_status()
             body = response.json()

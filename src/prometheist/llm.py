@@ -368,7 +368,11 @@ class OllamaClient:
         }
         try:
             from prometheist.model_evidence_budget import validate_model_input
+            from prometheist.network_consent import NetworkPurpose, require_destination
 
+            from urllib.parse import urljoin
+            endpoint = str(getattr(self._client, "base_url", self.base_url))
+            require_destination(urljoin(endpoint.rstrip("/") + "/", request_path), NetworkPurpose.MODEL)
             validate_model_input(request_json)
             response = self._client.post(request_path, json=request_json)
             diagnostics["http_status_code"] = getattr(response, "status_code", None)
@@ -453,6 +457,8 @@ class OllamaClient:
             ("running", "/api/ps"),
         ):
             try:
+                from prometheist.network_consent import NetworkPurpose, require_destination
+                require_destination(str(getattr(self._client, "base_url", self.base_url)), NetworkPurpose.MODEL)
                 response = self._client.get(path)
                 response.raise_for_status()
                 payload = response.json()
