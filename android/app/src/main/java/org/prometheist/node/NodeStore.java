@@ -187,7 +187,11 @@ public final class NodeStore {
           out.write(vault.seal(plain, name));
           out.getFD().sync();
         }
-        Os.link(temporary.getPath(), target.getPath());
+        // Android app SELinux domains prohibit hard links. All app components
+        // share this synchronized singleton in one process, so the existence
+        // check above and atomic rename form one serialized publication. Never
+        // put a component in another android:process without a cross-process lock.
+        Os.rename(temporary.getPath(), target.getPath());
         FileDescriptor dir = Os.open(journal.getPath(), OsConstants.O_RDONLY, 0);
         try {
           Os.fsync(dir);

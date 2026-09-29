@@ -150,6 +150,17 @@ def test_rebuild_recovers_corrupt_index_without_touching_evidence(tmp_path):
     assert files == {p.name: p.read_bytes() for p in store.journal.iterdir()}
 
 
+def test_pending_order_survives_index_rebuild(tmp_path):
+    store = NodeStore(tmp_path)
+    first = event(sequence=1)
+    second = event(node=first.node_id, sequence=2)
+    store.accept(second)
+    store.accept(first)
+    expected = [str(first.event_id), str(second.event_id)]
+    assert store.pending() == expected
+    assert NodeStore(tmp_path, rebuild=True).pending() == expected
+
+
 def test_partial_status_publication_repaired_before_interruption(tmp_path, monkeypatch):
     store = NodeStore(tmp_path)
     item = event()
@@ -159,6 +170,20 @@ def test_partial_status_publication_repaired_before_interruption(tmp_path, monke
     store._artifact(f"{item.event_id}.completed", b'{"text":"durable reply"}')
     store.interrupted()
     assert store.page(str(item.node_id), 0)[-1]["state"] == "completed"
+
+
+def test_all_published_terminal_receipts_replay_in_order(tmp_path):
+    store = NodeStore(tmp_path)
+    item = event()
+    store.accept(item)
+    store.transition(str(item.event_id), "started")
+    store._artifact(f"{item.event_id}.completed", b'{"text":"durable reply"}')
+    store._artifact(f"{item.event_id}.failed", b'{"message":"later commit failure"}')
+    store.interrupted()
+    before = store.page(str(item.node_id), 0)
+    rebuilt = NodeStore(tmp_path, rebuild=True).page(str(item.node_id), 0)
+    assert [r["state"] for r in before] == [r["state"] for r in rebuilt]
+    assert [r["state"] for r in before][-2:] == ["completed", "failed"]
 
 
 def test_payload_validation_and_bounded_stream_body(tmp_path):

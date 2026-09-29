@@ -22,7 +22,7 @@ from prometheist.operator_state import policy_lock
 from prometheist.artifact_journal import _fsync_parent
 
 STATES = ("received", "started", "imported", "completed", "interrupted", "failed")
-TERMINAL = frozenset(STATES[2:])
+TERMINAL = STATES[2:]
 
 
 class NodeStore:
@@ -181,7 +181,7 @@ class NodeStore:
             return [
                 r["id"]
                 for r in db.execute(
-                    "SELECT id FROM events WHERE state='received' ORDER BY rowid LIMIT ?",
+                    "SELECT id FROM events WHERE state='received' ORDER BY node,sequence LIMIT ?",
                     (PAGE_SIZE,),
                 )
             ]
@@ -208,14 +208,15 @@ class NodeStore:
                 except psutil.AccessDenied:
                     continue  # Unknown process authority cannot justify a retry.
             # Repair crash after journal publication but before DB commit first.
+            repaired = False
             for state in TERMINAL:
                 path = self.journal / f"{event_id}.{state}"
                 if path.exists():
                     self.transition(
                         event_id, state, json.loads(self.unseal(path.read_bytes(), path.name))
                     )
-                    break
-            else:
+                    repaired = True
+            if not repaired:
                 self.transition(
                     event_id,
                     "interrupted",

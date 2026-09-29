@@ -29,7 +29,14 @@ def source_files():
         .decode()
         .split("\0")
     )
-    return {name: digest(ROOT / name) for name in sorted(set(paths)) if name}
+    result = {}
+    for name in sorted(set(paths)):
+        if name:
+            raw = (ROOT / name).read_bytes()
+            if not name.endswith(".jar"):
+                raw = raw.replace(b"\r\n", b"\n")
+            result[name] = hashlib.sha256(raw).hexdigest()
+    return result
 
 
 def main():
@@ -57,7 +64,8 @@ def main():
         "version_name": "0.1.0",
         "version_code": 1,
         "signed": False,
-        "source_base_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT)
+        "source_text_newlines": "LF",
+        "source_base_commit": subprocess.check_output(["git", "merge-base", "HEAD", "origin/main"], cwd=ROOT)
         .decode()
         .strip(),
         "toolchain": {"agp": "8.9.2", "gradle": "8.11.1", "jdk": "17", "compile_sdk": 35},

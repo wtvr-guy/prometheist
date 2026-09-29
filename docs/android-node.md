@@ -34,7 +34,16 @@ explicitly marked as truncated; original laptop evidence remains authoritative.
 ## 1. Install the phone app from Windows
 
 Use this repository revision, including `installers/android/`. Review scripts
-before running them. Install Android Studio (or the standalone Android SDK and
+before running them. While this change is in draft PR #36, get its branch from
+your existing checkout (Git will refuse switching over conflicting local edits):
+
+```powershell
+git fetch origin
+git switch feat/android-private-node
+git pull --ff-only origin feat/android-private-node
+```
+
+Install Android Studio (or the standalone Android SDK and
 JDK 17). In **SDK Manager**, install Android SDK Platform 35, **Build-Tools
 35.0.0**, and **Platform-Tools**. `ANDROID_HOME` can override the default
 `%LOCALAPPDATA%\Android\Sdk`. The script can find Android Studio's bundled Java;

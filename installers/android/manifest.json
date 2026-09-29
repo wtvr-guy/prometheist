@@ -1,11 +1,12 @@
 {
   "file": "Prometheist-Node-0.1.0-unsigned.apk",
-  "sha256": "ad3b3e4001efcc5733eb74ae0466adc3981496a67c661ae4ceecbf443c02e46c",
+  "sha256": "95053134d05af6e271652a5b671bd0fc51f8f32034075f3ab8d99cde204a4805",
   "bytes": 46700,
   "application_id": "org.prometheist.node",
   "version_name": "0.1.0",
   "version_code": 1,
   "signed": false,
+  "source_text_newlines": "LF",
   "source_base_commit": "ebd86db5aa5e658a36b7fef041c03f6cd4b0c1b3",
   "toolchain": {
     "agp": "8.9.2",
@@ -20,7 +21,7 @@
     "android/app/src/main/java/org/prometheist/node/CaptureActivity.java": "a7abb25be48b510566e4896f24e1e087f035389ffedb97f2854a7d94898f73ac",
     "android/app/src/main/java/org/prometheist/node/CaptureService.java": "00d03ea9984fa9906bd2b78c0767aaa37ec57c5729244c4ccc539311e86e1205",
     "android/app/src/main/java/org/prometheist/node/MainActivity.java": "be2e052541d974c3642061d83777d7517ff8cfb28bca813b0fdf1d249bae39a6",
-    "android/app/src/main/java/org/prometheist/node/NodeStore.java": "456d063fe4dcbb6429e52108b40b65979f69024f85b6fb22a6633a48a2f599aa",
+    "android/app/src/main/java/org/prometheist/node/NodeStore.java": "49a95958c5a0db0d0359e4d81cef8ae71244820c124dfc30126aa5db2d82daa4",
     "android/app/src/main/java/org/prometheist/node/NodeSync.java": "23a542b6a5351a7689651f95dde3904ebdad5ac37b956cfec7304a9acde060c0",
     "android/app/src/main/java/org/prometheist/node/Policy.java": "b5fe0dfd128283866d05e4af7b155beeb83145fed7a3d156e8cb017ecf3cff1d",
     "android/app/src/main/java/org/prometheist/node/SensorCatalog.java": "99c24b90066bc3cdbc31f05061700ce76a66fd868de30869558cd4c0ee6e4644",
@@ -37,7 +38,7 @@
     "android/gradle/wrapper/gradle-wrapper.jar": "2db75c40782f5e8ba1fc278a5574bab070adccb2d21ca5a6e5ed840888448046",
     "android/gradle/wrapper/gradle-wrapper.properties": "1b9cd6961ee86eea17b2f912bddb22030492db23fc6dff07da6c30eccaaab0c4",
     "android/gradlew": "a3648413b47ef77af21d5ebc36c687c7d103aaef3e17f33de7d4f080a6f300a3",
-    "android/gradlew.bat": "57931b17dd228e5c24dac90e815d0bf82477e831a4618dfab4136f5446b42a9f",
+    "android/gradlew.bat": "2209f919a22528af59a2af2ad97e8d056cca18e39f7d87aa3fd549a73b180150",
     "android/settings.gradle": "112fd1a813e5b39b8e9befe982bafaf4ecf564ead35a114d925cad69e3e201f7"
   }
 }

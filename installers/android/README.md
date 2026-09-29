@@ -5,6 +5,8 @@ Follow [the setup guide](../../docs/android-node.md).
 `Prometheist-Node-0.1.0-unsigned.apk` is a release build, with no signing key or
 personal configuration. It must be signed before Android will install it.
 `manifest.json` records the binary checksum and source/toolchain provenance.
+Source text hashes normalize line endings to LF for Windows checkouts; the APK
+and Gradle wrapper JAR hashes always cover their exact bytes.
 
 From the repository root on Windows:
 
