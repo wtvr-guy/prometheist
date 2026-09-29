@@ -48,7 +48,7 @@ itself records events and situations without silently scheduling model work.
 
 The synthetic benchmark runner is not a personal-data importer. The initial
 private workflow is conversation → explicit consolidation → inspection → held-out
-prediction and feedback. Continuous device ingestion comes next.
+prediction and feedback. Chat now includes passive host/device discovery and security posture monitoring; see [HOST_ENVIRONMENT.md](HOST_ENVIRONMENT.md). Hardware telemetry is not personality evidence.
 
 ## Evaluation
 
@@ -64,4 +64,4 @@ Next implementation: a native Kotlin Android node for the Galaxy A16, paired wit
 
 First slice: device pairing, manual sharing, location/activity changes and device-state observations with separate controls. Actual collectors must discover available sensors and Android permissions on the exact phone; do not assume a particular A16 variant. Account adapters use provider-supported authorization and incremental checkpoints on the host. iPad capture is a later optional node. No wearable-dependent measurements are assumed.
 
-The private profile currently enables only manual chat. Sensor collectors, gateway authentication, Android APK, OAuth adapters, encryption-key management, and continuous background synchronization are not implemented by this cleanup. They are the next deliverables, not capabilities implied by a schema or registry entry.
+The private profile keeps manual chat as its human-content source. Local host/device inventories, supported physical sensor readings, continuous polling, destination consent, security enrollment and reviewed Windows Firewall controls are implemented; see [HOST_ENVIRONMENT.md](HOST_ENVIRONMENT.md). Gateway authentication, Android APK, OAuth adapters, encryption-key management and cross-device background synchronization remain future work. Phone Link presence does not establish phone sensor access.

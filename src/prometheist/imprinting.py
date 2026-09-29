@@ -44,7 +44,8 @@ def initialize_imprint(root: Path, subject_id: str, database_url_env: str) -> Pa
             "Private runtime state. Keep outside Git and on an encrypted volume.\n"
             "This initializer does not enable encryption or create a PostgreSQL database.\n"
             "Set the profile's dedicated database URL environment variable before use.\n"
-            "Only manual chat is enabled. No sensors or account adapters are connected.\n"
+            "Manual chat and passive local environment discovery are available. No account/content adapters are connected.\n"
+            "Security enrollment and outbound destination consent are separate, explicit operator actions.\n"
             "Store blinded scenarios, frozen predictions, independent answers and reviews in evaluation/.\n",
             encoding="utf-8",
         )
@@ -66,6 +67,8 @@ def activate_imprint(path: Path) -> ImprintProfile:
         raise ValueError("an imprint requires a dedicated non-test, non-benchmark database")
     # One identity per database. Bind before any chat or sensor input is admitted.
     import psycopg
+    from prometheist.network_consent import require_database_destination
+    require_database_destination(url, root=path.parent / "artifacts")
     with psycopg.connect(url) as conn:
         conn.execute("LOCK TABLE imprint_identity IN EXCLUSIVE MODE")
         existing = conn.execute("SELECT subject_id FROM imprint_identity WHERE singleton").fetchone()

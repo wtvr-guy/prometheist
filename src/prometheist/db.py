@@ -14,6 +14,8 @@ _RowT = TypeVar("_RowT")
 
 def get_connection() -> psycopg.Connection:
     database_url = os.environ["DATABASE_URL"]
+    from prometheist.network_consent import require_database_destination
+    require_database_destination(database_url)
     return psycopg.connect(database_url)
 
 
@@ -29,4 +31,3 @@ def require_row(row: _RowT | None, *, context: str) -> _RowT:
     if row is None:
         raise RuntimeError(f"expected exactly one row: {context}")
     return row
-

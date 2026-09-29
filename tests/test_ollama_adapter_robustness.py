@@ -265,3 +265,6 @@ def test_qwen3_empty_output_failure_reports_metadata_without_reasoning_text():
     assert '"thinking_length"' in message
     assert '"max_tokens":96' in message
     assert '"done_reason":"length"' in message
+
+
+pytestmark = pytest.mark.usefixtures("consented_mock_ollama")

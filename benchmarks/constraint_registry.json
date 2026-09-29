@@ -99,6 +99,126 @@
       "expected_value": 0,
       "classification": "STRUCTURAL_INVARIANT",
       "rationale": "No route completed before execution; the result records executed routes."
+    },
+    "src/prometheist/cli.py::main::slice_lower": {
+      "expected_value": 2,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "Skip the two fixed argv prefix items or UNC path prefix characters; not a behavioral budget."
+    },
+    "src/prometheist/environment_contracts.py::<module>::MAX_PROVIDER_RESOURCES": {
+      "expected_value": 4096,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "HOST-ENVIRONMENT-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded local inventory, monitor overhead, diagnostics or explicitly consented connectivity. Native laptop calibration required; see docs/engineering/HOST_ENVIRONMENT.md."
+    },
+    "src/prometheist/environment_contracts.py::<module>::MAX_SENSOR_READINGS": {
+      "expected_value": 4096,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "HOST-ENVIRONMENT-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded local inventory, monitor overhead, diagnostics or explicitly consented connectivity. Native laptop calibration required; see docs/engineering/HOST_ENVIRONMENT.md."
+    },
+    "src/prometheist/environment_contracts.py::<module>::MAX_DISCOVERY_BYTES": {
+      "expected_value": 16777216,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "HOST-ENVIRONMENT-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded local inventory, monitor overhead, diagnostics or explicitly consented connectivity. Native laptop calibration required; see docs/engineering/HOST_ENVIRONMENT.md."
+    },
+    "src/prometheist/environment_contracts.py::<module>::DISCOVERY_TIMEOUT_SECONDS": {
+      "expected_value": 90,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "HOST-ENVIRONMENT-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded local inventory, monitor overhead, diagnostics or explicitly consented connectivity. Native laptop calibration required; see docs/engineering/HOST_ENVIRONMENT.md."
+    },
+    "src/prometheist/environment_contracts.py::<module>::MONITOR_INTERVAL_SECONDS": {
+      "expected_value": 60,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "HOST-ENVIRONMENT-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded local inventory, monitor overhead, diagnostics or explicitly consented connectivity. Native laptop calibration required; see docs/engineering/HOST_ENVIRONMENT.md."
+    },
+    "src/prometheist/environment_contracts.py::<module>::MIN_MONITOR_INTERVAL_SECONDS": {
+      "expected_value": 10,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "HOST-ENVIRONMENT-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded local inventory, monitor overhead, diagnostics or explicitly consented connectivity. Native laptop calibration required; see docs/engineering/HOST_ENVIRONMENT.md."
+    },
+    "src/prometheist/environment_contracts.py::<module>::MAX_MONITOR_INTERVAL_SECONDS": {
+      "expected_value": 3600,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "HOST-ENVIRONMENT-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded local inventory, monitor overhead, diagnostics or explicitly consented connectivity. Native laptop calibration required; see docs/engineering/HOST_ENVIRONMENT.md."
+    },
+    "src/prometheist/environment_providers.py::<module>::CIM_TIMEOUT_SECONDS": {
+      "expected_value": 5,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "HOST-ENVIRONMENT-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded local inventory, monitor overhead, diagnostics or explicitly consented connectivity. Native laptop calibration required; see docs/engineering/HOST_ENVIRONMENT.md."
+    },
+    "src/prometheist/environment_providers.py::<module>::SENSOR_SAMPLE_SECONDS": {
+      "expected_value": 0.1,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "HOST-ENVIRONMENT-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded local inventory, monitor overhead, diagnostics or explicitly consented connectivity. Native laptop calibration required; see docs/engineering/HOST_ENVIRONMENT.md."
+    },
+    "src/prometheist/environment_providers.py::<module>::DIAGNOSTIC_CHAR_LIMIT": {
+      "expected_value": 512,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "HOST-ENVIRONMENT-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded local inventory, monitor overhead, diagnostics or explicitly consented connectivity. Native laptop calibration required; see docs/engineering/HOST_ENVIRONMENT.md."
+    },
+    "src/prometheist/environment_providers.py::<module>::ACPI_KELVIN_OFFSET": {
+      "expected_value": 273.15,
+      "classification": "EXTERNAL_CONTRACT",
+      "rationale": "ACPI thermal WMI reports tenths of kelvin; Celsius conversion is kelvin / 10 minus 273.15."
+    },
+    "src/prometheist/environment_providers.py::<module>::ACPI_TEMPERATURE_SCALE": {
+      "expected_value": 10,
+      "classification": "EXTERNAL_CONTRACT",
+      "rationale": "ACPI thermal WMI reports tenths of kelvin; Celsius conversion is kelvin / 10 minus 273.15."
+    },
+    "src/prometheist/environment_providers.py::storage_inventory::slice_lower": {
+      "expected_value": 2,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "Skip the two fixed argv prefix items or UNC path prefix characters; not a behavioral budget."
+    },
+    "src/prometheist/environment_providers.py::storage_inventory::comparison": {
+      "expected_value": 4,
+      "classification": "EXTERNAL_CONTRACT",
+      "rationale": "Win32 GetDriveTypeW DRIVE_REMOTE is 4. Skip remote drives before querying free space."
+    },
+    "src/prometheist/network_consent.py::<module>::CONNECTIVITY_TIMEOUT_SECONDS": {
+      "expected_value": 5,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "HOST-ENVIRONMENT-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded local inventory, monitor overhead, diagnostics or explicitly consented connectivity. Native laptop calibration required; see docs/engineering/HOST_ENVIRONMENT.md."
+    },
+    "manual:environment:stop_grace": {
+      "manual": true,
+      "expected_value": 10,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "HOST-ENVIRONMENT-001",
+      "status": "PROVISIONAL",
+      "rationale": "Monitor shutdown allows collector timeout plus teardown grace. Validate on native Windows with timeout injection.",
+      "source_path": "src/prometheist/environment_contracts.py",
+      "source_fragment": "MONITOR_STOP_TIMEOUT_SECONDS = DISCOVERY_TIMEOUT_SECONDS + 10"
+    },
+    "manual:environment:windows_json_depth": {
+      "manual": true,
+      "expected_value": 12,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "Serialization depth covers the fixed collector JSON structure without truncating nested reading maps; native tests execute the collector.",
+      "source_path": "src/prometheist/windows_environment.ps1",
+      "source_fragment": "-Depth 12 -Compress"
     }
   },
   "groups": {

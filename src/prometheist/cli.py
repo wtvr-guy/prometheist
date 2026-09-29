@@ -291,6 +291,10 @@ def _run_chat(conversation_id: uuid.UUID) -> None:
 
 def main() -> None:
     _configure_utf8_streams()
+    if len(sys.argv) > 1 and sys.argv[1] == "environment":
+        from prometheist.environment_cli import main as environment_main
+        environment_main(sys.argv[2:])
+        return
     parser = argparse.ArgumentParser(prog="prometheist")
     parser.add_argument(
         "command",
@@ -374,7 +378,9 @@ def main() -> None:
             _run_audit(args.interaction_id, latest=args.latest)
             return
         if args.command == "recover":
-            _run_recover(args.interaction_id, latest=args.latest)
+            from prometheist.environment_runtime import environment_session
+            with environment_session():
+                _run_recover(args.interaction_id, latest=args.latest)
             return
         if args.command == "sign":
             _run_sign(args.interaction_id, latest=args.latest)
@@ -422,18 +428,15 @@ def main() -> None:
     if args.subject is not None or args.property_name is not None:
         parser.error("--subject/--property are only valid with memory-fact")
     conversation_id = args.conversation_id or uuid.uuid4()
-    if args.once is not None:
-        with db.get_connection() as conn:
-            response = _handle_with_admission_diagnostics(
-                conn,
-                args.once,
-                conversation_id,
-            )
-        if response is not None:
-            print(response)
-        return
-
-    _run_chat(conversation_id)
+    from prometheist.environment_runtime import environment_session
+    with environment_session():
+        if args.once is not None:
+            with db.get_connection() as conn:
+                response = _handle_with_admission_diagnostics(conn, args.once, conversation_id)
+            if response is not None:
+                print(response)
+            return
+        _run_chat(conversation_id)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 import httpx
 
 from prometheist.attention_observation import HostResourceMetrics
@@ -170,3 +172,6 @@ def test_warm_reservation_that_turns_cold_is_debited_before_claim_gate():
     assert probe.last_memory_credit_mib == 0
     assert probe.last_memory_debit_mib == 2_695
     assert effective.memory_available_mib == 1_451
+
+
+pytestmark = pytest.mark.usefixtures("consented_mock_ollama")

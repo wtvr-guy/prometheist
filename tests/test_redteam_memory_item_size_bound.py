@@ -59,3 +59,6 @@ def test_single_oversized_memory_event_cannot_expand_v2_model_context(monkeypatc
                 surface_mode=ResponseSurfaceMode.NATURAL_LANGUAGE,
             ),
         )
+
+
+pytestmark = pytest.mark.usefixtures("consented_mock_ollama")

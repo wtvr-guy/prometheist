@@ -54,6 +54,9 @@ def main() -> None:
     if args.profile:
         from prometheist.imprinting import activate_imprint
         activate_imprint(args.profile)
+    if args.command in {"tick", "consolidate", "ingest"}:
+        from prometheist.environment_runtime import capture_and_record
+        capture_and_record(reason="STARTUP")
     with db.get_connection() as conn:
         data = json.loads(args.json_file.read_text(encoding="utf-8")) if hasattr(args, "json_file") else None
         if args.command == "install-source":

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -157,3 +159,6 @@ def test_retrieval_completion_does_not_claim_semantic_sufficiency():
     assert "does not establish answerability" in evidence
     assert "memory_sufficient" not in evidence
     assert client._artifact_evidence_refs == (f"event:{unrelated.source_event_id}",)
+
+
+pytestmark = pytest.mark.usefixtures("consented_mock_ollama")
