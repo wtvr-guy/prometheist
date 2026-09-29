@@ -36,6 +36,15 @@ See [local app setup and controls](docs/engineering/LOCAL_APP.md). The app uses 
 existing guarded worker and evidence pipeline; a dedicated migrated private
 PostgreSQL database is still required for chat.
 
+## Android phone node
+
+The native phone node provides encrypted offline notes, selected sensor observations,
+photos, voice memos and queued chat with a private internet connection to the laptop.
+It uses SQLite and Android Keystore, with no phone-side LLM. Collection and automatic
+sync are opt-in. See the [Android setup guide](docs/android-node.md) and
+[installer files](installers/android/). The Windows installer signs the bundled APK
+with a private key kept on your laptop. Galaxy A16 field validation remains pending.
+
 ## Why Prometheist exists
 
 Human beings are biological systems. We age, become injured, suffer disease, lose

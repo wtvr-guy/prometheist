@@ -819,6 +819,53 @@
         "host resource cost"
       ],
       "search": "Sweep chunk/preview/listing limits and deadlines against large local folders, slow disks, model sizes, context lengths and native Windows. Report truncated search coverage and interrupted copies explicitly. Expand any winning boundary before calibration. Defaults remain provisional."
+    },
+    "ANDROID-NODE-001": {
+      "title": "Private Android node durability, isolation and resource calibration",
+      "environment": "deterministic CI, Android emulator, then native Galaxy A16 and Windows laptop",
+      "parameters": [
+        "sampling period",
+        "window duration",
+        "page and payload bounds",
+        "recording size",
+        "battery/thermal/storage guard",
+        "poll/backoff periods",
+        "backup KDF"
+      ],
+      "scenario_families": [
+        "offline_note_chat_and_reboot",
+        "duplicate_conflicting_reordered_delivery",
+        "lost_pair_response",
+        "revocation",
+        "wrong_subject_and_node",
+        "lost_database_and_authentication_key",
+        "interrupted_worker",
+        "TLS_failure_redirect",
+        "permission_revocation",
+        "screen_off_DoZe",
+        "metered_network",
+        "battery_thermal_storage_pressure",
+        "encrypted_backup_roundtrip"
+      ],
+      "hard_invariants": [
+        "No silent erasure of admitted evidence",
+        "No overwrite on event ID/sequence collision",
+        "No cloud model or analytics traffic",
+        "No network request to an unpaired destination",
+        "No duplicate processing after an ambiguous interrupted effect",
+        "No plaintext evidence in phone DB/journal/backup"
+      ],
+      "metrics": [
+        "battery_drain_per_hour",
+        "memory_peak_mib",
+        "sensor_gap_seconds",
+        "sync_bytes",
+        "sync_latency",
+        "queue_age",
+        "backup_latency"
+      ],
+      "decision_rule": "Deterministic guards must pass. Sweep 1/5/10 Hz and 30/60/120-second windows on the actual A16 under screen on/off and work-day load; retain lowest cost that captures useful evidence. Native thresholds remain NATIVE_REQUIRED until that evidence is recorded.",
+      "specification": "docs/android-node.md"
     }
   }
 }
