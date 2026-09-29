@@ -15,6 +15,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import time
 from typing import Any, Iterable
 from uuid import UUID, uuid5
 
@@ -61,6 +62,33 @@ def _fsync_parent(path: Path) -> None:
         os.close(fd)
 
 
+_REPLACE_RETRY_ATTEMPTS = 5
+_REPLACE_RETRY_DELAY_SECONDS = 0.05
+_TRANSIENT_WINDOWS_ERRNOS = (5, 32)  # Access is denied / used by another process
+
+
+def _replace_with_retry(source: Path, destination: Path) -> None:
+    """Rename ``source`` onto ``destination``, retrying brief Windows locks.
+
+    On Windows, real-time antivirus scanning (e.g. Windows Defender) can hold a
+    transient handle on a just-written file, making ``os.replace`` fail with
+    ``PermissionError`` (WinError 5/32) even though no application code holds a
+    conflicting handle. High-frequency writers such as job progress reporting
+    hit this often enough to abort otherwise-successful long-running jobs, so a
+    short bounded retry is used before surfacing the failure.
+    """
+
+    for attempt in range(_REPLACE_RETRY_ATTEMPTS):
+        try:
+            os.replace(source, destination)
+            return
+        except OSError as exc:
+            is_last_attempt = attempt == _REPLACE_RETRY_ATTEMPTS - 1
+            if os.name != "nt" or exc.winerror not in _TRANSIENT_WINDOWS_ERRNOS or is_last_attempt:
+                raise
+            time.sleep(_REPLACE_RETRY_DELAY_SECONDS * (attempt + 1))
+
+
 def _atomic_write_json(path: Path, value: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
@@ -75,7 +103,7 @@ def _atomic_write_json(path: Path, value: dict[str, Any]) -> None:
         handle.write(encoded)
         handle.flush()
         os.fsync(handle.fileno())
-    os.replace(temporary, path)
+    _replace_with_retry(temporary, path)
     _fsync_parent(path.parent)
 
 

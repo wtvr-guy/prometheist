@@ -153,12 +153,86 @@ def test_specialist_catalog_is_fixed_bounded_sorted_and_consent_gated(monkeypatc
     grant_consent(gui_models.CATALOG_ORIGIN, NetworkPurpose.MODEL_CATALOG, accepted_digest=content_digest(proposal), root=tmp_path)
     result = gui_models.search_specialists("coding")
     assert [item["name"] for item in result["models"]] == ["alpha", "zeta"]
-    assert str(requests[0].url) == "https://ollama.com/search?q=coder"
+    # Coding fans out across every registered keyword ("coder", "code") and
+    # sort order ("popular", "newest") -- ollama.com has no pagination param
+    # that actually works, so this fixed fan-out is the only way to see more
+    # than one page's worth of results. "o=popular" is omitted like an empty
+    # "q=": ollama.com 303-redirects it too, since "popular" is the default.
+    assert [str(request.url) for request in requests] == [
+        "https://ollama.com/search?q=coder",
+        "https://ollama.com/search?q=coder&o=newest",
+        "https://ollama.com/search?q=code",
+        "https://ollama.com/search?q=code&o=newest",
+    ]
     assert result["openai_offer"]
     assert all(request.method == "GET" for request in requests)
     visual = gui_models.search_specialists("vision")
     assert visual["models"] == []  # cannot trust the remote filter alone
-    assert str(requests[-1].url) == "https://ollama.com/search?q=&c=vision"
+    # An empty keyword is omitted rather than sent as "q=", since ollama.com
+    # redirects (303) an explicit-but-empty q instead of returning results.
+    assert [str(request.url) for request in requests[-2:]] == [
+        "https://ollama.com/search?c=vision",
+        "https://ollama.com/search?c=vision&o=newest",
+    ]
+    # New browsing categories are independent of chat-routing TASKS: they do
+    # not require an implemented chat task and never offer an OpenAI fallback.
+    for category in ("tools", "thinking", "embedding"):
+        extra = gui_models.search_specialists(category)
+        assert extra["models"] == []
+        assert not extra["openai_offer"]
+    base = gui_models.search_specialists("base")
+    # "base" has no capability filter, so client-side filtering only removes
+    # cloud-only/no-size entries; real relevance to "base"/"pretrained"/
+    # "foundation" depends on ollama.com's own search, which this fixture
+    # (a fixed page regardless of query) cannot exercise.
+    assert [item["name"] for item in base["models"]] == ["alpha", "irrelevant", "zeta"]
+    assert all("not a verified base/foundation flag" in item["verification"] for item in base["models"])
+    with pytest.raises(ValueError, match="Unregistered catalog category"):
+        gui_models.search_specialists("unknown")
+
+
+def test_capacity_filter_is_dynamic_and_never_excludes_on_missing_evidence(monkeypatch):
+    from prometheist import gui_models
+    settings = AppSettings(selection=ModelSelection(model="default"))
+    records = [
+        {"name": "small", "advertised_sizes": ["1b"], "advertised_capabilities": []},
+        {"name": "huge", "advertised_sizes": ["4000b"], "advertised_capabilities": []},
+        {"name": "no-size-reported", "advertised_sizes": [], "advertised_capabilities": []},
+    ]
+    # No installed models to calibrate from yet: nothing is excluded, and the
+    # UI is told filtering is not active rather than silently hiding results.
+    monkeypatch.setattr(gui_models, "installed_models", lambda url: [])
+    kept, info = gui_models._apply_capacity_filter([dict(r) for r in records], settings)
+    assert [item["name"] for item in kept] == ["small", "huge", "no-size-reported"]
+    assert info["calibration_sample_count"] == 0
+    assert all(item["resource_check"] == "unavailable" for item in kept)
+
+    # Calibrate from a real installed model's own reported size/parameter
+    # count (here: 1 billion parameters occupying 1024 MiB, i.e. 1024
+    # MiB/billion): architecture- and capability-agnostic by construction.
+    monkeypatch.setattr(gui_models, "installed_models", lambda url: [
+        {"name": "calibrator", "size": 1024 * 1024 * 1024, "details": {"parameter_size": "1.0B"}},
+    ])
+    monkeypatch.setattr("prometheist.model_admission.capture_observation", lambda settings: observation(settings, free=8192, total=16384))
+    kept, info = gui_models._apply_capacity_filter([dict(r) for r in records], settings)
+    assert info["calibration_sample_count"] == 1
+    assert info["calibration_mib_per_billion_parameters"] == pytest.approx(1024, rel=0.01)
+    names = {item["name"]: item for item in kept}
+    assert "huge" not in names  # 4000B parameters is never plausible on 16 GiB
+    assert names["small"]["resource_check"] == "fits"
+    assert names["no-size-reported"]["resource_check"] == "unknown_size"  # absence of evidence never excludes
+
+
+def test_installed_weight_ratio_ignores_architecture_and_capability(monkeypatch):
+    from prometheist import gui_models
+    monkeypatch.setattr(gui_models, "installed_models", lambda url: [
+        {"name": "a", "size": 500 * 1024 * 1024, "details": {"parameter_size": "0.5B"}},  # unrecognized arch/capability irrelevant here
+        {"name": "b", "size": None, "details": {"parameter_size": "3B"}},  # no size: ignored, not a zero
+        {"name": "c", "size": 100, "details": {"parameter_size": ""}},  # unparsed size label: ignored
+    ])
+    ratio, count = gui_models._installed_weight_ratio("http://localhost:11434")
+    assert count == 1
+    assert ratio == pytest.approx(1000, rel=0.01)  # 500 MiB / 0.5B parameters
 
 
 def test_worker_records_choice_without_starting_cognition(monkeypatch, tmp_path):

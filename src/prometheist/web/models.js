@@ -47,20 +47,28 @@ function addModel(ctx,name=''){
 }
 function catalog(root,ctx){
   const query=el('input',{type:'search',placeholder:'Search the Ollama library…','aria-label':'Search Ollama library',maxlength:200});
-  const task=el('select',{'aria-label':'Specialist task'},...['general','coding','vision'].map(value=>el('option',{value},value[0].toUpperCase()+value.slice(1))));
+  const categoryLabels={general:'General',coding:'Coding',vision:'Vision',tools:'Tool use',thinking:'Reasoning',embedding:'Embedding',base:'Base / foundation'};
+  const task=el('select',{'aria-label':'Specialist category'},...Object.entries(categoryLabels).map(([value,label])=>el('option',{value},label)));
   task.value=ctx.state.specialistTask||'coding';
   const results=el('div',{class:'cards'});
   const specialistSearch=async()=>{
     if(!await grant('model_catalog','https://ollama.com'))return;
-    results.replaceChildren(empty('Matching advertised capabilities…','Only a fixed public task query is sent. Your message and files stay here.'));
+    results.replaceChildren(empty('Matching advertised capabilities…','Fixed public queries are sent for this category. Your message and files stay here.'));
     const data=await api(`/models/specialists?task=${task.value}`);
-    results.replaceChildren(...data.models.map(model=>el('article',{class:'card model-card'},
+    const filter=data.resource_filter;
+    const cards=[];
+    if(filter)cards.push(el('p',{class:'notice'},filter.calibration_sample_count
+      ?`Sizes estimated to exceed this host's ~${Math.round(filter.ceiling_mib/1024)} GB usable memory (from ${filter.calibration_sample_count} installed model${filter.calibration_sample_count===1?'':'s'}) are hidden or flagged below.`
+      :"Install at least one model to enable capacity-based filtering; nothing is hidden by size yet."));
+    cards.push(...data.models.map(model=>el('article',{class:'card model-card'},
       el('h3',{},model.name),el('div',{class:'row'},...model.advertised_capabilities.map(value=>badge(value))),
       el('p',{class:'hint'},model.advertised_sizes.length?`Advertised sizes: ${model.advertised_sizes.join(', ')}`:'Exact local sizes are not reported in this result.'),
+      model.resource_filtered_sizes&&model.resource_filtered_sizes.length?el('p',{class:'hint'},`Estimated too large for this host: ${model.resource_filtered_sizes.join(', ')}`):null,
       el('p',{class:'hint'},model.verification),
       el('div',{class:'row'},button('Choose tag to download',()=>addModel(ctx,model.name),{glyph:'download',kind:'primary'}),el('a',{href:model.url,target:'_blank',rel:'noopener noreferrer',class:'button ghost'},'Review model')))));
-    if(!data.models.length)results.append(empty('No advertised catalog matches','The fixed query and advertised capability filters returned no candidates. You can broaden the ordinary search or add a model by its exact ID.'));
-    if(data.openai_offer)results.append(el('article',{class:'card stack'},el('h3',{},'No suitable local option?'),el('p',{class:'hint'},'Next: optional OpenAI review, then your local default. You choose the model and route, connect a key, and review destination consent before cloud inference. API charges may apply.'),button('Continue to OpenAI review',()=>continueFallback(ctx),{glyph:'cloud'})));
+    if(!data.models.length)cards.push(empty('No advertised catalog matches','The fixed queries and advertised capability filters returned no candidates. You can broaden the ordinary search or add a model by its exact ID.'));
+    if(data.openai_offer)cards.push(el('article',{class:'card stack'},el('h3',{},'No suitable local option?'),el('p',{class:'hint'},'Next: optional OpenAI review, then your local default. You choose the model and route, connect a key, and review destination consent before cloud inference. API charges may apply.'),button('Continue to OpenAI review',()=>continueFallback(ctx),{glyph:'cloud'})));
+    results.replaceChildren(...cards);
   };
   const search=async()=>{
     if(!await grant('model_catalog','https://ollama.com'))return;

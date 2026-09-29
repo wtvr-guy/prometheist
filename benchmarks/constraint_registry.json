@@ -642,11 +642,16 @@
       "status": "PROVISIONAL"
     },
     "src/prometheist/gui_models.py::<module>::MAX_CATALOG_RESULTS": {
-      "expected_value": 40,
+      "expected_value": 120,
       "classification": "SAFETY_TUNABLE",
       "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
       "benchmark_id": "LOCAL-APP-001",
       "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_models.py::_installed_weight_ratio::comparison": {
+      "expected_value": 0,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "An installed model's reported weight size in bytes must be positive to represent a real footprint; a zero/negative value is invalid data to be skipped, not a calibrated policy threshold."
     },
     "src/prometheist/gui_models.py::pull_model::slice_upper": {
       "expected_value": 500,
@@ -654,6 +659,16 @@
       "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
       "benchmark_id": "LOCAL-APP-001",
       "status": "PROVISIONAL"
+    },
+    "src/prometheist/artifact_journal.py::<module>::_REPLACE_RETRY_ATTEMPTS": {
+      "expected_value": 5,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "A small bounded retry count so a transient Windows antivirus/file-lock collision on an atomic replace (WinError 5/32) does not abort an otherwise-successful write, while still failing fast and loud on a genuine, persistent error. Not host-performance calibrated; any small positive bound serves the same structural purpose."
+    },
+    "src/prometheist/artifact_journal.py::<module>::_REPLACE_RETRY_DELAY_SECONDS": {
+      "expected_value": 0.05,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "A small fixed per-attempt backoff before retrying a transient Windows file-replace lock, bounding total added worst-case latency to a few hundred milliseconds across all attempts. Not host-performance calibrated."
     },
     "src/prometheist/gui_server.py::<module>::MAX_REQUEST_BYTES": {
       "expected_value": 2097152,

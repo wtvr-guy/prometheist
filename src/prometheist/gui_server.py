@@ -290,10 +290,10 @@ def create_app(root: Path, profile: Path, *, port: int, token=None, start_monito
         return {"models": gui_models.search_catalog(q)}
 
     @app.get("/api/models/specialists")
-    def specialist_search(task: Literal["general", "coding", "vision"]):
+    def specialist_search(task: str):
         from uuid import uuid4
         from datetime import datetime, timezone
-        result = gui_models.search_specialists(task)
+        result = gui_models.search_specialists(task, settings=state.settings)
         receipt = {**result, "captured_at": datetime.now(timezone.utc).isoformat()}
         write_private_policy(root / "operator" / "model-searches" / f"{uuid4()}.json", receipt)
         return receipt

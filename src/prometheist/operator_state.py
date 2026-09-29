@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import tempfile
 
-from prometheist.artifact_journal import _fsync_parent
+from prometheist.artifact_journal import _fsync_parent, _replace_with_retry
 
 
 def write_private_policy(path: Path, value: dict):
@@ -19,7 +19,7 @@ def write_private_policy(path: Path, value: dict):
             handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temporary, path)
+        _replace_with_retry(temporary, path)
         _fsync_parent(path.parent)
     finally:
         temporary.unlink(missing_ok=True)

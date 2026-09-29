@@ -38,7 +38,7 @@ def local_app(tmp_path, monkeypatch):
     monkeypatch.setattr(gui_models, "model_details", details)
     monkeypatch.setattr(model_admission.SystemHostResourceProbe, "capture", lambda self: HostResourceMetrics(
         platform="browser-fixture", logical_cpu_count=8, cpu_utilization_percent=10, memory_total_mib=16384, memory_available_mib=12288))
-    monkeypatch.setattr(gui_models, "search_catalog", lambda query, capability=None: [{"name":"sample-coder", "url":"https://ollama.com/library/sample-coder", "advertised_capabilities":["tools"], "advertised_sizes":["1.5b"], "catalog_text":"Coding model"}])
+    monkeypatch.setattr(gui_models, "search_catalog", lambda query, capability=None, sort=None: [{"name":"sample-coder", "url":"https://ollama.com/library/sample-coder", "advertised_capabilities":["tools"], "advertised_sizes":["1.5b"], "catalog_text":"Coding model"}])
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]

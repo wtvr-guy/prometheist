@@ -18,7 +18,27 @@ DOWNLOAD_ORIGIN = "https://registry.ollama.ai"
 MODEL_HTTP_TIMEOUT_SECONDS = 10
 MODEL_PULL_TIMEOUT_SECONDS = 300
 MAX_CATALOG_BYTES = 2097152
-MAX_CATALOG_RESULTS = 40
+MAX_CATALOG_RESULTS = 120
+# Ollama's own site renders a fixed page per query/sort with no further
+# pagination (offset/page/cursor/limit params are all silently ignored); the
+# only way to broaden coverage through its plain HTML search is to fan out
+# across every sort order it actually supports and merge/dedupe the results.
+CATALOG_SORTS = ("popular", "newest")
+# Registered browsing categories for the Models page. These are independent of
+# `model_admission.TASKS` (chat-response routing): a category here only needs
+# to be a useful thing to browse for, not a text-completion specialist. Only
+# entries with a `chat_task` correspond to an actual routable chat task.
+CATALOG_CATEGORIES = {
+    "general": {"label": "General", "keywords": ("",), "capability": None, "chat_task": "general"},
+    "coding": {"label": "Coding", "keywords": ("coder", "code"), "capability": None, "chat_task": "coding"},
+    "vision": {"label": "Vision", "keywords": ("",), "capability": "vision", "chat_task": "vision"},
+    "tools": {"label": "Tool use", "keywords": ("",), "capability": "tools", "chat_task": None},
+    "thinking": {"label": "Reasoning", "keywords": ("",), "capability": "thinking", "chat_task": None},
+    "embedding": {"label": "Embedding", "keywords": ("",), "capability": "embedding", "chat_task": None},
+    # Ollama's catalog has no "base"/foundation filter; a keyword match is a
+    # heuristic over model descriptions, not a verified base-vs-instruct flag.
+    "base": {"label": "Base / foundation", "keywords": ("base", "pretrained", "foundation"), "capability": None, "chat_task": None},
+}
 
 
 def ollama_request(base_url, path, *, method="GET", body=None):
@@ -135,12 +155,21 @@ class CatalogParser(HTMLParser):
             self.current = None
 
 
-def search_catalog(query, *, capability=None):
+def search_catalog(query, *, capability=None, sort=None):
     if capability not in {None, "vision", "tools", "thinking", "embedding"}:
         raise ValueError("Unregistered catalog capability filter")
+    if sort not in {None, *CATALOG_SORTS}:
+        raise ValueError("Unregistered catalog sort order")
     require_destination(CATALOG_ORIGIN, NetworkPurpose.MODEL_CATALOG)
+    # An empty "q" is not the same as an absent one, and "o=popular" is not
+    # the same as an absent "o": ollama.com 303-redirects both a
+    # present-but-empty query and an explicit-but-default ("popular") sort to
+    # its canonical URL without them. Omit each rather than forwarding it, so
+    # the request lands on the real 200 page instead of an unfollowed redirect.
+    params = {**({"q": query} if query else {}), **({"c": capability} if capability else {}),
+              **({"o": sort} if sort and sort != "popular" else {})}
     with httpx.Client(trust_env=False, follow_redirects=False, timeout=MODEL_HTTP_TIMEOUT_SECONDS) as client:
-        with client.stream("GET", CATALOG_ORIGIN + "/search", params={"q": query, **({"c": capability} if capability else {})}) as response:
+        with client.stream("GET", CATALOG_ORIGIN + "/search", params=params) as response:
             response.raise_for_status()
             chunks, size = [], 0
             for chunk in response.iter_bytes():
@@ -153,28 +182,169 @@ def search_catalog(query, *, capability=None):
     return sorted(parser.records, key=lambda item: item["name"])
 
 
-def search_specialists(task):
-    """Fixed public query and exact capability filters, never the personal prompt."""
+def _broad_catalog_search(keywords, capability):
+    """Merge/dedupe results across every registered keyword and sort order.
+
+    Ollama's search page renders a fixed ~12-20 results per request and
+    silently ignores every pagination parameter tried (page/p/offset/cursor/
+    n/limit); fanning out across its supported sort orders ("popular",
+    "newest") and, where a category has no dedicated capability filter,
+    across a small set of related keywords, is the only way to see more than
+    one page's worth through its plain HTML search.
+    """
+    merged = {}
+    for keyword in keywords:
+        for sort in CATALOG_SORTS:
+            for record in search_catalog(keyword, capability=capability, sort=sort):
+                merged.setdefault(record["name"], record)
+    return sorted(merged.values(), key=lambda item: item["name"])[:MAX_CATALOG_RESULTS]
+
+
+def _parameter_count_billions(label):
+    """Parse a "<number><b|m>" parameter-count label (case-insensitive):
+    matches both ollama.com's advertised size badges ("7b") and Ollama's own
+    reported `parameter_size` ("8.9B", "270M")."""
+    if not label:
+        return None
+    match = re.fullmatch(r"(\d+(?:\.\d+)?)\s*([bm])", label.strip(), re.IGNORECASE)
+    if not match:
+        return None
+    value, unit = match.groups()
+    count = float(value)
+    return count / 1000 if unit.lower() == "m" else count
+
+
+def _installed_weight_ratio(base_url):
+    """Empirical MiB-per-billion-parameters ratio from every currently
+    installed model's own exact, real reported weight size and parameter
+    count -- no architecture or capability restriction, since raw weight
+    bytes-per-parameter (i.e. quantization) is unrelated to either. Returns
+    (ratio, sample_count), or None when nothing installed can calibrate it.
+    Self-improving: installing more/larger models only makes this more exact.
+    """
+    try:
+        installed = installed_models(base_url)
+    except Exception:
+        return None
+    ratios = []
+    for record in installed:
+        billions = _parameter_count_billions(record.get("details", {}).get("parameter_size", ""))
+        size_bytes = record.get("size")
+        if not billions or not isinstance(size_bytes, (int, float)) or size_bytes <= 0:
+            continue
+        ratios.append((size_bytes / (1024 * 1024)) / billions)
+    if not ratios:
+        return None
+    ratios.sort()
+    middle = len(ratios) // 2
+    median = ratios[middle] if len(ratios) % 2 else (ratios[middle - 1] + ratios[middle]) / 2
+    return median, len(ratios)
+
+
+def _host_memory_ceiling_mib(settings):
+    """The same hard, headroom-adjusted total-RAM ceiling
+    `model_admission.assess_model` uses to mark a model definitively
+    unsupported (as opposed to merely temporarily blocked by transient
+    load) -- reusing the resource observation the app already produces on
+    every scan, not a new one.
+    """
+    from prometheist.model_admission import capture_observation
+    from prometheist.attention_observation import HOST_MEMORY_RESOURCE_ID
+    observation = capture_observation(settings)
+    if not observation.healthy:
+        return None
+    pool = next((item for item in observation.capacities if item.resource_id == HOST_MEMORY_RESOURCE_ID), None)
+    if pool is None:
+        return None
+    return pool.configured_capacity - pool.configured_headroom_units
+
+
+def _apply_capacity_filter(records, settings):
+    """Exclude only catalog families whose every advertised size estimate
+    exceeds this host's measured capacity ceiling. The weight estimate comes
+    from `_installed_weight_ratio` (self-calibrating from whatever is
+    actually installed); the runtime/buffer margin reuses the operator's own
+    configured headroom settings, the same fields `assess_model` already
+    uses for that purpose. This is a coarse, catalog-time screen -- the
+    byte-precise post-install check remains `assess_model`. Absent evidence
+    (unparsed size, unmeasurable host, no calibration data yet) never
+    excludes a result; it is only ever excluded on positive evidence that it
+    cannot fit.
+    """
+    ceiling = _host_memory_ceiling_mib(settings)
+    calibration = _installed_weight_ratio(settings.ollama_url)
+    resource_filter = {"ceiling_mib": ceiling,
+                        "calibration_mib_per_billion_parameters": round(calibration[0], 1) if calibration else None,
+                        "calibration_sample_count": calibration[1] if calibration else 0}
+    if ceiling is None or calibration is None:
+        for record in records:
+            record["resource_check"] = "unavailable"
+        return records, resource_filter
+    ratio, _ = calibration
+
+    def required_mib(billions):
+        weights = billions * ratio
+        buffers = max(settings.resources.model_runtime_headroom_min_mib,
+                      weights * settings.resources.model_runtime_headroom_percent / 100)
+        worker = settings.resources.default_process_memory_mib
+        return max(settings.resources.default_llm_process_memory_mib, weights + buffers + worker)
+
+    kept = []
+    for record in records:
+        sizes = record.get("advertised_sizes") or []
+        known = [(size, billions) for size in sizes if (billions := _parameter_count_billions(size)) is not None]
+        if not known:
+            record["resource_check"] = "unknown_size"
+            kept.append(record)
+            continue
+        infeasible = [size for size, billions in known if required_mib(billions) > ceiling]
+        record["resource_filtered_sizes"] = infeasible
+        if len(infeasible) < len(known):
+            record["resource_check"] = "fits" if not infeasible else "partial_fit"
+            kept.append(record)
+        else:
+            record["resource_check"] = "exceeds_capacity"
+    return kept, resource_filter
+
+
+def search_specialists(category, *, settings=None):
+    """Fixed public queries and exact capability filters, never the personal prompt."""
     from prometheist.environment_contracts import content_digest
     from prometheist.model_admission import TASKS
-    if task not in TASKS:
-        raise ValueError("Unregistered task")
-    query, capability = {"general": ("", None), "coding": ("coder", None), "vision": ("", "vision")}[task]
-    records = search_catalog(query, capability=capability)
+    if category not in CATALOG_CATEGORIES:
+        raise ValueError("Unregistered catalog category")
+    spec = CATALOG_CATEGORIES[category]
+    records = _broad_catalog_search(spec["keywords"], spec["capability"])
     matches = []
     for record in records:
         advertised = set(record["advertised_capabilities"])
-        if "embedding" in advertised or ("cloud" in advertised and not record["advertised_sizes"]):
+        if category != "embedding" and "embedding" in advertised:
             continue
-        if capability and capability not in advertised:
+        if "cloud" in advertised and not record["advertised_sizes"]:
             continue
-        if task == "coding" and not re.search(r"\b(?:code|coding|coder|programming)\b", record["catalog_text"], re.I):
+        if spec["capability"] and spec["capability"] not in advertised:
             continue
-        matches.append({**record, "verification": "Advertised catalog match; exact tag, capabilities and resource fit require installation and /api/show"})
-    return {"policy_version": "specialist-search/v1", "task": task, "query": query,
-            "capability_filter": capability, "required_capabilities": TASKS[task]["requires"],
-            "catalog_digest": content_digest(records), "models": matches,
-            "openai_offer": TASKS[task]["implemented"], "download_policy": "Only the operator chooses an exact model/tag to download"}
+        if category == "coding" and not re.search(r"\b(?:code|coding|coder|programming)\b", record["catalog_text"], re.I):
+            continue
+        verification = "Advertised catalog match; exact tag, capabilities and resource fit require installation and /api/show"
+        if category == "base":
+            verification = ("Keyword match on model descriptions, not a verified base/foundation flag: ollama.com "
+                            "has no such filter. Review the exact tag before choosing.")
+        matches.append({**record, "verification": verification})
+    resource_filter = None
+    if settings is not None:
+        matches, resource_filter = _apply_capacity_filter(matches, settings)
+    chat_task = spec["chat_task"]
+    required_capabilities = TASKS[chat_task]["requires"] if chat_task else ([spec["capability"]] if spec["capability"] else [])
+    openai_offer = bool(chat_task and TASKS[chat_task]["implemented"])
+    result = {"policy_version": "specialist-search/v2", "task": category, "label": spec["label"],
+              "keywords": list(spec["keywords"]), "capability_filter": spec["capability"],
+              "required_capabilities": required_capabilities, "catalog_digest": content_digest(records),
+              "models": matches, "openai_offer": openai_offer,
+              "download_policy": "Only the operator chooses an exact model/tag to download"}
+    if resource_filter is not None:
+        result["resource_filter"] = resource_filter
+    return result
 
 
 def openai_models(key):
