@@ -8,3 +8,13 @@ __pycache__/
 benchmarks/generated/
 benchmarks/results/*.json
 .prometheist/
+# Model weights belong in the local model runtime, never in Git.
+*.gguf
+*.ggml
+*.safetensors
+*.onnx
+*.ckpt
+*.pth
+*.pt
+*.bin
+models/blobs/

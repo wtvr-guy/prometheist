@@ -66,11 +66,28 @@ function resources(root,ctx){return numericSection(root,ctx,'resources','Resourc
 function memory(root,ctx){return numericSection(root,ctx,'memory','Memory & evidence','Control how much evidence can enter one model request.',{max_item_bytes:'Maximum evidence item (bytes)',max_total_bytes:'Maximum combined evidence (bytes)',max_input_bytes:'Maximum complete input (bytes)'});}
 async function environment(root,ctx){
   const data=await api('/environment');const scan=data.observation?.scan;const reports=scan?.reports||[];const resources=reports.flatMap(report=>(report.resources||[]).map(resource=>({...resource,provider:report.provider})));
+  // Group the display only. The scan receipt retains every provider record and ID.
+  const groups=new Map();
+  for(const resource of resources){
+    const name=(resource.name||resource.label||String(resource.resource_id)).trim();
+    const key=`${resource.kind}\u0000${name.toLocaleLowerCase()}`;
+    if(!groups.has(key))groups.set(key,{name,kind:resource.kind,items:[]});
+    groups.get(key).items.push(resource);
+  }
+  const grouped=[...groups.values()].sort((a,b)=>a.kind.localeCompare(b.kind)||a.name.localeCompare(b.name));
   const interval=el('input',{type:'number',min:10,max:3600,step:1,value:ctx.state.settings.monitor_interval_seconds});
-  root.append(section('Devices & sensors','Passive host discovery runs when the app starts and at the configured interval.',el('div',{class:'row spread'},field('Scan interval (seconds)',interval),button('Save interval',async()=>{await ctx.saveSettings({monitor_interval_seconds:Number(interval.value)});toast('Scan interval saved');}),button('Scan now',async()=>{await api('/environment/scan',{method:'POST',body:{}});toast('Scan requested; refresh to read the result');},{glyph:'refresh'})),el('p',{class:'hint'},data.health.message)),el('div',{class:'metrics'},...[[resources.length,'Observed resources'],[reports.length,'Provider reports'],[data.observation?.persisted_to_database?'Recorded':'Local only','Observation persistence']].map(([value,label])=>el('div',{class:'card'},el('div',{class:'large-stat'},value),el('p',{class:'hint'},label)))));
+  root.append(section('Devices & sensors','Passive host discovery runs when the app starts and at the configured interval.',el('div',{class:'row spread'},field('Scan interval (seconds)',interval),button('Save interval',async()=>{await ctx.saveSettings({monitor_interval_seconds:Number(interval.value)});toast('Scan interval saved');}),button('Scan now',async()=>{await api('/environment/scan',{method:'POST',body:{}});toast('Scan requested; refresh to read the result');},{glyph:'refresh'})),el('p',{class:'hint'},data.health.message),el('p',{class:'notice'},'Phone Link can show that its Windows app is present, but it cannot grant Prometheist access to Android sensors. Phone permissions must be requested by an installed Android companion app on the phone; that integration is not implemented yet.')),el('div',{class:'metrics'},...[[grouped.length,'Displayed resource groups'],[reports.length,'Provider reports'],[data.observation?.persisted_to_database?'Recorded':'Local only','Observation persistence']].map(([value,label])=>el('div',{class:'card'},el('div',{class:'large-stat'},value),el('p',{class:'hint'},label)))));
   if(!scan){root.append(empty('Waiting for a host observation','The first scan may take a few moments.',button('Refresh',ctx.render,{glyph:'refresh'})));return;}
+  const filter=el('input',{type:'search',placeholder:'Filter resources by name, kind or provider…','aria-label':'Filter observed resources'});
+  const rows=el('tbody',{});
+  const draw=()=>{
+    const query=filter.value.trim().toLocaleLowerCase();
+    const shown=grouped.filter(group=>!query||[group.name,group.kind,...group.items.map(item=>item.provider)].some(value=>String(value).toLocaleLowerCase().includes(query)));
+    rows.replaceChildren(...shown.map(group=>el('tr',{},el('td',{},group.name,group.items.length>1?el('span',{class:'hint'},` · ${group.items.length} observations`):null),el('td',{},group.kind),el('td',{},button('Inspect',()=>modal('Resource observations',pretty(group.items)),{kind:'ghost'})))));
+  };
+  filter.addEventListener('input',draw);draw();
   root.append(section('Provider coverage',null,el('div',{class:'table-wrap'},el('table',{class:'data-table'},el('thead',{},el('tr',{},el('th',{},'Provider'),el('th',{},'Status'),el('th',{},'Resources'))),el('tbody',{},...reports.map(report=>el('tr',{},el('td',{},report.provider),el('td',{},badge(report.status,report.status==='COMPLETE'?'green':'')),el('td',{},report.resources?.length||0))))))),
-    section('Observed resources','Connected devices expose only what the operating system and cooperating device reports make available.',el('div',{class:'table-wrap'},el('table',{class:'data-table'},el('thead',{},el('tr',{},el('th',{},'Resource'),el('th',{},'Kind'),el('th',{},'Details'))),el('tbody',{},...resources.map(resource=>el('tr',{},el('td',{},resource.name||resource.label||resource.resource_id),el('td',{},resource.kind),el('td',{},button('Inspect',()=>modal('Resource observation',pretty(resource)),{kind:'ghost'})))))))),el('div',{class:'row'},button('Refresh observations',ctx.render,{glyph:'refresh'}),button('Full scan receipt',()=>modal('Host observation',pretty(data)),{kind:'ghost'})));
+    section('Observed resources','Matching names are grouped for display; inspect a group to see each original provider record. Distinct devices with the same name may appear in one group.',filter,el('div',{class:'table-wrap'},el('table',{class:'data-table'},el('thead',{},el('tr',{},el('th',{},'Resource'),el('th',{},'Kind'),el('th',{},'Details'))),rows))),el('div',{class:'row'},button('Refresh observations',ctx.render,{glyph:'refresh'}),button('Full scan receipt',()=>modal('Host observation',pretty(data)),{kind:'ghost'})));
 }
 async function security(root,ctx){
   const [enrollment,environment]=await Promise.all([api('/security/enrollment'),api('/environment')]);
