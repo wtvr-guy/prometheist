@@ -5,8 +5,8 @@ import uuid
 
 import pytest
 
-from jit_agent import cli
-from jit_agent.admission_diagnostics import RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX
+from prometheist import cli
+from prometheist.admission_diagnostics import RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX
 
 
 def test_cli_emits_structured_resource_diagnostics_for_admission_failure(

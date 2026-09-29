@@ -4,8 +4,8 @@ import uuid
 
 import pytest
 
-from jit_agent import db, event_store
-from jit_agent.models import EventType
+from prometheist import db, event_store
+from prometheist.models import EventType
 
 
 @pytest.fixture

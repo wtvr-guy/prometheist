@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from jit_agent import db
-from jit_agent.attention import (
+from prometheist import db
+from prometheist.attention import (
     AttentionTask,
     FocusAction,
     JITAttentionScheduler,
@@ -13,8 +13,8 @@ from jit_agent.attention import (
     TaskStatus,
     deterministic_task_id,
 )
-from jit_agent.attention_resources import ExecutionResource, ExecutionResourceClass
-from jit_agent.attention_store import allocate_created_seq, load_scheduler, save_scheduler
+from prometheist.attention_resources import ExecutionResource, ExecutionResourceClass
+from prometheist.attention_store import allocate_created_seq, load_scheduler, save_scheduler
 
 
 NAMESPACE = UUID("77777777-7777-7777-7777-777777777777")

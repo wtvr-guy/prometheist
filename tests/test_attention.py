@@ -5,7 +5,7 @@ from uuid import UUID
 
 import pytest
 
-from jit_agent.attention import (
+from prometheist.attention import (
     AttentionTask,
     FocusAction,
     InterruptionPolicy,

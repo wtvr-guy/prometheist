@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from jit_agent import db
-from jit_agent.attention import (
+from prometheist import db
+from prometheist.attention import (
     AttentionTask,
     FocusAction,
     InterruptionPolicy,
@@ -13,7 +13,7 @@ from jit_agent.attention import (
     TaskStatus,
     deterministic_task_id,
 )
-from jit_agent.attention_store import (
+from prometheist.attention_store import (
     allocate_created_seq,
     load_scheduler,
     load_transition_count,

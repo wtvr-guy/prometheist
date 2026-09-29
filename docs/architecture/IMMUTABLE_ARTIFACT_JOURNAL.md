@@ -4,7 +4,7 @@
 **Constitutional authority:** implements Article 36 of [`../../CONSTITUTION.md`](../../CONSTITUTION.md).  
 **Applies to:** canonical events, percept-to-response stage boundaries, stateless LLM invocations, content-addressed blob storage, inspection and human auditing, signed journal heads, interruption recovery, and database reconstruction
 
-Prometheist maintains an independent immutable JSON artifact journal in addition to PostgreSQL. PostgreSQL remains the indexed operational store used for efficient retrieval, scheduling, and execution. It is not the only surviving representation of Prometheist's memory, cognition, or completed work.
+Prometheist maintains an independent append-only artifact journal in addition to PostgreSQL. Each logical record is immutable and hash-checked. PostgreSQL remains the indexed operational store used for efficient retrieval, scheduling, and execution. It is not the only surviving representation of Prometheist's memory, cognition, or completed work.
 
 The artifact journal exists for four reasons:
 
@@ -46,17 +46,19 @@ and may be moved with:
 PROMETHEIST_ARTIFACT_ROOT=<path>
 ```
 
-The development repository deliberately leaves `.prometheist/` visible to Git so
-synthetic and explicitly non-sensitive test interactions can be shared for exact
-cross-machine debugging and audit. This is a repository-development policy, not an
-assumption that personal cognitive records are public. A deployment containing real
-personal memory, credentials, private tool results, or identifying sensor data should
-set `PROMETHEIST_ARTIFACT_ROOT` outside a public checkout or use a private repository.
+The `.prometheist/` directory is local and Git-ignored. It may eventually contain
+personal cognitive records, so its contents must not be checked into a public
+repository. The previously tracked synthetic examples remain recoverable in earlier
+commits, but new runtime artifacts stay in the user-controlled local root. A
+deployment may also set `PROMETHEIST_ARTIFACT_ROOT` outside the checkout.
 
-Public fictional benchmark journals under `benchmarks/generated/` are likewise
-Git-visible and permanent. A native person-fidelity run writes a content-addressed
-manifest over every raw event and interaction artifact so the compact result under
-`benchmarks/results/` remains connected to the exact causal record.
+Public fictional benchmark journals under `benchmarks/generated/` are retained
+locally and excluded from new Git commits. A native person-fidelity run writes a
+content-addressed manifest over every raw event and interaction artifact so the
+compact result under `benchmarks/results/` remains connected to the exact causal
+record. A verified Git-visible ZIP in `.tmp/` makes the latest run portable for review; see
+[`BENCHMARK_SHARING_BUNDLE.md`](BENCHMARK_SHARING_BUNDLE.md). Historical Git commits
+still contain the previously checked-in raw evidence.
 
 Current mechanism-run manifests also bind the host/runtime evidence used to interpret
 model behavior: operating-system and Python identity, CPU/RAM facts, discoverable
@@ -69,8 +71,9 @@ The journal contains two classes of records:
 ```text
 artifacts/
   events/
-    <event-id>.json
-    <event-id>.commit.json
+    <event-id>.jsonl                    # new, one append-only file per event
+    <event-id>.json                    # historical two-file format
+    <event-id>.commit.json             # historical two-file format
 
   interactions/
     <interaction-id>/
@@ -87,7 +90,7 @@ Interaction filenames deliberately use the bounded deterministic artifact UUID r
 
 ## 2. Canonical event mirroring
 
-Every canonical event written through `event_store.record_event` is independently mirrored to JSON.
+Every canonical event written through `event_store.record_event` is independently mirrored. New events use a two-line JSON Lines file. Each line is a complete JSON object with its own hash; the first line is atomically written and fsynced, and the second is appended and fsynced after PostgreSQL commits. Existing `.json` and `.commit.json` pairs stay in their original form and remain readable and repairable by retry.
 
 A new event follows this durability order:
 
@@ -96,13 +99,13 @@ allocate deterministic/explicit event identity
         ↓
 lock conversation sequence in PostgreSQL transaction
         ↓
-atomically write + fsync EVENT_RECORD JSON
+atomically write + fsync first EVENT_RECORD JSONL entry
         ↓
 insert event row and advance conversation sequence
         ↓
 COMMIT PostgreSQL transaction
         ↓
-atomically write + fsync EVENT_DATABASE_COMMIT JSON
+append + fsync second EVENT_DATABASE_COMMIT JSONL entry
 ```
 
 The first artifact contains the semantic event record:
@@ -127,9 +130,9 @@ The second artifact records database-commit metadata:
 - schema version;
 - commit hash.
 
-This two-record protocol distinguishes an event that was durably journaled before a crash from an event known to have committed to PostgreSQL.
+This two-entry protocol distinguishes an event that was durably journaled before a crash from an event known to have committed to PostgreSQL. The two immutable logical artifacts now share one physical file. Benchmark inventories call that file `EVENT_JOURNAL` while recording both entry hashes; old manifests and their separate file counts remain valid.
 
-A crash may therefore produce a semantic event artifact without a corresponding database-commit artifact. That is a recoverable state. A committed new PostgreSQL event should not exist without its semantic JSON record because the semantic artifact is written first.
+A crash may produce a complete first entry without a commit entry. This means database commit status is unknown, not necessarily rollback. A partial second entry is rejected by readers; a deterministic retry with authoritative database metadata can finish it only if the existing bytes are an exact prefix of the expected entry. Conflicting bytes fail closed. A committed new PostgreSQL event should not exist without its semantic record because that entry is written first.
 
 Deterministic retries repair missing commit artifacts and fail closed if an existing JSON artifact conflicts with the retry's semantic identity.
 
@@ -222,19 +225,21 @@ their location plus byte length and SHA-256 so truncation, unexpected thinking-m
 activation, and cross-attempt identity remain diagnosable without turning private
 chain-of-thought into an artifact. User-visible constrained output remains exact.
 
-Every invocation is followed by a linked `LLM_VALIDATION` artifact. It records:
+When a model attempt fails parsing, schema validation, or transport, a linked
+`LLM_VALIDATION` artifact records:
 
 - the invocation artifact ID and hash;
 - invocation index and semantic kind;
-- `VALID`, `INVALID`, or `TRANSPORT_ERROR` status;
+- `INVALID` or `TRANSPORT_ERROR` status;
 - the SHA-256 of the raw normalized output when present;
-- the exact parsed/validated object when accepted; and
-- the parser/schema/transport exception type and message when rejected.
+- the parser/schema/transport exception type and message.
 
-Retries therefore remain separate causal attempts. A malformed or truncated first
-response and a valid second response produce two invocation artifacts and two linked
-validation artifacts; the rejected attempt is not overwritten or inferable only from
-the later success.
+Retries remain separate causal attempts. A malformed first response and a valid
+second response produce two invocation artifacts, one linked failure artifact, and
+the committed stage result. Routine validation success creates no separate record:
+the stage result establishes acceptance. If the worker crashes before that result,
+the surviving invocation is an incomplete attempt, not proof of successful validation.
+Historical journals with `VALID` records remain readable and verifiable.
 
 For natural response this includes the resolved Prometheist personality/identity
 system prompt. For response policy it proves that only current authority was
@@ -266,9 +271,10 @@ complete durable worker claim/result in PostgreSQL
 allow downstream stage
 ```
 
-LLM invocation and validation artifacts are written during stage computation, before
-the stage-result artifact. A successful invocation cannot be followed by another
-model call in the same worker until its validation outcome has been persisted.
+LLM invocations and exceptional validation artifacts are written during stage
+computation, before the stage-result artifact. A successful invocation cannot be
+followed by another model call in the same worker until its validation has resolved;
+routine success is proven by the eventual stage result.
 
 A stage is therefore recoverable if the process disappears after the artifact write but before the PostgreSQL worker result commits.
 
@@ -456,11 +462,11 @@ Current policy:
 - artifacts are immutable;
 - ordinary retention/compaction does not delete them;
 - the artifact root is user-controlled;
-- `.prometheist/` is Git-visible in this development repository so non-sensitive test
-  journals can be audited remotely; real personal deployments must choose an
-  appropriately private artifact root or repository;
-- public fictional benchmark journals and generated corpora are permanent evidence,
-  remain visible to Git, and must not be deleted or rewritten after a failed run;
+- `.prometheist/` is Git-ignored. Runtime journals remain in their user-controlled
+  local root; deliberately selected synthetic evidence may be shared separately;
+- public fictional benchmark journals and generated corpora are permanent local
+  evidence. They are ignored by Git for new runs and shared as verified run ZIPs;
+  they must not be deleted or rewritten after a failed run;
 - every retained training candidate keeps its source role, model/runtime, tested
   revision, artifact hashes, and human-review status; preservation alone never marks a
   model output as a positive training example;

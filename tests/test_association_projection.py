@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
 
-from jit_agent.association_projection import (
+from prometheist.association_projection import (
     association_projection_digest,
     derive_associations,
 )
-from jit_agent.memory_kernel import MemoryEvent
+from prometheist.memory_kernel import MemoryEvent
 
 
 def ev(event_id: str, seq: int, text: str, *, source="user", entities=()):

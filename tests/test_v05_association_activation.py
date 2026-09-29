@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
-from jit_agent.associative_memory import Association, associative_recall
-from jit_agent.memory_kernel import CueState, MemoryEvent
+from prometheist.associative_memory import Association, associative_recall
+from prometheist.memory_kernel import CueState, MemoryEvent
 
 
 def _event(event_id: str, seq: int, text: str) -> MemoryEvent:

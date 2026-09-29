@@ -5,11 +5,11 @@ import uuid
 
 import pytest
 
-from jit_agent.model_evidence_budget import ModelEvidenceBudgetExceeded
-from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from jit_agent.percept_response_runtime import ResponseMemoryPackage
-from jit_agent.percept_response_worker import UserPromptLLM
-from jit_agent.response_policy import (
+from prometheist.model_evidence_budget import ModelEvidenceBudgetExceeded
+from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from prometheist.percept_response_runtime import ResponseMemoryPackage
+from prometheist.percept_response_worker import UserPromptLLM
+from prometheist.response_policy import (
     HistoricalEvidenceScope,
     ResponsePolicy,
     ResponseSurfaceMode,
@@ -42,8 +42,6 @@ def test_single_oversized_memory_event_cannot_expand_v2_model_context(monkeypatc
     )
     package = ResponseMemoryPackage(
         memory_packet=packet,
-        sufficient=True,
-        composer_rounds=1,
         adaptive_recall_rounds=0,
     )
     client = UserPromptLLM(base_url="http://ollama.test", model="model:test")

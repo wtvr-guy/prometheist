@@ -5,21 +5,21 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent.capability_registry import DEFAULT_REGISTRY
-from jit_agent.interaction_contracts import DurableInteraction
-from jit_agent.models import MemoryNeed, MemoryPacket
-from jit_agent.percept_response_runtime import (
+from prometheist.capability_registry import DEFAULT_REGISTRY
+from prometheist.interaction_contracts import DurableInteraction
+from prometheist.models import MemoryNeed, MemoryPacket
+from prometheist.percept_response_runtime import (
     PerceptStage,
     ResponseMemoryPackage,
     _execute_stage,
     _validated_response_policy,
 )
-from jit_agent.percept_response_worker import (
+from prometheist.percept_response_worker import (
     USER_PROMPT_STAGE_SPECIALIST_ROLES,
     UserPromptLLM,
     _ALLOWED_LLM_KINDS_BY_STAGE,
 )
-from jit_agent.response_policy import (
+from prometheist.response_policy import (
     RESPONSE_POLICY_VERSION,
     HistoricalEvidenceScope,
     ResponsePolicy,
@@ -48,7 +48,9 @@ def test_every_stage_has_one_named_specialist_role() -> None:
     assert _ALLOWED_LLM_KINDS_BY_STAGE[PerceptStage.PERSIST_RESULT] == set()
 
 
-@pytest.mark.parametrize("protocol_version", ["v0.7-interaction-v9", "v0.8-interaction-v10"])
+@pytest.mark.parametrize("protocol_version", [
+    "v0.7-interaction-v9", "v0.8-interaction-v10", "v0.8-interaction-v11",
+])
 def test_pre_split_interaction_protocol_cannot_resume_under_new_stage_graph(
     protocol_version: str,
 ) -> None:
@@ -106,9 +108,6 @@ def test_response_stage_inherits_exact_policy_without_reclassification(monkeypat
             supported=False,
             items=[],
         ),
-        sufficient=False,
-        unresolved_memory_deficit="remembered constraint",
-        composer_rounds=1,
         adaptive_recall_rounds=0,
     )
     results = {
@@ -123,13 +122,13 @@ def test_response_stage_inherits_exact_policy_without_reclassification(monkeypat
         PerceptStage.PRECOGNITIVE: {
             "disposition": {"response_required": True, "capability_indices": []},
         },
-        PerceptStage.COMPOSE_MEMORY: {
+        PerceptStage.RETRIEVE_MEMORY: {
             "memory_package": package.model_dump(mode="json"),
         },
         PerceptStage.EXECUTE_WORK: {"work_results": []},
     }
     monkeypatch.setattr(
-        "jit_agent.percept_response_runtime._stage_result",
+        "prometheist.percept_response_runtime._stage_result",
         lambda _conn, _interaction, stage, _scheduler_key: results[stage],
     )
     received: list[ResponsePolicy] = []

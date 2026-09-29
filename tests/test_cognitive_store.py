@@ -1,7 +1,7 @@
 import pytest
 
-from jit_agent import db
-from jit_agent.cognitive_store import get_record, put_record, record_history
+from prometheist import db
+from prometheist.cognitive_store import get_record, put_record, record_history
 
 
 @pytest.fixture

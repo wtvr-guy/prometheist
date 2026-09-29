@@ -732,6 +732,15 @@ CREATE TABLE IF NOT EXISTS cognitive_heads (
     PRIMARY KEY (record_kind, record_key)
 );
 CREATE INDEX IF NOT EXISTS idx_cognitive_heads_sequence ON cognitive_heads(record_kind, global_seq);
+-- Learned descriptions are routing hints; exact source records retain authority.
+CREATE INDEX IF NOT EXISTS idx_self_memory_navigation_terms
+    ON cognitive_heads USING GIN (to_tsvector('english',
+        coalesce(payload->>'statement', '') || ' ' ||
+        replace(coalesce((payload->'context_tags')::text, ''), '_', ' ')))
+    WHERE record_kind = 'self_representation';
+CREATE INDEX IF NOT EXISTS idx_self_evidence_representation
+    ON cognitive_heads ((payload->>'representation_id'), global_seq)
+    WHERE record_kind = 'self_evidence';
 CREATE OR REPLACE FUNCTION project_cognitive_event() RETURNS trigger AS $$
 BEGIN
     IF NEW.source = 'cognitive_runtime' AND NEW.payload->>'kind' = 'COGNITIVE_RECORD' THEN
@@ -748,3 +757,9 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS cognitive_event_head ON events;
 CREATE TRIGGER cognitive_event_head AFTER INSERT ON events
 FOR EACH ROW EXECUTE FUNCTION project_cognitive_event();
+
+-- A private deployment binds one subject to one database. No identity data in Git.
+CREATE TABLE IF NOT EXISTS imprint_identity (
+    singleton boolean PRIMARY KEY CHECK (singleton),
+    subject_id text NOT NULL
+);

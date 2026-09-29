@@ -24,9 +24,9 @@ import time
 import uuid
 from dataclasses import dataclass, field
 
-from jit_agent import db, event_store
-from jit_agent.percept_response_runtime import handle_percept_in_worker_processes
-from jit_agent.models import EventType
+from prometheist import db, event_store
+from prometheist.percept_response_runtime import handle_percept_in_worker_processes
+from prometheist.models import EventType
 
 _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
 

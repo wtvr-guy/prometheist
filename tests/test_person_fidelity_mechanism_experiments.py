@@ -252,30 +252,20 @@ def test_model_attempt_journals_exact_llm_invocation(tmp_path, monkeypatch):
 
     receipt = result["cases"][0]["attempts"][0]["artifact_journal"]
     assert receipt["artifact_type_counts"]["LLM_INVOCATION"] == 1
-    assert receipt["artifact_type_counts"]["LLM_VALIDATION"] == 1
-    invocation_path = next(
-        path
-        for path in (tmp_path / "artifacts").rglob("*.json")
-        if json.loads(path.read_text(encoding="utf-8"))["artifact_type"]
-        == "LLM_INVOCATION"
+    assert receipt["artifact_type_counts"].get("LLM_VALIDATION", 0) == 0
+    invocation = next(
+        json.loads(line)
+        for path in (tmp_path / "artifacts").rglob("*.jsonl")
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if json.loads(line)["artifact_type"] == "LLM_INVOCATION"
     )
-    payload = json.loads(invocation_path.read_text(encoding="utf-8"))["payload"]
+    payload = invocation["payload"]
     assert payload["system_prompt"] == mechanism._USER_PROMPT_COMPOSER
     assert payload["user_prompt"].endswith(case["prompt"])
     assert payload["output"] is not None
     assert payload["evidence_prompt"] is not None
 
-    validation_path = next(
-        path
-        for path in (tmp_path / "artifacts").rglob("*.json")
-        if json.loads(path.read_text(encoding="utf-8"))["artifact_type"]
-        == "LLM_VALIDATION"
-    )
-    validation = json.loads(validation_path.read_text(encoding="utf-8"))["payload"]
-    invocation = json.loads(invocation_path.read_text(encoding="utf-8"))
-    assert validation["status"] == "VALID"
-    assert validation["invocation_artifact_id"] == invocation["artifact_id"]
-    assert validation["invocation_artifact_hash"] == invocation["artifact_hash"]
+    assert receipt["chain_valid"] and receipt["chain_complete"]
 
 
 def test_v3_composer_decomposes_current_and_historical_decisions(
@@ -349,7 +339,6 @@ def test_v3_composer_decomposes_current_and_historical_decisions(
         "BENCHMARK_SPECIALIST_RESULT": 1,
         "FINAL_DISPOSITION": 1,
         "LLM_INVOCATION": 1,
-        "LLM_VALIDATION": 1,
         "STAGE_RESULT": 1,
     }
     assert history_attempt["artifact_journal"]["artifact_type_counts"][
@@ -358,9 +347,9 @@ def test_v3_composer_decomposes_current_and_historical_decisions(
     assert history_attempt["artifact_journal"]["artifact_type_counts"][
         "LLM_INVOCATION"
     ] == 2
-    assert history_attempt["artifact_journal"]["artifact_type_counts"][
-        "LLM_VALIDATION"
-    ] == 2
+    assert history_attempt["artifact_journal"]["artifact_type_counts"].get(
+        "LLM_VALIDATION", 0
+    ) == 0
     assert calls == [
         "V3_CURRENT_EVIDENCE_USER_PROMPT",
         "V3_CURRENT_EVIDENCE_USER_PROMPT",
@@ -400,18 +389,15 @@ def test_model_retry_journals_invalid_and_valid_parse_outcomes(tmp_path, monkeyp
     )
     receipt = result["cases"][0]["attempts"][0]["artifact_journal"]
     assert receipt["artifact_type_counts"]["LLM_INVOCATION"] == 2
-    assert receipt["artifact_type_counts"]["LLM_VALIDATION"] == 2
+    assert receipt["artifact_type_counts"]["LLM_VALIDATION"] == 1
     validation_payloads = [
         document["payload"]
-        for path in (tmp_path / "artifacts").rglob("*.json")
-        if (document := json.loads(path.read_text(encoding="utf-8")))["artifact_type"]
-        == "LLM_VALIDATION"
+        for path in (tmp_path / "artifacts").rglob("*.jsonl")
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if (document := json.loads(line))["artifact_type"] == "LLM_VALIDATION"
     ]
     validation_payloads.sort(key=lambda payload: payload["invocation_index"])
-    assert [payload["status"] for payload in validation_payloads] == [
-        "INVALID",
-        "VALID",
-    ]
+    assert [payload["status"] for payload in validation_payloads] == ["INVALID"]
 
 
 def test_artifact_manifest_verification_detects_raw_artifact_mutation(tmp_path):
@@ -469,7 +455,7 @@ def test_artifact_manifest_verification_detects_raw_artifact_mutation(tmp_path):
 
     assert mechanism.verify_result(result_path)["valid"] is True
     raw_artifact = next(
-        path for path in artifact_root.rglob("*.json") if path != manifest_path
+        path for path in artifact_root.rglob("*.jsonl")
     )
     raw_artifact.write_bytes(raw_artifact.read_bytes() + b" ")
     verification = mechanism.verify_result(result_path)
@@ -477,7 +463,7 @@ def test_artifact_manifest_verification_detects_raw_artifact_mutation(tmp_path):
     assert verification["checks"]["artifact_evidence_valid"] is False
 
 
-def test_v3_result_verifier_requires_linked_validations_and_transport_diagnostics(
+def test_v3_result_verifier_accepts_committed_success_without_validation_artifacts(
     tmp_path,
     monkeypatch,
 ):
@@ -535,7 +521,7 @@ def test_v3_result_verifier_requires_linked_validations_and_transport_diagnostic
     monkeypatch.setattr(mechanism.OllamaClient, "_structured", fake_current)
     artifact_root = tmp_path / "raw"
     artifact_run = {
-        "run_id": "schema4-verification-test",
+        "run_id": "schema5-verification-test",
         "artifact_root": artifact_root,
         "fixture_id": fixture.fixture_id,
         "fixture_version": fixture.fixture_version,
@@ -571,8 +557,8 @@ def test_v3_result_verifier_requires_linked_validations_and_transport_diagnostic
         },
     }
     report = {
-        "schema_version": 4,
-        "run_id": "schema4-verification-test",
+        "schema_version": 5,
+        "run_id": "schema5-verification-test",
         "experiment_version": mechanism.EXPERIMENT_VERSION_V3,
         "candidate_version": "v3",
         "captured_at": "2026-09-22T00:00:00+00:00",
@@ -606,9 +592,9 @@ def test_v3_result_verifier_requires_linked_validations_and_transport_diagnostic
 
     verification = mechanism.verify_result(result_path)
 
-    assert verification["valid"] is True
+    assert verification["valid"] is True, verification
     assert verification["artifact_verification"]["verified_llm_invocation_count"] == 2
-    assert verification["artifact_verification"]["verified_llm_validation_count"] == 2
+    assert verification["artifact_verification"]["verified_llm_validation_count"] == 0
 
 
 def test_attempt_artifact_paths_fit_windows_path_budget():
@@ -633,7 +619,7 @@ def test_attempt_artifact_paths_fit_windows_path_budget():
     assert all("/" not in directory and "\\" not in directory for directory in directories)
 
     representative_root = PureWindowsPath(
-        r"C:\Users\gy0d8\OneDrive\Documents\jit_agent_prototype"
+        r"C:\Users\gy0d8\OneDrive\Documents\prometheist_prototype"
     ) / "benchmarks" / "generated" / "pfmx" / "2026-09-21_215914"
     longest_atomic_target = (
         representative_root

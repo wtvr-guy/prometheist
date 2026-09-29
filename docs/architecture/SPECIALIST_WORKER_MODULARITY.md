@@ -1,5 +1,13 @@
 # Specialist Worker Modularity
 
+Current implementation update (2026-09-28): the Composer and MEMORY_REQUIREMENTS
+control stages are retired. The authoritative current stage sequence, registry
+contracts, and migration rules are in [Fixed retrieval](FIXED_RETRIEVAL.md).
+Private empirical imprinting uses a person-general self-model and isolated runtime
+state; see [setup](../engineering/IMPRINTING_SETUP.md). Earlier Composer-specific
+descriptions below record the previous design and do not override this update.
+
+
 **Constitutional authority:** implements Article 37 of
 [`../../CONSTITUTION.md`](../../CONSTITUTION.md) and is subordinate to the
 Constitution.
@@ -44,7 +52,7 @@ reassessment of the same semantic question. They do not authorize a second role.
 
 ## Current user-prompt specialists
 
-The implemented v2 user-prompt path uses these process boundaries:
+The implemented fixed retrieval user-prompt path uses these process boundaries:
 
 | Stage | Responsibility | LLM use |
 |---|---|---|
@@ -52,13 +60,18 @@ The implemented v2 user-prompt path uses these process boundaries:
 | Evidence policy | Select historical source scope and response surface from the current prompt only | One policy role, with bounded validation retries |
 | Work triage | Select required non-memory capability indices from the admitted aperture | One work-selection role, with bounded validation retries |
 | Capability execution | Execute the committed application-owned plan | None in the stage itself; invoked capabilities own their contracts |
-| Memory composition | Judge memory sufficiency and name only the missing memory semantics | One Composer role, freshly reassessed across bounded Adaptive Recall rounds |
+| Memory retrieval | Execute fixed bounded routes and merge source-admissible evidence with explicit budgets and diversity | None |
 | Response realization | Produce exact-source or natural output under the committed policy | One realization mode per path, with bounded validation retries |
 | Result persistence | Persist and emit the completed disposition | None |
 
 The evidence-policy result is an immutable stage artifact. Work triage, Adaptive
-Recall, the Composer, and response realization inherit that exact policy. They may
+Recall, fixed retrieval, and response realization inherit that exact policy. They may
 not reclassify it.
+
+The retrieval result is an immutable stage artifact containing evidence and route
+receipts. It has no requirements, deficit, coverage decision, or sufficiency flag.
+The retired split is preserved as an experiment in
+[COMPOSER_REQUIREMENTS_001.md](../experiments/COMPOSER_REQUIREMENTS_001.md).
 
 ## Percept triage for non-user inputs
 

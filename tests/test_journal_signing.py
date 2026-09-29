@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent import artifact_journal, journal_signing
+from prometheist import artifact_journal, journal_signing
 
 
 def _finalized_interaction(tmp_path, monkeypatch) -> tuple:
@@ -46,9 +46,11 @@ def test_sign_journal_head_refuses_an_incomplete_interaction(tmp_path, monkeypat
 def test_sign_journal_head_refuses_an_invalid_chain(tmp_path, monkeypatch) -> None:
     interaction_id = _finalized_interaction(tmp_path, monkeypatch)
     percept_path = Path(artifact_journal.interaction_artifacts(interaction_id)[0]["_path"])
-    document = json.loads(percept_path.read_text(encoding="utf-8"))
+    lines = percept_path.read_text(encoding="utf-8").splitlines()
+    document = json.loads(lines[0])
     document["payload"]["user_text"] = "tampered"
-    percept_path.write_text(json.dumps(document, indent=2), encoding="utf-8")
+    lines[0] = json.dumps(document)
+    percept_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     with pytest.raises(ValueError, match="invalid artifact chain"):
         journal_signing.sign_journal_head(interaction_id)
@@ -105,20 +107,22 @@ def test_verify_detects_the_journal_being_rewritten_after_signing(tmp_path, monk
     journal_signing.sign_journal_head(interaction_id)
 
     artifacts = artifact_journal.interaction_artifacts(interaction_id)
-    document = json.loads(Path(artifacts[0]["_path"]).read_text(encoding="utf-8"))
+    path = Path(artifacts[0]["_path"])
+    documents = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    document = documents[0]
     document["payload"]["user_text"] = "an attacker rewrote history after anchoring"
     document["payload_hash"] = artifact_journal._sha256(document["payload"])
 
     previous_id, previous_hash = document.get("previous_artifact_id"), document.get("previous_artifact_hash")
     for index, artifact in enumerate(artifacts):
-        path = Path(artifact["_path"])
-        current = document if index == 0 else json.loads(path.read_text(encoding="utf-8"))
+        current = document if index == 0 else documents[index]
         current["previous_artifact_id"], current["previous_artifact_hash"] = previous_id, previous_hash
         current["artifact_hash"] = artifact_journal._sha256(
             {key: value for key, value in current.items() if key not in {"artifact_hash", "_path"}}
         )
-        path.write_text(json.dumps(current, indent=2), encoding="utf-8")
+        documents[index] = current
         previous_id, previous_hash = current["artifact_id"], current["artifact_hash"]
+    path.write_text("\n".join(json.dumps(item) for item in documents) + "\n", encoding="utf-8")
 
     # The rewritten chain is still perfectly self-consistent on its own terms.
     assert artifact_journal.verify_interaction_chain(interaction_id)["valid"] is True

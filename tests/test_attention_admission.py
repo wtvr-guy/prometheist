@@ -4,8 +4,8 @@ from uuid import UUID
 
 import pytest
 
-from jit_agent import db
-from jit_agent.attention import (
+from prometheist import db
+from prometheist.attention import (
     AttentionTask,
     JITAttentionScheduler,
     SchedulingMetadata,
@@ -13,12 +13,12 @@ from jit_agent.attention import (
     TaskCriticality,
     deterministic_task_id,
 )
-from jit_agent.attention_resources import (
+from prometheist.attention_resources import (
     ExecutionResource,
     ExecutionResourceClass,
     ResourceRequirement,
 )
-from jit_agent.attention_store import load_scheduler, save_scheduler
+from prometheist.attention_store import load_scheduler, save_scheduler
 
 
 NAMESPACE = UUID("88888888-8888-8888-8888-888888888888")

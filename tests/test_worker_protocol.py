@@ -8,8 +8,8 @@ from uuid import UUID
 
 import pytest
 
-from jit_agent import db
-from jit_agent.attention import (
+from prometheist import db
+from prometheist.attention import (
     AttentionTask,
     JITAttentionScheduler,
     SchedulingMetadata,
@@ -17,18 +17,18 @@ from jit_agent.attention import (
     TaskCriticality,
     deterministic_task_id,
 )
-from jit_agent.attention_observation import (
+from prometheist.attention_observation import (
     HostResourceMetrics,
     LocalResourceAdmissionController,
     ResourceSafetyPolicy,
 )
-from jit_agent.attention_resources import (
+from prometheist.attention_resources import (
     ExecutionResourceClass,
     ProcessResourceEstimate,
     ResourceEstimateSource,
 )
-from jit_agent.attention_store import save_scheduler
-from jit_agent.worker_protocol import (
+from prometheist.attention_store import save_scheduler
+from prometheist.worker_protocol import (
     WorkerClaimDecision,
     WorkerClaimStatus,
     WorkerEffectPolicy,
@@ -37,8 +37,8 @@ from jit_agent.worker_protocol import (
     deterministic_worker_idempotency_key,
     deterministic_worker_step_id,
 )
-from jit_agent.worker_runtime import GuardedWorkerLauncher, WorkerLaunchDenied
-from jit_agent.worker_store import (
+from prometheist.worker_runtime import GuardedWorkerLauncher, WorkerLaunchDenied
+from prometheist.worker_store import (
     WorkerProtocolError,
     checkpoint_worker_claim,
     complete_worker_claim,

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from jit_agent.derived_associative_benchmark import run_derived_benchmark
+from prometheist.derived_associative_benchmark import run_derived_benchmark
 
 
 ROOT = Path(__file__).resolve().parent.parent

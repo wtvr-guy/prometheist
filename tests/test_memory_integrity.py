@@ -1,8 +1,8 @@
 from dataclasses import replace
 from datetime import datetime, timezone
 
-from jit_agent.memory_integrity import build_integrity_chain, verify_integrity_chain
-from jit_agent.memory_kernel import MemoryEvent
+from prometheist.memory_integrity import build_integrity_chain, verify_integrity_chain
+from prometheist.memory_kernel import MemoryEvent
 
 
 def event(event_id: str, seq: int, text: str):

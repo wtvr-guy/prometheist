@@ -1,13 +1,15 @@
 # Prometheist Constitution
 
-**Version:** 2.0  
+**Version:** 2.1
 **Adopted:** 2026-08-27  
-**Amended:** 2026-09-14  
+**Amended:** 2026-09-28
 **Status:** supreme project-wide purpose, identity, and engineering policy for Prometheist.
 
 Prometheist is developed under a set of purpose, identity, architectural, and engineering rules intended to remain true across milestones, implementations, models, storage backends, devices, embodiments, and worker processes. This Constitution states what Prometheist exists to become and constrains how that objective may be pursued.
 
 Version 2.0 places the digital-self mission above the engineering machinery built in its service. This file remains concise: each article states a hard rule, why it matters, and the authoritative deep-dive document that explains it. The amendment record at [`docs/audits/CONSTITUTIONAL_AMENDMENT_2_0_2026-09-14.md`](docs/audits/CONSTITUTIONAL_AMENDMENT_2_0_2026-09-14.md) preserves the version 1.1-to-2.0 numbering map and scope.
+
+Version 2.1 explicitly replaces Article 33's Composer requirement with bounded deterministic retrieval. See [`docs/audits/ARCHITECTURE_CLEANUP_2026-09-28.md`](docs/audits/ARCHITECTURE_CLEANUP_2026-09-28.md).
 
 ## Authority and interpretation
 
@@ -297,13 +299,23 @@ Automatic retention or compaction must never be confused with an identity-level 
 
 **Deep dive:** [`docs/engineering/CONSTITUTIONAL_GOVERNANCE.md`](docs/engineering/CONSTITUTIONAL_GOVERNANCE.md)
 
-### Article 33 — Memory reassessment may recur, but every reassessment is fresh and narrow
+### Article 33 — Retrieval control is bounded, deterministic, and evidence-preserving
 
-**Rule.** When the v2 Composer determines that persistent-memory context is insufficient for a required response, Prometheist may perform bounded Adaptive Recall and invoke a fresh stateless Composer again. The Composer decides only memory-context sufficiency and the semantic memory deficit. It does not decide whether a direct user prompt deserves a response, reinterpret completed tool/action results, become a second executive, or generate the final response. Completed capability/action results persist independently and reach the final responder through their authoritative execution path.
+**Rule.** Prometheist owns the retrieval sequence, source scope, history cutoff,
+merging, evidence budgets, and stop conditions in ordinary replayable software.
+The initial replacement policy runs a fixed finite sequence of retrieval routes;
+models do not certify memory sufficiency, author free-form deficits as control
+state, or become a second executive. Completion of retrieval does not establish
+that a question is answerable. The final responder receives admissible canonical
+evidence, separately labeled derived self-context, and authoritative completed
+capability results, and must preserve uncertainty and legitimate unknowns.
 
-**Why it matters.** Prometheist needs iterative memory depth without reintroducing hidden model continuity or a recurrent general-purpose router. Narrow fresh reassessment preserves statelessness while keeping control, tool evidence, and response policy in their proper system-owned domains.
+**Why it matters.** A semantic coverage judge can suppress useful evidence or
+repeat reasoning without improving recall. Deterministic bounded retrieval makes
+that mechanism independently testable while preserving statelessness and the
+separation of memory, action authority, and response realization.
 
-**Deep dive:** [`docs/architecture/PERCEPT_TO_RESPONSE_PIPELINE.md`](docs/architecture/PERCEPT_TO_RESPONSE_PIPELINE.md)
+**Deep dive:** [`docs/architecture/FIXED_RETRIEVAL.md`](docs/architecture/FIXED_RETRIEVAL.md)
 
 ### Article 34 — Durable queued work must have an explicit anti-starvation policy
 
@@ -333,7 +345,7 @@ Automatic retention or compaction must never be confused with an identity-level 
 
 **Rule.** One guarded LLM worker process may own only one coherent semantic
 responsibility. Independent decisions such as percept triage, evidence policy,
-work selection, memory sufficiency, and response realization require separate
+work selection, self-evidence interpretation, and response realization require separate
 specialist stages with typed inputs and outputs. Retries or bounded reassessment may
 repeat the same role, but a worker must not accumulate unrelated duties, hidden
 intermediate cognition, or cross-role context merely to reduce process count.

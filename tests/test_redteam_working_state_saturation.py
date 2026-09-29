@@ -4,18 +4,18 @@ import uuid
 
 import pytest
 
-from jit_agent import db, event_store
-from jit_agent.attention_aperture import open_attention_aperture
-from jit_agent.interaction_contracts import (
+from prometheist import db, event_store
+from prometheist.attention_aperture import open_attention_aperture
+from prometheist.interaction_contracts import (
     deterministic_interaction_event_id,
     deterministic_interaction_id,
 )
-from jit_agent.interaction_working_state import (
+from prometheist.interaction_working_state import (
     MAX_ACTIVE_EVENT_IDS,
     activate_working_state,
     load_working_state,
 )
-from jit_agent.models import EventType
+from prometheist.models import EventType
 
 
 @pytest.fixture

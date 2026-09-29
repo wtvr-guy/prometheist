@@ -19,10 +19,10 @@ from typing import Any
 
 import httpx
 
-from jit_agent.admission_diagnostics import RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX
-from jit_agent.attention_observation import SystemHostResourceProbe
-from jit_agent.native_policy import native_resource_safety_policy
-from jit_agent.ollama_runtime import (
+from prometheist.admission_diagnostics import RESOURCE_ADMISSION_DIAGNOSTIC_PREFIX
+from prometheist.attention_observation import SystemHostResourceProbe
+from prometheist.native_policy import native_resource_safety_policy
+from prometheist.ollama_runtime import (
     OllamaRuntimeProbe,
     configured_ollama_base_url,
     configured_ollama_model,

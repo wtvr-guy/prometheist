@@ -1,5 +1,13 @@
 # Interaction Continuity
 
+Current implementation update (2026-09-28): the Composer and MEMORY_REQUIREMENTS
+control stages are retired. The authoritative current stage sequence, registry
+contracts, and migration rules are in [Fixed retrieval](FIXED_RETRIEVAL.md).
+Private empirical imprinting uses a person-general self-model and isolated runtime
+state; see [setup](../engineering/IMPRINTING_SETUP.md). Earlier Composer-specific
+descriptions below record the previous design and do not override this update.
+
+
 **Status:** constitutional architecture deep dive, rebaselined 2026-09-03
 
 **Authority:** primary deep dive for Constitution Articles 11–14, 26, 33, and 35
@@ -75,25 +83,22 @@ current prompt + bounded aperture
   -> fresh current-only evidence-policy specialist
   -> durable source/surface policy
   -> bounded aperture filtered by that policy
+  -> bounded Working Self activation under the same evidence policy
   -> fresh pre-cognitive non-memory work-triage specialist
   -> deterministic external work execution
-  -> fresh Composer memory-sufficiency judgment
-       -> sufficient: response-ready memory package
-       -> deficit: deterministic Adaptive Recall -> fresh Composer
+  -> fixed bounded retrieval routes and deterministic evidence merge
   -> application filters event roles
   -> quarantined evidence precedes the current prompt
   -> validated exact-source output or natural final responder
 ```
 
-Composer reassessment may recur only inside this narrow memory-sufficiency loop. It
-does not become a general router. The Composer cannot decide whether to respond,
-select external work, reinterpret tool results, or generate final prose.
+Retrieval is model-free and exhausts its finite routes. It cannot decide whether
+to respond, select external work, reinterpret tool results, or generate final prose.
 
 ## Adaptive Recall
 
-Adaptive Recall is deterministic memory expansion driven by a bounded semantic
-deficit from the Composer. It progresses through architecture-neutral retrieval
-stages:
+Adaptive Recall is deterministic memory expansion driven by the original prompt
+and already learned navigation cues. It progresses through fixed retrieval stages:
 
 - `BROAD` — expand general candidate coverage;
 - `ASSOCIATIVE` — traverse bounded evidence associations;
@@ -105,6 +110,11 @@ give a model search-language authority or make recall a tool alongside web/API w
 
 Each expansion returns exact source-backed memory items, merges them deterministically
 within the response memory bound, and persists enough stage provenance for replay.
+Active self-schema statements may be supplied as bounded supplemental retrieval cues,
+including when they are not admissible as response evidence. This lets a derived
+person model improve navigation without laundering its conclusions into canonical
+history. `SELF_MODEL` natural-language requests may additionally receive the
+admitted self context directly; source-restricted and exact-source requests may not.
 The initially activated aperture is retained before newly appended expansion items,
 so a saturated later recall cannot evict the evidence that motivated expansion.
 When the fixed expansion policy is exhausted, the memory package explicitly carries

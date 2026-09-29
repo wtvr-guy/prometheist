@@ -17,23 +17,23 @@ from pathlib import Path
 import sys
 from typing import Any
 
-from jit_agent.attention_aperture import DEFAULT_ATTENTION_APERTURE_LIMIT
-from jit_agent.jit_memory import DEFAULT_EVIDENCE_TYPES, MINIMUM_SCORE
-from jit_agent.memory_kernel import (
+from prometheist.attention_aperture import DEFAULT_ATTENTION_APERTURE_LIMIT
+from prometheist.jit_memory import DEFAULT_EVIDENCE_TYPES, MINIMUM_SCORE
+from prometheist.memory_kernel import (
     POLICY_VERSION,
     CueState,
     MemoryEvent,
     recall,
     score_event,
 )
-from jit_agent.person_fidelity_benchmark import (
+from prometheist.person_fidelity_benchmark import (
     FidelityProbe,
     PersonFidelityCorpus,
     chronological_life_events,
     deterministic_fixture_uuid,
     load_person_fidelity_corpus,
 )
-from jit_agent.response_policy import HistoricalEvidenceScope, source_types_for_scope
+from prometheist.response_policy import HistoricalEvidenceScope, source_types_for_scope
 
 
 ROOT = Path(__file__).resolve().parents[1]

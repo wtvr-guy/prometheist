@@ -1,4 +1,4 @@
-from jit_agent.native_policy import (
+from prometheist.native_policy import (
     NATIVE_RESOURCE_POLICY_VERSION,
     native_resource_safety_policy,
 )

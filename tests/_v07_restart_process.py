@@ -7,12 +7,12 @@ import time
 from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid5
 
-from jit_agent import db, event_store
-from jit_agent.attention_observation import HostResourceMetrics, LocalResourceAdmissionController
-from jit_agent.attention_store import load_scheduler, save_scheduler
-from jit_agent.models import EventType
-from jit_agent.worker_protocol import WorkerEffectPolicy
-from jit_agent.worker_store import (
+from prometheist import db, event_store
+from prometheist.attention_observation import HostResourceMetrics, LocalResourceAdmissionController
+from prometheist.attention_store import load_scheduler, save_scheduler
+from prometheist.models import EventType
+from prometheist.worker_protocol import WorkerEffectPolicy
+from prometheist.worker_store import (
     checkpoint_worker_claim,
     complete_worker_claim,
     guarded_claim_worker_step,

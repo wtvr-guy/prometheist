@@ -2,8 +2,8 @@ from datetime import datetime, timezone
 
 import pytest
 
-from jit_agent.associative_memory import Association, associative_recall
-from jit_agent.memory_kernel import CueState, MemoryEvent
+from prometheist.associative_memory import Association, associative_recall
+from prometheist.memory_kernel import CueState, MemoryEvent
 
 
 def ev(event_id: str, seq: int, text: str, *, entities=()):

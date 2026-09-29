@@ -5,8 +5,8 @@ from uuid import UUID
 
 import pytest
 
-from jit_agent import attention_store, db
-from jit_agent.attention import (
+from prometheist import attention_store, db
+from prometheist.attention import (
     AttentionTask,
     JITAttentionScheduler,
     SchedulerSnapshot,
@@ -15,16 +15,16 @@ from jit_agent.attention import (
     TaskCriticality,
     deterministic_task_id,
 )
-from jit_agent.attention_assignments import (
+from prometheist.attention_assignments import (
     SchedulingEpochStatus,
     deterministic_epoch_id,
 )
-from jit_agent.attention_resources import (
+from prometheist.attention_resources import (
     ExecutionResource,
     ExecutionResourceClass,
     ResourceRequirement,
 )
-from jit_agent.attention_store import (
+from prometheist.attention_store import (
     load_scheduler,
     load_worker_visible_assignments,
     save_scheduler,

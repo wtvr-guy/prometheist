@@ -2,10 +2,10 @@ import uuid
 
 import pytest
 
-from jit_agent import db, event_store
-from jit_agent.memory_kernel import CueState
-from jit_agent.models import EventType
-from jit_agent.postgres_memory_kernel import (
+from prometheist import db, event_store
+from prometheist.memory_kernel import CueState
+from prometheist.models import EventType
+from prometheist.postgres_memory_kernel import (
     associative_recall_from_postgres,
     rebuild,
     recall_from_postgres,

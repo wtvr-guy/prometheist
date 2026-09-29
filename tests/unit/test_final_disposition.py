@@ -2,7 +2,7 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent import artifact_journal
+from prometheist import artifact_journal
 
 
 def _completed_stage():

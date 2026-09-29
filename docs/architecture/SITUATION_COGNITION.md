@@ -16,20 +16,28 @@ flowchart TD
     F --> G[Registered local work]
     G --> H[Observed action outcome]
     H --> A
-    G --> I[Optional response]
-    E --> J[Memory-only Composer]
+    G --> SR1[Self-schema proposal when consolidating]
+    SR1 --> SR2[Independent self-schema review]
+    SR2 --> I[Optional response]
+    G --> I
+    E --> J[Fixed deterministic retrieval]
     J --> I
     I --> K[Durable completion]
 ```
 
-The six non-user stages are `SITUATION_MEMORY`, `SITUATION_TRIAGE`,
-`SITUATION_EXECUTE`, `SITUATION_COMPOSE_MEMORY`, `SITUATION_RESPOND`, and
+The eight non-user stages are `SITUATION_MEMORY`, `SITUATION_TRIAGE`,
+`SITUATION_EXECUTE`, `SITUATION_SELF_PROPOSE`, `SITUATION_SELF_REVIEW`,
+`SITUATION_RETRIEVE_MEMORY`, `SITUATION_RESPOND`, and
 `SITUATION_PERSIST`. Each runs in a fresh process under `GuardedWorkerLauncher`.
+The two self-memory stages are model-free skips for non-consolidation work. For
+`CONSOLIDATE`, they are separate fresh specialists: proposal can only propose
+typed self representations from bounded canonical roots; review independently
+expands related/counterevidence before application-owned resolution.
 Stage results reach the independent artifact journal before claim completion.
 Replacement workers rehydrate completed artifacts instead of repeating inference.
 The supervisor verifies each durable worker result against its independent stage
 artifact; a zero process exit code alone cannot complete a stage. Before marking
-the task completed, it checks all six handoffs and the canonical completion record,
+the task completed, it checks all eight handoffs and the canonical completion record,
 verifies the hash chain, and publishes a final-disposition manifest naming
 `SITUATION_PERSIST`. This includes silent, `LLM=null` situations. A failed manifest
 write leaves the task resumable. A crash after scheduler completion but before the
@@ -37,7 +45,7 @@ progress cursor commits is repaired when bounded polling revisits that situation
 before admitting a newer snapshot, without rerunning completed workers. An empty
 page can first wrap the candidate cursor to the beginning.
 
-The user pipeline retains its seven v0.7 closure stages. Intake now also forms a
+The user pipeline uses the registered [fixed retrieval stages](FIXED_RETRIEVAL.md). Intake also forms a
 situation before submitting the user task. User response necessity is forced true
 at both normalization and application work-disposition boundaries. The current
 prompt alone determines historical evidence scope and response surface; salience
@@ -100,7 +108,7 @@ separate narrow work selector. No generic shell or network executor is introduce
 
 Responses are optional and application-owned. Structured reports need no model.
 When `natural_language_response` and `response_required` are both enabled, the
-existing memory-only Composer/Adaptive Recall mechanism and final responder run
+fixed deterministic retrieval mechanism and final responder run
 in separate guarded processes. Work results reach the final responder directly.
 Non-user observations never become the current user instruction: the instruction
 is application-authored and evidence remains quarantined.
@@ -160,12 +168,19 @@ hidden consolidation call in a responder or user intake, no model memory rewrite
 and no claim of learned procedural skills or biological replay. These derived
 projections can be retrieved under the explicit `DERIVED_INTERNAL` evidence scope.
 
-Each page separately derives a durable `SemanticFact` per exact subject/property
-whose value is unambiguous within that page -- distinct from the disposable
-per-page projection above, which intentionally aggregates across every subject
-sharing a property. A changed value creates a new, non-destructive record rather
-than editing the old one; an ambiguous page (a subject's own evidence disagrees
-with itself) is left unresolved rather than guessed. See
+Semantic memory is deliberately independent of the storage page. Every unique
+structured observation contributes an immutable SemanticEvidence relationship to
+a content-addressed SemanticAssertion. The current subject/property conclusion is
+an append-only SemanticResolution with ACCEPTED, AMBIGUOUS, or UNKNOWN status.
+Stable evidence identities deduplicate overlapping situation snapshots.
+
+Page agreement is never a condition for admitting semantic evidence. Historical
+backfill remains available without rolling the current resolution backward, and
+equal-effective-time conflicts become explicit ambiguity rather than a UUID
+tie-break. Before deriving semantic memory, consolidation freezes the exact page
+keys and one derived_at resolution timestamp in a durable consolidation_input
+record. Each source event's created_at supplies known_at, while each source
+observation retains its own observed_at. See
 [`SEMANTIC_FACT_PROVENANCE.md`](SEMANTIC_FACT_PROVENANCE.md) and
 `uv run prometheist memory-fact --subject <ref> --property <ref>`.
 
@@ -186,12 +201,12 @@ An input can share `entity_refs: ["worker:1"]` across deliveries and interfaces:
 ```
 
 ```bash
-uv run python -m jit_agent.percept_cli install-source source.json
-uv run python -m jit_agent.percept_cli expectation expectation.json
-uv run python -m jit_agent.percept_cli ingest sample.json
-uv run python -m jit_agent.percept_cli schedule-consolidation schedule.json
-uv run python -m jit_agent.percept_cli tick
-uv run python -m jit_agent.percept_cli situations
+uv run python -m prometheist.percept_cli install-source source.json
+uv run python -m prometheist.percept_cli expectation expectation.json
+uv run python -m prometheist.percept_cli ingest sample.json
+uv run python -m prometheist.percept_cli schedule-consolidation schedule.json
+uv run python -m prometheist.percept_cli tick
+uv run python -m prometheist.percept_cli situations
 ```
 
 Expectations require their explicit validity interval and provenance references;

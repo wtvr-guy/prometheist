@@ -12,15 +12,15 @@ import json
 from pathlib import Path
 from typing import Any
 
-from jit_agent.associative_memory import associative_recall
-from jit_agent.capability_registry import (
+from prometheist.associative_memory import associative_recall
+from prometheist.capability_registry import (
     CapabilityDescriptor,
     CapabilityKind,
     CapabilityNeed,
     CapabilityRegistry,
     RegisteredCapability,
 )
-from jit_agent.memory_kernel import CueState
+from prometheist.memory_kernel import CueState
 
 from tune_memory_scoring import (
     EXPLORATORY_CORPORA,

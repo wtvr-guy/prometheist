@@ -6,12 +6,12 @@ import json
 from types import SimpleNamespace
 from uuid import uuid4
 
-from jit_agent import artifact_journal
-from jit_agent.llm import _render_qwen_evidence_bound_prompt
-from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from jit_agent.percept_response_runtime import PerceptStage, ResponseMemoryPackage
-from jit_agent.percept_response_worker import UserPromptLLM
-from jit_agent.response_policy import (
+from prometheist import artifact_journal
+from prometheist.llm import _render_qwen_evidence_bound_prompt
+from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from prometheist.percept_response_runtime import PerceptStage, ResponseMemoryPackage
+from prometheist.percept_response_worker import UserPromptLLM
+from prometheist.response_policy import (
     HistoricalEvidenceScope,
     ResponsePolicy,
     ResponseSurfaceMode,
@@ -80,8 +80,6 @@ def _package() -> ResponseMemoryPackage:
     )
     return ResponseMemoryPackage(
         memory_packet=packet,
-        sufficient=True,
-        composer_rounds=1,
         adaptive_recall_rounds=0,
     )
 
@@ -133,7 +131,7 @@ def test_response_policy_sees_only_current_then_exact_selector_sees_filtered_evi
         if artifact["artifact_type"] == "LLM_VALIDATION"
     ]
     assert len(invocation_artifacts) == 1
-    assert len(validation_artifacts) == 1
+    assert len(validation_artifacts) == 0
     assert invocation_artifacts[0]["payload"]["evidence_refs"] == [
         f"event:{package.memory_packet.items[0].source_event_id}"
     ]
@@ -154,10 +152,6 @@ def test_response_policy_sees_only_current_then_exact_selector_sees_filtered_evi
         expected_response
     ).hexdigest()
     assert diagnostics["elapsed_seconds"] >= 0
-    assert validation_artifacts[0]["payload"]["status"] == "VALID"
-    assert validation_artifacts[0]["payload"]["invocation_artifact_id"] == str(
-        invocation_artifacts[0]["artifact_id"]
-    )
 
 
 def test_qwen_raw_evidence_cannot_break_out_with_chat_control_tokens():

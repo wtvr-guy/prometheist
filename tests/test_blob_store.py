@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from jit_agent import blob_store
+from prometheist import blob_store
 
 
 def test_put_blob_is_content_addressed_and_idempotent(tmp_path, monkeypatch) -> None:

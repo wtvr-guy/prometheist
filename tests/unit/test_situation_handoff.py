@@ -3,8 +3,8 @@ from uuid import uuid4
 
 import pytest
 
-from jit_agent import artifact_journal, situation_runtime
-from jit_agent.situation_runtime import SituationStage
+from prometheist import artifact_journal, situation_runtime
+from prometheist.situation_runtime import SituationStage
 
 
 @pytest.mark.parametrize("journal_state", ["missing", "wrong-output", "wrong-reference", "matching"])

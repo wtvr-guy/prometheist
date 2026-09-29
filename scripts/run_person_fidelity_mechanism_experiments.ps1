@@ -50,8 +50,12 @@ try {
         --trials $Trials --output $output --artifact-root $artifactRootArgument
     if ($LASTEXITCODE -ne 0) { throw "mechanism experiment failed" }
 
+    uv run --locked python benchmarks/package_benchmark_run.py --result $output
+    if ($LASTEXITCODE -ne 0) { throw "benchmark sharing ZIP failed; raw run remains intact" }
+
     Write-Host "Native experiment result written to $output"
     Write-Host "Complete raw artifact journal written to $artifactRootArgument"
+    Write-Host "Latest benchmark ZIP staged automatically; commit and push when you want it inspected."
     Write-Host "Review and commit the result before promoting either candidate."
 }
 finally {

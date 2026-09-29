@@ -2,13 +2,13 @@ import uuid
 
 import pytest
 
-from jit_agent import db, event_store, jit_memory
-from jit_agent.interaction_working_state import (
+from prometheist import db, event_store, jit_memory
+from prometheist.interaction_working_state import (
     InteractionWorkingState,
     activate_working_state,
     load_working_state,
 )
-from jit_agent.models import EventType
+from prometheist.models import EventType
 
 
 @pytest.fixture

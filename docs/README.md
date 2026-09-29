@@ -26,7 +26,8 @@ is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
 - [`architecture/FINAL_RESPONDER.md`](architecture/FINAL_RESPONDER.md) — mandatory identity/evidence contract, additive personality, response-only sampling, and invocation provenance.
 - [`architecture/SPECIALIST_WORKER_MODULARITY.md`](architecture/SPECIALIST_WORKER_MODULARITY.md) — one semantic responsibility per LLM worker, split criteria, runtime guards, and non-user percept triage boundary.
 - [`architecture/LOSSLESS_PROGRESSIVE_MEMORY.md`](architecture/LOSSLESS_PROGRESSIVE_MEMORY.md) — exact canonical evidence, replaceable derived structures, bounded recall, and memory-scaling constraints.
-- [`architecture/SEMANTIC_FACT_PROVENANCE.md`](architecture/SEMANTIC_FACT_PROVENANCE.md) — durable, non-destructive, provenance-linked beliefs about a subject/property, derived from consolidated evidence.
+- [`architecture/SEMANTIC_FACT_PROVENANCE.md`](architecture/SEMANTIC_FACT_PROVENANCE.md) — append-only semantic assertions, per-source evidence, bi-temporal queries, ambiguity, and current belief resolutions.
+- [`architecture/SELF_MEMORY_SYSTEM.md`](architecture/SELF_MEMORY_SYSTEM.md) — layered Working/Conceptual/relational/prospective/narrative self memory, canonical-root provenance, counterevidence review, prediction feedback, and response-path admission.
 - [`architecture/IMMUTABLE_ARTIFACT_JOURNAL.md`](architecture/IMMUTABLE_ARTIFACT_JOURNAL.md) — independent append-only artifacts, content-addressed blobs, human audit rendering, signed journal heads, interruption recovery, and database reconstruction.
 - [`architecture/SYSTEM_DETERMINISM.md`](architecture/SYSTEM_DETERMINISM.md) — replayable control authority and prohibition on race-based durable decisions.
 - [`architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md`](architecture/ATTENTION_AND_EXECUTION_GOVERNANCE.md) — attention/resource separation, headroom, preemption, guarded launch, recovery, and effects.
@@ -56,6 +57,7 @@ is already closed; audits must distinguish `PASS`, `FAIL`, and `GAP`.
 
 ## Research and experiment evidence
 
+- [`experiments/CANONICAL_NEIGHBORHOOD_001.md`](experiments/CANONICAL_NEIGHBORHOOD_001.md) — bounded local canonical context before Composer sufficiency; frozen pf-q001/pf-q002 failures and native acceptance commands.
 - [`concepts/lessons_from_cognitive_neuroscience.md`](concepts/lessons_from_cognitive_neuroscience.md) — mechanism-level research input; it motivates hypotheses but does not override experiments.
 - [`concepts/lessons_from_similar_projects.md`](concepts/lessons_from_similar_projects.md) — comparison with related cognitive and agent systems.
 - [`experiments/PERSON_FIDELITY_BASELINE.md`](experiments/PERSON_FIDELITY_BASELINE.md) — frozen public person-fidelity baseline with separate structural-provenance and human-semantic verdicts.
@@ -85,3 +87,9 @@ headers identify them as historical/superseded where necessary. The live path ne
 depends on their old router, memory-capability, or agent terminology.
 
 - [Situation cognition and operator guide](architecture/SITUATION_COGNITION.md)
+
+## Current empirical imprinting transition
+
+- [Fixed retrieval and registries](architecture/FIXED_RETRIEVAL.md)
+- [Private imprint setup](engineering/IMPRINTING_SETUP.md)
+- [Cleanup and branch audit](audits/ARCHITECTURE_CLEANUP_2026-09-28.md)

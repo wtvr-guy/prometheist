@@ -2,8 +2,8 @@ import uuid
 
 import pytest
 
-from jit_agent import db, event_store, retrieval
-from jit_agent.models import EventType, RetrievalRequest
+from prometheist import db, event_store, retrieval
+from prometheist.models import EventType, RetrievalRequest
 
 
 @pytest.fixture

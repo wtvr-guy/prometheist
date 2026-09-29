@@ -3,13 +3,13 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import uuid
 
-from jit_agent.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
-from jit_agent.percept_response_runtime import ResponseMemoryPackage
-from jit_agent.percept_response_worker import (
+from prometheist.models import EventType, MemoryEvidence, MemoryNeed, MemoryPacket
+from prometheist.percept_response_runtime import ResponseMemoryPackage
+from prometheist.percept_response_worker import (
     UserPromptLLM,
     _cognitive_memory_packet,
 )
-from jit_agent.response_policy import (
+from prometheist.response_policy import (
     HistoricalEvidenceScope,
     ResponsePolicy,
     ResponseSurfaceMode,
@@ -117,8 +117,6 @@ def test_final_responder_gets_user_evidence_authority_and_no_trace(monkeypatch) 
     )
     package = ResponseMemoryPackage(
         memory_packet=_packet(direct_user_evidence, bad_prior_response, recursive_trace),
-        sufficient=True,
-        composer_rounds=1,
         adaptive_recall_rounds=0,
     )
 
