@@ -112,7 +112,9 @@ function fillConversation(root) {
       messages.append(el('article', {class:'message user', 'aria-label':'Your message'}, el('div', {class:'message-text'}, job.payload.text)));
       const response = el('article', {class:'message assistant', 'aria-label':'Prometheist response'}, el('div', {class:'message-label'}, icon('shield',15), 'Prometheist', badge(job.admission?.stages?.V2_RESPOND?.model||job.selection.model)));
       if(job.admission)response.append(el('p',{class:'hint'},job.admission.route_reason));
-      if(job.admission?.specialist_offer)response.append(el('div',{class:'notice'},el('p',{},job.admission.specialist_offer),button('Find a specialist',()=>{state.specialistTask=job.admission.task;state.modelTab='catalog';navigate('models');},{kind:'ghost',glyph:'search'})));
+      if(job.admission?.specialist_offer)response.append(el('div',{class:'notice'},el('p',{},job.admission.specialist_offer),
+        ...Object.entries(job.admission.routing_exclusions||{}).map(([model,reason])=>el('p',{class:'hint'},`${model}: ${reason}`)),
+        button('Find a specialist',()=>{state.specialistTask=job.admission.task;state.modelTab='catalog';navigate('models');},{kind:'ghost',glyph:'search'})));
       if(job.admission?.openai_offer)response.append(el('div',{class:'notice'},el('p',{},'If no local option suits this task, would you like to review an OpenAI route?'),button('Review OpenAI options',()=>{state.modelTab='openai';navigate('models');},{kind:'ghost',glyph:'cloud'})));
       if (job.status === 'completed') {
         response.append(el('div', {class:'message-text'}, job.result?.text ?? 'No response was required for this interaction.'), el('div', {class:'message-meta'}, date(job.finished_at), button('Copy', () => navigator.clipboard.writeText(job.result?.text || '').then(() => toast('Response copied')), {glyph:'copy', kind:'ghost'})));

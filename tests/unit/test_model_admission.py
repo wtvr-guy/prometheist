@@ -25,6 +25,15 @@ def evidence(name="default", *, weights=2048):
                 "qwen3.attention.head_count": 16, "qwen3.attention.head_count_kv": 4}}}
 
 
+def starcoder_evidence(name="coder", *, weights=2048):
+    # Field shapes mirror a real installed coding specialist ("dolphincoder:7b"
+    # reports exactly these model_info values from `ollama show`).
+    return {"installed": {"name": name, "size": weights * 1024 * 1024, "digest": "digest-" + name},
+            "details": {"capabilities": ["completion"], "model_info": {"general.architecture": "starcoder2",
+                "starcoder2.context_length": 16384, "starcoder2.block_count": 32, "starcoder2.embedding_length": 4608,
+                "starcoder2.attention.head_count": 36, "starcoder2.attention.head_count_kv": 4}}}
+
+
 def check(settings=None, record=None, host=None, *, at=AT, selection=None, task="general"):
     settings = settings or AppSettings(selection=ModelSelection(model="default"))
     record = record or evidence()
@@ -68,6 +77,15 @@ def test_host_changes_unknowns_and_gpu_are_not_optimistically_admitted():
     assert check(record=visual, task="vision").status == "unsupported"
 
 
+def test_starcoder2_coding_specialists_are_registered_and_eligible():
+    # Regression test: a "starcoder2"-family model (e.g. the "dolphincoder"
+    # coding specialist) must be estimable, not stuck "unverified" forever.
+    result = check(record=starcoder_evidence(), task="coding")
+    assert result.status == "eligible"
+    assert result.required_memory_mib == 3584
+    assert result.components == {"weights_mib": 2048, "kv_mib": 512, "buffers_mib": 512, "worker_mib": 512}
+
+
 def configured(*names, **kwargs):
     return AppSettings(selection=ModelSelection(model="default"), task_routing=TaskRoutingSettings(
         specialists=[SpecialistModel(selection=ModelSelection(model=name), tasks=["coding"]) for name in names]), **kwargs)
@@ -86,6 +104,18 @@ def test_installed_specialist_order_is_stable_and_stage_pin_wins():
     three = plan_task(pinned, "```python\nx=1\n```", "auto", records, observation(), at=AT)
     assert three.stages["V2_RESPOND"].model == "zeta"
     assert "precedence" in three.route_reason
+
+
+def test_registered_starcoder2_specialist_is_actually_chosen_for_coding():
+    # End-to-end regression for the reported bug: registering an installed
+    # starcoder2-family specialist (e.g. "dolphincoder") for the coding task
+    # must route chat to it instead of silently keeping the default model.
+    settings = configured("dolphincoder")
+    records = {"default:latest": evidence(), "dolphincoder:latest": starcoder_evidence("dolphincoder")}
+    plan = plan_task(settings, "/code write a function", "auto", records, observation(), at=AT)
+    assert plan.status == "eligible"
+    assert plan.stages["V2_RESPOND"].model == "dolphincoder"
+    assert not plan.routing_exclusions
 
 
 def test_default_fallback_search_offer_and_combined_route_budget():

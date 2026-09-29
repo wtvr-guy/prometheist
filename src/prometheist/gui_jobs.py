@@ -80,7 +80,7 @@ class JobManager:
         admission = path.with_name("admission.json")
         if admission.exists():
             plan = json.loads(admission.read_text(encoding="utf-8"))
-            record["admission"] = {key: plan.get(key) for key in ("task", "route_reason", "status", "reasons", "stages", "specialist_offer", "openai_offer")}
+            record["admission"] = {key: plan.get(key) for key in ("task", "route_reason", "status", "reasons", "stages", "specialist_offer", "openai_offer", "routing_exclusions")}
         return record
 
     def list(self):

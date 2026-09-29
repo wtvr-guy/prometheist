@@ -27,7 +27,14 @@ ROUTING_VERSION = "task-routing/v1"
 MIB_BYTES = 1024 * 1024
 KV_ELEMENT_BYTES = 4  # conservative f32 envelope; no quantized-cache savings
 MAX_ESTIMATED_BATCH = 128
-DENSE_ARCHITECTURES = frozenset({"llama", "qwen2", "qwen3", "gemma", "gemma2", "gemma3", "phi3"})
+# starcoder2 (e.g. the "dolphincoder" coding specialist) reports the same
+# generic GQA/RoPE fields the estimator already reads (attention.head_count,
+# attention.head_count_kv, block_count, context_length, embedding_length), so
+# the same weights+KV-cache formula applies. Like the already-registered
+# gemma2, it alternates sliding-window and global attention, so this
+# estimator's dense (every layer, full context) formula is a safe overestimate
+# rather than an underestimate.
+DENSE_ARCHITECTURES = frozenset({"llama", "qwen2", "qwen3", "gemma", "gemma2", "gemma3", "phi3", "starcoder2"})
 TASKS = MappingProxyType({
     "general": {"label": "General", "requires": ["completion"], "input": "text", "implemented": True},
     "coding": {"label": "Coding", "requires": ["completion"], "input": "text", "implemented": True},

@@ -76,6 +76,7 @@ export async function reviewFallback(ctx, plan, startWithCloud=false) {
     if(startWithCloud){showCloud();return;}
     const results=el('div',{class:'stack'});
     content.append(badge('1 · Capability catalog search'),el('p',{},plan.specialist_offer||'No eligible installed specialist.'),
+      ...Object.entries(plan.routing_exclusions||{}).map(([model,reason])=>el('p',{class:'hint'},`${model}: ${reason}`)),
       el('p',{class:'hint'},'Search uses a fixed public task query. Your message is not sent. You choose the exact model and tag before any download.'),results);
     actions.replaceChildren(button('Search specialists',async()=>{
       // Consent uses the same dialog surface, so request it before reopening this review.
