@@ -1,4 +1,6 @@
 import json
+import os
+import stat
 
 import pytest
 
@@ -131,3 +133,15 @@ def test_concurrent_grant_and_revocation_cannot_restore_an_old_grant():
         require_destination(old, purpose)
     for url in urls:
         require_destination(url, purpose)
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX file modes; Windows depends on the private directory ACL")
+def test_revocation_keeps_remaining_grants_owner_only():
+    purpose = NetworkPurpose.MODEL
+    urls = ("https://revoked.example", "https://retained.example")
+    for url in urls:
+        grant_consent(url, purpose, accepted_digest=content_digest(consent_proposal(url, purpose)))
+    assert stat.S_IMODE(consent_path().stat().st_mode) == 0o600
+    revoke_consent(urls[0], purpose)
+    assert stat.S_IMODE(consent_path().stat().st_mode) == 0o600
+    require_destination(urls[1], purpose)

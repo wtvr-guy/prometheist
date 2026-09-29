@@ -126,8 +126,8 @@ def main(argv=None):
         result = ({"proposal": proposal, "accept_sha256": content_digest(proposal)} if args.accept is None else
                   enroll_security(profile.subject_id, host_id, accepted_digest=args.accept).model_dump(mode="json"))
     elif args.command == "security-revoke":
-        from prometheist.security_posture import enrollment_path
-        enrollment_path().unlink(missing_ok=True)
+        from prometheist.security_posture import revoke_security
+        revoke_security()
         result = {"revoked": True, "effect": "Future privileged security actions denied; existing firewall rules remain until a reviewed REMOVE plan. Stop the process to stop passive monitoring."}
     elif args.command == "firewall-plan":
         from prometheist.os_security import firewall_plan

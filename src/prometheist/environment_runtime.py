@@ -10,7 +10,7 @@ import threading
 from uuid import UUID, uuid4
 
 from prometheist import db
-from prometheist.artifact_journal import artifact_root, _atomic_write_json
+from prometheist.artifact_journal import artifact_root, _atomic_write_json, _fsync_parent
 from prometheist.cognitive_store import get_record, put_record, record_lock
 from prometheist.environment_contracts import (
     EnvironmentMap, EnvironmentScan, ResourcePresence, content_digest, reconcile_environment,
@@ -35,6 +35,7 @@ def local_host_id() -> UUID:
     if path.exists():
         return UUID(path.read_text(encoding="utf-8").strip())
     path.parent.mkdir(parents=True, exist_ok=True)
+    _fsync_parent(root)
     candidate = uuid4()
     temporary = path.with_name(f"host-id-{candidate}.tmp")
     try:
@@ -44,6 +45,7 @@ def local_host_id() -> UUID:
             os.fsync(handle.fileno())
         try:
             os.link(temporary, path)
+            _fsync_parent(path.parent)
         except FileExistsError:
             pass
     finally:

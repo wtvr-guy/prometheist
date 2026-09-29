@@ -11,10 +11,10 @@ from typing import Literal
 
 from pydantic import Field
 
-from prometheist.artifact_journal import artifact_root, _atomic_write_json
+from prometheist.artifact_journal import artifact_root
 from prometheist.environment_contracts import content_digest
 from prometheist.percept_context import FrozenRecord
-from prometheist.operator_state import policy_lock
+from prometheist.operator_state import policy_lock, write_private_policy
 
 CONSENT_VERSION = "network-consent/v1"
 CONNECTIVITY_TIMEOUT_SECONDS = 5
@@ -102,8 +102,7 @@ def grant_consent(url: str, purpose: NetworkPurpose, *, accepted_digest: str, ro
         prior = load_consent(root)
         grants = [g for g in prior.grants if (g.destination, g.purpose) != (grant.destination, purpose)]
         grants.append(grant)
-        _atomic_write_json(consent_path(root), NetworkConsent(grants=tuple(grants)).model_dump(mode="json"))
-        consent_path(root).chmod(0o600)
+        write_private_policy(consent_path(root), NetworkConsent(grants=tuple(grants)).model_dump(mode="json"))
     return grant
 
 
@@ -112,7 +111,7 @@ def revoke_consent(url: str, purpose: NetworkPurpose, *, root: Path | None = Non
     with policy_lock(consent_path(root)):
         prior = load_consent(root)
         kept = tuple(g for g in prior.grants if (g.destination, g.purpose) != (destination, purpose))
-        _atomic_write_json(consent_path(root), NetworkConsent(grants=kept).model_dump(mode="json"))
+        write_private_policy(consent_path(root), NetworkConsent(grants=kept).model_dump(mode="json"))
 
 
 def require_destination(url: str, purpose: NetworkPurpose, *, root: Path | None = None):

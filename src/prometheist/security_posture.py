@@ -7,9 +7,10 @@ from types import MappingProxyType
 from typing import Literal
 from uuid import UUID
 
-from prometheist.artifact_journal import _atomic_write_json, artifact_root
+from prometheist.artifact_journal import artifact_root
 from prometheist.environment_contracts import EnvironmentScan, ScanStatus, content_digest
 from prometheist.percept_context import FrozenRecord
+from prometheist.operator_state import policy_lock, write_private_policy
 
 # This registry describes actual implemented authority, not aspirational powers.
 # Future capabilities require a new reviewed enrollment, even for the same host.
@@ -54,9 +55,16 @@ def enroll_security(subject_id, host_id, *, accepted_digest, root=None):
         raise ValueError("enrollment requires acceptance of the exact host, subject, capabilities and disclosure")
     result = SecurityEnrollment(subject_id=subject_id, host_id=host_id, capabilities=tuple(SECURITY_CAPABILITIES),
         disclosure_sha256=accepted_digest, granted_at=datetime.now(timezone.utc))
-    _atomic_write_json(enrollment_path(root), result.model_dump(mode="json"))
-    enrollment_path(root).chmod(0o600)
+    with policy_lock(enrollment_path(root)):
+        write_private_policy(enrollment_path(root), result.model_dump(mode="json"))
     return result
+
+
+def revoke_security(*, root=None):
+    from prometheist.artifact_journal import _fsync_parent
+    with policy_lock(enrollment_path(root)):
+        enrollment_path(root).unlink(missing_ok=True)
+        _fsync_parent(enrollment_path(root).parent)
 
 
 def require_security_capability(subject_id, host_id, capability, *, root=None):
