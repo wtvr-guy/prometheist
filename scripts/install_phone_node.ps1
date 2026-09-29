@@ -54,7 +54,7 @@ if ((Test-Path $Keystore) -and -not (Test-Path $PasswordFile)) {
     $Password = Read-Host 'Signing-key password' -AsSecureString
 } elseif (Test-Path $PasswordFile) {
     if (-not (Test-Path $Keystore)) { throw 'Signing key missing. Restore the original .p12 backup; a new key cannot update your existing app.' }
-    $Password = Get-Content $PasswordFile -Raw | ConvertTo-SecureString
+    $Password = (Get-Content $PasswordFile -Raw).Trim() | ConvertTo-SecureString
 } else {
     Write-Host 'Choose a signing-key password (12+ characters) and keep it in your password manager.'
     $Password = Read-Host 'New signing-key password' -AsSecureString

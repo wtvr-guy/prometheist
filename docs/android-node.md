@@ -12,6 +12,15 @@ background behavior and real sensor/battery calibration still require native
 validation. The app has not been installed on the owner's phone by this change.
 Phone Link and a USB cable do not give this development environment phone access.
 
+At revision `90481c4`, [laptop CI](https://github.com/wtvr-guy/prometheist/actions/runs/36590981197)
+passed 710 tests (18 skipped), including synthetic PostgreSQL intake, with Windows
+and browser checks also passing. [Android CI](https://github.com/wtvr-guy/prometheist/actions/runs/36590981162)
+passed the build, unit tests, lint, installer-source verification, Windows script
+parsing and two API 35 emulator tests for Keystore authentication and offline
+storage. The bundled release APK contains the corrected atomic file publication
+verified by that emulator run. These checks do not substitute for the A16 field
+validation below.
+
 ## What works where
 
 | Capability | Offline phone | Laptop connected through tunnel |
