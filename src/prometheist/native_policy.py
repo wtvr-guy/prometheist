@@ -27,15 +27,26 @@ def native_resource_safety_policy() -> ResourceSafetyPolicy:
         llm_concurrency_limit=1,
     )
 
-    from prometheist.gui_config import job_settings
+    from prometheist.gui_config import job_settings, local_ollama
     settings = job_settings()
     if settings is not None:
-        values = settings.resources.model_dump()
+        values = {key: value for key, value in settings.resources.model_dump().items()
+                  if key in ResourceSafetyPolicy.model_fields}
+        import os
+        cpu = int(os.environ.get("PROMETHEIST_GUI_MODEL_CPU_UNITS", "1"))
+        if cpu < 1:
+            raise ValueError("model CPU requirement must be positive")
+        values["default_process_cpu_units"] = cpu
         from prometheist.contract_registry import STAGE_CONTRACTS
         selections = [settings.selection_for(stage) for stage, contract in STAGE_CONTRACTS.items()
                       if contract.kinds and stage.startswith("V2_")]
-        if selections and all(selection.provider == "openai" for selection in selections):
+        if selections and all(selection.provider == "openai" or not local_ollama(settings) for selection in selections):
             values["default_llm_process_memory_mib"] = values["default_process_memory_mib"]
+        else:
+            floor = int(os.environ.get("PROMETHEIST_GUI_MODEL_MEMORY_FLOOR_MIB", "0"))
+            if floor < 0:
+                raise ValueError("model memory floor must be nonnegative")
+            values["default_llm_process_memory_mib"] = max(values["default_llm_process_memory_mib"], floor)
         policy = ResourceSafetyPolicy.model_validate({**policy.model_dump(), **values,
                                                      "policy_version": "app-resource-policy/v1"})
     return policy

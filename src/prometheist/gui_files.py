@@ -327,8 +327,13 @@ class FileManager:
                         raise ValueError("Copy encountered a special file")
                     if progress:
                         progress({"status": "Copying files", "files": count, "name": Path(src).name})
+                    source_version = revision(Path(src))
                     with Path(src).open("rb") as reader, Path(dst).open("xb") as writer:
                         shutil.copyfileobj(reader, writer, length=UPLOAD_CHUNK_BYTES)
+                        writer.flush()
+                        os.fsync(writer.fileno())
+                    if revision(Path(src)) != source_version:
+                        raise ValueError("Source changed during copy; partial destination retained for inspection")
                     return str(dst)
                 if source.is_dir():
                     # Reject links before tree traversal, including junctions on Windows.

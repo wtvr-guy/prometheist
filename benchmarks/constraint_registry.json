@@ -1128,6 +1128,126 @@
       "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
       "source_path": "src/prometheist/model_parameters.py",
       "source_fragment": "Parameter(\"Output budget\", \"integer\", \"Context\", \"Includes reasoning tokens. Low budgets may leave no final answer.\", 256, 262144)"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_context_tokens.default": {
+      "expected_value": 4096,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_context_tokens.ge": {
+      "expected_value": 512,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_context_tokens.le": {
+      "expected_value": 1048576,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_runtime_headroom_percent.default": {
+      "expected_value": 25,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_runtime_headroom_percent.ge": {
+      "expected_value": 10,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_runtime_headroom_percent.le": {
+      "expected_value": 200,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_runtime_headroom_min_mib.default": {
+      "expected_value": 512,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_runtime_headroom_min_mib.ge": {
+      "expected_value": 256,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_runtime_headroom_min_mib.le": {
+      "expected_value": 1048576,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::SpecialistModel::tasks.max_length": {
+      "expected_value": 3,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "One slot for each of the three registered task kinds; duplicates are forbidden."
+    },
+    "src/prometheist/gui_config.py::SpecialistModel::priority.default": {
+      "expected_value": 100,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::SpecialistModel::priority.le": {
+      "expected_value": 1000,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::TaskRoutingSettings::specialists.max_length": {
+      "expected_value": 16,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/model_admission.py::<module>::KV_ELEMENT_BYTES": {
+      "expected_value": 4,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/model_admission.py::<module>::MAX_ESTIMATED_BATCH": {
+      "expected_value": 128,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/model_admission.py::ModelEligibility::required_cpu_units.default": {
+      "expected_value": 1,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/model_admission.py::plan_task::slice_upper": {
+      "expected_value": 3,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "The comparison tuple has three keys: operator priority, memory estimate and canonical ID; the model object is not compared."
+    },
+    "src/prometheist/native_policy.py::native_resource_safety_policy::comparison": {
+      "expected_value": 1,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "CPU claims must reserve at least one positive scheduling unit."
     }
   },
   "groups": {

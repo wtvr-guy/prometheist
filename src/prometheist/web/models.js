@@ -1,4 +1,5 @@
 import {el, icon, button, field, badge, pretty, empty, bytes, modal, confirm, api, toast, grant} from './ui.js';
+import {checkFit, editSpecialist, continueFallback} from './routing.js';
 
 export async function modelsView(ctx) {
   const {state} = ctx;
@@ -22,6 +23,7 @@ async function installed(root,ctx){
     cards.replaceChildren(...shown.map(model=>{
       const selected=ctx.state.settings.selection.provider==='ollama'&&ctx.state.settings.selection.model===model.name;
       return el('article',{class:'card model-card'},el('div',{class:'card-top'},el('div',{class:'model-symbol'},icon('cube',21)),badge(selected?'Selected':'Installed',selected?'amber':'green')),el('h3',{},model.name),el('p',{class:'model-sub'},[bytes(model.size),model.details?.parameter_size,model.details?.quantization_level].filter(Boolean).join(' · ')),
+        el('div',{class:'row'},button('Check capacity',()=>checkFit(selected?ctx.state.settings.selection:{provider:'ollama',model:model.name,parameters:{}}),{glyph:'cpu',kind:'ghost'}),button('Use as specialist',()=>editSpecialist(ctx,model.name,ctx.state.settings.task_routing.specialists.find(item=>item.selection.model===model.name)),{kind:'ghost'})),
         el('div',{class:'row'},button(selected?'Selected':'Use model',()=>selectModel(ctx,'ollama',model.name),{glyph:selected?'check':undefined,kind:selected?'ghost':'primary'}),button('Details',async()=>{const details=await api(`/models/details?model=${encodeURIComponent(model.name)}`);modal(model.name,el('div',{class:'stack'},el('div',{class:'row'},...details.capabilities.map(value=>badge(value))),pretty(details)),[button('Close',()=>document.querySelector('#dialog').close())]);},{kind:'ghost'}),button('',()=>removeModel(ctx,model.name),{glyph:'trash',kind:'icon-button ghost','aria-label':`Delete ${model.name}`})));
     }));
     if(!shown.length)cards.append(empty(models.length?'No models match':'Make room for your first model',models.length?'Try a different filter.':'Search the Ollama library, or add an exact model name.',button('Browse library',()=>{ctx.state.modelTab='catalog';ctx.render();},{glyph:'search'})));
@@ -45,7 +47,21 @@ function addModel(ctx,name=''){
 }
 function catalog(root,ctx){
   const query=el('input',{type:'search',placeholder:'Search the Ollama library…','aria-label':'Search Ollama library',maxlength:200});
+  const task=el('select',{'aria-label':'Specialist task'},...['general','coding','vision'].map(value=>el('option',{value},value[0].toUpperCase()+value.slice(1))));
+  task.value=ctx.state.specialistTask||'coding';
   const results=el('div',{class:'cards'});
+  const specialistSearch=async()=>{
+    if(!await grant('model_catalog','https://ollama.com'))return;
+    results.replaceChildren(empty('Matching advertised capabilities…','Only a fixed public task query is sent. Your message and files stay here.'));
+    const data=await api(`/models/specialists?task=${task.value}`);
+    results.replaceChildren(...data.models.map(model=>el('article',{class:'card model-card'},
+      el('h3',{},model.name),el('div',{class:'row'},...model.advertised_capabilities.map(value=>badge(value))),
+      el('p',{class:'hint'},model.advertised_sizes.length?`Advertised sizes: ${model.advertised_sizes.join(', ')}`:'Exact local sizes are not reported in this result.'),
+      el('p',{class:'hint'},model.verification),
+      el('div',{class:'row'},button('Choose tag to download',()=>addModel(ctx,model.name),{glyph:'download',kind:'primary'}),el('a',{href:model.url,target:'_blank',rel:'noopener noreferrer',class:'button ghost'},'Review model')))));
+    if(!data.models.length)results.append(empty('No advertised catalog matches','The fixed query and advertised capability filters returned no candidates. You can broaden the ordinary search or add a model by its exact ID.'));
+    if(data.openai_offer)results.append(el('article',{class:'card stack'},el('h3',{},'No suitable local option?'),el('p',{class:'hint'},'Next: optional OpenAI review, then your local default. You choose the model and route, connect a key, and review destination consent before cloud inference. API charges may apply.'),button('Continue to OpenAI review',()=>continueFallback(ctx),{glyph:'cloud'})));
+  };
   const search=async()=>{
     if(!await grant('model_catalog','https://ollama.com'))return;
     results.replaceChildren(empty('Searching the library…','The request goes directly to ollama.com.'));
@@ -55,14 +71,16 @@ function catalog(root,ctx){
     }catch(error){results.replaceChildren(empty('Search unavailable',error.message,el('a',{href:'https://ollama.com/search',target:'_blank',rel:'noopener noreferrer',class:'button'},'Open Ollama library')));}
   };
   query.addEventListener('keydown',event=>{if(event.key==='Enter')search().catch(error=>toast(error.message,true));});
-  root.append(el('div',{class:'searchbar'},query,button('Search library',search,{glyph:'search',kind:'primary'})),el('p',{class:'notice'},'Browse on demand. Library searches and model downloads each have their own external-access permission. Nothing is downloaded automatically.'),results);
+  root.append(el('div',{class:'searchbar'},query,button('Search library',search,{glyph:'search',kind:'primary'})),el('div',{class:'row'},task,button('Find task specialist',specialistSearch,{glyph:'search'})),el('p',{class:'notice'},'Browse on demand. Library searches and model downloads each have their own external-access permission. Nothing is downloaded automatically. Specialist search uses registered rules and advertised metadata; exact capabilities and capacity are checked after installation.'),results);
   results.append(empty('Find a model that fits','Search by model family or enter an exact model name. Metadata becomes available after the model is installed.',button('Add by name',()=>addModel(ctx),{glyph:'plus'})));
+  if(ctx.state.runSpecialistSearch){ctx.state.runSpecialistSearch=false;specialistSearch().catch(error=>toast(error.message,true));}
 }
 async function cloud(root,ctx){
   const connected=ctx.state.bootstrap.openai_connected;
   root.append(el('div',{class:'connection-banner'},el('div',{class:'model-symbol'},icon('cloud',23)),el('div',{class:'banner-content'},el('h3',{},'OpenAI API'),el('p',{},connected?'API key available in this app session.':'Connect your own API key. API usage is billed by OpenAI.')),
     connected?button('Disconnect',async()=>{const result=await api('/openai/key',{method:'DELETE',body:{}});ctx.state.bootstrap.openai_connected=false;toast(result.effect);ctx.render();},{kind:'ghost'}):button('Connect OpenAI',()=>connectCloud(ctx),{kind:'primary'})));
   root.append(el('p',{class:'notice'},'Cloud requests can contain your current prompt and selected personal evidence. Each request uses store: false; OpenAI’s own retention and abuse-monitoring policies still apply. Only explicitly selected stages use OpenAI.'));
+  if(ctx.state.fallbackPlan)root.append(el('div',{class:'row'},button('Continue fallback review',()=>continueFallback(ctx),{kind:'ghost'})));
   const model=el('input',{placeholder:'Exact OpenAI model ID', 'aria-label':'OpenAI model ID'});
   const filter=el('input',{type:'search',placeholder:'Filter available model IDs…','aria-label':'Filter OpenAI model IDs'});
   const results=el('div',{class:'cards'});

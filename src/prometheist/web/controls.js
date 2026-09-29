@@ -49,6 +49,8 @@ export async function parameterFields(selection, {compact = false} = {}) {
 export async function inspector(ctx) {
   const container = el('aside', {class:'inspector', 'aria-label':'Generation controls'}, el('div', {class:'inspector-title'}, el('h2', {}, 'Generation'), button('', () => ctx.toggleControls(false), {glyph:'close', kind:'icon-button', 'aria-label':'Close generation controls'})));
   const selection = ctx.state.settings.selection;
+  const responder = ctx.state.settings.routes.V2_RESPOND;
+  if (responder) container.append(el('p', {class:'notice'}, `Final responses use the explicit ${responder.model} route. Change its parameters in Settings → Model routing.`));
   const provider = el('select', {}, el('option', {value:'ollama'}, 'Ollama · local'), el('option', {value:'openai'}, 'OpenAI · cloud'));
   provider.value = selection.provider;
   const model = el('input', {value:selection.model, list:'model-options', 'aria-label':'Model ID', autocomplete:'off'});

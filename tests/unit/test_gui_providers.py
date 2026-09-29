@@ -121,3 +121,24 @@ def test_catalog_parser_does_not_turn_links_into_external_download_targets():
     parser = CatalogParser()
     parser.feed('<a href="/library/qwen3">x</a><a href="/library/qwen3">x</a><a href="https://evil.example/library/evil">e</a><a href="/library/name/tags">t</a><a href="/library/foo-cloud">cloud</a>')
     assert parser.names == ["qwen3"]
+
+
+def test_installed_huggingface_model_names_are_valid_but_download_scopes_stay_exact(monkeypatch):
+    from prometheist.gui_models import pull_model
+    name = "hf.co/example/small-model-GGUF:Q4_K_M"
+    assert ModelSelection(model=name).model == name
+    with pytest.raises(ValueError, match="registry names"):
+        pull_model("http://localhost:11434", name, lambda value: None)
+
+
+def test_measured_cost_and_remote_ollama_capacity_are_local_host_scoped(monkeypatch):
+    from prometheist.gui_runtime import configured_runtime_probe
+    local = AppSettings(selection=ModelSelection(model="large"))
+    floor = 8704
+    monkeypatch.setenv(GUI_CONFIG_ENV, local.model_dump_json())
+    monkeypatch.setenv("PROMETHEIST_GUI_MODEL_MEMORY_FLOOR_MIB", str(floor))
+    assert native_resource_safety_policy().default_llm_process_memory_mib == floor
+    remote = AppSettings(ollama_url="https://192.0.2.1:11434", selection=local.selection)
+    monkeypatch.setenv(GUI_CONFIG_ENV, remote.model_dump_json())
+    assert not configured_runtime_probe().capture().resident
+    assert native_resource_safety_policy().default_llm_process_memory_mib == 512

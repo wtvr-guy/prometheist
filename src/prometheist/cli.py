@@ -55,6 +55,7 @@ def _handle_with_admission_diagnostics(
     conn,
     user_text: str,
     conversation_id: uuid.UUID,
+    **runtime_options,
 ) -> str | None:
     """Run one percept and expose the authoritative denial envelope on failure."""
 
@@ -63,6 +64,7 @@ def _handle_with_admission_diagnostics(
             conn,
             user_text,
             conversation_id,
+            **runtime_options,
         )
     except WorkerLaunchDenied as exc:
         _emit_admission_diagnostics(

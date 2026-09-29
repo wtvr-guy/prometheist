@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from html.parser import HTMLParser
 import json
+import re
 from urllib.parse import urljoin, urlsplit
 
 import httpx
@@ -65,6 +66,8 @@ def delete_model(base_url, name):
 
 def pull_model(base_url, name, report):
     ModelSelection(model=name)
+    if name.count("/") > 1 or ("/" in name and "." in name.split("/", 1)[0]):
+        raise ValueError("Downloads support Ollama registry names only; install other sources in Ollama explicitly")
     require_destination(base_url, NetworkPurpose.MODEL)
     require_destination(DOWNLOAD_ORIGIN, NetworkPurpose.MODEL_DOWNLOAD)
     with httpx.Client(base_url=base_url, trust_env=False, follow_redirects=False,
@@ -89,8 +92,13 @@ class CatalogParser(HTMLParser):
     def __init__(self):
         super().__init__()
         self.names = []
+        self.records = []
+        self.current = None
+        self.badge = False
 
     def handle_starttag(self, tag, attrs):
+        if self.current and tag == "span":
+            self.badge = "rounded-md" in dict(attrs).get("class", "").split()
         if tag != "a":
             return
         href = dict(attrs).get("href", "")
@@ -106,12 +114,33 @@ class CatalogParser(HTMLParser):
             return
         if len(self.names) < MAX_CATALOG_RESULTS:
             self.names.append(name)
+            self.current = {"name": name, "url": CATALOG_ORIGIN + "/library/" + name,
+                            "advertised_capabilities": [], "advertised_sizes": [], "catalog_text": ""}
+
+    def handle_data(self, data):
+        if self.current is None:
+            return
+        value = data.strip()
+        self.current["catalog_text"] += " " + value
+        if self.badge and value in {"vision", "tools", "thinking", "embedding", "audio", "cloud"}:
+            self.current["advertised_capabilities"].append(value)
+        elif self.badge and re.fullmatch(r"\d+(?:\.\d+)?[bm]", value):
+            self.current["advertised_sizes"].append(value)
+
+    def handle_endtag(self, tag):
+        if tag == "span":
+            self.badge = False
+        if tag == "a" and self.current:
+            self.records.append(self.current)
+            self.current = None
 
 
-def search_catalog(query):
+def search_catalog(query, *, capability=None):
+    if capability not in {None, "vision", "tools", "thinking", "embedding"}:
+        raise ValueError("Unregistered catalog capability filter")
     require_destination(CATALOG_ORIGIN, NetworkPurpose.MODEL_CATALOG)
     with httpx.Client(trust_env=False, follow_redirects=False, timeout=MODEL_HTTP_TIMEOUT_SECONDS) as client:
-        with client.stream("GET", CATALOG_ORIGIN + "/search", params={"q": query}) as response:
+        with client.stream("GET", CATALOG_ORIGIN + "/search", params={"q": query, **({"c": capability} if capability else {})}) as response:
             response.raise_for_status()
             chunks, size = [], 0
             for chunk in response.iter_bytes():
@@ -121,7 +150,31 @@ def search_catalog(query):
                 chunks.append(chunk)
     parser = CatalogParser()
     parser.feed(b"".join(chunks).decode("utf-8", errors="replace"))
-    return [{"name": name, "url": CATALOG_ORIGIN + "/library/" + name} for name in parser.names]
+    return sorted(parser.records, key=lambda item: item["name"])
+
+
+def search_specialists(task):
+    """Fixed public query and exact capability filters, never the personal prompt."""
+    from prometheist.environment_contracts import content_digest
+    from prometheist.model_admission import TASKS
+    if task not in TASKS:
+        raise ValueError("Unregistered task")
+    query, capability = {"general": ("", None), "coding": ("coder", None), "vision": ("", "vision")}[task]
+    records = search_catalog(query, capability=capability)
+    matches = []
+    for record in records:
+        advertised = set(record["advertised_capabilities"])
+        if "embedding" in advertised or ("cloud" in advertised and not record["advertised_sizes"]):
+            continue
+        if capability and capability not in advertised:
+            continue
+        if task == "coding" and not re.search(r"\b(?:code|coding|coder|programming)\b", record["catalog_text"], re.I):
+            continue
+        matches.append({**record, "verification": "Advertised catalog match; exact tag, capabilities and resource fit require installation and /api/show"})
+    return {"policy_version": "specialist-search/v1", "task": task, "query": query,
+            "capability_filter": capability, "required_capabilities": TASKS[task]["requires"],
+            "catalog_digest": content_digest(records), "models": matches,
+            "openai_offer": TASKS[task]["implemented"], "download_policy": "Only the operator chooses an exact model/tag to download"}
 
 
 def openai_models(key):

@@ -30,7 +30,7 @@ class ModelSelection(SettingsRecord):
     @classmethod
     def model_reference(cls, value):
         import re
-        if not re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)?(?::[A-Za-z0-9_.-]+)?", value):
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+){0,3}(?::[A-Za-z0-9_.-]+)?", value):
             raise ValueError("use a model ID or Ollama namespace/name:tag, not a URL")
         if value.casefold().endswith(("-cloud", ":cloud")):
             raise ValueError("Ollama cloud aliases are not supported; use an explicit cloud provider")
@@ -62,11 +62,43 @@ class ResourceSettings(SettingsRecord):
     max_cpu_pressure_percent: int = Field(default=85, ge=10, le=99)
     default_llm_process_memory_mib: int = Field(default=3072, ge=512, le=1048576)
     default_process_memory_mib: int = Field(default=512, ge=128, le=1048576)
+    model_context_tokens: int = Field(default=4096, ge=512, le=1048576)
+    model_runtime_headroom_percent: int = Field(default=25, ge=10, le=200)
+    model_runtime_headroom_min_mib: int = Field(default=512, ge=256, le=1048576)
 
     @model_validator(mode="after")
     def enough_worker_memory(self):
         if self.default_llm_process_memory_mib < self.default_process_memory_mib:
             raise ValueError("local model memory estimate must include worker memory")
+        return self
+
+
+class SpecialistModel(SettingsRecord):
+    """Operator-declared expertise, distinct from provider-reported modalities."""
+    selection: ModelSelection
+    tasks: list[Literal["general", "coding", "vision"]] = Field(min_length=1, max_length=3)
+    priority: int = Field(default=100, ge=0, le=1000)
+
+    @model_validator(mode="after")
+    def local_specialist(self):
+        if self.selection.provider != "ollama":
+            raise ValueError("Automatic specialists must be local Ollama models; pin cloud models explicitly by stage")
+        if len(set(self.tasks)) != len(self.tasks):
+            raise ValueError("Specialist tasks must be unique")
+        return self
+
+
+class TaskRoutingSettings(SettingsRecord):
+    enabled: bool = True
+    allow_default_fallback: bool = True
+    specialists: list[SpecialistModel] = Field(default_factory=list, max_length=16)
+
+    @model_validator(mode="after")
+    def unique_models(self):
+        from prometheist.ollama_runtime import _canonical_model_name
+        names = [_canonical_model_name(item.selection.model) for item in self.specialists]
+        if len(set(names)) != len(names):
+            raise ValueError("Register each specialist model once")
         return self
 
 
@@ -77,6 +109,7 @@ class AppSettings(SettingsRecord):
     ollama_url: str = "http://localhost:11434"
     memory: MemorySettings = Field(default_factory=MemorySettings)
     resources: ResourceSettings = Field(default_factory=ResourceSettings)
+    task_routing: TaskRoutingSettings = Field(default_factory=TaskRoutingSettings)
     personality: str = Field(default="", max_length=8192)
     monitor_interval_seconds: int = Field(default=60, ge=10, le=3600)
     worker_timeout_seconds: int = Field(default=600, ge=30, le=3600)
@@ -141,3 +174,8 @@ def save_settings(root: Path, settings: AppSettings):
 def settings_revision(settings: AppSettings) -> str:
     from hashlib import sha256
     return sha256(json.dumps(settings.model_dump(mode="json"), sort_keys=True).encode()).hexdigest()
+
+
+def local_ollama(settings: AppSettings) -> bool:
+    from prometheist.network_consent import _loopback
+    return _loopback(urlsplit(settings.ollama_url).hostname)

@@ -38,7 +38,7 @@ app process runs, and its configured interval can be changed in Settings.
 - **Chat** opens first. Conversations retain their own display grouping; memory
   retrieval still follows the system's cross-conversation evidence rules.
 - **Controls** chooses a provider/model and exposes registered generation options.
-  An unchecked override inherits the model/runtime default. Ollama metadata narrows
+  An unchecked override inherits the registered execution profile or model default. Ollama metadata narrows
   thinking support and maximum context where reported. Sampling overrides affect
   final responses; hardware overrides affect all local model calls. Control workers
   keep their deterministic temperature. Model output itself is not guaranteed
@@ -60,9 +60,67 @@ app process runs, and its configured interval can be changed in Settings.
 Each chat snapshots settings into a private file inherited by its fresh worker
 processes. Later UI edits do not change an active task. Workers use the existing
 schema validation, stage specialization, admission policy, and artifact journal.
-Different routed local models receive no shared residency credit. All-OpenAI routes
-reserve local worker overhead rather than local model weights. The cold local
-model memory estimate must be calibrated when selecting larger weights or context.
+
+## Deterministic model choice and capacity
+
+The fallback order is **installed local specialist → capability-based catalog
+search → optional OpenAI review → local default**. Nothing is downloaded or sent
+to a cloud model automatically. An explicit stage route takes precedence; disabling
+automatic specialist routing deliberately pins the selected model. The default
+fallback can also be disabled in advanced settings.
+
+Register installed models using **Models → Use as specialist**. Declare general,
+coding or future vision expertise and a priority. Ollama reports modalities, but
+not a trustworthy coding-quality score; operator expertise labels are distinct from
+reported capabilities. Automatic task classification uses only a `/code` prefix or
+fenced code to identify coding; otherwise it chooses general. The task selector
+is an explicit override. Eligible specialists are ordered by priority, estimated
+memory, then canonical model ID. Only the final response stage changes; control
+stages retain their configured models. The combined stage budget must fit.
+
+When no specialist qualifies, the chat presents deterministic choice dialogs before
+starting cognition. Catalog search uses registered public queries (`coder` for
+coding, the `vision` capability filter for vision), sorts the results, rejects
+incompatible advertised modalities and cloud-only listings, and records the
+response digest and matches locally. The personal prompt is never a catalog query.
+Results are advertisements, not verified suitability: review an exact tag and
+choose its download, then register and assess the installed model. If no local
+option suits the task, review OpenAI; declining it leads to the final local-default
+choice. These questions, disclosures and status messages are code/template output,
+with no LLM call. Model inference still requires a fresh eligibility check.
+
+**Check capacity** and **Preview route** show measured CPU/RAM, the estimate and
+reasons. Every job records its original settings, complete admission inputs and
+effective settings in private `operator/app-jobs/` receipts. The pure policy returns
+the same result from identical inputs. It distinguishes eligible, temporarily
+blocked, unsupported, unverified and explicitly remote selections. An inventory
+outage produces a reviewable fallback. Remote service capacity remains unknown;
+only local worker overhead is assessed for explicit remote routes.
+
+The first registered estimator is deliberately limited to dense architectures in
+`model_admission.py` and CPU inference. It counts full installed weights, a full
+context K/V cache envelope, runtime buffers and worker memory, then applies the
+existing OS and uncertainty headroom policy. Context is explicitly set to the
+configured default (initially 4096) capped by reported model support, unless the
+operator overrides it. It never silently shrinks an explicit context. The initial
+profile uses one CPU thread, a batch of 128, no GPU offload, and unload-after-request;
+valid explicit overrides remain visible. Larger batches, speculative decoding,
+GPU offload and unknown/hybrid architectures require a registered estimator and
+native calibration. Shared integrated graphics memory is never counted as extra
+RAM. Resident models receive no optimistic reuse credit in the GUI profile.
+
+The estimate is provisional, not a physical RAM reservation or an OOM/performance
+guarantee. Worker claims remeasure capacity before launch. External workloads can
+still change resource pressure; the target laptop needs acceptance calibration.
+The full context envelope uses four bytes per K/V element and counts all layers,
+without taking savings for quantized caches or sliding-window attention. Formula
+inputs correspond to [Ollama metadata](https://docs.ollama.com/api-reference/show-model-details)
+and [llama.cpp cache dimensions](https://github.com/ggml-org/llama.cpp/blob/master/src/llama-kv-cache.cpp).
+Explicit context prevents drift with [Ollama's hardware-dependent defaults](https://docs.ollama.com/context-length).
+
+Vision capabilities and catalog discovery are registered, but image input is not
+connected to the guarded chat pipeline yet; vision execution stays unsupported.
+This interface does not pretend that a text prompt can supply missing image data.
 
 ## OpenAI
 
@@ -135,7 +193,7 @@ Native Firewall actions show the exact plan and still require OS administrator
 rights plus the existing enrollment contract. Local-only Firewall rules also block
 consented OpenAI/model-catalog calls; review removal when that is your intention.
 
-Typed settings, model selection, filesystem scopes and generation parameters are in
+Typed settings, model selection, task plans, deterministic control templates, filesystem scopes and generation parameters are in
 the contract registry. `model_parameters.py` owns metadata and validation;
 `gui_models.py` owns model lifecycle operations; the existing artifact-aware transport
 owns inference. UI view modules are registered in `web/app.js`; add views as local

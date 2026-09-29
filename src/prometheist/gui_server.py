@@ -44,6 +44,8 @@ class ChatInput(Input):
     text: str = Field(min_length=1, max_length=32768)
     conversation_id: UUID
     selection: ModelSelection | None = None
+    task: Literal["auto", "general", "coding", "vision"] = "auto"
+    fallback: Literal["review", "default"] = "review"
 
 
 class ModelInput(Input):
@@ -256,6 +258,26 @@ def create_app(root: Path, profile: Path, *, port: int, token=None, start_monito
     def details(model: str):
         return gui_models.model_details(state.settings.ollama_url, model)
 
+    @app.post("/api/models/assess")
+    def assess(body: ModelSelection):
+        from datetime import datetime, timezone
+        from prometheist.model_admission import read_model_evidence, capture_observation, assess_model
+        from prometheist.ollama_runtime import _canonical_model_name
+        settings = state.settings
+        evidence = read_model_evidence(settings, [body]).get(_canonical_model_name(body.model), {})
+        observation = capture_observation(settings)
+        result = assess_model(settings, body, evidence.get("installed"), evidence.get("details", {}),
+                              observation, at=datetime.now(timezone.utc))
+        return {"assessment": result.model_dump(mode="json"), "observation": observation.model_dump(mode="json")}
+
+    @app.post("/api/routing/preview")
+    def preview(body: ChatInput):
+        from prometheist.model_admission import prepare_task
+        settings = state.settings
+        if body.selection:
+            settings = AppSettings.model_validate({**settings.model_dump(), "selection": body.selection.model_dump()})
+        return prepare_task(settings, body.text, body.task, fallback=body.fallback).model_dump(mode="json")
+
     @app.get("/api/models/parameters")
     def parameters(provider: Literal["ollama", "openai"], model: str):
         from prometheist.model_parameters import parameter_catalog
@@ -266,6 +288,15 @@ def create_app(root: Path, profile: Path, *, port: int, token=None, start_monito
         if len(q) > 200:
             raise ValueError("Search query is too long")
         return {"models": gui_models.search_catalog(q)}
+
+    @app.get("/api/models/specialists")
+    def specialist_search(task: Literal["general", "coding", "vision"]):
+        from uuid import uuid4
+        from datetime import datetime, timezone
+        result = gui_models.search_specialists(task)
+        receipt = {**result, "captured_at": datetime.now(timezone.utc).isoformat()}
+        write_private_policy(root / "operator" / "model-searches" / f"{uuid4()}.json", receipt)
+        return receipt
 
     @app.post("/api/models/pull")
     def pull(body: ModelInput):
@@ -328,7 +359,7 @@ def create_app(root: Path, profile: Path, *, port: int, token=None, start_monito
         settings = state.settings
         if body.selection:
             settings = AppSettings.model_validate({**settings.model_dump(), "selection": body.selection.model_dump()})
-        return state.jobs.submit("chat", {"text": body.text, "conversation_id": str(body.conversation_id)},
+        return state.jobs.submit("chat", {"text": body.text, "conversation_id": str(body.conversation_id), "task": body.task, "fallback": body.fallback},
                                  settings, api_key=state.api_key)
 
     @app.get("/api/jobs")

@@ -52,7 +52,7 @@ def test_owned_process_cancellation_terminates_parent_and_child(tmp_path, monkey
     script = (
         "import subprocess,sys,time,json; from pathlib import Path; "
         "p=subprocess.Popen([sys.executable,'-c','import time; time.sleep(120)']); "
-        f"Path({str(child_file)!r}).write_text(json.dumps({{'pid':p.pid}})); "
+        f"ready=Path({str(child_file.with_suffix('.tmp'))!r}); ready.write_text(json.dumps({{'pid':p.pid}})); ready.replace(Path({str(child_file)!r})); "
         "time.sleep(120)"
     )
     seen = {}

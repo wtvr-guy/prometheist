@@ -37,6 +37,18 @@ def run(directory, profile):
         raise ValueError("Unregistered job action")
     report({"status": "Checking the private profile"})
     activate_imprint(profile)
+    from prometheist.gui_config import AppSettings
+    from prometheist.model_admission import prepare_task
+    report({"status": "Matching installed models to the task and measured host capacity"})
+    plan = prepare_task(settings, payload["text"], payload.get("task", "auto"), fallback=payload.get("fallback", "review"))
+    write_private_policy(directory / "admission.json", plan.model_dump(mode="json"))
+    if plan.status != "eligible":
+        raise ValueError("; ".join(plan.reasons))
+    settings = AppSettings.model_validate({**settings.model_dump(),
+        "routes": {**settings.routes, **plan.stages}})
+    effective_path = directory / "effective-settings.json"
+    write_private_policy(effective_path, settings.model_dump(mode="json"))
+    os.environ.update(settings.worker_environment(effective_path))
     from prometheist.contract_registry import STAGE_CONTRACTS
     selections = {settings.selection_for(stage).model_dump_json(): settings.selection_for(stage)
                   for stage, contract in STAGE_CONTRACTS.items() if contract.kinds and stage.startswith("V2_")}
@@ -50,8 +62,13 @@ def run(directory, profile):
             require_destination(OPENAI_ORIGIN, NetworkPurpose.MODEL)
             if not os.environ.get("OPENAI_API_KEY"):
                 raise ValueError("Connect your OpenAI API key before starting this task")
+    floor = plan.required_memory_mib
+    os.environ["PROMETHEIST_GUI_MODEL_MEMORY_FLOOR_MIB"] = str(floor)
+    os.environ["PROMETHEIST_GUI_MODEL_CPU_UNITS"] = str(plan.required_cpu_units)
+    report({"status": "Checking local capacity", "model_memory_requirement_mib": floor,
+            "response_model": plan.stages["V2_RESPOND"].model, "route_reason": plan.route_reason})
     from prometheist.chat_startup import reset_chat_execution_state
-    from prometheist.percept_response_runtime import handle_percept_in_worker_processes
+    from prometheist.cli import _handle_with_admission_diagnostics
     with db.get_connection() as conn:
         acquired = conn.execute("SELECT pg_try_advisory_lock(hashtext('prometheist.gui.chat'))").fetchone()[0]
         conn.commit()
@@ -59,9 +76,10 @@ def run(directory, profile):
             raise ValueError("Another Prometheist GUI is already running a chat task")
         scheduler_key = "gui-chat"
         reset_chat_execution_state(conn, scheduler_key=scheduler_key)
-        text = handle_percept_in_worker_processes(conn, payload["text"], UUID(payload["conversation_id"]),
+        text = _handle_with_admission_diagnostics(conn, payload["text"], UUID(payload["conversation_id"]),
             scheduler_key=scheduler_key, progress=lambda stage: report({"status": "Cognitive worker", "stage": stage}))
-    return {"text": text, "conversation_id": payload["conversation_id"]}
+    return {"text": text, "conversation_id": payload["conversation_id"], "model_memory_requirement_mib": floor,
+            "response_model": plan.stages["V2_RESPOND"].model, "task": plan.task}
 
 
 def main():

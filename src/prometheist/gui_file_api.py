@@ -1,5 +1,6 @@
 """Registered operator-only file controls for the local app."""
 from uuid import UUID
+from functools import wraps
 
 from fastapi import APIRouter, Query
 from fastapi.responses import FileResponse
@@ -55,6 +56,20 @@ def file_router(state):
     state.files = manager
     router = APIRouter(prefix="/api/files")
 
+    def writable_now():
+        from prometheist.gui_jobs import JobBusy
+        with state.jobs.lock:
+            if state.jobs.active and state.jobs.get(state.jobs.active)["action"] == "file_copy":
+                raise JobBusy("Finish or cancel the active file copy before changing files")
+
+    def file_change(function):
+        @wraps(function)
+        def guarded(*args, **kwargs):
+            with state.jobs.lock:
+                writable_now()
+                return function(*args, **kwargs)
+        return guarded
+
     @router.get("/roots")
     def roots():
         return {"roots": [root.model_dump(mode="json") for root in manager.roots()]}
@@ -99,15 +114,21 @@ def file_router(state):
         return FileResponse(target, media_type=media_type)
 
     @router.post("/folders")
+    @file_change
     def mkdir(body: FileInput):
+        writable_now()
         return manager.mkdir(body.root, body.path)
 
     @router.put("/text")
+    @file_change
     def write(body: TextInput):
+        writable_now()
         return manager.write_text(body.root, body.path, body.text, body.revision)
 
     @router.post("/relocate")
+    @file_change
     def relocate(body: RelocateInput):
+        writable_now()
         if body.copy_file:
             manager.resolve(body.root, body.path)
             manager.resolve(body.destination_root, body.destination, write=True, allow_root=False)
@@ -115,7 +136,9 @@ def file_router(state):
         return manager.relocate(body.root, body.path, body.destination_root, body.destination, body.revision)
 
     @router.post("/trash")
+    @file_change
     def trash(body: MutationInput):
+        writable_now()
         return manager.trash(body.root, body.path, body.revision)
 
     @router.get("/history")
@@ -123,7 +146,9 @@ def file_router(state):
         return {"operations": manager.history()}
 
     @router.post("/restore/{operation_id}")
+    @file_change
     def restore(operation_id: UUID):
+        writable_now()
         return manager.restore(operation_id)
 
     @router.get("/versions/{operation_id}")
@@ -132,11 +157,16 @@ def file_router(state):
         return FileResponse(path, media_type="application/octet-stream", filename="previous-content.txt")
 
     @router.post("/uploads")
+    @file_change
     def upload(body: UploadInput):
+        writable_now()
         return manager.upload_start(body.root, body.path, body.size)
 
     @router.put("/uploads/{upload_id}")
     def chunk(upload_id: UUID, body: ChunkInput):
-        return manager.upload_chunk(upload_id, body.offset, body.data, finish=body.finish, abort=body.abort)
+        with state.jobs.lock:
+            if not body.abort:
+                writable_now()
+            return manager.upload_chunk(upload_id, body.offset, body.data, finish=body.finish, abort=body.abort)
 
     return router

@@ -21,3 +21,24 @@ partially completed side effects must stay explicit. A failed invariant eliminat
 a candidate regardless of speed. Expand an optimum at a sampled boundary before
 choosing a calibrated value. Do not tune retrieval/model behavior to a browser
 fixture; independent unseen task cases remain required for cognitive acceptance.
+
+
+The CPU model eligibility estimator and specialist registry add provisional context,
+cache-element width, runtime-buffer, batch and candidate-count bounds. Test fresh
+versus stale measurements, loaded host pressure, model disappearance, unknown
+architectures and changing context. Replay the same serialized inputs and permute
+candidate input order: selection must remain stable. Reject a specialist whose
+combined stage footprint fails even if it fits by itself. Verify the exact fallback
+order (installed specialist, capability catalog search, optional OpenAI review,
+operator-approved local default), no download from discovery, and no inference for
+predetermined questions. Advertised catalog metadata is independently rechecked
+after installation. Outage and parser drift must not manufacture capabilities.
+
+Calibrate each admitted architecture/quantization across cold and warm launches,
+context and batch values, concurrency in the external Ollama service, all worker
+stages and background laptop load. Compare predicted peak requirements with process
+and OS measurements. The f32 full-context cache estimate, default runtime margin,
+single-thread/batch profile and lack of residency credit are conservative initial
+choices, not benchmark-proven performance or universal upper bounds. GPU admission
+needs separate dedicated/shared-memory evidence and estimator registration. Keep
+unseen tasks and hardware profiles outside tuning fixtures.

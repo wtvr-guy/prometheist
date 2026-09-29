@@ -1,5 +1,6 @@
 import {el, icon, button, field, badge, pretty, empty, modal, confirm, api, toast, grant, bytes} from './ui.js';
 import {parameterFields} from './controls.js';
+import {specialistSettings} from './routing.js';
 
 const SECTIONS=[['general','Workspace'],['routing','Model routing'],['resources','Resources'],['memory','Memory & evidence'],['environment','Devices & sensors'],['security','OS security'],['privacy','Privacy & consent'],['registries','Registries']];
 export async function settingsView(ctx){
@@ -23,6 +24,7 @@ function general(root,ctx){
     el('div',{class:'settings-save'},button('Save settings',async()=>{if(!endpoint.checkValidity()||!timeout.checkValidity())throw new Error('Check the endpoint and timeout');await ctx.saveSettings({theme:theme.value,advanced:advanced.checked,ollama_url:endpoint.value,personality:personality.value,worker_timeout_seconds:Number(timeout.value)});toast('Workspace settings saved');},{kind:'primary'})));
 }
 async function routing(root,ctx){
+  root.append(specialistSettings(ctx));
   root.append(section('Assign models by task','The chat model is the default. An explicit stage route overrides it.',el('p',{class:'notice'},'A route applies to the registered worker stage. A cloud route receives only that stage’s bounded instructions and evidence, after destination consent. Control workers keep deterministic sampling; reasoning models may not offer deterministic generation.')));
   for(const [id,role] of Object.entries(ctx.state.bootstrap.routes)){
     const selection=ctx.state.settings.routes[id];
