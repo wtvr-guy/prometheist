@@ -110,6 +110,11 @@ jobs:
         run: python -m pip install --upgrade uv==0.11.33
       - name: Sync locked environment
         run: uv sync --frozen
+      - name: Check frontend module syntax
+        run: |
+          for file in src/prometheist/web/*.js; do
+            node --input-type=module --check < "$file"
+          done
       - name: Browser app and persistent file acceptance
         run: uv run pytest -q tests/browser --confcutdir=tests/browser
       - name: Keep browser evidence

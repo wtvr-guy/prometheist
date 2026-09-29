@@ -99,3 +99,10 @@ def test_search_only_walks_the_selected_root_and_copy_refuses_links(files, tmp_p
     with pytest.raises(PermissionError):
         files.relocate("files", "notes", "files", "copy-notes", revision(files.workspace / "notes"), copy=True)
     assert not (files.workspace / "copy-notes").exists()
+
+
+def test_new_scope_requires_an_absolute_path_and_exact_review(files, tmp_path):
+    with pytest.raises(ValueError, match="absolute"):
+        scope_proposal("../relative", "Relative", True)
+    with pytest.raises(ValueError, match="acceptance"):
+        files.add_root(tmp_path, "Unreviewed", True, "not-the-proposal-digest")

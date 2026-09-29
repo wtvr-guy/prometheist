@@ -100,7 +100,7 @@ function fillConversation(root) {
       el('div', {class:'suggestions'},
         suggestion('chat','Start with me','Tell Prometheist what matters to you.', () => prompt('I want you to understand what matters most to me. Help me get started.')),
         suggestion('book','Make room for a thought','Work through something on your mind.', () => prompt('Help me think through a decision. Ask me what you need to know first.')),
-        suggestion('shield','Review my environment','See host resources and security observations.', () => {state.settingTab='environment';navigate('settings');})))));
+        suggestion('shield','Review my environment','See host resources and security observations.', () => {state.settingTab='environment';navigate('settings');}))));
   } else {
     const messages = el('div', {class:'messages', 'aria-live':'polite'});
     for (const job of jobs) {

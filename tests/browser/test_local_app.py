@@ -61,8 +61,14 @@ def test_navigation_controls_and_persistent_file_workflow(local_app, tmp_path):
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
+        page.on("console", lambda message: errors.append(message.text) if message.type == "error" else None)
         page.goto(url)
-        expect(page.get_by_role("heading", name="A private space to think clearly.")).to_be_visible()
+        try:
+            expect(page.get_by_role("heading", name="A private space to think clearly.")).to_be_visible()
+        except AssertionError:
+            page.screenshot(path=str(screenshots / "startup-failure.png"), full_page=True)
+            print("Browser errors:", errors)
+            raise
         page.screenshot(path=str(screenshots / "chat-desktop.png"), full_page=True)
         assert "token=" not in page.url
         page.get_by_role("button", name="Controls", exact=True).click()

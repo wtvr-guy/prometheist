@@ -62,7 +62,13 @@ def root_record(path: Path, *, root_id: str, label: str, writable: bool, digest=
 
 
 def scope_proposal(path, label, writable):
-    resolved = Path(path).expanduser().resolve(strict=True)
+    # Intentional operator scope selection, not a path beneath a preexisting grant.
+    # Only authenticated same-origin UI requests reach this boundary. A separate
+    # accepted digest is required before this path can become a browsing root.
+    selected = Path(path).expanduser()
+    if not selected.is_absolute():
+        raise ValueError("Choose an absolute local folder path")
+    resolved = selected.resolve(strict=True)
     if resolved == Path(resolved.anchor):
         raise ValueError("Choose a specific folder rather than an entire filesystem root")
     record = root_record(resolved, root_id="review", label=label, writable=writable)
