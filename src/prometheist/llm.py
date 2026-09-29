@@ -327,7 +327,13 @@ def _format_capability_result_data(results: tuple[dict[str, Any], ...]) -> str:
 
 
 class OllamaClient:
-    def __init__(self, base_url: str | None = None, model: str | None = None) -> None:
+    def __init__(self, base_url: str | None = None, model: str | None = None, *, selection=None) -> None:
+        self.selection = selection
+        if selection is not None:
+            model = selection.model
+            if selection.provider == "openai":
+                from prometheist.openai_transport import OPENAI_BASE_URL
+                base_url = OPENAI_BASE_URL
         self.base_url = base_url or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
         self.model = model or configured_ollama_model()
         self.keep_alive = (
@@ -350,6 +356,15 @@ class OllamaClient:
     ) -> dict[str, Any]:
         """Execute one request while retaining its exact diagnostic envelope."""
 
+        selection = getattr(self, "selection", None)
+        if selection is not None:
+            from prometheist.model_parameters import OLLAMA_PARAMETERS
+            for name, value in selection.parameters.items():
+                if name in ("keep_alive", "think"):
+                    if name == "keep_alive" or kind in _RESPONSE_KINDS:
+                        request_json[name] = value
+                elif kind in _RESPONSE_KINDS or OLLAMA_PARAMETERS[name].scope == "all":
+                    request_json["options"][name] = value
         started_at = datetime.now(timezone.utc).isoformat()
         t0 = time.monotonic()
         diagnostics: dict[str, Any] = {
@@ -449,6 +464,9 @@ class OllamaClient:
     def runtime_snapshot(self) -> dict[str, Any]:
         """Return version, immutable model identity, and loaded-model observations."""
 
+        if getattr(self, "selection", None) is not None and self.selection.provider == "openai":
+            return {"status": "REMOTE", "provider": "openai", "configured_model": self.model,
+                    "base_url": self.base_url, "store": False}
         payloads: dict[str, dict[str, Any]] = {}
         errors: list[dict[str, str]] = []
         for label, path in (
@@ -529,10 +547,18 @@ class OllamaClient:
             "errors": errors,
         }
 
-    def temperature_for_kind(self, kind: str) -> float:
+    def temperature_for_kind(self, kind: str) -> float | None:
         """Keep control workers deterministic while allowing expressive responses."""
 
+        selection = getattr(self, "selection", None)
+        if selection is not None and selection.provider == "openai":
+            from prometheist.model_parameters import openai_reasoning
+            if openai_reasoning(selection.model):
+                return None  # Provider does not accept a temperature for this family.
         if kind in _RESPONSE_KINDS:
+            selection = getattr(self, "selection", None)
+            if selection is not None and "temperature" in selection.parameters:
+                return selection.parameters["temperature"]
             return configured_response_temperature()
         return _CONTROL_TEMPERATURE
 
@@ -544,6 +570,10 @@ class OllamaClient:
         schema: dict,
         max_tokens: int,
     ) -> str:
+        if getattr(self, "selection", None) is not None and self.selection.provider == "openai":
+            from prometheist.openai_transport import perform_response
+            return perform_response(self, kind=kind, system=system, user=user,
+                                    evidence="", schema=schema, max_tokens=max_tokens)
         temperature = self.temperature_for_kind(kind)
         if _is_qwen3_instruct(self.model):
             request_path = "/api/generate"
@@ -563,7 +593,7 @@ class OllamaClient:
                     {"role": "system", "content": system},
                     {
                         "role": "user",
-                        "content": _nonthinking_user_input(self.model, user),
+                        "content": user if getattr(self, "selection", None) is not None and self.selection.parameters.get("think") and kind in _RESPONSE_KINDS else _nonthinking_user_input(self.model, user),
                     },
                 ],
                 "format": schema,
@@ -645,6 +675,10 @@ class OllamaClient:
     ) -> str:
         """Call Ollama with untrusted evidence isolated before current authority."""
 
+        if getattr(self, "selection", None) is not None and self.selection.provider == "openai":
+            from prometheist.openai_transport import perform_response
+            return perform_response(self, kind=kind, system=system, user=current_user,
+                                    evidence=evidence, schema=schema, max_tokens=max_tokens)
         temperature = self.temperature_for_kind(kind)
         if _is_qwen3_instruct(self.model):
             request_path = "/api/generate"
@@ -669,7 +703,7 @@ class OllamaClient:
                     {"role": "tool", "content": evidence},
                     {
                         "role": "user",
-                        "content": _nonthinking_user_input(self.model, current_user),
+                        "content": current_user if getattr(self, "selection", None) is not None and self.selection.parameters.get("think") and kind in _RESPONSE_KINDS else _nonthinking_user_input(self.model, current_user),
                     },
                 ],
                 "format": schema,

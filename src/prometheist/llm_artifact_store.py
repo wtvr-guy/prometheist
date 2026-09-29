@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from prometheist import artifact_journal
@@ -25,7 +25,7 @@ def write_llm_invocation(
     user_prompt: str,
     schema: dict[str, Any],
     max_tokens: int,
-    temperature: float,
+    temperature: float | None,
     output: str | None,
     error_type: str | None,
     error_message: str | None,
@@ -33,10 +33,12 @@ def write_llm_invocation(
     transport_layout: str | None = None,
     evidence_refs: Iterable[str] = (),
     transport_diagnostics: dict[str, Any] | None = None,
+    provider: Literal["ollama", "openai"] = "ollama",
 ) -> dict[str, Any]:
     """Persist the exact request contract and resulting normalized model output."""
 
     payload: dict[str, Any] = {
+        "provider": provider,
         "claim_id": str(claim_id),
         "invocation_index": invocation_index,
         "kind": kind,
@@ -76,7 +78,7 @@ def write_llm_invocation(
         task_id=task_id,
         assignment_id=assignment_id,
         stage=stage,
-        producer="percept_response_v2/ollama",
+        producer=f"percept_response_v2/{provider}",
         payload=payload,
     )
 

@@ -55,6 +55,7 @@ def _handle_with_admission_diagnostics(
     conn,
     user_text: str,
     conversation_id: uuid.UUID,
+    **runtime_options,
 ) -> str | None:
     """Run one percept and expose the authoritative denial envelope on failure."""
 
@@ -63,6 +64,7 @@ def _handle_with_admission_diagnostics(
             conn,
             user_text,
             conversation_id,
+            **runtime_options,
         )
     except WorkerLaunchDenied as exc:
         _emit_admission_diagnostics(
@@ -291,6 +293,10 @@ def _run_chat(conversation_id: uuid.UUID) -> None:
 
 def main() -> None:
     _configure_utf8_streams()
+    if len(sys.argv) > 1 and sys.argv[1] == "gui":
+        from prometheist.gui_cli import main as gui_main
+        gui_main(sys.argv[2:])
+        return
     if len(sys.argv) > 1 and sys.argv[1] == "environment":
         from prometheist.environment_cli import main as environment_main
         environment_main(sys.argv[2:])

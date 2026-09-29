@@ -219,6 +219,1040 @@
       "rationale": "Serialization depth covers the fixed collector JSON structure without truncating nested reading maps; native tests execute the collector.",
       "source_path": "src/prometheist/windows_environment.ps1",
       "source_fragment": "-Depth 12 -Compress"
+    },
+    "src/prometheist/cli.py::main::slice_lower#2": {
+      "expected_value": 2,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "CLI subcommand slicing, absence sentinels, nonnegative sizes and exact traversal counting encode data/protocol shape; they are not quality thresholds."
+    },
+    "src/prometheist/gui_cli.py::main::comparison": {
+      "expected_value": 1024,
+      "classification": "EXTERNAL_CONTRACT",
+      "rationale": "Matches unprivileged TCP port bounds, Windows reserved/control character naming, or the exact base64 expansion of the registered one-MiB upload chunk."
+    },
+    "src/prometheist/gui_cli.py::main::comparison#2": {
+      "expected_value": 65535,
+      "classification": "EXTERNAL_CONTRACT",
+      "rationale": "Matches unprivileged TCP port bounds, Windows reserved/control character naming, or the exact base64 expansion of the registered one-MiB upload chunk."
+    },
+    "src/prometheist/gui_config.py::ModelSelection::model.max_length": {
+      "expected_value": 200,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::MemorySettings::max_item_bytes.default": {
+      "expected_value": 16384,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::MemorySettings::max_item_bytes.ge": {
+      "expected_value": 1024,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::MemorySettings::max_item_bytes.le": {
+      "expected_value": 1048576,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::MemorySettings::max_total_bytes.default": {
+      "expected_value": 65536,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::MemorySettings::max_total_bytes.ge": {
+      "expected_value": 1024,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::MemorySettings::max_total_bytes.le": {
+      "expected_value": 4194304,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::MemorySettings::max_input_bytes.default": {
+      "expected_value": 98304,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::MemorySettings::max_input_bytes.ge": {
+      "expected_value": 1024,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::MemorySettings::max_input_bytes.le": {
+      "expected_value": 8388608,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::cpu_system_headroom_percent.default": {
+      "expected_value": 10,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::cpu_system_headroom_percent.le": {
+      "expected_value": 90,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::memory_system_headroom_percent.default": {
+      "expected_value": 10,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::memory_system_headroom_percent.le": {
+      "expected_value": 90,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::memory_system_headroom_min_mib.default": {
+      "expected_value": 1024,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::memory_system_headroom_min_mib.ge": {
+      "expected_value": 256,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::memory_system_headroom_min_mib.le": {
+      "expected_value": 1048576,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::uncertainty_headroom_percent.default": {
+      "expected_value": 5,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::uncertainty_headroom_percent.le": {
+      "expected_value": 90,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::max_cpu_pressure_percent.default": {
+      "expected_value": 85,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::max_cpu_pressure_percent.ge": {
+      "expected_value": 10,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::max_cpu_pressure_percent.le": {
+      "expected_value": 99,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::default_llm_process_memory_mib.default": {
+      "expected_value": 3072,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::default_llm_process_memory_mib.ge": {
+      "expected_value": 512,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::default_llm_process_memory_mib.le": {
+      "expected_value": 1048576,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::default_process_memory_mib.default": {
+      "expected_value": 512,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::default_process_memory_mib.ge": {
+      "expected_value": 128,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::default_process_memory_mib.le": {
+      "expected_value": 1048576,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::AppSettings::personality.max_length": {
+      "expected_value": 8192,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::AppSettings::monitor_interval_seconds.default": {
+      "expected_value": 60,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::AppSettings::monitor_interval_seconds.ge": {
+      "expected_value": 10,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::AppSettings::monitor_interval_seconds.le": {
+      "expected_value": 3600,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::AppSettings::worker_timeout_seconds.default": {
+      "expected_value": 600,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::AppSettings::worker_timeout_seconds.ge": {
+      "expected_value": 30,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_config.py::AppSettings::worker_timeout_seconds.le": {
+      "expected_value": 3600,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_file_api.py::FileInput::path.max_length": {
+      "expected_value": 4096,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_file_api.py::ScopeInput::path.max_length": {
+      "expected_value": 4096,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_file_api.py::ScopeInput::label.max_length": {
+      "expected_value": 80,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_file_api.py::RelocateInput::destination.max_length": {
+      "expected_value": 4096,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_file_api.py::ChunkInput::data.max_length": {
+      "expected_value": 1398104,
+      "classification": "EXTERNAL_CONTRACT",
+      "rationale": "Matches unprivileged TCP port bounds, Windows reserved/control character naming, or the exact base64 expansion of the registered one-MiB upload chunk."
+    },
+    "src/prometheist/gui_file_api.py::file_router.listing::Query.max_length": {
+      "expected_value": 200,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_files.py::<module>::FILE_PAGE_SIZE": {
+      "expected_value": 250,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_files.py::<module>::MAX_DIRECTORY_ENTRIES": {
+      "expected_value": 20000,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_files.py::<module>::MAX_SEARCH_ENTRIES": {
+      "expected_value": 20000,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_files.py::<module>::MAX_TEXT_BYTES": {
+      "expected_value": 524288,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_files.py::<module>::UPLOAD_CHUNK_BYTES": {
+      "expected_value": 1048576,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_files.py::<module>::MAX_COPY_ENTRIES": {
+      "expected_value": 20000,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_files.py::FileRoot::label.max_length": {
+      "expected_value": 80,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_files.py::path_parts::range_arg1": {
+      "expected_value": 10,
+      "classification": "EXTERNAL_CONTRACT",
+      "rationale": "Matches unprivileged TCP port bounds, Windows reserved/control character naming, or the exact base64 expansion of the registered one-MiB upload chunk."
+    },
+    "src/prometheist/gui_files.py::path_parts::range_arg1#2": {
+      "expected_value": 10,
+      "classification": "EXTERNAL_CONTRACT",
+      "rationale": "Matches unprivileged TCP port bounds, Windows reserved/control character naming, or the exact base64 expansion of the registered one-MiB upload chunk."
+    },
+    "src/prometheist/gui_files.py::path_parts::comparison": {
+      "expected_value": 32,
+      "classification": "EXTERNAL_CONTRACT",
+      "rationale": "Matches unprivileged TCP port bounds, Windows reserved/control character naming, or the exact base64 expansion of the registered one-MiB upload chunk."
+    },
+    "src/prometheist/gui_files.py::FileManager.relocate::count": {
+      "expected_value": 0,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "CLI subcommand slicing, absence sentinels, nonnegative sizes and exact traversal counting encode data/protocol shape; they are not quality thresholds."
+    },
+    "src/prometheist/gui_files.py::FileManager.relocate.copy_file::count.coefficient": {
+      "expected_value": 1,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "CLI subcommand slicing, absence sentinels, nonnegative sizes and exact traversal counting encode data/protocol shape; they are not quality thresholds."
+    },
+    "src/prometheist/gui_files.py::FileManager.history::slice_upper": {
+      "expected_value": 200,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_files.py::FileManager.upload_start::comparison": {
+      "expected_value": 0,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "CLI subcommand slicing, absence sentinels, nonnegative sizes and exact traversal counting encode data/protocol shape; they are not quality thresholds."
+    },
+    "src/prometheist/gui_jobs.py::<module>::JOB_HISTORY_LIMIT": {
+      "expected_value": 200,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_jobs.py::<module>::PROCESS_STOP_TIMEOUT_SECONDS": {
+      "expected_value": 5,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_models.py::<module>::MODEL_HTTP_TIMEOUT_SECONDS": {
+      "expected_value": 10,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_models.py::<module>::MODEL_PULL_TIMEOUT_SECONDS": {
+      "expected_value": 300,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_models.py::<module>::MAX_CATALOG_BYTES": {
+      "expected_value": 2097152,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_models.py::<module>::MAX_CATALOG_RESULTS": {
+      "expected_value": 40,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_models.py::pull_model::slice_upper": {
+      "expected_value": 500,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_server.py::<module>::MAX_REQUEST_BYTES": {
+      "expected_value": 2097152,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_server.py::Handshake::token.max_length": {
+      "expected_value": 200,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_server.py::ChatInput::text.max_length": {
+      "expected_value": 32768,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_server.py::KeyInput::key.max_length": {
+      "expected_value": 512,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_server.py::AppState.close::join.timeout": {
+      "expected_value": 5,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_server.py::create_app.local_boundary::length": {
+      "expected_value": -1,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "CLI subcommand slicing, absence sentinels, nonnegative sizes and exact traversal counting encode data/protocol shape; they are not quality thresholds."
+    },
+    "src/prometheist/gui_server.py::create_app.local_boundary::comparison": {
+      "expected_value": 0,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "CLI subcommand slicing, absence sentinels, nonnegative sizes and exact traversal counting encode data/protocol shape; they are not quality thresholds."
+    },
+    "src/prometheist/gui_server.py::create_app.search::comparison": {
+      "expected_value": 200,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/gui_worker.py::main::slice_upper": {
+      "expected_value": 2000,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/model_parameters.py::validate_parameters::comparison": {
+      "expected_value": 16,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/model_parameters.py::validate_parameters::comparison#2": {
+      "expected_value": 256,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/openai_transport.py::<module>::DEFAULT_REASONING_BUDGET": {
+      "expected_value": 8192,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/openai_transport.py::perform_response::Client.timeout": {
+      "expected_value": 300.0,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/openai_transport.py::perform_response::slice_upper": {
+      "expected_value": 120,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Local app input, preview, listing, model-generation, polling and resource bounds are explicit provisional controls. Existing evidence/admission defaults are preserved; host and model-specific calibration is required. See docs/experiments/LOCAL_APP_001.md.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "manual:generation-parameter:temperature:4": {
+      "manual": true,
+      "expected_value": 0,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Temperature\", \"number\", \"Sampling\", \"For standard models that accept sampling controls.\", 0, 2)"
+    },
+    "manual:generation-parameter:temperature:5": {
+      "manual": true,
+      "expected_value": 2,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Temperature\", \"number\", \"Sampling\", \"For standard models that accept sampling controls.\", 0, 2)"
+    },
+    "manual:generation-parameter:top_p:4": {
+      "manual": true,
+      "expected_value": 0,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Top P\", \"number\", \"Sampling\", \"For standard models that accept sampling controls.\", 0, 1)"
+    },
+    "manual:generation-parameter:top_p:5": {
+      "manual": true,
+      "expected_value": 1,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Top P\", \"number\", \"Sampling\", \"For standard models that accept sampling controls.\", 0, 1)"
+    },
+    "manual:generation-parameter:top_k:4": {
+      "manual": true,
+      "expected_value": 0,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Top K\", \"integer\", \"Sampling\", \"Limit sampling to the most likely tokens; zero disables.\", 0, 1000)"
+    },
+    "manual:generation-parameter:top_k:5": {
+      "manual": true,
+      "expected_value": 1000,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Top K\", \"integer\", \"Sampling\", \"Limit sampling to the most likely tokens; zero disables.\", 0, 1000)"
+    },
+    "manual:generation-parameter:min_p:4": {
+      "manual": true,
+      "expected_value": 0,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Min P\", \"number\", \"Sampling\", \"Discard tokens unlikely relative to the best candidate.\", 0, 1)"
+    },
+    "manual:generation-parameter:min_p:5": {
+      "manual": true,
+      "expected_value": 1,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Min P\", \"number\", \"Sampling\", \"Discard tokens unlikely relative to the best candidate.\", 0, 1)"
+    },
+    "manual:generation-parameter:seed:4": {
+      "manual": true,
+      "expected_value": -1,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Seed\", \"integer\", \"Sampling\", \"Reproducibility input; not a guarantee across runtimes or hardware.\", -1, 2147483647)"
+    },
+    "manual:generation-parameter:seed:5": {
+      "manual": true,
+      "expected_value": 2147483647,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Seed\", \"integer\", \"Sampling\", \"Reproducibility input; not a guarantee across runtimes or hardware.\", -1, 2147483647)"
+    },
+    "manual:generation-parameter:num_predict:4": {
+      "manual": true,
+      "expected_value": 1,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Output tokens\", \"integer\", \"Context\", \"Finite final-response output budget. Infinite generation is not supported.\", 1, 131072)"
+    },
+    "manual:generation-parameter:num_predict:5": {
+      "manual": true,
+      "expected_value": 131072,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Output tokens\", \"integer\", \"Context\", \"Finite final-response output budget. Infinite generation is not supported.\", 1, 131072)"
+    },
+    "manual:generation-parameter:num_ctx:4": {
+      "manual": true,
+      "expected_value": 256,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Context window\", \"integer\", \"Context\", \"Allocated context; bounded by reported model metadata when available. Larger values need more memory.\", 256, 2097152, scope=\"all\")"
+    },
+    "manual:generation-parameter:num_ctx:5": {
+      "manual": true,
+      "expected_value": 2097152,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Context window\", \"integer\", \"Context\", \"Allocated context; bounded by reported model metadata when available. Larger values need more memory.\", 256, 2097152, scope=\"all\")"
+    },
+    "manual:generation-parameter:num_keep:4": {
+      "manual": true,
+      "expected_value": -1,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Keep tokens\", \"integer\", \"Context\", \"Tokens retained when context is shifted.\", -1, 2097152, scope=\"all\")"
+    },
+    "manual:generation-parameter:num_keep:5": {
+      "manual": true,
+      "expected_value": 2097152,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Keep tokens\", \"integer\", \"Context\", \"Tokens retained when context is shifted.\", -1, 2097152, scope=\"all\")"
+    },
+    "manual:generation-parameter:repeat_last_n:4": {
+      "manual": true,
+      "expected_value": -1,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Repetition window\", \"integer\", \"Sampling\", \"Zero disables; -1 uses the context window.\", -1, 2097152)"
+    },
+    "manual:generation-parameter:repeat_last_n:5": {
+      "manual": true,
+      "expected_value": 2097152,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Repetition window\", \"integer\", \"Sampling\", \"Zero disables; -1 uses the context window.\", -1, 2097152)"
+    },
+    "manual:generation-parameter:repeat_penalty:4": {
+      "manual": true,
+      "expected_value": 0,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Repeat penalty\", \"number\", \"Sampling\", \"Penalty applied to repeated tokens.\", 0, 5)"
+    },
+    "manual:generation-parameter:repeat_penalty:5": {
+      "manual": true,
+      "expected_value": 5,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Repeat penalty\", \"number\", \"Sampling\", \"Penalty applied to repeated tokens.\", 0, 5)"
+    },
+    "manual:generation-parameter:presence_penalty:4": {
+      "manual": true,
+      "expected_value": -2,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Presence penalty\", \"number\", \"Sampling\", \"Penalty for previously present tokens.\", -2, 2)"
+    },
+    "manual:generation-parameter:presence_penalty:5": {
+      "manual": true,
+      "expected_value": 2,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Presence penalty\", \"number\", \"Sampling\", \"Penalty for previously present tokens.\", -2, 2)"
+    },
+    "manual:generation-parameter:frequency_penalty:4": {
+      "manual": true,
+      "expected_value": -2,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Frequency penalty\", \"number\", \"Sampling\", \"Penalty proportional to token frequency.\", -2, 2)"
+    },
+    "manual:generation-parameter:frequency_penalty:5": {
+      "manual": true,
+      "expected_value": 2,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Frequency penalty\", \"number\", \"Sampling\", \"Penalty proportional to token frequency.\", -2, 2)"
+    },
+    "manual:generation-parameter:num_thread:4": {
+      "manual": true,
+      "expected_value": 1,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"CPU threads\", \"integer\", \"Hardware\", \"Ollama worker threads; automatic when inherited.\", 1, 1024, scope=\"all\")"
+    },
+    "manual:generation-parameter:num_thread:5": {
+      "manual": true,
+      "expected_value": 1024,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"CPU threads\", \"integer\", \"Hardware\", \"Ollama worker threads; automatic when inherited.\", 1, 1024, scope=\"all\")"
+    },
+    "manual:generation-parameter:num_batch:4": {
+      "manual": true,
+      "expected_value": 1,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Batch size\", \"integer\", \"Hardware\", \"Prompt-processing batch size.\", 1, 65536, scope=\"all\")"
+    },
+    "manual:generation-parameter:num_batch:5": {
+      "manual": true,
+      "expected_value": 65536,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Batch size\", \"integer\", \"Hardware\", \"Prompt-processing batch size.\", 1, 65536, scope=\"all\")"
+    },
+    "manual:generation-parameter:num_gpu:4": {
+      "manual": true,
+      "expected_value": -1,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"GPU layers\", \"integer\", \"Hardware\", \"-1 lets Ollama decide; zero requests CPU only.\", -1, 1024, scope=\"all\")"
+    },
+    "manual:generation-parameter:num_gpu:5": {
+      "manual": true,
+      "expected_value": 1024,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"GPU layers\", \"integer\", \"Hardware\", \"-1 lets Ollama decide; zero requests CPU only.\", -1, 1024, scope=\"all\")"
+    },
+    "manual:generation-parameter:main_gpu:4": {
+      "manual": true,
+      "expected_value": 0,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Main GPU\", \"integer\", \"Hardware\", \"Primary GPU index.\", 0, 128, scope=\"all\")"
+    },
+    "manual:generation-parameter:main_gpu:5": {
+      "manual": true,
+      "expected_value": 128,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Main GPU\", \"integer\", \"Hardware\", \"Primary GPU index.\", 0, 128, scope=\"all\")"
+    },
+    "manual:generation-parameter:draft_num_predict:4": {
+      "manual": true,
+      "expected_value": 0,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Draft tokens\", \"integer\", \"Hardware\", \"Speculative decoding draft length; requires runtime and model support.\", 0, 256, scope=\"all\")"
+    },
+    "manual:generation-parameter:draft_num_predict:5": {
+      "manual": true,
+      "expected_value": 256,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Draft tokens\", \"integer\", \"Hardware\", \"Speculative decoding draft length; requires runtime and model support.\", 0, 256, scope=\"all\")"
+    },
+    "manual:generation-parameter:keep_alive:4": {
+      "manual": true,
+      "expected_value": -1,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Keep loaded (seconds)\", \"integer\", \"Hardware\", \"Zero unloads after requests; -1 retains until explicitly unloaded.\", -1, 86400, scope=\"all\")"
+    },
+    "manual:generation-parameter:keep_alive:5": {
+      "manual": true,
+      "expected_value": 86400,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Keep loaded (seconds)\", \"integer\", \"Hardware\", \"Zero unloads after requests; -1 retains until explicitly unloaded.\", -1, 86400, scope=\"all\")"
+    },
+    "manual:generation-parameter:max_output_tokens:4": {
+      "manual": true,
+      "expected_value": 256,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Output budget\", \"integer\", \"Context\", \"Includes reasoning tokens. Low budgets may leave no final answer.\", 256, 262144)"
+    },
+    "manual:generation-parameter:max_output_tokens:5": {
+      "manual": true,
+      "expected_value": 262144,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
+      "source_path": "src/prometheist/model_parameters.py",
+      "source_fragment": "Parameter(\"Output budget\", \"integer\", \"Context\", \"Includes reasoning tokens. Low budgets may leave no final answer.\", 256, 262144)"
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_context_tokens.default": {
+      "expected_value": 4096,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_context_tokens.ge": {
+      "expected_value": 512,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_context_tokens.le": {
+      "expected_value": 1048576,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_runtime_headroom_percent.default": {
+      "expected_value": 25,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_runtime_headroom_percent.ge": {
+      "expected_value": 10,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_runtime_headroom_percent.le": {
+      "expected_value": 200,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_runtime_headroom_min_mib.default": {
+      "expected_value": 512,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_runtime_headroom_min_mib.ge": {
+      "expected_value": 256,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::ResourceSettings::model_runtime_headroom_min_mib.le": {
+      "expected_value": 1048576,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::SpecialistModel::tasks.max_length": {
+      "expected_value": 3,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "One slot for each of the three registered task kinds; duplicates are forbidden."
+    },
+    "src/prometheist/gui_config.py::SpecialistModel::priority.default": {
+      "expected_value": 100,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::SpecialistModel::priority.le": {
+      "expected_value": 1000,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/gui_config.py::TaskRoutingSettings::specialists.max_length": {
+      "expected_value": 16,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/model_admission.py::<module>::KV_ELEMENT_BYTES": {
+      "expected_value": 4,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/model_admission.py::<module>::MAX_ESTIMATED_BATCH": {
+      "expected_value": 128,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/model_admission.py::ModelEligibility::required_cpu_units.default": {
+      "expected_value": 1,
+      "classification": "SAFETY_TUNABLE",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL",
+      "rationale": "Bounded, provisional local model admission or specialist-choice policy. Replay/fallback invariants are tested; host, context, batch, cache and runtime memory require native calibration. See docs/experiments/LOCAL_APP_001.md."
+    },
+    "src/prometheist/model_admission.py::plan_task::slice_upper": {
+      "expected_value": 3,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "The comparison tuple has three keys: operator priority, memory estimate and canonical ID; the model object is not compared."
+    },
+    "src/prometheist/native_policy.py::native_resource_safety_policy::comparison": {
+      "expected_value": 1,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "CPU claims must reserve at least one positive scheduling unit."
+    },
+    "src/prometheist/gui_files.py::local_scope_path::comparison": {
+      "expected_value": 4,
+      "classification": "EXTERNAL_CONTRACT",
+      "rationale": "Win32 GetDriveTypeW DRIVE_REMOTE enumeration value; mapped network drives require separate destination consent. https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getdrivetypew"
     }
   },
   "groups": {

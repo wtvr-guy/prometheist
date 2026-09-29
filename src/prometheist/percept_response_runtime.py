@@ -1155,6 +1155,7 @@ def handle_percept_in_worker_processes(
     scheduler_key: str = DEFAULT_SCHEDULER_KEY,
     worker_lease_seconds: int | None = None,
     worker_timeout_seconds: int | None = None,
+    progress: Callable[[str], None] | None = None,
 ) -> str | None:
     """Run every architectural stage in a separately guarded fresh process."""
 
@@ -1172,6 +1173,9 @@ def handle_percept_in_worker_processes(
     )
     effective_policy = policy or native_resource_safety_policy()
     physical_probe = probe or SystemHostResourceProbe()
+    if ollama_runtime_probe is None:
+        from prometheist.gui_runtime import configured_runtime_probe
+        ollama_runtime_probe = configured_runtime_probe()
     runtime_probe = ollama_runtime_probe or OllamaRuntimeProbe()
     admission_runtime_state = runtime_probe.capture()
     scheduled_memory_mib = admission_runtime_state.incremental_process_memory_mib(effective_policy)
@@ -1197,6 +1201,8 @@ def handle_percept_in_worker_processes(
         scheduler_key=scheduler_key,
     )
     for stage in PERCEPT_STAGES:
+        if progress is not None:
+            progress(stage.value)
         step_id = deterministic_worker_step_id(interaction.assignment_id, stage.value)
         worker_id = f"percept-v2-{interaction.interaction_id}-{stage.value.casefold()}"
         launched = launcher.launch(

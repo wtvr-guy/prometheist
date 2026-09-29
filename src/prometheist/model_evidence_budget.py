@@ -81,7 +81,7 @@ def validate_model_input(request: dict[str, Any]) -> None:
     maximum = _positive_env_int(_INPUT_ENV, DEFAULT_MAX_MODEL_INPUT_BYTES)
     input_fields = {
         key: request[key]
-        for key in ("prompt", "messages", "format")
+        for key in ("prompt", "messages", "format", "input", "instructions", "text")
         if key in request
     }
     size = len(json.dumps(input_fields, ensure_ascii=False, default=str).encode("utf-8"))

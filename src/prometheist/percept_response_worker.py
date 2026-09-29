@@ -153,7 +153,13 @@ class UserPromptLLM(PerceptSpecialists):
         os.environ["PROMETHEIST_PERSONALITY_PROMPT"] = (
             _resolved_interactive_personality_prompt()
         )
-        super().__init__(base_url=base_url, model=model)
+        from prometheist.gui_config import job_settings
+        configured = job_settings()
+        if configured is None:
+            super().__init__(base_url=base_url, model=model)
+        else:
+            super().__init__(base_url=base_url, model=model,
+                             selection=configured.selection_for(stage.value if stage else None))
         self._artifact_interaction = interaction
         self._artifact_stage = stage
         self._artifact_claim_id = claim_id
@@ -354,10 +360,12 @@ class UserPromptLLM(PerceptSpecialists):
             error_message=str(error) if error is not None else None,
             evidence_prompt=evidence,
             transport_layout=(
-                _evidence_transport_layout(self.model) if evidence is not None else None
+                ("responses:instructions,evidence,current-user" if getattr(self, "selection", None) is not None and self.selection.provider == "openai"
+                 else _evidence_transport_layout(self.model)) if evidence is not None else None
             ),
             evidence_refs=self._artifact_evidence_refs,
             transport_diagnostics=transport_diagnostics,
+            provider=self.selection.provider if getattr(self, "selection", None) is not None else "ollama",
         )
         self._artifact_invocation_records[invocation_index] = artifact
         return artifact
