@@ -41,7 +41,7 @@ OLLAMA_PARAMETERS = MappingProxyType({
     "use_mmap": Parameter("Memory mapping", "boolean", "Hardware", "Map model weights into memory.", scope="all"),
     "draft_num_predict": Parameter("Draft tokens", "integer", "Hardware", "Speculative decoding draft length; requires runtime and model support.", 0, 256, scope="all"),
     "think": Parameter("Thinking", "boolean", "Model", "Enable final-response thinking only when the model reports this capability."),
-    "keep_alive": Parameter("Keep loaded (seconds)", "integer", "Hardware", "Zero unloads after requests; -1 retains until explicitly unloaded.", -1, 86400, scope="all"),
+    "keep_alive": Parameter("Keep loaded (seconds)", "integer", "Hardware", "The local app enforces zero and verifies unloading between model calls. Remote services may honor this override.", -1, 86400, scope="all"),
 })
 OPENAI_PARAMETERS = MappingProxyType({
     "max_output_tokens": Parameter("Output budget", "integer", "Context", "Includes reasoning tokens. Low budgets may leave no final answer.", 256, 262144),

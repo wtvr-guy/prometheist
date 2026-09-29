@@ -92,9 +92,11 @@ export async function previewRoute(ctx) {
   const plan=await api('/routing/preview',{method:'POST',body:{text,conversation_id:ctx.state.conversation,task:ctx.state.task}});
   modal('Model route for this task',el('div',{class:'stack'},badge(plan.status.replaceAll('_',' '),plan.status==='eligible'?'green':'amber'),
     el('p',{},`${plan.task}: ${plan.classification_reason}`),el('p',{},plan.route_reason),
+    el('p',{class:'hint'},`One local model at a time · ${plan.required_memory_mib.toLocaleString()} MiB peak estimate including worker overhead.`),
+    ...Object.entries(plan.routing_exclusions||{}).map(([model,reason])=>el('p',{class:'hint'},`${model}: ${reason}`)),
     ...Object.entries(plan.stages).map(([stage,selection])=>el('p',{class:'hint'},`${stage}: ${selection.model}`)),
     ...plan.reasons.map(reason=>el('p',{},reason)),plan.specialist_offer?el('p',{class:'notice'},plan.specialist_offer):null,
-    el('p',{class:'hint'},'No inference or download took place. The worker measures again before execution.'),
+    el('p',{class:'hint'},plan.capacity_basis==='after_unload_estimate'?'This estimate includes memory reported by currently loaded models. Sending unloads them and checks actual free memory before starting.':'No inference, download or unloading took place. The worker unloads local models and measures again before execution.'),
     el('details',{},el('summary',{},'Decision inputs and evidence'),pretty(plan))),
     [button('Close',()=>document.querySelector('#dialog').close()),button('Find a specialist',()=>{document.querySelector('#dialog').close();ctx.state.specialistTask=plan.task;ctx.state.modelTab='catalog';ctx.navigate('models');},{glyph:'search'}),
       ...(plan.openai_offer?[button('Review OpenAI',()=>{document.querySelector('#dialog').close();ctx.state.modelTab='openai';ctx.navigate('models');},{glyph:'cloud'})]:[])]);

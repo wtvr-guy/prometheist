@@ -27,8 +27,9 @@ The CPU model eligibility estimator and specialist registry add provisional cont
 cache-element width, runtime-buffer, batch and candidate-count bounds. Test fresh
 versus stale measurements, loaded host pressure, model disappearance, unknown
 architectures and changing context. Replay the same serialized inputs and permute
-candidate input order: selection must remain stable. Reject a specialist whose
-combined stage footprint fails even if it fits by itself. Verify the exact fallback
+candidate input order: selection must remain stable. Admit a specialist when the
+largest sequential stage estimate fits, even if the sum would not. Reject any
+individual stage that exceeds measured capacity. Verify the exact fallback
 order (installed specialist, capability catalog search, optional OpenAI review,
 operator-approved local default), no download from discovery, and no inference for
 predetermined questions. Advertised catalog metadata is independently rechecked
@@ -38,7 +39,20 @@ Calibrate each admitted architecture/quantization across cold and warm launches,
 context and batch values, concurrency in the external Ollama service, all worker
 stages and background laptop load. Compare predicted peak requirements with process
 and OS measurements. The f32 full-context cache estimate, default runtime margin,
-single-thread/batch profile and lack of residency credit are conservative initial
+single-thread/batch profile and lack of execution-time residency credit are conservative initial
 choices, not benchmark-proven performance or universal upper bounds. GPU admission
 needs separate dedicated/shared-memory evidence and estimator registration. Keep
 unseen tasks and hardware profiles outside tuning fixtures.
+
+Sequential residency revision (2026-09-29): unload polling uses a provisional
+10-second deadline and 0.1-second interval. Test delayed release, malformed or
+unreachable `/api/ps`, failed unload acknowledgement, generation timeout, another
+worker attempting to acquire the same endpoint lock, cancellation and restart.
+No next model may be submitted before an empty inventory is observed. Persist
+before/after receipts with the invocation. A read-only preview may forecast
+reclamation but must be marked `needs_unload`; execution must repeat admission on
+actual post-unload CPU/RAM. Vary the reported versus actually reclaimed memory to
+prove optimistic previews never permit an over-budget launch. Native Windows
+acceptance must observe general-to-coder transitions with `ollama ps` and physical
+memory measurements; this deterministic suite does not certify target-host peak
+usage or service cancellation behavior.

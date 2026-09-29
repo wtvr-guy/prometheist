@@ -39,8 +39,12 @@ def run(directory, profile):
     activate_imprint(profile)
     from prometheist.gui_config import AppSettings
     from prometheist.model_admission import prepare_task
+    from prometheist.model_residency import prepare_local_models
+    report({"status": "Unloading local models before measuring available capacity"})
+    residency = prepare_local_models(settings)
     report({"status": "Matching installed models to the task and measured host capacity"})
     plan = prepare_task(settings, payload["text"], payload.get("task", "auto"), fallback=payload.get("fallback", "review"))
+    plan = plan.model_copy(update={"residency": residency})
     write_private_policy(directory / "admission.json", plan.model_dump(mode="json"))
     if plan.status != "eligible":
         raise ValueError("; ".join(plan.reasons))

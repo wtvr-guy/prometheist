@@ -180,3 +180,40 @@ def test_fallback_order_and_specialist_registration_without_inference(local_app,
         expect(page.get_by_text("Installed eligible specialist: priority, then memory requirement, then canonical model ID", exact=True)).to_be_visible()
         assert app.state.control.jobs.list() == []
         browser.close()
+
+
+def test_coding_send_can_start_verified_unload_preparation(local_app, monkeypatch):
+    from playwright.sync_api import sync_playwright, expect
+    from prometheist import model_admission, model_residency
+    from prometheist.attention_observation import HostResourceMetrics
+    from prometheist.gui_config import SpecialistModel, ModelSelection, TaskRoutingSettings
+    url, app = local_app
+    settings = app.state.control.settings
+    app.state.control.settings = settings.model_copy(update={"task_routing": TaskRoutingSettings(
+        specialists=[SpecialistModel(selection=ModelSelection(model="gemma3:4b"), tasks=["coding"])])})
+    monkeypatch.setattr(model_admission.SystemHostResourceProbe, "capture", lambda self: HostResourceMetrics(
+        platform="browser-fixture", logical_cpu_count=8, cpu_utilization_percent=10,
+        memory_total_mib=16384, memory_available_mib=2500))
+    monkeypatch.setattr(model_residency, "running_models", lambda client: [
+        {"name": "qwen3:4b", "size": 6000 * 1024 * 1024, "size_vram": 0}])
+    submitted = []
+    # Observe the real browser/API dispatch without starting native cognition.
+    monkeypatch.setattr(app.state.control.jobs, "submit", lambda *args, **kwargs:
+                        submitted.append(args) or {"id": "prepared-job"})
+    with sync_playwright() as playwright:
+        executable = os.environ.get("PROMETHEIST_BROWSER_BINARY") or shutil.which("google-chrome") or shutil.which("chromium")
+        browser = playwright.chromium.launch(headless=True, executable_path=executable, args=["--no-sandbox"])
+        page = browser.new_page()
+        page.goto(url)
+        page.get_by_role("combobox", name="Task type").select_option("coding")
+        page.locator("#message-input").fill("Write a sorting function")
+        page.get_by_role("button", name="Preview route", exact=True).click()
+        expect(page.get_by_text("needs unload", exact=True)).to_be_visible()
+        expect(page.get_by_text("V2_RESPOND: gemma3:4b", exact=True)).to_be_visible()
+        assert submitted == []
+        page.get_by_role("button", name="Close", exact=True).click()
+        page.get_by_role("button", name="Send message", exact=True).click()
+        expect(page.locator("#message-input")).to_have_value("")
+        assert len(submitted) == 1
+        assert submitted[0][0] == "chat" and submitted[0][1]["task"] == "coding"
+        browser.close()

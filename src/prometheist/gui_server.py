@@ -276,7 +276,7 @@ def create_app(root: Path, profile: Path, *, port: int, token=None, start_monito
         settings = state.settings
         if body.selection:
             settings = AppSettings.model_validate({**settings.model_dump(), "selection": body.selection.model_dump()})
-        return prepare_task(settings, body.text, body.task, fallback=body.fallback).model_dump(mode="json")
+        return prepare_task(settings, body.text, body.task, fallback=body.fallback, preview=True).model_dump(mode="json")
 
     @app.get("/api/models/parameters")
     def parameters(provider: Literal["ollama", "openai"], model: str):

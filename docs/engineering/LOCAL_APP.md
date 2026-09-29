@@ -77,7 +77,9 @@ reported capabilities. Automatic task classification uses only a `/code` prefix 
 fenced code to identify coding; otherwise it chooses general. The task selector
 is an explicit override. Eligible specialists are ordered by priority, estimated
 memory, then canonical model ID. Only the final response stage changes; control
-stages retain their configured models. The combined stage budget must fit.
+stages retain their configured models. Local stages execute sequentially: the
+largest stage budget (including worker overhead) must fit, not the sum of all
+model budgets. A general model is unloaded before the coding responder loads.
 
 When no specialist qualifies, the chat presents deterministic choice dialogs before
 starting cognition. Catalog search uses registered public queries (`coder` for
@@ -108,7 +110,38 @@ profile uses one CPU thread, a batch of 128, no GPU offload, and unload-after-re
 valid explicit overrides remain visible. Larger batches, speculative decoding,
 GPU offload and unknown/hybrid architectures require a registered estimator and
 native calibration. Shared integrated graphics memory is never counted as extra
-RAM. Resident models receive no optimistic reuse credit in the GUI profile.
+RAM. The local app enforces `keep_alive=0` even over saved parameter or environment
+overrides. Before and after each local inference it checks `/api/ps`, requests
+explicit unloading when needed, and waits for an empty inventory. An unload
+failure blocks the next request. A cross-process lock serializes these boundaries
+within the private runtime; lifecycle receipts join the existing invocation
+diagnostics. Unloading frees runtime memory; downloaded weights stay on disk.
+
+At job startup the same cleanup runs before physical RAM is measured. A read-only
+route preview can estimate RAM recoverable from an already-loaded model. Such a
+plan is labeled `needs_unload`, preserves the original physical observation, and
+does not authorize inference. Sending starts cleanup and a new physical admission
+check; the forecast is never passed to the guarded scheduler as available RAM.
+Unknown/malformed residency is not interpreted as an empty model server.
+
+This policy covers the app's local Ollama pipeline. Use a dedicated Ollama service
+for it. Unrelated applications do not honor Prometheist's private runtime lock.
+For a daemon-wide limit, set `OLLAMA_MAX_LOADED_MODELS=1` and
+`OLLAMA_NUM_PARALLEL=1` in the environment of **the Ollama server**, then restart
+that server. Setting them only in an already-running Prometheist process cannot
+reconfigure Ollama. On Windows, quit Ollama from the tray, run the following in
+PowerShell, and relaunch Ollama and Prometheist:
+
+```powershell
+[Environment]::SetEnvironmentVariable('OLLAMA_MAX_LOADED_MODELS', '1', 'User')
+[Environment]::SetEnvironmentVariable('OLLAMA_NUM_PARALLEL', '1', 'User')
+```
+
+These are Ollama's documented [concurrency and residency controls](https://docs.ollama.com/faq);
+the app also verifies its own unload boundaries through the
+[running-model endpoint](https://docs.ollama.com/api/ps). Remote Ollama servers and
+legacy CLI-only sessions retain their own residency policies. Each local app call
+starts cold; this trades repeated load latency for verified memory release.
 
 The estimate is provisional, not a physical RAM reservation or an OOM/performance
 guarantee. Worker claims remeasure capacity before launch. External workloads can

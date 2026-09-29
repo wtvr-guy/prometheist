@@ -22,7 +22,7 @@ from prometheist.environment_contracts import content_digest
 from prometheist.gui_config import AppSettings, ModelSelection, SettingsRecord, local_ollama
 from prometheist.ollama_runtime import _canonical_model_name
 
-ADMISSION_VERSION = "model-admission/cpu-v1"
+ADMISSION_VERSION = "model-admission/cpu-v2"
 ROUTING_VERSION = "task-routing/v1"
 MIB_BYTES = 1024 * 1024
 KV_ELEMENT_BYTES = 4  # conservative f32 envelope; no quantized-cache savings
@@ -47,7 +47,7 @@ CONTROL_MESSAGES = MappingProxyType({
     "openai_offer": "If no local option suits this task, would you like to review an OpenAI route?",
 })
 TaskKind = Literal["auto", "general", "coding", "vision"]
-Status = Literal["eligible", "temporarily_blocked", "unsupported", "unverified", "remote", "needs_choice"]
+Status = Literal["eligible", "temporarily_blocked", "unsupported", "unverified", "remote", "needs_choice", "needs_unload"]
 
 
 class ModelEligibility(SettingsRecord):
@@ -81,12 +81,15 @@ class TaskPlan(SettingsRecord):
     routing_exclusions: dict[str, str] = Field(default_factory=dict)
     openai_offer: bool = False
     fallback_steps: list[str] = Field(default_factory=list)
+    capacity_basis: Literal["measured", "after_unload_estimate"] = "measured"
+    physical_observation: ResourceObservationSnapshot | None = None
+    residency: dict = Field(default_factory=dict)
 
 
 def resource_policy(settings: AppSettings) -> ResourceSafetyPolicy:
     values = {key: value for key, value in settings.resources.model_dump().items()
               if key in ResourceSafetyPolicy.model_fields}
-    return ResourceSafetyPolicy(policy_version=ADMISSION_VERSION, **values)
+    return ResourceSafetyPolicy(policy_version=ADMISSION_VERSION, llm_concurrency_limit=1, **values)
 
 
 def capture_observation(settings: AppSettings) -> ResourceObservationSnapshot:
@@ -196,7 +199,7 @@ def assess_model(settings: AppSettings, selection: ModelSelection, installed: di
     required = max(settings.resources.default_llm_process_memory_mib, weights + kv + buffers + worker)
     threads = parameters.get("num_thread", 1)
     parameters = {"num_ctx": context, "num_gpu": 0, "num_batch": MAX_ESTIMATED_BATCH,
-                  "num_thread": threads, "keep_alive": 0, **parameters}
+                  "num_thread": threads, **parameters, "keep_alive": 0}
     cost = {"required_memory_mib": required, "required_cpu_units": threads,
             "components": {"weights_mib": weights, "kv_mib": kv, "buffers_mib": buffers, "worker_mib": worker},
             "effective_selection": ModelSelection(provider=selection.provider, model=selection.model, parameters=parameters)}
@@ -260,12 +263,11 @@ def plan_task(settings: AppSettings, text: str, requested: TaskKind, evidence: d
     needs_choice = False
     worker = settings.resources.default_process_memory_mib
     def requirements(items):
-        costs = {}
-        for item in items:
-            if item.status != "remote" and item.required_memory_mib is not None:
-                name = _canonical_model_name(item.selection.model)
-                costs[name] = max(costs.get(name, 0), item.required_memory_mib - worker)
-        return worker + sum(costs.values()), max(item.required_cpu_units for item in items)
+        # A worker completes and verified unloading finishes before another
+        # model may load. Each estimate already includes worker overhead.
+        costs = [item.required_memory_mib for item in items
+                 if item.status != "remote" and item.required_memory_mib is not None]
+        return max([worker, *costs]), max(item.required_cpu_units for item in items)
     if "V2_RESPOND" in settings.routes:
         route_reason = "Explicit final-response stage route takes precedence"
     elif settings.task_routing.enabled and local_ollama(settings) and settings.selection.provider == "ollama":
@@ -280,7 +282,7 @@ def plan_task(settings: AppSettings, text: str, requested: TaskKind, evidence: d
                 if memory <= capacity(observation, HOST_MEMORY_RESOURCE_ID) and cpu <= capacity(observation, HOST_CPU_RESOURCE_ID):
                     candidates.append((entry.priority, outcome.required_memory_mib, _canonical_model_name(entry.selection.model), entry.selection))
                 else:
-                    exclusions[entry.selection.model] = "Specialist plus other stage models exceed current CPU/RAM capacity"
+                    exclusions[entry.selection.model] = "Largest sequential stage requirement exceeds current CPU/RAM capacity"
             else:
                 exclusions[entry.selection.model] = outcome.reasons[0]
         if candidates:
@@ -303,7 +305,7 @@ def plan_task(settings: AppSettings, text: str, requested: TaskKind, evidence: d
     failure.extend(f"{item.selection.model}: {item.reasons[0]}" for item in bad)
     required, cpu = requirements(chosen_assessments)
     if required > capacity(observation, HOST_MEMORY_RESOURCE_ID) or cpu > capacity(observation, HOST_CPU_RESOURCE_ID):
-        failure.append("Combined stage routes exceed current CPU/RAM capacity after headroom")
+        failure.append("Largest sequential stage requirement exceeds current CPU/RAM capacity after headroom")
     if needs_choice and not failure:
         failure.append("Choose a fallback before inference; the local default passes the current capacity check")
     status = "needs_choice" if needs_choice else bad[0].status if bad else "temporarily_blocked" if failure else "eligible"
@@ -321,14 +323,19 @@ def plan_task(settings: AppSettings, text: str, requested: TaskKind, evidence: d
 
 
 def prepare_task(settings: AppSettings, text: str, requested: TaskKind = "auto", *,
-                 fallback: Literal["review", "default"] = "review") -> TaskPlan:
+                 fallback: Literal["review", "default"] = "review", preview: bool = False) -> TaskPlan:
     task, _ = classify_task(text, requested)
     selections = [settings.selection, *settings.routes.values()]
     if settings.task_routing.enabled and "V2_RESPOND" not in settings.routes and settings.selection.provider == "ollama":
         selections += [item.selection for item in settings.task_routing.specialists if task in item.tasks]
     evidence = read_model_evidence(settings, selections)
     observation = capture_observation(settings)
-    return plan_task(settings, text, requested, evidence, observation, at=datetime.now(timezone.utc), fallback=fallback)
+    plan = plan_task(settings, text, requested, evidence, observation, at=datetime.now(timezone.utc), fallback=fallback)
+    if preview and local_ollama(settings) and any(item.provider == "ollama" for item in selections):
+        from prometheist.model_residency import preview_after_unload
+        return preview_after_unload(settings, plan, lambda projected: plan_task(
+            settings, text, requested, evidence, projected, at=datetime.now(timezone.utc), fallback=fallback))
+    return plan
 
 
 def admission_manifest():
@@ -340,4 +347,6 @@ def admission_manifest():
             "specialist_search": {"version": "specialist-search/v1", "coding_query": "coder", "vision_filter": "vision",
                                   "order": "canonical model ID", "verification": "advertised catalog metadata only"},
             "control_messages": {"version": "control-messages/v1", "templates": dict(CONTROL_MESSAGES), "model_calls": False},
-            "calibration": "LOCAL-APP-001; provisional CPU inference estimate; no VRAM/residency credit"}
+            "residency_policy": "sequential-cold-models/v1; one local model per call, verified unload at boundaries",
+            "memory_aggregation": "maximum sequential stage requirement including worker overhead",
+            "calibration": "LOCAL-APP-001; provisional CPU estimate; unload forecasts never authorize execution"}

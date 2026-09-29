@@ -388,20 +388,22 @@ class OllamaClient:
             from urllib.parse import urljoin
             endpoint = str(getattr(self._client, "base_url", self.base_url))
             require_destination(urljoin(endpoint.rstrip("/") + "/", request_path), NetworkPurpose.MODEL)
-            validate_model_input(request_json)
-            response = self._client.post(request_path, json=request_json)
-            diagnostics["http_status_code"] = getattr(response, "status_code", None)
-            response_content = getattr(response, "content", None)
-            if isinstance(response_content, bytes):
-                diagnostics["response_body_bytes"] = len(response_content)
-                diagnostics["response_body_sha256"] = hashlib.sha256(
-                    response_content
-                ).hexdigest()
-            body = response.json()
-            diagnostics["response_envelope"] = _redact_hidden_thinking(body)
-            response.raise_for_status()
-            if not isinstance(body, dict):
-                raise OllamaStructuredOutputError("Ollama response was not a JSON object")
+            from prometheist.model_residency import managed_inference
+            with managed_inference(self._client, request_json, diagnostics):
+                validate_model_input(request_json)
+                response = self._client.post(request_path, json=request_json)
+                diagnostics["http_status_code"] = getattr(response, "status_code", None)
+                response_content = getattr(response, "content", None)
+                if isinstance(response_content, bytes):
+                    diagnostics["response_body_bytes"] = len(response_content)
+                    diagnostics["response_body_sha256"] = hashlib.sha256(
+                        response_content
+                    ).hexdigest()
+                body = response.json()
+                diagnostics["response_envelope"] = _redact_hidden_thinking(body)
+                response.raise_for_status()
+                if not isinstance(body, dict):
+                    raise OllamaStructuredOutputError("Ollama response was not a JSON object")
             return body
         except Exception as exc:
             diagnostics["transport_error_type"] = type(exc).__name__

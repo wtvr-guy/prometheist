@@ -142,7 +142,7 @@ async function sendMessage(fallback='review') {
       const choice=await reviewFallback(ctx,plan);if(!choice)return;
       body.fallback=choice;plan=await api('/routing/preview',{method:'POST',body});
     }
-    if(plan.status!=='eligible'){await previewRoute(ctx);return;}
+    if(!['eligible','needs_unload'].includes(plan.status)){await previewRoute(ctx);return;}
     await api('/chat', {method:'POST', body});
     state.draft=''; const input=document.querySelector('#message-input'); if(input) input.value=''; await refreshJobs();
   } finally { sending=false; }

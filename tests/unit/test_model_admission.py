@@ -118,9 +118,9 @@ def test_registered_starcoder2_specialist_is_actually_chosen_for_coding():
     assert not plan.routing_exclusions
 
 
-def test_default_fallback_search_offer_and_combined_route_budget():
+def test_default_fallback_search_offer_and_individual_route_budget():
     settings = configured("missing", "large")
-    records = {"default:latest": evidence(), "large:latest": evidence("large", weights=6144)}
+    records = {"default:latest": evidence(), "large:latest": evidence("large", weights=10000)}
     review = plan_task(settings, "write a function", "coding", records, observation(), at=AT)
     assert review.status == "needs_choice"
     assert review.fallback_steps == ["catalog_search", "openai_review", "local_default"]
@@ -129,12 +129,31 @@ def test_default_fallback_search_offer_and_combined_route_budget():
     assert plan.status == "eligible"
     assert plan.stages["V2_RESPOND"].model == "default"
     assert "Combined" not in plan.reasons[0]
-    assert "other stage" in plan.routing_exclusions["large"]
+    assert "CPU/RAM availability" in plan.routing_exclusions["large"]
     assert "not installed" in plan.routing_exclusions["missing"]
     assert not plan.openai_offer
     blocked = plan_task(settings, "write a function", "coding", records, observation(free=2200), at=AT, fallback="default")
     assert blocked.status == "temporarily_blocked" and blocked.openai_offer
     assert blocked.specialist_offer
+
+
+def test_coding_routes_fit_sequentially_without_combined_residency():
+    settings = configured("coder")
+    records = {"default:latest": evidence(), "coder:latest": starcoder_evidence(weights=4096)}
+    plan = plan_task(settings, "write a function", "coding", records, observation(free=10000), at=AT)
+    assert plan.status == "eligible"
+    assert plan.stages["V2_RESPOND"].model == "coder"
+    assert plan.stages["V2_EVIDENCE_POLICY"].model == "default"
+    # 3,456 + 6,144 would fail this host's envelope. Only 6,144 is reserved.
+    assert plan.required_memory_mib == 6144
+    assert not plan.routing_exclusions
+    assert all(route.parameters["keep_alive"] == 0 for route in plan.stages.values())
+
+
+def test_saved_keep_alive_cannot_defeat_sequential_admission():
+    result = check(selection=ModelSelection(model="default", parameters={"keep_alive": -1}))
+    assert result.status == "eligible"
+    assert result.effective_selection.parameters["keep_alive"] == 0
 
 
 def test_remote_host_is_not_measured_as_local_and_never_selected_implicitly():
@@ -267,13 +286,14 @@ def test_installed_weight_ratio_ignores_architecture_and_capability(monkeypatch)
 
 def test_worker_records_choice_without_starting_cognition(monkeypatch, tmp_path):
     import json
-    from prometheist import db, gui_worker, imprinting, model_admission
+    from prometheist import db, gui_worker, imprinting, model_admission, model_residency
     settings = configured()
     plan = plan_task(settings, "code task", "coding", {"default:latest": evidence()}, observation(), at=AT)
     assert plan.status == "needs_choice"
     (tmp_path / "job.json").write_text(json.dumps({"action":"chat", "payload":{"text":"code task", "task":"coding"}}))
     monkeypatch.setattr(gui_worker, "job_settings", lambda: settings)
     monkeypatch.setattr(imprinting, "activate_imprint", lambda profile: None)
+    monkeypatch.setattr(model_residency, "prepare_local_models", lambda settings: {})
     monkeypatch.setattr(model_admission, "prepare_task", lambda *args, **kwargs: plan)
     def forbidden():
         raise AssertionError("No cognitive transaction may start while a fallback choice is required")

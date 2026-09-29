@@ -1112,7 +1112,7 @@
       "status": "PROVISIONAL",
       "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
       "source_path": "src/prometheist/model_parameters.py",
-      "source_fragment": "Parameter(\"Keep loaded (seconds)\", \"integer\", \"Hardware\", \"Zero unloads after requests; -1 retains until explicitly unloaded.\", -1, 86400, scope=\"all\")"
+      "source_fragment": "Parameter(\"Keep loaded (seconds)\", \"integer\", \"Hardware\", \"The local app enforces zero and verifies unloading between model calls. Remote services may honor this override.\", -1, 86400, scope=\"all\")"
     },
     "manual:generation-parameter:keep_alive:5": {
       "manual": true,
@@ -1122,7 +1122,7 @@
       "status": "PROVISIONAL",
       "rationale": "UI parameter range is a bounded operator override, not a universal claim of model support. Exact provider/model metadata and validation still apply; calibrate context and generation costs on target hardware.",
       "source_path": "src/prometheist/model_parameters.py",
-      "source_fragment": "Parameter(\"Keep loaded (seconds)\", \"integer\", \"Hardware\", \"Zero unloads after requests; -1 retains until explicitly unloaded.\", -1, 86400, scope=\"all\")"
+      "source_fragment": "Parameter(\"Keep loaded (seconds)\", \"integer\", \"Hardware\", \"The local app enforces zero and verifies unloading between model calls. Remote services may honor this override.\", -1, 86400, scope=\"all\")"
     },
     "manual:generation-parameter:max_output_tokens:4": {
       "manual": true,
@@ -1268,6 +1268,35 @@
       "expected_value": 4,
       "classification": "EXTERNAL_CONTRACT",
       "rationale": "Win32 GetDriveTypeW DRIVE_REMOTE enumeration value; mapped network drives require separate destination consent. https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getdrivetypew"
+    },
+    "src/prometheist/model_admission.py::resource_policy::ResourceSafetyPolicy.llm_concurrency_limit": {
+      "expected_value": 1,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "Sequential local-app admission requires exactly one simultaneous LLM worker; each invocation verifies a cold boundary."
+    },
+    "src/prometheist/model_residency.py::<module>::UNLOAD_TIMEOUT_SECONDS": {
+      "expected_value": 10,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounded wait for explicit unload and empty running-model inventory; native service and cancellation latency remain provisional.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/model_residency.py::<module>::UNLOAD_POLL_SECONDS": {
+      "expected_value": 0.1,
+      "classification": "EMPIRICAL_TUNABLE",
+      "rationale": "Bounded unload polling cadence; tune service overhead against model-release latency in LOCAL-APP-001.",
+      "benchmark_id": "LOCAL-APP-001",
+      "status": "PROVISIONAL"
+    },
+    "src/prometheist/model_residency.py::unload_and_verify.remaining::comparison": {
+      "expected_value": 0,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "An expired deadline must not permit another request or model load."
+    },
+    "src/prometheist/model_residency.py::preview_after_unload::comparison": {
+      "expected_value": 0,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "Reclaim estimates accept only nonnegative reported system memory; forecasts never authorize execution."
     }
   },
   "groups": {
