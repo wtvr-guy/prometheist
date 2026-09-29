@@ -117,6 +117,9 @@ def test_remote_host_is_not_measured_as_local_and_never_selected_implicitly():
         SpecialistModel(selection=cloud.selection, tasks=["coding"])
     assert classify_task("can you help", "auto")[0] == "general"
     assert classify_task("/code solve this", "general")[0] == "general"
+    assert classify_task(" " * 32768 + "/code: fix", "auto")[0] == "coding"
+    assert classify_task("/codebase", "auto")[0] == "general"
+    assert classify_task("/coding2", "auto")[0] == "general"
 
 
 def test_missing_model_discovery_never_downloads(monkeypatch):

@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import math
-import re
 from types import MappingProxyType
 from typing import Literal
 
@@ -99,7 +98,14 @@ def capture_observation(settings: AppSettings) -> ResourceObservationSnapshot:
 def classify_task(text: str, requested: TaskKind = "auto") -> tuple[str, str]:
     if requested != "auto":
         return requested, "Explicit task selected by the operator"
-    if re.match(r"\s*/(?:code|coding)\b", text) or "```" in text:
+    leading = text.lstrip()
+    command_match = False
+    for prefix in ("/code", "/coding"):
+        if leading.startswith(prefix) and (len(leading) == len(prefix) or
+                not (leading[len(prefix)].isalnum() or leading[len(prefix)] == "_")):
+            command_match = True
+            break
+    if command_match or "```" in text:
         return "coding", "Registered rule: /code prefix or fenced code block"
     return "general", "No explicit coding marker; default text task"
 
