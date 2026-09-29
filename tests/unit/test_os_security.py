@@ -74,3 +74,11 @@ def test_private_host_identity_is_stable_and_refuses_git_and_onedrive(tmp_path, 
     monkeypatch.setenv("OneDrive", str(tmp_path))
     with pytest.raises(ValueError, match="OneDrive"):
         environment_runtime.local_host_id()
+
+
+def test_private_device_export_refuses_a_git_target_before_scanning(tmp_path, monkeypatch):
+    (tmp_path / ".git").mkdir()
+    monkeypatch.setattr(environment_runtime, "scan_environment", lambda *a, **kw: pytest.fail("must not scan before path validation"))
+    with pytest.raises(ValueError, match="Git"):
+        environment_runtime.export_device_scan(tmp_path / "inventory.json")
+    assert not (tmp_path / "inventory.json").exists()

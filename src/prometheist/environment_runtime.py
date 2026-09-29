@@ -241,6 +241,8 @@ def environment_session():
 def export_device_scan(path: Path):
     # This writes locally only. Moving the report to the host is an explicit
     # user action; no pairing, upload, broadcast, or account access occurs here.
+    from prometheist.imprinting import _outside_git
+    path = _outside_git(path)
     scan = scan_environment(local_host_id(), reason="DEVICE_EXPORT")
     with path.open("x", encoding="utf-8") as handle:
         handle.write(scan.model_dump_json(indent=2) + "\n")

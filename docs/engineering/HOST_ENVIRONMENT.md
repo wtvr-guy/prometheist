@@ -67,7 +67,7 @@ and disk growth need measurement. Monitoring performs no canonical deletion.
 Connected-device inspection is limited to interfaces the host OS exposes. It
 does not bypass pairing, Android permissions, device encryption or account
 boundaries. A cooperating device running this package can write a versioned
-local report with `environment export-device <file.json>`. The operator can
+local report with `environment export-device <private-path.json>` outside Git. The operator can
 attach it using `environment import-device <file.json> --parent-id <observed-UUID>`.
 The reporting host is bound to that parent, its report stays separately labeled
 device-reported, and its resources do not become local scheduler capacity.
