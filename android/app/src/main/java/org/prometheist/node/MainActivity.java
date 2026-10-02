@@ -31,6 +31,7 @@ public final class MainActivity extends Activity {
       new java.util.concurrent.atomic.AtomicBoolean();
   private String tab = "Chat", message = "Your history stays with you.";
   private boolean unlocked, authenticating;
+  private boolean askedBackgroundLocation, askedCamera;
   private char[] exportPassword;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private final Runnable poll =
@@ -528,6 +529,15 @@ public final class MainActivity extends Activity {
     toggle("Precise GPS coordinates", "precise_location", config.optBoolean("precise_location"));
     toggle(
         "Ambient sound level (no recording)", "ambient_audio", config.optBoolean("ambient_audio"));
+    toggle("Automatic photo capture", "auto_photo", config.optBoolean("auto_photo"));
+    body.addView(
+        text(
+            "Automatic photos are taken every 15 minutes from the rear camera while collection"
+                + " runs, with no preview and no shutter sound control. Android forbids camera"
+                + " access to a service started at boot, so this channel waits until you start"
+                + " collection from the app.",
+            13,
+            MUTED));
     body.addView(
         text(
             "Sound uses relative dBFS, not calibrated loudness. Raw sound buffers are discarded. No"
@@ -602,6 +612,27 @@ public final class MainActivity extends Activity {
       if (!permissions.isEmpty()) {
         requestPermissions(permissions.toArray(new String[0]), 20);
         notice("After granting permissions, tap Start selected collection.");
+        return;
+      }
+      // Ask once for each extra grant. A refusal leaves that channel off rather
+      // than blocking collection, so Start can never become a dead button.
+      if (c.optBoolean("auto_photo")
+          && !askedCamera
+          && checkSelfPermission(Manifest.permission.CAMERA)
+              != PackageManager.PERMISSION_GRANTED) {
+        askedCamera = true;
+        requestPermissions(new String[] {Manifest.permission.CAMERA}, 22);
+        notice("Allow the camera for automatic photos, then tap Start again.");
+        return;
+      }
+      if (Build.VERSION.SDK_INT >= 29
+          && c.optBoolean("location")
+          && !askedBackgroundLocation
+          && checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+              != PackageManager.PERMISSION_GRANTED) {
+        askedBackgroundLocation = true;
+        requestPermissions(new String[] {Manifest.permission.ACCESS_BACKGROUND_LOCATION}, 21);
+        notice("Choose Allow all the time to keep location after a reboot, then tap Start again.");
         return;
       }
       store.setting("paused", false);

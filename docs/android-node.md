@@ -26,7 +26,7 @@ validation below.
 
 | Capability | Offline phone | Laptop connected through tunnel |
 | --- | --- | --- |
-| Notes, deliberate photos and voice memos | Encrypted capture and journal | Canonical observation intake |
+| Notes, photos and voice memos | Encrypted capture and journal | Canonical observation intake |
 | Selected sensor/location/device observations | Visible, pausable foreground collection | Source-attributed observation intake |
 | Chat | Save a durable queued message; no generated answer | Existing guarded Prometheist stages using local Ollama |
 | Memory | Recent local search and previously fetched laptop text | Refresh latest or fetch older text pages |
@@ -206,27 +206,36 @@ Changing collection choices stops the current session; start again deliberately.
 | Environmental | Available light, proximity, magnetic field, pressure, humidity and ambient temperature, with units, sensor vendor/name and reported accuracy |
 | Steps | Available step counter/detector; Android activity-recognition permission; counter is since boot, not a verified daily total |
 | Device state | Battery level/charging, power-saving mode and screen-interactive state per window |
-| Location | Opt-in; approximate by default with coordinate rounding; precise GNSS requires a separate choice and permission; requested at five-minute/200-metre intervals |
+| Location | Opt-in; approximate by default with coordinate rounding; precise GNSS requires a separate choice and permission; requested at five-minute/200-metre intervals; "Allow all the time" lets it resume after a reboot |
 | Ambient sound | Opt-in microphone; window RMS level in dBFS, not calibrated dB SPL; raw microphone samples are discarded |
-| Photo | Deliberate in-app camera capture only; JPEG capped at 512 KiB, no gallery/cloud copy created by the app |
+| Automatic photo | Opt-in; a rear-camera still every 15 minutes while collection runs, with no preview; JPEG capped at 512 KiB and downscaled to fit; no gallery/cloud copy created by the app |
+| Photo | Deliberate in-app camera capture; JPEG capped at 512 KiB, no gallery/cloud copy created by the app |
 | Voice memo | Deliberate ten-second mono WAV capture; exact accepted audio retained privately |
 
 Unsupported hardware is absent from the sensor choices. Fingerprints, call audio,
 SMS, contacts, notification contents, other apps' screens, Wi-Fi/Bluetooth device
-tracking, and health/wearable data are not collected. Cameras never start
-remotely or as background observation. Manual photos/voice memos pause ambient
-collection and do not restart it silently. Obtain others' consent before
-purposefully preserving their private conversations or images.
+tracking, and health/wearable data are not collected. Cameras never start remotely
+or on a remote command. The automatic photo channel is off until you enable it and
+start collection yourself, it runs only while the visible observing notification is
+present, and Android forbids it to a session resumed at boot. Every stored image
+records whether it was a deliberate capture or an automatic one. Manual photos and
+voice memos pause ambient collection and do not restart it silently. Obtain others'
+consent before purposefully preserving their private conversations or images.
 
 The requested motion rate is 5 Hz, with batching where supported. These are
 **pre-admission measurements**: selected window statistics become immutable
 observations; this app does not claim to retain every raw sensor sample. Android
 sleep, force-stop, thermal pressure, permission changes and vendor battery controls
-can cause gaps. Collection never restarts automatically after reboot/process death.
-Automatic sync is a persisted job, so queued evidence keeps uploading after a
-reboot once the phone is unlocked; resuming collection still requires opening the
-app and starting it explicitly. Review Samsung's per-app battery settings only if
-measured gaps warrant it; no promise of continuous monitoring is made.
+can cause gaps. Automatic sync is a persisted job, and a collection session that
+was running when the phone went down resumes after reboot once you unlock the
+device. Collection never starts by itself if you had paused it, and no channel you
+did not choose is ever enabled. A service started from boot has no while-in-use
+access, so Android grants it location only when you have allowed location "all the
+time", and never grants it the microphone or camera. Ambient sound and automatic
+photos therefore wait for your next deliberate start; the resumed session records
+each deferred channel rather than implying it was captured. Review Samsung's
+per-app battery settings only if measured gaps warrant it; no promise of
+continuous monitoring is made.
 
 Collection pauses at OS low-memory status, severe thermal status, battery below
 15% while unplugged, less than 256 MiB free storage, or a 512 MiB journal. These

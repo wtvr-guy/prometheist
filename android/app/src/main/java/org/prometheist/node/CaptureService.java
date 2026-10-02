@@ -5,16 +5,22 @@ import android.app.*;
 import android.content.*;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
+import android.graphics.ImageFormat;
 import android.hardware.*;
+import android.hardware.camera2.*;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.location.*;
 import android.media.*;
 import android.os.*;
+import android.util.Size;
+import java.nio.ByteBuffer;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.json.*;
 
-/** Explicitly started foreground capture; never starts on boot or remote command. */
+/** Foreground capture the owner starts explicitly, or that resumes a running session after boot. */
 public final class CaptureService extends Service implements SensorEventListener, LocationListener {
   public static volatile boolean running;
   public static volatile String status = "Collection paused";
@@ -32,6 +38,10 @@ public final class CaptureService extends Service implements SensorEventListener
   private double soundSquares;
   private long soundSamples;
   private boolean resourcesClosed;
+  private boolean deliberateStop;
+  private volatile boolean cameraBusy;
+  private CameraDevice photoCamera;
+  private ImageReader photoReader;
 
   @Override
   public void onCreate() {
@@ -49,7 +59,13 @@ public final class CaptureService extends Service implements SensorEventListener
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
-    if (intent == null || "STOP".equals(intent.getAction())) {
+    if (intent == null) {
+      stopSelf();
+      return START_NOT_STICKY;
+    }
+    if ("STOP".equals(intent.getAction())) {
+      // The owner pressed Pause; that choice must outlive a reboot.
+      deliberateStop = true;
       stopSelf();
       return START_NOT_STICKY;
     }
@@ -58,13 +74,29 @@ public final class CaptureService extends Service implements SensorEventListener
       store = NodeStore.get(this);
       JSONObject config = store.config();
       if (config.optBoolean("paused", true)) {
+        deliberateStop = true;
         stopSelf();
         return START_NOT_STICKY;
       }
       if (Build.VERSION.SDK_INT >= 33 && !allowed(Manifest.permission.POST_NOTIFICATIONS))
         throw new IllegalStateException("Enable notifications so collection remains visible");
-      boolean useLocation = config.optBoolean("location"),
-          useAudio = config.optBoolean("ambient_audio");
+      boolean wantsLocation = config.optBoolean("location");
+      boolean wantsAudio = config.optBoolean("ambient_audio");
+      boolean wantsCamera = config.optBoolean("auto_photo");
+      // A foreground service started from BOOT_COMPLETED runs without while-in-use
+      // access. Location survives that only with ACCESS_BACKGROUND_LOCATION; Android
+      // offers no equivalent for the microphone or the camera, so those two resume
+      // on the next deliberate start and the gap is recorded rather than implied.
+      boolean fromBoot = intent.getBooleanExtra("from_boot", false);
+      boolean backgroundLocation =
+          Build.VERSION.SDK_INT < 29
+              || allowed(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+      final boolean useLocation = wantsLocation && (!fromBoot || backgroundLocation);
+      final boolean useAudio = wantsAudio && !fromBoot;
+      // A missing camera grant must not kill the whole session; the control event
+      // and status record that the channel is not running.
+      final boolean useCamera =
+          wantsCamera && !fromBoot && allowed(Manifest.permission.CAMERA);
       if (useLocation && !allowed(Manifest.permission.ACCESS_COARSE_LOCATION))
         throw new SecurityException("Location permission missing");
       if (useAudio && !allowed(Manifest.permission.RECORD_AUDIO))
@@ -96,18 +128,24 @@ public final class CaptureService extends Service implements SensorEventListener
         int type = ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE;
         if (useLocation) type |= ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
         if (useAudio) type |= ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
+        if (useCamera) type |= ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA;
         startForeground(7, notification, type);
       } else startForeground(7, notification);
       running = true;
       status = "Starting selected channels";
-      handler.post(() -> begin(config));
+      handler.post(() -> begin(config, useLocation, useAudio, useCamera, fromBoot));
     } catch (Exception error) {
       fail(error);
     }
     return START_NOT_STICKY;
   }
 
-  private void begin(JSONObject config) {
+  private void begin(
+      JSONObject config,
+      boolean withLocation,
+      boolean withAudio,
+      boolean withCamera,
+      boolean fromBoot) {
     try {
       checkResources();
       windowStart = Instant.now().toString();
@@ -123,7 +161,7 @@ public final class CaptureService extends Service implements SensorEventListener
             && sensors.registerListener(this, sensor, Policy.SAMPLE_US, 30_000_000, handler))
           count++;
       }
-      if (config.optBoolean("location")) {
+      if (withLocation) {
         if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
             != PackageManager.PERMISSION_GRANTED)
           throw new SecurityException("Location permission missing");
@@ -138,22 +176,192 @@ public final class CaptureService extends Service implements SensorEventListener
               new JSONObject().put("state", "location_unavailable").put("provider", provider));
         } else locations.requestLocationUpdates(provider, 300_000, 200, this, handler.getLooper());
       }
-      if (config.optBoolean("ambient_audio")) startAudio();
+      if (withAudio) startAudio();
+      if (withCamera) handler.postDelayed(autoPhoto, Policy.AUTO_PHOTO_MS);
+      boolean locationDeferred = fromBoot && config.optBoolean("location") && !withLocation;
+      boolean audioDeferred = fromBoot && config.optBoolean("ambient_audio");
+      boolean cameraDeferred = fromBoot && config.optBoolean("auto_photo");
       store.append(
           "control",
           new JSONObject()
               .put("state", "capture_started")
               .put("selected_sensor_types", selected)
-              .put("location", config.optBoolean("location"))
-              .put("ambient_audio", config.optBoolean("ambient_audio"))
+              .put("location", withLocation)
+              .put("ambient_audio", withAudio)
+              .put("auto_photo", withCamera)
+              .put("location_deferred", locationDeferred)
+              .put("ambient_audio_deferred", audioDeferred)
+              .put("auto_photo_deferred", cameraDeferred)
+              .put("started_by", fromBoot ? "boot_resume" : "owner")
               .put("policy", "low-rate-window/v1")
               .put("requested_sample_us", Policy.SAMPLE_US)
               .put("window_ms", Policy.WINDOW_MS));
-      status = "Observing · " + count + " sensor channels";
+      java.util.List<String> waiting = new java.util.ArrayList<>();
+      if (locationDeferred) waiting.add("location");
+      if (audioDeferred) waiting.add("ambient sound");
+      if (cameraDeferred) waiting.add("photos");
+      status =
+          "Observing · "
+              + count
+              + " sensor channels"
+              + (waiting.isEmpty() ? "" : " · " + String.join(", ", waiting) + " need the app open");
       handler.postDelayed(flush, Policy.WINDOW_MS);
     } catch (Exception error) {
       fail(error);
     }
+  }
+
+  private final Runnable autoPhoto =
+      new Runnable() {
+        @Override
+        public void run() {
+          capturePhoto();
+          handler.postDelayed(this, Policy.AUTO_PHOTO_MS);
+        }
+      };
+
+  /**
+   * Opens the camera, takes one still into an ImageReader with no preview surface, stores it and
+   * closes the camera again. Only runs in a session the owner started from the app, because
+   * Android denies camera access to any service started from the background.
+   */
+  private void capturePhoto() {
+    if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+        || cameraBusy) return;
+    try {
+      checkResources();
+    } catch (Exception pressure) {
+      return;
+    }
+    CameraManager manager = getSystemService(CameraManager.class);
+    try {
+      String chosen = null;
+      for (String id : manager.getCameraIdList()) {
+        Integer facing = manager.getCameraCharacteristics(id).get(CameraCharacteristics.LENS_FACING);
+        if (facing != null && facing == CameraCharacteristics.LENS_FACING_BACK) {
+          chosen = id;
+          break;
+        }
+      }
+      if (chosen == null) return;
+      StreamConfigurationMap map =
+          manager
+              .getCameraCharacteristics(chosen)
+              .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+      if (map == null) return;
+      Size best = null;
+      for (Size size : map.getOutputSizes(ImageFormat.JPEG))
+        if (size.getWidth() <= 1920 && (best == null || size.getWidth() > best.getWidth()))
+          best = size;
+      if (best == null) return;
+      cameraBusy = true;
+      photoReader = ImageReader.newInstance(best.getWidth(), best.getHeight(), ImageFormat.JPEG, 1);
+      photoReader.setOnImageAvailableListener(this::storePhoto, handler);
+      manager.openCamera(chosen, cameraCallback, handler);
+      // If a frame never arrives the channel must recover instead of staying busy
+      // and silently skipping every later interval.
+      handler.postDelayed(
+          () -> {
+            if (cameraBusy) releaseCamera();
+          },
+          10_000);
+    } catch (Exception unavailable) {
+      releaseCamera();
+    }
+  }
+
+  private final CameraDevice.StateCallback cameraCallback =
+      new CameraDevice.StateCallback() {
+        @Override
+        public void onOpened(CameraDevice device) {
+          photoCamera = device;
+          try {
+            // The SessionConfiguration overload needs API 28; this one keeps minSdk 26.
+            device.createCaptureSession(
+                java.util.Collections.singletonList(photoReader.getSurface()),
+                new CameraCaptureSession.StateCallback() {
+                  @Override
+                  public void onConfigured(CameraCaptureSession session) {
+                    try {
+                      CaptureRequest.Builder request =
+                          device.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+                      request.addTarget(photoReader.getSurface());
+                      request.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+                      request.set(CaptureRequest.JPEG_ORIENTATION, 0);
+                      session.capture(request.build(), null, handler);
+                    } catch (Exception failed) {
+                      releaseCamera();
+                    }
+                  }
+
+                  @Override
+                  public void onConfigureFailed(CameraCaptureSession session) {
+                    releaseCamera();
+                  }
+                },
+                handler);
+          } catch (Exception failed) {
+            releaseCamera();
+          }
+        }
+
+        @Override
+        public void onDisconnected(CameraDevice device) {
+          releaseCamera();
+        }
+
+        @Override
+        public void onError(CameraDevice device, int error) {
+          releaseCamera();
+        }
+      };
+
+  private void storePhoto(ImageReader reader) {
+    try (Image image = reader.acquireLatestImage()) {
+      if (image == null) return;
+      ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+      byte[] bytes = new byte[buffer.remaining()];
+      buffer.get(bytes);
+      if (bytes.length > Policy.MEDIA_BYTES) {
+        byte[] reduced = CaptureActivity.shrink(bytes);
+        if (reduced != bytes) {
+          Arrays.fill(bytes, (byte) 0);
+          bytes = reduced;
+        }
+      }
+      if (bytes.length > Policy.MEDIA_BYTES) return;
+      store.append(
+          "photo",
+          new JSONObject()
+              .put("mime_type", "image/jpeg")
+              .put("base64", android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP))
+              .put("deliberate_capture", false)
+              .put("automatic_capture", true)
+              .put("interval_ms", Policy.AUTO_PHOTO_MS));
+      Arrays.fill(bytes, (byte) 0);
+    } catch (Exception ignored) {
+      // A single missed frame must not stop the rest of the session.
+    } finally {
+      releaseCamera();
+    }
+  }
+
+  private void releaseCamera() {
+    if (photoCamera != null) {
+      try {
+        photoCamera.close();
+      } catch (Exception ignored) {
+      }
+      photoCamera = null;
+    }
+    if (photoReader != null) {
+      try {
+        photoReader.close();
+      } catch (Exception ignored) {
+      }
+      photoReader = null;
+    }
+    cameraBusy = false;
   }
 
   private void checkResources() throws Exception {
@@ -374,13 +582,18 @@ public final class CaptureService extends Service implements SensorEventListener
             : error instanceof IllegalStateException
                 ? error.getMessage()
                 : "Storage or sensor unavailable; collection paused";
+    // A genuine failure pauses collection; do not silently resume it at boot.
+    deliberateStop = true;
     stopSelf();
   }
 
   @Override
   public void onDestroy() {
     running = false;
-    if (store != null)
+    // Only a deliberate pause or a failure records the paused choice. An
+    // involuntary teardown such as phone shutdown must leave the owner's
+    // session intact so BootReceiver can resume it.
+    if (deliberateStop && store != null)
       try {
         store.setting("paused", true);
       } catch (Exception ignored) {
@@ -389,6 +602,8 @@ public final class CaptureService extends Service implements SensorEventListener
         () -> {
           if (resourcesClosed) return;
           resourcesClosed = true;
+          handler.removeCallbacks(autoPhoto);
+          releaseCamera();
           sensors.unregisterListener(this);
           try {
             locations.removeUpdates(this);

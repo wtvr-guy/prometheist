@@ -13,6 +13,7 @@ public final class Policy {
   public static final long MIN_FREE_BYTES = 256L * 1024 * 1024;
   public static final long MAX_VAULT_BYTES = 512L * 1024 * 1024;
   public static final long WINDOW_MS = 60_000;
+  public static final long AUTO_PHOTO_MS = 15 * 60_000L;
   public static final int SAMPLE_US = 200_000; // 5 Hz requested; hardware may differ.
 
   public static String origin(String value) {

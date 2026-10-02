@@ -328,7 +328,7 @@ public final class CaptureActivity extends Activity {
    * A deliberate capture must fit the evidence cap, so reduce quality and then resolution instead
    * of discarding the photo the owner intentionally took.
    */
-  private static byte[] shrink(byte[] original) {
+  static byte[] shrink(byte[] original) {
     BitmapFactory.Options bounds = new BitmapFactory.Options();
     bounds.inJustDecodeBounds = true;
     BitmapFactory.decodeByteArray(original, 0, original.length, bounds);

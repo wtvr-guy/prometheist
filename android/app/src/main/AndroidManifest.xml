@@ -7,8 +7,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -26,10 +28,15 @@
         </activity>
         <activity android:name=".CaptureActivity" android:exported="false" />
         <service android:name=".CaptureService" android:exported="false"
-            android:foregroundServiceType="specialUse|location|microphone">
+            android:foregroundServiceType="specialUse|location|microphone|camera">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="User-started personal motion and environmental journal, with visible stop control; no remote activation." />
+                android:value="Personal motion and environmental journal the user starts, and that resumes a running session after reboot, with visible stop control; no remote activation." />
         </service>
+        <receiver android:name=".BootReceiver" android:exported="false" android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
         <service android:name=".SyncJob" android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="true" />
     </application>
