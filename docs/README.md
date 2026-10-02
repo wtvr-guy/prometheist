@@ -92,4 +92,5 @@ depends on their old router, memory-capability, or agent terminology.
 
 - [Fixed retrieval and registries](architecture/FIXED_RETRIEVAL.md)
 - [Private imprint setup](engineering/IMPRINTING_SETUP.md)
+- [Android node setup, installers, private tunnel and recovery](android-node.md)
 - [Cleanup and branch audit](audits/ARCHITECTURE_CLEANUP_2026-09-28.md)

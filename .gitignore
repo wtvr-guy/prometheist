@@ -8,3 +8,12 @@ __pycache__/
 benchmarks/generated/
 benchmarks/results/*.json
 .prometheist/
+
+# Android build products and signing material; never private node evidence.
+android/.gradle/
+android/local.properties
+android/**/build/
+*.jks
+*.keystore
+*.p12
+*.dpapi

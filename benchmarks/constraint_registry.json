@@ -1268,6 +1268,362 @@
       "expected_value": 4,
       "classification": "EXTERNAL_CONTRACT",
       "rationale": "Win32 GetDriveTypeW DRIVE_REMOTE enumeration value; mapped network drives require separate destination consent. https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getdrivetypew"
+    },
+    "src/prometheist/cli.py::main::slice_lower#3": {
+      "expected_value": 2,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "Skip executable and subcommand tokens."
+    },
+    "src/prometheist/node_backend.py::import_observation::comparison": {
+      "expected_value": 32768,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounds mobile requests, evidence previews, process waiting or gateway pressure. Native Galaxy A16/Windows calibration is pending; see docs/android-node.md.",
+      "benchmark_id": "ANDROID-NODE-001",
+      "status": "NATIVE_REQUIRED"
+    },
+    "src/prometheist/node_backend.py::run_chat::comparison": {
+      "expected_value": 32768,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounds mobile requests, evidence previews, process waiting or gateway pressure. Native Galaxy A16/Windows calibration is pending; see docs/android-node.md.",
+      "benchmark_id": "ANDROID-NODE-001",
+      "status": "NATIVE_REQUIRED"
+    },
+    "src/prometheist/node_backend.py::memory_page::limit": {
+      "expected_value": 25,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounds mobile requests, evidence previews, process waiting or gateway pressure. Native Galaxy A16/Windows calibration is pending; see docs/android-node.md.",
+      "benchmark_id": "ANDROID-NODE-001",
+      "status": "NATIVE_REQUIRED"
+    },
+    "src/prometheist/node_backend.py::memory_page::slice_upper": {
+      "expected_value": 16384,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounds mobile requests, evidence previews, process waiting or gateway pressure. Native Galaxy A16/Windows calibration is pending; see docs/android-node.md.",
+      "benchmark_id": "ANDROID-NODE-001",
+      "status": "NATIVE_REQUIRED"
+    },
+    "src/prometheist/node_backend.py::memory_page::comparison": {
+      "expected_value": 16384,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounds mobile requests, evidence previews, process waiting or gateway pressure. Native Galaxy A16/Windows calibration is pending; see docs/android-node.md.",
+      "benchmark_id": "ANDROID-NODE-001",
+      "status": "NATIVE_REQUIRED"
+    },
+    "src/prometheist/node_backup.py::recover::comparison": {
+      "expected_value": 52,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "Backup magic 8 + salt 16 + nonce 12 + GCM tag 16 = 52 bytes."
+    },
+    "src/prometheist/node_backup.py::recover::PBKDF2HMAC.length": {
+      "expected_value": 32,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "AES-256 requires a 32-byte key; versioned backup format."
+    },
+    "src/prometheist/node_cli.py::main::comparison": {
+      "expected_value": 1024,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "Unprivileged TCP port lower bound."
+    },
+    "src/prometheist/node_cli.py::main::comparison#2": {
+      "expected_value": 65535,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "TCP port field maximum."
+    },
+    "src/prometheist/node_cli.py::main::run.limit_concurrency": {
+      "expected_value": 8,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounds mobile requests, evidence previews, process waiting or gateway pressure. Native Galaxy A16/Windows calibration is pending; see docs/android-node.md.",
+      "benchmark_id": "ANDROID-NODE-001",
+      "status": "NATIVE_REQUIRED"
+    },
+    "src/prometheist/node_cli.py::main::run.timeout_keep_alive": {
+      "expected_value": 5,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounds mobile requests, evidence previews, process waiting or gateway pressure. Native Galaxy A16/Windows calibration is pending; see docs/android-node.md.",
+      "benchmark_id": "ANDROID-NODE-001",
+      "status": "NATIVE_REQUIRED"
+    },
+    "src/prometheist/node_contracts.py::<module>::PAGE_SIZE": {
+      "expected_value": 32,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounds mobile requests, evidence previews, process waiting or gateway pressure. Native Galaxy A16/Windows calibration is pending; see docs/android-node.md.",
+      "benchmark_id": "ANDROID-NODE-001",
+      "status": "NATIVE_REQUIRED"
+    },
+    "src/prometheist/node_contracts.py::<module>::PAIR_LIFETIME_SECONDS": {
+      "expected_value": 600,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounds mobile requests, evidence previews, process waiting or gateway pressure. Native Galaxy A16/Windows calibration is pending; see docs/android-node.md.",
+      "benchmark_id": "ANDROID-NODE-001",
+      "status": "NATIVE_REQUIRED"
+    },
+    "src/prometheist/node_contracts.py::NodeEvent::data_json.min_length": {
+      "expected_value": 2,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "Shortest JSON object is two bytes."
+    },
+    "src/prometheist/node_contracts.py::PairRequest::label.max_length": {
+      "expected_value": 80,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounds mobile requests, evidence previews, process waiting or gateway pressure. Native Galaxy A16/Windows calibration is pending; see docs/android-node.md.",
+      "benchmark_id": "ANDROID-NODE-001",
+      "status": "NATIVE_REQUIRED"
+    },
+    "src/prometheist/node_pairing.py::PairingRegistry.authenticate::comparison": {
+      "expected_value": 43,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "Unpadded base64url encoding of a 32-byte random credential has 43 characters."
+    },
+    "src/prometheist/node_server.py::IntakeRunner.run::wait.timeout": {
+      "expected_value": 5,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounds mobile requests, evidence previews, process waiting or gateway pressure. Native Galaxy A16/Windows calibration is pending; see docs/android-node.md.",
+      "benchmark_id": "ANDROID-NODE-001",
+      "status": "NATIVE_REQUIRED"
+    },
+    "src/prometheist/node_server.py::IntakeRunner.close::join.timeout": {
+      "expected_value": 10,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounds mobile requests, evidence previews, process waiting or gateway pressure. Native Galaxy A16/Windows calibration is pending; see docs/android-node.md.",
+      "benchmark_id": "ANDROID-NODE-001",
+      "status": "NATIVE_REQUIRED"
+    },
+    "src/prometheist/node_server.py::create_node_app.boundary::slice_lower": {
+      "expected_value": 7,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "Length of Bearer plus a space in the authorization scheme."
+    },
+    "src/prometheist/node_store.py::<module>::slice_lower": {
+      "expected_value": 2,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "First two states are received and started; the remaining named states are terminal."
+    },
+    "src/prometheist/node_store.py::NodeStore.connect::connect.timeout": {
+      "expected_value": 10,
+      "classification": "SAFETY_TUNABLE",
+      "rationale": "Bounds mobile requests, evidence previews, process waiting or gateway pressure. Native Galaxy A16/Windows calibration is pending; see docs/android-node.md.",
+      "benchmark_id": "ANDROID-NODE-001",
+      "status": "NATIVE_REQUIRED"
+    },
+    "src/prometheist/node_store.py::NodeStore.unseal::slice_lower": {
+      "expected_value": 12,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "AES-GCM nonce occupies the first 12 bytes of the versioned envelope."
+    },
+    "src/prometheist/node_store.py::NodeStore.unseal::slice_upper": {
+      "expected_value": 12,
+      "classification": "STRUCTURAL_INVARIANT",
+      "rationale": "AES-GCM nonce occupies the first 12 bytes of the versioned envelope."
+    },
+    "manual:android-node:body_bytes": {
+      "manual": true,
+      "source_path": "src/prometheist/node_contracts.py",
+      "source_fragment": "MAX_BODY_BYTES = 2 * 1024 * 1024",
+      "expected_value": 2097152,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:event_bytes": {
+      "manual": true,
+      "source_path": "src/prometheist/node_contracts.py",
+      "source_fragment": "MAX_EVENT_BYTES = 768 * 1024",
+      "expected_value": 786432,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:backup_bytes": {
+      "manual": true,
+      "source_path": "src/prometheist/node_backup.py",
+      "source_fragment": "MAX_BACKUP_BYTES = 600 * 1024 * 1024",
+      "expected_value": 629145600,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:phone_event_bytes": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/Policy.java",
+      "source_fragment": "MAX_EVENT_BYTES = 768 * 1024",
+      "expected_value": 786432,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:phone_response_bytes": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/Policy.java",
+      "source_fragment": "MAX_RESPONSE_BYTES = 2 * 1024 * 1024",
+      "expected_value": 2097152,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:media_bytes": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/Policy.java",
+      "source_fragment": "MEDIA_BYTES = 512 * 1024",
+      "expected_value": 524288,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:free_storage": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/Policy.java",
+      "source_fragment": "MIN_FREE_BYTES = 256L * 1024 * 1024",
+      "expected_value": 268435456,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:vault_cap": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/Policy.java",
+      "source_fragment": "MAX_VAULT_BYTES = 512L * 1024 * 1024",
+      "expected_value": 536870912,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:window_ms": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/Policy.java",
+      "source_fragment": "WINDOW_MS = 60_000",
+      "expected_value": 60000,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:sample_us": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/Policy.java",
+      "source_fragment": "SAMPLE_US = 200_000",
+      "expected_value": 200000,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:battery_percent": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/CaptureService.java",
+      "source_fragment": "level * 100 / scale < 15",
+      "expected_value": 15,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:location_ms": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/CaptureService.java",
+      "source_fragment": "requestLocationUpdates(provider, 300_000, 200",
+      "expected_value": 300000,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:location_distance": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/CaptureService.java",
+      "source_fragment": "requestLocationUpdates(provider, 300_000, 200",
+      "expected_value": 200,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:read_timeout": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/NodeSync.java",
+      "source_fragment": "setReadTimeout(30_000)",
+      "expected_value": 30000,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:connect_timeout": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/NodeSync.java",
+      "source_fragment": "setConnectTimeout(15_000)",
+      "expected_value": 15000,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:sync_pages": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/NodeSync.java",
+      "source_fragment": "page < 4",
+      "expected_value": 4,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:recent_records": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/NodeStore.java",
+      "source_fragment": "ORDER BY rowid DESC LIMIT 200",
+      "expected_value": 200,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:recent_display": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/NodeStore.java",
+      "source_fragment": "rows.length() < 50",
+      "expected_value": 50,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:backup_kdf": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/NodeStore.java",
+      "source_fragment": "passphrase, salt, 600_000, 256",
+      "expected_value": 600000,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:photo_side": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/CaptureActivity.java",
+      "source_fragment": "size.getWidth() <= 1280",
+      "expected_value": 1280,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
+    },
+    "manual:android-node:audio_seconds": {
+      "manual": true,
+      "source_path": "android/app/src/main/java/org/prometheist/node/CaptureActivity.java",
+      "source_fragment": "16000 * 2 * 10",
+      "expected_value": 10,
+      "classification": "SAFETY_TUNABLE",
+      "status": "NATIVE_REQUIRED",
+      "benchmark_id": "ANDROID-NODE-001",
+      "rationale": "Conservative mobile safety/energy/privacy bound, not a measured device capacity. See docs/android-node.md for native sweep and invariant requirements."
     }
   },
   "groups": {
