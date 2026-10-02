@@ -7,10 +7,11 @@ SDK or cloud model runs on the phone. Actual Galaxy A16 sensor availability is
 discovered at runtime. Different A16 variants may expose different sensors.
 
 **Status:** APK compilation, Android JVM tests/lint and portable Python tests have
-been exercised. Installation, Windows signing, live Tailscale pairing, Samsung
-background behavior and real sensor/battery calibration still require native
-validation. The app has not been installed on the owner's phone by this change.
-Phone Link and a USB cable do not give this development environment phone access.
+been exercised. The app has been built from source, personally signed and installed
+on the owner's Galaxy A16 (SM-A166U, Android 16) over authorized USB ADB; it opens
+past the device-credential lock and renders every tab with no crash or ANR. Live
+Tailscale pairing, Samsung background behavior and real sensor/battery calibration
+still require native validation.
 
 At revision `90481c4`, [laptop CI](https://github.com/wtvr-guy/prometheist/actions/runs/36590981197)
 passed 710 tests (18 skipped), including synthetic PostgreSQL intake, with Windows

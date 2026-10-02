@@ -46,7 +46,10 @@ foreach ($Sid in @($UserSid, $SystemSid)) {
     $Rule = New-Object System.Security.AccessControl.FileSystemAccessRule($Sid, 'FullControl', 'ContainerInherit,ObjectInherit', 'None', 'Allow')
     $Acl.AddAccessRule($Rule)
 }
-Set-Acl -Path $PrivateRoot -AclObject $Acl
+# Set-Acl re-persists every descriptor section and fails without SeSecurityPrivilege once this
+# directory is already protected, which broke re-runs and upgrades. SetAccessControl writes only
+# the DACL that was modified above.
+(Get-Item $PrivateRoot).SetAccessControl($Acl)
 $Keystore = Join-Path $PrivateRoot 'prometheist-node.p12'
 $PasswordFile = Join-Path $PrivateRoot 'password.dpapi'
 if ((Test-Path $Keystore) -and -not (Test-Path $PasswordFile)) {

@@ -139,11 +139,11 @@ public final class CaptureActivity extends Activity {
               byte[] bytes = new byte[buffer.remaining()];
               buffer.get(bytes);
               if (bytes.length > Policy.MEDIA_BYTES) {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                ByteArrayOutputStream compressed = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 55, compressed);
-                bitmap.recycle();
-                bytes = compressed.toByteArray();
+                byte[] reduced = shrink(bytes);
+                if (reduced != bytes) {
+                  Arrays.fill(bytes, (byte) 0);
+                  bytes = reduced;
+                }
               }
               save("photo", "image/jpeg", bytes);
             } catch (Exception e) {
@@ -321,6 +321,42 @@ public final class CaptureActivity extends Activity {
         recorder = null;
       }
       error("Microphone unavailable");
+    }
+  }
+
+  /**
+   * A deliberate capture must fit the evidence cap, so reduce quality and then resolution instead
+   * of discarding the photo the owner intentionally took.
+   */
+  private static byte[] shrink(byte[] original) {
+    BitmapFactory.Options bounds = new BitmapFactory.Options();
+    bounds.inJustDecodeBounds = true;
+    BitmapFactory.decodeByteArray(original, 0, original.length, bounds);
+    BitmapFactory.Options options = new BitmapFactory.Options();
+    // Decoding a 50 MP frame at full resolution would exhaust the app heap.
+    int sample = 1;
+    while ((long) bounds.outWidth * bounds.outHeight / ((long) sample * sample) > 4_000_000L)
+      sample *= 2;
+    options.inSampleSize = sample;
+    Bitmap bitmap = BitmapFactory.decodeByteArray(original, 0, original.length, options);
+    if (bitmap == null) return original;
+    byte[] best = original;
+    try {
+      while (true) {
+        for (int quality = 80; quality >= 35; quality -= 15) {
+          ByteArrayOutputStream out = new ByteArrayOutputStream();
+          bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out);
+          best = out.toByteArray();
+          if (best.length <= Policy.MEDIA_BYTES) return best;
+        }
+        if (bitmap.getWidth() <= 640 || bitmap.getHeight() <= 640) return best;
+        Bitmap smaller =
+            Bitmap.createScaledBitmap(bitmap, bitmap.getWidth() / 2, bitmap.getHeight() / 2, true);
+        if (smaller != bitmap) bitmap.recycle();
+        bitmap = smaller;
+      }
+    } finally {
+      bitmap.recycle();
     }
   }
 

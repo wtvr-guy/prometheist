@@ -59,6 +59,11 @@ public final class MainActivity extends Activity {
             store = NodeStore.get(this);
             runOnUiThread(
                 () -> {
+                  if (store.damaged() > 0)
+                    message =
+                        store.damaged()
+                            + " unreadable record(s) were skipped. The rest of your evidence is"
+                            + " intact — export an encrypted backup.";
                   if (unlocked) show();
                 });
           } catch (Exception e) {
@@ -309,7 +314,40 @@ public final class MainActivity extends Activity {
               true);
         });
     body.addView(text("Recent conversations", 18, TEXT));
-    render(store.recent("", true));
+    renderAsync("", true);
+  }
+
+  /**
+   * Decrypting up to 200 records is too slow for the UI thread; load them on the IO executor and
+   * render only if the user is still on the same view.
+   */
+  private void renderAsync(String query, boolean chat) {
+    LinearLayout target = body;
+    TextView placeholder = text("Loading recent evidence…", 15, MUTED);
+    target.addView(placeholder);
+    SyncJob.IO.execute(
+        () -> {
+          JSONArray found = null;
+          String failure = null;
+          try {
+            found = store.recent(query, chat);
+          } catch (Exception e) {
+            failure = safe(e);
+          }
+          JSONArray rows = found;
+          String error = failure;
+          runOnUiThread(
+              () -> {
+                if (!unlocked || body != target) return;
+                target.removeView(placeholder);
+                try {
+                  if (error != null) notice(error);
+                  else render(rows);
+                } catch (Exception e) {
+                  notice(safe(e));
+                }
+              });
+        });
   }
 
   private void render(JSONArray rows) throws Exception {
@@ -357,7 +395,7 @@ public final class MainActivity extends Activity {
           try {
             body.removeAllViews();
             section("Recent evidence", q.isEmpty() ? "All recent records" : q);
-            render(store.recent(q, false));
+            renderAsync(q, false);
           } catch (Exception e) {
             notice(safe(e));
           }
@@ -381,7 +419,7 @@ public final class MainActivity extends Activity {
                 },
                 true));
     button("Export encrypted backup", this::exportDialog);
-    render(store.recent("", false));
+    renderAsync("", false);
   }
 
   private interface Checked {

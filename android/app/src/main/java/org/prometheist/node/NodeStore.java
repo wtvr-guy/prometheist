@@ -30,6 +30,7 @@ public final class NodeStore {
   private final AtomicFile settings;
   private JSONObject config;
   private long journalBytes;
+  private int damaged;
 
   public static synchronized NodeStore get(Context context) throws Exception {
     if (instance == null) instance = new NodeStore(context.getApplicationContext());
@@ -78,12 +79,23 @@ public final class NodeStore {
     if (files != null)
       for (File file : files) {
         journalBytes += file.length();
-        byte[] plain = vault.open(Files.readAllBytes(file.toPath()), file.getName());
-        JSONObject envelope = new JSONObject(new String(plain, StandardCharsets.UTF_8));
-        index(envelope);
+        // A single unreadable record must never make the whole node unopenable:
+        // the remaining evidence stays searchable and exportable.
+        try {
+          byte[] plain = vault.open(Files.readAllBytes(file.toPath()), file.getName());
+          JSONObject envelope = new JSONObject(new String(plain, StandardCharsets.UTF_8));
+          index(envelope);
+        } catch (Exception skipped) {
+          damaged++;
+        }
       }
     // A newly rebuilt DB must replay server receipts, not skip with an old cursor.
     if (!hasMeta("epoch")) putMeta("cursor", "0");
+  }
+
+  /** Count of records skipped at startup because they could not be decrypted or parsed. */
+  public synchronized int damaged() {
+    return damaged;
   }
 
   private static String secret() {
