@@ -27,6 +27,10 @@ public final class SyncJob extends JobService {
                     ? JobInfo.NETWORK_TYPE_UNMETERED
                     : JobInfo.NETWORK_TYPE_ANY)
             .setRequiresBatteryNotLow(true)
+            // Without this the job is dropped at reboot and queued evidence waits
+            // until the owner next opens the app. Persistence needs
+            // RECEIVE_BOOT_COMPLETED and only resumes upload, never collection.
+            .setPersisted(true)
             .setPeriodic(15 * 60_000L)
             .build());
   }

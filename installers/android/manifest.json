@@ -1,7 +1,7 @@
 {
   "file": "Prometheist-Node-0.1.0-unsigned.apk",
-  "sha256": "7245a295f4fefe2ea5632d15e91fd164edadd00d8234df098aa7e425d130941d",
-  "bytes": 47844,
+  "sha256": "fcac1fe3263bc2c3625bd80a1c9bc6fc72ab00e533c05a7ab2e1c2e7e37d2d01",
+  "bytes": 47888,
   "application_id": "org.prometheist.node",
   "version_name": "0.1.0",
   "version_code": 1,
@@ -17,7 +17,7 @@
   "source_files": {
     "android/app/build.gradle": "6437031e6a006f819d69008d8e8bb5c4a7560002647978c4d95e54922160c177",
     "android/app/src/androidTest/java/org/prometheist/node/VaultTest.java": "479ae849b82dc2ec20cb9de5a9f7818982ba5277e25d51a5380cc4b70d37426e",
-    "android/app/src/main/AndroidManifest.xml": "7753c5fe68cfa8283061bc96182f307b8c4a8a3933d0ee557321fe4fdcd4b832",
+    "android/app/src/main/AndroidManifest.xml": "79be0400e18e10ca22b3c6a087b1faa33a70952d89edb11c919be3fafc1963b4",
     "android/app/src/main/java/org/prometheist/node/CaptureActivity.java": "cd7b04328bb914b4b1213491e8524f1157cabf8ca637e363e1c2dbfb86b26573",
     "android/app/src/main/java/org/prometheist/node/CaptureService.java": "00d03ea9984fa9906bd2b78c0767aaa37ec57c5729244c4ccc539311e86e1205",
     "android/app/src/main/java/org/prometheist/node/MainActivity.java": "4e5a2d1fc61c1a267ff13ca83e94457eaaf9969b293457c9581172c0b09969af",
@@ -25,7 +25,7 @@
     "android/app/src/main/java/org/prometheist/node/NodeSync.java": "23a542b6a5351a7689651f95dde3904ebdad5ac37b956cfec7304a9acde060c0",
     "android/app/src/main/java/org/prometheist/node/Policy.java": "b5fe0dfd128283866d05e4af7b155beeb83145fed7a3d156e8cb017ecf3cff1d",
     "android/app/src/main/java/org/prometheist/node/SensorCatalog.java": "99c24b90066bc3cdbc31f05061700ce76a66fd868de30869558cd4c0ee6e4644",
-    "android/app/src/main/java/org/prometheist/node/SyncJob.java": "659ae8308809d758017bed2ceede3c18f64baa19fb9d0176aed74de4bbe4dd76",
+    "android/app/src/main/java/org/prometheist/node/SyncJob.java": "dfbf1b89a7f036dcd4165af04917771acafbb3df4a6809e01bac263cbf56a90d",
     "android/app/src/main/java/org/prometheist/node/Vault.java": "d7f6553b38b5e0d1b6c1870264abc4a8b68053ca63a333c8461aad7115b81f2d",
     "android/app/src/main/java/org/prometheist/node/WindowStats.java": "6edca40096b63bec380c3a930a0174389efd47efdac8ef81d73dbd5045d3f5f7",
     "android/app/src/main/res/drawable/ic_node.xml": "3fd1263ddf6667151964e2ca5eabcac707bb17af8bbcfd8fc50d4c74520ca5c2",

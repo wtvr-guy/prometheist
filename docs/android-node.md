@@ -223,9 +223,10 @@ The requested motion rate is 5 Hz, with batching where supported. These are
 observations; this app does not claim to retain every raw sensor sample. Android
 sleep, force-stop, thermal pressure, permission changes and vendor battery controls
 can cause gaps. Collection never restarts automatically after reboot/process death.
-After reboot, open the app to reschedule automatic sync and explicitly resume
-collection. Review Samsung's per-app battery settings only if measured gaps warrant
-it; no promise of continuous monitoring is made.
+Automatic sync is a persisted job, so queued evidence keeps uploading after a
+reboot once the phone is unlocked; resuming collection still requires opening the
+app and starting it explicitly. Review Samsung's per-app battery settings only if
+measured gaps warrant it; no promise of continuous monitoring is made.
 
 Collection pauses at OS low-memory status, severe thermal status, battery below
 15% while unplugged, less than 256 MiB free storage, or a 512 MiB journal. These
@@ -338,7 +339,29 @@ tailscale serve --https=443 off
 
 Use 8443 instead if you used the manual alternate port. Do not reset unrelated
 Tailscale services. No scheduled task or Windows service is installed by these
-scripts; startup after laptop reboot is manual.
+scripts; startup after laptop reboot is manual unless you add the optional
+autostart below.
+
+### Optional: start the gateway automatically after a laptop reboot
+
+Tailscale's service and its Serve configuration already persist, as do PostgreSQL
+and Ollama if you installed them with their normal startup entries. Only the
+gateway needs an entry. Register a logon task that runs the serve command
+directly; do not rerun pairing on every boot, because it mints an unnecessary
+pairing code. Substitute your own repository path, profile and tailnet hostname:
+
+```powershell
+$Action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument @'
+-NoProfile -WindowStyle Hidden -Command "Set-Location 'C:\path\to\prometheist'; uv run prometheist node serve --profile \"$env:LOCALAPPDATA\Prometheist\subject_001\profile.json\" --url 'https://YOUR-LAPTOP.YOUR-TAILNET.ts.net' --port 8766"
+'@
+$Trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+$Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit 0
+Register-ScheduledTask -TaskName 'Prometheist Phone Gateway' -Action $Action -Trigger $Trigger -Settings $Settings
+```
+
+A logon trigger, rather than a boot trigger, keeps the gateway in your own session
+alongside the loopback Ollama it needs for chat replies. Remove it with
+`Unregister-ScheduledTask -TaskName 'Prometheist Phone Gateway'`.
 
 ## Validation and native acceptance
 
