@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<incidents format="6" by="lint 8.9.2" type="partial_results">
+    <map id="JobSchedulerService">
+        <location id="org.prometheist.node.SyncJob"
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/org/prometheist/node/SyncJob.java"
+            line="24"
+            column="60"
+            startOffset="874"
+            endLine="24"
+            endColumn="73"
+            endOffset="887"/>
+    </map>
+    <map id="UnsafeImplicitIntentLaunch">
+            <map id="actionsSent">
+                    <map id="android.settings.SECURITY_SETTINGS (used to start an activity)">
+                        <location id="0"
+                            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/org/prometheist/node/MainActivity.java"
+                            line="110"
+                            column="33"
+                            startOffset="3687"
+                            endLine="110"
+                            endColumn="95"
+                            endOffset="3749"/>
+                    </map>
+            </map>
+    </map>
+    <map id="UnsafeIntentLaunch">
+            <map id="unprotected">
+                <entry
+                    name="org.prometheist.node.MainActivity"
+                    boolean="true"/>
+            </map>
+    </map>
+    <map id="UnusedResources">
+        <entry
+            name="model"
+            string="drawable[ic_node(U)],style[AppTheme(U)],xml[data_extraction_rules(U),network_security_config(U)];;;;"/>
+    </map>
+
+</incidents>

@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "org.prometheist.node.app-release-4:/xml_data_extraction_rules.xml.flat",
+        "source": "org.prometheist.node.app-main-5:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "org.prometheist.node.app-release-4:/drawable_ic_node.xml.flat",
+        "source": "org.prometheist.node.app-main-5:/drawable/ic_node.xml"
+    },
+    {
+        "merged": "org.prometheist.node.app-release-4:/xml_network_security_config.xml.flat",
+        "source": "org.prometheist.node.app-main-5:/xml/network_security_config.xml"
+    }
+]

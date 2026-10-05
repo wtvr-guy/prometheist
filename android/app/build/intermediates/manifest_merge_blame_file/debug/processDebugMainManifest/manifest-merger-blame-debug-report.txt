@@ -1,0 +1,158 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="org.prometheist.node"
+4    android:versionCode="1"
+5    android:versionName="0.1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="26"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:2:5-67
+11-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:2:22-64
+12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+12-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:3:5-79
+12-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:3:22-76
+13    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+13-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:4:5-81
+13-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:4:22-78
+14    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+14-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:5:5-77
+14-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:5:22-74
+15    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+15-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:6:5-77
+15-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:6:22-74
+16    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+16-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:7:5-89
+16-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:7:22-86
+17    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+17-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:8:5-86
+17-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:8:22-83
+18    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+18-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:9:5-88
+18-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:9:22-85
+19    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+19-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:10:5-84
+19-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:10:22-81
+20    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+20-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:11:5-81
+20-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:11:22-78
+21    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+21-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:12:5-79
+21-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:12:22-76
+22    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+22-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:13:5-85
+22-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:13:22-82
+23    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+23-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:14:5-79
+23-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:14:22-76
+24    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+24-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:15:5-71
+24-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:15:22-68
+25    <uses-permission android:name="android.permission.CAMERA" />
+25-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:16:5-65
+25-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:16:22-62
+26
+27    <uses-feature
+27-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:17:5-89
+28        android:name="android.hardware.camera.any"
+28-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:17:19-61
+29        android:required="false" />
+29-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:17:62-86
+30    <uses-feature
+30-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:18:5-89
+31        android:name="android.hardware.microphone"
+31-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:18:19-61
+32        android:required="false" />
+32-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:18:62-86
+33
+34    <application
+34-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:19:5-42:19
+35        android:allowBackup="false"
+35-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:20:41-68
+36        android:dataExtractionRules="@xml/data_extraction_rules"
+36-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:21:43-99
+37        android:debuggable="true"
+38        android:extractNativeLibs="false"
+39        android:fullBackupContent="false"
+39-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:21:9-42
+40        android:icon="@drawable/ic_node"
+40-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:19:46-78
+41        android:label="Prometheist"
+41-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:19:18-45
+42        android:networkSecurityConfig="@xml/network_security_config"
+42-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:22:46-106
+43        android:theme="@style/AppTheme"
+43-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:20:9-40
+44        android:usesCleartextTraffic="false" >
+44-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:22:9-45
+45        <activity
+45-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:23:9-28:20
+46            android:name="org.prometheist.node.MainActivity"
+46-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:23:19-47
+47            android:exported="true"
+47-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:23:48-71
+48            android:windowSoftInputMode="adjustResize" >
+48-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:23:72-114
+49            <intent-filter>
+49-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:24:13-27:29
+50                <action android:name="android.intent.action.MAIN" />
+50-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:25:17-69
+50-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:25:25-66
+51
+52                <category android:name="android.intent.category.LAUNCHER" />
+52-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:26:17-77
+52-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:26:27-74
+53            </intent-filter>
+54        </activity>
+55        <activity
+55-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:29:9-78
+56            android:name="org.prometheist.node.CaptureActivity"
+56-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:29:19-50
+57            android:exported="false" />
+57-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:29:51-75
+58
+59        <service
+59-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:30:9-34:19
+60            android:name="org.prometheist.node.CaptureService"
+60-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:30:18-48
+61            android:exported="false"
+61-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:30:49-73
+62            android:foregroundServiceType="specialUse|location|microphone|camera" >
+62-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:31:13-82
+63            <property
+63-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:32:13-33:192
+64                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+64-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:32:23-82
+65                android:value="Personal motion and environmental journal the user starts, and that resumes a running session after reboot, with visible stop control; no remote activation." />
+65-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:33:17-189
+66        </service>
+67
+68        <receiver
+68-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:35:9-39:20
+69            android:name="org.prometheist.node.BootReceiver"
+69-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:35:19-47
+70            android:enabled="true"
+70-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:35:73-95
+71            android:exported="false" >
+71-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:35:48-72
+72            <intent-filter>
+72-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:36:13-38:29
+73                <action android:name="android.intent.action.BOOT_COMPLETED" />
+73-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:37:17-79
+73-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:37:25-76
+74            </intent-filter>
+75        </receiver>
+76
+77        <service
+77-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:40:9-41:39
+78            android:name="org.prometheist.node.SyncJob"
+78-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:40:18-41
+79            android:exported="true"
+79-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:41:13-36
+80            android:permission="android.permission.BIND_JOB_SERVICE" />
+80-->C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\AndroidManifest.xml:40:42-98
+81    </application>
+82
+83</manifest>

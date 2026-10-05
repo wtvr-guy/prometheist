@@ -1,0 +1,7 @@
+org.prometheist.node.app-pngs-0 C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\build\generated\res\pngs\release
+org.prometheist.node.app-resValues-1 C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\build\generated\res\resValues\release
+org.prometheist.node.app-packageReleaseResources-2 C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\build\intermediates\incremental\release\packageReleaseResources\merged.dir
+org.prometheist.node.app-packageReleaseResources-3 C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\build\intermediates\incremental\release\packageReleaseResources\stripped.dir
+org.prometheist.node.app-release-4 C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\build\intermediates\merged_res\release\mergeReleaseResources
+org.prometheist.node.app-main-5 C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\main\res
+org.prometheist.node.app-release-6 C:\Users\gy0d8\OneDrive\Documents\prometheist\android\app\src\release\res

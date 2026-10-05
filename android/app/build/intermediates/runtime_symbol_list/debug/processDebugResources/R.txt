@@ -1,0 +1,4 @@
+int drawable ic_node 0x7f010000
+int style AppTheme 0x7f020000
+int xml data_extraction_rules 0x7f030000
+int xml network_security_config 0x7f030001

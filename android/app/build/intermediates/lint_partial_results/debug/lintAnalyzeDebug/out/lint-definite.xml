@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<incidents format="6" by="lint 8.9.2" type="incidents">
+
+    <incident
+        id="GradleDependency"
+        severity="warning"
+        message="A newer version of androidx.test:runner than 1.6.2 is available: 1.7.0">
+        <fix-replace
+            description="Change to 1.7.0"
+            family="Update versions"
+            oldString="1.6.2"
+            replacement="1.7.0"
+            priority="0"/>
+        <location
+            file="${:app*projectDir}/build.gradle"
+            line="26"
+            column="31"
+            startOffset="733"
+            endLine="26"
+            endColumn="59"
+            endOffset="761"/>
+    </incident>
+
+    <incident
+        id="GradleDependency"
+        severity="warning"
+        message="A newer version of androidx.test.ext:junit than 1.2.1 is available: 1.3.0">
+        <fix-replace
+            description="Change to 1.3.0"
+            family="Update versions"
+            oldString="1.2.1"
+            replacement="1.3.0"
+            priority="0"/>
+        <location
+            file="${:app*projectDir}/build.gradle"
+            line="27"
+            column="31"
+            startOffset="793"
+            endLine="27"
+            endColumn="62"
+            endOffset="824"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/org/prometheist/node/CaptureActivity.java"
+            line="47"
+            column="22"
+            startOffset="1564"
+            endLine="47"
+            endColumn="64"
+            endOffset="1606"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/org/prometheist/node/CaptureActivity.java"
+            line="50"
+            column="23"
+            startOffset="1742"
+            endLine="50"
+            endColumn="38"
+            endOffset="1757"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/org/prometheist/node/CaptureActivity.java"
+            line="76"
+            column="23"
+            startOffset="2726"
+            endLine="76"
+            endColumn="40"
+            endOffset="2743"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/org/prometheist/node/CaptureActivity.java"
+            line="86"
+            column="20"
+            startOffset="2994"
+            endLine="86"
+            endColumn="27"
+            endOffset="3001"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/org/prometheist/node/CaptureActivity.java"
+            line="262"
+            column="23"
+            startOffset="9884"
+            endLine="262"
+            endColumn="38"
+            endOffset="9899"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/org/prometheist/node/CaptureActivity.java"
+            line="263"
+            column="22"
+            startOffset="9923"
+            endLine="263"
+            endColumn="44"
+            endOffset="9945"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/org/prometheist/node/CaptureActivity.java"
+            line="378"
+            column="28"
+            startOffset="14551"
+            endLine="378"
+            endColumn="78"
+            endOffset="14601"/>
+    </incident>
+
+</incidents>

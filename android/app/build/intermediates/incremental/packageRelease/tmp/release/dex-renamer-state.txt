@@ -1,0 +1,4 @@
+#Fri Oct 02 13:10:23 PDT 2026
+base.0=C\:\\Users\\gy0d8\\OneDrive\\Documents\\prometheist\\android\\app\\build\\intermediates\\dex\\release\\mergeDexRelease\\classes.dex
+renamed.0=classes.dex
+path.0=classes.dex

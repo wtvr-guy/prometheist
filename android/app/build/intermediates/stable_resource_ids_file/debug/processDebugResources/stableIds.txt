@@ -1,0 +1,4 @@
+org.prometheist.node:xml/network_security_config = 0x7f030001
+org.prometheist.node:xml/data_extraction_rules = 0x7f030000
+org.prometheist.node:style/AppTheme = 0x7f020000
+org.prometheist.node:drawable/ic_node = 0x7f010000
